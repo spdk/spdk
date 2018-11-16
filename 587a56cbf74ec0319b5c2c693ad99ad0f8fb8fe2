@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dae07c35_be319004",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-16T17:20:10Z",
+      "side": 1,
+      "message": "defining NSEC_PER_SEC could improve readability",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae61709b_dbeb633c",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-16T17:20:10Z",
+      "side": 1,
+      "message": "There is (spdk_ftl_init, spdk_ftl_dev_init) and (ftl_module_init_opts, ftl_init_opts).\nMaybe would be good to have the same scheme for functions and opts naming?",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49d42190_7bb44e07",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-16T17:20:10Z",
+      "side": 1,
+      "message": "typo",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
