@@ -65,7 +65,7 @@
   # poll. Units in microseconds.
   AcceptorPollRate 10000
 
-[Transport]
+[Transport1]
   # Set a transport type, this is mandatory
   Type RDMA
 
@@ -89,6 +89,13 @@
 
   # Set the maximum number of IO for admin queue
   #MaxAQDepth 32
+
+# Define NVMf transports
+#[Transport2]
+#  Type FC
+#  MaxQueuesPerSession 5
+#  MaxQueueDepth 128
+#  MaxIOSize 65536
 
 [Nvme]
   # NVMe Device Whitelist

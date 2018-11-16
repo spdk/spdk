@@ -48,6 +48,10 @@ ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 endif
 
+ifeq ($(CONFIG_FC),y)
+SPDK_LIB_LIST += scsi fc nvmf fc_adm_api
+endif
+
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
 	$(SOCK_MODULES_LINKER_ARGS) \

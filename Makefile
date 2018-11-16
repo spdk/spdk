@@ -59,6 +59,11 @@ else
 LIB = lib
 endif
 
+ifeq ($(CONFIG_FC),y)
+FCDRVRBUILD = fc
+DIRS-y += fc
+endif
+
 all: $(DIRS-y)
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
@@ -68,10 +73,11 @@ install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
 
 shared_lib: lib
-lib: $(DPDKBUILD)
-app: $(LIB)
-test: $(LIB)
-examples: $(LIB)
+fc: $(DPDKBUILD)
+lib: $(FCDRVRBUILD) $(DPDKBUILD)
+app: lib
+test: lib
+examples: lib
 pkgdep:
 	sh ./scripts/pkgdep.sh
 

@@ -400,4 +400,13 @@ struct spdk_nvmf_fc_ls_rjt {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvmf_fc_ls_rjt) == 40, "size_mismatch");
 
+/*
+ * FC World Wide Name
+ */
+struct spdk_nvmf_fc_wwn {
+	union {
+		uint64_t wwn; /* World Wide Names consist of eight bytes */
+		uint8_t octets[sizeof(uint64_t)];
+	} u;
+};
 #endif

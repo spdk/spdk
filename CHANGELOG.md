@@ -2,6 +2,12 @@
 
 ## v19.01: (Upcoming Release)
 
+### NVME-oF Target (FC)
+New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
+Also, requires a Fibre Channel HBA low level driver (lld).  This driver source code must be
+put in the SPDK's top-level 'fc' directory and is built with the SPDK build when the FC option
+is enabled. Use configure with the "--with-fc" option to build with the FC transport.
+
 ### nvme
 
 admin_timeout_ms was added to NVMe controller initialization options, users

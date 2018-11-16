@@ -282,7 +282,7 @@ bdev_nvme_destruct(void *ctx)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	nvme_ctrlr->ref--;
 	free(nvme_disk->disk.name);
-	memset(nvme_disk, 0, sizeof(*nvme_disk));
+	nvme_disk->active = false;
 	if (nvme_ctrlr->ref == 0 && nvme_ctrlr->destruct) {
 		/* Clear destruct sign in case of reentering controller destruct */
 		nvme_ctrlr->destruct = false;

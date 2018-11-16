@@ -28,3 +28,4 @@ CONFIG.local
 mk/cc.mk
 mk/config.mk
 PYTHON_COMMAND
+fc/

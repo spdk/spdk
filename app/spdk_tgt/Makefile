@@ -61,6 +61,10 @@ LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(SOCK_MODULES_LINKER_ARGS) \
 	$(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
 
+ifeq ($(CONFIG_FC),y)
+SPDK_LIB_LIST += fc nvmf fc_adm_api
+endif
+
 all: $(APP)
 	@:
 
