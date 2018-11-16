@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "102309cc_d527e7bd",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-16T06:53:07Z",
+      "side": 1,
+      "message": "I think you should use at least not num_read_ops but bytes_read, and multiply qos_limit by 1024*1024 when the type is bandwidth.\n\nif [ $LIMIT_TYPE \u003d BANDWIDTH ]; then\n  qos_limit\u003d$qos_limit*1024*1024\n\nif [ $LIMIT_TYPE \u003d IOPS]; then\n  start\u003d$(rpc_py get_bdevs_iostat -b $3 | jq -r \u0027.[1].num_read__ops\u0027)\nelse\n  start\u003d$(rpc_py get_bdevs_iostat -b $3 | jq -r \u0027.[1].bytes_read\u0027)\nfi\n\n$fio_py 51264 randread 5\n\nif [ $LIMIT_TYPE \u003d IOPS]; then\n  end\u003d$(rpc_py get_bdevs_iostat -b $3 | jq -r \u0027.[1].num_read__ops\u0027)\nelse\n end\u003d$(rpc_py get_bdevs_iostat -b $3 | jq -r \u0027.[1].bytes_read\u0027)\nfi\n\nread_result\u003d$((end-start)/5)\n\nif [ $enable_limit \u003d true ]; then",
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42bf1fe1_da4efd3b",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-16T06:53:07Z",
+      "side": 1,
+      "message": "this bracket is not necessary?",
+      "range": {
+        "startLine": 18,
+        "startChar": 15,
+        "endLine": 18,
+        "endChar": 16
+      },
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
