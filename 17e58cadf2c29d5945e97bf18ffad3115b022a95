@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1c108a2b_58f499e7",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 1
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-16T04:01:12Z",
+      "side": 1,
+      "message": "Good point",
+      "parentUuid": "ee5eb3cf_3c0656cb",
+      "revId": "17e58cadf2c29d5945e97bf18ffad3115b022a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "07450bdd_56ec25d2",
         "filename": "include/spdk/trace.h",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-15T20:50:17Z",
       "side": 1,
       "message": "this method will not be efficient\n\nfor example, if we add a trace event on lcore 100, get_per_lcore_history will need to loop 100 times to get the history pointer",
+      "revId": "17e58cadf2c29d5945e97bf18ffad3115b022a95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb60ac93_b19db238",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-16T04:01:12Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07450bdd_56ec25d2",
       "revId": "17e58cadf2c29d5945e97bf18ffad3115b022a95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
