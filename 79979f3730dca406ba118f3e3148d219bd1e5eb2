@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "191ae180_c0bffa28",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-16T10:46:11Z",
+      "side": 1,
+      "message": "Just wondering if wee need this RPC call. All connections might just listen by default. If user won\u0027t provide \u0027get_event\u0027 ID it won\u0027t get event... Need to think about this.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 150,
+        "endChar": 40
+      },
+      "revId": "79979f3730dca406ba118f3e3148d219bd1e5eb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
