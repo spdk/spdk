@@ -1,0 +1,344 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e061b286_4e0546c8",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Please define 1000000000UL",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ed230fc_65b36afd",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "requets -\u003e requests",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05c782d9_4320b544",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we have some init_opts here? I know that we should pass ann_thread only for now, but maybe it will be cleaner from interface perspective.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b144bdf9_ad2ed656",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "negitive -\u003e negative",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dd3414b_12691cf8",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "This looks very odd. Why we should distinguish those cases?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa2b2f72_48d4a367",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "g_bdev_count should be decreased here.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb658b2c_b30e3fb7",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Add some comment/TODO here.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1af06ccd_4c2097e7",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Do we need check this? I think this is required at this point.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd0a588a_db81c27d",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Please add some comment/TODO that this should be configurable somehow.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98a401de_9b7b148d",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 921,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "... can be called called",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d0d9d07_90063249",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Extra space before lock.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f6fb8aa_648bd299",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Maybe we should have configurable timeout. At least add some commnet/TOOD.",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e64b9cfc_373b1552",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Extra space befoe tasks?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ad28f55_4dc70a92",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Not sure if we should have blocking initialization?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7cbf06c2_602f4755",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Don\u0027t we have a conflict here with ANM process_admin_completion?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09fb6864_f7866030",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Don\u0027t we have a conflict here with ANM process_admin_completion?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4c39c34_a1f7c1b7",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Why not calloc?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ed6438c_891e021f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "Should be ftl_free_tasks() ?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d70add9f_8d57ea47",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "extra space?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b756ea6_4997601a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-16T12:19:30Z",
+      "side": 1,
+      "message": "extra space?",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
