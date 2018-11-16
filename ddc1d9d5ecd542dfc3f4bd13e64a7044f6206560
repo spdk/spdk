@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2969214b_f6ff0ed0",
+        "filename": "mk/spdk.app.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-16T08:53:11Z",
+      "side": 1,
+      "message": "Where did --whole-archive go? This does the opposite of what the commit message says and I\u0027m pretty sure it breaks the unittest build on some configurations.",
+      "revId": "ddc1d9d5ecd542dfc3f4bd13e64a7044f6206560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
