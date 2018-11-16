@@ -341,15 +341,14 @@ int main(int argc, char **argv)
 		exit(1);
 	}
 
-	if (shm_id >= 0) {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, shm_id);
-	} else {
-		snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
-	}
-
 	if (file_name) {
 		fd = open(file_name, O_RDONLY);
 	} else {
+		if (shm_id >= 0) {
+			snprintf(shm_name, sizeof(shm_name), "/%s_trace.%d", app_name, shm_id);
+		} else {
+			snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
+		}
 		fd = shm_open(shm_name, O_RDONLY, 0600);
 	}
 	if (fd < 0) {
