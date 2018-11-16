@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "574c9119_674c9292",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-16T17:39:46Z",
+      "side": 1,
+      "message": "This is actually core 8 (the original docs were wrong too, but let\u0027s fix it here).",
+      "revId": "6ce38ffe1969be45e3d81094ee67040f335ba98c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
