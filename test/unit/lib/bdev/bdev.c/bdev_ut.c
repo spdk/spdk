@@ -59,6 +59,8 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *sh
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
+int g_status;
+
 static void
 _bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -1399,6 +1401,58 @@ bdev_io_alignment(void)
 	free(buf);
 }
 
+
+static void
+histogram_status_cb(void *cb_arg, int status)
+{
+	g_status = status;
+}
+
+static void
+histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	g_status = status;
+}
+
+static void
+bdev_histograms(void)
+{
+	struct spdk_bdev *bdev;
+
+	bdev = allocate_bdev("bdev");
+
+	spdk_histogram_enable(bdev, histogram_status_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram != NULL);
+
+
+	/* TODO: Do some IO */
+
+	spdk_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram != NULL);
+
+	spdk_histogram_reset(bdev, histogram_status_cb, NULL);
+
+	/* Check if histogram is zeroed */
+	spdk_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram != NULL);
+
+	spdk_histogram_disable(bdev, histogram_status_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram != NULL);
+
+	/* Try to run histogram commands on disabled bdev */
+	spdk_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == -EOPNOTSUPP);
+
+	spdk_histogram_reset(bdev, histogram_status_cb, NULL);
+	CU_ASSERT(g_status == -EOPNOTSUPP);
+
+	free(bdev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1426,7 +1480,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
 		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
-		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL
+		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
+		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
