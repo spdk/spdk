@@ -218,12 +218,15 @@ _initialize_vol_pm_pointers(struct spdk_reduce_vol *vol)
 	vol->pm_chunk_maps = vol->pm_logical_map + (vol->params.vol_size / vol->params.chunk_size);
 }
 
+/* We need 2 iovs during load - one for the superblock, another for the path */
+#define LOAD_IOV_COUNT	2
+
 struct reduce_init_load_ctx {
 	struct spdk_reduce_vol			*vol;
 	struct spdk_reduce_vol_cb_args		backing_cb_args;
 	spdk_reduce_vol_op_with_handle_complete	cb_fn;
 	void					*cb_arg;
-	struct iovec				iov[2];
+	struct iovec				iov[LOAD_IOV_COUNT];
 	void					*path;
 };
 
@@ -335,6 +338,12 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	 */
 	max_dir_len = REDUCE_PATH_MAX - SPDK_UUID_STRING_LEN - 1;
 	dir_len = strnlen(pm_file_dir, max_dir_len);
+	/* Strip trailing slash if the user provided one - we will add it back
+	 * later when appending the filename.
+	 */
+	if (pm_file_dir[dir_len - 1] == '/') {
+		dir_len--;
+	}
 	if (dir_len == max_dir_len) {
 		SPDK_ERRLOG("pm_file_dir (%s) too long\n", pm_file_dir);
 		cb_fn(cb_arg, NULL, -EINVAL);
@@ -595,7 +604,7 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	load_ctx->iov[1].iov_len = REDUCE_PATH_MAX;
 	load_ctx->backing_cb_args.cb_fn = _load_read_super_and_path_cpl;
 	load_ctx->backing_cb_args.cb_arg = load_ctx;
-	vol->backing_dev->readv(vol->backing_dev, load_ctx->iov, 2, 0,
+	vol->backing_dev->readv(vol->backing_dev, load_ctx->iov, LOAD_IOV_COUNT, 0,
 				(sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
 				vol->backing_dev->blocklen,
 				&load_ctx->backing_cb_args);
