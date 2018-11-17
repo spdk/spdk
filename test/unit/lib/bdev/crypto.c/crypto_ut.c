@@ -398,20 +398,6 @@ test_error_paths(void)
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	ut_rte_crypto_op_bulk_alloc = 1;
 
-	/* test failure of rte_cryptodev_sym_session_create() */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	MOCK_SET(rte_cryptodev_sym_session_create, NULL);
-	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_SET(rte_cryptodev_sym_session_create, (struct rte_cryptodev_sym_session *)1);
-
-	/* test failure of rte_cryptodev_sym_session_init() */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	MOCK_SET(rte_cryptodev_sym_session_init, -1);
-	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_SET(rte_cryptodev_sym_session_init, 0);
-
 	/* test failure of rte_crypto_op_attach_sym_session() */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	ut_rte_crypto_op_attach_sym_session = -1;
@@ -437,7 +423,6 @@ test_simple_write(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 1);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT);
 	CU_ASSERT(g_io_ctx->cry_iov.iov_len == 512);
 	CU_ASSERT(g_io_ctx->cry_iov.iov_base != NULL);
 	CU_ASSERT(g_io_ctx->cry_offset_blocks == 0);
@@ -472,7 +457,6 @@ test_simple_read(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 1);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_DECRYPT);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->buf_addr == &test_simple_read);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->data_len == 512);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_src->next == NULL);
@@ -505,7 +489,6 @@ test_large_rw(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == (int)num_blocks);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_DECRYPT);
 
 	for (i = 0; i < num_blocks; i++) {
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->buf_addr == &test_large_rw + (i * block_len));
@@ -531,7 +514,6 @@ test_large_rw(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == (int)num_blocks);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT);
 
 	for (i = 0; i < num_blocks; i++) {
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->buf_addr == &test_large_rw + (i * block_len));
@@ -578,7 +560,6 @@ test_dev_full(void)
 
 	/* this test only completes one of the 2 IOs (in the drain path) */
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == 1);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_DECRYPT);
 
 	for (i = 0; i < num_blocks; i++) {
 		/* One of the src_mbufs was freed because of the device full condition so
@@ -622,7 +603,6 @@ test_crazy_rw(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == num_blocks);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_DECRYPT);
 
 	for (i = 0; i < num_blocks; i++) {
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->buf_addr == &test_crazy_rw + (i * block_len));
@@ -657,7 +637,6 @@ test_crazy_rw(void)
 	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(g_io_ctx->cryop_cnt_remaining == num_blocks);
-	CU_ASSERT(g_io_ctx->crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT);
 
 	for (i = 0; i < num_blocks; i++) {
 		CU_ASSERT(g_test_crypto_ops[i]->sym->m_src->buf_addr == &test_crazy_rw + (i * block_len));
