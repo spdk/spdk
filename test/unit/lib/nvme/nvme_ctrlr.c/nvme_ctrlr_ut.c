@@ -39,7 +39,7 @@
 
 #include "common/lib/test_env.c"
 
-struct spdk_trace_flag SPDK_LOG_NVME = {
+struct spdk_log_flag SPDK_LOG_NVME = {
 	.name = "nvme",
 	.enabled = false,
 };
