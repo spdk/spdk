@@ -653,14 +653,18 @@ memory_hotplug_cb(enum rte_mem_event event_type,
 		  const void *addr, size_t len, void *arg)
 {
 	if (event_type == RTE_MEM_EVENT_ALLOC) {
+		spdk_mem_register((void *)addr, len);
+
+		/* Now mark each segment so that DPDK won't later free it.
+		 * This ensures we don't have to deal with the memory
+		 * getting freed in different units than it was allocated.
+		 */
 		while (len > 0) {
 			struct rte_memseg *seg;
 
 			seg = rte_mem_virt2memseg(addr, NULL);
 			assert(seg != NULL);
-			assert(len >= seg->hugepage_sz);
-
-			spdk_mem_register((void *)seg->addr, seg->hugepage_sz);
+			seg->flags |= RTE_MEMSEG_FLAG_DO_NOT_FREE;
 			addr = (void *)((uintptr_t)addr + seg->hugepage_sz);
 			len -= seg->hugepage_sz;
 		}
