@@ -1192,7 +1192,6 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 		   const char *crypto_pmd, const char *key)
 {
 	struct spdk_bdev *bdev = NULL;
-	struct vbdev_crypto *crypto_bdev, *tmp;
 	int rc = 0;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
@@ -1209,23 +1208,6 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 	rc = vbdev_crypto_claim(bdev);
 	if (rc) {
 		return rc;
-	}
-
-	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
-		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
-			rc = spdk_vbdev_register(&crypto_bdev->crypto_bdev,
-						 &crypto_bdev->base_bdev, 1);
-			if (rc) {
-				SPDK_ERRLOG("could not register crypto_bdev\n");
-				spdk_bdev_close(crypto_bdev->base_desc);
-				TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
-				spdk_io_device_unregister(crypto_bdev, NULL);
-				free(crypto_bdev->crypto_bdev.name);
-				free(crypto_bdev->key);
-				free(crypto_bdev);
-			}
-			break;
-		}
 	}
 
 	return rc;
@@ -1544,12 +1526,19 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_session_init;
 		}
 
-		SPDK_NOTICELOG("registered io_device for: %s\n", name->vbdev_name);
+		rc = spdk_vbdev_register(&vbdev->crypto_bdev, &vbdev->base_bdev, 1);
+		if (rc < 0) {
+			SPDK_ERRLOG("ERROR trying to register vbdev\n");
+			rc = -EINVAL;
+			goto error_vbdev_register;
+		}
+		SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", name->vbdev_name);
 	}
 
 	return rc;
 
 	/* Error cleanup paths. */
+error_vbdev_register:
 error_session_init:
 	rte_cryptodev_sym_session_free(vbdev->session_decrypt);
 error_session_de_create:
@@ -1614,30 +1603,12 @@ delete_crypto_disk(struct spdk_bdev *bdev, spdk_delete_crypto_complete cb_fn,
 static void
 vbdev_crypto_examine(struct spdk_bdev *bdev)
 {
-	struct vbdev_crypto *crypto_bdev, *tmp;
 	int rc;
 
 	rc = vbdev_crypto_claim(bdev);
 	if (rc) {
 		spdk_bdev_module_examine_done(&crypto_if);
 		return;
-	}
-
-	TAILQ_FOREACH_SAFE(crypto_bdev, &g_vbdev_crypto, link, tmp) {
-		if (strcmp(crypto_bdev->base_bdev->name, bdev->name) == 0) {
-			rc = spdk_vbdev_register(&crypto_bdev->crypto_bdev,
-						 &crypto_bdev->base_bdev, 1);
-			if (rc) {
-				SPDK_ERRLOG("could not register crypto_bdev\n");
-				spdk_bdev_close(crypto_bdev->base_desc);
-				TAILQ_REMOVE(&g_vbdev_crypto, crypto_bdev, link);
-				spdk_io_device_unregister(crypto_bdev, NULL);
-				free(crypto_bdev->crypto_bdev.name);
-				free(crypto_bdev->key);
-				free(crypto_bdev);
-			}
-			break;
-		}
 	}
 
 	spdk_bdev_module_examine_done(&crypto_if);
