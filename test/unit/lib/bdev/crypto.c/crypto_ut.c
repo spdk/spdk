@@ -398,20 +398,6 @@ test_error_paths(void)
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
 	ut_rte_crypto_op_bulk_alloc = 1;
 
-	/* test failure of rte_cryptodev_sym_session_create() */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	MOCK_SET(rte_cryptodev_sym_session_create, NULL);
-	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_SET(rte_cryptodev_sym_session_create, (struct rte_cryptodev_sym_session *)1);
-
-	/* test failure of rte_cryptodev_sym_session_init() */
-	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	MOCK_SET(rte_cryptodev_sym_session_init, -1);
-	vbdev_crypto_submit_request(g_io_ch, g_bdev_io);
-	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);
-	MOCK_SET(rte_cryptodev_sym_session_init, 0);
-
 	/* test failure of rte_crypto_op_attach_sym_session() */
 	g_bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	ut_rte_crypto_op_attach_sym_session = -1;

@@ -39,6 +39,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/bdev_module.h"
 
+
 #include <rte_config.h>
 #include <rte_bus_vdev.h>
 #include <rte_crypto.h>
@@ -104,7 +105,7 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
  */
 #define NUM_MBUFS		32768
 #define POOL_CACHE_SIZE		256
-#define NUM_SESSIONS		NUM_MBUFS
+#define NUM_SESSIONS		1024
 #define SESS_MEMPOOL_CACHE_SIZE 256
 
 /* This is the max number of IOs we can supply to any crypto device QP at one time.
@@ -151,6 +152,9 @@ struct vbdev_crypto {
 	struct spdk_bdev		crypto_bdev;		/* the crypto virtual bdev */
 	uint8_t				*key;			/* key per bdev */
 	char				*drv_name;		/* name of the crypto device driver */
+	struct rte_cryptodev_sym_session *session_encrypt;	/* encryption session for this bdev */
+	struct rte_cryptodev_sym_session *session_decrypt;	/* decryption session for this bdev */
+	struct rte_crypto_sym_xform	cipher_xform;		/* crypto control struct for this bdev */
 	TAILQ_ENTRY(vbdev_crypto)	link;
 };
 static TAILQ_HEAD(, vbdev_crypto) g_vbdev_crypto = TAILQ_HEAD_INITIALIZER(g_vbdev_crypto);
@@ -180,7 +184,6 @@ struct crypto_bdev_io {
 	struct crypto_io_channel *crypto_ch;		/* need to store for crypto completion handling */
 	struct vbdev_crypto *crypto_bdev;		/* the crypto node struct associated with this IO */
 	enum rte_crypto_cipher_operation crypto_op;	/* the crypto control struct */
-	struct rte_crypto_sym_xform	cipher_xform;	/* crypto control struct for this IO */
 	struct spdk_bdev_io *orig_io;			/* the original IO */
 	struct spdk_bdev_io *read_io;			/* the read IO we issued */
 
@@ -240,7 +243,7 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 	}
 
-	g_session_mp = spdk_mempool_create("session_mp", NUM_SESSIONS * 2, max_sess_size,
+	g_session_mp = spdk_mempool_create("session_mp", NUM_SESSIONS, max_sess_size,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					   SPDK_ENV_SOCKET_ID_ANY);
 	if (g_session_mp == NULL) {
@@ -497,10 +500,6 @@ crypto_dev_poller(void *args)
 
 			/* Complete the IO */
 			_crypto_operation_complete(bdev_io);
-
-			/* Return session */
-			rte_cryptodev_sym_session_clear(cdev_id, dequeued_ops[i]->sym->session);
-			rte_cryptodev_sym_session_free(dequeued_ops[i]->sym->session);
 		}
 	}
 
@@ -532,7 +531,6 @@ crypto_dev_poller(void *args)
 static int
 _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation crypto_op)
 {
-	struct rte_cryptodev_sym_session *session;
 	uint16_t num_enqueued_ops = 0;
 	uint32_t cryop_cnt = bdev_io->u.bdev.num_blocks;
 	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
@@ -586,32 +584,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		SPDK_ERRLOG("ERROR trying to get crypto ops!\n");
 		rc = -ENOMEM;
 		goto error_get_ops;
-	}
-
-	/* Get sessions. */
-	session = rte_cryptodev_sym_session_create((struct rte_mempool *)g_session_mp);
-	if (NULL == session) {
-		SPDK_ERRLOG("ERROR trying to create crypto session!\n");
-		rc = -EINVAL;
-		goto error_session_create;
-	}
-
-	/* Init our session with the desired cipher options. */
-	io_ctx->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
-	io_ctx->cipher_xform.cipher.key.data = io_ctx->crypto_bdev->key;
-	io_ctx->cipher_xform.cipher.op = io_ctx->crypto_op = crypto_op;
-	io_ctx->cipher_xform.cipher.iv.offset = IV_OFFSET;
-	io_ctx->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
-	io_ctx->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
-	io_ctx->cipher_xform.cipher.iv.length = AES_CBC_IV_LENGTH;
-
-	rc = rte_cryptodev_sym_session_init(cdev_id, session,
-					    &io_ctx->cipher_xform,
-					    (struct rte_mempool *)g_session_mp);
-	if (rc < 0) {
-		SPDK_ERRLOG("ERROR trying to init crypto session!\n");
-		rc = -EINVAL;
-		goto error_session_init;
 	}
 
 	/* For encryption, we need to prepare a single contiguous buffer as the encryption
@@ -695,13 +667,25 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 			en_offset += crypto_len;
 			dst_mbufs[crypto_index]->next = NULL;
-		}
 
-		/* Attach the crypto session to the operation */
-		rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index], session);
-		if (rc) {
-			rc = -EINVAL;
-			goto error_attach_session;
+			/* Attach the crypto session to the operation */
+			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
+							      io_ctx->crypto_bdev->session_encrypt);
+			if (rc) {
+				rc = -EINVAL;
+				goto error_attach_session;
+			}
+
+		} else {
+			/* Attach the crypto session to the operation */
+			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
+							      io_ctx->crypto_bdev->session_decrypt);
+			if (rc) {
+				rc = -EINVAL;
+				goto error_attach_session;
+			}
+
+
 		}
 
 		/* Subtract our running totals for the op in progress and the overall bdev io */
@@ -755,10 +739,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	/* Error cleanup paths. */
 error_attach_session:
 error_get_write_buffer:
-error_session_init:
-	rte_cryptodev_sym_session_clear(cdev_id, session);
-	rte_cryptodev_sym_session_free(session);
-error_session_create:
 	rte_mempool_put_bulk(g_crypto_op_mp, (void **)crypto_ops, cryop_cnt);
 	allocated = 0;
 error_get_ops:
@@ -981,6 +961,8 @@ _device_unregister_cb(void *io_device)
 	struct vbdev_crypto *crypto_bdev = io_device;
 
 	/* Done with this crypto_bdev. */
+	rte_cryptodev_sym_session_free(crypto_bdev->session_decrypt);
+	rte_cryptodev_sym_session_free(crypto_bdev->session_encrypt);
 	free(crypto_bdev->drv_name);
 	free(crypto_bdev->key);
 	free(crypto_bdev->crypto_bdev.name);
@@ -1422,6 +1404,8 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 {
 	struct bdev_names *name;
 	struct vbdev_crypto *vbdev;
+	struct vbdev_dev *device;
+	bool found = false;
 	int rc = 0;
 
 	/* Check our list of names from config versus this bdev and if
@@ -1503,12 +1487,75 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_claim;
 		}
 
+
+		/* To init the session we have to get the cryptoDev device ID for this vbdev */
+		TAILQ_FOREACH(device, &g_vbdev_devs, link) {
+			if (strcmp(device->cdev_info.driver_name, vbdev->drv_name) == 0) {
+				found = true;
+				break;
+			}
+		}
+		if (found == false) {
+			SPDK_ERRLOG("ERROR can't match crypto device driver to crypto vbdev!\n");
+			rc = -EINVAL;
+			goto error_cant_find_devid;
+		}
+
+		/* Get sessions. */
+		vbdev->session_encrypt = rte_cryptodev_sym_session_create((struct rte_mempool *)g_session_mp);
+		if (NULL == vbdev->session_encrypt) {
+			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
+			rc = -EINVAL;
+			goto error_session_en_create;
+		}
+
+		vbdev->session_decrypt = rte_cryptodev_sym_session_create((struct rte_mempool *)g_session_mp);
+		if (NULL == vbdev->session_decrypt) {
+			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
+			rc = -EINVAL;
+			goto error_session_de_create;
+		}
+
+		/* Init our per vbdev xform with the desired cipher options. */
+		vbdev->cipher_xform.type = RTE_CRYPTO_SYM_XFORM_CIPHER;
+		vbdev->cipher_xform.cipher.key.data = vbdev->key;
+		vbdev->cipher_xform.cipher.iv.offset = IV_OFFSET;
+		vbdev->cipher_xform.cipher.algo = RTE_CRYPTO_CIPHER_AES_CBC;
+		vbdev->cipher_xform.cipher.key.length = AES_CBC_KEY_LENGTH;
+		vbdev->cipher_xform.cipher.iv.length = AES_CBC_IV_LENGTH;
+
+		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
+		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_encrypt,
+						    &vbdev->cipher_xform,
+						    (struct rte_mempool *)g_session_mp);
+		if (rc < 0) {
+			SPDK_ERRLOG("ERROR trying to init encrypt session!\n");
+			rc = -EINVAL;
+			goto error_session_init;
+		}
+
+		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_DECRYPT;
+		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_decrypt,
+						    &vbdev->cipher_xform,
+						    (struct rte_mempool *)g_session_mp);
+		if (rc < 0) {
+			SPDK_ERRLOG("ERROR trying to init decrypt session!\n");
+			rc = -EINVAL;
+			goto error_session_init;
+		}
+
 		SPDK_NOTICELOG("registered io_device for: %s\n", name->vbdev_name);
 	}
 
 	return rc;
 
 	/* Error cleanup paths. */
+error_session_init:
+	rte_cryptodev_sym_session_free(vbdev->session_decrypt);
+error_session_de_create:
+	rte_cryptodev_sym_session_free(vbdev->session_encrypt);
+error_session_en_create:
+error_cant_find_devid:
 error_claim:
 	spdk_bdev_close(vbdev->base_desc);
 error_open:
