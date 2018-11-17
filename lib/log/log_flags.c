@@ -35,7 +35,7 @@
 
 #include "spdk_internal/log.h"
 
-static TAILQ_HEAD(, spdk_trace_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
+static TAILQ_HEAD(, spdk_log_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
 
 enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
@@ -78,10 +78,10 @@ spdk_log_get_backtrace_level(void) {
 	return g_spdk_log_backtrace_level;
 }
 
-static struct spdk_trace_flag *
+static struct spdk_log_flag *
 get_trace_flag(const char *name)
 {
-	struct spdk_trace_flag *flag;
+	struct spdk_log_flag *flag;
 
 	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
 		if (strcasecmp(name, flag->name) == 0) {
@@ -93,18 +93,18 @@ get_trace_flag(const char *name)
 }
 
 void
-spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
+spdk_log_register_trace_flag(const char *name, struct spdk_log_flag *flag)
 {
-	struct spdk_trace_flag *iter;
+	struct spdk_log_flag *iter;
 
 	if (name == NULL || flag == NULL) {
-		SPDK_ERRLOG("missing spdk_trace_flag parameters\n");
+		SPDK_ERRLOG("missing spdk_log_flag parameters\n");
 		assert(false);
 		return;
 	}
 
 	if (get_trace_flag(name)) {
-		SPDK_ERRLOG("duplicate spdk_trace_flag '%s'\n", name);
+		SPDK_ERRLOG("duplicate spdk_log_flag '%s'\n", name);
 		assert(false);
 		return;
 	}
@@ -122,7 +122,7 @@ spdk_log_register_trace_flag(const char *name, struct spdk_trace_flag *flag)
 bool
 spdk_log_get_trace_flag(const char *name)
 {
-	struct spdk_trace_flag *flag = get_trace_flag(name);
+	struct spdk_log_flag *flag = get_trace_flag(name);
 
 	if (flag && flag->enabled) {
 		return true;
@@ -134,7 +134,7 @@ spdk_log_get_trace_flag(const char *name)
 static int
 set_trace_flag(const char *name, bool value)
 {
-	struct spdk_trace_flag *flag;
+	struct spdk_log_flag *flag;
 
 	if (strcasecmp(name, "all") == 0) {
 		TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
@@ -165,14 +165,14 @@ spdk_log_clear_trace_flag(const char *name)
 	return set_trace_flag(name, false);
 }
 
-struct spdk_trace_flag *
+struct spdk_log_flag *
 spdk_log_get_first_trace_flag(void)
 {
 	return TAILQ_FIRST(&g_trace_flags);
 }
 
-struct spdk_trace_flag *
-spdk_log_get_next_trace_flag(struct spdk_trace_flag *flag)
+struct spdk_log_flag *
+spdk_log_get_next_trace_flag(struct spdk_log_flag *flag)
 {
 	return TAILQ_NEXT(flag, tailq);
 }
@@ -181,7 +181,7 @@ void
 spdk_tracelog_usage(FILE *f, const char *trace_arg)
 {
 #ifdef DEBUG
-	struct spdk_trace_flag *flag;
+	struct spdk_log_flag *flag;
 	fprintf(f, " %s, --traceflag <flag>    enable debug log flag (all", trace_arg);
 
 	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {

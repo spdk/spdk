@@ -310,7 +310,7 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
-	struct spdk_trace_flag *flag;
+	struct spdk_log_flag *flag;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
