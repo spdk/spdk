@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfdeb4ca_c251b1c5",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-17T00:11:50Z",
+      "side": 1,
+      "message": "This is equal to cnt \u003d 262144 / 2.\n\nDividing by 2 meant two sockets originally?\n\nThis patch will aggregate per socket pools to single global pool.\nHence this should be cnt \u003d 262144?\n\nAnd if so, inlining _spdk_reactor_get_max_event_cnt() into spdk_reactors_init() is possible? (because cnt \u003d 262144 - 1.) It\u0027s OK if we should keep this function for now.",
+      "range": {
+        "startLine": 220,
+        "startChar": 16,
+        "endLine": 220,
+        "endChar": 34
+      },
+      "revId": "0413f4fed3c57a56b4524add8e8e20d27c86ec5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
