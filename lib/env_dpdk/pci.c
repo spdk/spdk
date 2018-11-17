@@ -48,9 +48,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	int rc;
 
 	if (!ctx->cb_fn) {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-		rte_pci_unmap_device(device);
-#elif RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
+#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
 		rte_eal_pci_unmap_device(device);
 #endif
 
