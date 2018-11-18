@@ -53,6 +53,10 @@ extern struct rte_pci_bus rte_pci_bus;
 #endif
 #include <rte_dev.h>
 
+#if RTE_VERSION < RTE_VERSION_NUM(16, 11, 0, 0)
+#error RTE_VERSION is too old! Minimum 16.11 is required.
+#endif
+
 /* x86-64 and ARM userspace virtual addresses use only the low 48 bits [0..47],
  * which is enough to cover 256 TB.
  */
