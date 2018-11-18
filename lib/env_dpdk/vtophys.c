@@ -103,7 +103,6 @@ static struct vfio_cfg g_vfio = {
 struct spdk_vtophys_pci_device {
 	struct rte_pci_device *pci_device;
 	TAILQ_ENTRY(spdk_vtophys_pci_device) tailq;
-	uint64_t ref;
 };
 
 static pthread_mutex_t g_vtophys_pci_devices_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -518,26 +517,15 @@ void
 spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 {
 	struct spdk_vtophys_pci_device *vtophys_dev;
-	bool found = false;
 
 	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
-	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
-		if (vtophys_dev->pci_device == pci_device) {
-			vtophys_dev->ref++;
-			found = true;
-			break;
-		}
-	}
 
-	if (!found) {
-		vtophys_dev = calloc(1, sizeof(*vtophys_dev));
-		if (vtophys_dev) {
-			vtophys_dev->pci_device = pci_device;
-			vtophys_dev->ref = 1;
-			TAILQ_INSERT_TAIL(&g_vtophys_pci_devices, vtophys_dev, tailq);
-		} else {
-			DEBUG_PRINT("Memory allocation error\n");
-		}
+	vtophys_dev = calloc(1, sizeof(*vtophys_dev));
+	if (vtophys_dev) {
+		vtophys_dev->pci_device = pci_device;
+		TAILQ_INSERT_TAIL(&g_vtophys_pci_devices, vtophys_dev, tailq);
+	} else {
+		DEBUG_PRINT("Memory allocation error\n");
 	}
 	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
 
@@ -579,11 +567,8 @@ spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
 	TAILQ_FOREACH(vtophys_dev, &g_vtophys_pci_devices, tailq) {
 		if (vtophys_dev->pci_device == pci_device) {
-			assert(vtophys_dev->ref > 0);
-			if (--vtophys_dev->ref == 0) {
-				TAILQ_REMOVE(&g_vtophys_pci_devices, vtophys_dev, tailq);
-				free(vtophys_dev);
-			}
+			TAILQ_REMOVE(&g_vtophys_pci_devices, vtophys_dev, tailq);
+			free(vtophys_dev);
 			break;
 		}
 	}
