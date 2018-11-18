@@ -41,45 +41,72 @@
 #define PCI_EXT_CAP_ID_SN	0x03
 
 static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
+static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
 
 int
 spdk_pci_device_init(struct rte_pci_driver *driver,
-		     struct rte_pci_device *device)
+		     struct rte_pci_device *_dev)
 {
 	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
+	struct spdk_pci_device *dev;
 	int rc;
 
 	if (!ctx->cb_fn) {
 #if RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
-		rte_eal_pci_unmap_device(device);
+		rte_eal_pci_unmap_device(_dev);
 #endif
 		/* Return a positive value to indicate that this device does not belong to this driver, but
 		 * this isn't an error. */
 		return 1;
 	}
 
-	rc = ctx->cb_fn(ctx->cb_arg, (struct spdk_pci_device *)device);
+	dev = calloc(1, sizeof(*dev));
+	if (dev == NULL) {
+		return -1;
+	}
+
+	dev->dev_handle = _dev;
+
+	rc = ctx->cb_fn(ctx->cb_arg, dev);
 	if (rc != 0) {
+		free(dev);
 		return rc;
 	}
 
-	spdk_vtophys_pci_device_added(device);
+	TAILQ_INSERT_TAIL(&g_pci_devices, dev, tailq);
+	spdk_vtophys_pci_device_added(dev->dev_handle);
 	return 0;
 }
 
 int
-spdk_pci_device_fini(struct rte_pci_device *device)
+spdk_pci_device_fini(struct rte_pci_device *_dev)
 {
-	spdk_vtophys_pci_device_removed(device);
+	struct spdk_pci_device *dev;
+
+	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
+		if (dev->dev_handle == _dev) {
+			break;
+		}
+	}
+
+	if (dev == NULL) {
+		return -1;
+	}
+
+	spdk_vtophys_pci_device_removed(dev->dev_handle);
+	TAILQ_REMOVE(&g_pci_devices, dev, tailq);
+	free(dev);
 	return 0;
+
 }
 
 void
-spdk_pci_device_detach(struct spdk_pci_device *device)
+spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	rte_eal_hotplug_remove("pci", device->device.name);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
+	struct rte_pci_device *device = dev->dev_handle;
 	struct spdk_pci_addr	addr;
 	char			bdf[32];
 
@@ -201,7 +228,7 @@ int
 spdk_pci_device_map_bar(struct spdk_pci_device *device, uint32_t bar,
 			void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
 {
-	struct rte_pci_device *dev = device;
+	struct rte_pci_device *dev = device->dev_handle;
 
 	*mapped_addr = dev->mem_resource[bar].addr;
 	*phys_addr = (uint64_t)dev->mem_resource[bar].phys_addr;
@@ -219,49 +246,49 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *ad
 uint32_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
 {
-	return dev->addr.domain;
+	return dev->dev_handle->addr.domain;
 }
 
 uint8_t
 spdk_pci_device_get_bus(struct spdk_pci_device *dev)
 {
-	return dev->addr.bus;
+	return dev->dev_handle->addr.bus;
 }
 
 uint8_t
 spdk_pci_device_get_dev(struct spdk_pci_device *dev)
 {
-	return dev->addr.devid;
+	return dev->dev_handle->addr.devid;
 }
 
 uint8_t
 spdk_pci_device_get_func(struct spdk_pci_device *dev)
 {
-	return dev->addr.function;
+	return dev->dev_handle->addr.function;
 }
 
 uint16_t
 spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
 {
-	return dev->id.vendor_id;
+	return dev->dev_handle->id.vendor_id;
 }
 
 uint16_t
 spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
 {
-	return dev->id.device_id;
+	return dev->dev_handle->id.device_id;
 }
 
 uint16_t
 spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
 {
-	return dev->id.subsystem_vendor_id;
+	return dev->dev_handle->id.subsystem_vendor_id;
 }
 
 uint16_t
 spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 {
-	return dev->id.subsystem_device_id;
+	return dev->dev_handle->id.subsystem_device_id;
 }
 
 struct spdk_pci_id
@@ -278,9 +305,9 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 }
 
 int
-spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
+spdk_pci_device_get_socket_id(struct spdk_pci_device *dev)
 {
-	return pci_dev->device.numa_node;
+	return dev->dev_handle->device.numa_node;
 }
 
 int
@@ -289,9 +316,9 @@ spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len,
 	int rc;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	rc = rte_pci_read_config(dev, value, len, offset);
+	rc = rte_pci_read_config(dev->dev_handle, value, len, offset);
 #else
-	rc = rte_eal_pci_read_config(dev, value, len, offset);
+	rc = rte_eal_pci_read_config(dev->dev_handle, value, len, offset);
 #endif
 
 #if defined(__FreeBSD__) && RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
@@ -307,9 +334,9 @@ spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len
 	int rc;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	rc = rte_pci_write_config(dev, value, len, offset);
+	rc = rte_pci_write_config(dev->dev_handle, value, len, offset);
 #else
-	rc = rte_eal_pci_write_config(dev, value, len, offset);
+	rc = rte_eal_pci_write_config(dev->dev_handle, value, len, offset);
 #endif
 
 #ifdef __FreeBSD__
