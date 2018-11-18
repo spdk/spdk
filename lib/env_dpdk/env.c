@@ -33,7 +33,7 @@
 
 #include "spdk/stdinc.h"
 
-#include "spdk/env.h"
+#include "env_internal.h"
 
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -246,9 +246,7 @@ spdk_mempool_get_name(struct spdk_mempool *mp)
 void
 spdk_mempool_free(struct spdk_mempool *mp)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
 	rte_mempool_free((struct rte_mempool *)mp);
-#endif
 }
 
 void *
@@ -285,11 +283,7 @@ spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count)
 size_t
 spdk_mempool_count(const struct spdk_mempool *pool)
 {
-#if RTE_VERSION < RTE_VERSION_NUM(16, 7, 0, 1)
-	return rte_mempool_count((struct rte_mempool *)pool);
-#else
 	return rte_mempool_avail_count((struct rte_mempool *)pool);
-#endif
 }
 
 bool

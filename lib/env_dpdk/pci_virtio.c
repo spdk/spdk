@@ -49,15 +49,9 @@ static struct spdk_pci_enum_ctx g_virtio_pci_drv = {
 #endif
 		,
 		.id_table	= virtio_pci_driver_id,
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,
 		.remove		= spdk_pci_device_fini,
 		.driver.name	= "spdk_virtio",
-#else
-		.devinit	= spdk_pci_device_init,
-		.devuninit	= spdk_pci_device_fini,
-		.name		= "spdk_virtio",
-#endif
 	},
 
 	.cb_fn = NULL,

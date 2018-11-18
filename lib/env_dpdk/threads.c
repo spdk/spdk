@@ -31,7 +31,7 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/env.h"
+#include "env_internal.h"
 
 #include <rte_config.h>
 #include <rte_lcore.h>
