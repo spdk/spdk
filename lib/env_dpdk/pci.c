@@ -40,6 +40,8 @@
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 
+static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
+
 int
 spdk_pci_device_init(struct rte_pci_driver *driver,
 		     struct rte_pci_device *device)
@@ -122,7 +124,7 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 	addr.function = pci_address->func;
 #endif
 
-	pthread_mutex_lock(&ctx->mtx);
+	pthread_mutex_lock(&g_pci_mutex);
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
@@ -147,13 +149,13 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 #endif
 		ctx->cb_arg = NULL;
 		ctx->cb_fn = NULL;
-		pthread_mutex_unlock(&ctx->mtx);
+		pthread_mutex_unlock(&g_pci_mutex);
 		return -1;
 	}
 
 	ctx->cb_arg = NULL;
 	ctx->cb_fn = NULL;
-	pthread_mutex_unlock(&ctx->mtx);
+	pthread_mutex_unlock(&g_pci_mutex);
 
 	return 0;
 }
@@ -167,7 +169,7 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
-	pthread_mutex_lock(&ctx->mtx);
+	pthread_mutex_lock(&g_pci_mutex);
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
@@ -190,13 +192,13 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 #endif
 		ctx->cb_arg = NULL;
 		ctx->cb_fn = NULL;
-		pthread_mutex_unlock(&ctx->mtx);
+		pthread_mutex_unlock(&g_pci_mutex);
 		return -1;
 	}
 
 	ctx->cb_arg = NULL;
 	ctx->cb_fn = NULL;
-	pthread_mutex_unlock(&ctx->mtx);
+	pthread_mutex_unlock(&g_pci_mutex);
 
 	return 0;
 }

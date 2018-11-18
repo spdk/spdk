@@ -62,7 +62,6 @@ static struct spdk_pci_enum_ctx g_virtio_pci_drv = {
 
 	.cb_fn = NULL,
 	.cb_arg = NULL,
-	.mtx = PTHREAD_MUTEX_INITIALIZER,
 	.is_registered = false,
 };
 
