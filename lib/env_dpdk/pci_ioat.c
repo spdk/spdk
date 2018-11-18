@@ -92,15 +92,9 @@ static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
 	.driver = {
 		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
 		.id_table	= ioat_driver_id,
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,
 		.remove		= spdk_pci_device_fini,
 		.driver.name	= "spdk_ioat",
-#else
-		.devinit	= spdk_pci_device_init,
-		.devuninit	= spdk_pci_device_fini,
-		.name		= "spdk_ioat",
-#endif
 	},
 
 	.cb_fn = NULL,
