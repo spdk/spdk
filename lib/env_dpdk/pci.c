@@ -50,10 +50,9 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	int rc;
 
 	if (!ctx->cb_fn) {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0) && RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
+#if RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
 		rte_eal_pci_unmap_device(device);
 #endif
-
 		/* Return a positive value to indicate that this device does not belong to this driver, but
 		 * this isn't an error. */
 		return 1;
@@ -78,12 +77,6 @@ spdk_pci_device_fini(struct rte_pci_device *device)
 void
 spdk_pci_device_detach(struct spdk_pci_device *device)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
-#if RTE_VERSION < RTE_VERSION_NUM(17, 05, 0, 0)
-	rte_eal_device_remove(&device->device);
-#endif
-#endif
-
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	rte_eal_hotplug_remove("pci", device->device.name);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
@@ -102,6 +95,7 @@ spdk_pci_device_detach(struct spdk_pci_device *device)
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	rte_pci_detach(&device->addr);
 #else
+	rte_eal_device_remove(&device->device);
 	rte_eal_pci_detach(&device->addr);
 #endif
 }
@@ -286,11 +280,7 @@ spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
 int
 spdk_pci_device_get_socket_id(struct spdk_pci_device *pci_dev)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 	return pci_dev->device.numa_node;
-#else
-	return pci_dev->numa_node;
-#endif
 }
 
 int
