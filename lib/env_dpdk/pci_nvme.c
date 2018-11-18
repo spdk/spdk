@@ -36,7 +36,6 @@
 #include "spdk/pci_ids.h"
 
 static struct rte_pci_id nvme_pci_driver_id[] = {
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 7, 0, 1)
 	{
 		.class_id = SPDK_PCI_CLASS_NVME,
 		.vendor_id = PCI_ANY_ID,
@@ -44,9 +43,6 @@ static struct rte_pci_id nvme_pci_driver_id[] = {
 		.subsystem_vendor_id = PCI_ANY_ID,
 		.subsystem_device_id = PCI_ANY_ID,
 	},
-#else
-	{RTE_PCI_DEVICE(0x8086, 0x0953)},
-#endif
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
@@ -58,15 +54,9 @@ static struct spdk_pci_enum_ctx g_nvme_pci_drv = {
 #endif
 		,
 		.id_table	= nvme_pci_driver_id,
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 0)
 		.probe		= spdk_pci_device_init,
 		.remove		= spdk_pci_device_fini,
 		.driver.name	= "spdk_nvme",
-#else
-		.devinit	= spdk_pci_device_init,
-		.devuninit	= spdk_pci_device_fini,
-		.name		= "spdk_nvme",
-#endif
 	},
 
 	.cb_fn = NULL,
