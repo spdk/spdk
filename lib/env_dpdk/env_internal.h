@@ -36,8 +36,6 @@
 
 #include "spdk/stdinc.h"
 
-#define spdk_pci_device rte_pci_device
-
 #include "spdk/env.h"
 
 #include <rte_config.h>
@@ -73,6 +71,11 @@ extern struct rte_pci_bus rte_pci_bus;
 #define SHIFT_4KB	12 /* (1 << 12) == 4KB */
 #define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
 #define VALUE_4KB	(1 << SHIFT_4KB)
+
+struct spdk_pci_device {
+	struct rte_pci_device		*dev_handle;
+	TAILQ_ENTRY(spdk_pci_device)	tailq;
+};
 
 struct spdk_pci_enum_ctx {
 	struct rte_pci_driver	driver;
