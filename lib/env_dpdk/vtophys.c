@@ -305,11 +305,7 @@ vtophys_get_paddr_pci(uint64_t vaddr)
 	struct spdk_vtophys_pci_device *vtophys_dev;
 	uintptr_t paddr;
 	struct rte_pci_device	*dev;
-#if RTE_VERSION >= RTE_VERSION_NUM(16, 11, 0, 1)
 	struct rte_mem_resource *res;
-#else
-	struct rte_pci_resource *res;
-#endif
 	unsigned r;
 
 	pthread_mutex_lock(&g_vtophys_pci_devices_mutex);
