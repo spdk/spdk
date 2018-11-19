@@ -3028,7 +3028,7 @@ static inline void
 _spdk_bdev_io_complete(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
-	uint64_t tsc;
+	uint64_t tsc, tsc_diff;
 
 	if (spdk_unlikely(bdev_io->internal.in_submit_request || bdev_io->internal.io_submit_ch)) {
 		/*
@@ -3050,6 +3050,7 @@ _spdk_bdev_io_complete(void *ctx)
 	}
 
 	tsc = spdk_get_ticks();
+	tsc_diff = tsc - bdev_io->internal.submit_tsc;
 	spdk_trace_record_tsc(tsc, TRACE_BDEV_IO_DONE, 0, 0, (uintptr_t)bdev_io, 0);
 
 	if (bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
@@ -3057,12 +3058,12 @@ _spdk_bdev_io_complete(void *ctx)
 		case SPDK_BDEV_IO_TYPE_READ:
 			bdev_io->internal.ch->stat.bytes_read += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->internal.ch->stat.num_read_ops++;
-			bdev_io->internal.ch->stat.read_latency_ticks += (tsc - bdev_io->internal.submit_tsc);
+			bdev_io->internal.ch->stat.read_latency_ticks += tsc_diff;
 			break;
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			bdev_io->internal.ch->stat.bytes_written += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
 			bdev_io->internal.ch->stat.num_write_ops++;
-			bdev_io->internal.ch->stat.write_latency_ticks += (tsc - bdev_io->internal.submit_tsc);
+			bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
 			break;
 		default:
 			break;
