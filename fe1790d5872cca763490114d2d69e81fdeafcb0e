@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b98fa84c_fbfb2aa4",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-19T04:53:44Z",
+      "side": 1,
+      "message": "Hi Shuhei, I think maybe we don\u0027t need so complicated logic here, for IO vectors, each vector\u0027s data length should be the multiple of (block size + metadata size), I really can\u0027t think out what kind of application can have such usage scenario.",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
