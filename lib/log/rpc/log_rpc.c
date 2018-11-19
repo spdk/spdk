@@ -94,8 +94,9 @@ _get_log_level_name(int level)
 		return "INFO";
 	} else if (level == SPDK_LOG_DEBUG) {
 		return "DEBUG";
+	} else {
+		return "unknown";
 	}
-	return NULL;
 }
 
 static void
