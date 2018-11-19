@@ -50,6 +50,40 @@
       "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fb404c0_88d37981",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1500,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-19T17:18:39Z",
+      "side": 1,
+      "message": "Is it issue that ftl_free_tasks unregisters this pooler too?",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c763c42a_6514159d",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-19T17:18:39Z",
+      "side": 1,
+      "message": "Halt callback is defined below, is this comment appropriate?",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
