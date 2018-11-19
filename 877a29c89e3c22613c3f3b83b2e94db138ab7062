@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e8956d7b_7106f4ae",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 2
+      },
+      "lineNbr": 395,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-19T17:23:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "423243ae_689e53dc",
+      "revId": "877a29c89e3c22613c3f3b83b2e94db138ab7062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "524a7fec_e327e3dd",
         "filename": "include/spdk/trace.h",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "09427bec_2b9f2ab1",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-19T17:23:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "524a7fec_e327e3dd",
+      "revId": "877a29c89e3c22613c3f3b83b2e94db138ab7062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a92df2dc_757e052f",
         "filename": "lib/trace/trace.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-16T17:33:49Z",
       "side": 1,
       "message": "I think this would be more clear to do:\n\nfor (i \u003d 1; i \u003c SPDK_COUNTOF(lcore_offsets), i++) {\n  lcore_offsets[i] \u003d ... + lcore_offsets[i - 1];\n}",
+      "revId": "877a29c89e3c22613c3f3b83b2e94db138ab7062",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76ac109f_0c000593",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-19T17:23:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a92df2dc_757e052f",
       "revId": "877a29c89e3c22613c3f3b83b2e94db138ab7062",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
