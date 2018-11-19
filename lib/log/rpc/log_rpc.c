@@ -158,6 +158,9 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 
 	level = spdk_log_get_print_level();
 	name = _get_log_level_name(level);
+	if (name == NULL) {
+		return;
+	}
 	spdk_json_write_string(w, name);
 
 
@@ -226,6 +229,9 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 
 	level = spdk_log_get_level();
 	name = _get_log_level_name(level);
+	if (name == NULL) {
+		return;
+	}
 	spdk_json_write_string(w, name);
 
 	spdk_jsonrpc_end_result(request, w);
