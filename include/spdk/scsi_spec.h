@@ -497,6 +497,198 @@ struct spdk_scsi_unmap_bdesc {
 	uint32_t reserved;
 };
 
+/* SCSI Persistent Reserve In action codes */
+enum spdk_scsi_pr_in_action_code {
+	/* Read all registered reservation keys */
+	SPDK_SCSI_PR_IN_READ_KEYS		= 0x00,
+	/* Read current persistent reservations */
+	SPDK_SCSI_PR_IN_READ_RESERVATION	= 0x01,
+	/* Return capabilities information */
+	SPDK_SCSI_PR_IN_REPORT_CAPABILITIES	= 0x02,
+	/* Read all registrations and persistent reservations */
+	SPDK_SCSI_PR_IN_READ_FULL_STATUS	= 0x03,
+	/* 0x04h - 0x1fh Reserved */
+};
+
+enum spdk_scsi_pr_scope_code {
+	/* Persistent reservation applies to full logic unit */
+	SPDK_SCSI_PR_LU_SCOPE			= 0x00,
+};
+
+/* SCSI Persistent Reservation type codes */
+enum spdk_scsi_pr_type_code {
+	/* Write Exclusive */
+	SPDK_SCSI_PR_WRITE_EXCLUSIVE		= 0x01,
+	/* Exclusive Access */
+	SPDK_SCSI_PR_EXCLUSIVE_ACCESS		= 0x03,
+	/* Write Exclusive - Registrants Only */
+	SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY	= 0x05,
+	/* Exclusive Access - Registrants Only */
+	SPDK_SCSI_PR_EXCLUSIVE_ACCESS_REGS_ONLY	= 0x06,
+	/* Write Exclusive - All Registrants */
+	SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS	= 0x07,
+	/* Exclusive Access - All Registrants */
+	SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS	= 0x08,
+};
+
+/* SCSI Persistent Reserve In read reservations data */
+struct spdk_scsi_pr_in_read_reservations_data {
+	/* persistent reservation generation */
+	uint32_t prgeneration;
+	/* Fixed value 0x10 */
+	uint32_t length;
+	/* reservation key */
+	uint64_t rkey;
+	uint32_t obsolete1;
+	uint8_t reserved;
+	uint8_t		type  : 4;
+	uint8_t		scope : 4;
+	uint16_t obsolete2;
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_in_read_reservations_data) == 24, "Incorrect size");
+
+/* SCSI Persistent Reserve In report capabilities data */
+struct spdk_scsi_pr_in_report_capabilities_data {
+	/* Fixed value 0x8 */
+	uint16_t length;
+
+	/* Persist through power loss capable */
+	uint8_t		ptpl_c    : 1;
+	uint8_t		reserved1 : 1;
+	/* All target ports capable */
+	uint8_t		atp_c     : 1;
+	/* Specify initiator port capable */
+	uint8_t		sip_c     : 1;
+	/* Compatible reservation handing bit to indicate
+	 * SPC-2 reserve/release is supported
+	 */
+	uint8_t		crh       : 1;
+	uint8_t		reserved2 : 3;
+	/* Persist through power loss activated */
+	uint8_t		ptpl_a    : 1;
+	uint8_t		reserved3 : 6;
+	/* Type mask valid */
+	uint8_t		tmv       : 1;
+
+	/* Type mask format */
+	uint8_t		reserved4 : 1;
+	/* Write Exclusive */
+	uint8_t		wr_ex     : 1;
+	uint8_t		reserved5 : 1;
+	/* Exclusive Access */
+	uint8_t		ex_ac     : 1;
+	uint8_t		reserved6 : 1;
+	/* Write Exclusive - Registrants Only */
+	uint8_t		wr_ex_ro  : 1;
+	/* Exclusive Access - Registrants Only */
+	uint8_t		ex_ac_ro  : 1;
+	/* Write Exclusive - All Registrants */
+	uint8_t		wr_ex_ar  : 1;
+	/* Exclusive Access - All Registrants */
+	uint8_t		ex_ac_ar  : 1;
+	uint8_t		reserved7 : 7;
+
+	uint8_t		reserved8[2];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_in_report_capabilities_data) == 8, "Incorrect size");
+
+/* SCSI Persistent Reserve In full status descriptor */
+struct spdk_scsi_pr_in_full_status_desc {
+	/* Reservation key */
+	uint64_t rkey;
+	uint8_t reserved1[4];
+
+	/* 0 - Registrant only
+	 * 1 - Registrant and reservation holder
+	 */
+	uint8_t		r_holder  : 1;
+	/* All target ports */
+	uint8_t		all_tg_pt : 1;
+	uint8_t		reserved2 : 6;
+
+	/* Reservation type */
+	uint8_t		type      : 4;
+	/* Set to LU_SCOPE */
+	uint8_t		scope     : 4;
+
+	uint8_t reserved3[4];
+	uint16_t relative_target_port_id;
+	/* Size of TransportID */
+	uint32_t desc_len;
+
+	uint8_t transportid[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_in_full_status_desc) == 24, "Incorrect size");
+
+/* SCSI Persistent Reserve Out service action codes */
+enum spdk_scsi_pr_out_service_action_code {
+	/* Register/unregister a reservation key */
+	SPDK_SCSI_PR_OUT_REGISTER		= 0x00,
+	/* Create a persistent reservation */
+	SPDK_SCSI_PR_OUT_RESERVE		= 0x01,
+	/* Release a persistent reservation */
+	SPDK_SCSI_PR_OUT_RELEASE		= 0x02,
+	/* Clear all reservation keys and persistent reservations */
+	SPDK_SCSI_PR_OUT_CLEAR			= 0x03,
+	/* Preempt persistent reservations and/or remove registrants */
+	SPDK_SCSI_PR_OUT_PREEMPT		= 0x04,
+	/* Preempt persistent reservations and or remove registrants
+	 * and abort all tasks for all preempted I_T nexuses
+	 */
+	SPDK_SCSI_PR_OUT_PREEMPT_AND_ABORT	= 0x05,
+	/* Register/unregister a reservation key based on the ignore bit */
+	SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY	= 0x06,
+	/* Register a reservation key for another I_T nexus
+	 * and move a persistent reservation to that I_T nexus
+	 */
+	SPDK_SCSI_PR_OUT_REG_AND_MOVE		= 0x07,
+	/* 0x08 - 0x1f Reserved */
+};
+
+/* SCSI Persistent Reserve Out parameter list */
+struct spdk_scsi_pr_out_parameter_list {
+	/* Reservation key */
+	uint64_t rkey;
+	/* Service action reservation key */
+	uint64_t sa_rkey;
+	uint8_t obsolete1[4];
+
+	/* Active persist through power loss */
+	uint8_t		aptpl     : 1;
+	uint8_t		reserved1 : 1;
+	/* All target ports */
+	uint8_t		all_tg_pt : 1;
+	/* Specify initiator ports */
+	uint8_t		spec_i_pt : 1;
+	uint8_t		reserved2 : 4;
+
+	uint8_t reserved3;
+	uint16_t obsolete2;
+
+	uint8_t para_data[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_out_parameter_list) == 24, "Incorrect size");
+
+struct spdk_scsi_pr_out_reg_and_move_parameter {
+	/* Reservation key */
+	uint64_t rkey;
+	/* Service action reservation key */
+	uint64_t sa_rkey;
+	uint8_t reserved1;
+
+	/* Active persist through power loss */
+	uint8_t		aptpl     : 1;
+	/* Unregister */
+	uint8_t		unreg     : 1;
+	uint8_t		reserved2 : 6;
+
+	uint16_t relative_target_port_id;
+	/* TransportID parameter data length */
+	uint32_t transport_len;
+	uint8_t transportid[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_out_reg_and_move_parameter) == 24, "Incorrect size");
+
 #define SPDK_SCSI_UNMAP_LBPU			1 << 7
 #define SPDK_SCSI_UNMAP_LBPWS			1 << 6
 #define SPDK_SCSI_UNMAP_LBPWS10			1 << 5
