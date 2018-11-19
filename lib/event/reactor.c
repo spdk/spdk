@@ -290,6 +290,10 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
 	}
 
 	reactor = spdk_reactor_get(core);
+	if (!reactor) {
+		SPDK_ERRLOG("Unable to get reactor for core %u\n", core);
+		return -1;
+	}
 	*tsc_stats = reactor->tsc_stats;
 
 	return 0;
