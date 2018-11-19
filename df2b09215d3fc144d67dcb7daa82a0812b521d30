@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "198d4997_690177b5",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T18:10:27Z",
+      "side": 0,
+      "message": "don\u0027t we still need to keep this for RTE_VERSION_NUM \u003c 17.05.0?",
+      "revId": "df2b09215d3fc144d67dcb7daa82a0812b521d30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c9157f4_74c44d7a",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T18:10:27Z",
+      "side": 1,
+      "message": "maybe this is ok - but i\u0027m not following why we make this change as part of removing DPDK 16.07 support",
+      "revId": "11ea59df23cb67a0327cab64b99a34c527e2d9ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
