@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "97cbe25b_d3f9c24c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-19T17:05:38Z",
+      "side": 1,
+      "message": "It isn\u0027t broken to do it the way you\u0027ve done it here - but it will cause the underlying layers to break the I/O into two and will cause AIO to double buffer.",
+      "parentUuid": "d23f68a4_9ad788b9",
+      "revId": "5234fa338997b3f5e53c34879e47e5dc2f8bbcaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d352314e_c3f81f4f",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 5
