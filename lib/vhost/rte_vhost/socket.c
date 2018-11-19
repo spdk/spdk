@@ -672,6 +672,7 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 	}
 	ret = create_unix_socket(vsocket);
 	if (ret < 0) {
+		pthread_mutex_destroy(&vsocket->conn_mutex);
 		free(vsocket->path);
 		free(vsocket);
 		goto out;
