@@ -356,6 +356,9 @@ struct spdk_bdev {
 
 		/** accumulated I/O statistics for previously deleted channels of this bdev */
 		struct spdk_bdev_io_stat stat;
+
+		/** merged histogram data from all channels */
+		struct spdk_histogram_data	*histogram;
 	} internal;
 };
 
