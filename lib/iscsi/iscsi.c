@@ -1631,7 +1631,7 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 			       int alloc_len, int cid)
 {
 	enum session_type session_type;
-	char initiator_port_name[MAX_INITIATOR_NAME];
+	char initiator_port_name[MAX_INITIATOR_PORT_NAME];
 	struct iscsi_bhs_login_rsp *rsph;
 	struct spdk_iscsi_tgt_node *target = NULL;
 	int rc = 0;
@@ -1641,7 +1641,7 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 	conn->dev = NULL;
 
 	rc = spdk_iscsi_op_login_initialize_port(conn, rsp_pdu,
-			initiator_port_name, MAX_INITIATOR_NAME, params);
+			initiator_port_name, MAX_INITIATOR_PORT_NAME, params);
 	if (rc < 0) {
 		return rc;
 	}

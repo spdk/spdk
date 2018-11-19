@@ -792,6 +792,11 @@ spdk_check_iscsi_name(const char *name)
 	const unsigned char *up = (const unsigned char *) name;
 	size_t n;
 
+	/* valid iSCSI name no larger than 223 bytes */
+	if (strlen(name) > MAX_TARGET_NAME) {
+		return -1;
+	}
+
 	/* valid iSCSI name? */
 	for (n = 0; up[n] != 0; n++) {
 		if (up[n] > 0x00U && up[n] <= 0x2cU) {
