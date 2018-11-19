@@ -850,6 +850,11 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 
 	pci_id = spdk_pci_device_get_id(pci_dev);
 	pctrlr->ctrlr.quirks = nvme_get_quirks(&pci_id);
+	if (pctrlr->ctrlr.quirks == 0) {
+		nvme_ctrlr_destruct(&pctrlr->ctrlr);
+		SPDK_ERRLOG("please add quirks in nvme_quirk table to avoid an unknown device controller error\n");
+		return NULL;
+	}
 
 	rc = nvme_pcie_ctrlr_construct_admin_qpair(&pctrlr->ctrlr);
 	if (rc != 0) {
