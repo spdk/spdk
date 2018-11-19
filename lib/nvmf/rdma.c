@@ -1202,6 +1202,40 @@ get_next_data_wr(struct spdk_nvmf_rdma_wr *base_wr, struct spdk_nvmf_rdma_transp
 	return data;
 }
 
+/* return when the buffer has been completely used, or length has been exhausted */
+static void
+spdk_nvmf_rdma_consume_buffer(void *buf,
+			      struct spdk_nvmf_request *req,
+			      struct spdk_nvmf_rdma_request_data *data,
+			      struct spdk_nvmf_rdma_device *device,
+			      struct spdk_nvmf_rdma_transport *rtransport,
+			      uint32_t *desired_length)
+{
+	uint32_t buffer_length;
+	struct ibv_mr *mr;
+	uint64_t map_length;
+
+	buffer_length = spdk_min(*desired_length, rtransport->transport.opts.io_unit_size);
+	do {
+		map_length = buffer_length;
+		mr = (struct ibv_mr *)spdk_mem_map_translate(device->map, (uint64_t)buf, &map_length);
+		map_length = spdk_min(buffer_length, map_length);
+
+		req->iov[req->iovcnt].iov_base = buf;
+		req->iov[req->iovcnt].iov_len = map_length;
+		data->buffers[data->wr.num_sge] = buf;
+		data->wr.sg_list[data->wr.num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
+		data->wr.sg_list[data->wr.num_sge].length = req->iov[req->iovcnt].iov_len;
+		data->wr.sg_list[data->wr.num_sge].lkey = mr->lkey;
+
+		*desired_length -= map_length;
+		buffer_length -= map_length;
+		req->iovcnt++;
+		data->wr.num_sge++;
+		buf = (void *)((uintptr_t)buf + map_length);
+	} while (buffer_length);
+}
+
 static int
 spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
@@ -1209,27 +1243,17 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 {
 	void		*buf = NULL;
 	uint32_t	length = rdma_req->req.length;
-	uint32_t	i = 0;
 
 	rdma_req->req.iovcnt = 0;
+	rdma_req->data.wr.num_sge = 0;
 	while (length) {
 		buf = spdk_mempool_get(rtransport->data_buf_pool);
 		if (!buf) {
 			goto nomem;
 		}
 
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-						~NVMF_DATA_BUFFER_MASK);
-		rdma_req->req.iov[i].iov_len  = spdk_min(length, rtransport->transport.opts.io_unit_size);
-		rdma_req->req.iovcnt++;
-		rdma_req->data.buffers[i] = buf;
-		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
-		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
-		rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						     (uint64_t)buf, NULL))->lkey;
-
-		length -= rdma_req->req.iov[i].iov_len;
-		i++;
+		buf = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) & ~NVMF_DATA_BUFFER_MASK);
+		spdk_nvmf_rdma_consume_buffer(buf, &rdma_req->req, &rdma_req->data, device, rtransport, &length);
 	}
 
 	rdma_req->data_from_pool = true;
@@ -1237,17 +1261,16 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	return 0;
 
 nomem:
-	while (i) {
-		i--;
-		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.iov[i].iov_base);
-		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->req.iov[i].iov_len = 0;
+	while (rdma_req->req.iovcnt) {
+		rdma_req->req.iovcnt--;
+		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.iov[rdma_req->req.iovcnt].iov_base);
+		rdma_req->req.iov[rdma_req->req.iovcnt].iov_base = NULL;
+		rdma_req->req.iov[rdma_req->req.iovcnt].iov_len = 0;
 
-		rdma_req->data.wr.sg_list[i].addr = 0;
-		rdma_req->data.wr.sg_list[i].length = 0;
-		rdma_req->data.wr.sg_list[i].lkey = 0;
+		rdma_req->data.wr.sg_list[rdma_req->req.iovcnt].addr = 0;
+		rdma_req->data.wr.sg_list[rdma_req->req.iovcnt].length = 0;
+		rdma_req->data.wr.sg_list[rdma_req->req.iovcnt].lkey = 0;
 	}
-	rdma_req->req.iovcnt = 0;
 	return -ENOMEM;
 }
 
@@ -1293,24 +1316,8 @@ spdk_nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtra
 				goto nomem;
 			}
 
-			req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-							 ~NVMF_DATA_BUFFER_MASK);
-			req->iov[req->iovcnt].iov_len  = spdk_min(current_sgl_length,
-							 rtransport->transport.opts.io_unit_size);
-
-			rdma_req->data.buffers[req->iovcnt] = buf;
-
-			current_data_wr->wr.sg_list[current_data_wr->wr.num_sge].addr = (uintptr_t)(
-						req->iov[req->iovcnt].iov_base);
-			current_data_wr->wr.sg_list[current_data_wr->wr.num_sge].length =
-				req->iov[req->iovcnt].iov_len;
-			current_data_wr->wr.sg_list[current_data_wr->wr.num_sge].lkey = ((struct ibv_mr *)
-					spdk_mem_map_translate(device->map,
-							       (uint64_t)buf, NULL))->lkey;
-
-			current_sgl_length -= req->iov[req->iovcnt].iov_len;
-			req->iovcnt++;
-			current_data_wr->wr.num_sge++;
+			buf = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) & ~NVMF_DATA_BUFFER_MASK);
+			spdk_nvmf_rdma_consume_buffer(buf, req, current_data_wr, device, rtransport, &current_sgl_length);
 		}
 		current_data_wr->wr.wr.rdma.rkey = cmd_sgl_segment[ui].keyed.key;
 		current_data_wr->wr.wr.rdma.remote_addr = cmd_sgl_segment[ui].address;
