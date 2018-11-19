@@ -841,6 +841,7 @@ struct spdk_nbd_start_ctx {
 	struct spdk_nbd_disk	*nbd;
 	spdk_nbd_start_cb	cb_fn;
 	void			*cb_arg;
+	struct spdk_poller	*poller;
 };
 
 static void
@@ -895,6 +896,47 @@ err:
 		ctx->cb_fn(ctx->cb_arg, NULL, -rc);
 	}
 	free(ctx);
+}
+
+static int
+spdk_nbd_enable_kernel(void *arg)
+{
+	struct spdk_nbd_start_ctx *ctx = arg;
+	int rc;
+
+	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SOCK, ctx->nbd->kernel_sp_fd);
+	if (rc == -1) {
+		if (errno == EBUSY) {
+			if (ctx->poller == NULL) {
+				ctx->poller = spdk_poller_register(spdk_nbd_enable_kernel, ctx, 20000);
+			}
+			/* If the kernel is busy, check back later */
+			return 0;
+		}
+
+
+		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
+		if (ctx->poller) {
+			spdk_poller_unregister(&ctx->poller);
+		}
+
+		spdk_nbd_stop(ctx->nbd);
+
+		if (ctx->cb_fn) {
+			ctx->cb_fn(ctx->cb_arg, NULL, -errno);
+		}
+
+		free(ctx);
+		return 1;
+	}
+
+	if (ctx->poller) {
+		spdk_poller_unregister(&ctx->poller);
+	}
+
+	spdk_nbd_start_complete(ctx);
+
+	return 1;
 }
 
 int
@@ -998,14 +1040,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	SPDK_INFOLOG(SPDK_LOG_NBD, "Enabling kernel access to bdev %s via %s\n",
 		     spdk_bdev_get_name(bdev), nbd_path);
 
-	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
-	spdk_nbd_start_complete(ctx);
+	spdk_nbd_enable_kernel(ctx);
 	return 0;
 
 err:
