@@ -32,7 +32,6 @@ while getopts 'hi-:' optchar; do
 	esac
 done
 
-trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
 scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
@@ -118,6 +117,62 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
 	pkg install -y autoconf automake libtool help2man
+elif [ -f /etc/arch-release ]; then
+	# Install main dependencies
+	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
+		git astyle autopep8 python clang libutil-linux sg3_utils \
+		libiscsi pciutils shellcheck
+
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/perl-perlio-gzip.git
+		cd perl-perlio-gzip;
+		yes y | makepkg -si --needed;
+		cd ..; rm -rf perl-git
+		popd"
+
+	su - $SUDO_USER -c "pushd /tmp
+		git clone https://aur.archlinux.org/lcov-git.git;
+		cd lcov-git;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf lcov-git;
+		popd"
+
+	# # Additional dependency for building docs
+	pacman -S --noconfirm --needed gd ttf-font
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/mscgen.git;
+		cd mscgen;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf mscgen;
+		popd"
+
+	# Additional (optional) dependencies for showing backtrace in logs
+	pacman -Sy --needed --noconfirm libunwind
+
+	# Additional dependencies for NVMe over Fabrics
+	su - $SUDO_USER -c "gpg --recv-keys 29F0D86B9C1019B1"
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/rdma-core.git;
+		cd rdma-core;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf rdma-core;
+		popd"
+
+	# Additional dependencies for DPDK
+	pacman -Sy --needed --noconfirm numactl nasm
+	# Additional dependencies for building docs
+	pacman -S --needed --noconfirm doxygen graphviz
+
+	# TODO: not available in pacman or AUR. Use make?
+	# Additional dependencies for building pmem based backends
+	# yum install -y libpmemblk-devel || true
+
+	# Additional dependencies for SPDK CLI
+	pacman -Sy --needed --noconfirm python-pexpect python-pip
+	pip install configshell_fb
+
+	# Additional dependencies for ISA-L used in compression
+	pacman -Sy --needed --noconfirm autoconf automake libtool help2man
 else
 	echo "pkgdep: unknown system type."
 	exit 1
