@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9d58543_ebcff0e1",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T18:14:46Z",
+      "side": 1,
+      "message": "what if we just had _get_log_level_name() return \"(unknown)\" instead of NULL?\n\ni just think that if this case ever did hit, this RPC would never get completed, and we wouldn\u0027t get any kind of real error/warning of what was wrong",
+      "revId": "73265a26e68ef779fb5fbc8aea07c4006014f437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
