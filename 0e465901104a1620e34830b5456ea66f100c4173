@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0635d039_6d386e45",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "is g_trace_port used?",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d29a08e7_332f363d",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "you don\u0027t need to pass 0600 here\n\n(note: this is a bug in trace.cpp and iscsi_top.cpp too - we can fix those later)",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e108d450_2922dae5",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "I think this can all be simpler by just making lcore_file something like:\n\n#define TRACE_PATH_MAX 2048\n\nchar lcore_file[TRACE_PATH_MAX];\n\nThen still use snprintf, but check the return value that it is \u003c TRACE_PATH_MAX.",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "634ed311_57165c04",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "this function is only called in one place - i would suggest just inline the code where it is called - it reduces the number of times a reader has to jump to see the code",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79eedfeb_4d4f2844",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9be22e34_4f45e7cd",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "Technically I don\u0027t think fprintf is supposed to be called from a signal handler - see \"man sigaction\".",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3eba85f3_ad0aca54",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "remove the \"If -s is specified\" part\n\nthis is only true in the spdk_trace app, where user can specify an input file\n\nbut here, there is no mechanism for user specifying an input file, only the parameters for the shm file - so user must specify -i or -p",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d82e04ff_dfeab2e1",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "[1] is not needed\n\njust use \u0026ctx to pass this to a helper function",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff6b318e_f8e85c05",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "let\u0027s do separate checks, so that the error message is specific to the missed option",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfabb1c9_31dba516",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "also need to check:\n\nif (shm_id \u003d\u003d -1 \u0026\u0026 shm_pid \u003d\u003d -1) {\n  /* -i or -p must be specified */\n}",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c616ef5_8fe289ba",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T23:20:36Z",
+      "side": 1,
+      "message": "Let\u0027s remove the /dev/shm reference, and just show the shm_name.\n\nOn FreeBSD, it doesn\u0027t use /dev/shm.",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
