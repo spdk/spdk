@@ -44,6 +44,7 @@
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
 #include "spdk/queue.h"
+#include "spdk/histogram_data.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -1074,6 +1075,46 @@ void spdk_bdev_io_get_scsi_status(const struct spdk_bdev_io *bdev_io,
  * \param iovcntp Pointer to be filled with number of iovec entries.
  */
 void spdk_bdev_io_get_iovec(struct spdk_bdev_io *bdev_io, struct iovec **iovp, int *iovcntp);
+
+
+typedef void (*spdk_bdev_histogram_status_cb)(void *cb_arg, int status);
+typedef void (*spdk_bdev_histogram_data_cb)(void *cb_arg, int status,
+		struct spdk_histogram_data *histogram);
+
+/**
+ * Enable collecting histogram data on a bdev.
+ *
+ * \param bdev Block device.
+ * \param cb_fn Callback function to be called when histograms are enabled.
+ * \param cb_arg Argument to pass to cb_fn.
+ *
+ */
+void spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
+				void *cb_arg);
+
+/**
+ * Disable collecting histogram data on a bdev.
+ *
+ * \param bdev Block device.
+ * \param cb_fn Callback function to be called when histograms are disabled.
+ * \param cb_arg Argument to pass to cb_fn.
+ *
+ */
+void spdk_bdev_histogram_disable(struct spdk_bdev *bdev, spdk_bdev_histogram_status_cb cb_fn,
+				 void *cb_arg);
+
+/**
+ * Get histogram data from a bdev. Callback provides merged histogram for specified
+ * bdev. Histogram structure is freed with spdk_bdev_histogram_disable call.
+ *
+ * \param bdev Block device.
+ * \param cb_fn Callback function to be called with data collected on bdev.
+ * \param cb_arg Argument to pass to cb_fn.
+ *
+ */
+void spdk_bdev_histogram_get(struct spdk_bdev *bdev, spdk_bdev_histogram_data_cb cb_fn,
+			     void *cb_arg);
+
 
 #ifdef __cplusplus
 }
