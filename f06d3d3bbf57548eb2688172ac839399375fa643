@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0956b77d_10e8c821",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 63
+      },
+      "lineNbr": 1158,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T22:22:51Z",
+      "side": 0,
+      "message": "I\u0027d like the function pointers to be at this level.  Meaning that for each limit type, we call a function pointer to see if this I/O should be submitted, or if we should exit the loop.\n\nThis should be a preparatory patch, before this one that adds read/write support.  For IOPs and bandwidth, it can jus\n\nIt will make the final code much easier to understand.  This function just calls each of the function pointers - if any of them return false, then the I/O does not get submitted.  This function (in the read/write patch) would have no code related to read or write - all understanding of read v. write would be in the functions called by the function pointers.",
+      "revId": "f06d3d3bbf57548eb2688172ac839399375fa643",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
