@@ -78,6 +78,11 @@ struct spdk_nbd_disk *spdk_nbd_start(const char *bdev_name, const char *nbd_path
 void spdk_nbd_stop(struct spdk_nbd_disk *nbd);
 
 /**
+ * Get the local filesystem path used for the network block device.
+ */
+const char *spdk_nbd_get_path(struct spdk_nbd_disk *nbd);
+
+/**
  * Write NBD subsystem configuration into provided JSON context.
  *
  * \param w JSON write context

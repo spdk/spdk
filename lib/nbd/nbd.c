@@ -966,4 +966,10 @@ err:
 	return NULL;
 }
 
+const char *
+spdk_nbd_get_path(struct spdk_nbd_disk *nbd)
+{
+	return nbd->nbd_path;
+}
+
 SPDK_LOG_REGISTER_COMPONENT("nbd", SPDK_LOG_NBD)
