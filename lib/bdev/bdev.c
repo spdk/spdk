@@ -244,6 +244,8 @@ struct spdk_bdev_channel {
 
 	uint32_t		flags;
 
+	struct spdk_histogram_data *histogram;
+
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t		start_tsc;
 	uint64_t		interval_tsc;
@@ -1796,6 +1798,13 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	ch->channel = bdev->fn_table->get_io_channel(bdev->ctxt);
 	if (!ch->channel) {
 		return -1;
+	}
+
+	if (bdev->internal.histogram && ch->histogram == NULL) {
+		ch->histogram = spdk_histogram_data_alloc();
+		if (ch->histogram == NULL) {
+			return -1;
+		}
 	}
 
 	mgmt_io_ch = spdk_get_io_channel(&g_bdev_mgr);
@@ -4062,6 +4071,233 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 	}
 
 	pthread_mutex_unlock(&bdev->internal.mutex);
+}
+
+struct spdk_histogram_ctx {
+	spdk_histogram_status_cb cb_fn;
+	void *cb_arg;
+	struct spdk_bdev *bdev;
+	int status;
+};
+
+static void
+_spdk_histogram_disable_channel_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_histogram_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+_spdk_histogram_disable_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+
+	if (ch->histogram != NULL) {
+		spdk_histogram_data_free(ch->histogram);
+		ch->histogram = NULL;
+	}
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void spdk_histogram_disable(struct spdk_bdev *bdev, spdk_histogram_status_cb cb_fn,
+			    void *cb_arg)
+{
+	struct spdk_histogram_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct spdk_histogram_ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->status = 0;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	if (bdev->internal.histogram) {
+		spdk_histogram_data_free(bdev->internal.histogram);
+		bdev->internal.histogram = NULL;
+	}
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_histogram_disable_channel, ctx,
+			      _spdk_histogram_disable_channel_cb);
+}
+
+static void
+_spdk_histogram_enable_channel_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_histogram_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+
+	if (status != 0) {
+		ctx->status = status;
+		spdk_for_each_channel(__bdev_to_io_dev(ctx->bdev), _spdk_histogram_disable_channel, ctx,
+				      _spdk_histogram_enable_channel_cb);
+	} else {
+		ctx->cb_fn(ctx->cb_arg, ctx->status);
+		free(ctx);
+	}
+}
+
+static void
+_spdk_histogram_enable_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		ch->histogram = spdk_histogram_data_alloc();
+		if (ch->histogram == NULL) {
+			status = -ENOMEM;
+		}
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+void spdk_histogram_enable(struct spdk_bdev *bdev, spdk_histogram_status_cb cb_fn,
+			   void *cb_arg)
+{
+	struct spdk_histogram_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct spdk_histogram_ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->status = 0;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	/* Allocate histogram for bdev */
+	if (bdev->internal.histogram == NULL) {
+		bdev->internal.histogram = spdk_histogram_data_alloc();
+		if (bdev->internal.histogram == NULL) {
+			cb_fn(cb_arg, -ENOMEM);
+			free(ctx);
+			return;
+		}
+	}
+
+	/* Allocate histogram for each channel */
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_histogram_enable_channel, ctx,
+			      _spdk_histogram_enable_channel_cb);
+
+}
+
+static void
+_spdk_histogram_reset_channel_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_histogram_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	ctx->cb_fn(ctx->cb_arg, status);
+	free(ctx);
+}
+
+static void
+_spdk_histogram_reset_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		status = -EOPNOTSUPP;
+	} else {
+		spdk_histogram_data_reset(ch->histogram);
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+void spdk_histogram_reset(struct spdk_bdev *bdev, spdk_histogram_status_cb cb_fn,
+			  void *cb_arg)
+{
+	struct spdk_histogram_ctx *ctx;
+
+	if (bdev->internal.histogram == NULL) {
+		cb_fn(cb_arg, -EOPNOTSUPP);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(struct spdk_histogram_ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->status = 0;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_histogram_reset_channel, ctx,
+			      _spdk_histogram_reset_channel_cb);
+
+}
+
+struct spdk_histogram_data_ctx {
+	spdk_histogram_data_cb cb_fn;
+	void *cb_arg;
+	struct spdk_bdev *bdev;
+};
+
+
+static void
+_spdk_histogram_get_channel_cb(struct spdk_io_channel_iter *i, int status)
+{
+	struct spdk_histogram_data_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	ctx->cb_fn(ctx->cb_arg, status, ctx->bdev->internal.histogram);
+	free(ctx);
+}
+
+static void
+_spdk_histogram_get_channel(struct spdk_io_channel_iter *i)
+{
+	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
+	struct spdk_bdev_channel *ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_bdev *bdev = ch->bdev;
+	int status = 0;
+
+	if (ch->histogram == NULL) {
+		status = -EOPNOTSUPP;
+	} else {
+		spdk_histogram_data_merge(bdev->internal.histogram, ch->histogram);
+	}
+
+	spdk_for_each_channel_continue(i, status);
+}
+
+void spdk_histogram_get(struct spdk_bdev *bdev, spdk_histogram_data_cb cb_fn,
+			void *cb_arg)
+{
+	struct spdk_histogram_data_ctx *ctx;
+
+	ctx = calloc(1, sizeof(struct spdk_histogram_data_ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM, NULL);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	if (bdev->internal.histogram == NULL) {
+		cb_fn(cb_arg, -EOPNOTSUPP, NULL);
+		free(ctx);
+		return;
+	}
+
+	spdk_histogram_data_reset(bdev->internal.histogram);
+
+	spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_histogram_get_channel, ctx,
+			      _spdk_histogram_get_channel_cb);
+
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)
