@@ -46,7 +46,7 @@ SPDK_LIB_LINKER_ARGS = \
 SPDK_STATIC_LIB_LINKER_ARGS = \
 	$(SPDK_LIB_LIST:%=$(SPDK_ROOT_DIR)/build/lib/libspdk_%.a) \
 	-Wl,--whole-archive \
-	$(SPDK_ROOT_DIR)/build/lib/libspdk_spdk_mock.a \
+	$(SPDK_ROOT_DIR)/build/lib/libspdk_ut_mock.a \
 	-Wl,--no-whole-archive
 
 install: all

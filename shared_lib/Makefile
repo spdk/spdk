@@ -40,7 +40,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 SHARED_LINKED_LIB := $(SPDK_ROOT_DIR)/build/lib/libspdk.so
 SHARED_REALNAME_LIB := $(SHARED_LINKED_LIB).$(SO_SUFFIX_ALL)
 IGNORED_LIBS := libspdk.so
-IGNORED_LIBS += libspdk_spdk_mock.so
+IGNORED_LIBS += libspdk_ut_mock.so
 IGNORED_LIBS += libspdk_env_dpdk.so
 
 SPDK_SHARED_LIBS := $(filter-out $(IGNORED_LIBS), $(sort $(notdir $(wildcard $(SPDK_ROOT_DIR)/build/lib/*.so))))
