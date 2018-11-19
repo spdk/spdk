@@ -59,11 +59,30 @@ static const struct spdk_json_object_decoder rpc_start_nbd_disk_decoders[] = {
 };
 
 static void
+spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (rc) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_string(w, spdk_nbd_get_path(nbd));
+	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
 spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_start_nbd_disk req = {};
-	struct spdk_json_write_ctx *w;
 	struct spdk_nbd_disk *nbd;
 
 	if (spdk_json_decode_object(params, rpc_start_nbd_disk_decoders,
@@ -83,19 +102,9 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	nbd = spdk_nbd_start(req.bdev_name, req.nbd_device);
-	if (!nbd) {
-		goto invalid;
-	}
+	spdk_nbd_start(req.bdev_name, req.nbd_device,
+		       spdk_rpc_start_nbd_done, request);
 
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_start_nbd_disk(&req);
-		return;
-	}
-
-	spdk_json_write_string(w, req.nbd_device);
-	spdk_jsonrpc_end_result(request, w);
 	free_rpc_start_nbd_disk(&req);
 	return;
 
