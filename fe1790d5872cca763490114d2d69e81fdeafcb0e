@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "05c9fd9c_038b94bd",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-19T21:53:17Z",
+      "side": 1,
+      "message": "I\u0027m unclear on the definition of start_blocks. Is this from the start of the iov, or from the start of the storage device?",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d4bbac9_8a304543",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-19T21:53:17Z",
+      "side": 1,
+      "message": "Can you move the parameters for the block size before the start_blocks and num_blocks parameters? I think that is more intuitive.",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b98fa84c_fbfb2aa4",
         "filename": "lib/util/dif.c",
         "patchSetId": 8
@@ -49,6 +83,41 @@
       "side": 1,
       "message": "thanks Shuhei, no hurry, :).",
       "parentUuid": "9c91fe98_92e92ce9",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2018080_22f8ce47",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-19T21:53:17Z",
+      "side": 1,
+      "message": "I am concerned that due to splitting for other reasons (RDMA MR spanning, striping, PRP lists), we may actually end up with iovec elements that are not a multiple of the block size. Especially when the block size is not a power of two. I think you should leave it in actually.",
+      "parentUuid": "6d4d91e1_d52b404b",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dedbadf_e0fe6361",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-19T21:53:17Z",
+      "side": 1,
+      "message": "Great test! I was about to suggest you add tests for iov splits in the middle of the guard, apptag, and reftag values, but of course you already have them.",
       "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
