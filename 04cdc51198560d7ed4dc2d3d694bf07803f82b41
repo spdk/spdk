@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ca65ff5_bf5d7826",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "we shouldn\u0027t have a reset operation - users should be responsible for calculating differences if necessary\n\nthis is similar to what we do with bdev iostats - we don\u0027t reset because then it automatically sets a limit of one client at a time for this data",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3090691c_c8156ac2",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "i don\u0027t think we can store this in the bdev itself - it has to be part of the context\n\notherwise we can\u0027t support multiple overlapping get_data calls",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4635f360_e9150237",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1803,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "ch-\u003ehistogram must be NULL here\nit would be better to assert() instead - otherwise future readers will wonder why you need to check if ch-\u003ehistogram is already set",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c1eda64_0102f8d1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1805,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "I think if we can\u0027t allocate a histogram, let\u0027s just print an ERRLOG but still proceed - it would be better in this case to have a functional channel that cannot collect histogram data than to fail creating the channel altogether",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bda82346_970a7121",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4086,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "newline after declaration",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43eba1a7_d3339d49",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "newline after declaration",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb005147_6f6dce8f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:37:17Z",
+      "side": 1,
+      "message": "newline after declaration",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
