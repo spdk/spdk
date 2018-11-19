@@ -1596,9 +1596,7 @@ nvme_tcp_qpair_icreq_send(struct nvme_tcp_qpair *tqpair)
 	ic_req->maxr2t = NVME_TCP_MAX_R2T_DEFAULT - 1;
 	ic_req->hpda = NVME_TCP_HPDA_DEFAULT;
 
-	/* Currently, always enable it here for debuging */
-	ic_req->dgst.bits.hdgst_enable = 1;
-	ic_req->dgst.bits.ddgst_enable = 1;
+	ic_req->dgst.raw = tqpair->qpair.ctrlr->trid.digest_type;
 
 	nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_send_icreq_complete, tqpair);
 
