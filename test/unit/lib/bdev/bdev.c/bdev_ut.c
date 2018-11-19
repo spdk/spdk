@@ -61,6 +61,10 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *sh
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
 
+int g_status;
+int g_count;
+struct spdk_histogram_data *g_histogram;
+
 static void
 _bdev_send_msg(spdk_thread_fn fn, void *ctx, void *thread_ctx)
 {
@@ -1401,6 +1405,108 @@ bdev_io_alignment(void)
 	free(buf);
 }
 
+static void
+histogram_status_cb(void *cb_arg, int status)
+{
+	g_status = status;
+}
+
+static void
+histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	g_status = status;
+	g_histogram = histogram;
+}
+
+static void
+histogram_io_count(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+		   uint64_t total, uint64_t so_far)
+{
+	g_count += count;
+}
+
+static void
+bdev_histograms(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch1, *ch2;
+	uint8_t buf[4096];
+	int rc;
+
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+
+	bdev = allocate_bdev("bdev");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(desc != NULL);
+
+	ch1 = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(ch1 != NULL);
+	ch2 = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(ch2 != NULL);
+
+	/* Enable histogram */
+	spdk_bdev_histogram_enable(bdev, histogram_status_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram_enabled == true);
+
+	/* Check if histogram is zeroed */
+	spdk_bdev_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram_enabled == true);
+	SPDK_CU_ASSERT_FATAL(g_histogram != NULL);
+
+	g_count = 0;
+	spdk_histogram_data_iterate(g_histogram, histogram_io_count, NULL);
+
+	CU_ASSERT(g_count == 0);
+
+	spdk_histogram_data_free(g_histogram);
+
+	/* Do some IO on different channels */
+
+	rc = spdk_bdev_write_blocks(desc, ch1, &buf, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(10);
+	stub_complete_io(1);
+
+	rc = spdk_bdev_read_blocks(desc, ch2, &buf, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(10);
+	stub_complete_io(1);
+
+	/* Check if histogram gathered data from all I/O channels */
+	spdk_bdev_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram_enabled == true);
+	SPDK_CU_ASSERT_FATAL(g_histogram != NULL);
+
+	g_count = 0;
+	spdk_histogram_data_iterate(g_histogram, histogram_io_count, NULL);
+	CU_ASSERT(g_count == 2);
+
+	spdk_histogram_data_free(g_histogram);
+
+	/* Disable histogram */
+	spdk_bdev_histogram_disable(bdev, histogram_status_cb, NULL);
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(bdev->internal.histogram_enabled == false);
+
+	/* Try to run histogram commands on disabled bdev */
+	spdk_bdev_histogram_get(bdev, histogram_data_cb, NULL);
+	CU_ASSERT(g_status == -EOPNOTSUPP);
+
+	spdk_put_io_channel(ch1);
+	spdk_put_io_channel(ch2);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1429,7 +1535,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_spans_boundary", bdev_io_spans_boundary_test) == NULL ||
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
 		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
-		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL
+		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
+		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
