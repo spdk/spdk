@@ -837,10 +837,11 @@ spdk_nbd_bdev_hot_remove(void *remove_ctx)
 	spdk_nbd_stop(nbd);
 }
 
-struct spdk_nbd_disk *
-spdk_nbd_start(const char *bdev_name, const char *nbd_path)
+void
+spdk_nbd_start(const char *bdev_name, const char *nbd_path,
+	       spdk_nbd_start_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nbd_disk	*nbd;
+	struct spdk_nbd_disk	*nbd = NULL;
 	struct spdk_bdev	*bdev;
 	pthread_t		tid;
 	int			rc;
@@ -850,12 +851,14 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (bdev == NULL) {
 		SPDK_ERRLOG("no bdev %s exists\n", bdev_name);
-		return NULL;
+		rc = -EINVAL;
+		goto err;
 	}
 
 	nbd = calloc(1, sizeof(*nbd));
 	if (nbd == NULL) {
-		return NULL;
+		rc = -ENOMEM;
+		goto err;
 	}
 
 	nbd->dev_fd = -1;
@@ -884,6 +887,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->nbd_path = strdup(nbd_path);
 	if (!nbd->nbd_path) {
 		SPDK_ERRLOG("strdup allocation failure\n");
+		rc = -ENOMEM;
 		goto err;
 	}
 
@@ -899,24 +903,28 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
 	rc = ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
@@ -926,6 +934,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	rc = ioctl(nbd->dev_fd, NBD_SET_SOCK, nbd->kernel_sp_fd);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
@@ -933,6 +942,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
 		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 #endif
@@ -953,17 +963,26 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path)
 	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
 		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
 			    nbd->spdk_sp_fd, spdk_strerror(errno));
+		rc = -errno;
 		goto err;
 	}
 
 	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
 
-	return nbd;
+	if (cb_fn) {
+		cb_fn(cb_arg, nbd, 0);
+	}
+
+	return;
 
 err:
-	spdk_nbd_stop(nbd);
+	if (nbd) {
+		spdk_nbd_stop(nbd);
+	}
 
-	return NULL;
+	if (cb_fn) {
+		cb_fn(cb_arg, NULL, rc);
+	}
 }
 
 const char *
