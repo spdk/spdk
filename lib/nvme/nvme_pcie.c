@@ -766,8 +766,10 @@ nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pc
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
+	enum_ctx.has_pci_addr = true;
+	enum_ctx.pci_addr = *pci_addr;
 
-	return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, pci_addr);
+	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
