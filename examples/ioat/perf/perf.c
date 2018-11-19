@@ -321,7 +321,7 @@ submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *io
 	ioat_chan_entry->current_queue_depth++;
 }
 
-static void
+static int
 submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 {
 	while (queue_depth-- > 0) {
@@ -331,9 +331,14 @@ submit_xfers(struct ioat_chan_entry *ioat_chan_entry, uint64_t queue_depth)
 		src = spdk_mempool_get(ioat_chan_entry->data_pool);
 		dst = spdk_mempool_get(ioat_chan_entry->data_pool);
 		ioat_task = spdk_mempool_get(ioat_chan_entry->task_pool);
+		if (!ioat_task) {
+			fprintf(stderr, "Unable to get ioat_task\n");
+			return -1;
+		}
 
 		submit_single_xfer(ioat_chan_entry, ioat_task, dst, src);
 	}
+	return 0;
 }
 
 static int
@@ -350,7 +355,9 @@ work_fn(void *arg)
 	t = worker->ctx;
 	while (t != NULL) {
 		/* begin to submit transfers */
-		submit_xfers(t, g_user_config.queue_depth);
+		if (submit_xfers(t, g_user_config.queue_depth) < 0) {
+			return -1;
+		}
 		t = t->next;
 	}
 
