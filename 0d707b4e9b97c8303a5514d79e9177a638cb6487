@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d275b4c0_baf05c42",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 3035,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:38:50Z",
+      "side": 1,
+      "message": "I would put this patch first (the one that creates the tsc_diff local variable).\n\nThen you can just add the spdk_histogram_data_tally() into the main bdev histogram patch.",
+      "revId": "0d707b4e9b97c8303a5514d79e9177a638cb6487",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
