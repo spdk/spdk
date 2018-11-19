@@ -705,6 +705,27 @@ spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const char *s
 	return 0;
 }
 
+static int
+spdk_nvme_transport_id_parse_digest_type(enum spdk_nvme_tcp_digest_type *type, const char *str)
+{
+	if (type == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	if (strcasecmp(str, "None") == 0) {
+		*type = SPDK_NVME_TCP_DIGEST_NONE;
+	} else if (strcasecmp(str, "Header") == 0) {
+		*type = SPDK_NVME_TCP_DIGEST_HEADER;
+	} else if (strcasecmp(str, "Data") == 0) {
+		*type = SPDK_NVME_TCP_DIGEST_DATA;
+	} else if (strcasecmp(str, "Both") == 0) {
+		*type = SPDK_NVME_TCP_DIGEST_BOTH;
+	} else {
+		return -ENOENT;
+	}
+	return 0;
+}
+
 const char *
 spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam)
 {
@@ -790,6 +811,12 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				SPDK_ERRLOG("Unknown adrfam '%s'\n", val);
 				return -EINVAL;
 			}
+		} else if (strcasecmp(key, "digest_type") == 0) {
+			if (spdk_nvme_transport_id_parse_digest_type(&trid->digest_type, val) != 0) {
+				SPDK_ERRLOG("Unknown digest_type '%s'\n", val);
+				return -EINVAL;
+			}
+
 		} else if (strcasecmp(key, "traddr") == 0) {
 			if (val_len > SPDK_NVMF_TRADDR_MAX_LEN) {
 				SPDK_ERRLOG("traddr length %zu greater than maximum allowed %u\n",

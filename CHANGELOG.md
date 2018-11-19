@@ -24,6 +24,9 @@ Add a new TCP/IP transport(located in lib/nvme/nvme_tcp.c) in nvme driver. With
 this new transport, it can be used to connect the NVMe-oF target with the
 same TCP/IP support.
 
+Add a new member 'digest_type' in spdk_nvme_transport_id structure. This
+member is used to specify the digest type of the connection.
+
 ### nvmf
 
 Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
