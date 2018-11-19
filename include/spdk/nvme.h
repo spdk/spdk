@@ -212,6 +212,29 @@ enum spdk_nvme_transport_type {
 /* typedef added for coding style reasons */
 typedef enum spdk_nvme_transport_type spdk_nvme_transport_type_t;
 
+enum spdk_nvme_transport_digest_type {
+	/**
+	 * No header and data digests;
+	 */
+	SPDK_NVME_TCP_DIGEST_NONE = 0,
+
+	/**
+	 * Only header digest is enabled
+	 */
+	SPDK_NVME_TCP_DIGEST_HEADER = 1,
+
+	/**
+	 * Only data digest is enabled
+	 */
+	SPDK_NVME_TCP_DIGEST_DATA = 2,
+
+	/**
+	 * Both header and data digests are enabled
+	 */
+	SPDK_NVME_TCP_DIGEST_BOTH = 3,
+};
+
+
 /**
  * NVMe transport identifier.
  *
@@ -232,6 +255,12 @@ struct spdk_nvme_transport_id {
 	 * For PCIe, this value is ignored.
 	 */
 	enum spdk_nvmf_adrfam adrfam;
+
+	/**
+	 * Digest type of the tcp transport connection. For other transport,
+	 * this value will be ignored.
+	 */
+	enum spdk_nvme_transport_digest_type digest_type;
 
 	/**
 	 * Transport address of the NVMe-oF endpoint. For transports which use IP
