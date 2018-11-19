@@ -118,6 +118,78 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y doxygen mscgen graphviz
 	# Additional dependencies for ISA-L used in compression
 	pkg install -y autoconf automake libtool help2man
+elif [ -f /etc/arch-release ]; then
+	# Install main dependencies
+	pacman -Sy --needed --noconfirm gcc make cunit libaio openssl \
+		git astyle autopep8 python clang libutil-linux sg3_utils \
+		libiscsi pciutils shellcheck
+
+	# Additional (optional) dependencies for showing backtrace in logs
+	pacman -Sy --needed --noconfirm libunwind
+
+	# Additional dependencies for DPDK
+	pacman -Sy --needed --noconfirm numactl nasm
+
+	# Additional dependencies for building docs
+	pacman -Sy --needed --noconfirm doxygen graphviz
+
+	# Additional dependencies for SPDK CLI
+	pacman -Sy --needed --noconfirm python-pexpect python-pip
+	pip install configshell_fb
+
+	# Additional dependencies for ISA-L used in compression
+	pacman -Sy --needed --noconfirm autoconf automake libtool help2man
+
+	#fakeroot needed to instal via makepkg
+	pacman -Sy --needed --noconfirm fakeroot
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/perl-perlio-gzip.git;
+		cd perl-perlio-gzip;
+		yes y | makepkg -si --needed;
+		cd ..; rm -rf perl-perlio-gzip
+		popd"
+
+	# sed is to modify sources section in PKGBUILD
+	# By default it uses git:// which will fail behind proxy, so
+	# redirect it to http:// source instead
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/lcov-git.git;
+		cd lcov-git;
+		sed -i 's/git:/git+http:/' PKGBUILD;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf lcov-git;
+		popd"
+
+	# Additional dependency for building docs
+	pacman -S --noconfirm --needed gd ttf-font
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/mscgen.git;
+		cd mscgen;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf mscgen;
+		popd"
+
+	# Additional dependencies for NVMe over Fabrics
+	if [[ -n "$http_proxy" ]]; then
+		gpg_options=" --keyserver hkp://keyserver.ubuntu.com:80 --keyserver-options \"http-proxy=$http_proxy\""
+	fi
+	su - $SUDO_USER -c "gpg $gpg_options --recv-keys 29F0D86B9C1019B1"
+	su - $SUDO_USER -c "pushd /tmp;
+		git clone https://aur.archlinux.org/rdma-core.git;
+		cd rdma-core;
+		makepkg -si --needed --noconfirm;
+		cd .. && rm -rf rdma-core;
+		popd"
+
+	# Additional dependencies for building pmem based backends
+	pacman -Sy --needed --noconfirm ndctl
+	git clone https://github.com/pmem/pmdk.git /tmp/pmdk -b 1.6.1
+	make -C /tmp/pmdk -j$(nproc)
+	make install -C /tmp/pmdk
+	echo "/usr/local/lib" > /etc/ld.so.conf.d/pmdk.conf
+	ldconfig
+	rm -rf /tmp/pmdk
+
 else
 	echo "pkgdep: unknown system type."
 	exit 1
