@@ -154,7 +154,7 @@ void spdk_trace_record(uint16_t tpoint_id, uint16_t poller_id, uint32_t size,
 	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
 	 *  tracepoint group has its own tracepoint mask.
 	 */
-	if (g_trace_histories == NULL ||
+	if (g_trace_histories == NULL || tpoint_id >= SPDK_TRACE_MAX_TPOINT_ID ||
 	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
 		return;
 	}
@@ -183,7 +183,7 @@ void spdk_trace_record_tsc(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 	 *  within the group, the remaining upper bits determine the tracepoint group.  Each
 	 *  tracepoint group has its own tracepoint mask.
 	 */
-	if (g_trace_histories == NULL ||
+	if (g_trace_histories == NULL || tpoint_id >= SPDK_TRACE_MAX_TPOINT_ID ||
 	    !((1ULL << (tpoint_id & 0x3F)) & g_trace_histories->flags.tpoint_mask[tpoint_id >> 6])) {
 		return;
 	}
