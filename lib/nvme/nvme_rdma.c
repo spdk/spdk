@@ -1191,7 +1191,7 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 			return -1;
 		}
 
-		assert(length <= remaining_payload);
+		length = spdk_min(remaining_payload, length);
 
 		/* The RDMA SGL contains multiple elements. The first describes
 		* the NVMe command and the rest describe the data
