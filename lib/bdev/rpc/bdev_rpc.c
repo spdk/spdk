@@ -166,9 +166,9 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	/*
-	 * Increment initial bdev_count so that it will never reach 0 in the middle
-	 * of iterating.
-	 */
+	* Increment initial bdev_count so that it will never reach 0 in the middle
+	* of iterating.
+	*/
 	ctx->bdev_count++;
 	ctx->request = request;
 	ctx->w = w;
@@ -694,6 +694,20 @@ SPDK_RPC_REGISTER("histogram_enable", spdk_rpc_histogram_enable, SPDK_RPC_RUNTIM
 /* SPDK_RPC_HISTOGRAM_GET */
 
 static void
+print_bucket(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+	     uint64_t total, uint64_t so_far)
+{
+	struct spdk_json_write_ctx *w = (struct spdk_json_write_ctx *)ctx;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_double(w, "start", start);
+	spdk_json_write_named_double(w, "end", end);
+	spdk_json_write_named_double(w, "count", count);
+	spdk_json_write_named_double(w, "percentage", (so_far * 100 / total));
+	spdk_json_write_object_end(w);
+}
+
+static void
 _spdk_rpc_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
@@ -703,11 +717,13 @@ _spdk_rpc_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 	if (w == NULL) {
 		return;
 	}
-
-
-	/* TODO: Write histogram data instead of status */
-
-	spdk_json_write_bool(w, status == 0);
+	if (status == 0) {
+		spdk_json_write_array_begin(w);
+		spdk_histogram_data_iterate(histogram, print_bucket, w);
+		spdk_json_write_array_end(w);
+	} else {
+		spdk_json_write_bool(w, status == 0);
+	}
 	spdk_jsonrpc_end_result(request, w);
 }
 
