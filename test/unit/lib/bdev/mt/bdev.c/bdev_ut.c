@@ -80,6 +80,9 @@ bool g_get_io_channel = true;
 bool g_create_ch = true;
 bool g_init_complete_called = false;
 bool g_fini_start_called = true;
+int g_status = 0;
+int g_count = 0;
+struct spdk_histogram_data *g_histogram = NULL;
 
 static int
 stub_create_ch(void *io_device, void *ctx_buf)
@@ -1314,6 +1317,108 @@ qos_dynamic_enable(void)
 	teardown_test();
 }
 
+static void
+histogram_status_cb(void *cb_arg, int status)
+{
+	g_status = status;
+}
+
+static void
+histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	g_status = status;
+	g_histogram = histogram;
+}
+
+static void
+histogram_io_count(void *ctx, uint64_t start, uint64_t end, uint64_t count,
+		   uint64_t total, uint64_t so_far)
+{
+	g_count += count;
+}
+
+static void
+bdev_histograms_mt(void)
+{
+	struct spdk_io_channel *ch[2];
+	struct spdk_histogram_data *histogram;
+	uint8_t buf[4096];
+	int status = false;
+	int rc;
+
+
+	setup_test();
+
+	set_thread(0);
+	ch[0] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(ch[0] != NULL);
+
+	set_thread(1);
+	ch[1] = spdk_bdev_get_io_channel(g_desc);
+	CU_ASSERT(ch[1] != NULL);
+
+
+	/* Enable histogram */
+	spdk_bdev_histogram_enable(&g_bdev.bdev, histogram_status_cb, NULL, true);
+	poll_threads();
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == true);
+
+	/* Allocate histogram */
+	histogram = spdk_histogram_data_alloc();
+
+	/* Check if histogram is zeroed */
+	spdk_bdev_histogram_get(&g_bdev.bdev, histogram, histogram_data_cb, NULL);
+	poll_threads();
+	CU_ASSERT(g_status == 0);
+	SPDK_CU_ASSERT_FATAL(g_histogram != NULL);
+
+	g_count = 0;
+	spdk_histogram_data_iterate(g_histogram, histogram_io_count, NULL);
+
+	CU_ASSERT(g_count == 0);
+
+	set_thread(0);
+	rc = spdk_bdev_write_blocks(g_desc, ch[0], &buf, 0, 1, io_during_io_done, &status);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(10);
+	stub_complete_io(g_bdev.io_target, 1);
+	poll_threads();
+	CU_ASSERT(status == true);
+
+
+	set_thread(1);
+	rc = spdk_bdev_read_blocks(g_desc, ch[1], &buf, 0, 1, io_during_io_done, &status);
+	CU_ASSERT(rc == 0);
+
+	spdk_delay_us(10);
+	stub_complete_io(g_bdev.io_target, 1);
+	poll_threads();
+	CU_ASSERT(status == true);
+
+	set_thread(0);
+
+	/* Check if histogram gathered data from all I/O channels */
+	spdk_bdev_histogram_get(&g_bdev.bdev, histogram, histogram_data_cb, NULL);
+	poll_threads();
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == true);
+	SPDK_CU_ASSERT_FATAL(g_histogram != NULL);
+
+	g_count = 0;
+	spdk_histogram_data_iterate(g_histogram, histogram_io_count, NULL);
+	CU_ASSERT(g_count == 2);
+
+	/* Disable histogram */
+	spdk_bdev_histogram_enable(&g_bdev.bdev, histogram_status_cb, NULL, false);
+	poll_threads();
+	CU_ASSERT(g_status == 0);
+	CU_ASSERT(g_bdev.bdev.internal.histogram_enabled == false);
+
+	spdk_histogram_data_free(g_histogram);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1342,7 +1447,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
 		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
-		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL
+		CU_add_test(suite, "qos_dynamic_enable", qos_dynamic_enable) == NULL ||
+		CU_add_test(suite, "bdev_histograms_mt", bdev_histograms_mt) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
