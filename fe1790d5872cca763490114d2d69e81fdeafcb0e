@@ -16,6 +16,24 @@
       "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c91fe98_92e92ce9",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-19T05:21:30Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nThank you for your comment.\n\nI developed and tested these complex code to get better understanding of T10DIF + IOV, and to remove any limitation of alignment and granularity.\n\nI agree with you that supporting multiple of (block size + metadata size) will be enough because I asked that idea in SPDK mailing list before. I remove these complex code in the next patch.\n\nWe will be able to support these complex use cases even if becoming necessary.\n\nI have had other critical tasks until tomorrow but I hope I will submit the next version in this week.\n\nThanks,\nShuhei",
+      "parentUuid": "b98fa84c_fbfb2aa4",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
