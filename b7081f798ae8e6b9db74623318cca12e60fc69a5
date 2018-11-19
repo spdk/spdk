@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18a982fc_f67d84bb",
+        "filename": "lib/vhost/rte_vhost/socket.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-19T13:35:55Z",
+      "side": 1,
+      "message": "It is needed here too. It would be better if you move initialization of the mutex into line 680. Then no destroy is needed.\n\nIs this change valid also for upstream DPDK vhost?",
+      "range": {
+        "startLine": 666,
+        "startChar": 4,
+        "endLine": 667,
+        "endChar": 13
+      },
+      "revId": "b7081f798ae8e6b9db74623318cca12e60fc69a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
