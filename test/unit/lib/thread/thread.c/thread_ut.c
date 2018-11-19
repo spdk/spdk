@@ -219,8 +219,8 @@ for_each_channel_remove(void)
 	int count = 0;
 
 	allocate_threads(3);
-	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	set_thread(0);
+	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	ch0 = spdk_get_io_channel(&io_target);
 	set_thread(1);
 	ch1 = spdk_get_io_channel(&io_target);
@@ -294,13 +294,13 @@ for_each_channel_unreg(void)
 	int io_target;
 
 	allocate_threads(1);
+	set_thread(0);
 	CU_ASSERT(TAILQ_EMPTY(&g_io_devices));
 	spdk_io_device_register(&io_target, channel_create, channel_destroy, sizeof(int), NULL);
 	CU_ASSERT(!TAILQ_EMPTY(&g_io_devices));
 	dev = TAILQ_FIRST(&g_io_devices);
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
 	CU_ASSERT(TAILQ_NEXT(dev, tailq) == NULL);
-	set_thread(0);
 	ch0 = spdk_get_io_channel(&io_target);
 	spdk_for_each_channel(&io_target, unreg_ch_done, &ctx, unreg_foreach_done);
 

@@ -630,6 +630,7 @@ void
 spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 {
 	struct call_thread *ct;
+	struct spdk_thread *thread;
 
 	ct = calloc(1, sizeof(*ct));
 	if (!ct) {
@@ -643,7 +644,14 @@ spdk_for_each_thread(spdk_thread_fn fn, void *ctx, spdk_thread_fn cpl)
 	ct->cpl = cpl;
 
 	pthread_mutex_lock(&g_devlist_mutex);
-	ct->orig_thread = _get_thread();
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		free(ct);
+		cpl(ctx);
+		return;
+	}
+	ct->orig_thread = thread;
 	ct->cur_thread = TAILQ_FIRST(&g_threads);
 	pthread_mutex_unlock(&g_devlist_mutex);
 
@@ -659,10 +667,18 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 			const char *name)
 {
 	struct io_device *dev, *tmp;
+	struct spdk_thread *thread;
 
 	assert(io_device != NULL);
 	assert(create_cb != NULL);
 	assert(destroy_cb != NULL);
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		assert(false);
+		return;
+	}
 
 	dev = calloc(1, sizeof(struct io_device));
 	if (dev == NULL) {
@@ -685,7 +701,7 @@ spdk_io_device_register(void *io_device, spdk_io_channel_create_cb create_cb,
 	dev->refcnt = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Registering io_device %s (%p) on thread %s\n",
-		      dev->name, dev->io_device, spdk_get_thread()->name);
+		      dev->name, dev->io_device, thread->name);
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(tmp, &g_io_devices, tailq) {
@@ -737,6 +753,11 @@ spdk_io_device_unregister(void *io_device, spdk_io_device_unregister_cb unregist
 	struct spdk_thread *thread;
 
 	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		assert(false);
+		return;
+	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
 	TAILQ_FOREACH(dev, &g_io_devices, tailq) {
@@ -859,12 +880,20 @@ _spdk_put_io_channel(void *arg)
 {
 	struct spdk_io_channel *ch = arg;
 	bool do_remove_dev = true;
+	struct spdk_thread *thread;
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("%s called from non-SPDK thread\n", __func__);
+		assert(false);
+		return;
+	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
 		      "Releasing io_channel %p for io_device %s (%p). Channel thread %p. Current thread %s\n",
-		      ch, ch->dev->name, ch->dev->io_device, ch->thread, spdk_get_thread()->name);
+		      ch, ch->dev->name, ch->dev->io_device, ch->thread, thread->name);
 
-	assert(ch->thread == spdk_get_thread());
+	assert(ch->thread == thread);
 
 	ch->destroy_ref--;
 
