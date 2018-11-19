@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "cc67b36c_9e3dea65",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-19T01:14:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81b23b87_6653ecc0",
+      "range": {
+        "startLine": 117,
+        "startChar": 11,
+        "endLine": 117,
+        "endChar": 61
+      },
+      "revId": "b5e28ab009ca3099332d16a60aaa45369303c2f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d445e82b_d67c3ab7",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-16T05:11:40Z",
       "side": 1,
       "message": "\"For raid2, the lvol bdev on raid2 is being used.\" ?",
+      "range": {
+        "startLine": 160,
+        "startChar": 4,
+        "endLine": 160,
+        "endChar": 61
+      },
+      "revId": "b5e28ab009ca3099332d16a60aaa45369303c2f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c10a90c_46c81d49",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-19T01:14:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d445e82b_d67c3ab7",
       "range": {
         "startLine": 160,
         "startChar": 4,
