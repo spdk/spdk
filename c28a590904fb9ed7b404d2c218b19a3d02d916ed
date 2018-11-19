@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c2a8cf8_2be805cd",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T20:34:39Z",
+      "side": 0,
+      "message": "Hi Ziye,\n\nCould you do a patch before this one, that moves all of this code into a common function?  Then this patch can just call that function, maybe with some small modifications.\n\nIt really makes the patch a lot smaller, and easier to review.\n\nThanks,\n\n-Jim",
+      "revId": "c28a590904fb9ed7b404d2c218b19a3d02d916ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
