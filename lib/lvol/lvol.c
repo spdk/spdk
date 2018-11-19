@@ -1425,8 +1425,7 @@ void
 spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
-	struct spdk_blob *blob = lvol->blob;
-	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+	spdk_blob_id blob_id;
 
 	assert(cb_fn != NULL);
 
@@ -1453,6 +1452,7 @@ spdk_lvol_inflate(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 		return;
 	}
 
+	blob_id = spdk_blob_get_id(lvol->blob);
 	spdk_bs_inflate_blob(lvol->lvol_store->blobstore, req->channel, blob_id, _spdk_lvol_inflate_cb,
 			     req);
 }
@@ -1461,8 +1461,7 @@ void
 spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
-	struct spdk_blob *blob = lvol->blob;
-	spdk_blob_id blob_id = spdk_blob_get_id(blob);
+	spdk_blob_id blob_id;
 
 	assert(cb_fn != NULL);
 
@@ -1489,6 +1488,7 @@ spdk_lvol_decouple_parent(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, v
 		return;
 	}
 
+	blob_id = spdk_blob_get_id(lvol->blob);
 	spdk_bs_blob_decouple_parent(lvol->lvol_store->blobstore, req->channel, blob_id,
 				     _spdk_lvol_inflate_cb, req);
 }
