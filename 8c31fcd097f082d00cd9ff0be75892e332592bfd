@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b36ded98_0b7e165f",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 3
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T21:10:19Z",
+      "side": 1,
+      "message": "history_entries is no longer dereferenced as a struct spdk_trace_history.  So we should remove this case, and just declare history_entries as a void * now.",
+      "revId": "8c31fcd097f082d00cd9ff0be75892e332592bfd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fda2ada3_ae72d2d8",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T21:10:19Z",
+      "side": 1,
+      "message": "let\u0027s add a check here if lcore \u003e\u003d SPDK_TRACE_MAX_LCORE, then return NULL\n\nprevious code didn\u0027t check for this, but I think we can add it now",
+      "revId": "8c31fcd097f082d00cd9ff0be75892e332592bfd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
