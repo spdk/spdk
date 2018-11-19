@@ -2,6 +2,7 @@
 # Please run this script as root.
 
 set -e
+trap 'set +e; trap - ERR; echo "Error on line $LINENO"; exit 1;' ERR
 
 function usage()
 {
@@ -35,7 +36,6 @@ while getopts 'hi-:' optchar; do
 	esac
 done
 
-trap 'set +e; trap - ERR; echo "Error!"; exit 1;' ERR
 
 scriptsdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $scriptsdir/..)
@@ -108,6 +108,42 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
+elif [ -f /etc/arch-release ]; then
+	echo -n "Install lcov-git, rdma-core and mscdocs from AUR? (y/N) "
+	read AUR
+	if [[ "$AUR" != "y" ]]; then
+		echo "Aborted!" && exit 1
+	fi
+	su - $SUDO_USER -c "\
+		git clone https://aur.archlinux.org/lcov-git.git && \
+		cd lcov-git && \
+		makepkg -si --needed --noconfirm && \
+		cd .. && rm -rf lcov-git"
+	# Additional dependencies for NVMe over Fabrics
+	su - $SUDO_USER -c "gpg --recv-keys 29F0D86B9C1019B1"
+	su - $SUDO_USER -c "\
+		git clone https://aur.archlinux.org/rdma-core.git && \
+		cd rdma-core && \
+		makepkg -si --needed --noconfirm && \
+		cd .. && rm -rf rdma-core"
+	# Additional dependency for building docs
+	pacman -S --noconfirm --needed gd ttf-font
+	su - $SUDO_USER -c "\
+		git clone https://aur.archlinux.org/mscgen.git && \
+		cd mscgen && \
+		makepkg -si --needed --noconfirm && \
+		cd .. && rm -rf mscgen"
+	pacman -S --needed --noconfirm cunit libunwind gcc make libaio openssl git \
+		astyle autopep8 python clang libutil-linux sg3_utils libiscsi pciutils
+	# Additional (optional) dependencies for showing backtrace in logs
+	pacman -S --noconfirm libunwind
+	# Additional dependencies for DPDK
+	pacman -S --needed --noconfirm numactl nasm
+	# Additional dependencies for building docs
+	pacman -S --needed --noconfirm doxygen graphviz
+	# Additional dependencies for SPDK CLI
+	pacman -S --needed --noconfirm python-pexpect python-pip
+	pip install configshell_fb
 else
 	echo "pkgdep: unknown system type."
 	exit 1
@@ -123,7 +159,7 @@ if $INSTALL_CRYPTO; then
 			echo Crypto requires NASM version 2.12.02 or newer.  Please install
 			echo or upgrade and re-run this script if you are going to use Crypto.
 	else
-		ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)"
+		ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)" || true
 		if [ "$ipsec" == "" ]; then
 			ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
 			if [ "$ipsec_submodule_cloned" != "" ]; then
