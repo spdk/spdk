@@ -22,6 +22,30 @@
       "revId": "b7081f798ae8e6b9db74623318cca12e60fc69a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "245f64ee_620f5388",
+        "filename": "lib/vhost/rte_vhost/socket.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 667,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-11-19T14:35:29Z",
+      "side": 1,
+      "message": "ACK, I guess so. This was found by Klocwork.",
+      "parentUuid": "18a982fc_f67d84bb",
+      "range": {
+        "startLine": 666,
+        "startChar": 4,
+        "endLine": 667,
+        "endChar": 13
+      },
+      "revId": "b7081f798ae8e6b9db74623318cca12e60fc69a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
