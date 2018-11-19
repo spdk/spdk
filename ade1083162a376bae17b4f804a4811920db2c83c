@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81c59c49_a22a0f05",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:23:05Z",
+      "side": 1,
+      "message": "return -errno?",
+      "revId": "ade1083162a376bae17b4f804a4811920db2c83c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74d787c4_9dcb9fb8",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T17:23:05Z",
+      "side": 1,
+      "message": "This rc \u003d\u003d 0 assumes that POLLOUT was set and _spdk_jsonrpc_client_send_request() returned 0.\n\nIf poll() on line 149 returns 1, and POLLOUT is not set in revents, then rc will still equal 1 here and we won\u0027t try to receive data.",
+      "revId": "ade1083162a376bae17b4f804a4811920db2c83c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
