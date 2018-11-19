@@ -34,6 +34,24 @@
       "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d4d91e1_d52b404b",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-19T05:27:25Z",
+      "side": 1,
+      "message": "thanks Shuhei, no hurry, :).",
+      "parentUuid": "9c91fe98_92e92ce9",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
