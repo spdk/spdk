@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebd268ad_e019f7b6",
+        "filename": "lib/iscsi/init_grp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T20:47:21Z",
+      "side": 1,
+      "message": "This should change to \u003e instead of \u003e\u003d if you change MAX_INITIATOR_NAME to 223 (see comment on header file)",
+      "revId": "cc8b0119c20bfddaa6263337ed758a3d7d543609",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41c083a1_cd8c7e22",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T20:47:21Z",
+      "side": 1,
+      "message": "I think we should change MAX_INITIATOR_NAME and MAX_TARGET_NAME to 223, since that is the value specified in the spec.  Then we can just check \u003e instead of \u003e\u003d to find illegal length strings.",
+      "revId": "cc8b0119c20bfddaa6263337ed758a3d7d543609",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5fe54f21_39c4e59c",
+        "filename": "lib/iscsi/tgt_node.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-19T20:47:21Z",
+      "side": 1,
+      "message": "\u003e instead of \u003e\u003d (when MAX_TARGET_NAME \u003d 223)",
+      "revId": "cc8b0119c20bfddaa6263337ed758a3d7d543609",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
