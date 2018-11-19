@@ -33,6 +33,24 @@
       "revId": "ade1083162a376bae17b4f804a4811920db2c83c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bff45a5_1f5c753b",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-19T19:10:48Z",
+      "side": 1,
+      "message": "Good catch. I didn\u0027t notice that as POLOUT is always set. Will fix it.",
+      "parentUuid": "74d787c4_9dcb9fb8",
+      "revId": "ade1083162a376bae17b4f804a4811920db2c83c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
