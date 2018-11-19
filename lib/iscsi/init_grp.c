@@ -83,6 +83,11 @@ spdk_iscsi_init_grp_add_initiator(struct spdk_iscsi_init_grp *ig, char *name)
 		return -EPERM;
 	}
 
+	if (strlen(name) > MAX_INITIATOR_NAME) {
+		SPDK_ERRLOG("Initiator Name is larger than 223 bytes\n");
+		return -EINVAL;
+	}
+
 	iname = spdk_iscsi_init_grp_find_initiator(ig, name);
 	if (iname != NULL) {
 		return -EEXIST;
