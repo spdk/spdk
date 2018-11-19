@@ -143,13 +143,15 @@ nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint
 
 static void
 nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
-			   void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+			   void *cb_ctx, spdk_nvme_probe_cb probe_cb,
+			   enum spdk_nvme_transport_digest_type type)
 {
 	struct spdk_nvme_transport_id trid;
 	uint8_t *end;
 	size_t len;
 
 	memset(&trid, 0, sizeof(trid));
+	trid.digest_type = type;
 
 	if (entry->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
 		SPDK_WARNLOG("Skipping unsupported discovery service referral\n");
@@ -260,7 +262,7 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 		}
 
 		for (i = 0; i < numrec; i++) {
-			nvme_fabric_discover_probe(log_page_entry++, cb_ctx, probe_cb);
+			nvme_fabric_discover_probe(log_page_entry++, cb_ctx, probe_cb, ctrlr->trid.digest_type);
 		}
 		remaining_num_rec -= numrec;
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);
