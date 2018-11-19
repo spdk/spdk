@@ -837,16 +837,74 @@ spdk_nbd_bdev_hot_remove(void *remove_ctx)
 	spdk_nbd_stop(nbd);
 }
 
+struct spdk_nbd_start_ctx {
+	struct spdk_nbd_disk	*nbd;
+	spdk_nbd_start_cb	cb_fn;
+	void			*cb_arg;
+};
+
+static void
+spdk_nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
+{
+	int		rc;
+	pthread_t	tid;
+	int		flag;
+
+#ifdef NBD_FLAG_SEND_TRIM
+	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
+	if (rc == -1) {
+		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
+		goto err;
+	}
+#endif
+
+	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)ctx->nbd->dev_fd);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
+		goto err;
+	}
+
+	rc = pthread_detach(tid);
+	if (rc != 0) {
+		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
+		goto err;
+	}
+
+	flag = fcntl(ctx->nbd->spdk_sp_fd, F_GETFL);
+	if (fcntl(ctx->nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
+		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
+			    ctx->nbd->spdk_sp_fd, spdk_strerror(errno));
+		rc = -errno;
+		goto err;
+	}
+
+	ctx->nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, ctx->nbd, 0);
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, ctx->nbd, 0);
+	}
+
+	free(ctx);
+	return;
+
+err:
+	spdk_nbd_stop(ctx->nbd);
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, NULL, rc);
+	}
+	free(ctx);
+}
+
 void
 spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	       spdk_nbd_start_cb cb_fn, void *cb_arg)
 {
-	struct spdk_nbd_disk	*nbd = NULL;
-	struct spdk_bdev	*bdev;
-	pthread_t		tid;
-	int			rc;
-	int			sp[2];
-	int			flag;
+	struct spdk_nbd_start_ctx	*ctx;
+	struct spdk_nbd_disk		*nbd = NULL;
+	struct spdk_bdev		*bdev;
+	int				rc;
+	int				sp[2];
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (bdev == NULL) {
@@ -864,6 +922,16 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	nbd->dev_fd = -1;
 	nbd->spdk_sp_fd = -1;
 	nbd->kernel_sp_fd = -1;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		rc = -ENOMEM;
+		goto err;
+	}
+
+	ctx->nbd = nbd;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 
 	rc = spdk_bdev_open(bdev, true, spdk_nbd_bdev_hot_remove, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
@@ -938,44 +1006,11 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 		goto err;
 	}
 
-#ifdef NBD_FLAG_SEND_TRIM
-	rc = ioctl(nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_FLAGS) failed: %s\n", spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-#endif
-
-	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)nbd->dev_fd);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
-		goto err;
-	}
-
-	rc = pthread_detach(tid);
-	if (rc != 0) {
-		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
-		goto err;
-	}
-
-	flag = fcntl(nbd->spdk_sp_fd, F_GETFL);
-	if (fcntl(nbd->spdk_sp_fd, F_SETFL, flag | O_NONBLOCK) < 0) {
-		SPDK_ERRLOG("fcntl can't set nonblocking mode for socket, fd: %d (%s)\n",
-			    nbd->spdk_sp_fd, spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
-	nbd->nbd_poller = spdk_poller_register(spdk_nbd_poll, nbd, 0);
-
-	if (cb_fn) {
-		cb_fn(cb_arg, nbd, 0);
-	}
-
+	spdk_nbd_start_complete(ctx);
 	return;
 
 err:
+	free(ctx);
 	if (nbd) {
 		spdk_nbd_stop(nbd);
 	}
