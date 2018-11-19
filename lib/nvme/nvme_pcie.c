@@ -197,8 +197,7 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
-static int nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx,
-				  struct spdk_pci_addr *pci_addr);
+static int nvme_pcie_ctrlr_enumerate(spdk_nvme_probe_cb probe_cb, void *cb_ctx);
 static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
@@ -252,7 +251,6 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 {
 	struct spdk_nvme_ctrlr *ctrlr, *tmp;
 	struct spdk_uevent event;
-	struct spdk_pci_addr pci_addr;
 	union spdk_nvme_csts_register csts;
 	struct spdk_nvme_ctrlr_process *proc;
 
@@ -263,9 +261,7 @@ _nvme_pcie_hotplug_monitor(void *cb_ctx, spdk_nvme_probe_cb probe_cb,
 				SPDK_DEBUGLOG(SPDK_LOG_NVME, "add nvme address: %s\n",
 					      event.traddr);
 				if (spdk_process_is_primary()) {
-					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
-						nvme_pcie_ctrlr_attach(probe_cb, cb_ctx, &pci_addr);
-					}
+					nvme_pcie_ctrlr_enumerate(probe_cb, cb_ctx);
 				}
 			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
 				struct spdk_nvme_transport_id trid;
@@ -760,14 +756,14 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 }
 
 static int
-nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pci_addr *pci_addr)
+nvme_pcie_ctrlr_enumerate(spdk_nvme_probe_cb probe_cb, void *cb_ctx)
 {
 	struct nvme_pcie_enum_ctx enum_ctx;
 
 	enum_ctx.probe_cb = probe_cb;
 	enum_ctx.cb_ctx = cb_ctx;
 
-	return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, pci_addr);
+	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
