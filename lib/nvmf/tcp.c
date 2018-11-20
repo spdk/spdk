@@ -559,7 +559,6 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	pthread_mutex_init(&ttransport->lock, NULL);
 	TAILQ_INIT(&ttransport->ports);
 
 	ttransport->transport.ops = &spdk_nvmf_transport_tcp;
@@ -594,6 +593,8 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		free(ttransport);
 		return NULL;
 	}
+
+	pthread_mutex_init(&ttransport->lock, NULL);
 
 	spdk_io_device_register(ttransport, spdk_nvmf_tcp_mgmt_channel_create,
 				spdk_nvmf_tcp_mgmt_channel_destroy,
