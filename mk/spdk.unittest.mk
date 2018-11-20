@@ -53,7 +53,7 @@ endif
 all: $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ADDITIONAL_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:
