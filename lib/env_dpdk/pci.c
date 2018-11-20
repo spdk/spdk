@@ -137,6 +137,7 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
+	struct spdk_pci_device *dev;
 	int rc;
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	char bdf[32];
@@ -152,6 +153,26 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 #endif
 
 	pthread_mutex_lock(&g_pci_mutex);
+
+	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
+		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
+			break;
+		}
+	}
+
+	if (dev != NULL && dev->enum_ctx == ctx) {
+		if (dev->attached) {
+			pthread_mutex_unlock(&g_pci_mutex);
+			return -1;
+		}
+
+		rc = enum_cb(enum_ctx, dev);
+		if (rc == 0) {
+			dev->attached = true;
+		}
+		pthread_mutex_unlock(&g_pci_mutex);
+		return rc;
+	}
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
@@ -191,7 +212,24 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
+	struct spdk_pci_device *dev;
+	int rc;
+
 	pthread_mutex_lock(&g_pci_mutex);
+
+	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
+		if (dev->attached || dev->enum_ctx != ctx) {
+			continue;
+		}
+
+		rc = enum_cb(enum_ctx, dev);
+		if (rc == 0) {
+			dev->attached = true;
+		} else if (rc < 0) {
+			pthread_mutex_unlock(&g_pci_mutex);
+			return -1;
+		}
+	}
 
 	if (!ctx->is_registered) {
 		ctx->is_registered = true;
