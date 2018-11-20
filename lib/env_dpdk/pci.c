@@ -122,12 +122,13 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
+	int rc;
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	char				bdf[32];
+	char bdf[32];
 
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
 #else
-	struct rte_pci_addr		addr;
+	struct rte_pci_addr addr;
 
 	addr.domain = pci_address->domain;
 	addr.bus = pci_address->bus;
@@ -150,25 +151,20 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 	ctx->cb_arg = enum_ctx;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
-	if (rte_eal_hotplug_add("pci", bdf, "") != 0) {
+	rc = rte_eal_hotplug_add("pci", bdf, "");
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	if (rte_eal_dev_attach(bdf, "") != 0) {
+	rc = rte_eal_dev_attach(bdf, "");
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	if (rte_pci_probe_one(&addr) != 0) {
+	rc = rte_pci_probe_one(&addr);
 #else
-	if (rte_eal_pci_probe_one(&addr) != 0) {
+	rc = rte_eal_pci_probe_one(&addr);
 #endif
-		ctx->cb_arg = NULL;
-		ctx->cb_fn = NULL;
-		pthread_mutex_unlock(&g_pci_mutex);
-		return -1;
-	}
 
 	ctx->cb_arg = NULL;
 	ctx->cb_fn = NULL;
 	pthread_mutex_unlock(&g_pci_mutex);
 
-	return 0;
+	return rc == 0 ? 0 : -1;
 }
 
 /* Note: You can call spdk_pci_enumerate from more than one thread
