@@ -73,6 +73,9 @@ extern struct rte_pci_bus rte_pci_bus;
 
 struct spdk_pci_device {
 	struct rte_pci_device		*dev_handle;
+	struct spdk_pci_addr		addr;
+	struct spdk_pci_id		id;
+	int				socket_id;
 	bool				attached;
 	TAILQ_ENTRY(spdk_pci_device)	tailq;
 };
