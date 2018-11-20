@@ -39,9 +39,9 @@ include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 C_SRCS = $(APP:%=%.c)
 
-SPDK_LIB_LIST = nvme thread util log sock
+SPDK_LIB_LIST = $(SOCK_MODULES_LIST)
+SPDK_LIB_LIST += nvme thread util log sock
 
-LIBS += $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 ifeq ($(CONFIG_RDMA),y)
@@ -51,7 +51,7 @@ endif
 all: $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SOCK_MODULES_FILES) $(SPDK_LIB_FILES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:

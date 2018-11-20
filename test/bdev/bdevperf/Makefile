@@ -40,16 +40,16 @@ APP = bdevperf
 
 C_SRCS := bdevperf.c
 
-SPDK_LIB_LIST = event_bdev event_copy
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_copy
 SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc jsonrpc json sock
 
-LIBS += $(ALL_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all : $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ALL_MODULES_FILES) $(ENV_LIBS)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :

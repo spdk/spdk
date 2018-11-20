@@ -40,19 +40,19 @@ APP = vhost
 
 C_SRCS := vhost.c
 
-SPDK_LIB_LIST = vhost rte_vhost event_vhost
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += vhost rte_vhost event_vhost
 SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
 SPDK_LIB_LIST += event_nbd nbd net sock
 
-LIBS += $(ALL_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all : $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(ALL_MODULES_FILES)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
