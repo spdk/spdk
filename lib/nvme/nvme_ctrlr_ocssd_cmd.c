@@ -72,6 +72,7 @@ spdk_nvme_ocssd_ctrlr_cmd_geometry(struct spdk_nvme_ctrlr *ctrlr, uint32_t nsid,
 	req = nvme_allocate_request_user_copy(ctrlr->adminq,
 					      payload, payload_size, cb_fn, cb_arg, false);
 	if (req == NULL) {
+		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 		return -ENOMEM;
 	}
 
