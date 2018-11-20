@@ -231,6 +231,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
+	TAILQ_INIT(&dev->sess_head);
+	TAILQ_INIT(&dev->res_head);
 
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],

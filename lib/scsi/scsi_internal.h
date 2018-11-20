@@ -72,6 +72,12 @@ struct spdk_scsi_dev {
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
 
 	uint8_t			protocol_id;
+
+	TAILQ_HEAD(, spdk_scsi_pr_session) sess_head;
+	TAILQ_HEAD(, spdk_scsi_pr_reservation) res_head;
+	enum spdk_scsi_pr_type_code type;
+	uint32_t pr_generation;
+	uint64_t crkey;
 };
 
 struct spdk_scsi_desc {
@@ -117,6 +123,20 @@ struct spdk_scsi_lun {
 
 	/** pending tasks */
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;
+};
+
+/* I_T Nexus */
+struct spdk_scsi_pr_session {
+	uint64_t rkey;
+	struct spdk_scsi_port *initiator_port;
+	struct spdk_scsi_port *target_port;
+	TAILQ_ENTRY(spdk_scsi_pr_session) link;
+};
+
+/* Reservation holders for different types */
+struct spdk_scsi_pr_reservation {
+	struct spdk_scsi_pr_session *sess;
+	TAILQ_ENTRY(spdk_scsi_pr_reservation) link;
 };
 
 struct spdk_lun_db_entry {
