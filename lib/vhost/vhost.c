@@ -1362,7 +1362,7 @@ spdk_vhost_init(void)
 		}
 
 		len = strlen(dev_dirname);
-		if (dev_dirname[len - 1] != '/') {
+		if ((len < sizeof(dev_dirname) - 1) && dev_dirname[len - 1] != '/') {
 			dev_dirname[len] = '/';
 			dev_dirname[len + 1] = '\0';
 		}
