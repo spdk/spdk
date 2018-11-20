@@ -103,22 +103,12 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 void
 spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
+	struct rte_pci_device *device = dev->dev_handle;
+
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	rte_eal_hotplug_remove("pci", device->device.name);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	struct rte_pci_device *device = dev->dev_handle;
-	struct spdk_pci_addr	addr;
-	char			bdf[32];
-
-	addr.domain = device->addr.domain;
-	addr.bus = device->addr.bus;
-	addr.dev = device->addr.devid;
-	addr.func = device->addr.function;
-
-	spdk_pci_addr_fmt(bdf, sizeof(bdf), &addr);
-	if (rte_eal_dev_detach(&device->device) < 0) {
-		fprintf(stderr, "Failed to detach PCI device %s (device already removed?).\n", bdf);
-	}
+	rte_eal_dev_detach(&device->device);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
 	rte_pci_detach(&device->addr);
 #else
