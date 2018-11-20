@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = dev.c lun.c port.c scsi.c scsi_bdev.c scsi_rpc.c task.c
+C_SRCS = dev.c lun.c port.c scsi.c scsi_bdev.c scsi_pr.c scsi_rpc.c task.c
 LIBNAME = scsi
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
