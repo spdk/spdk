@@ -527,7 +527,7 @@ function part_dev_by_gpt () {
 		waitforlisten $nbd_pid $rpc_server
 
 		# Start bdev as a nbd device
-		$rootdir/scripts/rpc.py -s "$rpc_server" start_nbd_disk $devname $nbd_path
+		nbd_start_disks "$rpc_server" $devname $nbd_path
 
 		waitfornbd ${nbd_path:5}
 
@@ -545,7 +545,7 @@ function part_dev_by_gpt () {
 			dd if=/dev/zero of=$nbd_path bs=4096 count=8 oflag=direct
 		fi
 
-		$rootdir/scripts/rpc.py -s "$rpc_server" stop_nbd_disk $nbd_path
+		nbd_stop_disks "$rpc_server" $nbd_path
 
 		killprocess $nbd_pid
 		rm -f ${conf}.gpt

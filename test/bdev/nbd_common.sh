@@ -6,12 +6,9 @@ function nbd_start_disks() {
 	local nbd_list=($3)
 
 	for (( i=0; i<${#nbd_list[@]}; i++ )); do
-		$rootdir/scripts/rpc.py -s $rpc_server start_nbd_disk \
-		${bdev_list[$i]} ${nbd_list[$i]}
-	done
-	# Wait for nbd devices ready
-	for i in ${nbd_list[@]}; do
-		waitfornbd ${i:5}
+		$rootdir/scripts/rpc.py -s $rpc_server start_nbd_disk ${bdev_list[$i]} ${nbd_list[$i]}
+		# Wait for nbd device ready
+		waitfornbd $(basename ${nbd_list[$i]})
 	done
 }
 
@@ -35,9 +32,7 @@ function nbd_stop_disks() {
 
 	for i in ${nbd_list[@]}; do
 		$rootdir/scripts/rpc.py -s $rpc_server stop_nbd_disk $i
-	done
-	for i in ${nbd_list[@]}; do
-		waitfornbd_exit ${i:5}
+		waitfornbd_exit $(basename $i)
 	done
 }
 
