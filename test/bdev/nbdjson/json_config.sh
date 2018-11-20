@@ -14,7 +14,9 @@ modprobe nbd
 timing_enter nbd_json_config_create_setup
 $rpc_py construct_malloc_bdev 128 512 --name Malloc0
 $rpc_py start_nbd_disk Malloc0 /dev/nbd0
+waitfornbd nbd0
 $rpc_py start_nbd_disk Nvme0n1 /dev/nbd1
+waitfornbd nbd1
 timing_exit nbd_json_config_create_setup
 
 timing_enter nbd_json_config_test
