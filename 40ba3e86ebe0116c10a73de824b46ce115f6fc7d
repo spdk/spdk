@@ -22,6 +22,30 @@
       "revId": "40ba3e86ebe0116c10a73de824b46ce115f6fc7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f7642eb_5bfc608a",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-20T15:26:02Z",
+      "side": 1,
+      "message": "I am OK with that - but let\u0027s do it in a separate patch from this one.",
+      "parentUuid": "e1d85664_bef7dc0c",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 30
+      },
+      "revId": "40ba3e86ebe0116c10a73de824b46ce115f6fc7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
