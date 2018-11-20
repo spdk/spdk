@@ -72,6 +72,13 @@ struct spdk_scsi_dev {
 	struct spdk_scsi_port	port[SPDK_SCSI_DEV_MAX_PORTS];
 
 	uint8_t			protocol_id;
+
+	TAILQ_HEAD(, spdk_scsi_pr_registrant) reg_head;
+	struct spdk_scsi_pr_registrant *holder;
+	enum spdk_scsi_pr_type_code type;
+	uint32_t pr_generation;
+	uint64_t crkey;
+	pthread_mutex_t reservation_lock;
 };
 
 struct spdk_scsi_desc {
@@ -131,6 +138,19 @@ struct spdk_scsi_lun {
 	struct spdk_poller *reset_poller;
 };
 
+/* I_T Nexus */
+struct spdk_scsi_pr_registrant {
+	uint64_t rkey;
+	uint16_t relative_target_port_id;
+	uint16_t transport_id_len;
+	char transport_id[SPDK_SCSI_MAX_TRANSPORT_ID_LENGTH];
+	char initiator_port_name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
+	char target_port_name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
+	struct spdk_scsi_port *initiator_port;
+	struct spdk_scsi_port *target_port;
+	TAILQ_ENTRY(spdk_scsi_pr_registrant) link;
+};
+
 struct spdk_lun_db_entry {
 	struct spdk_scsi_lun *lun;
 	struct spdk_lun_db_entry *next;
@@ -173,5 +193,8 @@ struct spdk_scsi_globals {
 };
 
 extern struct spdk_scsi_globals g_spdk_scsi;
+
+int spdk_scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb,
+		     uint8_t *data, uint16_t data_len);
 
 #endif /* SPDK_SCSI_INTERNAL_H */
