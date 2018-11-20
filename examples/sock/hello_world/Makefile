@@ -40,7 +40,7 @@ C_SRCS := hello_sock.c
 
 SPDK_LIB_LIST += event thread util conf trace log jsonrpc json rpc sock
 
-LIBS += $(SOCK_MODULES_LINKER_ARGS) $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += $(SOCK_MODULES_LINKER_ARGS) $(SPDK_LIB_LINKER_ARGS)
 
 all : $(APP)
 	@:

@@ -38,26 +38,6 @@
 
 #include "spdk/bit_array.h"
 
-static struct rte_mem_config g_mcfg = {};
-
-static struct rte_config g_cfg = {
-	.mem_config = &g_mcfg,
-};
-
-struct rte_config *
-rte_eal_get_configuration(void)
-{
-	return &g_cfg;
-}
-
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
-DEFINE_STUB(rte_mem_event_callback_register, int, (const char *name, rte_mem_event_callback_t clb,
-		void *arg), 0);
-DEFINE_STUB(rte_memseg_contig_walk, int, (rte_memseg_contig_walk_t func, void *arg), 0);
-DEFINE_STUB(rte_mem_virt2memseg, struct rte_memseg *, (const void *addr,
-		const struct rte_memseg_list *msl), NULL);
-#endif
-
 #define PAGE_ARRAY_SIZE (100)
 static struct spdk_bit_array *g_page_array;
 static void *g_vaddr_to_fail = (void *)UINT64_MAX;

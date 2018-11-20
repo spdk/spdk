@@ -44,7 +44,6 @@ SPDK_LIB_LIST = event conf nvme log trace rpc jsonrpc json thread util sock
 
 LIBS += $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
-LIBS += $(ENV_LINKER_ARGS)
 
 all : $(APP)
 	@:
