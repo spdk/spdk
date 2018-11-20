@@ -98,6 +98,8 @@ DEFINE_STUB(spdk_bdev_get_name, const char *,
 
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
+DEFINE_STUB(spdk_scsi_pr_out, int, (struct spdk_scsi_task *task,
+				    uint8_t *cdb, uint8_t *data, uint16_t data_len), 0);
 
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
