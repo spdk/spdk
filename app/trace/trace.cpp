@@ -359,7 +359,7 @@ int main(int argc, char **argv)
 
 	history_ptr = mmap(NULL, sizeof(*g_histories), PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
 		usage();
 		exit(-1);
 	}
