@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dfb3950_7344ddd2",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1172,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T23:11:39Z",
+      "side": 1,
+      "message": "This is fine for now, but it isn\u0027t strictly required. The user may pass in an SGL where the last element is longer than the actual payload data and everything would be ok.",
+      "revId": "4a70e739a0f4a0840839649ba2612bd370a62480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
