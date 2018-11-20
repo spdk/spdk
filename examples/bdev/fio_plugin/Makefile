@@ -34,7 +34,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP := fio_plugin
@@ -46,15 +45,4 @@ LDFLAGS += -shared -rdynamic
 SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += thread util bdev conf copy rpc jsonrpc json log sock trace
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all: $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
