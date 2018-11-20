@@ -46,6 +46,7 @@ LDFLAGS += -shared -rdynamic
 SPDK_LIB_LIST += thread util bdev conf copy rpc jsonrpc json log sock trace
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) $(SOCK_MODULES_LINKER_ARGS)
+LIBS += $(COPY_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all: $(APP)
