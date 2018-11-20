@@ -46,6 +46,8 @@ LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
 
 APP = $(TEST_FILE:.c=)
 
+ENV_LINKER_ARGS =
+
 all: $(APP)
 	@:
 

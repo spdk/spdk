@@ -41,7 +41,7 @@ C_SRCS = histogram_perf.c
 
 SPDK_LIB_LIST = thread util log
 
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all: $(APP)
 	@:

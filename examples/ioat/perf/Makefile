@@ -41,7 +41,7 @@ C_SRCS := perf.c
 
 SPDK_LIB_LIST = ioat thread util log
 
-LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)
+LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all: $(APP)
 	@:

@@ -36,7 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 CFLAGS += $(ENV_CFLAGS)
-LIBS += $(ENV_LINKER_ARGS)
 TEST_FILE = pci_ut.c
 
 ADDITIONAL_LIBS += $(ENV_LIBS)
