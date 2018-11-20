@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "47cc0351_d0f23b55",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-11-20T14:03:17Z",
+      "side": 1,
+      "message": "Done. I use qos_limit*1000*1000 since it is MB not MiB.",
+      "parentUuid": "102309cc_d527e7bd",
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42bf1fe1_da4efd3b",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 5
@@ -30,6 +48,30 @@
       "writtenOn": "2018-11-16T06:53:07Z",
       "side": 1,
       "message": "this bracket is not necessary?",
+      "range": {
+        "startLine": 18,
+        "startChar": 15,
+        "endLine": 18,
+        "endChar": 16
+      },
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71e971fd_41a72b55",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-11-20T14:03:17Z",
+      "side": 1,
+      "message": "It is necessary since the bash arithmetic operation needs it.",
+      "parentUuid": "42bf1fe1_da4efd3b",
       "range": {
         "startLine": 18,
         "startChar": 15,
