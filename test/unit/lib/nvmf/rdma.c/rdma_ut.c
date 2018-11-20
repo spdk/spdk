@@ -113,6 +113,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	struct spdk_nvmf_rdma_transport rtransport;
 	struct spdk_nvmf_rdma_device device;
 	struct spdk_nvmf_rdma_request rdma_req;
+	struct spdk_nvmf_rdma_port port;
 	struct spdk_nvmf_rdma_recv recv;
 	struct spdk_nvmf_rdma_poll_group group;
 	struct spdk_nvmf_rdma_qpair rqpair;
@@ -143,6 +144,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	sgl->keyed.key = 0xEEEE;
 	sgl->address = 0xFFFF;
 	rdma_req.recv->buf = (void *)0xDDDD;
+	port.device = &device;
 
 	/* Test 1: sgl type: keyed data block subtype: address */
 	sgl->generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
@@ -153,7 +155,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size / 2;
 
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
 	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size / 2);
@@ -169,7 +171,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	/* Part 2: simple I/O, one SGL larger than the transport io unit size (equal to the max io size) */
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size * RDMA_UT_UNITS_IN_MAX_IO;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
@@ -187,7 +189,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	/* Part 3: simple I/O one SGL larger than the transport max io size */
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.max_io_size * 2;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == -1);
 
@@ -195,7 +197,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	MOCK_SET(spdk_mempool_get, NULL);
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size * RDMA_UT_UNITS_IN_MAX_IO;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == false);
@@ -216,7 +218,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = 0;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(rdma_req.req.data == (void *)0xDDDD);
@@ -227,7 +229,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = rtransport.transport.opts.in_capsule_data_size;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == -1);
 
@@ -235,7 +237,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->address = 0;
 	sgl->unkeyed.length = rtransport.transport.opts.in_capsule_data_size * 2;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	CU_ASSERT(rc == -1);
 	/* Test 3: use PG buffer cache */
@@ -257,7 +259,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	MOCK_SET(spdk_mempool_get, (void *)0x2000);
 	reset_nvmf_rdma_request(&rdma_req);
 	sgl->keyed.length = rtransport.transport.opts.io_unit_size * 4;
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
@@ -278,7 +280,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	/* part 2: now that we have used the buffers from the cache, try again. We should get mempool buffers. */
 
 	reset_nvmf_rdma_request(&rdma_req);
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
@@ -303,7 +305,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 		STAILQ_INSERT_TAIL(&group.group.buf_cache, &bufs[i], link);
 	}
 	reset_nvmf_rdma_request(&rdma_req);
-	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &port, &rdma_req);
 
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(rdma_req.data_from_pool == true);
