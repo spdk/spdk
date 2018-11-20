@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "86343e62_b6c70c85",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-20T01:54:29Z",
+      "side": 1,
+      "message": "There seems to be a misunderstanding. So i changed the \"raid0,raid1,raid2\" to \"RaidBdev0,RaidBdev1,RaidBdev2\".",
+      "parentUuid": "6e3ecbdc_52aad3f0",
+      "range": {
+        "startLine": 118,
+        "startChar": 20,
+        "endLine": 118,
+        "endChar": 25
+      },
+      "revId": "2fd91108ed74cb0a444fa8704d969d20db28d17a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62609ac0_f7af4c47",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 11
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-19T15:07:15Z",
       "side": 1,
       "message": "Can you simplify this to\n\n  base_disk\u003d$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)",
+      "range": {
+        "startLine": 121,
+        "startChar": 5,
+        "endLine": 122,
+        "endChar": 26
+      },
+      "revId": "2fd91108ed74cb0a444fa8704d969d20db28d17a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "361c74d2_f1ccd752",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-11-20T01:54:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62609ac0_f7af4c47",
       "range": {
         "startLine": 121,
         "startChar": 5,
