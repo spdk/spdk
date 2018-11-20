@@ -82,28 +82,4 @@ endif
 
 COPY_MODULES_LIST = copy_ioat ioat
 
-BLOCKDEV_MODULES_LINKER_ARGS = -Wl,--whole-archive \
-			       $(BLOCKDEV_MODULES_LIST:%=-lspdk_%) \
-			       -Wl,--no-whole-archive
-
-BLOCKDEV_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(BLOCKDEV_MODULES_LIST))
-
-COPY_MODULES_LINKER_ARGS = -Wl,--whole-archive \
-			   $(COPY_MODULES_LIST:%=-lspdk_%) \
-			   -Wl,--no-whole-archive
-
-COPY_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(COPY_MODULES_LIST))
-
-SOCK_MODULES_LINKER_ARGS = -Wl,--whole-archive \
-			   $(SOCK_MODULES_LIST:%=-lspdk_%) \
-			   -Wl,--no-whole-archive
-
-SOCK_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(SOCK_MODULES_LIST))
-
 ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(COPY_MODULES_LIST) $(SOCK_MODULES_LIST)
-
-ALL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
-			  $(ALL_MODULES_LIST:%=-lspdk_%) \
-			  -Wl,--no-whole-archive
-
-ALL_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(ALL_MODULES_LIST))

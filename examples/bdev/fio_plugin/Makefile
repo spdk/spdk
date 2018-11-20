@@ -43,15 +43,15 @@ C_SRCS = fio_plugin.c
 CFLAGS += -I$(CONFIG_FIO_SOURCE_DIR)
 LDFLAGS += -shared -rdynamic
 
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += thread util bdev conf copy rpc jsonrpc json log sock trace
 
-LIBS += $(ALL_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
 all: $(APP)
 	@:
 
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS) $(ALL_MODULES_FILES)
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean:
