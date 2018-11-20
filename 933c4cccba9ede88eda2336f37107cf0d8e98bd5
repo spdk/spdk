@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79a034d7_ee63bb77",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-20T22:58:31Z",
+      "side": 1,
+      "message": "Is there a reason to keep the cipher_xform in vbdev?\nSeems like it could just be a local var in this fn.",
+      "range": {
+        "startLine": 1519,
+        "startChar": 2,
+        "endLine": 1519,
+        "endChar": 7
+      },
+      "revId": "933c4cccba9ede88eda2336f37107cf0d8e98bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
