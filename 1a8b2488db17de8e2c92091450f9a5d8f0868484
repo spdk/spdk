@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "744792cd_475c6236",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 39
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T21:40:47Z",
+      "side": 1,
+      "message": "We always put these on one line:\n\nfor type in $TYPES; do",
+      "revId": "1a8b2488db17de8e2c92091450f9a5d8f0868484",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
