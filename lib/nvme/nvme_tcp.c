@@ -1712,12 +1712,14 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 
 	rc = nvme_qpair_init(qpair, qid, ctrlr, qprio, num_requests);
 	if (rc != 0) {
+		free(tqpair);
 		return NULL;
 	}
 
 	rc = nvme_tcp_qpair_connect(tqpair);
 	if (rc < 0) {
 		nvme_tcp_qpair_destroy(qpair);
+		free(tqpair);
 		return NULL;
 	}
 
