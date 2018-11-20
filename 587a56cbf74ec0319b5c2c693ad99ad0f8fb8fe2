@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a23d1051_a9d951e3",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dae07c35_be319004",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ae61709b_dbeb633c",
         "filename": "include/spdk/ftl.h",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-16T17:20:10Z",
       "side": 1,
       "message": "There is (spdk_ftl_init, spdk_ftl_dev_init) and (ftl_module_init_opts, ftl_init_opts).\nMaybe would be good to have the same scheme for functions and opts naming?",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b3d82e6_c09a4e2c",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ae61709b_dbeb633c",
       "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3d01604e_a62a2009",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49d42190_7bb44e07",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0fb404c0_88d37981",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "46662b92_4b86d8a0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1500,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "You\u0027re right that\u0027s incorrect. The pollers should only be unregistered from the thread they were registered on. I\u0027ve removed the poller_unregsiter() calls from free_tasks.",
+      "parentUuid": "0fb404c0_88d37981",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c763c42a_6514159d",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 3
@@ -81,6 +153,24 @@
       "writtenOn": "2018-11-19T17:18:39Z",
       "side": 1,
       "message": "Halt callback is defined below, is this comment appropriate?",
+      "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ef5df89_3f169748",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c763c42a_6514159d",
       "revId": "587a56cbf74ec0319b5c2c693ad99ad0f8fb8fe2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true

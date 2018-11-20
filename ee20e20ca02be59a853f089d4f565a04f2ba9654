@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "9a7d6465_ea7fca27",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b21cdb4_f6da37e4",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ed230fc_65b36afd",
         "filename": "include/spdk/ftl.h",
         "patchSetId": 2
@@ -207,6 +225,24 @@
       "side": 1,
       "message": "But will this fetch_add/_sub break anything in RPC case?",
       "parentUuid": "e093fd5e_440db91a",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "440ccac2_5317ef54",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Yeah, if someone sends an RPC while we\u0027re still initializing this will break. I\u0027ve added module_init_done() function to fix this.",
+      "parentUuid": "40f1bdd9_acccf1c5",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -494,6 +530,24 @@
     },
     {
       "key": {
+        "uuid": "b794af2d_30b0bc8b",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1df1c870_c5bce392",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e64b9cfc_373b1552",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 2
@@ -582,6 +636,24 @@
     },
     {
       "key": {
+        "uuid": "c10a331e_31bd0aeb",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "We had the same problem before (there are even some TODOs saying to add timeouts when waiting for these admin commands\u0027 completions). I would really want to stick with the current synchronous initialization for now, as it\u0027d require significant changes to the whole initialization for very little gain.",
+      "parentUuid": "1504a602_101be5fa",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7cbf06c2_602f4755",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -629,6 +701,24 @@
       "side": 1,
       "message": "I think that there were some strong arguments that we should pool admin completions in one place? Potentially anm poller could be on another thread?",
       "parentUuid": "13df8ad2_7cc79475",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d5d5cb9_96b30c04",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "I\u0027ve looked at the ANM code and indeed there is a race there if it\u0027s running on a different thread. However, I think it\u0027d be a better idea to make the ANM code thread safe, instead of removing process_admin_completions() from every place in our code. I\u0027ve added necessary locks to ANM code.",
+      "parentUuid": "bb339f63_da393c5d",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -735,6 +825,24 @@
       "side": 1,
       "message": "Agree, but I think this is our common pattern in ftl so why no to be fit with it.",
       "parentUuid": "59e8f4a7_0dee1132",
+      "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f09a2d11_d8121f18",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-20T09:22:09Z",
+      "side": 1,
+      "message": "I think it\u0027s just a matter of what needs to be done - when you need the memory to be zeroed and/or you\u0027re allocating a number of objects use calloc, otherwise malloc is fine.",
+      "parentUuid": "a807bcc2_e5f2e0bc",
       "revId": "ee20e20ca02be59a853f089d4f565a04f2ba9654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
