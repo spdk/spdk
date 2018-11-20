@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "93e4bdb3_63a8abcd",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-20T15:54:02Z",
+      "side": 0,
+      "message": "This founction should check level before setting it.",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 33
+      },
+      "revId": "e956be96eb63a7dfe0c8fb9fb300782e29b4f9ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b352325_70b9efaf",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-20T15:54:02Z",
+      "side": 0,
+      "message": "name !\u003d NULL should be asserted here instead of returning trash. You must FAIL the request in this case.",
+      "range": {
+        "startLine": 159,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 33
+      },
+      "revId": "e956be96eb63a7dfe0c8fb9fb300782e29b4f9ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
