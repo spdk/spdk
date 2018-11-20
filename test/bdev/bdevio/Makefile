@@ -33,7 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = bdevio
@@ -44,15 +43,6 @@ SPDK_LIB_LIST = $(ALL_MODULES_LIST)
 SPDK_LIB_LIST += event_bdev event_copy
 SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc jsonrpc json sock
 
-LIBS += $(SPDK_LIB_LINKER_ARGS) -lcunit
+LIBS += -lcunit
 
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
