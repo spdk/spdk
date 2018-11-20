@@ -45,6 +45,30 @@
       "revId": "03efab325d504e0a1bed6b73f2943fee577be6ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ef3625a_2d085f61",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T22:12:00Z",
+      "side": 1,
+      "message": "Nope, this is a typo.",
+      "parentUuid": "1b89351c_eeee4c4f",
+      "range": {
+        "startLine": 895,
+        "startChar": 32,
+        "endLine": 895,
+        "endChar": 35
+      },
+      "revId": "03efab325d504e0a1bed6b73f2943fee577be6ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
