@@ -66,6 +66,17 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	}
 
 	dev->dev_handle = _dev;
+	dev->enum_ctx = ctx;
+
+	dev->addr.domain = _dev->addr.domain;
+	dev->addr.bus = _dev->addr.bus;
+	dev->addr.dev = _dev->addr.devid;
+	dev->addr.func = _dev->addr.function;
+	dev->id.vendor_id = _dev->id.vendor_id;
+	dev->id.device_id = _dev->id.device_id;
+	dev->id.subvendor_id = _dev->id.subsystem_vendor_id;
+	dev->id.subdevice_id = _dev->id.subsystem_device_id;
+	dev->socket_id = _dev->device.numa_node;
 
 	rc = ctx->cb_fn(ctx->cb_arg, dev);
 	if (rc != 0) {
@@ -236,68 +247,61 @@ spdk_pci_device_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *ad
 uint32_t
 spdk_pci_device_get_domain(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->addr.domain;
+	return dev->addr.domain;
 }
 
 uint8_t
 spdk_pci_device_get_bus(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->addr.bus;
+	return dev->addr.bus;
 }
 
 uint8_t
 spdk_pci_device_get_dev(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->addr.devid;
+	return dev->addr.dev;
 }
 
 uint8_t
 spdk_pci_device_get_func(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->addr.function;
+	return dev->addr.func;
 }
 
 uint16_t
 spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->id.vendor_id;
+	return dev->id.vendor_id;
 }
 
 uint16_t
 spdk_pci_device_get_device_id(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->id.device_id;
+	return dev->id.device_id;
 }
 
 uint16_t
 spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->id.subsystem_vendor_id;
+	return dev->id.subvendor_id;
 }
 
 uint16_t
 spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->id.subsystem_device_id;
+	return dev->id.subdevice_id;
 }
 
 struct spdk_pci_id
-spdk_pci_device_get_id(struct spdk_pci_device *pci_dev)
+spdk_pci_device_get_id(struct spdk_pci_device *dev)
 {
-	struct spdk_pci_id pci_id;
-
-	pci_id.vendor_id = spdk_pci_device_get_vendor_id(pci_dev);
-	pci_id.device_id = spdk_pci_device_get_device_id(pci_dev);
-	pci_id.subvendor_id = spdk_pci_device_get_subvendor_id(pci_dev);
-	pci_id.subdevice_id = spdk_pci_device_get_subdevice_id(pci_dev);
-
-	return pci_id;
+	return dev->id;
 }
 
 int
 spdk_pci_device_get_socket_id(struct spdk_pci_device *dev)
 {
-	return dev->dev_handle->device.numa_node;
+	return dev->socket_id;
 }
 
 int
@@ -418,16 +422,9 @@ spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, size_t 
 }
 
 struct spdk_pci_addr
-spdk_pci_device_get_addr(struct spdk_pci_device *pci_dev)
+spdk_pci_device_get_addr(struct spdk_pci_device *dev)
 {
-	struct spdk_pci_addr pci_addr;
-
-	pci_addr.domain = spdk_pci_device_get_domain(pci_dev);
-	pci_addr.bus = spdk_pci_device_get_bus(pci_dev);
-	pci_addr.dev = spdk_pci_device_get_dev(pci_dev);
-	pci_addr.func = spdk_pci_device_get_func(pci_dev);
-
-	return pci_addr;
+	return dev->addr;
 }
 
 int
