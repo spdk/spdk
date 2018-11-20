@@ -805,6 +805,200 @@ inq_error:
 	return -1;
 }
 
+static struct spdk_scsi_pr_session *
+spdk_scsi_pr_get_session(struct spdk_scsi_dev *dev,
+			 struct spdk_scsi_port *initiator_port,
+			 struct spdk_scsi_port *target_port)
+{
+	struct spdk_scsi_pr_session *sess, *tmp;
+
+	TAILQ_FOREACH_SAFE(sess, &dev->sess_head, link, tmp) {
+		if ((initiator_port == sess->initiator_port) &&
+		    (target_port == sess->target_port)) {
+			return sess;
+		}
+	}
+
+	return NULL;
+}
+
+static struct spdk_scsi_pr_reservation *
+spdk_scsi_pr_get_reservation(struct spdk_scsi_dev *dev,
+			     struct spdk_scsi_pr_session *sess)
+{
+	struct spdk_scsi_pr_reservation *res, *tmp;
+
+	TAILQ_FOREACH_SAFE(res, &dev->res_head, link, tmp) {
+		if (res->sess == sess) {
+			return res;
+		}
+	}
+
+	return NULL;
+}
+
+static int
+spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
+			  enum spdk_scsi_pr_out_service_action_code action,
+			  uint64_t rkey, uint64_t sa_rkey,
+			  uint8_t spec_i_pt, uint8_t all_tg_pt, uint8_t aptpl)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_session *sess;
+	struct spdk_scsi_pr_reservation *res;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT REGISTER: rkey 0x%"PRIx64", "
+		      "sa_key 0x%"PRIx64", reservation type %u\n", rkey, sa_rkey, dev->type);
+
+	/* TODO: don't support now */
+	if (spec_i_pt || all_tg_pt || aptpl) {
+		SPDK_ERRLOG("REGISTER: don't support spec_i_pt/all_tg_pt/aptpl\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	sess = spdk_scsi_pr_get_session(dev, task->initiator_port, task->target_port);
+	/* an unregisted I_T nexus session */
+	if (!sess) {
+		if (rkey && (action == SPDK_SCSI_PR_OUT_REGISTER)) {
+			SPDK_ERRLOG("REGISTER: reservation key field is not empty\n");
+			spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+						  SPDK_SCSI_SENSE_NO_SENSE,
+						  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+						  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+			return -EINVAL;
+		}
+
+		if (!sa_rkey) {
+			/* Do nothing except return GOOD status */
+			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: service action "
+				      "reservation key is zero, do noting\n");
+			return 0;
+		}
+
+		/* Register sa_rkey with the I_T nexus */
+		sess = calloc(1, sizeof(*sess));
+		if (!sess) {
+			return -ENOMEM;
+		}
+		/* New I_T nexus */
+		sess->initiator_port = task->initiator_port;
+		sess->target_port = task->target_port;
+		sess->rkey = sa_rkey;
+		TAILQ_INSERT_TAIL(&dev->sess_head, sess, link);
+
+		dev->pr_generation++;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: new registrant registered "
+			      "with key 0x%"PRIx64"\n", sa_rkey);
+
+		return 0;
+	}
+
+	/* a registred I_T nexus */
+	if ((rkey != sess->rkey) && (action == SPDK_SCSI_PR_OUT_REGISTER)) {
+		SPDK_ERRLOG("REGISTER: reservation key 0x%"PRIx64" don't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, sess->rkey);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	if (!sa_rkey) {
+		/* unregister */
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: unregister registrant\n");
+		TAILQ_REMOVE(&dev->sess_head, sess, link);
+		if (all_regs) {
+			/* last registrant, all the registrants
+			 * are reservation holders
+			 */
+			if (TAILQ_EMPTY(&dev->sess_head)) {
+				SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: release reservation "
+					      "with type %u\n", dev->type);
+				res = TAILQ_FIRST(&dev->res_head);
+				TAILQ_REMOVE(&dev->res_head, res, link);
+				free(res);
+				dev->crkey = 0;
+				dev->type = 0;
+			}
+		} else {
+			res = spdk_scsi_pr_get_reservation(dev, sess);
+			/* the only reservation holder */
+			if (res) {
+				SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: release reservation "
+					      "with type %u\n", dev->type);
+				TAILQ_REMOVE(&dev->res_head, res, link);
+				free(res);
+				dev->crkey = 0;
+				dev->type = 0;
+			}
+		}
+		free(sess);
+	} else {
+		/* replace */
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: replace with new "
+			      "reservation key 0x%"PRIx64"\n", sa_rkey);
+		sess->rkey = sa_rkey;
+	}
+
+	dev->pr_generation++;
+
+	return 0;
+}
+
+static int
+spdk_scsi_pr_out(struct spdk_scsi_task *task,
+		 uint8_t *cdb, uint8_t *data,
+		 uint16_t data_len)
+{
+	int rc = -1;
+	uint64_t rkey, sa_rkey;
+	uint8_t spec_i_pt, all_tg_pt, aptpl;
+	enum spdk_scsi_pr_out_service_action_code action;
+	enum spdk_scsi_pr_scope_code scope;
+	struct spdk_scsi_pr_out_param_list *param = (struct spdk_scsi_pr_out_param_list *)data;
+
+	action = cdb[1] & 0x0f;
+	scope = (cdb[2] >> 4) & 0x0f;
+
+	if (scope != SPDK_SCSI_PR_LU_SCOPE) {
+		goto invalid;
+	}
+
+	rkey = from_be64(&param->rkey);
+	sa_rkey = from_be64(&param->sa_rkey);
+	aptpl = param->aptpl;
+	spec_i_pt = param->spec_i_pt;
+	all_tg_pt = param->all_tg_pt;
+
+	switch (action) {
+	case SPDK_SCSI_PR_OUT_REGISTER:
+	case SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY:
+		rc = spdk_scsi_pr_out_register(task, action, rkey, sa_rkey,
+					       spec_i_pt, all_tg_pt, aptpl);
+		break;
+	default:
+		SPDK_ERRLOG("Invalid service action code %u\n", action);
+		goto invalid;
+		break;
+	}
+
+	return rc;
+
+invalid:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+				  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
+
 static void
 mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 {
@@ -1841,7 +2035,6 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 	int dbd, pc, page, subpage;
 	int cmd_parsed = 0;
 
-
 	switch (cdb[0]) {
 	case SPDK_SPC_INQUIRY:
 		alloc_len = from_be16(&cdb[3]);
@@ -2053,6 +2246,21 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		}
 
 		rc = 0;
+		break;
+
+	case SPDK_SPC_PERSISTENT_RESERVE_OUT:
+		pllen = from_be32(&cdb[5]);
+		data = spdk_scsi_task_gather_data(task, &rc);
+		if (rc < 0) {
+			break;
+		}
+		data_len = rc;
+		rc = spdk_scsi_pr_out(task, cdb, data, data_len);
+		if (rc < 0) {
+			break;
+		}
+		rc = pllen;
+		data_len = 0;
 		break;
 
 	default:

@@ -75,6 +75,8 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 {
 	int lun_cnt;
 	int i;
+	struct spdk_scsi_pr_session *sess, *tmp1;
+	struct spdk_scsi_pr_reservation *res, *tmp2;
 
 	if (dev == NULL || dev->removed) {
 		return;
@@ -82,6 +84,17 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 
 	dev->removed = true;
 	lun_cnt = 0;
+
+	TAILQ_FOREACH_SAFE(sess, &dev->sess_head, link, tmp1) {
+		TAILQ_REMOVE(&dev->sess_head, sess, link);
+		free(sess);
+	}
+	TAILQ_FOREACH_SAFE(res, &dev->res_head, link, tmp2) {
+		TAILQ_REMOVE(&dev->res_head, res, link);
+		free(res);
+	}
+	dev->type = 0;
+	dev->crkey = 0;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
@@ -231,6 +244,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
+	TAILQ_INIT(&dev->sess_head);
+	TAILQ_INIT(&dev->res_head);
 
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],
