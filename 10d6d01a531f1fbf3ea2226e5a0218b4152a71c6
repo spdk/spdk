@@ -22,6 +22,30 @@
       "revId": "10d6d01a531f1fbf3ea2226e5a0218b4152a71c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5a8f9ae_6d21d15a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-20T16:34:27Z",
+      "side": 1,
+      "message": "I agree - can we add this check as an assert instead?  With a comment that it\u0027s to silence a Klocwork warning and that getcwd should already be making sure the len is not too long.",
+      "parentUuid": "f5147918_a67fec7a",
+      "range": {
+        "startLine": 1365,
+        "startChar": 2,
+        "endLine": 1365,
+        "endChar": 71
+      },
+      "revId": "10d6d01a531f1fbf3ea2226e5a0218b4152a71c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
