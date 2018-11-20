@@ -57,6 +57,47 @@ _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 	return true;
 }
 
+static uint32_t
+_get_iovs_len(struct iovec *iovs, int iovcnt)
+{
+	int i;
+	uint32_t len = 0;
+
+	for (i = 0; i < iovcnt; i++) {
+		len += iovs[i].iov_len;
+	}
+
+	return len;
+}
+
+static void
+_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(buf, iovs[i].iov_base, len);
+		buf += len;
+		buf_len -= len;
+	}
+}
+
+static void
+_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, uint32_t buf_len)
+{
+	int i;
+	size_t len;
+
+	for (i = 0; i < iovcnt; i++) {
+		len = spdk_min(iovs[i].iov_len, buf_len);
+		memcpy(iovs[i].iov_base, buf, len);
+		buf += len;
+		buf_len -= len;
+	}
+}
+
 static void
 _t10dif_generate(void *_dif, void *data_buf, uint32_t data_block_size,
 		 uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
@@ -331,5 +372,224 @@ spdk_t10dif_verify(struct iovec *iovs, int iovcnt,
 	} else {
 		return t10dif_verify_split(iovs, iovcnt, data_block_size, block_size,
 					   dif_flags, ref_tag, apptag_mask, app_tag);
+	}
+}
+
+static void
+t10dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
+		     uint32_t data_block_size, uint32_t block_size,
+		     uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos;
+	void *buf;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		/* copy data block */
+		buf = iovs[iovpos].iov_base + iov_offset;
+		memcpy(bounce_buf, buf, data_block_size);
+
+		/* generate and append T10 DIF */
+		_t10dif_generate(bounce_buf + data_block_size, bounce_buf,
+				 data_block_size, dif_flags, ref_tag, app_tag);
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+		bounce_buf += block_size;
+	}
+}
+
+
+static void
+t10dif_generate_copy_split(void *bounce_buf, struct iovec *iovs, int iovcnt,
+			   uint32_t data_block_size, uint32_t block_size,
+			   uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t payload_offset, iov_offset, buf_len;
+	uint32_t offset_blocks, offset_in_block, _ref_tag;
+	int iovpos;
+	void *buf;
+
+	payload_offset = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		offset_blocks = payload_offset / data_block_size;
+		offset_in_block = payload_offset % data_block_size;
+
+		_ref_tag = ref_tag + offset_blocks;
+
+		/* copy data block */
+		buf = iovs[iovpos].iov_base + iov_offset;
+		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
+				   data_block_size - offset_in_block);
+
+		memcpy(bounce_buf + offset_in_block, buf, buf_len);
+
+		if (offset_in_block + buf_len == data_block_size) {
+			/* generate and append T10 DIF */
+			_t10dif_generate(bounce_buf + data_block_size, bounce_buf,
+					 data_block_size, dif_flags, _ref_tag, app_tag);
+			bounce_buf += block_size;
+		}
+
+		payload_offset += buf_len;
+
+		iov_offset += buf_len;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+}
+
+int
+spdk_t10dif_generate_copy(void *bounce_buf, uint32_t bounce_buf_len, struct iovec *iovs,
+			  int iovcnt, uint32_t data_block_size, uint32_t metadata_size,
+			  uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t required_len, block_size;
+
+	block_size = data_block_size + metadata_size;
+	required_len =  _get_iovs_len(iovs, iovcnt) * block_size / data_block_size;
+	if (bounce_buf_len < required_len) {
+		return -1;
+	}
+
+	if (metadata_size == 0) {
+		_copy_iovs_to_buf(bounce_buf, bounce_buf_len, iovs, iovcnt);
+		return 0;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		t10dif_generate_copy(bounce_buf, iovs, iovcnt, data_block_size,
+				     block_size, dif_flags, ref_tag, app_tag);
+	} else {
+		t10dif_generate_copy_split(bounce_buf, iovs, iovcnt, data_block_size,
+					   block_size, dif_flags, ref_tag, app_tag);
+	}
+
+	return 0;
+}
+
+static int
+t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+		   uint32_t data_block_size, uint32_t block_size, uint32_t dif_flags,
+		   uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos, rc;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		rc = _t10dif_verify(bounce_buf + data_block_size, bounce_buf, data_block_size,
+				    dif_flags, ref_tag, apptag_mask, app_tag);
+		if (rc != 0) {
+			return rc;
+		}
+
+		memcpy(iovs[iovpos].iov_base + iov_offset, bounce_buf, data_block_size);
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+		bounce_buf += block_size;
+	}
+
+	return 0;
+}
+
+static int
+t10dif_verify_copy_split(struct iovec *iovs, int iovcnt, void *bounce_buf,
+			 uint32_t data_block_size, uint32_t block_size, uint32_t dif_flags,
+			 uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t payload_offset, offset_blocks, offset_in_block, iov_offset, buf_len;
+	uint32_t _ref_tag;
+	void *buf;
+	int iovpos, rc;
+
+	payload_offset = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		offset_blocks = payload_offset / data_block_size;
+		offset_in_block = payload_offset % data_block_size;
+
+		_ref_tag = ref_tag + offset_blocks;
+
+		if (offset_in_block == 0) {
+			rc = _t10dif_verify(bounce_buf + data_block_size, bounce_buf,
+					    data_block_size, dif_flags,
+					    _ref_tag, apptag_mask, app_tag);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+
+		buf = iovs[iovpos].iov_base + iov_offset;
+		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
+				   data_block_size - offset_in_block);
+
+		memcpy(buf, bounce_buf + offset_in_block, buf_len);
+
+		if (offset_in_block + buf_len == data_block_size) {
+			bounce_buf += block_size;
+		}
+
+		payload_offset += buf_len;
+
+		iov_offset += buf_len;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+			uint32_t bounce_buf_len, uint32_t data_block_size,
+			uint32_t metadata_size, uint32_t dif_flags,
+			uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t required_len, block_size;
+
+	block_size = data_block_size + metadata_size;
+	required_len =  _get_iovs_len(iovs, iovcnt) * block_size / data_block_size;
+
+	if (bounce_buf_len < required_len) {
+		return -1;
+	}
+
+	if (metadata_size == 0) {
+		_copy_buf_to_iovs(iovs, iovcnt, bounce_buf, bounce_buf_len);
+		return 0;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return t10dif_verify_copy(iovs, iovcnt, bounce_buf,
+					  data_block_size, block_size, dif_flags,
+					  ref_tag, apptag_mask, app_tag);
+	} else {
+		return t10dif_verify_copy_split(iovs, iovcnt, bounce_buf,
+						data_block_size, block_size, dif_flags,
+						ref_tag, apptag_mask, app_tag);
 	}
 }
