@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "85878a5a_890b898d",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "No, removed it.",
+      "parentUuid": "0635d039_6d386e45",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d29a08e7_332f363d",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5308184a_e1e80f50",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d29a08e7_332f363d",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e108d450_2922dae5",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-19T23:20:36Z",
       "side": 1,
       "message": "I think this can all be simpler by just making lcore_file something like:\n\n#define TRACE_PATH_MAX 2048\n\nchar lcore_file[TRACE_PATH_MAX];\n\nThen still use snprintf, but check the return value that it is \u003c TRACE_PATH_MAX.",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfa68f1f_5d54e65d",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "ok",
+      "parentUuid": "e108d450_2922dae5",
       "revId": "0e465901104a1620e34830b5456ea66f100c4173",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "facec11a_eebd8ea1",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "634ed311_57165c04",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79eedfeb_4d4f2844",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "d790954f_da22a951",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79eedfeb_4d4f2844",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9be22e34_4f45e7cd",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -98,6 +188,24 @@
       "writtenOn": "2018-11-19T23:20:36Z",
       "side": 1,
       "message": "Technically I don\u0027t think fprintf is supposed to be called from a signal handler - see \"man sigaction\".",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d33185cf_6e7fe24c",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9be22e34_4f45e7cd",
       "revId": "0e465901104a1620e34830b5456ea66f100c4173",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "cd194311_5eb626f7",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3eba85f3_ad0aca54",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d82e04ff_dfeab2e1",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -132,6 +258,24 @@
       "writtenOn": "2018-11-19T23:20:36Z",
       "side": 1,
       "message": "[1] is not needed\n\njust use \u0026ctx to pass this to a helper function",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecff77ad_5f49a449",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Ok\nBefore, just wanted to avoid \u0026 and ctx.elements",
+      "parentUuid": "d82e04ff_dfeab2e1",
       "revId": "0e465901104a1620e34830b5456ea66f100c4173",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "585f322a_c3279832",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 597,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff6b318e_f8e85c05",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfabb1c9_31dba516",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -172,6 +334,24 @@
     },
     {
       "key": {
+        "uuid": "d422f417_1d94e3ff",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bfabb1c9_31dba516",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c616ef5_8fe289ba",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 6
@@ -183,6 +363,24 @@
       "writtenOn": "2018-11-19T23:20:36Z",
       "side": 1,
       "message": "Let\u0027s remove the /dev/shm reference, and just show the shm_name.\n\nOn FreeBSD, it doesn\u0027t use /dev/shm.",
+      "revId": "0e465901104a1620e34830b5456ea66f100c4173",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18bf5161_3f4ac04c",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-20T17:46:07Z",
+      "side": 1,
+      "message": "Got it",
+      "parentUuid": "2c616ef5_8fe289ba",
       "revId": "0e465901104a1620e34830b5456ea66f100c4173",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
