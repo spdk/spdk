@@ -41,7 +41,7 @@ APP = bdevio
 C_SRCS := bdevio.c
 
 SPDK_LIB_LIST = event_bdev event_copy
-SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc jsonrpc json
+SPDK_LIB_LIST += bdev copy event trace log conf thread util rpc jsonrpc json sock
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
