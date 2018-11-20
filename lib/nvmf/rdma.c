@@ -51,6 +51,8 @@
 
 #include "spdk_internal/log.h"
 
+struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
+
 /*
  RDMA Connection Resource Defaults
  */
@@ -1150,28 +1152,34 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 			  enum spdk_mem_map_notify_action action,
 			  void *vaddr, size_t size)
 {
-	struct spdk_nvmf_rdma_device *device = cb_ctx;
-	struct ibv_pd *pd = device->pd;
+	struct ibv_pd *pd = cb_ctx;
 	struct ibv_mr *mr;
 
 	switch (action) {
 	case SPDK_MEM_MAP_NOTIFY_REGISTER:
-		mr = ibv_reg_mr(pd, vaddr, size,
-				IBV_ACCESS_LOCAL_WRITE |
-				IBV_ACCESS_REMOTE_READ |
-				IBV_ACCESS_REMOTE_WRITE);
-		if (mr == NULL) {
-			SPDK_ERRLOG("ibv_reg_mr() failed\n");
-			return -1;
+		if (!g_nvmf_hooks.get_rkey) {
+			mr = ibv_reg_mr(pd, vaddr, size,
+					IBV_ACCESS_LOCAL_WRITE |
+					IBV_ACCESS_REMOTE_READ |
+					IBV_ACCESS_REMOTE_WRITE);
+			if (mr == NULL) {
+				SPDK_ERRLOG("ibv_reg_mr() failed\n");
+				return -1;
+			} else {
+				spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+			}
 		} else {
-			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size, (uint64_t)mr);
+			spdk_mem_map_set_translation(map, (uint64_t)vaddr, size,
+						     g_nvmf_hooks.get_rkey(pd, vaddr, size));
 		}
 		break;
 	case SPDK_MEM_MAP_NOTIFY_UNREGISTER:
-		mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
-		spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
-		if (mr) {
-			ibv_dereg_mr(mr);
+		if (!g_nvmf_hooks.get_rkey) {
+			mr = (struct ibv_mr *)spdk_mem_map_translate(map, (uint64_t)vaddr, NULL);
+			spdk_mem_map_clear_translation(map, (uint64_t)vaddr, size);
+			if (mr) {
+				ibv_dereg_mr(mr);
+			}
 		}
 		break;
 	}
@@ -1306,8 +1314,15 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
 		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
 		translation_len = rdma_req->req.iov[i].iov_len;
-		rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						     (uint64_t)buf, &translation_len))->lkey;
+
+		if (!g_nvmf_hooks.get_rkey) {
+			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
+							     (uint64_t)buf, &translation_len))->lkey;
+		} else {
+			rdma_req->data.wr.sg_list[i].lkey = *((uint64_t *)spdk_mem_map_translate(device->map,
+							      (uint64_t)buf, &translation_len));
+		}
+
 		length -= rdma_req->req.iov[i].iov_len;
 
 		if (translation_len < rdma_req->req.iov[i].iov_len) {
@@ -1716,11 +1731,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
 
-	const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
-		.notify_cb = spdk_nvmf_rdma_mem_notify,
-		.are_contiguous = spdk_nvmf_rdma_check_contiguous_entries
-	};
-
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
 		return NULL;
@@ -1865,23 +1875,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 			break;
 		}
 
-		device->pd = ibv_alloc_pd(device->context);
-		if (!device->pd) {
-			SPDK_ERRLOG("Unable to allocate protection domain.\n");
-			free(device);
-			rc = -1;
-			break;
-		}
-
-		device->map = spdk_mem_map_alloc(0, &nvmf_rdma_map_ops, device);
-		if (!device->map) {
-			SPDK_ERRLOG("Unable to allocate memory map for new poll group\n");
-			ibv_dealloc_pd(device->pd);
-			free(device);
-			rc = -1;
-			break;
-		}
-
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
 	}
@@ -1944,7 +1937,9 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 			spdk_mem_map_free(&device->map);
 		}
 		if (device->pd) {
-			ibv_dealloc_pd(device->pd);
+			if (!g_nvmf_hooks.get_ibv_pd) {
+				ibv_dealloc_pd(device->pd);
+			}
 		}
 		free(device);
 	}
@@ -1967,12 +1962,23 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 }
 
 static int
+spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
+			       struct spdk_nvme_transport_id *trid,
+			       bool peer);
+
+const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
+	.notify_cb = spdk_nvmf_rdma_mem_notify,
+	.are_contiguous = spdk_nvmf_rdma_check_contiguous_entries
+};
+
+static int
 spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid)
 {
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
 	struct spdk_nvmf_rdma_port	*port_tmp, *port;
+	struct ibv_pd			*pd;
 	struct addrinfo			*res;
 	struct addrinfo			hints;
 	int				family;
@@ -2083,6 +2089,62 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
+
+	pd = NULL;
+	if (g_nvmf_hooks.get_ibv_pd) {
+		if (spdk_nvmf_rdma_trid_from_cm_id(port->id, &port->trid, 1) < 0) {
+			rdma_destroy_id(port->id);
+			free(port);
+			pthread_mutex_unlock(&rtransport->lock);
+			return -EINVAL;
+		}
+
+		pd = g_nvmf_hooks.get_ibv_pd(&port->trid, port->id->verbs);
+	}
+
+	if (device->pd == NULL) {
+		/* Haven't created a protection domain yet. */
+
+		if (!g_nvmf_hooks.get_ibv_pd) {
+			device->pd = ibv_alloc_pd(device->context);
+			if (!device->pd) {
+				SPDK_ERRLOG("Unable to allocate protection domain.\n");
+				rdma_destroy_id(port->id);
+				free(port);
+				pthread_mutex_unlock(&rtransport->lock);
+				return -ENOMEM;
+			}
+		} else {
+			device->pd = pd;
+		}
+
+		assert(device->map == NULL);
+
+		device->map = spdk_mem_map_alloc(0, &g_nvmf_rdma_map_ops, device->pd);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
+			if (!g_nvmf_hooks.get_ibv_pd) {
+				ibv_dealloc_pd(device->pd);
+			}
+			rdma_destroy_id(port->id);
+			free(port);
+			pthread_mutex_unlock(&rtransport->lock);
+			return -ENOMEM;
+		}
+	} else if (g_nvmf_hooks.get_ibv_pd) {
+		/* A protection domain exists for this device, but the user has
+		 * enabled hooks. Verify that they only supply one pd per device. */
+		if (device->pd != pd) {
+			SPDK_ERRLOG("The NVMe-oF target only supports one protection domain per device.\n");
+			rdma_destroy_id(port->id);
+			free(port);
+			pthread_mutex_unlock(&rtransport->lock);
+			return -EINVAL;
+		}
+	}
+
+	assert(device->map != NULL);
+	assert(device->pd != NULL);
 
 	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** NVMf Target Listening on %s port %d ***\n",
 		     port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
@@ -3007,6 +3069,12 @@ spdk_nvmf_rdma_qpair_get_listen_trid(struct spdk_nvmf_qpair *qpair,
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	return spdk_nvmf_rdma_trid_from_cm_id(rqpair->listen_id, trid, false);
+}
+
+void
+spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
+{
+	g_nvmf_hooks = *hooks;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
