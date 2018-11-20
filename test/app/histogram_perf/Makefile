@@ -33,7 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 APP = histogram_perf
 
@@ -41,15 +40,4 @@ C_SRCS = histogram_perf.c
 
 SPDK_LIB_LIST = thread util log
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all: $(APP)
-	@:
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
