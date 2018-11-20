@@ -40,7 +40,7 @@ C_SRCS := blobcli.c
 
 SPDK_LIB_LIST = event_bdev event_copy
 SPDK_LIB_LIST += bdev copy event thread util conf trace \
-		log jsonrpc json rpc
+		log jsonrpc json rpc sock
 
 # Don't link bdev_lvol in blobcli - otherwise this utility cannot operate on an lvolstore
 BLOCKDEV_MODULES_LIST := $(filter-out bdev_lvol,$(BLOCKDEV_MODULES_LIST))

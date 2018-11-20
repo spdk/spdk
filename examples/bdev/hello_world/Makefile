@@ -39,7 +39,7 @@ APP = hello_bdev
 C_SRCS := hello_bdev.c
 
 SPDK_LIB_LIST = event_bdev event_copy
-SPDK_LIB_LIST += bdev copy event thread util conf trace log jsonrpc json rpc
+SPDK_LIB_LIST += bdev copy event thread util conf trace log jsonrpc json rpc sock
 
 LIBS += $(COPY_MODULES_LINKER_ARGS) $(BLOCKDEV_MODULES_LINKER_ARGS) $(SOCK_MODULES_LINKER_ARGS)
 LIBS += $(SPDK_LIB_LINKER_ARGS) $(ENV_LINKER_ARGS)

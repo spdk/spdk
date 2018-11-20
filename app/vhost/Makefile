@@ -44,7 +44,7 @@ SPDK_LIB_LIST = vhost rte_vhost event_vhost
 SPDK_LIB_LIST += event_bdev event_copy event_net event_scsi event
 SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
-SPDK_LIB_LIST += event_nbd nbd net
+SPDK_LIB_LIST += event_nbd nbd net sock
 
 LIBS += $(BLOCKDEV_MODULES_LINKER_ARGS) \
 	$(COPY_MODULES_LINKER_ARGS) \
