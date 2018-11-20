@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -xe
 
-basedir=$(readlink -f $(dirname $0))
-. $basedir/../common/common.sh
+testdir=$(readlink -f $(dirname $0))
+rootdir=$(readlink -f $testdir/../../..)
+. $testdir/../common/common.sh
+. $rootdir/test/bdev/nbd_common.sh
+
 rpc_py="python $SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 vm_no="0"
 
@@ -65,11 +68,11 @@ timing_exit create_lvol
 
 timing_enter convert_vm_image
 modprobe nbd
-trap '$rpc_py stop_nbd_disk /dev/nbd0; rmmod nbd; err_clean "${FUNCNAME}" "${LINENO}"' ERR
-$rpc_py start_nbd_disk $lvb_u /dev/nbd0
+trap 'nbd_stop_disks $(get_vhost_dir)/rpc.sock /dev/nbd0; rmmod nbd; err_clean "${FUNCNAME}" "${LINENO}"' ERR
+nbd_start_disks "$(get_vhost_dir)/rpc.sock" $lvb_u /dev/nbd0
 $QEMU_PREFIX/bin/qemu-img convert $os_image -O raw /dev/nbd0
 sync
-$rpc_py stop_nbd_disk /dev/nbd0
+nbd_stop_disks $(get_vhost_dir)/rpc.sock /dev/nbd0
 sleep 1
 rmmod nbd
 timing_exit convert_vm_image
