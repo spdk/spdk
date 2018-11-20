@@ -39,5 +39,4 @@ UNIT_TEST_LINK_ENV = 1
 CFLAGS += $(ENV_CFLAGS)
 TEST_FILE = pci_ut.c
 
-ADDITIONAL_LIBS += $(ENV_LIBS)
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk

@@ -38,5 +38,4 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 UNIT_TEST_LINK_ENV = 1
 TEST_FILE = vtophys.c
 
-ADDITIONAL_LIBS += $(ENV_LIBS)
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
