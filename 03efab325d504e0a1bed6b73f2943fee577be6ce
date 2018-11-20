@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46f4bf64_c5db3d2c",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 865,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-20T21:53:00Z",
+      "side": 1,
+      "message": "that shouldn\u0027t be here. errno is not used in pthread_create. The above strerror is correct though, so this one must have been just overlooked.",
+      "range": {
+        "startLine": 865,
+        "startChar": 2,
+        "endLine": 865,
+        "endChar": 14
+      },
+      "revId": "03efab325d504e0a1bed6b73f2943fee577be6ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b89351c_eeee4c4f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-20T21:53:00Z",
+      "side": 1,
+      "message": "right now those will be \u003e\u003d 0 since rc \u003d -errno. Is this intended?",
+      "range": {
+        "startLine": 895,
+        "startChar": 32,
+        "endLine": 895,
+        "endChar": 35
+      },
+      "revId": "03efab325d504e0a1bed6b73f2943fee577be6ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
