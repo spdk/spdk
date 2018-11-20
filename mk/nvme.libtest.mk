@@ -34,7 +34,7 @@
 NVME_DIR := $(SPDK_ROOT_DIR)/lib/nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 C_SRCS = $(APP:%=%.c)
@@ -47,6 +47,8 @@ LIBS += $(SPDK_LIB_LINKER_ARGS)
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif
+
+install: all
 
 all: $(APP)
 	@:
