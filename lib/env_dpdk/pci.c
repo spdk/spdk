@@ -73,6 +73,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 		return rc;
 	}
 
+	dev->attached = true;
 	TAILQ_INSERT_TAIL(&g_pci_devices, dev, tailq);
 	spdk_vtophys_pci_device_added(dev->dev_handle);
 	return 0;
@@ -89,7 +90,8 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 		}
 	}
 
-	if (dev == NULL) {
+	if (dev == NULL || dev->attached) {
+		/* The device might be still referenced somewhere in SPDK. */
 		return -1;
 	}
 
@@ -105,6 +107,8 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
 	struct rte_pci_device *device = dev->dev_handle;
 
+	assert(dev->attached);
+	dev->attached = false;
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	rte_eal_hotplug_remove("pci", device->device.name);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
