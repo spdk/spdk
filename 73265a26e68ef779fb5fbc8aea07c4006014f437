@@ -16,6 +16,24 @@
       "revId": "73265a26e68ef779fb5fbc8aea07c4006014f437",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9f8e740_57e1074e",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-20T08:38:09Z",
+      "side": 1,
+      "message": "You are right, this is better solution.",
+      "parentUuid": "d9d58543_ebcff0e1",
+      "revId": "73265a26e68ef779fb5fbc8aea07c4006014f437",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
