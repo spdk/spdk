@@ -40,15 +40,4 @@ C_SRCS := reactor_perf.c
 
 SPDK_LIB_LIST = event trace conf thread util log rpc jsonrpc json sock
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
