@@ -91,4 +91,55 @@ int spdk_t10dif_verify(struct iovec *iovs, int iovcnt,
 		       uint32_t data_block_size, uint32_t metadata_size,
 		       uint32_t dif_flags, uint32_t ref_tag,
 		       uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Generate and append T10 DIF in each extended logical block of the payload.
+ *
+ * This API is used by the application that is not aware of extended LBA.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata. This API is used before write I/O.
+ *
+ * \param bounce_buf A contiguous buffer forming extended logical block.
+ * \param bounce_buf_len Size of the contiguous buffer.
+ * \param iovs A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iovs.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_flags The flag to specify the T10 DIF action.
+ * \param ref_tag Start reference tag.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated error otherwise..
+ */
+int spdk_t10dif_generate_copy(void *bounce_buf, uint32_t bounce_buf_len,
+			      struct iovec *iovs, int iovcnt,
+			      uint32_t data_block_size, uint32_t metadata_size,
+			      uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag);
+
+/**
+ * Verify and strip T10 DIF in each extended logical block of the payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata. This API is used after read I/O.
+ *
+ * \param rx_buf A contiguous buffer forming extended logical block.
+ * \param rx_buf_size Size of the contiguous buffer.
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param start_blocks The offset from the start, in blocks.
+ * \param num_blocks The number of blocks to be written to.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_chk_flags The flag to specify the T10 DIF action.
+ * \param apptag_mask Application tag mask.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt,
+			    void *bounce_buf, uint32_t bounce_buf_size,
+			    uint32_t data_block_size, uint32_t metadata_size,
+			    uint32_t dif_flags, uint32_t ref_tag,
+			    uint16_t apptag_mask, uint16_t app_tag);
 #endif /* SPDK_T10DIF_H */
