@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ad53ca3_0c0dda8a",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-20T22:48:44Z",
+      "side": 1,
+      "message": "let\u0027s always call the callback, even in the failure case",
+      "revId": "96361a935b132b00c62e4be22c5acc8943ead3d5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
