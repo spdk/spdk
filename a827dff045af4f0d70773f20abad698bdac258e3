@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a15904f_044e7aa0",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T22:09:20Z",
+      "side": 1,
+      "message": "I wrote a bunch of comments below, but then deleted a lot of them. How about this implementation instead?\n\n{\n    uint32_t size;\n    spdk_bit_array_word last_word;\n    uint8_t last_byte;\n\n    size \u003d spdk_bit_array_capacity(ba) / CHAR_BIT;\n\n    memcpy(mask, ba-\u003ewords, size);\n\n    last_word \u003d ba-\u003ewords[(size * CHAR_BIT) \u003e\u003e SPDK_BIT_ARRAY_WORD_INDEX_SHIFT];\n\n    mask[size] \u003d (uint8_t)(last_word \u003e\u003e (SPDK_BIT_ARRAY_WORD_BYTES - 1));\n}\n\nWarning: I did not test this.",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "747b0210_da33501a",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T22:09:20Z",
+      "side": 1,
+      "message": "reminder -\u003e remainder",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21ccb15f_73a65bb2",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T22:09:20Z",
+      "side": 1,
+      "message": "for (i \u003d (size * CHAR_BIT); i \u003c num_bits; i++)? Then you don\u0027t actually need to calculate the remainder too.",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fd89149_b09f4b1d",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-20T22:09:20Z",
+      "side": 1,
+      "message": "use a uint8_t instead of char.",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
