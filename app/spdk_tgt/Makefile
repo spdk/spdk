@@ -56,17 +56,6 @@ ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
 endif
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all: $(APP)
-	@:
-
-$(APP): $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
 install: $(APP)
 	$(INSTALL_APP)
 

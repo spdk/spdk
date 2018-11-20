@@ -42,15 +42,4 @@ C_SRCS := rpc_client_test.c
 
 SPDK_LIB_LIST = jsonrpc json rpc log util
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
