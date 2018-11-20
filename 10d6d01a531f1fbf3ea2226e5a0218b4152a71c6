@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5147918_a67fec7a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-20T13:49:40Z",
+      "side": 1,
+      "message": "we already pass \u0027sizeof(dev_dirname) - 1)\u0027 when invoking getcwd() so we can\u0027toverflow dev_dirname here. Also if len will be \u003e\u003d \u0027sizeof(dev_dirname) - 1\u0027 this must be error condition rather than silently ignoring it.",
+      "range": {
+        "startLine": 1365,
+        "startChar": 2,
+        "endLine": 1365,
+        "endChar": 71
+      },
+      "revId": "10d6d01a531f1fbf3ea2226e5a0218b4152a71c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
