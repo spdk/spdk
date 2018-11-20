@@ -1592,7 +1592,7 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		     struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task, struct spdk_bdev_scsi_unmap_ctx *ctx)
 {
 	uint8_t				*data;
-	int				desc_count, i;
+	int				i, desc_count = -1;
 	int				data_len;
 	int				rc;
 
@@ -1619,8 +1619,8 @@ spdk_bdev_scsi_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		desc_count = __copy_desc(ctx, data, data_len);
 	} else {
 		data = spdk_scsi_task_gather_data(task, &data_len);
-		desc_count = __copy_desc(ctx, data, data_len);
-		if (desc_count < 0) {
+		if (data) {
+			desc_count = __copy_desc(ctx, data, data_len);
 			spdk_dma_free(data);
 		}
 	}
