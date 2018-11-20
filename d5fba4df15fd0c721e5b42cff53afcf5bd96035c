@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "a122e92c_25327f49",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-11-20T16:38:33Z",
+      "side": 1,
+      "message": "Thanks for pointing that. Our setup actually has disks distributed equally between numa nodes. I have corrected the script and for now it will allocate disk according to \"prefer-numa\" parameter - so if there is more disks on node0, just set prefer-numa to 0 - for now, it\u0027s good for tests with one cpu core. I will add cpu mask configuration to script that will allocate disks with adequate numa node to desired core soon.",
+      "parentUuid": "f0eca654_e7fdbfa4",
+      "range": {
+        "startLine": 100,
+        "startChar": 3,
+        "endLine": 103,
+        "endChar": 9
+      },
+      "revId": "d5fba4df15fd0c721e5b42cff53afcf5bd96035c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "32a04118_49e92a86",
         "filename": "test/nvme/perf/config.fio",
         "patchSetId": 24
@@ -59,6 +83,30 @@
       "writtenOn": "2018-11-15T12:42:42Z",
       "side": 1,
       "message": "This is more of a nitpicky.\nThis can be driver/bdev. You might want to build the description in the function where you generate the other fio parameters. This would allow you add a more descriptive header like \"4K Random Read IOPS test\"",
+      "range": {
+        "startLine": 9,
+        "startChar": 22,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "d5fba4df15fd0c721e5b42cff53afcf5bd96035c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48357bd7_dce7a824",
+        "filename": "test/nvme/perf/config.fio",
+        "patchSetId": 24
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-11-20T16:38:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32a04118_49e92a86",
       "range": {
         "startLine": 9,
         "startChar": 22,
