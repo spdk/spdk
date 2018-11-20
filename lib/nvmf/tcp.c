@@ -579,6 +579,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	sge_count = ttransport->max_io_size / ttransport->io_unit_size;
 	if (sge_count > SPDK_NVMF_MAX_SGL_ENTRIES) {
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", ttransport->io_unit_size);
+		pthread_mutex_destroy(&ttransport->lock);
 		free(ttransport);
 		return NULL;
 	}
@@ -591,6 +592,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	if (!ttransport->data_buf_pool) {
 		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		pthread_mutex_destroy(&ttransport->lock);
 		free(ttransport);
 		return NULL;
 	}
