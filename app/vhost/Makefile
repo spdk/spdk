@@ -33,7 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = vhost
@@ -47,15 +46,4 @@ SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev scsi copy trace conf
 SPDK_LIB_LIST += thread util log log_rpc app_rpc
 SPDK_LIB_LIST += event_nbd nbd net sock
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

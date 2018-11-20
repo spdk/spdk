@@ -33,7 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
 APP = rpc_client_test
@@ -42,15 +41,4 @@ C_SRCS := rpc_client_test.c
 
 SPDK_LIB_LIST = jsonrpc json rpc log util
 
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

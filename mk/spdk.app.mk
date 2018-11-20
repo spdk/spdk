@@ -33,4 +33,17 @@
 
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
+LIBS += $(SPDK_LIB_LINKER_ARGS)
+
+all : $(APP)
+	@:
+
 install: all
+
+$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
+	$(LINK_C)
+
+clean :
+	$(CLEAN_C) $(APP)
+
+include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
