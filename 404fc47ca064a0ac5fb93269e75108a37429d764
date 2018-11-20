@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1372657b_7c3ad1e7",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T23:09:23Z",
+      "side": 1,
+      "message": "The result \"echo \u002710000000*0.9 \u003c 10491596 \u0026\u0026 10491596 \u003c 10000000*1.05\u0027\" says that one extra 512KB IO overshot.\n\nHence can we do the following?\n\nFor IOPS test,\n use qos_limit * 1.01\nFor BANDWIDTH test,\n use qos_limit + io_size * 1000",
+      "range": {
+        "startLine": 34,
+        "startChar": 76,
+        "endLine": 34,
+        "endChar": 80
+      },
+      "revId": "404fc47ca064a0ac5fb93269e75108a37429d764",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "d423b962_ee2f3f9c",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T23:09:23Z",
+      "side": 1,
+      "message": "Oh, I got it. Thank you for your explanation.",
+      "parentUuid": "47cc0351_d0f23b55",
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42bf1fe1_da4efd3b",
         "filename": "test/iscsi_tgt/qos/qos.sh",
         "patchSetId": 5
@@ -72,6 +90,30 @@
       "side": 1,
       "message": "It is necessary since the bash arithmetic operation needs it.",
       "parentUuid": "42bf1fe1_da4efd3b",
+      "range": {
+        "startLine": 18,
+        "startChar": 15,
+        "endLine": 18,
+        "endChar": 16
+      },
+      "revId": "94e2549733aed2f6d567ca39c91c81648f3cce89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a88e2606_40dff902",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T23:09:23Z",
+      "side": 1,
+      "message": "Thank you for correcting me.",
+      "parentUuid": "71e971fd_41a72b55",
       "range": {
         "startLine": 18,
         "startChar": 15,
