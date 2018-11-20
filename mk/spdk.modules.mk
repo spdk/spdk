@@ -66,8 +66,7 @@ BLOCKDEV_MODULES_LIST += bdev_pmem
 BLOCKDEV_MODULES_DEPS += -lpmemblk
 endif
 
-SOCK_MODULES_LIST = sock
-SOCK_MODULES_LIST += sock_posix
+SOCK_MODULES_LIST = sock_posix
 
 ifeq ($(CONFIG_VPP),y)
 ifneq ($(CONFIG_VPP_DIR),)
