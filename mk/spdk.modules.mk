@@ -99,3 +99,11 @@ SOCK_MODULES_LINKER_ARGS = -Wl,--whole-archive \
 			   -Wl,--no-whole-archive
 
 SOCK_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(SOCK_MODULES_LIST))
+
+ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(COPY_MODULES_LIST) $(SOCK_MODULES_LIST)
+
+ALL_MODULES_LINKER_ARGS = -Wl,--whole-archive \
+			  $(ALL_MODULES_LIST:%=-lspdk_%) \
+			  -Wl,--no-whole-archive
+
+ALL_MODULES_FILES = $(call spdk_lib_list_to_static_libs,$(ALL_MODULES_LIST))
