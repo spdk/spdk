@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5e4ecd6e_82f1fc65",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T09:04:47Z",
+      "side": 1,
+      "message": "Yes, I saw that start_blocks and num_blocks were not meaningful too.\n\nStart reference tag is necessary and I changed start_blocks to ref_tag in the next patch.",
+      "parentUuid": "05c9fd9c_038b94bd",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d4bbac9_8a304543",
         "filename": "include/spdk/dif.h",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-19T21:53:17Z",
       "side": 1,
       "message": "Can you move the parameters for the block size before the start_blocks and num_blocks parameters? I think that is more intuitive.",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b1acfa0_3bae0e05",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T09:04:47Z",
+      "side": 1,
+      "message": "I removed start_blocks and num_blocks and added ref_tag instead. I hope the intention is clear for you.",
+      "parentUuid": "3d4bbac9_8a304543",
       "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "I am concerned that due to splitting for other reasons (RDMA MR spanning, striping, PRP lists), we may actually end up with iovec elements that are not a multiple of the block size. Especially when the block size is not a power of two. I think you should leave it in actually.",
       "parentUuid": "6d4d91e1_d52b404b",
+      "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8300a494_d240098f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-20T09:04:47Z",
+      "side": 1,
+      "message": "OK, I keep this function.",
+      "parentUuid": "d2018080_22f8ce47",
       "revId": "fe1790d5872cca763490114d2d69e81fdeafcb0e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
