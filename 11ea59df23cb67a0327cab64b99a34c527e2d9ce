@@ -16,6 +16,24 @@
       "revId": "11ea59df23cb67a0327cab64b99a34c527e2d9ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf53b454_714a8295",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-20T00:53:48Z",
+      "side": 1,
+      "message": "Good catch, this was not entirely intended. I also checked DPDK 17.02 just now and it actually does require to call both rte_eal_device_remove and rte_eal_pci_detach.",
+      "parentUuid": "1c9157f4_74c44d7a",
+      "revId": "11ea59df23cb67a0327cab64b99a34c527e2d9ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
