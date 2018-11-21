@@ -886,6 +886,10 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 	int type;
 
 	total = data_len;
+	if (data_len < 0) {
+		assert(false);
+		return -EINVAL;
+	}
 	if (alloc_len < 1) {
 		return 0;
 	}
