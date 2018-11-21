@@ -37,6 +37,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/histogram_data.h"
+#include "spdk/base64.h"
 
 #include "spdk/bdev_module.h"
 
@@ -698,17 +699,27 @@ _spdk_rpc_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
+	int rc;
+	char *encoded_histogram;
+	size_t src_len, dst_len;
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return;
 	}
 
+	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t);
+	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
+	encoded_histogram = calloc(dst_len, sizeof(char *));
 
-	/* TODO: Write histogram data instead of status */
-
-	spdk_json_write_bool(w, status == 0);
-	spdk_jsonrpc_end_result(request, w);
+	rc = spdk_base64_encode(encoded_histogram, histogram->bucket, src_len);
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, "Cannot convert to base64");
+	} else {
+		spdk_json_write_named_string(w, "histogram", encoded_histogram);
+		spdk_json_write_bool(w, status == 0);
+		spdk_jsonrpc_end_result(request, w);
+	}
 }
 
 static void
