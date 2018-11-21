@@ -231,7 +231,7 @@ function configure_linux_pci {
 			blknames=''
 			get_virtio_names_from_bdf "$bdf" blknames
 			for blkname in $blknames; do
-				if mount | grep -q "/dev/$blkname"; then
+				if [ "$(lsblk /dev/$blkname --output MOUNTPOINT -n | wc -w)" != "0" ]; then
 					echo Active mountpoints on /dev/$blkname, so not binding PCI dev $bdf
 					continue 2
 				fi
