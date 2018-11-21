@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "647305c4_8929c480",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 321,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-21T14:25:38Z",
+      "side": 1,
+      "message": "I suppose that\u0027s moved here so it shows up in `set -x`. That\u0027s fine, but could be mentioned in the commit msg.",
+      "range": {
+        "startLine": 311,
+        "startChar": 1,
+        "endLine": 321,
+        "endChar": 3
+      },
+      "revId": "17ec8e5f7ff76bcbdb233ab6676b5dfbcd928975",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
