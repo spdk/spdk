@@ -4,11 +4,13 @@ set -e
 vm_count=1
 vm_memory=2048
 vm_image="/home/sys_sgsw/vhost_vm_image.qcow2"
+vm_measure_cpu=false
+vm_throttle=""
 max_disks=""
 ctrl_type="spdk_vhost_scsi"
 use_split=false
-throttle=false
-
+kernel_cpus=""
+lvol_precondition=true
 lvol_stores=()
 lvol_bdevs=()
 used_vms=""
@@ -34,14 +36,18 @@ function usage()
 	echo "                            Default: 2048 MB"
 	echo "    --vm-image=PATH         OS image to use for running the VMs."
 	echo "                            Default: /home/sys_sgsw/vhost_vm_image.qcow2"
+	echo "    --vm-measure-cpu        Measure CPU utilization on VM using sar."
+	echo "    --vm-throttle-iops=INT  I/Os throttle rate in IOPS for each device on the VMs."
 	echo "    --max-disks=INT         Maximum number of NVMe drives to use in test."
 	echo "                            Default: will use all available NVMes."
 	echo "    --ctrl-type=TYPE        Controller type to use for test:"
 	echo "                            spdk_vhost_scsi - use spdk vhost scsi"
 	echo "                            spdk_vhost_blk - use spdk vhost block"
+	echo "                            kernel_vhost - use kernel vhost scsi"
 	echo "                            Default: spdk_vhost_scsi"
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
-	echo "    --throttle=INT          I/Os throttle rate in IOPS for each device on the VMs."
+	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
+	echo "    --lvol-precondition     Precondition lvols after creating. Default: true."
 	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
 	echo "                            Default: spdk/test/vhost/common/autotest.config"
 	echo "-x                          set -x for script debug"
@@ -81,13 +87,14 @@ while getopts 'xh-:' optchar; do
 			vm-count=*) vm_count="${OPTARG#*=}" ;;
 			vm-memory=*) vm_memory="${OPTARG#*=}" ;;
 			vm-image=*) vm_image="${OPTARG#*=}" ;;
+			vm-measure-cpu) vm_measure_cpu=true ;;
+			vm-throttle-iops=*) vm_throttle="${OPTARG#*=}" ;;
 			max-disks=*) max_disks="${OPTARG#*=}" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 			use-split) use_split=true ;;
-			throttle) throttle=true ;;
+			lvol-precondition) lvol_precondition=true ;;
+			limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 			custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
-			thin-provisioning) thin=" -t " ;;
-			multi-os) multi_os=true ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -100,6 +107,7 @@ done
 
 . $(readlink -e "$(dirname $0)/../common/common.sh") || exit 1
 . $(readlink -e "$(dirname $0)/../../../scripts/common.sh") || exit 1
+BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 COMMON_DIR="$(cd $(readlink -f $(dirname $0))/../common && pwd)"
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -124,60 +132,78 @@ if [[ ${#nvmes[@]} -lt max_disks ]]; then
 	fail "Number of NVMe drives (${#nvmes[@]}) is lower than number of requested disks for test ($max_disks)"
 fi
 
+if [[ ! "$ctrl_type" == "kernel_vhost" ]]; then
 notice "running SPDK vhost"
 spdk_vhost_run
 notice "..."
 
+
 # Calculate number of needed splits per NVMe
 # so that each VM gets it's own bdev during test
-splits=()
+	splits=()
 
 #Calculate least minimum number of splits on each disks
-for i in `seq 0 $((max_disks - 1))`; do
-	splits+=( $((vm_count / max_disks)) )
-done
+	for i in `seq 0 $((max_disks - 1))`; do
+		splits+=( $((vm_count / max_disks)) )
+	done
 
 # Split up the remainder
-for i in `seq 0 $((vm_count % max_disks - 1))`; do
-	(( splits[i]++ ))
-done
+	for i in `seq 0 $((vm_count % max_disks - 1))`; do
+		(( splits[i]++ ))
+	done
 
-notice "Preparing NVMe setup..."
-notice "Using $max_disks physical NVMe drives"
-notice "Nvme split list: ${splits[@]}"
+	notice "Preparing NVMe setup..."
+	notice "Using $max_disks physical NVMe drives"
+	notice "Nvme split list: ${splits[@]}"
 # Prepare NVMes - Lvols or Splits
-if [[ $use_split == true ]]; then
-	notice "Using split vbdevs"
-	trap 'cleanup_split_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
-	split_bdevs=()
-	for (( i=0; i<$max_disks; i++ ));do
-		out=$($rpc_py construct_split_vbdev Nvme${i}n1 ${splits[$i]})
-		for s in $out; do
-			split_bdevs+=("$s")
+	if [[ $use_split == true ]]; then
+		notice "Using split vbdevs"
+		trap 'cleanup_split_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
+		split_bdevs=()
+		for (( i=0; i<$max_disks; i++ ));do
+			out=$($rpc_py construct_split_vbdev Nvme${i}n1 ${splits[$i]})
+			for s in $(seq 0 $((${splits[$i]}-1))); do
+				split_bdevs+=("Nvme${i}n1p${s}")
+			done
 		done
-	done
-	bdevs=("${split_bdevs[@]}")
-else
-	notice "Using logical volumes"
-	trap 'cleanup_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
-	for (( i=0; i<$max_disks; i++ ));do
-		ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
-		lvol_stores+=("$ls_guid")
-		for (( j=0; j<${splits[$i]}; j++)); do
-			free_mb=$(get_lvs_free_mb "$ls_guid")
-			size=$((free_mb / (${splits[$i]}-j) ))
-			lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $size)
-			lvol_bdevs+=("$lb_name")
+		bdevs=("${split_bdevs[@]}")
+	else
+		notice "Using logical volumes"
+		trap 'cleanup_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
+		for (( i=0; i<$max_disks; i++ ));do
+			ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
+			lvol_stores+=("$ls_guid")
+			for (( j=0; j<${splits[$i]}; j++)); do
+				free_mb=$(get_lvs_free_mb "$ls_guid")
+				size=$((free_mb / (${splits[$i]}-j) ))
+				lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $size)
+				lvol_bdevs+=("$lb_name")
+			done
 		done
-	done
-	bdevs=("${lvol_bdevs[@]}")
+		bdevs=("${lvol_bdevs[@]}")
+	fi
+fi
+
+if [[ ! "$ctrl_type" == "kernel_vhost" && $lvol_precondition == true && $use_split == false ]]; then
+	# Need to precondition lvols due to UNMAP done after creation
+	# of lvol_stores. Kill vhost for now and run fio_plugin over all lvol bdevs
+	spdk_vhost_kill
+	$SPDK_BUILD_DIR/scripts/gen_nvme.sh > $SPDK_BUILD_DIR/nvme.cfg
+	fio_filename=$(printf ":%s" "${bdevs[@]}")
+	fio_filename=${fio_filename:1}
+	/usr/src/fio/fio --name="lvol_precondition" \
+	--ioengine="${SPDK_BUILD_DIR}/examples/bdev/fio_plugin/fio_plugin" \
+	--rw="write" --spdk_conf="${SPDK_BUILD_DIR}/nvme.cfg" --thread="1" \
+	--group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
+	--filename="${fio_filename}" || true
+	spdk_vhost_run
 fi
 
 # Prepare VMs and controllers
 for (( i=0; i<$vm_count; i++)); do
 	vm="vm_$i"
 
-	setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i"
+	setup_cmd="vm_setup --disk-type=$ctrl_type --force=$i --memory=$vm_memory"
 	setup_cmd+=" --os=$vm_image"
 
 	if [[ "$ctrl_type" == "spdk_vhost_scsi" ]]; then
@@ -187,6 +213,15 @@ for (( i=0; i<$vm_count; i++)); do
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 		$rpc_py construct_vhost_blk_controller naa.$i.$i ${bdevs[$i]}
 		setup_cmd+=" --disks=$i"
+	elif [[ "$ctrl_type" == "kernel_vhost" ]]; then
+		x=$i
+		if [[ ${#x} -eq 1 ]]; then
+			x="00${x}"
+		fi
+		if [[ ${#x} -eq 2 ]]; then
+			x="0${x}"
+		fi
+		setup_cmd+=" --disks=naa.5001405bc6498${x}"
 	fi
 	$setup_cmd
 	used_vms+=" $i"
@@ -196,6 +231,37 @@ done
 # Run VMs
 vm_run $used_vms
 vm_wait_for_boot 300 $used_vms
+
+if [[ -n "$kernel_cpus" ]]; then
+	mkdir -p /sys/fs/cgroup/cpuset/spdk
+	kernel_mask=$vhost_0_reactor_mask
+	kernel_mask=${kernel_mask#"["}
+	kernel_mask=${kernel_mask%"]"}
+
+	#echo "0-$(($kernel_cpus-1))" >> /sys/fs/cgroup/cpuset/spdk/cpuset.cpus
+	echo "$kernel_mask" >> /sys/fs/cgroup/cpuset/spdk/cpuset.cpus
+	echo "0-1" >> /sys/fs/cgroup/cpuset/spdk/cpuset.mems
+
+	kernel_vhost_pids=$(ps aux | grep -Po "^root\s+\K(\d+)(?=.*\[vhost-\d+\])")
+	for kpid in $kernel_vhost_pids; do
+		echo "Limiting kernel vhost pid ${kpid}"
+		echo "${kpid}" >> /sys/fs/cgroup/cpuset/spdk/tasks
+	done
+fi
+
+# Enable disk throttle if enabled
+if [[ -n "$vm_throttle" ]]; then
+	major="8"
+	minor="0"
+	if [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
+		major="253"
+	fi
+
+	for vm_num in $used_vms; do
+		vm_ssh "$vm_num" "echo \"$major:$minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.read_iops_device"
+		vm_ssh "$vm_num" "echo \"$major:$minor $vm_throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.write_iops_device"
+	done
+fi
 
 # Run FIO
 fio_disks=""
@@ -209,21 +275,48 @@ for vm_num in $used_vms; do
 		vm_check_scsi_location $vm_num
 	elif [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
 		vm_check_blk_location $vm_num
+	elif [[ "$ctrl_type" == "kernel_vhost" ]]; then
+		vm_check_scsi_location $vm_num
 	fi
 
 	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
 
 # Run FIO traffic
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks
+run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks &
+fio_pid=$!
+
+if $vm_measure_cpu; then
+	sleep 30
+	mkdir -p $TEST_DIR/fio_results/sar_stats
+	pids=""
+	for vm_num in $used_vms; do
+		vm_ssh "$vm_num" "mkdir -p /root/sar; sar -P ALL 10 5 >> /root/sar/sar_stats_VM${vm_num}.txt" &
+		pids+=" $!"
+	done
+	for j in $pids; do
+		wait $j
+	done
+	for vm_num in $used_vms; do
+		vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}.txt" "$TEST_DIR/fio_results/sar_stats"
+	done
+fi
+
+wait $fio_pid
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
 
-#notice "Shutting down SPDK vhost app..."
-if [[ $use_split == true ]]; then
-	cleanup_split_cfg
-else
-	cleanup_lvol_cfg
+if [[ ! "$ctrl_type" == "kernel_vhost" ]]; then
+	notice "Shutting down SPDK vhost app..."
+	if [[ $use_split == true ]]; then
+		cleanup_split_cfg
+	else
+		cleanup_lvol_cfg
+	fi
+	spdk_vhost_kill
 fi
-spdk_vhost_kill
+
+if [[ -n "$kernel_cpus" ]]; then
+	rmdir /sys/fs/cgroup/cpuset/spdk
+fi

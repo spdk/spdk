@@ -26,6 +26,7 @@ def gen_cpu_mask_config(output_dir, spdk_cpu_list, vm_count, vm_cpu_num):
     spdk = gen_spdk_cpu_mask_config(spdk_cpu_list)
     qemu = gen_qemu_cpu_mask_config(spdk_cpu_list, vm_count, vm_cpu_num)
     file_path = os.path.join(output_dir, "mask_config")
+    print("Writing to:", file_path)
     with open(file_path, "w") as fh:
         fh.write("".join([spdk, qemu]))
     return file_path
@@ -139,10 +140,16 @@ parser.add_argument('-R', '--ramptime', default="10", type=str,
                     help="Ramp time param for FIO (in seconds). Default: 10")
 parser.add_argument('-c', '--ctrl-type', default="spdk_vhost_scsi", type=str,
                     help="Type of vhost controller to use in test.\
-                    Possible options: spdk_vhost_scsi, spdk_vhost_blk.\
+                    Possible options: spdk_vhost_scsi, spdk_vhost_blk, kernel_vhost\
                     Default: spdk_vhost_scsi")
 parser.add_argument('-s', '--split', default=False, type=bool,
                     help="Use split vbdevs instead of logical volumes. Default: false")
+parser.add_argument('--measure-cpu', default=False, type=bool,
+                    help="Measure CPU utilization on VM using sar. Default: false")
+parser.add_argument('--throttle', default=None, type=int,
+                    help="Throttle VM disk read/write IOPS to this value. Default: none")
+parser.add_argument('--kernel-cpu', default=None, type=int,
+                    help="Limit kernel vhost to this number of CPUs. Default: none")
 parser.add_argument('-d', '--max-disks', default=0, type=int,
                     help="How many physical disks to use in test. Default: all disks.\
                     Depending on the number of --vm-count disks may be split into\
@@ -184,6 +191,9 @@ fio_cfg_path = create_fio_cfg(script_dir, script_dir, **vars(args))
 cpu_cfg_arg = ""
 disk_arg = ""
 split_arg = ""
+measure_cpu_arg = ""
+throttle_arg = ""
+kernel_cpu_arg = ""
 if "spdk_cpu_list" in args:
     cfg_path = gen_cpu_mask_config(script_dir, args.spdk_cpu_list, args.vm_count, args.vm_cpu_num)
     cpu_cfg_arg = "--custom-cpu-cfg=%s" % cfg_path
@@ -191,6 +201,12 @@ if "custom_mask_file" in args:
     cpu_cfg_arg = "--custom-cpu-cfg=%s" % args.custom_mask_file
 if args.split is True:
     split_arg = "--use-split"
+if args.measure_cpu is True:
+    measure_cpu_arg = "--measure-cpu"
+if args.throttle:
+    throttle_arg = "--throttle-iops=%s" % args.throttle
+if args.kernel_cpu:
+    kernel_cpu_arg = "--limit-kernel-vhost=%s" % args.kernel_cpu
 if args.max_disks > 0:
     disk_arg = "--max-disks=%s" % args.max_disks
 
@@ -200,9 +216,12 @@ command = " ".join(["test/vhost/perf_bench/vhost_perf.sh",
                     "--vm-count=%s" % args.vm_count,
                     "--ctrl-type=%s" % args.ctrl_type,
                     "%s" % split_arg,
+                    "%s" % measure_cpu_arg,
+                    "%s" % throttle_arg,
+                    "%s" % kernel_cpu_arg,
                     "%s" % disk_arg,
                     "--fio-job=%s" % fio_cfg_path,
                     "%s" % cpu_cfg_arg])
-print("INFO: Running perf test with command:")
-print(command)
-pr = check_output(command, shell=True)
+#print("INFO: Running perf test with command:")
+#print(command)
+#pr = check_output(command, shell=True)
