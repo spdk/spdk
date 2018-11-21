@@ -33,7 +33,6 @@
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
 
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 CXX_SRCS := $(patsubst %.h,%.cpp,$(notdir $(HEADERS)))
