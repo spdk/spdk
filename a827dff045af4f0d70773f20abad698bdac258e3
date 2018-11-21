@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b72ce653_f034b2d7",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-21T08:49:07Z",
+      "side": 1,
+      "message": "Your proposal is similar to my implementation from patchset 1:\n{\n    uint32_t size;\n    size \u003d spdk_bit_array_word_count(ba-\u003ebit_count) * sizeof(spdk_bit_array_word);\n    memcpy(mask, ba-\u003ewords, size);\n}\n\nI got comment on this that I shouldn\u0027t copy whole last byte to mask but only valid bits and this approach is probably safer in some cases e.g when we calculating CRC on stored mask.",
+      "parentUuid": "5a15904f_044e7aa0",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "747b0210_da33501a",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-20T22:09:20Z",
       "side": 1,
       "message": "reminder -\u003e remainder",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c08c7c5_d346d1fa",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-21T08:49:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "747b0210_da33501a",
       "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "209438ac_7bb69dc6",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-21T08:49:07Z",
+      "side": 1,
+      "message": "Yes, but if I do that I will end up with some modulo operations when mask is set e.g:\n*((char *)mask[size] |\u003d 1U \u003c\u003c (i % CHAR_BIT);\n\nI think that current implementation is more readable. I can get rid of remainder variable and put num_buit % CHAR_BIT inside loop.",
+      "parentUuid": "21ccb15f_73a65bb2",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2fd89149_b09f4b1d",
         "filename": "lib/util/bit_array.c",
         "patchSetId": 6
@@ -64,6 +118,24 @@
       "writtenOn": "2018-11-20T22:09:20Z",
       "side": 1,
       "message": "use a uint8_t instead of char.",
+      "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84e5e67a_84f6be4c",
+        "filename": "lib/util/bit_array.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-21T08:49:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2fd89149_b09f4b1d",
       "revId": "a827dff045af4f0d70773f20abad698bdac258e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
