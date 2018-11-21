@@ -7,7 +7,8 @@ vm_image="/home/sys_sgsw/vhost_vm_image.qcow2"
 max_disks=""
 ctrl_type="spdk_vhost_scsi"
 use_split=false
-throttle=false
+throttle=""
+measure_cpu=false
 
 lvol_stores=()
 lvol_bdevs=()
@@ -41,7 +42,8 @@ function usage()
 	echo "                            spdk_vhost_blk - use spdk vhost block"
 	echo "                            Default: spdk_vhost_scsi"
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
-	echo "    --throttle=INT          I/Os throttle rate in IOPS for each device on the VMs."
+	echo "    --throttle-iops=INT          I/Os throttle rate in IOPS for each device on the VMs."
+	echo "    --measure-cpu           Measure CPU utilization on VM using sar."
 	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
 	echo "                            Default: spdk/test/vhost/common/autotest.config"
 	echo "-x                          set -x for script debug"
@@ -84,7 +86,8 @@ while getopts 'xh-:' optchar; do
 			max-disks=*) max_disks="${OPTARG#*=}" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 			use-split) use_split=true ;;
-			throttle) throttle=true ;;
+			measure-cpu) measure_cpu=true ;;
+			throttle-iops=*) throttle="${OPTARG#*=}" ;;
 			custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
 			thin-provisioning) thin=" -t " ;;
 			multi-os) multi_os=true ;;
@@ -197,6 +200,20 @@ done
 vm_run $used_vms
 vm_wait_for_boot 300 $used_vms
 
+# Enable disk throttle if enabled
+if [[ -n "$throttle" ]]; then
+	major="8"
+	minor="0"
+	if [[ "$ctrl_type" == "spdk_vhost_blk" ]]; then
+		major="253"
+fi
+
+	for vm_num in $used_vms; do
+		vm_ssh "$vm_num" "echo \"$major:$minor $throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.read_iops_device"
+		vm_ssh "$vm_num" "echo \"$major:$minor $throttle\" > /sys/fs/cgroup/blkio/blkio.throttle.write_iops_device"
+	done
+fi
+
 # Run FIO
 fio_disks=""
 for vm_num in $used_vms; do
@@ -215,7 +232,25 @@ for vm_num in $used_vms; do
 done
 
 # Run FIO traffic
-run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" --json $fio_disks
+run_fio $fio_bin --job-file="$fio_job" --out="$TEST_DIR/fio_results" $fio_disks &
+fio_pid=$!
+
+if $measure_cpu; then
+	sleep 60
+	pids=""
+	for vm_num in $used_vms; do
+		vm_ssh "$vm_num" "mkdir -p /root/sar; sar -P ALL 10 5 >> /root/sar/sar_stats_VM${vm_num}.txt" &
+		pids+=" $!"
+	done
+	for j in $pids; do
+		wait $j
+	done
+	for vm_num in $used_vms; do
+		vm_scp "$vm_num" "root@127.0.0.1:/root/sar/sar_stats_VM${vm_num}.txt" "$TEST_DIR/fio_results/sar_stats"
+	done
+fi
+
+wait $fio_pid
 
 notice "Shutting down virtual machines..."
 vm_shutdown_all
