@@ -388,6 +388,8 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 		spdk_env_unlink_shared_files();
 	}
 
+	spdk_pci_init();
+
 	if (spdk_mem_map_init() < 0) {
 		fprintf(stderr, "Failed to allocate mem_map\n");
 		return -1;
