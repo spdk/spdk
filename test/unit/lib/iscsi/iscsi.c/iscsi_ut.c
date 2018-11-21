@@ -45,6 +45,7 @@
 #include "iscsi/acceptor.h"
 #include "iscsi/portal_grp.h"
 #include "scsi/scsi_internal.h"
+#include "common/lib/test_env.c"
 
 #define UT_TARGET_NAME1		"iqn.2017-11.spdk.io:t0001"
 #define UT_TARGET_NAME2		"iqn.2017-11.spdk.io:t0002"
