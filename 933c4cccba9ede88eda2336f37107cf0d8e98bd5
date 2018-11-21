@@ -22,6 +22,30 @@
       "revId": "933c4cccba9ede88eda2336f37107cf0d8e98bd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03974965_378966e5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-21T15:31:40Z",
+      "side": 1,
+      "message": "I did this so that the whole xform is kept with the vbdev because of the key,  however I already have the key in here so yeh I guess this could be a local and I could copy the key into xform before ding the session_init.  I assume that xform data is copied from the address of the xform so we don\u0027t need to worry about it (the address) being referenced later?\n\nWith 2 +2\u0027s already my vote would be to merge and test with this and I can always pull the xform out of the vbdev later, its not a big thing.\n\nThanks for reviewing!!!!",
+      "parentUuid": "79a034d7_ee63bb77",
+      "range": {
+        "startLine": 1519,
+        "startChar": 2,
+        "endLine": 1519,
+        "endChar": 7
+      },
+      "revId": "933c4cccba9ede88eda2336f37107cf0d8e98bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
