@@ -71,3 +71,5 @@ spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	return spdk_pci_enumerate(&g_virtio_pci_drv, enum_cb, enum_ctx);
 }
+
+SPDK_PMD_REGISTER_PCI(g_virtio_pci_drv);
