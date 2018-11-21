@@ -192,6 +192,16 @@ spdk_nvmf_transport_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	return group->transport->ops->poll_group_add(group, qpair);
 }
 
+void
+spdk_nvmf_transport_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
+				      struct spdk_nvmf_qpair *qpair)
+{
+	assert(qpair->transport == group->transport);
+	if (group->transport->ops->poll_group_remove) {
+		group->transport->ops->poll_group_remove(group, qpair);
+	}
+}
+
 int
 spdk_nvmf_transport_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 {
