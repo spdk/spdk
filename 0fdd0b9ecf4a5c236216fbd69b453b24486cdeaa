@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ee1face_63dc9466",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1722,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-21T01:58:28Z",
+      "side": 1,
+      "message": "No need for this line, tqpair is freed in function nvme_tcp_qpair_destroy().",
+      "revId": "0fdd0b9ecf4a5c236216fbd69b453b24486cdeaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
