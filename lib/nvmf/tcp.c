@@ -276,8 +276,6 @@ struct nvme_tcp_qpair {
 	uint16_t				initiator_port;
 	uint16_t				target_port;
 
-	/* qpair->group is freed early, this should be a temporal fix */
-	struct spdk_nvmf_tcp_poll_group		*tgroup;
 	TAILQ_ENTRY(nvme_tcp_qpair)		link;
 };
 
@@ -497,21 +495,7 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 static void
 spdk_nvmf_tcp_qpair_destroy(struct nvme_tcp_qpair *tqpair)
 {
-	struct spdk_nvmf_tcp_poll_group *tgroup;
-	int                             rc;
-
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
-	tgroup = tqpair->tgroup;
-
-	if (tgroup) {
-		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
-		TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
-		rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
-		if (rc != 0) {
-			SPDK_ERRLOG("Could not remove sock from sock_group: %s (%d)\n",
-				    spdk_strerror(errno), errno);
-		}
-	}
 
 	spdk_poller_unregister(&tqpair->flush_poller);
 	spdk_sock_close(&tqpair->sock);
@@ -2656,11 +2640,31 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
 	tqpair->timeout = SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT;
 	tqpair->last_pdu_time = spdk_get_ticks();
-
-	tqpair->tgroup = tgroup;
 	TAILQ_INSERT_TAIL(&tgroup->qpairs, tqpair, link);
 
 	return 0;
+}
+
+static int
+spdk_nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
+				struct spdk_nvmf_qpair *qpair)
+{
+	struct spdk_nvmf_tcp_poll_group	*tgroup;
+	struct nvme_tcp_qpair		*tqpair;
+	int				rc;
+
+	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
+	tqpair = SPDK_CONTAINEROF(qpair, struct nvme_tcp_qpair, qpair);
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
+	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
+	rc = spdk_sock_group_remove_sock(tgroup->sock_group, tqpair->sock);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not remove sock from sock_group: %s (%d)\n",
+			    spdk_strerror(errno), errno);
+	}
+
+	return rc;
 }
 
 static int
@@ -2859,6 +2863,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.poll_group_create = spdk_nvmf_tcp_poll_group_create,
 	.poll_group_destroy = spdk_nvmf_tcp_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_tcp_poll_group_add,
+	.poll_group_remove = spdk_nvmf_tcp_poll_group_remove,
 	.poll_group_poll = spdk_nvmf_tcp_poll_group_poll,
 
 	.req_free = spdk_nvmf_tcp_req_free,
