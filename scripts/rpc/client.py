@@ -65,10 +65,9 @@ class JSONRPCClient(object):
                     break
 
                 self.sock.settimeout(timeout)
-                newdata = self.sock.recv(4096)
+                newdata = self.sock.recv(65536)
                 if (newdata == b''):
                     closed = True
-
                 buf += newdata.decode("utf-8")
                 response = json.loads(buf)
             except socket.timeout:
