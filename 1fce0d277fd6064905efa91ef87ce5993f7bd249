@@ -16,6 +16,24 @@
       "revId": "1fce0d277fd6064905efa91ef87ce5993f7bd249",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78e4668f_e27f4ccc",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-21T09:18:27Z",
+      "side": 1,
+      "message": "You are right, the tpoint_id is asserted when registering the trace description.",
+      "parentUuid": "ec23ced3_9431fcbf",
+      "revId": "1fce0d277fd6064905efa91ef87ce5993f7bd249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
