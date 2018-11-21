@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c56417c_28ba25ac",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-21T15:33:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 26
+      },
+      "revId": "37306b2a801c6da0a571a7a13c510f15c2786113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71530921_d0b9a402",
+        "filename": "lib/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-21T15:33:26Z",
+      "side": 1,
+      "message": "You could unify indention while you are here",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 3
+      },
+      "revId": "37306b2a801c6da0a571a7a13c510f15c2786113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ba085ff_b29264f4",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-21T15:33:26Z",
+      "side": 1,
+      "message": "this is not ENOMEM. Can we have iterators here like:\nspdk_notify_type_first(), spdk_notify_type_next()?",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 2
+      },
+      "revId": "37306b2a801c6da0a571a7a13c510f15c2786113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6a20474_702e4395",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-21T15:33:26Z",
+      "side": 1,
+      "message": "empty line here would be great.",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 106,
+        "endChar": 1
+      },
+      "revId": "37306b2a801c6da0a571a7a13c510f15c2786113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b7a878c_b248e3cc",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-21T15:33:26Z",
+      "side": 1,
+      "message": "NULL?",
+      "range": {
+        "startLine": 119,
+        "startChar": 50,
+        "endLine": 119,
+        "endChar": 54
+      },
+      "revId": "37306b2a801c6da0a571a7a13c510f15c2786113",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
