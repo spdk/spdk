@@ -37,6 +37,7 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/histogram_data.h"
+#include "spdk/base64.h"
 
 #include "spdk/bdev_module.h"
 
@@ -336,6 +337,10 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
+	uint64_t tsc_start, tsc_end;
+
+	tsc_start = spdk_get_ticks();
+
 	spdk_json_write_array_begin(w);
 
 	if (bdev != NULL) {
@@ -347,6 +352,10 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_array_end(w);
+
+	tsc_end = spdk_get_ticks();
+	printf("ticks to generate json: %" PRIu64 ", %" PRIu64 "\n", tsc_end - tsc_start,
+	       spdk_get_ticks_hz());
 
 	spdk_jsonrpc_end_result(request, w);
 
@@ -697,16 +706,32 @@ _spdk_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
+	int rc;
+	char *encoded_histogram;
+	size_t src_len, dst_len;
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return;
 	}
 
-	/* TODO: Write histogram data instead of status */
+	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t);
+	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
+	encoded_histogram = calloc(dst_len, sizeof(char *));
 
-	spdk_json_write_bool(w, status == 0);
-	spdk_jsonrpc_end_result(request, w);
+	rc = spdk_base64_encode(encoded_histogram, histogram->bucket, src_len);
+
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, "Cannot convert to base64");
+	} else {
+		spdk_json_write_named_string(w, "histogram", encoded_histogram);
+		spdk_json_write_named_bool(w, "status", status == 0);
+		spdk_json_write_named_int64(w, "bucket_shit", histogram->bucket_shift);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+	spdk_histogram_data_free(histogram);
+	free(encoded_histogram);
 }
 
 static void
