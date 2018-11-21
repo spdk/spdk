@@ -707,10 +707,19 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
 	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvmf_transport_poll_group *tgroup;
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
 	qpair_ctx->qid = qpair->qid;
+
+	/* Find the tgroup and remove the qpair from the tgroup */
+	TAILQ_FOREACH(tgroup, &qpair->group->tgroups, link) {
+		if (tgroup->transport == qpair->transport) {
+			spdk_nvmf_transport_poll_group_remove(tgroup, qpair);
+			break;
+		}
+	}
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 	qpair->group = NULL;
