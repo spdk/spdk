@@ -72,6 +72,12 @@ extern struct rte_pci_bus rte_pci_bus;
 #define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
 #define VALUE_4KB	(1 << SHIFT_4KB)
 
+#define SPDK_PMD_REGISTER_PCI(pci_drv)									\
+__attribute__((constructor)) static void pci_drv ## _register(void)					\
+{													\
+	spdk_pci_driver_register(&pci_drv);								\
+}
+
 struct spdk_pci_device {
 	struct rte_pci_device		*dev_handle;
 	struct spdk_pci_driver		*driver;
@@ -83,12 +89,14 @@ struct spdk_pci_device {
 };
 
 struct spdk_pci_driver {
-	struct rte_pci_driver	driver;
-	spdk_pci_enum_cb	cb_fn;
-	void			*cb_arg;
-	bool			is_registered;
+	struct rte_pci_driver		driver;
+	spdk_pci_enum_cb		cb_fn;
+	void				*cb_arg;
+	bool				is_registered;
+	TAILQ_ENTRY(spdk_pci_driver)	tailq;
 };
 
+void spdk_pci_driver_register(struct spdk_pci_driver *driver);
 int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int spdk_pci_device_fini(struct rte_pci_device *device);
 
@@ -96,6 +104,7 @@ int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
 int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx,
 			   struct spdk_pci_addr *pci_address);
 
+void spdk_pci_init(void);
 int spdk_mem_map_init(void);
 int spdk_vtophys_init(void);
 
