@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67840e20_ab9fd87f",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1622,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-21T02:24:23Z",
+      "side": 1,
+      "message": "Looks good.  I had to study the code to make sure - this could probably use some better comments (but in a separate patch).",
+      "revId": "53bfcb71bc55bfa6bca11207f454830d2825f3ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
