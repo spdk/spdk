@@ -1207,6 +1207,11 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
+	if (nvme_ctrlr_get_by_name(base_name)) {
+		SPDK_ERRLOG("A controller with the provided name (%s) already exists.\n", base_name);
+		return -1;
+	}
+
 	probe_ctx = calloc(1, sizeof(*probe_ctx));
 	if (probe_ctx == NULL) {
 		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
