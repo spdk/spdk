@@ -42,6 +42,40 @@
 
 static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
+static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
+
+void
+spdk_pci_driver_register(struct spdk_pci_driver *driver)
+{
+	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
+}
+
+void
+spdk_pci_init(void)
+{
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
+	struct spdk_pci_driver *driver;
+
+	/* We need to pre-register pci drivers for the pci devices to be
+	 * attachable in multi-process with DPDK 18.11+.
+	 *
+	 * DPDK 18.11+ does its best to ensure all devices are equally
+	 * attached or detached in all processes within a shared memory group.
+	 * For SPDK it means that if a device is hotplugged in the primary,
+	 * then DPDK will automatically send an IPC hotplug request to all other
+	 * processes. Those other processes may not have the same SPDK PCI
+	 * driver registered and may fail to attach the device. DPDK will send
+	 * back the failure status, and the the primary process will also fail
+	 * to hotplug the device. To prevent that, we need to pre-register the
+	 * pci drivers here.
+	 */
+	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
+		assert(!driver->is_registered);
+		driver->is_registered = true;
+		rte_pci_register(&driver->driver);
+	}
+#endif
+}
 
 int
 spdk_pci_device_init(struct rte_pci_driver *_drv,
