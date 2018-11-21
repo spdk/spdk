@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2112e8a9_9d4a216c",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-11-21T17:39:26Z",
+      "side": 1,
+      "message": "I think this call should return an error code and report a failure if the transport does not allow qpairs to be removed from poll groups. Then, the generic code on top can try to remove a qpair and deal with the failure case.",
+      "revId": "b6f0f638f48f39c4f844c4fa15428e2e2f0f45a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
