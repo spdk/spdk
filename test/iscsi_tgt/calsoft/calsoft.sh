@@ -44,6 +44,7 @@ echo "iscsi_tgt is listening. Running tests..."
 timing_exit start_iscsi_tgt
 
 $rpc_py add_iscsi_auth_group 1 -c 'user:root secret:tester'
+$rpc_py add_iscsi_discovery_auth -g 1
 $rpc_py add_portal_group $PORTAL_TAG $TARGET_IP:$ISCSI_PORT
 $rpc_py add_initiator_group $INITIATOR_TAG $INITIATOR_NAME $NETMASK
 $rpc_py construct_malloc_bdev -b MyBdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE
