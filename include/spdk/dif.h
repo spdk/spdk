@@ -135,4 +135,50 @@ int spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt,
 			    uint32_t data_block_size, uint32_t metadata_size,
 			    uint32_t dif_flags, uint32_t ref_tag,
 			    uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Generate and append T10 DIX to the separate metadata buffer for each logical block.
+ *
+ * Currently only T10 DIX Type 1 is suppported and T10 DIX is limited to append
+ * to the first eight byte of the metadata.
+ *
+ * \param iovs A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iovs.
+ * \param metadata_buf A contiguous buffer for metadata.
+ * \param metadata_buf_len Size of the contiguous metadata buffer.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_flags The flag to specify the T10 DIF action.
+ * \param ref_tag Start reference tag.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_t10dix_generate(struct iovec *iovs, int iovcnt,
+			 void *metadata_buf, uint32_t metadata_buf_len,
+			 uint32_t data_block_size, uint32_t metadata_size,
+			 uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag);
+
+/**
+ * Verify T10 DIX for each logical block..
+ *
+ * Currently only T10 DIX Type 1 is suppported and T10 DIX is limited to append
+ * to the first eight byte of the metadata.
+ *
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_flags The flag to specify the T10 DIF action.
+ * \param ref_tag Start reference tag.
+ * \param apptag_mask Application tag mask.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_t10dix_verify(struct iovec *iovs, int iovcnt,
+		       void *metadata_buf, uint32_t metadata_buf_len,
+		       uint32_t data_block_size, uint32_t metadata_size,
+		       uint32_t dif_flags, uint32_t ref_tag,
+		       uint16_t apptag_mask, uint16_t app_tag);
 #endif /* SPDK_T10DIF_H */
