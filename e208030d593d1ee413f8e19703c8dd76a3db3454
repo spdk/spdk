@@ -1,0 +1,250 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bfecdbb8_0cea1048",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Changes to fio_plugin.c are not directly related to rest of the patch, right ? Why not submit is separately ?",
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9823791f_eb060175",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "This can be moved later in the process. Like just before creating first ocssd bdev.\nWe should check if poller actually started. Especially if we care if it starts before rest of ocssd bdev initialization.",
+      "range": {
+        "startLine": 900,
+        "startChar": 0,
+        "endLine": 903,
+        "endChar": 38
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce3080a2_09071ff3",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "spdk_bdev_module_init_done() should be called, please see below.",
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60f2f89d_9ac747e3",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 918,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "spdk_bdev_module_init_done() should be called, please see below.",
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31c5767d_d497d3e8",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "spdk_bdev_module_init_done() should be called, please see below.",
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cfa6fe5_949ebf1e",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 931,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Do you think removing g_bdev_count, but adding check if g_ocssd_bdevs is contains expected number as in opts-\u003ecount in bdev_ocssd_init_cb() would work ?",
+      "range": {
+        "startLine": 931,
+        "startChar": 2,
+        "endLine": 931,
+        "endChar": 33
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "478f06bb_0af41b22",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "This doesn\u0027t seem needed. Please see next file for details.",
+      "range": {
+        "startLine": 945,
+        "startChar": 1,
+        "endLine": 945,
+        "endChar": 23
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f224011d_4d98c014",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Think spdk_bdev_module_init_done() should be called in every error case when bdev_ocssd_initialize() function exits.\nOnly exception is the \u0027proper\u0027 path which initialize some ocssd bdevs, then module init done should be called in last callback.",
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78653e1c_ddaf96ed",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Besides setting the callback, there should be explicit action to destroy the bdevs. Like calling bdev_ocssd_destruct() for all ocssd bdevs on g_ocssd_bdevs list.\n\nIf not done - the module finish would never end, unless user deletes them first.",
+      "range": {
+        "startLine": 1021,
+        "startChar": 0,
+        "endLine": 1023,
+        "endChar": 2
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e0aa653_9d87a09a",
+        "filename": "lib/bdev/ocssd/bdev_ocssd_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to check whether the module initialized. When registering RPC a state in which it can be called is defined SPDK_RPC_STARTUP or SPDK_RPC_RUNTIME.\nState changes from STARTUP to RUNTIME after all subsystems are initialized - including bdev subsystem and all bdev modules in it.",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 2
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a69ef5a_8d43c269",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Why not compare dev-\u003etasks[id].thread with spdk_get_thread() ?",
+      "range": {
+        "startLine": 114,
+        "startChar": 23,
+        "endLine": 114,
+        "endChar": 45
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6504076_dac2f7f3",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T14:54:25Z",
+      "side": 1,
+      "message": "Isn\u0027t task-\u003ethread enough ? (please see previous file)",
+      "range": {
+        "startLine": 574,
+        "startChar": 1,
+        "endLine": 574,
+        "endChar": 28
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
