@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14be257d_8a8a9ee5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1780,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-22T08:58:38Z",
+      "side": 1,
+      "message": "I think an assert here would do just fine. This channel must be already opened (that\u0027s how you got the *ch in the first place) and the above just increases the refcount.",
+      "revId": "f0930e1947edbc4445e49d20ec20cf50afb953cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
