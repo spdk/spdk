@@ -52,6 +52,7 @@ extern "C" {
 #define SPDK_CONTAINEROF(ptr, type, member) ((type *)((uintptr_t)ptr - offsetof(type, member)))
 
 #define SPDK_SEC_TO_USEC 1000000ULL
+#define SPDK_SEC_TO_NSEC 1000000000ULL
 
 static inline uint32_t
 spdk_u32log2(uint32_t x)
