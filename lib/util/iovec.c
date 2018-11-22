@@ -77,3 +77,17 @@ spdk_iovec_is_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
 
 	return true;
 }
+
+bool
+spdk_iovec_has_granularity(struct iovec *iovs, int iovcnt, uint32_t granularity)
+{
+	int i;
+
+	for (i = 0; i < iovcnt; i++) {
+		if (iovs[i].iov_len % granularity) {
+			return false;
+		}
+	}
+
+	return true;
+}

@@ -78,6 +78,19 @@ spdk_iovec_buf_is_allocated(struct iovec *iovs)
  */
 bool spdk_iovec_is_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment);
 
+/**
+ * Check if the size of each buffer of a scatter gather list has required
+ * granularity..
+ *
+ * \param iovs A scatter gather list to be checked.
+ * \param iovcnt The number of elements in iov.
+ * \param alignment Required granularity in bytes.
+ *
+ * \return true if having required granularity or false otherwise.
+ */
+bool spdk_iovec_has_granularity(struct iovec *iovs, int iovcnt,
+				uint32_t granularity);
+
 #ifdef __cplusplus
 }
 #endif
