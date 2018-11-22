@@ -91,6 +91,43 @@ bool spdk_iovec_is_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment);
 bool spdk_iovec_has_granularity(struct iovec *iovs, int iovcnt,
 				uint32_t granularity);
 
+/*
+ * Contest to iterate a scatter gather list.
+ */
+struct spdk_iovec_iter {
+	/* Current iovec in the iteration */
+	struct iovec *iov;
+
+	/* Remaining count of iovecs in the iteration. */
+	int iovcnt;
+
+	/* Current offset in the iovec */
+	uint32_t iov_offset;
+};
+
+#define spdk_iovec_iter_init(i, iovs, iovcnt) {	\
+	i.iov = iovs;				\
+	i.iovcnt = iovcnt;			\
+	i.iov_offset = 0;			\
+}
+
+#define spdk_iovec_iter_cont(i)			\
+	while (i.iovcnt != 0)
+
+#define spdk_iovec_iter_advance(i, step) {	\
+	i.iov_offset += step;			\
+	if (i.iov_offset == i.iov->iov_len) {	\
+		i.iov++;			\
+		i.iovcnt--;			\
+		i.iov_offset = 0;		\
+	}					\
+}
+
+#define spdk_iovec_iter_get_buf(i, buf, buf_len) {	\
+	buf = i.iov->iov_base + i.iov_offset;		\
+	buf_len = i.iov->iov_len - i.iov_offset;	\
+}
+
 #ifdef __cplusplus
 }
 #endif
