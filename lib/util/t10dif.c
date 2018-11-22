@@ -84,6 +84,49 @@ t10dif_generate(struct iovec *iovs, int iovcnt,
 	}
 }
 
+static void
+t10dif_generate_split(struct iovec *iovs, int iovcnt,
+		      uint32_t data_block_size, uint32_t block_size,
+		      uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	struct spdk_iovec_iter iter;
+	uint32_t payload_offset, offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
+	void *buf;
+	uint8_t contig_buf[4096], contig_dif[8] = {0};
+
+	payload_offset = 0;
+	spdk_iovec_iter_init(iter, iovs, iovcnt);
+
+	spdk_iovec_iter_cont(iter) {
+		offset_blocks = payload_offset / block_size;
+		offset_in_block = payload_offset % block_size;
+
+		_ref_tag = ref_tag + offset_blocks;
+		spdk_iovec_iter_get_buf(iter, buf, buf_len);
+
+		if (offset_in_block < data_block_size) {
+			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
+			if (dif_flags & SPDK_T10DIF_GUARD_CHECK) {
+				memcpy(&contig_buf[offset_in_block], buf, buf_len);
+			}
+			if (offset_in_block + buf_len == data_block_size) {
+				_t10dif_generate(contig_dif, contig_buf, data_block_size,
+						 dif_flags, _ref_tag, app_tag);
+			}
+		} else if (offset_in_block < data_block_size + 8) {
+			buf_len = spdk_min(buf_len, data_block_size + 8 - offset_in_block);
+			memcpy(buf, &contig_dif[offset_in_block - data_block_size], buf_len);
+		} else {
+			buf_len = spdk_min(buf_len, block_size - offset_in_block);
+		}
+
+		payload_offset += buf_len;
+
+		spdk_iovec_iter_advance(iter, buf_len);
+	}
+}
+
 void
 spdk_t10dif_generate(struct iovec *iovs, int iovcnt,
 		     uint32_t data_block_size, uint32_t metadata_size,
@@ -101,7 +144,8 @@ spdk_t10dif_generate(struct iovec *iovs, int iovcnt,
 		t10dif_generate(iovs, iovcnt, data_block_size, block_size,
 				dif_flags, ref_tag, app_tag);
 	} else {
-		assert(false);
+		t10dif_generate_split(iovs, iovcnt, data_block_size, block_size,
+				      dif_flags, ref_tag, app_tag);
 	}
 }
 
@@ -171,8 +215,59 @@ t10dif_verify(struct iovec *iovs, int iovcnt,
 		if (rc != 0) {
 			return rc;
 		}
+
 		ref_tag++;
 		spdk_iovec_iter_advance(iter, block_size);
+	}
+
+	return 0;
+}
+
+static int
+t10dif_verify_split(struct iovec *iovs, int iovcnt,
+		    uint32_t data_block_size, uint32_t block_size,
+		    uint32_t dif_flags, uint32_t ref_tag,
+		    uint16_t apptag_mask, uint16_t app_tag)
+{
+	struct spdk_iovec_iter iter;
+	uint32_t payload_offset, offset_blocks, offset_in_block, buf_len;
+	uint32_t _ref_tag;
+	void *buf;
+	int rc;
+	uint8_t contig_buf[4096], contig_dif[8] = {0};
+
+	payload_offset = 0;
+	spdk_iovec_iter_init(iter, iovs, iovcnt);
+
+	spdk_iovec_iter_cont(iter) {
+		offset_blocks = payload_offset / block_size;
+		offset_in_block = payload_offset % block_size;
+
+		_ref_tag = ref_tag + offset_blocks;
+
+		spdk_iovec_iter_get_buf(iter, buf, buf_len);
+
+		if (offset_in_block < data_block_size) {
+			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
+			if (dif_flags & SPDK_T10DIF_GUARD_CHECK) {
+				memcpy(&contig_buf[offset_in_block], buf, buf_len);
+			}
+		} else if (offset_in_block < data_block_size + 8) {
+			buf_len = spdk_min(buf_len, data_block_size + 8 - offset_in_block);
+			memcpy(&contig_dif[offset_in_block - data_block_size], buf, buf_len);
+			if (offset_in_block + buf_len == data_block_size + 8) {
+				rc = _t10dif_verify(contig_dif, contig_buf, data_block_size,
+						    dif_flags, _ref_tag, apptag_mask, app_tag);
+				if (rc != 0) {
+					return rc;
+				}
+			}
+		} else {
+			buf_len = spdk_min(buf_len, block_size - offset_in_block);
+		}
+
+		payload_offset += buf_len;
+		spdk_iovec_iter_advance(iter, buf_len);
 	}
 
 	return 0;
@@ -196,6 +291,7 @@ spdk_t10dif_verify(struct iovec *iovs, int iovcnt,
 		return t10dif_verify(iovs, iovcnt, data_block_size, block_size,
 				     dif_flags, ref_tag, apptag_mask, app_tag);
 	} else {
-		return -1;
+		return t10dif_verify_split(iovs, iovcnt, data_block_size, block_size,
+					   dif_flags, ref_tag, apptag_mask, app_tag);
 	}
 }
