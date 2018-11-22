@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74599d12_fd7f7070",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-22T08:38:24Z",
+      "side": 1,
+      "message": "that\u0027s not exactly accurate, will fix in v2",
+      "revId": "cb90c770b9fde3d7871810194f106969220c33be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
