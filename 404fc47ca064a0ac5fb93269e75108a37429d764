@@ -46,6 +46,29 @@
       "revId": "404fc47ca064a0ac5fb93269e75108a37429d764",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91cd1e60_4214d0bb",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-11-22T09:51:53Z",
+      "side": 1,
+      "message": "could have the setting in one line\n\nset_bdev_qos_limit Malloc0 --rw_ios_per_sec 0 --rw_mbytes_per_sec $BANDWIDTH_LIMIT",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 71
+      },
+      "revId": "404fc47ca064a0ac5fb93269e75108a37429d764",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
