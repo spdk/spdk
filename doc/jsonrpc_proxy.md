@@ -33,7 +33,7 @@ import json
 import requests
 
 if __name__ == '__main__':
-	payload = {'method': 'get_bdevs', 'params': {'name': 'Malloc0'}}
+	payload = {'id':1, 'method': 'get_bdevs', 'params': {'name': 'Malloc0'}}
 	url = 'http://192.168.0.2:8000/'
 	req = requests.post(url,
                         data=json.dumps(payload),
