@@ -179,6 +179,30 @@
     },
     {
       "key": {
+        "uuid": "7800f0f6_a451de83",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-11-22T15:40:03Z",
+      "side": 1,
+      "message": "Please disregard previous comment.\nThis is done in _spdk_bdev_finish_unregister_bdevs_iter() regardless of the certain bdev module finish.",
+      "parentUuid": "78653e1c_ddaf96ed",
+      "range": {
+        "startLine": 1021,
+        "startChar": 0,
+        "endLine": 1023,
+        "endChar": 2
+      },
+      "revId": "e208030d593d1ee413f8e19703c8dd76a3db3454",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e0aa653_9d87a09a",
         "filename": "lib/bdev/ocssd/bdev_ocssd_rpc.c",
         "patchSetId": 7
