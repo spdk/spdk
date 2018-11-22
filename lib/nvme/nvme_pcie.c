@@ -703,15 +703,16 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	spdk_pci_addr_fmt(trid.traddr, sizeof(trid.traddr), &pci_addr);
 
-	/* Verify that this controller is not already attached */
 	ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
-	if (ctrlr) {
-		if (spdk_process_is_primary()) {
-			/* Already attached */
-			return 0;
-		} else {
-			return nvme_ctrlr_add_process(ctrlr, pci_dev);
+	if (!spdk_process_is_primary()) {
+		if (!ctrlr) {
+			/* We're trying to construct a controller from
+			 * a secondary process, which is not supported yet.
+			 */
+			return -1;
 		}
+
+		return nvme_ctrlr_add_process(ctrlr, pci_dev);
 	}
 
 	/* check whether user passes the pci_addr */
