@@ -44,14 +44,14 @@ static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
 
 int
-spdk_pci_device_init(struct rte_pci_driver *driver,
+spdk_pci_device_init(struct rte_pci_driver *_drv,
 		     struct rte_pci_device *_dev)
 {
-	struct spdk_pci_enum_ctx *ctx = (struct spdk_pci_enum_ctx *)driver;
+	struct spdk_pci_driver *driver = (struct spdk_pci_driver *)_drv;
 	struct spdk_pci_device *dev;
 	int rc;
 
-	if (!ctx->cb_fn) {
+	if (!driver->cb_fn) {
 #if RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
 		rte_eal_pci_unmap_device(_dev);
 #endif
@@ -77,7 +77,7 @@ spdk_pci_device_init(struct rte_pci_driver *driver,
 	dev->id.subdevice_id = _dev->id.subsystem_device_id;
 	dev->socket_id = _dev->device.numa_node;
 
-	rc = ctx->cb_fn(ctx->cb_arg, dev);
+	rc = driver->cb_fn(driver->cb_arg, dev);
 	if (rc != 0) {
 		free(dev);
 		return rc;
@@ -132,7 +132,7 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 }
 
 int
-spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
+spdk_pci_device_attach(struct spdk_pci_driver *driver,
 		       spdk_pci_enum_cb enum_cb,
 		       void *enum_ctx, struct spdk_pci_addr *pci_address)
 {
@@ -173,17 +173,17 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 		return rc;
 	}
 
-	if (!ctx->is_registered) {
-		ctx->is_registered = true;
+	if (!driver->is_registered) {
+		driver->is_registered = true;
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-		rte_pci_register(&ctx->driver);
+		rte_pci_register(&driver->driver);
 #else
-		rte_eal_pci_register(&ctx->driver);
+		rte_eal_pci_register(&driver->driver);
 #endif
 	}
 
-	ctx->cb_fn = enum_cb;
-	ctx->cb_arg = enum_ctx;
+	driver->cb_fn = enum_cb;
+	driver->cb_arg = enum_ctx;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	rc = rte_eal_hotplug_add("pci", bdf, "");
@@ -195,8 +195,8 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
 	rc = rte_eal_pci_probe_one(&addr);
 #endif
 
-	ctx->cb_arg = NULL;
-	ctx->cb_fn = NULL;
+	driver->cb_arg = NULL;
+	driver->cb_fn = NULL;
 	pthread_mutex_unlock(&g_pci_mutex);
 
 	return rc == 0 ? 0 : -1;
@@ -207,7 +207,7 @@ spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx,
  *       and rte_eal_pci_probe simultaneously.
  */
 int
-spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
+spdk_pci_enumerate(struct spdk_pci_driver *driver,
 		   spdk_pci_enum_cb enum_cb,
 		   void *enum_ctx)
 {
@@ -230,17 +230,17 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 		}
 	}
 
-	if (!ctx->is_registered) {
-		ctx->is_registered = true;
+	if (!driver->is_registered) {
+		driver->is_registered = true;
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-		rte_pci_register(&ctx->driver);
+		rte_pci_register(&driver->driver);
 #else
-		rte_eal_pci_register(&ctx->driver);
+		rte_eal_pci_register(&driver->driver);
 #endif
 	}
 
-	ctx->cb_fn = enum_cb;
-	ctx->cb_arg = enum_ctx;
+	driver->cb_fn = enum_cb;
+	driver->cb_arg = enum_ctx;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	if (rte_bus_probe() != 0) {
@@ -249,14 +249,14 @@ spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx,
 #else
 	if (rte_eal_pci_probe() != 0) {
 #endif
-		ctx->cb_arg = NULL;
-		ctx->cb_fn = NULL;
+		driver->cb_arg = NULL;
+		driver->cb_fn = NULL;
 		pthread_mutex_unlock(&g_pci_mutex);
 		return -1;
 	}
 
-	ctx->cb_arg = NULL;
-	ctx->cb_fn = NULL;
+	driver->cb_arg = NULL;
+	driver->cb_fn = NULL;
 	pthread_mutex_unlock(&g_pci_mutex);
 
 	return 0;

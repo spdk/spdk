@@ -41,7 +41,7 @@ static struct rte_pci_id virtio_pci_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static struct spdk_pci_enum_ctx g_virtio_pci_drv = {
+static struct spdk_pci_driver g_virtio_pci_drv = {
 	.driver = {
 		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 8, 0, 0)
