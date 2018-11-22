@@ -1777,6 +1777,10 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 
 			/* Take another reference to ch */
 			io_ch = spdk_get_io_channel(__bdev_to_io_dev(bdev));
+			if (!io_ch ) {
+				SPDK_ERRLOG("Unable to aquire another refrence for QoS Channel for bdev %s\n", bdev->name);
+				return;
+			}
 			qos->ch = ch;
 
 			qos->thread = spdk_io_channel_get_thread(io_ch);
