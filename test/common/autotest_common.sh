@@ -323,8 +323,14 @@ function waitforlisten() {
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
-	local ret=0
+
+	if [[ "$(uname -a)" != "Linux" ]]; then
+		local is_linux=false
+		set -x
+	else
+		local is_linux=true
+		set +x
+	fi
 
 	while sleep 0.5; do
 		# if the process is no longer running, then exit the script
@@ -347,6 +353,12 @@ function waitforlisten() {
 				break
 			fi
 		else
+			if $is_linux; then
+				echo "=== waitforlisten: DEBUG START ==="
+				$ns_cmd netstat -an
+				echo "=== waitforlisten: DEBUG END ==="
+			fi
+
 			# if system doesn't have ss, just assume it has netstat
 			if $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
 				break
