@@ -22,6 +22,30 @@
       "revId": "404fc47ca064a0ac5fb93269e75108a37429d764",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a9d33e2_08f0624c",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2018-11-22T04:40:22Z",
+      "side": 1,
+      "message": "Hi shuhei,\n\nI want to know why using io_size *1000. The io_size can be 512, 4096 or others. But the percentage calculation will be more precise, I think.",
+      "parentUuid": "1372657b_7c3ad1e7",
+      "range": {
+        "startLine": 34,
+        "startChar": 76,
+        "endLine": 34,
+        "endChar": 80
+      },
+      "revId": "404fc47ca064a0ac5fb93269e75108a37429d764",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
