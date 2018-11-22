@@ -323,13 +323,22 @@ function waitforlisten() {
 	echo "Waiting for process to start up and listen on UNIX domain socket $rpc_addr..."
 	# turn off trace for this loop
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
-	set +x
-	local ret=0
 
-	while sleep 0.5; do
+	if [[ "$(uname -s)" != "Linux" ]]; then
+		local is_linux=false
+		set -x
+	else
+		local is_linux=true
+		set -x
+	fi
+
+	local ret=0
+	local i
+	for (( i=0; i<40; i++)); do
 		# if the process is no longer running, then exit the script
 		#  since it means the application crashed
 		if ! kill -s 0 $1; then
+			echo "ERROR: process (pid: $1) is no longer running"
 			ret=1
 			break
 		fi
@@ -343,21 +352,38 @@ function waitforlisten() {
 		fi
 
 		if $have_ss_cmd; then
+			sleep 0.5;
 			if $ns_cmd ss -ln | egrep -q "\s+$rpc_addr\s+"; then
 				break
 			fi
-		else
+		elif $is_linux; then
+			sleep 0.5;
 			# if system doesn't have ss, just assume it has netstat
 			if $ns_cmd netstat -an | grep -iw LISTENING | egrep -q "\s+$rpc_addr\$"; then
+				break
+			fi
+		else
+			echo "=== waitforlisten: DEBUG START ==="
+			$ns_cmd netstat -an
+			echo "=== waitforlisten: grep ==="
+			$ns_cmd netstat -an | egrep "$rpc_addr" || true
+			$ns_cmd netstat -an | egrep "$rpc_addr\$" || true
+			$ns_cmd netstat -an | egrep "\s+$rpc_addr" || true
+			echo "=== waitforlisten: DEBUG END ==="
+			# On FreeBSD netstat output 'State' column is missing for Unix sockets.
+			# To workaround this check if socket is created then try to use it.
+			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods; then
 				break
 			fi
 		fi
 	done
 
 	$shell_restore_x
-	if [ $ret -ne 0 ]; then
-		exit 1
+	if (( i == 40 )); then
+		echo "ERROR: timeout while waiting for process (pid: $1) to start listening on '$rpc_addr'"
+		ret=1
 	fi
+	return $ret
 }
 
 function waitfornbd() {
