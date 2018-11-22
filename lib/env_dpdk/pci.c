@@ -85,14 +85,17 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	struct spdk_pci_device *dev;
 	int rc;
 
+#if RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
 	if (!driver->cb_fn) {
 #if RTE_VERSION < RTE_VERSION_NUM(17, 02, 0, 1)
 		rte_eal_pci_unmap_device(_dev);
 #endif
-		/* Return a positive value to indicate that this device does not belong to this driver, but
-		 * this isn't an error. */
+		/* Return a positive value to indicate that this device does
+		 * not belong to this driver, but this isn't an error.
+		 */
 		return 1;
 	}
+#endif
 
 	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
@@ -112,13 +115,15 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	dev->id.subdevice_id = _dev->id.subsystem_device_id;
 	dev->socket_id = _dev->device.numa_node;
 
-	rc = driver->cb_fn(driver->cb_arg, dev);
-	if (rc != 0) {
-		free(dev);
-		return rc;
+	if (driver->cb_fn != NULL) {
+		rc = driver->cb_fn(driver->cb_arg, dev);
+		if (rc != 0) {
+			free(dev);
+			return rc;
+		}
+		dev->attached = true;
 	}
 
-	dev->attached = true;
 	TAILQ_INSERT_TAIL(&g_pci_devices, dev, tailq);
 	spdk_vtophys_pci_device_added(dev->dev_handle);
 	return 0;
