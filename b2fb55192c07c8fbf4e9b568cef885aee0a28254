@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15616d85_47340c13",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-22T08:19:36Z",
+      "side": 0,
+      "message": "This is for Nightly tests, why does it matters?",
+      "revId": "b2fb55192c07c8fbf4e9b568cef885aee0a28254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
