@@ -89,12 +89,19 @@ function test_perf()
 			$rpc_py destroy_lvol_store -l lvs_n_0
 			$rpc_py destroy_lvol_bdev "$lb_guid"
 			$rpc_py destroy_lvol_store -l lvs_0
-			$rpc_py delete_nvme_controller Nvme0
 		fi
 	fi
 }
 
 test_perf "RDMA" $NVMF_FIRST_TARGET_IP
+
+if [ -n "$local_nvme_trid" ]; then
+	$rpc_py delete_nvme_controller Nvme0
+fi
+
+for malloc_bdev in $bdevs; do
+        $rpc_py delete_malloc_bdev "$malloc_bdev"
+done
 
 trap - SIGINT SIGTERM EXIT
 
