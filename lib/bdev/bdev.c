@@ -39,6 +39,7 @@
 #include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/iovec.h"
 #include "spdk/thread.h"
 #include "spdk/likely.h"
 #include "spdk/queue.h"
@@ -411,60 +412,6 @@ spdk_bdev_io_set_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 	iovs[0].iov_len = len;
 }
 
-static bool
-_is_buf_allocated(struct iovec *iovs)
-{
-	return iovs[0].iov_base != NULL;
-}
-
-static bool
-_are_iovs_aligned(struct iovec *iovs, int iovcnt, uint32_t alignment)
-{
-	int i;
-	uintptr_t iov_base;
-
-	if (spdk_likely(alignment == 1)) {
-		return true;
-	}
-
-	for (i = 0; i < iovcnt; i++) {
-		iov_base = (uintptr_t)iovs[i].iov_base;
-		if ((iov_base & (alignment - 1)) != 0) {
-			return false;
-		}
-	}
-
-	return true;
-}
-
-static void
-_copy_iovs_to_buf(void *buf, size_t buf_len, struct iovec *iovs, int iovcnt)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(buf, iovs[i].iov_base, len);
-		buf += len;
-		buf_len -= len;
-	}
-}
-
-static void
-_copy_buf_to_iovs(struct iovec *iovs, int iovcnt, void *buf, size_t buf_len)
-{
-	int i;
-	size_t len;
-
-	for (i = 0; i < iovcnt; i++) {
-		len = spdk_min(iovs[i].iov_len, buf_len);
-		memcpy(iovs[i].iov_base, buf, len);
-		buf += len;
-		buf_len -= len;
-	}
-}
-
 static void
 _bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 {
@@ -479,7 +426,8 @@ _bdev_io_set_bounce_buf(struct spdk_bdev_io *bdev_io, void *buf, size_t len)
 	bdev_io->u.bdev.iovs[0].iov_len = len;
 	/* if this is write path, copy data from original buffer to bounce buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
-		_copy_iovs_to_buf(buf, len, bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt);
+		spdk_iovec_copy_buf(bdev_io->internal.orig_iovs,
+				    bdev_io->internal.orig_iovcnt, buf, len, true);
 	}
 }
 
@@ -516,7 +464,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 		tmp = STAILQ_FIRST(stailq);
 
 		alignment = spdk_bdev_get_buf_align(tmp->bdev);
-		buf_allocated = _is_buf_allocated(tmp->u.bdev.iovs);
+		buf_allocated = spdk_iovec_buf_is_allocated(tmp->u.bdev.iovs);
 
 		aligned_buf = (void *)(((uintptr_t)buf +
 					(alignment - 1)) & ~(alignment - 1));
@@ -538,8 +486,9 @@ _bdev_io_unset_bounce_buf(struct spdk_bdev_io *bdev_io)
 	/* if this is read path, copy data from bounce buffer to original buffer */
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ &&
 	    bdev_io->internal.status == SPDK_BDEV_IO_STATUS_SUCCESS) {
-		_copy_buf_to_iovs(bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt,
-				  bdev_io->internal.bounce_iov.iov_base, bdev_io->internal.bounce_iov.iov_len);
+		spdk_iovec_copy_buf(bdev_io->internal.orig_iovs, bdev_io->internal.orig_iovcnt,
+				    bdev_io->internal.bounce_iov.iov_base,
+				    bdev_io->internal.bounce_iov.iov_len, false);
 	}
 	/* set orignal buffer for this io */
 	bdev_io->u.bdev.iovcnt = bdev_io->internal.orig_iovcnt;
@@ -565,10 +514,11 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	assert(bdev_io->u.bdev.iovs != NULL);
 
 	alignment = spdk_bdev_get_buf_align(bdev_io->bdev);
-	buf_allocated = _is_buf_allocated(bdev_io->u.bdev.iovs);
+	buf_allocated = spdk_iovec_buf_is_allocated(bdev_io->u.bdev.iovs);
 
 	if (buf_allocated &&
-	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
+	    spdk_iovec_is_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				  alignment)) {
 		/* Buffer already present and aligned */
 		cb(bdev_io->internal.ch->channel, bdev_io);
 		return;
