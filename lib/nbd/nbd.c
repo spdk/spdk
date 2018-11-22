@@ -152,7 +152,7 @@ spdk_nbd_disk_register(struct spdk_nbd_disk *nbd)
 {
 	if (spdk_nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
 		SPDK_NOTICELOG("%s is already exported\n", nbd->nbd_path);
-		return -1;
+		return -EBUSY;
 	}
 
 	TAILQ_INSERT_TAIL(&g_spdk_nbd.disk_head, nbd, tailq);
@@ -863,12 +863,14 @@ spdk_nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	rc = pthread_create(&tid, NULL, nbd_start_kernel, (void *)(intptr_t)ctx->nbd->dev_fd);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not create thread: %s\n", spdk_strerror(rc));
+		rc = -rc;
 		goto err;
 	}
 
 	rc = pthread_detach(tid);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not detach thread for nbd kernel: %s\n", spdk_strerror(rc));
+		rc = -rc;
 		goto err;
 	}
 
@@ -989,6 +991,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	rc = socketpair(AF_UNIX, SOCK_STREAM, 0, sp);
 	if (rc != 0) {
 		SPDK_ERRLOG("socketpair failed\n");
+		rc = -errno;
 		goto err;
 	}
 
