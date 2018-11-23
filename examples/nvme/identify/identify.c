@@ -276,7 +276,9 @@ get_cmd_effects_log_page(struct spdk_nvme_ctrlr *ctrlr)
 static int
 get_intel_smart_log_page(struct spdk_nvme_ctrlr *ctrlr)
 {
-	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_INTEL_LOG_SMART, SPDK_NVME_GLOBAL_NS_TAG,
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr,
+					     spdk_nvme_cmd_get_log_page_retain_async_event(SPDK_NVME_INTEL_LOG_SMART, 0),
+					     SPDK_NVME_GLOBAL_NS_TAG,
 					     &intel_smart_page, sizeof(intel_smart_page), 0, get_log_page_completion, NULL)) {
 		printf("spdk_nvme_ctrlr_cmd_get_log_page() failed\n");
 		exit(1);

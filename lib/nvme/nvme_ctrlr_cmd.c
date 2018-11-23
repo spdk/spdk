@@ -453,6 +453,64 @@ nvme_ctrlr_cmd_set_host_id(struct spdk_nvme_ctrlr *ctrlr, void *host_id, uint32_
 					       host_id, host_id_size, cb_fn, cb_arg);
 }
 
+
+/* follow spec to find out async event type which can be cleared or retained by cdw10.bit15 */
+static bool is_support_rae(uint8_t log_page)
+{
+	uint8_t aet;
+
+	switch (log_page) {
+	/* ********************************************************
+	 * from spec:
+	 * 1.Error event
+	 * 2.SMART / Health Status event
+	 * 3.I/O Command Set events
+	 *   NVM Command Set Events
+	 * 4.Vendor Specific event
+	 * above cases can use Get Log Page command with the Retain Asynchronous
+	 * Event field cleared to ‘0’,reserve this for user to define.
+	 * ********************************************************** */
+	case SPDK_NVME_LOG_ERROR:
+		aet = SPDK_NVME_ASYNC_EVENT_TYPE_ERROR;
+		break;
+	case SPDK_NVME_LOG_HEALTH_INFORMATION:
+		aet = SPDK_NVME_ASYNC_EVENT_TYPE_SMART;
+		break;
+	case SPDK_NVME_LOG_FIRMWARE_SLOT:
+	case SPDK_NVME_LOG_CHANGED_NS_LIST:
+		aet = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+		break;
+	case SPDK_NVME_LOG_COMMAND_EFFECTS_LOG:
+		aet = SPDK_NVME_ASYNC_EVENT_TYPE_IO;
+		break;
+	default:
+		aet = SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE;
+		break;
+	}
+
+	switch (aet) {
+	case SPDK_NVME_ASYNC_EVENT_TYPE_ERROR:
+	case SPDK_NVME_ASYNC_EVENT_TYPE_SMART:
+	case SPDK_NVME_ASYNC_EVENT_TYPE_IO:
+	case SPDK_NVME_ASYNC_EVENT_TYPE_VENDOR:
+		return true;
+	case SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE:
+		break;
+	default:
+		break;
+	}
+
+	return false;
+}
+
+uint16_t spdk_nvme_cmd_get_log_page_retain_async_event(uint8_t log_page, bool retain)
+{
+	/* return logpage with setting the the RAE bit enabled to retain async event */
+	/* pass through log_page with bit15 to enabled or disabled */
+	return is_support_rae(log_page) & retain ? (1 << 15 | log_page) : ((uint16_t)log_page & ~
+			(1 << 15)) ;
+}
+
 int
 spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
 				 uint32_t nsid, void *payload, uint32_t payload_size,

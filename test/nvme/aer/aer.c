@@ -207,7 +207,8 @@ get_health_log_page(struct dev *dev)
 {
 	int rc;
 
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_HEALTH_INFORMATION,
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr,
+					      spdk_nvme_cmd_get_log_page_retain_async_event(SPDK_NVME_LOG_HEALTH_INFORMATION, 0),
 					      SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
 					      get_health_log_page_completion, dev);
 
@@ -223,7 +224,8 @@ get_changed_ns_log_page(struct dev *dev)
 {
 	int rc;
 
-	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr, SPDK_NVME_LOG_CHANGED_NS_LIST,
+	rc = spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr,
+					      spdk_nvme_cmd_get_log_page_retain_async_event(SPDK_NVME_LOG_CHANGED_NS_LIST, 0),
 					      SPDK_NVME_GLOBAL_NS_TAG, dev->changed_ns_list,
 					      sizeof(*dev->changed_ns_list), 0,
 					      get_changed_ns_log_page_completion, dev);
