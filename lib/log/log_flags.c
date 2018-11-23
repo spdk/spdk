@@ -48,6 +48,8 @@ SPDK_LOG_REGISTER_COMPONENT("log", SPDK_LOG_LOG)
 void
 spdk_log_set_level(enum spdk_log_level level)
 {
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
 	g_spdk_log_level = level;
 }
 
@@ -59,6 +61,8 @@ spdk_log_get_level(void) {
 void
 spdk_log_set_print_level(enum spdk_log_level level)
 {
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
 	g_spdk_log_print_level = level;
 }
 
@@ -70,6 +74,8 @@ spdk_log_get_print_level(void) {
 void
 spdk_log_set_backtrace_level(enum spdk_log_level level)
 {
+	assert(level >= SPDK_LOG_DISABLED);
+	assert(level <= SPDK_LOG_DEBUG);
 	g_spdk_log_backtrace_level = level;
 }
 
