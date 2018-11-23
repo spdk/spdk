@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "785a65c7_971bad4e",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-23T00:49:56Z",
+      "side": 1,
+      "message": "$bdevs may contain Nvme0n1 bdev, so here you can try with \"delete_bdev\" rpc.",
+      "revId": "eeb3cbcb204d8ca096fb58b3f0b86aa3ad87eac8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
