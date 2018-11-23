@@ -1037,6 +1037,68 @@ conflict:
 }
 
 static int
+spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
+			 enum spdk_scsi_pr_type_code type, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_session *sess;
+	struct spdk_scsi_pr_reservation *res;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT RELEASE: rkey 0x%"PRIx64", "
+		      "reservation type %u\n", rkey, type);
+
+	sess = spdk_scsi_pr_get_session(dev, task->initiator_port, task->target_port);
+	if (!sess) {
+		SPDK_ERRLOG("RELEASE: no registration\n");
+		return -EINVAL;
+	}
+
+	/* no reservation holder */
+	if (TAILQ_EMPTY(&dev->res_head)) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: no reservation holder\n");
+		return 0;
+	}
+
+	if (dev->type != type || rkey != dev->crkey) {
+		SPDK_ERRLOG("RELEASE: type or reservation key doesn't match\n");
+		goto check_condition;
+	}
+
+	res = spdk_scsi_pr_get_reservation(dev, sess);
+	if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
+	    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+		all_regs = true;
+	}
+	/* I_T nexus is not a persistent reservation holder */
+	if (!all_regs && !res) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "RELEASE: current I_T nexus is not holder\n");
+		return 0;
+	}
+
+	/* TODO: Unit Attention to other initiator ports for
+	 * type registrants only or all registrants
+	 */
+	if (!TAILQ_EMPTY(&dev->res_head)) {
+		res = TAILQ_FIRST(&dev->res_head);
+		TAILQ_REMOVE(&dev->res_head, res, link);
+		free(res);
+	}
+	dev->type = 0;
+	dev->crkey = 0;
+
+	return 0;
+
+check_condition:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+				  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
+
+static int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
 		 uint16_t data_len)
@@ -1072,6 +1134,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 	case SPDK_SCSI_PR_OUT_RESERVE:
 		rc = spdk_scsi_pr_out_reserve(task, type, rkey,
 					      spec_i_pt, all_tg_pt, aptpl);
+		break;
+	case SPDK_SCSI_PR_OUT_RELEASE:
+		rc = spdk_scsi_pr_out_release(task, type, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
