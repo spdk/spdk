@@ -16,6 +16,24 @@
       "revId": "975da2f6c9548e89908c59a73aa9023f725e08d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9be1c8ab_64520b4d",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T09:06:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f8b65c20_390b4655",
+      "revId": "975da2f6c9548e89908c59a73aa9023f725e08d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
