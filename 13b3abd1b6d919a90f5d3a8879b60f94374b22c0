@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "95f37b72_87a30366",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-23T14:12:56Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we skip this line if name \u003d\u003d NULL ?",
+      "range": {
+        "startLine": 165,
+        "startChar": 1,
+        "endLine": 166,
+        "endChar": 0
+      },
+      "revId": "13b3abd1b6d919a90f5d3a8879b60f94374b22c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96c7105e_2edd5dac",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-23T14:12:56Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we skip this line if name \u003d\u003d NULL ?",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 237,
+        "endChar": 33
+      },
+      "revId": "13b3abd1b6d919a90f5d3a8879b60f94374b22c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
