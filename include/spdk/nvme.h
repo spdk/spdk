@@ -952,6 +952,33 @@ struct spdk_nvme_ns;
  */
 struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint32_t ns_id);
 
+
+/**
+ *  Pass logpage parameter with Bit15 enabled to retain async event
+ *
+ * spdk_nvme_cmd_get_log_page_retain_async_event:
+ *
+ * we can use spdk_nvme_cmd_get_log_page_retain_async_event(log_page,0) instead of log_page
+ *
+ * spdk_nvme_cmd_get_log_page_retain_async_event(logpage,0) is the same as before.
+ * if you want to retain async event use
+ * spdk_nvme_cmd_get_log_page_retain_async_event(SPDK_NVME_LOG_HEALTH_INFORMATION,1)
+ * instead.
+ * for example:
+ * spdk_nvme_ctrlr_cmd_get_log_page(dev->ctrlr,
+ *     spdk_nvme_cmd_get_log_page_retain_async_event(SPDK_NVME_LOG_HEALTH_INFORMATION,1),
+ *     SPDK_NVME_GLOBAL_NS_TAG, dev->health_page, sizeof(*dev->health_page), 0,
+ *     get_health_log_page_completion, dev);
+ *
+ *
+ * \param log_page The log page identifier.
+ * \param retain  set 1 means reatin async event, 0 means clear async event.
+ *
+ * it send out admin command get log page with cdw10.bit15 enabled, the async event will retained.
+ * and now our code default value is to clear it after finished this command.
+ */
+uint16_t spdk_nvme_cmd_get_log_page_retain_async_event(uint16_t log_page, bool retain);
+
 /**
  * Get a specific log page from the NVMe controller.
  *
@@ -979,7 +1006,7 @@ struct spdk_nvme_ns *spdk_nvme_ctrlr_get_ns(struct spdk_nvme_ctrlr *ctrlr, uint3
  * allocated for this request.
  */
 int spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr,
-				     uint8_t log_page, uint32_t nsid,
+				     uint16_t log_page, uint32_t nsid,
 				     void *payload, uint32_t payload_size,
 				     uint64_t offset,
 				     spdk_nvme_cmd_cb cb_fn, void *cb_arg);

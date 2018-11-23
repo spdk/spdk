@@ -228,7 +228,7 @@ spdk_nvme_ctrlr_cmd_get_feature(struct spdk_nvme_ctrlr *ctrlr, uint8_t feature,
 }
 
 int
-spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint8_t log_page,
+spdk_nvme_ctrlr_cmd_get_log_page(struct spdk_nvme_ctrlr *ctrlr, uint16_t log_page,
 				 uint32_t nsid, void *payload, uint32_t payload_size,
 				 uint64_t offset, spdk_nvme_cmd_cb cb_fn, void *cb_arg)
 {
