@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "661d8c80_ced67808",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 1
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-23T13:36:11Z",
+      "side": 1,
+      "message": "Also the reason for this is that these images have support for libvirt provider",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 21,
+        "endChar": 41
+      },
+      "revId": "844ab1458ea904fbe547b7e9a40f2c7a45dfbb12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
