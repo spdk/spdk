@@ -1,0 +1,478 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0de6edc2_b38253ec",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Let\u0027s call it ioch.",
+      "range": {
+        "startLine": 85,
+        "startChar": 26,
+        "endLine": 85,
+        "endChar": 37
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79793df2_cbf146b0",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Let\u0027s do it on another line, after bio \u003d spdk_bdev_io_from_ctx(io).",
+      "range": {
+        "startLine": 296,
+        "startChar": 33,
+        "endLine": 296,
+        "endChar": 56
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9f09d94_cdd14196",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Just do a \u0027return spdk_ftl_write\u0027.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b826dc8b_0394ed1f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Change ftl_io_write(ctx) to ftl_io_write(io).",
+      "range": {
+        "startLine": 1336,
+        "startChar": 0,
+        "endLine": 1337,
+        "endChar": 21
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4870db06_c19b3a16",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "You should free the io if rc !\u003d 0.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4cac4cd_e6961255",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Just call _spdk_ftl_write.",
+      "range": {
+        "startLine": 1376,
+        "startChar": 0,
+        "endLine": 1382,
+        "endChar": 2
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "974adfcc_faf1e12d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Same here, free the io if the rc !\u003d 0.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ac8a87d_f1f840c4",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e589908_b5579001",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Move it to ftl_io.h.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdd0f5b1_34216fae",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Why is it here? In my opinion it should be defined inside ftl_io.h. Also what is the purpose of this structure? Can\u0027t you just call spdk_mempool_count()?",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09d0bee3_87815898",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Why 2048? This should definitely be configurable.",
+      "range": {
+        "startLine": 810,
+        "startChar": 7,
+        "endLine": 810,
+        "endChar": 11
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5b58769_9268e5b5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Really, what is the point of that? It\u0027s initialization the failures are already handled.",
+      "range": {
+        "startLine": 815,
+        "startChar": 0,
+        "endLine": 815,
+        "endChar": 21
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba9a9307_bbb10904",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Same here.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f05673f0_af901cd4",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "These kind of asserts are useless. If there\u0027s no IOs left in the pool, the code will break nearly in the same way if the assert wasn\u0027t there. Remove it please.\n\nAlso, I\u0027m not a fan of doing this here. We might want to handle this case in the upper layers, so I\u0027d rather see code checking for NULL here.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4871fb57_c7a8236a",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "What\u0027s the reason for this?",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0980cf3e_fc98c9ea",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Device should be the first argument.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd81c66c_adee3cda",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "This flag doesn\u0027t make sense anymore, we want to free all IOs.",
+      "range": {
+        "startLine": 283,
+        "startChar": 37,
+        "endLine": 283,
+        "endChar": 50
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a269cc66_ebc45a5b",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Same here, get rid of this.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d938e540_ece24593",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Remove this.",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 341,
+        "endChar": 12
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "934a5ea3_c65823a1",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Let\u0027s have a fake io_channel for internal IOs and point the io-\u003ech to that.",
+      "range": {
+        "startLine": 371,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 1
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67b60340_bb615f56",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Aren\u0027t we going to have a circular references soon? I don\u0027t think ftl_io should depend on band.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b60313ea_6e37d7e0",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Why not cast the spdk_io_channel to our own ftl_io_channel as soon as we can and use that throughout the FTL code?",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56163094_1197aee5",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "We should have the same API to retrieve IOs, regardless if they\u0027re coming from the user or are internal to the FTL. I think doing something like\n\nstruct ftl_io * ftl_io_channel_get_io(struct ftl_dev *dev, struct ftl_io_channel *ch, int flags)\n\nwould be much better.",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 56
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff790082_9832bbc3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-23T10:33:14Z",
+      "side": 1,
+      "message": "Double semicolon.",
+      "range": {
+        "startLine": 166,
+        "startChar": 34,
+        "endLine": 166,
+        "endChar": 35
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
