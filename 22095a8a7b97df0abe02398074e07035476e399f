@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "19355d49_e53d9760",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I think this name is more readable.",
+      "parentUuid": "0de6edc2_b38253ec",
+      "range": {
+        "startLine": 85,
+        "startChar": 26,
+        "endLine": 85,
+        "endChar": 37
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79793df2_cbf146b0",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Let\u0027s do it on another line, after bio \u003d spdk_bdev_io_from_ctx(io).",
+      "range": {
+        "startLine": 296,
+        "startChar": 33,
+        "endLine": 296,
+        "endChar": 56
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e982c91c_23b7a26f",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79793df2_cbf146b0",
       "range": {
         "startLine": 296,
         "startChar": 33,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "072debd7_2c16122e",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f9f09d94_cdd14196",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b826dc8b_0394ed1f",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -76,6 +142,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Change ftl_io_write(ctx) to ftl_io_write(io).",
+      "range": {
+        "startLine": 1336,
+        "startChar": 0,
+        "endLine": 1337,
+        "endChar": 21
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05983f9a_ee5a8ee5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b826dc8b_0394ed1f",
       "range": {
         "startLine": 1336,
         "startChar": 0,
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "b57a2333_29ee6d9d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1340,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "We currenlty free io on submit_write/submit_read fail - but perhaps this could be handled in this place.",
+      "parentUuid": "4870db06_c19b3a16",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4cac4cd_e6961255",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -116,6 +224,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Just call _spdk_ftl_write.",
+      "range": {
+        "startLine": 1376,
+        "startChar": 0,
+        "endLine": 1382,
+        "endChar": 2
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9595877_897c7ff3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Yeah, but we will end up with another EAGAIN and then call thread_send_msg. This could potentialy produce some cost on rwb-\u003elock synchronization?",
+      "parentUuid": "b4cac4cd_e6961255",
       "range": {
         "startLine": 1376,
         "startChar": 0,
@@ -145,6 +277,24 @@
     },
     {
       "key": {
+        "uuid": "1e7151f7_8ba8421f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Look at my previous comment.",
+      "parentUuid": "974adfcc_faf1e12d",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ac8a87d_f1f840c4",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -156,6 +306,24 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Same here.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8baf4898_d9e19adc",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1445,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Look at my previous comment.",
+      "parentUuid": "3ac8a87d_f1f840c4",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -179,6 +347,24 @@
     },
     {
       "key": {
+        "uuid": "07ead2b0_139cf0bf",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e589908_b5579001",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fdd0f5b1_34216fae",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 2
@@ -196,6 +382,24 @@
     },
     {
       "key": {
+        "uuid": "7612e74d_d567f5cc",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I will move it ftl_io.h. This comment is wrong - this is size of single element.",
+      "parentUuid": "fdd0f5b1_34216fae",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "09d0bee3_87815898",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -207,6 +411,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Why 2048? This should definitely be configurable.",
+      "range": {
+        "startLine": 810,
+        "startChar": 7,
+        "endLine": 810,
+        "endChar": 11
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe5eec6a_4a5ec45e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 810,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I agree - I will make it configurable.",
+      "parentUuid": "09d0bee3_87815898",
       "range": {
         "startLine": 810,
         "startChar": 7,
@@ -242,6 +470,30 @@
     },
     {
       "key": {
+        "uuid": "1e75566a_cc16d964",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 815,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5b58769_9268e5b5",
+      "range": {
+        "startLine": 815,
+        "startChar": 0,
+        "endLine": 815,
+        "endChar": 21
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ba9a9307_bbb10904",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 2
@@ -253,6 +505,24 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Same here.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83b4641f_30535482",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ba9a9307_bbb10904",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -276,6 +546,24 @@
     },
     {
       "key": {
+        "uuid": "209c3eee_f31f31cf",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I removed it in patchset 3.",
+      "parentUuid": "f05673f0_af901cd4",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4871fb57_c7a8236a",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -293,6 +581,24 @@
     },
     {
       "key": {
+        "uuid": "ab6c218d_398c7f2e",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I removed it in patchset 3.",
+      "parentUuid": "4871fb57_c7a8236a",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0980cf3e_fc98c9ea",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -304,6 +610,24 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Device should be the first argument.",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a181597a_17b0e4a5",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0980cf3e_fc98c9ea",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -333,6 +657,30 @@
     },
     {
       "key": {
+        "uuid": "26bd230a_c278cf1e",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "It is still needed by reloc - but I think we should get rid of it.",
+      "parentUuid": "dd81c66c_adee3cda",
+      "range": {
+        "startLine": 283,
+        "startChar": 37,
+        "endLine": 283,
+        "endChar": 50
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a269cc66_ebc45a5b",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -350,6 +698,24 @@
     },
     {
       "key": {
+        "uuid": "8eac7809_c4b7562a",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Look at my previous comment.",
+      "parentUuid": "a269cc66_ebc45a5b",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d938e540_ece24593",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -361,6 +727,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Remove this.",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 341,
+        "endChar": 12
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d240fe3_2fa34596",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 341,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I removed it in patchset 3.",
+      "parentUuid": "d938e540_ece24593",
       "range": {
         "startLine": 341,
         "startChar": 0,
@@ -396,6 +786,30 @@
     },
     {
       "key": {
+        "uuid": "ca579130_94665635",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Idea here was to distinguish those two cases.",
+      "parentUuid": "934a5ea3_c65823a1",
+      "range": {
+        "startLine": 371,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 1
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67b60340_bb615f56",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 2
@@ -413,6 +827,24 @@
     },
     {
       "key": {
+        "uuid": "d722631c_5f577fa0",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67b60340_bb615f56",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b60313ea_6e37d7e0",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 2
@@ -424,6 +856,24 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Why not cast the spdk_io_channel to our own ftl_io_channel as soon as we can and use that throughout the FTL code?",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76183d9b_02761bef",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "I need this in spdk_io_channel_get_thread.",
+      "parentUuid": "b60313ea_6e37d7e0",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -453,6 +903,30 @@
     },
     {
       "key": {
+        "uuid": "7f1ed0cd_4fcd2305",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Maybe this approach is not ideal but in my opinion is cleaner then API that is operating both on io_channel and dev. We have separate \"user\" io pools associated with io_channel mempool and we have internal mempool associated with our device.\nIf we will have real io_channel in dev then it would make sense but we can\u0027t guarantee that core will be running on separate thread.",
+      "parentUuid": "56163094_1197aee5",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 56
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff790082_9832bbc3",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 2
@@ -464,6 +938,30 @@
       "writtenOn": "2018-11-23T10:33:14Z",
       "side": 1,
       "message": "Double semicolon.",
+      "range": {
+        "startLine": 166,
+        "startChar": 34,
+        "endLine": 166,
+        "endChar": 35
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e491bc45_fb637384",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-23T12:28:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff790082_9832bbc3",
       "range": {
         "startLine": 166,
         "startChar": 34,
