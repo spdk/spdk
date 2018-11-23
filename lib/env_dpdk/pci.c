@@ -40,6 +40,11 @@
 #define PCI_CFG_SIZE		256
 #define PCI_EXT_CAP_ID_SN	0x03
 
+/* DPDK 18.11+ hotplug isn't robust. Multiple apps starting at the same time
+ * might cause the internal IPC to misbehave. Just retry in such case.
+ */
+#define DPDK_HOTPLUG_RETRY_COUNT 4
+
 static pthread_mutex_t g_pci_mutex = PTHREAD_MUTEX_INITIALIZER;
 static TAILQ_HEAD(, spdk_pci_device) g_pci_devices = TAILQ_HEAD_INITIALIZER(g_pci_devices);
 static TAILQ_HEAD(, spdk_pci_driver) g_pci_drivers = TAILQ_HEAD_INITIALIZER(g_pci_drivers);
@@ -160,7 +165,13 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 	assert(dev->attached);
 	dev->attached = false;
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
-	rte_eal_hotplug_remove("pci", device->device.name);
+	char bdf[32];
+	int i = 0, rc;
+
+	snprintf(bdf, sizeof(bdf), "%s", device->device.name);
+	do {
+		rc = rte_eal_hotplug_remove("pci", bdf);
+	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	rte_eal_dev_detach(&device->device);
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
@@ -226,7 +237,18 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	driver->cb_arg = enum_ctx;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
-	rc = rte_eal_hotplug_add("pci", bdf, "");
+	int i = 0;
+
+	do {
+		rc = rte_eal_hotplug_add("pci", bdf, "");
+	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
+
+	if (i > 1 && rc == -EEXIST) {
+		/* Even though the previous request timed out, the device
+		 * was attached successfully.
+		 */
+		rc = 0;
+	}
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	rc = rte_eal_dev_attach(bdf, "");
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
