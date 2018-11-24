@@ -1073,6 +1073,46 @@ check_condition:
 }
 
 static int
+spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg, *tmp, *tmp1;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT CLEAR: rkey 0x%"PRIx64"\n", rkey);
+
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("CLEAR: no registration\n");
+		return -EINVAL;
+	}
+
+	if (rkey != reg->rkey) {
+		SPDK_ERRLOG("CLEAR: reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, reg->rkey);
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH_SAFE(tmp, &dev->reg_head, link, tmp1) {
+		TAILQ_REMOVE(&dev->reg_head, tmp, link);
+		if (tmp != reg) {
+			/* TODO: Unit Attention for other initiator ports */
+		}
+		free(tmp);
+	}
+
+	if (dev->holder) {
+		dev->crkey = 0;
+		dev->type = 0;
+		dev->holder = NULL;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CLEAR: release reservation\n");
+	}
+
+	dev->pr_generation++;
+	return 0;
+}
+
+static int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
 		 uint16_t data_len)
@@ -1122,6 +1162,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_OUT_RELEASE:
 		rc = spdk_scsi_pr_out_release(task, type, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_CLEAR:
+		rc = spdk_scsi_pr_out_clear(task, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
