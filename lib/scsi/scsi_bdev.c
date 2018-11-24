@@ -1344,6 +1344,65 @@ invalid:
 }
 
 static int
+spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
+				 uint8_t *buf, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_in_full_status_data *data;
+	struct spdk_scsi_pr_in_full_status_desc *desc;
+	struct spdk_scsi_pr_session *sess, *tmp;
+	bool all_regs = false;
+	uint32_t len = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ FULL STATUS\n");
+
+	if (data_len < sizeof(data->header)) {
+		return -ENOMEM;
+	}
+
+	if (!TAILQ_EMPTY(&dev->res_head)) {
+		if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
+		    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+			all_regs = true;
+		}
+	}
+
+	data = (struct spdk_scsi_pr_in_full_status_data *)buf;
+
+	to_be32(&data->header.pr_generation, dev->pr_generation);
+	desc = &data->desc_list[0];
+
+	TAILQ_FOREACH_SAFE(sess, &dev->sess_head, link, tmp) {
+		len += sizeof(*desc);
+		if (len + sizeof(data->header) > data_len) {
+			break;
+		}
+		desc->rkey = sess->rkey;
+		desc->r_holder = all_regs;
+		desc->all_tg_pt = 0;
+		desc->scope = SPDK_SCSI_PR_LU_SCOPE;
+		desc->type = dev->type;
+		desc->relative_target_port_id = sess->target_port->id;
+		/* TransportID */
+		len += sess->initiator_port->transport_id_len;
+		if (len + sizeof(data->header) > data_len) {
+			break;
+		}
+		desc->transport_id[0] = (0x01 << 6) | dev->protocol_id;
+		memcpy(&desc->transport_id[4], sess->initiator_port->transport_id,
+		       sess->initiator_port->transport_id_len);
+		to_be16(&desc->transport_id[2], sess->initiator_port->transport_id_len);
+		to_be32(&desc->desc_len, 4 + sess->initiator_port->transport_id_len);
+
+		desc++;
+	}
+	to_be32(&data->header.addiontal_len, len);
+
+	return (sizeof(data->header) + len);
+}
+
+static int
 spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 				    uint8_t *data, uint16_t data_len)
 {
@@ -1453,6 +1512,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_IN_REPORT_CAPABILITIES:
 		rc = spdk_scsi_pr_in_report_capabilities(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_FULL_STATUS:
+		rc = spdk_scsi_pr_in_read_full_status(task, data, data_len);
 		break;
 	default:
 		return -1;
