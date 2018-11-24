@@ -1322,6 +1322,68 @@ invalid:
 	return -EINVAL;
 }
 
+static int
+spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
+			  uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+	struct spdk_scsi_pr_in_read_keys_data *keys;
+	uint16_t count = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ KEYS\n");
+
+	if (data_len < sizeof(keys->header)) {
+		return -ENOMEM;
+	}
+	keys = (struct spdk_scsi_pr_in_read_keys_data *)data;
+
+	to_be32(&keys->header.pr_generation, dev->pr_generation);
+	TAILQ_FOREACH_SAFE(reg, &dev->reg_head, link, tmp) {
+		if ((count * 8 + sizeof(keys->header)) > data_len) {
+			break;
+		}
+		to_be64(&keys->rkeys[count], reg->rkey);
+		count++;
+	}
+	to_be32(&keys->header.addiontal_len, count * 8);
+
+	return (sizeof(keys->header) + count * 8);
+}
+
+static int
+spdk_scsi_pr_in(struct spdk_scsi_task *task,
+		uint8_t *cdb, uint8_t *data,
+		uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_dev *dev;
+	enum spdk_scsi_pr_in_action_code action;
+	int rc = 0;
+
+	lun = task->lun;
+	if (!lun) {
+		return -EINVAL;
+	}
+	dev = lun->dev;
+	if (!dev) {
+		return -EINVAL;
+	}
+
+	action = cdb[1] & 0x1f;
+
+	switch (action) {
+	case SPDK_SCSI_PR_IN_READ_KEYS:
+		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		break;
+	default:
+		return -1;
+	}
+
+	return rc;
+}
+
 static void
 mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 {
@@ -2569,6 +2631,17 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 		}
 
 		rc = 0;
+		break;
+
+	case SPDK_SPC_PERSISTENT_RESERVE_IN:
+		alloc_len = from_be16(&cdb[7]);
+		data_len = alloc_len;
+		data = spdk_dma_zmalloc(data_len, 0, NULL);
+		assert(data != NULL);
+		rc = spdk_scsi_pr_in(task, cdb, data, data_len);
+		if (rc < 0) {
+			break;
+		}
 		break;
 
 	case SPDK_SPC_PERSISTENT_RESERVE_OUT:
