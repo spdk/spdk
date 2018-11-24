@@ -324,6 +324,7 @@ function waitforlisten() {
 	# turn off trace for this loop
 	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	set +x
+	[[ "$(uname -s)" == "Linux" ]] || set -x
 	local ret=0
 	local i
 	for (( i=0; i<40; i++ )); do
@@ -358,7 +359,7 @@ function waitforlisten() {
 			# To workaround this issue just try to use provided address.
 			# Second issue is that there might be no python3 so force 'python' interpreter
 			# XXX: This solution could be used for other distros.
-			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods 1>&2 2>/dev/null; then
+			if python $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods 1>&2 2>/dev/null; then
 				break
 			fi
 		fi
