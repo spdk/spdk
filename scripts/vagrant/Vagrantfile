@@ -5,6 +5,7 @@ Vagrant.configure(2) do |config|
 
   # Pick the right distro and bootstrap, default is fedora26
   distro = ( ENV['SPDK_VAGRANT_DISTRO'] || "fedora26")
+  provider = (ENV['SPDK_VAGRANT_PROVIDER'] || "virtualbox")
   case distro
   when "centos7"
     config.vm.box = "puppetlabs/centos-7.2-64-nocm"
@@ -14,13 +15,23 @@ Vagrant.configure(2) do |config|
       config.vm.box = "centos/7"
     end if Vagrant.has_plugin?('vagrant-libvirt')
   when "ubuntu16"
-    # See: https://app.vagrantup.com/puppetlabs/boxes/ubuntu-16.04-64-nocm
-    config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
-    config.vm.box_version = "1.0.0"
+    if provider.eql?("libvirt")
+      # https://app.vagrantup.com/sjohnsen/boxes/ubuntu1604
+      config.vm.box = "sjohnsen/ubuntu1604"
+    else
+      # See: https://app.vagrantup.com/puppetlabs/boxes/ubuntu-16.04-64-nocm
+      config.vm.box = "puppetlabs/ubuntu-16.04-64-nocm"
+      config.vm.box_version = "1.0.0"
+    end
   when "ubuntu18"
-    # See: https://app.vagrantup.com/bento/boxes/ubuntu-18.04
-    config.vm.box = "bento/ubuntu-18.04"
-    config.vm.box_version = "201803.24.0"
+    if provider.eql?("libvirt")
+      # https://app.vagrantup.com/sjohnsen/boxes/ubuntu1804
+      config.vm.box = "sjohnsen/ubuntu1804"
+    else
+      # See: https://app.vagrantup.com/bento/boxes/ubuntu-18.04
+      config.vm.box = "bento/ubuntu-18.04"
+      config.vm.box_version = "201803.24.0"
+    end
   when "fedora26"
     #See: https://app.vagrantup.com/generic/boxes/fedora2
     config.vm.box = "generic/fedora26"

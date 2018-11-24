@@ -54,6 +54,7 @@ DEPLOY_TEST_VM=0
 SPDK_VAGRANT_DISTRO="distro"
 SPDK_VAGRANT_VMCPU=4
 SPDK_VAGRANT_VMRAM=4096
+SPDK_VAGRANT_PROVIDER="virtualbox"
 OPTIND=1
 NVME_FILE="nvme_disk.img"
 
@@ -78,7 +79,7 @@ while getopts ":b:n:s:x:p:vrldh-:" opt; do
 			SPDK_VAGRANT_VMRAM=$OPTARG
 		;;
 		p)
-			PROVIDER=$OPTARG
+			SPDK_VAGRANT_PROVIDER=$OPTARG
 		;;
 		v)
 			VERBOSE=1
@@ -156,6 +157,7 @@ if [ ${VERBOSE} = 1 ]; then
 	echo SPDK_VAGRANT_DISTRO=$SPDK_VAGRANT_DISTRO
 	echo SPDK_VAGRANT_VMCPU=$SPDK_VAGRANT_VMCPU
 	echo SPDK_VAGRANT_VMRAM=$SPDK_VAGRANT_VMRAM
+	echo SPDK_VAGRANT_PROVIDER=$SPDK_VAGRANT_PROVIDER
 	echo SPDK_VAGRANT_HTTP_PROXY=$SPDK_VAGRANT_HTTP_PROXY
 	echo VHOST_HOST_DIR=$VHOST_HOST_DIR
 	echo VHOST_VM_DIR=$VHOST_VM_DIR
@@ -170,8 +172,8 @@ export COPY_SPDK_DIR
 export DEPLOY_TEST_VM
 export NVME_FILE
 
-if [ -n "$PROVIDER" ]; then
-    provider="--provider=${PROVIDER}"
+if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
+    provider="--provider=${SPDK_VAGRANT_PROVIDER}"
 fi
 
 if [ -n "$VHOST_HOST_DIR" ]; then
@@ -182,24 +184,29 @@ if [ -n "$VHOST_VM_DIR" ]; then
     export VHOST_VM_DIR
 fi
 
+if [ -n "$SPDK_VAGRANT_PROVIDER" ]; then
+    export SPDK_VAGRANT_PROVIDER
+fi
+
 if [ ${DRY_RUN} = 1 ]; then
 	echo "Environemnt Variables"
 	printenv SPDK_VAGRANT_DISTRO
 	printenv SPDK_VAGRANT_VMRAM
 	printenv SPDK_VAGRANT_VMCPU
+	printenv SPDK_VAGRANT_PROVIDER
 	printenv SPDK_VAGRANT_HTTP_PROXY
 	printenv SPDK_DIR
 fi
 
-if [ -d "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}" ]; then
-	echo "Error: ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER} already exists!"
+if [ -d "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}" ]; then
+	echo "Error: ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER} already exists!"
 	exit 1
 fi
 
 if [ ${DRY_RUN} != 1 ]; then
-	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}"
-	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}
-	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${PROVIDER}"
+	mkdir -vp "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
+	cp ${DIR}/Vagrantfile ${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}
+	pushd "${VAGRANT_TARGET}/${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER}"
 	if [ ! -z "${http_proxy}" ]; then
 		export http_proxy
 		export https_proxy
@@ -220,7 +227,7 @@ EOF
 	echo ""
 	echo "  SUCCESS!"
 	echo ""
-	echo "  cd to ${SPDK_VAGRANT_DISTRO}-${PROVIDER} and type \"vagrant ssh\" to use."
+	echo "  cd to ${SPDK_VAGRANT_DISTRO}-${SPDK_VAGRANT_PROVIDER} and type \"vagrant ssh\" to use."
 	echo "  Use vagrant \"suspend\" and vagrant \"resume\" to stop and start."
 	echo "  Use vagrant \"destroy\" followed by \"rm -rf ${SPDK_VAGRANT_DISTRO}\" to destroy all trace of vm."
 	echo ""
