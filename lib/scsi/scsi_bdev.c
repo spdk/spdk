@@ -1323,6 +1323,65 @@ invalid:
 }
 
 static int
+spdk_scsi_pr_in_read_full_status(struct spdk_scsi_task *task,
+				 uint8_t *buf, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_in_full_status_data *data;
+	struct spdk_scsi_pr_in_full_status_desc *desc;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+	bool all_regs = false;
+	uint32_t add_len = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ FULL STATUS\n");
+
+	if (data_len < sizeof(data->header)) {
+		return -ENOMEM;
+	}
+
+	if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
+	    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+		all_regs = true;
+	}
+
+	data = (struct spdk_scsi_pr_in_full_status_data *)buf;
+
+	to_be32(&data->header.pr_generation, dev->pr_generation);
+
+	TAILQ_FOREACH_SAFE(reg, &dev->reg_head, link, tmp) {
+		desc = (struct spdk_scsi_pr_in_full_status_desc *)
+		       ((uint8_t *)data->desc_list + add_len);
+		add_len += sizeof(*desc);
+		if (add_len + sizeof(data->header) > data_len) {
+			break;
+		}
+		desc->rkey = reg->rkey;
+		if (all_regs) {
+			desc->r_holder = true;
+			desc->type = dev->type;
+		} else {
+			desc->r_holder = (dev->holder == reg) ? true : false;
+			desc->type = (dev->holder == reg) ? dev->type : 0;
+		}
+		desc->all_tg_pt = 0;
+		desc->scope = SPDK_SCSI_PR_LU_SCOPE;
+		desc->relative_target_port_id = reg->target_port->id;
+		add_len += reg->initiator_port->transport_id_len;
+		if (add_len + sizeof(data->header) > data_len) {
+			break;
+		}
+		desc->transport_id[0] = (0x01 << 6) | dev->protocol_id;
+		memcpy(&desc->transport_id, reg->initiator_port->transport_id,
+		       reg->initiator_port->transport_id_len);
+		to_be32(&desc->desc_len, reg->initiator_port->transport_id_len);
+	}
+	to_be32(&data->header.addiontal_len, add_len);
+
+	return (sizeof(data->header) + add_len);
+}
+
+static int
 spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 				    uint8_t *data, uint16_t data_len)
 {
@@ -1371,7 +1430,7 @@ spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 			return -ENOMEM;
 		}
 		if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
-	    	    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+		    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
 			all_regs = true;
 		}
 		if (all_regs) {
@@ -1452,6 +1511,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_IN_REPORT_CAPABILITIES:
 		rc = spdk_scsi_pr_in_report_capabilities(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_FULL_STATUS:
+		rc = spdk_scsi_pr_in_read_full_status(task, data, data_len);
 		break;
 	default:
 		return -1;
