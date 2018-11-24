@@ -1313,6 +1313,40 @@ invalid:
 }
 
 static int
+spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
+				  uint8_t *data, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_in_read_reservations_data *param;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ RESERVATIONS\n");
+
+	if (data_len < sizeof(param->header)) {
+		return -ENOMEM;
+	}
+	param = (struct spdk_scsi_pr_in_read_reservations_data *)(data);
+
+	to_be32(&param->header.pr_generation, dev->pr_generation);
+	if (!TAILQ_EMPTY(&dev->res_head)) {
+		if (sizeof(*param) > data_len) {
+			return -ENOMEM;
+		}
+		to_be32(&param->header.addiontal_len, 16);
+		to_be64(&param->rkey, dev->crkey);
+		param->scope = SPDK_SCSI_PR_LU_SCOPE;
+		param->type = dev->type;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS with valid reservation\n");
+		return sizeof(*param);
+	}
+
+	/* no reservation */
+	to_be32(&param->header.addiontal_len, 0);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS no reservation\n");
+	return sizeof(param->header);
+}
+
+static int
 spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
 			  uint16_t data_len)
 {
@@ -1355,6 +1389,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 	switch (action) {
 	case SPDK_SCSI_PR_IN_READ_KEYS:
 		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_RESERVATION:
+		rc = spdk_scsi_pr_in_read_reservations(task, data, data_len);
 		break;
 	default:
 		return -1;
