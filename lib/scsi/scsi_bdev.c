@@ -1099,6 +1099,49 @@ check_condition:
 }
 
 static int
+spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_session *sess, *tmp, *tmp1;
+	struct spdk_scsi_pr_reservation *res;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT CLEAR: rkey 0x%"PRIx64"\n", rkey);
+
+	sess = spdk_scsi_pr_get_session(dev, task->initiator_port, task->target_port);
+	if (!sess) {
+		SPDK_ERRLOG("CLEAR: no registration\n");
+		return -EINVAL;
+	}
+
+	if (rkey != sess->rkey) {
+		SPDK_ERRLOG("CLEAR: reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, sess->rkey);
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH_SAFE(tmp, &dev->sess_head, link, tmp1) {
+		TAILQ_REMOVE(&dev->sess_head, tmp, link);
+		if (tmp != sess) {
+			/* TODO: Unit Attention for other initiator ports */
+		}
+		free(tmp);
+	}
+
+	if (!TAILQ_EMPTY(&dev->res_head)) {
+		res = TAILQ_FIRST(&dev->res_head);
+		TAILQ_REMOVE(&dev->res_head, res, link);
+		free(res);
+		dev->crkey = 0;
+		dev->type = 0;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CLEAR: release reservation\n");
+	}
+
+	dev->pr_generation++;
+	return 0;
+}
+
+static int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
 		 uint16_t data_len)
@@ -1137,6 +1180,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_OUT_RELEASE:
 		rc = spdk_scsi_pr_out_release(task, type, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_CLEAR:
+		rc = spdk_scsi_pr_out_clear(task, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
