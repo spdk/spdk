@@ -1323,6 +1323,33 @@ invalid:
 }
 
 static int
+spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
+				    uint8_t *data, uint16_t data_len)
+{
+	struct spdk_scsi_pr_in_report_capabilities_data *param;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN REPORT CAPABILITIES\n");
+
+	if (data_len < 8) {
+		return -ENOMEM;
+	}
+
+	param = (struct spdk_scsi_pr_in_report_capabilities_data *)data;
+	memset(param, 0, sizeof(*param));
+	/* TODO: can support more capabilities bits */
+	to_be16(&param->length, 8);
+	param->tmv = true;
+	param->wr_ex = true;
+	param->ex_ac = true;
+	param->wr_ex_ro = true;
+	param->ex_ac_ro = true;
+	param->wr_ex_ar = true;
+	param->ex_ac_ar = true;
+
+	return sizeof(*param);
+}
+
+static int
 spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
 				  uint8_t *data, uint16_t data_len)
 {
@@ -1422,6 +1449,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_IN_READ_RESERVATION:
 		rc = spdk_scsi_pr_in_read_reservations(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_REPORT_CAPABILITIES:
+		rc = spdk_scsi_pr_in_report_capabilities(task, data, data_len);
 		break;
 	default:
 		return -1;
