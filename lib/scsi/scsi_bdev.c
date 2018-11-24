@@ -1113,6 +1113,143 @@ spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
 }
 
 static int
+spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
+			 enum spdk_scsi_pr_out_service_action_code action,
+			 enum spdk_scsi_pr_type_code type,
+			 uint64_t rkey, uint64_t sa_rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg, *tmp, *tmp1;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT PREEMPT: rkey 0x%"PRIx64", sa_rkey 0x%"PRIx64" "
+		      "action %u, type %u, reservation type %u\n",
+		      rkey, sa_rkey, action, type, dev->type);
+
+	/* I_T nexus is not registered */
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("PREEMPT: no registration\n");
+		goto conflict;
+	}
+	if (rkey != reg->rkey) {
+		SPDK_ERRLOG("PREEMPT: reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, reg->rkey);
+		goto conflict;
+	}
+
+	/* no persistent reservation */
+	if (dev->holder == NULL) {
+		/* remove all registrants pointed by service action key */
+		TAILQ_FOREACH_SAFE(tmp, &dev->reg_head, link, tmp1) {
+			if (tmp->rkey == sa_rkey) {
+				TAILQ_REMOVE(&dev->reg_head, tmp, link);
+				free(tmp);
+			}
+		}
+		dev->pr_generation++;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: no persistent reservation\n");
+		return 0;
+	}
+
+	if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
+	    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+		all_regs = true;
+	}
+
+	if (all_regs && sa_rkey != 0) {
+		/* remove all registrants pointed by service action key */
+		TAILQ_FOREACH_SAFE(tmp, &dev->reg_head, link, tmp1) {
+			if (tmp->rkey == sa_rkey) {
+				TAILQ_REMOVE(&dev->reg_head, tmp, link);
+				free(tmp);
+			}
+		}
+
+		if (TAILQ_EMPTY(&dev->reg_head)) {
+			dev->type = 0;
+			dev->crkey = 0;
+			dev->holder = NULL;
+		} else {
+			dev->holder = TAILQ_FIRST(&dev->reg_head);
+		}
+		dev->pr_generation++;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey\n");
+		return 0;
+	}
+
+	if (all_regs && sa_rkey == 0) {
+		/* 1. remove all other registrants
+		 * 2. release persistent reservation
+		 * 3. create persistent reservation using new type and scope */
+		TAILQ_FOREACH_SAFE(tmp, &dev->reg_head, link, tmp1) {
+			if (tmp == reg) {
+				continue;
+			}
+			TAILQ_REMOVE(&dev->reg_head, tmp, link);
+			free(tmp);
+		}
+		dev->type = type;
+		dev->crkey = rkey;
+		dev->holder = reg;
+		dev->pr_generation++;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: All registrants type with sa_rkey zeroed\n");
+		return 0;
+	}
+
+	assert(all_regs == false);
+
+	/* preempt itself for non all registrants type */
+	if (dev->holder == reg && sa_rkey == dev->crkey) {
+		dev->type = type;
+		dev->pr_generation++;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PREEMPT: preempt itself with type %u\n", type);
+		return 0;
+	}
+
+	if (!sa_rkey) {
+		SPDK_ERRLOG("PREEMPT: zeroed sa_rkey\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	/* remove all registrants pointed by service action key */
+	TAILQ_FOREACH_SAFE(tmp, &dev->reg_head, link, tmp1) {
+		if (tmp->rkey == sa_rkey) {
+			TAILQ_REMOVE(&dev->reg_head, tmp, link);
+			free(tmp);
+		}
+	}
+
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("PREEMPT: current I_T nexus registrant was removed\n");
+		goto conflict;
+	}
+
+	/* preempt other holder */
+	if (sa_rkey == dev->crkey) {
+		dev->type = type;
+		dev->crkey = rkey;
+		dev->holder = reg;
+	}
+	dev->pr_generation++;
+
+	return 0;
+
+conflict:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+				  SPDK_SCSI_SENSE_NO_SENSE,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
+
+static int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
 		 uint16_t data_len)
@@ -1165,6 +1302,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_OUT_CLEAR:
 		rc = spdk_scsi_pr_out_clear(task, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_PREEMPT:
+		rc = spdk_scsi_pr_out_preempt(task, action, type, rkey, sa_rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
