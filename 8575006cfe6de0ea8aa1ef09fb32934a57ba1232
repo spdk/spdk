@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "3a08ffd1_7c950790",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-26T18:35:00Z",
+      "side": 1,
+      "message": "\u0027compressed\u0027 is just a hacked global for this 2 IO test. Its not tot ttl length, it is currently set tot he produced element in the dequeued op for the compression\n\ncompressed \u003d deq_ops[0]-\u003eproduced;",
+      "parentUuid": "96f35c6c_ca7628e7",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e97a9416_6ecaa445",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 31
@@ -136,6 +154,24 @@
       "side": 1,
       "message": "I\u0027d suggest separate loops for src and dest. index for each is number of buffers (\u003d nr of segments in the chain) There\u0027s no reason for indices to be the same. And every reason to minimise them, as more performant to use contiguous buffers wherever they\u0027re available.",
       "parentUuid": "69052b8c_33d06810",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "961d136f_28ff2a4c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-26T18:35:00Z",
+      "side": 1,
+      "message": "will work on that after lunch, thanks!",
+      "parentUuid": "8a0bba9a_4c8d803a",
       "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
