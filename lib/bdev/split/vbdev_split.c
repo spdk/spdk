@@ -117,9 +117,12 @@ vbdev_split_destruct(void *ctx)
 }
 
 static void
-vbdev_split_base_bdev_hotremove_cb(void *_base_bdev)
+vbdev_split_base_bdev_hotremove_cb(void *_part_base)
 {
-	spdk_bdev_part_base_hotremove(_base_bdev, &g_split_disks);
+	struct spdk_bdev_part_base *part_base = _part_base;
+	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(part_base);
+
+	spdk_bdev_part_base_hotremove(base_bdev, &g_split_disks);
 }
 
 static void
