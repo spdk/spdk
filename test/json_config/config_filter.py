@@ -53,8 +53,16 @@ def filter_methods(do_remove_global_rpcs):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-method', dest='method')
+    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
+    parser.add_argument('-method', dest='method', default=None,
+                        help="""One of the methods:
+delete_global_parameters
+    remove pre-init configuration (pre start_subsystem_init RPC methods)
+delete_configs
+    remove post-init configuration (post start_subsystem_init RPC methods)
+sort
+    remove nothing - just sort JSON objects (and subobjects but not arrays)
+    in lexicographical order. This can be used to do plain text diff.""")
 
     args = parser.parse_args()
     if args.method == "delete_global_parameters":
@@ -67,4 +75,4 @@ if __name__ == "__main__":
         o = json.loads('{ "the_object": ' + sys.stdin.read() + ' }')
         print(json.dumps(sort_json_object(o)['the_object'], indent=2))
     else:
-        raise ValueError("Invalid method '{}'".format(args.method))
+        raise ValueError("Invalid method '{}'\n\n{}".format(args.method, parser.format_help()))
