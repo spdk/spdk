@@ -331,7 +331,11 @@ function json_config_clear() {
 	[[ ! -z "${#app_socket[$1]}" ]] # Check app type
 	$rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
-	#TODO check if config is cleared
+	# Check if config is clean
+	# Global params can't be cleared so need to filter them out"
+	local config_filter="$rootdir/test/json_config/config_filter.py"
+	[[ "$1" == "target" ]] && tgt_rpc save_config || initiator_rpc save_config | \
+		$config_filter -method delete_global_parameters | $config_filter -method check_empty
 }
 
 on_error_exit() {
