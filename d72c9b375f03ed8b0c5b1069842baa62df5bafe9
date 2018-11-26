@@ -16,6 +16,24 @@
       "revId": "d72c9b375f03ed8b0c5b1069842baa62df5bafe9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "feb94d56_6186442d",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-11-26T11:15:57Z",
+      "side": 1,
+      "message": "Thanks for noticing this. I decided to move deleting multiple lvol stores to another patch.",
+      "parentUuid": "ae20bc85_5908a620",
+      "revId": "d72c9b375f03ed8b0c5b1069842baa62df5bafe9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
