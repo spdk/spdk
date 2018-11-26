@@ -19,6 +19,7 @@ $spdkcli_job "/bdevs/malloc create 32 512 Malloc1" "Malloc1" True
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc2" "Malloc2" True
 $spdkcli_job "/bdevs/malloc create 32 4096 Malloc3" "Malloc3" True
 $spdkcli_job "/bdevs/malloc create 32 4096 Malloc4" "Malloc4" True
+$spdkcli_job "/bdevs/malloc create 32 4096 Malloc5" "Malloc5" True
 $spdkcli_job "/bdevs/error create Malloc1" "EE_Malloc1" True
 $spdkcli_job "/bdevs/error create Malloc4" "EE_Malloc4" True
 $spdkcli_job "/bdevs/null create null_bdev0 32 512" "null_bdev0" True
@@ -34,9 +35,10 @@ $spdkcli_job "/bdevs/split_disk split_bdev Nvme0n1 4" "Nvme0n1p0" True
 timing_exit spdkcli_create_bdevs_config
 
 timing_enter spdkcli_create_lvols_config
-$spdkcli_job "/lvol_stores create lvs Malloc0" "lvs" True
-$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs" "lvs/lvol0" True
-$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs" "lvs/lvol1" True
+$spdkcli_job "/lvol_stores create lvs0 Malloc0" "lvs0" True
+$spdkcli_job "/lvol_stores create lvs1 Malloc5" "lvs1" True
+$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs0" "lvs0/lvol0" True
+$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs0" "lvs0/lvol1" True
 timing_exit spdkcli_create_lvols_config
 
 timing_enter spdkcli_create_vhosts_config
@@ -81,9 +83,10 @@ $spdkcli_job "/bdevs/aio delete_all" "sample1"
 $spdkcli_job "/bdevs/nvme delete Nvme0" "Nvme0"
 $spdkcli_job "/bdevs/null delete null_bdev0" "null_bdev0"
 $spdkcli_job "/bdevs/null delete_all" "null_bdev1"
-$spdkcli_job "/bdevs/logical_volume delete lvs/lvol0" "lvs/lvol0"
-$spdkcli_job "/bdevs/logical_volume delete_all" "lvs/lvol1"
-$spdkcli_job "/lvol_stores delete lvs" "lvs"
+$spdkcli_job "/bdevs/logical_volume delete lvs0/lvol0" "lvs0/lvol0"
+$spdkcli_job "/bdevs/logical_volume delete_all" "lvs0/lvol1"
+$spdkcli_job "/lvol_stores delete lvs0" "lvs0"
+$spdkcli_job "/lvol_stores delete_all" "lvs1"
 $spdkcli_job "/bdevs/error delete EE_Malloc1" "EE_Malloc1"
 $spdkcli_job "/bdevs/error delete_all" "EE_Malloc4"
 $spdkcli_job "/bdevs/malloc delete Malloc0" "Malloc0"
@@ -92,18 +95,20 @@ timing_exit spdkcli_clear_config
 
 timing_enter spdkcli_load_config
 $spdkcli_job "load_config $testdir/config.json"
-$spdkcli_job "/lvol_stores create lvs Malloc0" "lvs" True
-$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs" "lvs/lvol0" True
-$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs" "lvs/lvol1" True
+$spdkcli_job "/lvol_stores create lvs0 Malloc0" "lvs0" True
+$spdkcli_job "/lvol_stores create lvs1 Malloc5" "lvs1" True
+$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs0" "lvs0/lvol0" True
+$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs0" "lvs0/lvol1" True
 check_match
 $spdk_clear_config_py clear_config
 # FIXME: remove this sleep when NVMe driver will be fixed to wait for reset to complete
 sleep 2
 $spdkcli_job "load_subsystem_config $testdir/config_bdev.json"
 $spdkcli_job "load_subsystem_config $testdir/config_vhost.json"
-$spdkcli_job "/lvol_stores create lvs Malloc0" "lvs" True
-$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs" "lvs/lvol0" True
-$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs" "lvs/lvol1" True
+$spdkcli_job "/lvol_stores create lvs0 Malloc0" "lvs0" True
+$spdkcli_job "/lvol_stores create lvs1 Malloc5" "lvs1" True
+$spdkcli_job "/bdevs/logical_volume create lvol0 16 lvs0" "lvs0/lvol0" True
+$spdkcli_job "/bdevs/logical_volume create lvol1 16 lvs0" "lvs0/lvol1" True
 check_match
 rm -f $testdir/config.json
 rm -f $testdir/config_bdev.json
