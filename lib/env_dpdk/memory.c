@@ -652,6 +652,10 @@ static void
 memory_hotplug_cb(enum rte_mem_event event_type,
 		  const void *addr, size_t len, void *arg)
 {
+	fprintf(stderr, "%s:\t\t%p-%p (%zu bytes)\n",
+		event_type == RTE_MEM_EVENT_ALLOC ? "REG" : "UNREG",
+		addr, addr + len, len);
+
 	if (event_type == RTE_MEM_EVENT_ALLOC) {
 		while (len > 0) {
 			struct rte_memseg *seg;
@@ -673,6 +677,9 @@ static int
 memory_iter_cb(const struct rte_memseg_list *msl,
 	       const struct rte_memseg *ms, size_t len, void *arg)
 {
+	fprintf(stderr, "PREREG:\t\t%p-%p (%zu bytes)\n",
+		ms->addr, ms->addr + len, len);
+
 	return spdk_mem_register(ms->addr, len);
 }
 #endif
