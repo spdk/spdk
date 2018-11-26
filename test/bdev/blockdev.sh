@@ -67,8 +67,10 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 	$rootdir/scripts/gen_rbd.sh >> $testdir/bdev.conf
 fi
 
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
-	$rootdir/scripts/gen_crypto.sh Malloc6 >> $testdir/bdev.conf
+if [ $RUN_NIGHTLY -eq 1 ]; then
+	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+		$rootdir/scripts/gen_crypto.sh Malloc6 >> $testdir/bdev.conf
+	fi
 fi
 
 if hash pmempool; then
