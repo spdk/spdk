@@ -130,12 +130,12 @@ spdk_bdev_part_free(struct spdk_bdev_part *part)
 }
 
 void
-spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq)
+spdk_bdev_part_base_hotremove(struct spdk_bdev_part_base *part_base, struct bdev_part_tailq *tailq)
 {
 	struct spdk_bdev_part *part, *tmp;
 
 	TAILQ_FOREACH_SAFE(part, tailq, tailq, tmp) {
-		if (part->internal.base->bdev == base_bdev) {
+		if (part->internal.base == part_base) {
 			spdk_bdev_unregister(&part->internal.bdev, NULL, NULL);
 		}
 	}
