@@ -307,7 +307,7 @@ struct spdk_bdev_part_base *
 	base->ch_create_cb = ch_create_cb;
 	base->ch_destroy_cb = ch_destroy_cb;
 
-	rc = spdk_bdev_open(bdev, false, remove_cb, bdev, &base->desc);
+	rc = spdk_bdev_open(bdev, false, remove_cb, base, &base->desc);
 	if (rc) {
 		spdk_bdev_part_base_free(base);
 		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
