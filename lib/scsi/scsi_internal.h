@@ -124,6 +124,9 @@ struct spdk_scsi_lun {
 
 	/** suspend tasks during LUN reset */
 	TAILQ_HEAD(suspend_tasks, spdk_scsi_task) suspend_tasks;
+
+	/** Poller to check completion of tasks prior to reset */
+	struct spdk_poller *reset_poller;
 };
 
 struct spdk_lun_db_entry {

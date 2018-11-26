@@ -49,22 +49,11 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 	task->cpl_fn(task);
 }
 
-void
-spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+static void
+_spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun,
+				   struct spdk_scsi_task *task)
 {
 	struct spdk_scsi_task *_task;
-
-	if (task->status == SPDK_SCSI_STATUS_GOOD) {
-		/*
-		 * The backend LUN device was just reset. If there are active tasks
-		 * in the backend, it means that LUN reset fails, and we set failure
-		 * status to LUN reset task.
-		 */
-		if (spdk_scsi_lun_has_pending_tasks(lun)) {
-			SPDK_ERRLOG("lun->tasks should be empty after reset\n");
-			task->response = SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;
-		}
-	}
 
 	task->cpl_fn(task);
 
@@ -82,6 +71,36 @@ spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_ta
 	TAILQ_REMOVE(&lun->reset_tasks, _task, scsi_link);
 
 	spdk_bdev_scsi_reset(_task);
+}
+
+static int
+spdk_scsi_lun_reset_check_pending_tasks(void *arg)
+{
+	struct spdk_scsi_task *task = (struct spdk_scsi_task *)arg;
+	struct spdk_scsi_lun *lun = task->lun;
+
+	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+		return -1;
+	}
+
+	spdk_poller_unregister(&lun->reset_poller);
+
+	_spdk_scsi_lun_complete_reset_task(lun, task);
+	return -1;
+}
+
+void
+spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
+	if (task->status == SPDK_SCSI_STATUS_GOOD) {
+		if (spdk_scsi_lun_has_pending_tasks(lun)) {
+			lun->reset_poller = spdk_poller_register(spdk_scsi_lun_reset_check_pending_tasks,
+					    task, 10);
+			return;
+		}
+	}
+
+	_spdk_scsi_lun_complete_reset_task(lun, task);
 }
 
 static void
@@ -275,7 +294,7 @@ spdk_scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 }
 
 static int
-spdk_scsi_lun_check_pending_tasks(void *arg)
+spdk_scsi_lun_remove_check_pending_tasks(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
@@ -294,7 +313,7 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 	struct spdk_scsi_lun *lun = arg1;
 
 	if (spdk_scsi_lun_has_pending_tasks(lun) || lun->resetting) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_pending_tasks,
+		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_remove_check_pending_tasks,
 					lun, 10);
 	} else {
 		spdk_scsi_lun_notify_hot_remove(lun);
@@ -363,6 +382,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	TAILQ_INIT(&lun->tasks);
 	TAILQ_INIT(&lun->suspend_tasks);
 	TAILQ_INIT(&lun->reset_tasks);
+	TAILQ_INIT(&lun->suspend_tasks);
 
 	lun->bdev = bdev;
 	lun->io_channel = NULL;
