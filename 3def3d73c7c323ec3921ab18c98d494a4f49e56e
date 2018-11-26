@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "489c2e7d_84f56ff3",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1479,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-26T20:44:09Z",
+      "side": 1,
+      "message": "all of this code looks fine, but I think this comment could use some better explanation - something like \"this controller\u0027s destruction was already started before the application started shutting down\".",
+      "revId": "3def3d73c7c323ec3921ab18c98d494a4f49e56e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
