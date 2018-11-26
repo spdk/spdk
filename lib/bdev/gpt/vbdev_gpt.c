@@ -66,6 +66,7 @@ SPDK_BDEV_MODULE_REGISTER(&gpt_if)
 struct gpt_base {
 	struct spdk_gpt			gpt;
 	struct spdk_bdev_part_base	*part_base;
+	SPDK_BDEV_PART_TAILQ		parts;
 
 	/* This channel is only used for reading the partition table. */
 	struct spdk_io_channel		*ch;
@@ -89,8 +90,6 @@ struct gpt_io {
 	struct spdk_bdev_io_wait_entry bdev_io_wait;
 };
 
-static SPDK_BDEV_PART_TAILQ g_gpt_disks = TAILQ_HEAD_INITIALIZER(g_gpt_disks);
-
 static bool g_gpt_disabled;
 
 static void
@@ -106,8 +105,9 @@ static void
 spdk_gpt_base_bdev_hotremove_cb(void *_part_base)
 {
 	struct spdk_bdev_part_base *part_base = _part_base;
+	struct gpt_base *gpt_base = spdk_bdev_part_base_get_ctx(part_base);
 
-	spdk_bdev_part_base_hotremove(part_base, &g_gpt_disks);
+	spdk_bdev_part_base_hotremove(part_base, &gpt_base->parts);
 }
 
 static int vbdev_gpt_destruct(void *ctx);
@@ -132,10 +132,11 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 		return NULL;
 	}
 
+	TAILQ_INIT(&gpt_base->parts);
 	gpt_base->part_base = spdk_bdev_part_base_construct(bdev,
 			      spdk_gpt_base_bdev_hotremove_cb,
 			      &gpt_if, &vbdev_gpt_fn_table,
-			      &g_gpt_disks, spdk_gpt_base_free, gpt_base,
+			      &gpt_base->parts, spdk_gpt_base_free, gpt_base,
 			      sizeof(struct gpt_channel), NULL, NULL);
 	if (!gpt_base->part_base) {
 		free(gpt_base);
