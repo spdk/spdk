@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5992f6d8_4d11b296",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "This is the name used in other parts of code, so I\u0027d like to be consistent.",
+      "parentUuid": "19355d49_e53d9760",
+      "range": {
+        "startLine": 85,
+        "startChar": 26,
+        "endLine": 85,
+        "endChar": 37
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79793df2_cbf146b0",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 2
@@ -260,6 +284,30 @@
     },
     {
       "key": {
+        "uuid": "bc0be422_20514e01",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "The _spdk_ftl_write does the exact same thing, the highlighted code does.",
+      "parentUuid": "e9595877_897c7ff3",
+      "range": {
+        "startLine": 1376,
+        "startChar": 0,
+        "endLine": 1382,
+        "endChar": 2
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "974adfcc_faf1e12d",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -394,6 +442,24 @@
       "side": 1,
       "message": "I will move it ftl_io.h. This comment is wrong - this is size of single element.",
       "parentUuid": "fdd0f5b1_34216fae",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37228104_16fdeae5",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "Isn\u0027t there an API to retrieve that from the pool? If not perhaps, it might be a good idea to extend it? If not, fix the comment and change the name of the variable to reflect that it refers to the size of each element.",
+      "parentUuid": "7612e74d_d567f5cc",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -681,6 +747,30 @@
     },
     {
       "key": {
+        "uuid": "ef685119_d92443b9",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 283,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "The name is misleading now though. Maybe it\u0027d be better to change it to FTL_IO_KEEP_ALIVE or something like that?",
+      "parentUuid": "26bd230a_c278cf1e",
+      "range": {
+        "startLine": 283,
+        "startChar": 37,
+        "endLine": 283,
+        "endChar": 50
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a269cc66_ebc45a5b",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -810,6 +900,30 @@
     },
     {
       "key": {
+        "uuid": "a756627f_3e835f04",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "Replace the IO channel in the ftl_io with an IO pool it was taken from. That way you don\u0027t need to have these ugly checks when freeing the IO.",
+      "parentUuid": "ca579130_94665635",
+      "range": {
+        "startLine": 371,
+        "startChar": 0,
+        "endLine": 378,
+        "endChar": 1
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "67b60340_bb615f56",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 2
@@ -915,6 +1029,30 @@
       "side": 1,
       "message": "Maybe this approach is not ideal but in my opinion is cleaner then API that is operating both on io_channel and dev. We have separate \"user\" io pools associated with io_channel mempool and we have internal mempool associated with our device.\nIf we will have real io_channel in dev then it would make sense but we can\u0027t guarantee that core will be running on separate thread.",
       "parentUuid": "56163094_1197aee5",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 266,
+        "endChar": 56
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9eea771f_493ab728",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T12:58:29Z",
+      "side": 1,
+      "message": "I don\u0027t think having two separate functions doing pretty much the same thing can be considered cleaner. I don\u0027t think that it\u0027s important for the user of the ftl_io_* API to know that there are separate pools from which the IO can be coming from.",
+      "parentUuid": "7f1ed0cd_4fcd2305",
       "range": {
         "startLine": 265,
         "startChar": 0,
