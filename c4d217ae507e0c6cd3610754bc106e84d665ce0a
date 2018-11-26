@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4474bbe_8ecc1bdf",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T14:32:53Z",
+      "side": 1,
+      "message": "Please revert this back. Without this check it\u0027s impossible to create two FTL devices on two different controllers when their ranges intersect.",
+      "range": {
+        "startLine": 133,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 3
+      },
+      "revId": "c4d217ae507e0c6cd3610754bc106e84d665ce0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
