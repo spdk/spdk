@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d24734b_7fbefde1",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-26T07:47:28Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "0661dc3d7f7d3363515ed08dbcf6759953306c7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "398ee5a1_f7f670d7",
+        "filename": "lib/log/rpc/log_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-26T07:47:28Z",
+      "side": 1,
+      "message": "it seems like you leak the spdk_json_write_ctx here.\nCan you move `spdk_jsonrpc_begin_result()` to the very end of this function?",
+      "revId": "0661dc3d7f7d3363515ed08dbcf6759953306c7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
