@@ -16,6 +16,24 @@
       "revId": "ad5e73e3500bcf8c372086671b1466eaf30cd380",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ae06d63_78e4857e",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-26T20:38:18Z",
+      "side": 1,
+      "message": "Sure, I just put some more description in the commit message. In one of subsequent patches I introduced a per-base tailq and I had to put it in some struct. Without this particular patch, no matter where I would have put it, the remove_cb wouldn\u0027t have any access to it (unless it did some kind of sad lookup). Now that there\u0027s the part base in the remove_cb callback, the upper layer can just call it spdk_bdev_part_base_get_ctx(part_base) and get access to whatever it allocated and passed here.",
+      "parentUuid": "51a88709_01cada63",
+      "revId": "ad5e73e3500bcf8c372086671b1466eaf30cd380",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
