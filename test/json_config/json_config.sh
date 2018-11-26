@@ -31,24 +31,17 @@ if (( SPDK_TEST_BLOCKDEV + \
 	exit 0
 fi
 
-# FIXME: Remove this when python3 will on FeeBSD machines
-if [ $(uname -s) = "FreeBSD" ]; then
-	python_cmd=python
-else
-	python_cmd=""
-fi
-
 declare -A app_pid=([target]= [initiator]=)
 declare -A app_socket=([target]='/var/tmp/spdk_tgt.sock' [initiator]='/var/tmp/spdk_initiator.sock')
 declare -A app_params=([target]='-m 0x1 -p 0 -s 1024' [initiator]='-m 0x2 -p 0 -g -u -s 1024')
 declare -A configs_path=([target]="$rootdir/spdk_tgt_config.json" [initiator]="$rootdir/spdk_initiator_config.json")
 
 function tgt_rpc() {
-	$python_cmd $rootdir/scripts/rpc.py -s "${app_socket[target]}" "$@"
+	$rootdir/scripts/rpc.py -s "${app_socket[target]}" "$@"
 }
 
 function initiator_rpc() {
-	$python_cmd $rootdir/scripts/rpc.py -s "${app_socket[initiator]}" "$@"
+	$rootdir/scripts/rpc.py -s "${app_socket[initiator]}" "$@"
 }
 
 # $1 - target / initiator
@@ -337,11 +330,11 @@ function json_config_test_fini() {
 function json_config_clear() {
 	[[ ! -z "${#app_socket[$1]}" ]] # Check app type
 
-	$python_cmd $rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
+	$rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
 	# Check if config is clean
 	# Globa params can't be cleared so need to filter them out"
-	local config_filter="$python_cmd $rootdir/test/json_config/config_filter.py"
+	local config_filter="$rootdir/test/json_config/config_filter.py"
 	[[ "$1" == "target" ]] && tgt_rpc save_config || initiator_rpc save_config | \
 		$config_filter -method delete_global_parameters | $config_filter -method check_empty
 }
