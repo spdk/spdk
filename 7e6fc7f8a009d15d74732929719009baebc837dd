@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "96ee6ba5_f8f6c453",
+        "filename": "include/spdk/ocssd.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-26T07:54:11Z",
+      "side": 1,
+      "message": "I have removed these callbacks.",
+      "parentUuid": "d6b98e0c_6787e5e2",
+      "revId": "7e6fc7f8a009d15d74732929719009baebc837dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca9b6c2b_fcd743a9",
         "filename": "include/spdk/ocssd.h",
         "patchSetId": 2
