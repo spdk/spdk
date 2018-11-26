@@ -52,10 +52,23 @@ def filter_methods(do_remove_global_rpcs):
     print(json.dumps(out, indent=2))
 
 
+def check_empty():
+    data = json.loads(sys.stdin.read())
+    if not data:
+        raise EOFError("Cant read config!")
+
+    for s in data['subsystems']:
+        if s['config']:
+            print("Config not empty")
+            sys.exit(1)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-method', dest='method', default=None,
                         help="""One of the methods:
+check_empty
+    check if provided configuration is logicaly empty
 delete_global_parameters
     remove pre-init configuration (pre start_subsystem_init RPC methods)
 delete_configs
@@ -69,6 +82,8 @@ sort
         filter_methods(True)
     elif args.method == "delete_configs":
         filter_methods(False)
+    elif args.method == "check_empty":
+        check_empty()
     elif args.method == "sort":
         """ Wrap input into JSON object so any input is possible here
         like output from get_bdevs RPC method"""
