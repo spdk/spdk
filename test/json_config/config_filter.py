@@ -52,13 +52,26 @@ def filter_methods(do_remove_global_rpcs):
     print(json.dumps(out, indent=2))
 
 
+def check_empty():
+    data = json.loads(sys.stdin.read())
+    if not data:
+        raise EOFError("Cant read config!")
+
+    for s in data['subsystems']:
+        if s['config']:
+            print("Config not empty")
+            sys.exit(1)
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument('-method', dest='method', default=None, help="one of the methods:\n"
                         """delete_global_parameters\n"""
                         """  remove pre-init configuration (pre start_subsystem_init RPC methods)\n"""
                         """delete_configs\n"""
-                        """  remove post-init configuration (post start_subsystem_init RPC methods)\n"""
+                        """  remove pos-init configuration (post start_subsystem_init RPC methods)\n"""
+                        """check_empty\n"""
+                        """  check if provided configuration is logicaly empty"""
                         """sort\n"""
                         """  remove nothing - just sort JSON objects (and subobjects but not arrays)\n"""
                         """  in lexicographical order. This can be used to do plain text diff.\n""")
@@ -68,6 +81,8 @@ if __name__ == "__main__":
         filter_methods(True)
     elif args.method == "delete_configs":
         filter_methods(False)
+    elif args.method == "check_empty":
+        check_empty()
     elif args.method == "sort":
         """ Wrap input into JSON object so any input is possible here
         like output from get_bdevs RPC method"""
