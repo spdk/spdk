@@ -2987,11 +2987,11 @@ spdk_iscsi_task_mgmt_resp_complete(struct spdk_iscsi_conn *conn,
 
 	/* abort all tasks issued via this session on the LUN */
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
-		spdk_clear_all_transfer_task(conn, task->scsi.lun);
+		spdk_clear_all_transfer_task(conn, task->scsi.lun, pdu);
 		break;
 
 	case ISCSI_TASK_FUNC_LOGICAL_UNIT_RESET:
-		spdk_clear_all_transfer_task(conn, task->scsi.lun);
+		spdk_clear_all_transfer_task(conn, task->scsi.lun, pdu);
 		break;
 	}
 }
@@ -3519,9 +3519,12 @@ void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
 
 static void
 spdk_del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
-				struct spdk_scsi_lun *lun)
+				struct spdk_scsi_lun *lun,
+				struct spdk_iscsi_pdu *pdu)
 {
 	struct spdk_iscsi_task *task, *task_tmp;
+	struct spdk_iscsi_pdu *pdu_tmp;
+
 	/*
 	 * Temporary used to index spdk_scsi_task related
 	 *  queues of the connection.
@@ -3530,7 +3533,9 @@ spdk_del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
 	head = (struct queued_tasks *)tailq;
 
 	TAILQ_FOREACH_SAFE(task, head, link, task_tmp) {
-		if (lun == NULL || lun == task->scsi.lun) {
+		pdu_tmp = spdk_iscsi_task_get_pdu(task);
+		if ((lun == NULL || lun == task->scsi.lun) &&
+		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
 			TAILQ_REMOVE(head, task, link);
 			if (lun != NULL && spdk_scsi_lun_is_removing(lun)) {
 				spdk_scsi_task_process_null_lun(&task->scsi);
@@ -3542,15 +3547,19 @@ spdk_del_connection_queued_task(struct spdk_iscsi_conn *conn, void *tailq,
 }
 
 void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				  struct spdk_scsi_lun *lun)
+				  struct spdk_scsi_lun *lun,
+				  struct spdk_iscsi_pdu *pdu)
 {
 	int i, j, pending_r2t;
 	struct spdk_iscsi_task *task;
+	struct spdk_iscsi_pdu *pdu_tmp;
 
 	pending_r2t = conn->pending_r2t;
 	for (i = 0; i < pending_r2t; i++) {
 		task = conn->outstanding_r2t_tasks[i];
-		if (lun == NULL || lun == task->scsi.lun) {
+		pdu_tmp = spdk_iscsi_task_get_pdu(task);
+		if ((lun == NULL || lun == task->scsi.lun) &&
+		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
 			conn->outstanding_r2t_tasks[i] = NULL;
 			task->outstanding_r2t = 0;
 			task->next_r2t_offset = 0;
@@ -3573,8 +3582,8 @@ void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	spdk_del_connection_queued_task(conn, &conn->active_r2t_tasks, lun);
-	spdk_del_connection_queued_task(conn, &conn->queued_r2t_tasks, lun);
+	spdk_del_connection_queued_task(conn, &conn->active_r2t_tasks, lun, pdu);
+	spdk_del_connection_queued_task(conn, &conn->queued_r2t_tasks, lun, pdu);
 
 	spdk_start_queued_transfer_tasks(conn);
 }

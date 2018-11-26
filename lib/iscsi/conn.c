@@ -529,7 +529,7 @@ _spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
 	int rc;
 
-	spdk_clear_all_transfer_task(conn, NULL);
+	spdk_clear_all_transfer_task(conn, NULL, NULL);
 	spdk_iscsi_poll_group_remove_conn_sock(conn);
 	spdk_sock_close(&conn->sock);
 	spdk_poller_unregister(&conn->logout_timer);
@@ -668,7 +668,7 @@ _iscsi_conn_remove_lun(void *arg1, void *arg2)
 		return;
 	}
 
-	spdk_clear_all_transfer_task(conn, lun);
+	spdk_clear_all_transfer_task(conn, lun, NULL);
 	TAILQ_FOREACH_SAFE(pdu, &conn->write_pdu_list, tailq, tmp_pdu) {
 		if (pdu->task && (lun == pdu->task->scsi.lun)) {
 			TAILQ_REMOVE(&conn->write_pdu_list, pdu, tailq);
