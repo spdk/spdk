@@ -119,11 +119,25 @@ main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "vtophys";
 	opts.core_mask = "0x1";
-	opts.mem_size = 256;
+	opts.mem_size = 0;
 	if (spdk_env_init(&opts) < 0) {
 		printf("Err: Unable to initialize SPDK env\n");
 		return 1;
 	}
+
+       fprintf(stderr, "reg a----\n");
+       void *a = spdk_dma_malloc(0x800000, 0, NULL);
+       fprintf(stderr, "reg y----\n");
+       void *y = spdk_dma_malloc(64, 0, NULL);
+       fprintf(stderr, "reg b----\n");
+       void *b = spdk_dma_malloc(0x600000, 0, NULL);
+
+       fprintf(stderr, "free b----\n");
+       spdk_dma_free(b);
+       fprintf(stderr, "free a----\n");
+       spdk_dma_free(a);
+       fprintf(stderr, "free y----\n");
+       spdk_dma_free(y);
 
 	rc = vtophys_negative_test();
 	if (rc < 0) {
