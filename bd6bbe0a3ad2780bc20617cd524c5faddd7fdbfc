@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "844d1c97_c2ad7782",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T15:34:36Z",
+      "side": 1,
+      "message": "I believe the idea was to count the number of devices created on each controller and release it once all of the devices using it were freed. You\u0027re right, it\u0027s not used right now, we should detach the controller when ref_cnt \u003d\u003d 0.",
+      "parentUuid": "e87390df_ea2fb805",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 176,
+        "endChar": 25
+      },
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5604225e_27b31ebf",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 23
@@ -59,6 +83,24 @@
       "writtenOn": "2018-11-23T15:12:21Z",
       "side": 1,
       "message": "There should be a check if ctrlr is already attached (present in g_ocssd_bdev_ctrlrs list). This way attach_cb won\u0027t be called on that ctrlr.",
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50d493d8_4331b752",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T15:34:36Z",
+      "side": 1,
+      "message": "I was under the impression, that once we attach to a controller, it won\u0027t show up in subsequent probes. Isn\u0027t that the case? If so, we already first check the controllers on the bdev_ctrlr list (see bdev_ocssd_ctrlr_create).",
+      "parentUuid": "436357a6_afb619d2",
       "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -116,6 +158,30 @@
       "writtenOn": "2018-11-23T15:12:21Z",
       "side": 1,
       "message": "When will this trigger ? When initialization happens there are no items in g_ocssd_bdev_ctrlrs. On RPC just that particular ctrlr would need to be created, and after spdk_nvme_probe() rather than before.",
+      "range": {
+        "startLine": 976,
+        "startChar": 0,
+        "endLine": 979,
+        "endChar": 2
+      },
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05cc744f_c42b5d8d",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 979,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T15:34:36Z",
+      "side": 1,
+      "message": "This will trigger when the user creates a bdev via RPC on a controller that already has bdevs using it.",
+      "parentUuid": "c39ce2a5_e23f8f99",
       "range": {
         "startLine": 976,
         "startChar": 0,
