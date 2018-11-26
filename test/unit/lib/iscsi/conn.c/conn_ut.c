@@ -216,7 +216,8 @@ spdk_iscsi_conn_params_init(struct iscsi_param **params)
 }
 
 void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				  struct spdk_scsi_lun *lun)
+				  struct spdk_scsi_lun *lun,
+				  struct spdk_iscsi_pdu *pdu)
 {
 }
 
