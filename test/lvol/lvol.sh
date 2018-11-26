@@ -122,7 +122,6 @@ function vhost_kill()
         sleep 1
     fi
     rm $BASE_DIR/vhost.pid || true
-    rmmod nbd || true
 }
 
 trap "vhost_kill; rm -f $BASE_DIR/aio_bdev_0 $BASE_DIR/aio_bdev_1; exit 1" SIGINT SIGTERM EXIT
