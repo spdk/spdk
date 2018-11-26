@@ -115,6 +115,12 @@ struct spdk_scsi_lun {
 
 	/** pending tasks */
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;
+
+	/** reset tasks */
+	TAILQ_HEAD(reset_tasks, spdk_scsi_task) reset_tasks;
+
+	/** The LUN is being reset */
+	bool resetting;
 };
 
 struct spdk_lun_db_entry {

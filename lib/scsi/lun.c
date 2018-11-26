@@ -52,6 +52,8 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 void
 spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
+	struct spdk_scsi_task *_task;
+
 	if (task->status == SPDK_SCSI_STATUS_GOOD) {
 		/*
 		 * The backend LUN device was just reset. If there are active tasks
@@ -65,6 +67,15 @@ spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_ta
 	}
 
 	task->cpl_fn(task);
+
+	_task = TAILQ_FIRST(&lun->reset_tasks);
+	if (_task == NULL) {
+		lun->resetting = false;
+		return;
+	}
+	TAILQ_REMOVE(&lun->reset_tasks, _task, scsi_link);
+
+	spdk_bdev_scsi_reset(_task);
 }
 
 static void
@@ -73,6 +84,21 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 	assert(task->function != SPDK_SCSI_TASK_FUNC_LUN_RESET);
 
 	task->cpl_fn(task);
+}
+
+static void
+spdk_scsi_lun_task_reset_execute(struct spdk_scsi_task *task)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_task *_task;
+
+	lun->resetting = true;
+	TAILQ_INSERT_TAIL(&lun->reset_tasks, task, scsi_link);
+
+	_task = TAILQ_FIRST(&lun->reset_tasks);
+	TAILQ_REMOVE(&lun->reset_tasks, _task, scsi_link);
+
+	spdk_bdev_scsi_reset(task);
 }
 
 int
@@ -101,7 +127,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 		break;
 
 	case SPDK_SCSI_TASK_FUNC_LUN_RESET:
-		spdk_bdev_scsi_reset(task);
+		spdk_scsi_lun_task_reset_execute(task);
 		return 0;
 
 	default:
@@ -241,7 +267,7 @@ spdk_scsi_lun_check_pending_tasks(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+	if (spdk_scsi_lun_has_pending_tasks(lun) || lun->resetting) {
 		return -1;
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
@@ -255,7 +281,7 @@ _spdk_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
-	if (spdk_scsi_lun_has_pending_tasks(lun)) {
+	if (spdk_scsi_lun_has_pending_tasks(lun) || lun->resetting) {
 		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_pending_tasks,
 					lun, 10);
 	} else {
@@ -323,6 +349,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	}
 
 	TAILQ_INIT(&lun->tasks);
+	TAILQ_INIT(&lun->reset_tasks);
 
 	lun->bdev = bdev;
 	lun->io_channel = NULL;
