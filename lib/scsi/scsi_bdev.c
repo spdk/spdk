@@ -1284,8 +1284,8 @@ spdk_bdev_scsi_task_complete_cmd(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static void
-spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
-				  void *cb_arg)
+spdk_bdev_scsi_task_complete_reset(struct spdk_bdev_io *bdev_io, bool success,
+				   void *cb_arg)
 {
 	struct spdk_scsi_task *task = cb_arg;
 
@@ -1295,7 +1295,7 @@ spdk_bdev_scsi_task_complete_mgmt(struct spdk_bdev_io *bdev_io, bool success,
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_SUCCESS;
 	}
 
-	spdk_scsi_lun_complete_mgmt_task(task->lun, task);
+	spdk_scsi_lun_complete_reset_task(task->lun, task);
 }
 
 static void
@@ -2111,7 +2111,8 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 	struct spdk_scsi_lun *lun = task->lun;
 	int rc;
 
-	rc = spdk_bdev_reset(lun->bdev_desc, lun->io_channel, spdk_bdev_scsi_task_complete_mgmt, task);
+	rc = spdk_bdev_reset(lun->bdev_desc, lun->io_channel, spdk_bdev_scsi_task_complete_reset,
+			     task);
 	if (rc == -ENOMEM) {
 		spdk_bdev_scsi_queue_io(task, spdk_bdev_scsi_reset_resubmit, task);
 	}

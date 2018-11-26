@@ -50,10 +50,9 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 }
 
 void
-spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	if (task->function == SPDK_SCSI_TASK_FUNC_LUN_RESET &&
-	    task->status == SPDK_SCSI_STATUS_GOOD) {
+	if (task->status == SPDK_SCSI_STATUS_GOOD) {
 		/*
 		 * The backend LUN device was just reset. If there are active tasks
 		 * in the backend, it means that LUN reset fails, and we set failure
@@ -64,6 +63,15 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 			task->response = SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;
 		}
 	}
+
+	task->cpl_fn(task);
+}
+
+static void
+spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
+	assert(task->function != SPDK_SCSI_TASK_FUNC_LUN_RESET);
+
 	task->cpl_fn(task);
 }
 
