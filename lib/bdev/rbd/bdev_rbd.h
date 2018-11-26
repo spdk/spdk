@@ -40,6 +40,8 @@
 
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
 
+typedef void (*spdk_resize_rbd_complete)(void *cb_arg, int bdeverrno);
+
 struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *pool_name,
 				       const char *rbd_name, uint32_t block_size);
 /**
@@ -51,5 +53,9 @@ struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *pool_name,
  */
 void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
 			  void *cb_arg);
+
+void
+spdk_bdev_rbd_resize(struct spdk_bdev *bdev, uint64_t size,
+                     spdk_resize_rbd_complete cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_RBD_H */
