@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7de0b4a1_569fdf48",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-26T14:31:57Z",
+      "side": 1,
+      "message": "Move this to ftl_init, add a spdk_nvme_ns *ns inside ftl_dev, and use that throughout the code (if you ever need it namespace id, use spdk_nvme_ns_get_id).",
+      "revId": "df66128664ed440bdeaa7b30d437254eb9e71c7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
