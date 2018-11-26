@@ -344,7 +344,7 @@ function waitfornbd() {
 		if grep -q -w $nbd_name /proc/partitions; then
 			break
 		else
-			sleep 0.1
+			sleep 0.5
 		fi
 	done
 
@@ -360,7 +360,7 @@ function waitfornbd() {
 		if [ "$size" != "0" ]; then
 			return 0
 		else
-			sleep 0.1
+			sleep 0.5
 		fi
 	done
 
