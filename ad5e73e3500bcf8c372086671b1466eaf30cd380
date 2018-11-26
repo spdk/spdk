@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51a88709_01cada63",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-26T17:59:53Z",
+      "side": 1,
+      "message": "not sure I understand this change, can you explain?",
+      "revId": "ad5e73e3500bcf8c372086671b1466eaf30cd380",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
