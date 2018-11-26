@@ -425,7 +425,8 @@ int spdk_iscsi_sess_params_init(struct iscsi_param **params);
 
 void spdk_free_sess(struct spdk_iscsi_sess *sess);
 void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				  struct spdk_scsi_lun *lun);
+				  struct spdk_scsi_lun *lun,
+				  struct spdk_iscsi_pdu *pdu);
 void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t CmdSN);
 bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu);
 
