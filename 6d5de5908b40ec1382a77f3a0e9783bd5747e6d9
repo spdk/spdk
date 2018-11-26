@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c97d29ce_eadb12dc",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-26T16:25:52Z",
+      "side": 1,
+      "message": "This will change order of tasks that are placed in lun-\u003etasks queue vs mgmt tasks. Also adding additional queue and state variable is another place when something bad can happen.\n\nCan you reuse existing lun-\u003etasks queue? Reset task can be implicit barier for other task. So you can place it in on the top of the lun-\u003etasks queue and in spdk_scsi_lun_execute_task() you can check if first task is the reset task. If yes don\u0027t execute it and return SPDK_SCSI_TASK_PENDING.\n\nIn spdk_scsi_lun_complete_reset_task() just kick the lun-\u003etasks queue when reset task is complete.\n\nAnother solution is to avoid the issue at all and just abort all queued tasks when reset is requested.",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 28
+      },
+      "revId": "6d5de5908b40ec1382a77f3a0e9783bd5747e6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
