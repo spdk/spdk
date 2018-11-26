@@ -257,9 +257,8 @@ static void
 spdk_vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 {
 	struct spdk_bdev_part_base *part_base = part_base;
-	struct spdk_bdev *base_bdev = spdk_bdev_part_base_get_bdev(part_base);
 
-	spdk_bdev_part_base_hotremove(base_bdev, &g_error_disks);
+	spdk_bdev_part_base_hotremove(part_base, &g_error_disks);
 }
 
 static int
