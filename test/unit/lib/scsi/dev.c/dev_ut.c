@@ -112,7 +112,7 @@ spdk_bdev_get_by_name(const char *bdev_name)
 }
 
 int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func)
+spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 {
 	return 0;
 }
