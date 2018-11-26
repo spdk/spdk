@@ -68,8 +68,7 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 }
 
 int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
-				enum spdk_scsi_task_func func)
+spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
 {
 	if (!task) {
 		return -1;
@@ -82,7 +81,7 @@ spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task,
 		return -1;
 	}
 
-	switch (func) {
+	switch (task->function) {
 	case SPDK_SCSI_TASK_FUNC_ABORT_TASK:
 		task->response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
 		SPDK_ERRLOG("ABORT_TASK failed\n");

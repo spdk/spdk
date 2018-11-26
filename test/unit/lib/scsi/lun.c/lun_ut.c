@@ -224,7 +224,7 @@ lun_task_mgmt_execute_null_task(void)
 {
 	int rc;
 
-	rc = spdk_scsi_lun_task_mgmt_execute(NULL, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
+	rc = spdk_scsi_lun_task_mgmt_execute(NULL);
 
 	/* returns -1 since we passed NULL for the task */
 	CU_ASSERT_TRUE(rc < 0);
@@ -241,8 +241,9 @@ lun_task_mgmt_execute_abort_task_null_lun_failure(void)
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = NULL;
 	mgmt_task.initiator_port = &initiator_port;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* returns -1 since we passed NULL for LUN */
 	CU_ASSERT_TRUE(rc < 0);
@@ -266,6 +267,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = lun;
 	mgmt_task.initiator_port = &initiator_port;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
 
 	/* Params to add regular task to the lun->tasks */
 	ut_init_task(&task);
@@ -277,7 +279,7 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* returns -1 since task abort is not supported */
 	CU_ASSERT_TRUE(rc < 0);
@@ -302,8 +304,9 @@ lun_task_mgmt_execute_abort_task_all_null_lun_failure(void)
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = NULL;
 	mgmt_task.initiator_port = &initiator_port;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET;
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* Returns -1 since we passed NULL for lun */
 	CU_ASSERT_TRUE(rc < 0);
@@ -328,6 +331,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = lun;
 	mgmt_task.initiator_port = &initiator_port;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET;
 
 	/* Params to add regular task to the lun->tasks */
 	ut_init_task(&task);
@@ -340,7 +344,7 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* returns -1 since task abort is not supported */
 	CU_ASSERT_TRUE(rc < 0);
@@ -364,8 +368,9 @@ lun_task_mgmt_execute_lun_reset_failure(void)
 
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = NULL;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* Returns -1 since we passed NULL for lun */
 	CU_ASSERT_TRUE(rc < 0);
@@ -386,8 +391,9 @@ lun_task_mgmt_execute_lun_reset(void)
 
 	ut_init_task(&mgmt_task);
 	mgmt_task.lun = lun;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
 
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* Returns success */
 	CU_ASSERT_EQUAL(rc, 0);
@@ -411,8 +417,10 @@ lun_task_mgmt_execute_invalid_case(void)
 	lun->dev = &dev;
 
 	ut_init_task(&mgmt_task);
+	mgmt_task.function = 5;
+
 	/* Pass an invalid value to the switch statement */
-	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task, 5);
+	rc = spdk_scsi_lun_task_mgmt_execute(&mgmt_task);
 
 	/* Returns -1 on passing an invalid value to the switch case */
 	CU_ASSERT_TRUE(rc < 0);

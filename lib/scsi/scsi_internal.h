@@ -135,7 +135,7 @@ _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task, enum spdk_scsi_task_func func);
+int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);

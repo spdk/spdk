@@ -252,7 +252,7 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 	assert(task != NULL);
 
 	task->function = func;
-	spdk_scsi_lun_task_mgmt_execute(task, func);
+	spdk_scsi_lun_task_mgmt_execute(task);
 }
 
 void
