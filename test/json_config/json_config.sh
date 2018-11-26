@@ -340,24 +340,10 @@ function json_config_clear() {
 	$python_cmd $rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
 	# Check if config is clean
-	if [[ "$1" == "target" ]]; then
-		local null_json_config="$(tgt_rpc save_config)"
-	else
-		local null_json_config="$(initiator_rpc save_config)"
-	fi
-
 	# Globa params can't be cleared so need to filter them out"
-	null_json_config="$(cat '$null_json_config' | \
-		$python_cmd $rootdir/test/json_config/config_filter.py -method delete_global_parameters)"
-
-	null_json_config="$(cat '$null_json_config' | \
-		jq '.subsystems | \
-			map(select(.config != null)) | map(select(.config != []))')"
-
-	if [[ "$null_json_config" != "[]" ]]; then
-		echo "ERROR: JSON config not cleared"
-		reutnr 1
-	fi
+	local config_filter="$python_cmd $rootdir/test/json_config/config_filter.py"
+	[[ "$1" == "target" ]] && tgt_rpc save_config || initiator_rpc save_config | \
+		$config_filter -method delete_global_parameters | $config_filter -method check_empty
 }
 
 on_error_exit() {
