@@ -336,17 +336,34 @@ function json_config_test_fini() {
 
 function json_config_clear() {
 	[[ ! -z "${#app_socket[$1]}" ]] # Check app type
+
 	$python_cmd $rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
-	#TODO check if config is cleared
+	# Check if config is clean
+	if [[ "$1" == "target" ]]; then
+		local null_json_config="$(tgt_rpc save_config)"
+	else
+		local null_json_config="$(initiator_rpc save_config)"
+	fi
+
+	# Globa params can't be cleared so need to filter them out"
+	null_json_config="$(cat '$null_json_config' | \
+		$python_cmd $rootdir/test/json_config/config_filter.py -method delete_global_parameters)"
+
+	null_json_config="$(cat '$null_json_config' | \
+		jq '.subsystems | \
+			map(select(.config != null)) | map(select(.config != []))')"
+
+	if [[ "$null_json_config" != "[]" ]]; then
+		echo "ERROR: JSON config not cleared"
+		reutnr 1
+	fi
 }
 
 on_error_exit() {
 	set -x
 	set +e
 	print_backtrace
-	# Unset tracing array so 'x' wont be touched
-	unset json_config_trace_func
 	trap - ERR
 	echo "Error on $1 - $2"
 	json_config_test_fini
