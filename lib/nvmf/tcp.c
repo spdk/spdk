@@ -618,6 +618,7 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 
 	spdk_mempool_free(ttransport->data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
+	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
 	return 0;
 }
