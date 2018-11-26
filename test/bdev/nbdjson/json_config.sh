@@ -25,6 +25,5 @@ timing_exit nbd_json_config_test
 
 $clear_config_py clear_config
 kill_targets
-rmmod nbd
 timing_exit nbd_json_config
 report_test_completion nbd_json_config

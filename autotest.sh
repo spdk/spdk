@@ -14,6 +14,9 @@ fi
 if [ $(uname -s) = Linux ]; then
 	# set core_pattern to a known value to avoid ABRT, systemd-coredump, etc.
 	echo "core" > /proc/sys/kernel/core_pattern
+
+	# make sure nbd (network block device) driver is loaded
+	modprobe nbd
 fi
 
 trap "process_core; autotest_cleanup; exit 1" SIGINT SIGTERM EXIT
