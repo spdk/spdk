@@ -53,6 +53,7 @@ struct spdk_vbdev_split_config {
 	unsigned split_count;
 	uint64_t split_size_mb;
 
+	SPDK_BDEV_PART_TAILQ splits;
 	struct spdk_bdev_part_base *split_base;
 	bool removed;
 
@@ -61,7 +62,6 @@ struct spdk_vbdev_split_config {
 
 static TAILQ_HEAD(, spdk_vbdev_split_config) g_split_config = TAILQ_HEAD_INITIALIZER(
 			g_split_config);
-static SPDK_BDEV_PART_TAILQ g_split_disks = TAILQ_HEAD_INITIALIZER(g_split_disks);
 
 struct vbdev_split_channel {
 	struct spdk_bdev_part_channel	part_ch;
@@ -76,6 +76,8 @@ struct vbdev_split_bdev_io {
 };
 
 static void vbdev_split_del_config(struct spdk_vbdev_split_config *cfg);
+static struct spdk_vbdev_split_config *
+vbdev_split_config_find_by_base_name(const char *base_bdev_name);
 
 static int vbdev_split_init(void);
 static void vbdev_split_fini(void);
@@ -120,8 +122,9 @@ static void
 vbdev_split_base_bdev_hotremove_cb(void *_part_base)
 {
 	struct spdk_bdev_part_base *part_base = _part_base;
+	struct spdk_vbdev_split_config *cfg = spdk_bdev_part_base_get_ctx(part_base);
 
-	spdk_bdev_part_base_hotremove(part_base, &g_split_disks);
+	spdk_bdev_part_base_hotremove(part_base, &cfg->splits);
 }
 
 static void
@@ -249,10 +252,11 @@ vbdev_split_create(struct spdk_vbdev_split_config *cfg)
 		      " split_size_blocks: %" PRIu64 "\n",
 		      spdk_bdev_get_name(base_bdev), split_count, split_size_blocks);
 
+	TAILQ_INIT(&cfg->splits);
 	cfg->split_base = spdk_bdev_part_base_construct(base_bdev,
 			  vbdev_split_base_bdev_hotremove_cb,
 			  &split_if, &vbdev_split_fn_table,
-			  &g_split_disks, vbdev_split_base_free, cfg,
+			  &cfg->splits, vbdev_split_base_free, cfg,
 			  sizeof(struct vbdev_split_channel), NULL, NULL);
 	if (!cfg->split_base) {
 		SPDK_ERRLOG("Cannot construct bdev part base\n");
