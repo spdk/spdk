@@ -73,6 +73,12 @@ class UILvolStores(UINode):
         for lvs in self.get_root().get_lvol_stores():
             UILvsObj(lvs, self)
 
+    def delete(self, name, uuid):
+        if name is None and uuid is None:
+            self.shell.log.error("Please specify one of the identifiers: "
+                                 "lvol store name or UUID")
+        self.get_root().delete_lvol_store(lvs_name=name, uuid=uuid)
+
     def ui_command_create(self, name, bdev_name, cluster_size=None):
         """
         Creates logical volume store on target bdev.
@@ -102,10 +108,13 @@ class UILvolStores(UINode):
         name - Friendly name of the logical volume store to be deleted.
         uuid - UUID number of the logical volume store to be deleted.
         """
-        if name is None and uuid is None:
-            self.shell.log.error("Please specify one of the identifiers: "
-                                 "lvol store name or UUID")
-        self.get_root().delete_lvol_store(lvs_name=name, uuid=uuid)
+        self.delete(name, uuid)
+        self.get_root().refresh()
+        self.refresh()
+
+    def ui_command_delete_all(self):
+        for lvs in self._children:
+            self.delete(None, lvs.lvs.uuid)
         self.get_root().refresh()
         self.refresh()
 
