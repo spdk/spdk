@@ -108,6 +108,7 @@ source $TEST_DIR/test/common/autotest_common.sh
 function vhost_start()
 {
     modprobe nbd
+    sleep 1
     $TEST_DIR/app/vhost/vhost &
     vhost_pid=$!
     echo $vhost_pid > $BASE_DIR/vhost.pid

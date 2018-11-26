@@ -10,6 +10,7 @@ timing_enter nbd_json_config
 run_spdk_tgt
 load_nvme
 modprobe nbd
+sleep 1
 
 timing_enter nbd_json_config_create_setup
 $rpc_py construct_malloc_bdev 128 512 --name Malloc0

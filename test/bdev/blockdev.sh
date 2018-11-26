@@ -36,6 +36,7 @@ function nbd_function_test() {
 		fi
 
 		modprobe nbd
+		sleep 1
 		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
 		nbd_pid=$!
 		echo "Process nbd pid: $nbd_pid"

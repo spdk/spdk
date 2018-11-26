@@ -502,7 +502,7 @@ function print_backtrace() {
 }
 
 function part_dev_by_gpt () {
-	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd; then
+	if [ $(uname -s) = Linux ] && hash sgdisk && modprobe nbd && sleep 1; then
 		conf=$1
 		devname=$2
 		rootdir=$3
