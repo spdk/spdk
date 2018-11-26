@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50a0094a_9cf8f824",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Can you add a comment indicating what you\u0027re doing here? I think I understand that at this point the no more disk to assign in the CPU core NUMA node so you are going to try and assign disk from the other NUMA node. But that is probably not clear to someone who is not familiar with the script.",
+      "range": {
+        "startLine": 135,
+        "startChar": 3,
+        "endLine": 141,
+        "endChar": 7
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6b4c2da_15e9d53f",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Echo a message before running preconditioning to let new users know that the drives are getting preconditioned and that could take a while depending on the size of the drive. That way they don\u0027t kill the script because they think it hang.",
+      "range": {
+        "startLine": 158,
+        "startChar": 1,
+        "endLine": 159,
+        "endChar": 25
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9df545b_c60065e3",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Whenever you calculate lat it\u0027s always good to include the units in the name so that someone can easily tell units by looking at the name. So names like mean_lat_usec would be better here. You can see how the fields your reading from the json output have the units.",
+      "range": {
+        "startLine": 172,
+        "startChar": 2,
+        "endLine": 172,
+        "endChar": 10
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8e3098e_38cc6d14",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Include units",
+      "range": {
+        "startLine": 177,
+        "startChar": 2,
+        "endLine": 177,
+        "endChar": 9
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75d604a0_86a2177d",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Include units",
+      "range": {
+        "startLine": 182,
+        "startChar": 2,
+        "endLine": 182,
+        "endChar": 12
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0959f65c_24639152",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Include units",
+      "range": {
+        "startLine": 187,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 7
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dae0d1ff_5bce28cd",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-11-26T14:34:32Z",
+      "side": 1,
+      "message": "Can you echo something to indicate the test is running? People who are completely new to the script might think it hang. Adding a message here to let them know the test is running and how long the test will take would be helpful to new users.",
+      "range": {
+        "startLine": 197,
+        "startChar": 1,
+        "endLine": 202,
+        "endChar": 80
+      },
+      "revId": "fefde15c56b70b74ade88c6bd83c4c85f581c9e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
