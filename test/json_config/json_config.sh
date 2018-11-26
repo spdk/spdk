@@ -9,13 +9,14 @@ source "$rootdir/test/nvmf/common.sh"
 
 set -x
 
-if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+if [[ $SPDK_TEST_ISCSI -eq 1 ]]; then
 	source "$rootdir/test/iscsi_tgt/common.sh"
 fi
 
 if [[ $SPDK_TEST_VHOST -ne 1 && $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	SPDK_TEST_VHOST=1
-	echo "WARNING: Virtio initiator tests require vhost tests - enabling vhost tests"
+	echo "WARNING: Virtio initiator JSON_config test requires vhost target."
+	echo "         Setting SPDK_TEST_VHOST=1 for duration of current script."
 fi
 
 set -x
@@ -98,10 +99,10 @@ function json_config_test_shutdown_app() {
 function create_bdev_subsystem_config() {
 	timing_enter $FUNCNAME
 
-	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		local lvol_store_base_bdev=Nvme0n1
 		if ! tgt_rpc get_bdevs --name ${lvol_store_base_bdev} >/dev/null; then
-			if [ $(uname -s) = Linux ]; then
+			if [[ $(uname -s) = Linux ]]; then
 				lvol_store_base_bdev=aio_disk
 				echo "WARNING: No NVMe drive found. Using '$lvol_store_base_bdev' instead."
 			else
@@ -120,8 +121,8 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_malloc_bdev 32 512 --name Malloc0
 		tgt_rpc construct_malloc_bdev 16 4096 --name Malloc1
 
-		if [ $(uname -s) = Linux ]; then
-			# This AIO bdev must be large anought to be used as LVOL store
+		if [[ $(uname -s) = Linux ]]; then
+			# This AIO bdev must be large enough to be used as LVOL store
 			dd if=/dev/zero of=/tmp/sample_aio bs=1024 count=102400
 			tgt_rpc construct_aio_bdev /tmp/sample_aio aio_disk 1024
 		fi
@@ -136,9 +137,9 @@ function create_bdev_subsystem_config() {
 		tgt_rpc clone_lvol_bdev        lvs_test/snapshot0 clone0
 	fi
 
-	if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
 		tgt_rpc construct_malloc_bdev 8 1024 --name MallocForCryptoBdev
-		if [ $(lspci -d:37c8 | wc -l) -eq 0 ]; then
+		if [[ $(lspci -d:37c8 | wc -l) -eq 0 ]]; then
 			local crypto_dirver=crypto_aesni_mb
 		else
 			local crypto_dirver=crypto_qat
@@ -147,14 +148,14 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_crypto_bdev -b MallocForCryptoBdev -c CryptoMallocBdev -d $crypto_dirver -k 0123456789123456
 	fi
 
-	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+	if [[ $SPDK_TEST_PMDK -eq 1 ]]; then
 		pmem_pool_file=$(mktemp /tmp/pool_file1.XXXXX)
 		rm -f $pmem_pool_file
 		tgt_rpc create_pmem_pool $pmem_pool_file 128 4096
 		tgt_rpc construct_pmem_bdev -n pmem1 $pmem_pool_file
 	fi
 
-	if [ $SPDK_TEST_RBD -eq 1 ]; then
+	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
 		tgt_rpc construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
 	fi
@@ -165,14 +166,14 @@ function create_bdev_subsystem_config() {
 function cleanup_bdev_subsystem_config() {
 	timing_enter $FUNCNAME
 
-	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		tgt_rpc destroy_lvol_bdev     lvs_test/clone0
 		tgt_rpc destroy_lvol_bdev     lvs_test/lvol0
 		tgt_rpc destroy_lvol_bdev     lvs_test/snapshot0
 		tgt_rpc destroy_lvol_store -l lvs_test
 	fi
 
-	if [ $(uname -s) = Linux ]; then
+	if [[ $(uname -s) = Linux ]]; then
 		rm -f /tmp/sample_aio
 	fi
 
@@ -182,7 +183,7 @@ function cleanup_bdev_subsystem_config() {
 		rm -f $pmem_pool_file
 	fi
 
-	if [ $SPDK_TEST_RBD -eq 1 ]; then
+	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_cleanup
 	fi
 
@@ -220,11 +221,9 @@ function create_iscsi_subsystem_config() {
 function create_nvmf_subsystem_config() {
 	timing_enter $FUNCNAME
 
-	# TODO: test it
-
 	RDMA_IP_LIST=$(get_available_rdma_ips)
 	NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
-	if [ -z $NVMF_FIRST_TARGET_IP ]; then
+	if [[ -z $NVMF_FIRST_TARGET_IP ]]; then
 		echo "Error: no NIC for nvmf test"
 		return 1
 	fi
@@ -266,24 +265,24 @@ function json_config_test_init()
 		echo ']}'
 	) | tgt_rpc load_config
 
-	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		create_bdev_subsystem_config
 	fi
 
-	if [ $SPDK_TEST_VHOST -eq 1 ]; then
+	if [[ $SPDK_TEST_VHOST -eq 1 ]]; then
 		create_vhost_subsystem_config
 	fi
 
-	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+	if [[ $SPDK_TEST_ISCSI -eq 1 ]]; then
 		create_iscsi_subsystem_config
 	fi
 
-	if [ $SPDK_TEST_NVMF -eq 1 ]; then
+	if [[ $SPDK_TEST_NVMF -eq 1 ]]; then
 		create_nvmf_subsystem_config
 	fi
 	timing_exit json_config_setup_target
 
-	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+	if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 		json_config_test_start_app initiator
 		create_virtio_initiator_config
 	fi
@@ -310,10 +309,7 @@ function json_config_test_fini() {
 		# Remove any artifacts we created (files, lvol etc)
 		cleanup_bdev_subsystem_config
 
-		if [ $SPDK_TEST_NVMF -eq 1 ]; then
-			# Should we clear this?
-			true
-		fi
+		# SPDK_TEST_NVMF: Should we clear something?
 
 		if ! json_config_test_shutdown_app target; then
 			kill -9 ${app_pid[target]}
@@ -331,7 +327,11 @@ function json_config_clear() {
 	[[ ! -z "${#app_socket[$1]}" ]] # Check app type
 	$rootdir/test/json_config/clear_config.py -s ${app_socket[$1]} clear_config
 
-	#TODO check if config is cleared
+	# Check if config is clean.
+	# Global params can't be cleared so need to filter them out.
+	local config_filter="$rootdir/test/json_config/config_filter.py"
+	[[ "$1" == "target" ]] && tgt_rpc save_config || initiator_rpc save_config | \
+		$config_filter -method delete_global_parameters | $config_filter -method check_empty
 }
 
 on_error_exit() {
@@ -351,7 +351,7 @@ json_config_test_init
 tgt_rpc save_config > ${configs_path[target]}
 
 echo "INFO: shutting down applications..."
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	initiator_rpc save_config > ${configs_path[initiator]}
 	json_config_clear initiator
 	json_config_test_shutdown_app initiator
@@ -362,13 +362,13 @@ json_config_test_shutdown_app target
 
 echo "INFO: relaunching applications..."
 json_config_test_start_app target --json ${configs_path[target]}
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	json_config_test_start_app initiator --json ${configs_path[initiator]}
 fi
 
 echo "INFO: Checking if target configuration is the same..."
 $rootdir/test/json_config/json_diff.sh <(tgt_rpc save_config) "${configs_path[target]}"
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+if [[ $SPDK_TEST_VHOST_INIT -eq 1 ]]; then
 	echo "INFO: Checking if virtio initiator configuration is the same..."
 	$rootdir/test/json_config/json_diff.sh <(initiator_rpc save_config) "${configs_path[initiator]}"
 fi
