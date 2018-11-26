@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "077f667d_a2d8c8b5",
+        "filename": "lib/iscsi/param.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-26T16:59:20Z",
+      "side": 1,
+      "message": "returning 0 doesn\u0027t really indicate failure, but if total \u003c 0, that is definitely a failure, probably even an assert.\n\nI think we should also be checking data_len instead of total - it\u0027s much more clear.\n\nHow about:\n\nif (data_len \u003c 0) {\n  assert(false);\n  return -EINVAL;\n}",
+      "revId": "577a01c621464f2405914e23ad96cb54639c2a78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
