@@ -95,6 +95,10 @@ spdk_rpc_construct_split_vbdev(struct spdk_jsonrpc_request *request,
 
 		split_base_tailq = spdk_bdev_part_base_get_tailq(split_base);
 		TAILQ_FOREACH(split_part, split_base_tailq, tailq) {
+			if (split_base != spdk_bdev_part_get_base(split_part)) {
+				continue;
+			}
+
 			split_bdev = spdk_bdev_part_get_bdev(split_part);
 			spdk_json_write_string(w, spdk_bdev_get_name(split_bdev));
 		}
