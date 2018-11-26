@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce8a71a3_8b21d9ad",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T00:38:56Z",
+      "side": 1,
+      "message": "more needed to handle decompression overflow case.\non compression overflow you probably don\u0027t care and can just store the uncompressed data.\nFor decompresssion, I\u0027d expect you have to retry with a bigger destination buffer - unless you\u0027ve saved meta data with the expected uncompressed size and so know this case can never arise?",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e97a9416_6ecaa445",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T00:38:56Z",
+      "side": 1,
+      "message": "for dest I don\u0027t see a need for an SGL / mbuf chain - \njust one mbuf with the dest_iov.iov-base with it\u0027s total length attached should do fine.\nFor src, if data is already in multiple separate external buffers, then it makes sense to use same num of mbufs and chain them.",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ceab51a5_8029f8e9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T00:38:56Z",
+      "side": 1,
+      "message": "this should be within the for loop",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9567fead_17250951",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T00:38:56Z",
+      "side": 1,
+      "message": "set src.length \u003d total_length",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6c4e7cc_80b7e968",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T00:38:56Z",
+      "side": 1,
+      "message": "if this is handling decompress, it will need to take this into account in dest buffer size alloc above. Decompressed data is expected to be bigger than src data. \nIf the iobuf total length already accounts for that, then the src.length needs to reflect the actual compressed data to be processed.",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
