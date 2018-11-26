@@ -16,6 +16,24 @@
       "revId": "bbe0c6d35d6f4afdaf4906329c5116ca608b6d2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f67adfb3_635e1eed",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-26T23:19:12Z",
+      "side": 1,
+      "message": "Can we not make delete_bdev deprecated. If you use every module specific rpc, you need know the type of the every bdev...",
+      "parentUuid": "ec76dda7_70946058",
+      "revId": "bbe0c6d35d6f4afdaf4906329c5116ca608b6d2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
