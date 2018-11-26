@@ -121,6 +121,9 @@ struct spdk_scsi_lun {
 
 	/** The LUN is being reset */
 	bool resetting;
+
+	/** suspend tasks during LUN reset */
+	TAILQ_HEAD(suspend_tasks, spdk_scsi_task) suspend_tasks;
 };
 
 struct spdk_lun_db_entry {

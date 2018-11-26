@@ -71,6 +71,12 @@ spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_ta
 	_task = TAILQ_FIRST(&lun->reset_tasks);
 	if (_task == NULL) {
 		lun->resetting = false;
+		while (!TAILQ_EMPTY(&lun->suspend_tasks)) {
+			_task = TAILQ_FIRST(&lun->suspend_tasks);
+			TAILQ_REMOVE(&lun->suspend_tasks, _task, scsi_link);
+
+			spdk_scsi_lun_execute_task(lun, task);
+		}
 		return;
 	}
 	TAILQ_REMOVE(&lun->reset_tasks, _task, scsi_link);
@@ -188,8 +194,14 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 {
 	int rc;
 
+	if (lun->resetting) {
+		TAILQ_INSERT_TAIL(&lun->suspend_tasks, task, scsi_link);
+		return;
+	}
+
 	task->status = SPDK_SCSI_STATUS_GOOD;
 	spdk_trace_record(TRACE_SCSI_TASK_START, lun->dev->id, task->length, (uintptr_t)task, 0);
+
 	TAILQ_INSERT_TAIL(&lun->tasks, task, scsi_link);
 	if (!lun->removed) {
 		rc = spdk_bdev_scsi_execute(task);
@@ -349,6 +361,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	}
 
 	TAILQ_INIT(&lun->tasks);
+	TAILQ_INIT(&lun->suspend_tasks);
 	TAILQ_INIT(&lun->reset_tasks);
 
 	lun->bdev = bdev;
