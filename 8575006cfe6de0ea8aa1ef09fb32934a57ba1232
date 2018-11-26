@@ -37,6 +37,23 @@
     },
     {
       "key": {
+        "uuid": "96f35c6c_ca7628e7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T14:26:16Z",
+      "side": 1,
+      "message": "the len used for attach\u0026append should be the size of the buffer to be attached to the mbuf.\n\"compressed\" is the total compressed length.",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e97a9416_6ecaa445",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 31
@@ -107,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "8a0bba9a_4c8d803a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T14:26:16Z",
+      "side": 1,
+      "message": "I\u0027d suggest separate loops for src and dest. index for each is number of buffers (\u003d nr of segments in the chain) There\u0027s no reason for indices to be the same. And every reason to minimise them, as more performant to use contiguous buffers wherever they\u0027re available.",
+      "parentUuid": "69052b8c_33d06810",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9567fead_17250951",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 31
@@ -153,6 +188,24 @@
       "side": 1,
       "message": "I\u0027m not sure what LOC you are commenting on - I understand the statement but do you see something incorrect or missing? Where you are commenting is just a print and assignment of the pre-filled out xform which doesn\u0027t have anything to do with size right?",
       "parentUuid": "e6c4e7cc_80b7e968",
+      "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "073bb982_4ba8a437",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 535,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-26T14:26:16Z",
+      "side": 1,
+      "message": "ah, ok. comment is on the whole fn. I just realised with this \"if\" that it\u0027s handling both compression and decomp. I\u0027d been focused on compression.\nYes, xform has nothing to do with size.\nadded comment on line 497 above",
+      "parentUuid": "4422557b_4e8f8d79",
       "revId": "8575006cfe6de0ea8aa1ef09fb32934a57ba1232",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
