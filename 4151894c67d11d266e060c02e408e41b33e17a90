@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60ae39f4_bb7d7fc3",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-26T12:40:54Z",
+      "side": 1,
+      "message": "Please describe in comment why 2048 was chosen.",
+      "revId": "4151894c67d11d266e060c02e408e41b33e17a90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c2ff03f_c72e97a7",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-26T12:40:54Z",
+      "side": 1,
+      "message": "Please describe in comment why 2048 was chosen.\nAs we discuss this value could be associated with io depth for background operations.",
+      "revId": "4151894c67d11d266e060c02e408e41b33e17a90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
