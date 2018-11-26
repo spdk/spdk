@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b44c2dbf_0eda9219",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-26T15:52:15Z",
+      "side": 1,
+      "message": "What is start and what is end?\nWhat is so_far? Can you provide json doc?\n\nAll these values can and should be returned as json_uin64",
+      "range": {
+        "startLine": 703,
+        "startChar": 1,
+        "endLine": 706,
+        "endChar": 71
+      },
+      "revId": "466a7c2343bc133085ab951d9074f831d922cd79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
