@@ -138,7 +138,7 @@ part_test(void)
 	rc = spdk_bdev_part_construct(&part2, base, "test2", 100, 100, "test");
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
-	spdk_bdev_part_base_hotremove(&bdev_base, &tailq);
+	spdk_bdev_part_base_hotremove(base, &tailq);
 
 	spdk_bdev_part_base_free(base);
 	_part_cleanup(&part1);

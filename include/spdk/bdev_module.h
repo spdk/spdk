@@ -860,10 +860,11 @@ int spdk_bdev_part_free(struct spdk_bdev_part *part);
 /**
  * Calls spdk_bdev_unregister on the bdev for each part associated with base_bdev.
  *
- * \param base_bdev The spdk_bdev upon which an spdk_bdev-part_base is built
+ * \param part_base The part base object built on top of an spdk_bdev
  * \param tailq The list of spdk_bdev_part bdevs associated with this base bdev.
  */
-void spdk_bdev_part_base_hotremove(struct spdk_bdev *base_bdev, struct bdev_part_tailq *tailq);
+void spdk_bdev_part_base_hotremove(struct spdk_bdev_part_base *part_base,
+				   struct bdev_part_tailq *tailq);
 
 /**
  * Construct a new spdk_bdev_part_base on top of the provided bdev.
