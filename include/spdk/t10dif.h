@@ -183,4 +183,22 @@ int spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt,
 			    uint32_t data_block_size, uint32_t metadata_size,
 			    uint32_t dif_flags, uint32_t ref_tag,
 			    uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Inject bit flip error to data or T10DIF for extended LBA payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata.
+ *
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param inject_flags The flag to specify the action of error injection.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_t10dif_inject_error(struct iovec *iovs, int iovcnt,
+			     uint32_t data_block_size, uint32_t metadata_size,
+			     uint32_t inject_flags);
 #endif /* SPDK_T10DIF_H */

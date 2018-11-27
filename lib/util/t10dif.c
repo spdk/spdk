@@ -771,3 +771,108 @@ spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
 						ref_tag, apptag_mask, app_tag);
 	}
 }
+
+static void
+_bit_flip_random(void *buf, uint32_t len)
+{
+	uint8_t byte;
+	uint32_t seed;
+
+	seed = time(0);
+	srand(seed);
+
+	buf += rand() % len;
+
+	byte = *(uint8_t *)buf;
+	byte ^= 1 << (rand() % 8);
+
+	*(uint8_t *)buf = byte;
+}
+
+static uint32_t
+get_t10dif_inject_error_offset_blocks(struct iovec *iovs, int iovcnt, uint32_t block_size)
+{
+	uint32_t block_counts, seed;
+
+	block_counts = _get_iovs_len(iovs, iovcnt) / block_size;
+
+	seed = time(0);
+	srand(seed);
+
+	return rand() % block_counts;
+}
+
+static int
+_t10dif_inject_error(void *_dif, void *data_buf, uint32_t data_block_size,
+		     uint32_t inject_flags)
+{
+	struct spdk_t10dif *dif = _dif;
+
+	if (inject_flags == 0) {
+		_bit_flip_random(data_buf, data_block_size);
+	} else if (inject_flags == SPDK_T10DIF_GUARD_CHECK) {
+		_bit_flip_random(&dif->guard, 2);
+	} else if (inject_flags == SPDK_T10DIF_APPTAG_CHECK) {
+		_bit_flip_random(&dif->app_tag, 2);
+	} else if (inject_flags == SPDK_T10DIF_REFTAG_CHECK) {
+		_bit_flip_random(&dif->ref_tag, 4);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+t10dif_inject_error(struct iovec *iovs, int iovcnt,
+		    uint32_t data_block_size, uint32_t block_size,
+		    uint32_t inject_flags, uint32_t inject_offset_blocks)
+{
+	uint32_t offset_blocks, iov_offset;
+	int iovpos;
+	void *buf;
+
+	offset_blocks = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		if (offset_blocks == inject_offset_blocks) {
+			buf = iovs[iovpos].iov_base + iov_offset;
+			return _t10dif_inject_error(buf + data_block_size, buf,
+						    data_block_size, inject_flags);
+		}
+
+		offset_blocks++;
+		iov_offset += block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return -1;
+}
+
+int
+spdk_t10dif_inject_error(struct iovec *iovs, int iovcnt,
+			 uint32_t data_block_size, uint32_t metadata_size,
+			 uint32_t inject_flags)
+{
+	uint32_t block_size, inject_offset_blocks;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	block_size = data_block_size + metadata_size;
+
+	inject_offset_blocks = get_t10dif_inject_error_offset_blocks(iovs, iovcnt, block_size);
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, block_size)) {
+		return t10dif_inject_error(iovs, iovcnt, data_block_size, block_size,
+					   inject_flags, inject_offset_blocks);
+	} else {
+		return -1;
+	}
+}
