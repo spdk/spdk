@@ -1854,7 +1854,7 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
-		SPDK_TRACEDUMP(SPDK_LOG_SCSI, "INQUIRY", data, data_len);
+		SPDK_LOGDUMP(SPDK_LOG_SCSI, "INQUIRY", data, data_len);
 		break;
 
 	case SPDK_SPC_REPORT_LUNS: {
@@ -1882,7 +1882,7 @@ spdk_bdev_scsi_process_primary(struct spdk_scsi_task *task)
 			break;
 		}
 
-		SPDK_TRACEDUMP(SPDK_LOG_SCSI, "REPORT LUNS", data, data_len);
+		SPDK_LOGDUMP(SPDK_LOG_SCSI, "REPORT LUNS", data, data_len);
 		break;
 	}
 
