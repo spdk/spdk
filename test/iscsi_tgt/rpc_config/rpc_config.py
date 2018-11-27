@@ -42,7 +42,7 @@ rpc_param = {
     'chap_group': 0,
     'header_digest': False,
     'data_digest': False,
-    'trace_flag': 'rpc',
+    'log_flag': 'rpc',
     'cpumask': 0x1
 }
 
@@ -73,24 +73,24 @@ def verify(expr, retcode, msg):
         raise RpcException(retcode, msg)
 
 
-def verify_trace_flag_rpc_methods(rpc_py, rpc_param):
+def verify_log_flag_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
-    output = rpc.get_trace_flags()
+    output = rpc.get_log_flags()
     jsonvalue = json.loads(output)
-    verify(not jsonvalue[rpc_param['trace_flag']], 1,
-           "get_trace_flags returned {}, expected false".format(jsonvalue))
-    rpc.set_trace_flag(rpc_param['trace_flag'])
-    output = rpc.get_trace_flags()
+    verify(not jsonvalue[rpc_param['log_flag']], 1,
+           "get_log_flags returned {}, expected false".format(jsonvalue))
+    rpc.set_log_flag(rpc_param['log_flag'])
+    output = rpc.get_log_flags()
     jsonvalue = json.loads(output)
-    verify(jsonvalue[rpc_param['trace_flag']], 1,
-           "get_trace_flags returned {}, expected true".format(jsonvalue))
-    rpc.clear_trace_flag(rpc_param['trace_flag'])
-    output = rpc.get_trace_flags()
+    verify(jsonvalue[rpc_param['log_flag']], 1,
+           "get_log_flags returned {}, expected true".format(jsonvalue))
+    rpc.clear_log_flag(rpc_param['log_flag'])
+    output = rpc.get_log_flags()
     jsonvalue = json.loads(output)
-    verify(not jsonvalue[rpc_param['trace_flag']], 1,
-           "get_trace_flags returned {}, expected false".format(jsonvalue))
+    verify(not jsonvalue[rpc_param['log_flag']], 1,
+           "get_log_flags returned {}, expected false".format(jsonvalue))
 
-    print("verify_trace_flag_rpc_methods passed")
+    print("verify_log_flag_rpc_methods passed")
 
 
 def verify_iscsi_connection_rpc_methods(rpc_py):
@@ -483,7 +483,7 @@ if __name__ == "__main__":
     rpc_py = sys.argv[1]
 
     try:
-        verify_trace_flag_rpc_methods(rpc_py, rpc_param)
+        verify_log_flag_rpc_methods(rpc_py, rpc_param)
         verify_get_interfaces(rpc_py)
         verify_add_delete_ip_address(rpc_py)
         create_malloc_bdevs_rpc_methods(rpc_py, rpc_param)

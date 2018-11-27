@@ -1,30 +1,42 @@
-def set_trace_flag(client, flag):
-    """Set trace flag.
+def set_log_flag(client, flag):
+    """Set log flag.
 
     Args:
-        flag: trace mask we want to set. (for example "nvme")
+        flag: log flag we want to set. (for example "nvme")
     """
     params = {'flag': flag}
-    return client.call('set_trace_flag', params)
+    return client.call('set_log_flag', params)
+
+
+def set_trace_flag(client, flag):
+    return set_log_flag(client, flag)
+
+
+def clear_log_flag(client, flag):
+    """Clear log flag.
+
+    Args:
+        flag: log flag we want to clear. (for example "nvme")
+    """
+    params = {'flag': flag}
+    return client.call('clear_log_flag', params)
 
 
 def clear_trace_flag(client, flag):
-    """Clear trace flag.
+    return clear_log_flag(client, flag)
 
-    Args:
-        flag: trace mask we want to clear. (for example "nvme")
+
+def get_log_flags(client):
+    """Get log flags
+
+    Returns:
+        List of log flags
     """
-    params = {'flag': flag}
-    return client.call('clear_trace_flag', params)
+    return client.call('get_log_flags')
 
 
 def get_trace_flags(client):
-    """Get trace flags
-
-    Returns:
-        List of trace flag
-    """
-    return client.call('get_trace_flags')
+    return get_log_flags(client)
 
 
 def set_log_level(client, level):
