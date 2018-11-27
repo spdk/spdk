@@ -811,6 +811,18 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				return -EINVAL;
 			}
 			memcpy(trid->subnqn, val, val_len + 1);
+		} else if (strcasecmp(key, "ns") == 0) {
+			/*
+			 * Special case.  The namespace id parameter may
+			 * optionally be passed in the transport id string
+			 * for an SPDK application (e.g. nvme/perf)
+			 * and additionally parsed therein to limit
+			 * targeting a specific namespace.  For this
+			 * scenario, just silently ignore this key
+			 * rather than letting it default to logging
+			 * it as an invalid key.
+			 */
+			continue;
 		} else {
 			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
 		}
