@@ -383,7 +383,7 @@ int main(int argc, char **argv)
 	munmap(history_ptr, sizeof(*g_histories));
 	history_ptr = mmap(NULL, trace_histories_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap shm %s.\n", shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
 		usage();
 		exit(-1);
 	}
