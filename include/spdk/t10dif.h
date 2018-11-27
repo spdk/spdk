@@ -135,4 +135,52 @@ int spdk_t10dix_verify(struct iovec *iovs, int iovcnt,
 		       uint32_t data_block_size, uint32_t metadata_size,
 		       uint32_t dif_flags, uint32_t ref_tag,
 		       uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Copy data and generate T10 DIF for extended LBA payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata.
+ *
+ * \param bounce_buf A contiguous buffer forming extended logical block.
+ * \param bounce_buf_len Size of the contiguous buffer.
+ * \param iovs A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iovs.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_flags The flag to specify the T10 DIF action.
+ * \param ref_tag Start reference tag.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated error otherwise..
+ */
+int spdk_t10dif_generate_copy(void *bounce_buf, uint32_t bounce_buf_len,
+			      struct iovec *iovs, int iovcnt,
+			      uint32_t data_block_size, uint32_t metadata_size,
+			      uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag);
+
+/**
+ * Verify T10 DIF and strip metadata for extended LBA payload.
+ *
+ * Currently only T10 DIF Type 1 is suppported and T10 DIF is limited to append
+ * to the first eight byte of the metadata.
+ *
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param bounce_buf A contiguous buffer forming extended logical block.
+ * \param bounce_buf_len Size of the contiguous buffer.
+ * \param data_block_size The data block size in a block.
+ * \param metadata_size The metadata size in a block.
+ * \param dif_flags The flag to specify the T10 DIF action.
+ * \param ref_tag Start reference tag.
+ * \param apptag_mask Application tag mask.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt,
+			    void *bounce_buf, uint32_t bounce_buf_len,
+			    uint32_t data_block_size, uint32_t metadata_size,
+			    uint32_t dif_flags, uint32_t ref_tag,
+			    uint16_t apptag_mask, uint16_t app_tag);
 #endif /* SPDK_T10DIF_H */
