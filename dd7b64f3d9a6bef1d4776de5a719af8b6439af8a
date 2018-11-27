@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b35f62f1_e8aeaccb",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-27T14:46:46Z",
+      "side": 1,
+      "message": "What\u0027s the reason to move it inside the script? Can you move it back to original place and just comment?",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 3
+      },
+      "revId": "dd7b64f3d9a6bef1d4776de5a719af8b6439af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
