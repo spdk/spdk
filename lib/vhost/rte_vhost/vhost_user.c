@@ -56,6 +56,18 @@
 #define VIRTIO_MIN_MTU 68
 #define VIRTIO_MAX_MTU 65535
 
+#define SHM_ALIGNMENT 64
+/* The version of shared memory */
+#define SHM_VERSION 1
+#define SPDK_VHOST_MAX_VQUEUES 256
+#define SPDK_VHOST_MAX_VQ_SIZE 1024
+
+/* Round number down to multiple */
+#define ALIGN_DOWN(n, m) ((n) / (m) * (m))
+
+/* Round number up to multiple */
+#define ALIGN_UP(n, m) ALIGN_DOWN((n) + (m) - 1, (m))
+
 static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NONE] = "VHOST_USER_NONE",
 	[VHOST_USER_GET_FEATURES] = "VHOST_USER_GET_FEATURES",
@@ -80,6 +92,8 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NET_SET_MTU]  = "VHOST_USER_NET_SET_MTU",
 	[VHOST_USER_GET_CONFIG] = "VHOST_USER_GET_CONFIG",
 	[VHOST_USER_SET_CONFIG] = "VHOST_USER_SET_CONFIG",
+	[VHOST_USER_GET_SHM_SIZE] = "VHOST_USER_GET_SHM_SIZE",
+	[VHOST_USER_SET_SHM_FD] = "VHOST_USER_SET_SHM_FD",
 	[VHOST_USER_NVME_ADMIN] = "VHOST_USER_NVME_ADMIN",
 	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
 	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
@@ -143,6 +157,10 @@ vhost_backend_cleanup(struct virtio_net *dev)
 		munmap((void *)(uintptr_t)dev->bar_addr, dev->bar_size);
 		dev->bar_addr = NULL;
 		dev->bar_size = 0;
+	}
+	if (dev->shm_info.addr) {
+		munmap(dev->shm_info.addr, dev->shm_info.mmap_size);
+		dev->shm_info.addr = NULL;
 	}
 }
 
@@ -741,6 +759,109 @@ virtio_is_ready(struct virtio_net *dev)
 	}
 
 	return 0;
+}
+
+static int
+vhost_user_get_shm_size(struct virtio_net *dev, VhostUserMsg *msg)
+{
+	if (msg->size != sizeof(msg->payload.shm)) {
+		RTE_LOG(ERR, VHOST_CONFIG, "Invalid get_shm_size message:%d", msg->size);
+		msg->size = 0;
+		return 0;
+	}
+
+	msg->payload.shm.dev_size = 0;
+	msg->payload.shm.vq_size = SPDK_VHOST_MAX_VQ_SIZE;
+	msg->payload.shm.align = SHM_ALIGNMENT;
+	msg->payload.shm.version = SHM_VERSION;
+
+	RTE_LOG(INFO, VHOST_CONFIG, "send shm dev_size: %u\n", msg->payload.shm.dev_size);
+	RTE_LOG(INFO, VHOST_CONFIG, "send shm vq_size: %u\n", msg->payload.shm.vq_size);
+	RTE_LOG(INFO, VHOST_CONFIG, "send shm align: %u\n", msg->payload.shm.align);
+	RTE_LOG(INFO, VHOST_CONFIG, "send shm version: %u\n", msg->payload.shm.version);
+
+	return 0;
+}
+
+static int
+vhost_user_setup_shm(struct virtio_net *dev)
+{
+        int i;
+        char *addr = (char *)dev->shm_info.addr;
+        uint64_t size = 0;
+        struct vhost_virtqueue *vq;
+        uint32_t vq_size = ALIGN_UP(dev->shm_info.vq_size, dev->shm_info.align);
+
+        if (dev->shm_info.version != SHM_VERSION) {
+                RTE_LOG(ERR, VHOST_CONFIG, "Invalid version for shm: %d", dev->shm_info.version);
+                return -1;
+        }
+
+        if (dev->shm_info.dev_size != 0) {
+                RTE_LOG(ERR, VHOST_CONFIG, "Invalid dev_size for shm: %d", dev->shm_info.dev_size);
+                return -1;
+        }
+
+        if (dev->shm_info.vq_size != SPDK_VHOST_MAX_VQ_SIZE) {
+                RTE_LOG(ERR, VHOST_CONFIG, "Invalid vq_size for shm: %d", dev->shm_info.vq_size);
+                return -1;
+        }
+
+        for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+                size += vq_size;
+                if (size > dev->shm_info.mmap_size) {
+                        break;
+                }
+                vq = dev->virtqueue[i];
+                vq->inflight_desc_array = addr;
+                addr += vq_size;
+        }
+
+        return 0;
+}
+
+static int
+vhost_user_set_shm_fd(struct virtio_net *dev, VhostUserMsg *msg)
+{
+        uint64_t mmap_size, mmap_offset;
+        void *rc;
+        int fd = msg->fds[0];
+
+        if (msg->size != sizeof(msg->payload.shm) || fd < 0) {
+                RTE_LOG(ERR, VHOST_CONFIG, "Invalid set_shm_fd message size is :%d,fd is %d\n", msg->size, fd);
+                return -1;
+        }
+
+        mmap_size = msg->payload.shm.mmap_size;
+        mmap_offset = msg->payload.shm.mmap_offset;
+
+        if (dev->shm_info.addr) {
+                munmap(dev->shm_info.addr, dev->shm_info.mmap_size);
+        }
+
+        rc = mmap(0, mmap_size, PROT_READ | PROT_WRITE, MAP_SHARED,
+                        fd, mmap_offset);
+
+        if (rc == MAP_FAILED) {
+                RTE_LOG(ERR, VHOST_CONFIG,
+                        "failed to mmap share memory.\n");
+                return -1;
+        }
+
+        dev->shm_info.addr = rc;
+        dev->shm_info.mmap_size = mmap_size;
+        dev->shm_info.dev_size = msg->payload.shm.dev_size;
+        dev->shm_info.vq_size = msg->payload.shm.vq_size;
+        dev->shm_info.align = msg->payload.shm.align;
+        dev->shm_info.version = msg->payload.shm.version;
+
+        if (vhost_user_setup_shm(dev)) {
+                RTE_LOG(ERR, VHOST_CONFIG,
+                        "failed to setup share memory on each virtqueue.\n");
+                return -1;
+        }
+
+        return 0;
 }
 
 static void
@@ -1374,6 +1495,14 @@ vhost_user_msg_handler(int vid, int fd)
 		vhost_user_get_vring_base(dev, &msg);
 		msg.size = sizeof(msg.payload.state);
 		send_vhost_message(fd, &msg);
+		break;
+
+	case VHOST_USER_GET_SHM_SIZE:
+		vhost_user_get_shm_size(dev, &msg);
+		send_vhost_message(fd, &msg);
+		break;
+	case VHOST_USER_SET_SHM_FD:
+		vhost_user_set_shm_fd(dev, &msg);
 		break;
 
 	case VHOST_USER_SET_VRING_KICK:
