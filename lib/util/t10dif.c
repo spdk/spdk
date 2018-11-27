@@ -983,3 +983,62 @@ spdk_t10dif_inject_error(struct iovec *iovs, int iovcnt,
 						 inject_flags, inject_offset_blocks);
 	}
 }
+
+static int
+t10dix_inject_error(struct iovec *iovs, int iovcnt, void *metadata_buf,
+		    uint32_t data_block_size, uint32_t metadata_size,
+		    uint32_t inject_flags, uint32_t inject_block_offsets)
+{
+	uint32_t block_offsets, iov_offset;
+	int iovpos;
+
+	block_offsets = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		if (block_offsets == inject_block_offsets) {
+			return _t10dif_inject_error(metadata_buf,
+						    iovs[iovpos].iov_base + iov_offset,
+						    data_block_size, inject_flags);
+		}
+
+		metadata_buf += metadata_size;
+
+		block_offsets++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return -1;
+}
+
+int
+spdk_t10dix_inject_error(struct iovec *iovs, int iovcnt,
+			 void *metadata_buf, uint32_t metadata_buf_len,
+			 uint32_t data_block_size, uint32_t metadata_size,
+			 uint32_t inject_flags)
+{
+	uint32_t required_md_buf_len, inject_block_offsets;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	required_md_buf_len = _get_iovs_len(iovs, iovcnt) * metadata_size / data_block_size;
+	if (metadata_buf_len < required_md_buf_len) {
+		return -1;
+	}
+
+	inject_block_offsets = get_t10dif_inject_error_block_offsets(iovs, iovcnt, data_block_size);
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return t10dix_inject_error(iovs, iovcnt, metadata_buf, data_block_size,
+					   metadata_size, inject_flags, inject_block_offsets);
+	} else {
+		return -1;
+	}
+}
