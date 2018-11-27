@@ -36,6 +36,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 #ifdef RTE_LIBRTE_VHOST_NUMA
 #include <numaif.h>
 #endif
@@ -71,6 +72,12 @@ cleanup_vq(struct vhost_virtqueue *vq, int destroy)
 		close(vq->callfd);
 	if (vq->kickfd >= 0)
 		close(vq->kickfd);
+	if (vq->inflight_desc_array) {
+		munmap((void *)vq->inflight_desc_array,
+					vq->inflight_desc_size);
+		vq->inflight_desc_array = NULL;
+		vq->inflight_desc_size = 0;
+	}
 }
 
 /*
@@ -385,6 +392,9 @@ rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
 	vring->callfd  = vq->callfd;
 	vring->kickfd  = vq->kickfd;
 	vring->size    = vq->size;
+
+	vring->inflight_desc_array = vq->inflight_desc_array;
+	vring->inflight_desc_size = vq->inflight_desc_size;
 
 	vring->last_avail_idx = vq->last_avail_idx;
 	vring->last_used_idx = vq->last_used_idx;
