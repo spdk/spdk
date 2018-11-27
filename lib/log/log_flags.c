@@ -35,7 +35,7 @@
 
 #include "spdk_internal/log.h"
 
-static TAILQ_HEAD(, spdk_log_flag) g_trace_flags = TAILQ_HEAD_INITIALIZER(g_trace_flags);
+static TAILQ_HEAD(, spdk_log_flag) g_log_flags = TAILQ_HEAD_INITIALIZER(g_log_flags);
 
 enum spdk_log_level g_spdk_log_level = SPDK_LOG_NOTICE;
 enum spdk_log_level g_spdk_log_print_level = SPDK_LOG_NOTICE;
@@ -83,7 +83,7 @@ get_log_flag(const char *name)
 {
 	struct spdk_log_flag *flag;
 
-	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+	TAILQ_FOREACH(flag, &g_log_flags, tailq) {
 		if (strcasecmp(name, flag->name) == 0) {
 			return flag;
 		}
@@ -93,7 +93,7 @@ get_log_flag(const char *name)
 }
 
 void
-spdk_log_register_trace_flag(const char *name, struct spdk_log_flag *flag)
+spdk_log_register_flag(const char *name, struct spdk_log_flag *flag)
 {
 	struct spdk_log_flag *iter;
 
@@ -109,14 +109,14 @@ spdk_log_register_trace_flag(const char *name, struct spdk_log_flag *flag)
 		return;
 	}
 
-	TAILQ_FOREACH(iter, &g_trace_flags, tailq) {
+	TAILQ_FOREACH(iter, &g_log_flags, tailq) {
 		if (strcasecmp(iter->name, flag->name) > 0) {
 			TAILQ_INSERT_BEFORE(iter, flag, tailq);
 			return;
 		}
 	}
 
-	TAILQ_INSERT_TAIL(&g_trace_flags, flag, tailq);
+	TAILQ_INSERT_TAIL(&g_log_flags, flag, tailq);
 }
 
 bool
@@ -137,7 +137,7 @@ set_log_flag(const char *name, bool value)
 	struct spdk_log_flag *flag;
 
 	if (strcasecmp(name, "all") == 0) {
-		TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+		TAILQ_FOREACH(flag, &g_log_flags, tailq) {
 			flag->enabled = value;
 		}
 		return 0;
@@ -166,13 +166,13 @@ spdk_log_clear_flag(const char *name)
 }
 
 struct spdk_log_flag *
-spdk_log_get_first_trace_flag(void)
+spdk_log_get_first_flag(void)
 {
-	return TAILQ_FIRST(&g_trace_flags);
+	return TAILQ_FIRST(&g_log_flags);
 }
 
 struct spdk_log_flag *
-spdk_log_get_next_trace_flag(struct spdk_log_flag *flag)
+spdk_log_get_next_flag(struct spdk_log_flag *flag)
 {
 	return TAILQ_NEXT(flag, tailq);
 }
@@ -184,7 +184,7 @@ spdk_log_usage(FILE *f, const char *log_arg)
 	struct spdk_log_flag *flag;
 	fprintf(f, " %s, --traceflag <flag>    enable debug log flag (all", log_arg);
 
-	TAILQ_FOREACH(flag, &g_trace_flags, tailq) {
+	TAILQ_FOREACH(flag, &g_log_flags, tailq) {
 		fprintf(f, ", %s", flag->name);
 	}
 

@@ -1448,8 +1448,8 @@ process_scan_resp(struct virtio_scsi_scan_base *base)
 		base->retries--;
 		if (base->retries == 0) {
 			SPDK_NOTICELOG("Target %"PRIu8" is present, but unavailable.\n", target_id);
-			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
-			SPDK_TRACEDUMP(SPDK_LOG_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
+			SPDK_LOGDUMP(SPDK_LOG_VIRTIO, "CDB", req->cdb, sizeof(req->cdb));
+			SPDK_LOGDUMP(SPDK_LOG_VIRTIO, "SENSE DATA", resp->sense, sizeof(resp->sense));
 			_virtio_scsi_dev_scan_next(base, -EBUSY);
 			return;
 		}

@@ -1359,7 +1359,7 @@ nvme_ctrlr_set_host_id(struct spdk_nvme_ctrlr *ctrlr)
 		return 0;
 	}
 
-	SPDK_TRACEDUMP(SPDK_LOG_NVME, "host_id", host_id, host_id_size);
+	SPDK_LOGDUMP(SPDK_LOG_NVME, "host_id", host_id, host_id_size);
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_HOST_ID,
 			     ctrlr->opts.admin_timeout_ms);

@@ -52,19 +52,19 @@ struct spdk_log_flag {
 	bool enabled;
 };
 
-void spdk_log_register_trace_flag(const char *name, struct spdk_log_flag *flag);
+void spdk_log_register_flag(const char *name, struct spdk_log_flag *flag);
 
-struct spdk_log_flag *spdk_log_get_first_trace_flag(void);
-struct spdk_log_flag *spdk_log_get_next_trace_flag(struct spdk_log_flag *flag);
+struct spdk_log_flag *spdk_log_get_first_flag(void);
+struct spdk_log_flag *spdk_log_get_next_flag(struct spdk_log_flag *flag);
 
 #define SPDK_LOG_REGISTER_COMPONENT(str, flag) \
 struct spdk_log_flag flag = { \
 	.enabled = false, \
 	.name = str, \
 }; \
-__attribute__((constructor)) static void register_trace_flag_##flag(void) \
+__attribute__((constructor)) static void register_flag_##flag(void) \
 { \
-	spdk_log_register_trace_flag(str, &flag); \
+	spdk_log_register_flag(str, &flag); \
 }
 
 #define SPDK_INFOLOG(FLAG, ...)									\
@@ -85,7 +85,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 		}										\
 	} while (0)
 
-#define SPDK_TRACEDUMP(FLAG, LABEL, BUF, LEN)						\
+#define SPDK_LOGDUMP(FLAG, LABEL, BUF, LEN)						\
 	do {										\
 		extern struct spdk_log_flag FLAG;					\
 		if ((FLAG.enabled) && (LEN)) {						\
@@ -95,7 +95,7 @@ __attribute__((constructor)) static void register_trace_flag_##flag(void) \
 
 #else
 #define SPDK_DEBUGLOG(...) do { } while (0)
-#define SPDK_TRACEDUMP(...) do { } while (0)
+#define SPDK_LOGDUMP(...) do { } while (0)
 #endif
 
 #endif /* SPDK_INTERNAL_LOG_H */

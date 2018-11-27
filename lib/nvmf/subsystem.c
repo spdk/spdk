@@ -1174,7 +1174,7 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 
 	if (!spdk_nvmf_valid_ascii_string(sn, len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII sn\n");
-		SPDK_TRACEDUMP(SPDK_LOG_NVMF, "sn", sn, len);
+		SPDK_LOGDUMP(SPDK_LOG_NVMF, "sn", sn, len);
 		return -1;
 	}
 

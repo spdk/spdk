@@ -289,7 +289,7 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 	struct spdk_scsi_dev *dev;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
 
-	SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "LUN", lun, 8);
+	SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "LUN", lun, 8);
 
 	/* First byte must be 1 and second is target */
 	if (lun[0] != 1 || lun[1] >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
@@ -339,8 +339,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
 		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->vring.last_used_idx,
 		      task->vq->vring.kickfd, task->vq->vring.size);
-	SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "Request descriptor", (uint8_t *)ctrl_req,
-		       desc->len);
+	SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "Request descriptor", (uint8_t *)ctrl_req, desc->len);
 
 	spdk_vhost_scsi_task_init_target(task, ctrl_req->lun);
 
@@ -473,7 +472,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			 */
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_DATA,
 				      "No payload descriptors for FROM DEV command req_idx=%"PRIu16".\n", task->req_idx);
-			SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
+			SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_DATA, "CDB=", (*req)->cdb, VIRTIO_SCSI_CDB_SIZE);
 			task->used_len = sizeof(struct virtio_scsi_cmd_resp);
 			task->scsi.iovcnt = 1;
 			task->scsi.iovs[0].iov_len = 0;
@@ -563,7 +562,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 	}
 
 	task->scsi.cdb = req->cdb;
-	SPDK_TRACEDUMP(SPDK_LOG_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
+	SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_DATA, "request CDB", req->cdb, VIRTIO_SCSI_CDB_SIZE);
 
 	if (spdk_unlikely(task->scsi.lun == NULL)) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
