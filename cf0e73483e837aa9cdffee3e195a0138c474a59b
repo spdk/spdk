@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da0210cf_7f05e96d",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:13:26Z",
+      "side": 1,
+      "message": "I’d suggest using a 12k buffer for destination rather than 16k. i.e. size of (num blocks per chunk-1). Because unless you save at least one disk block there’s no point in compressing and the uncompressed data can be saved instead.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
