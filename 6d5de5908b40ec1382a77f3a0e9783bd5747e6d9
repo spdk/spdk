@@ -22,6 +22,30 @@
       "revId": "6d5de5908b40ec1382a77f3a0e9783bd5747e6d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cdd918e7_2ac653ed",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-27T07:55:42Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nAdmin queue and IO queue are separate in NVMe.\nSPDK SCSI will have to support not only LUN reset but also abort task and abort task set.\ncurrent lun-\u003etasks is not for submission but for wait-for-completion.\n\nIf we support proper task management feature in SPDK SCSI, admin submission queue and IO submission queue will be necessary.\n\nBut I understand your concern. Hence I will elaborate patch series more.\n\nPlease wait shortly.\n\nThanks,\nShuhei",
+      "parentUuid": "c97d29ce_eadb12dc",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 101,
+        "endChar": 28
+      },
+      "revId": "6d5de5908b40ec1382a77f3a0e9783bd5747e6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
