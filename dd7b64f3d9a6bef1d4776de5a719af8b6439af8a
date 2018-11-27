@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "82e6844b_9206b215",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-27T14:53:27Z",
+      "side": 1,
+      "message": "BTW... why do we have this commented out?\nI wasn\u0027t aware of that to be honest. We should try to get this test back.",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 24
+      },
+      "revId": "dd7b64f3d9a6bef1d4776de5a719af8b6439af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b35f62f1_e8aeaccb",
         "filename": "autotest.sh",
         "patchSetId": 8
