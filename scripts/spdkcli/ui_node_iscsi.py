@@ -24,7 +24,10 @@ class UIISCSIGlobalParams(UINode):
 
     def refresh(self):
         self._children = set([])
-        for param, val in self.get_root().get_iscsi_global_params().items():
+        iscsi_global_params = self.get_root().get_iscsi_global_params()
+        if not iscsi_global_params:
+            return
+        for param, val in iscsi_global_params.items():
             UIISCSIGlobalParam("%s: %s" % (param, val), self)
 
     def ui_command_set_auth(self, g=None, d=None, r=None, m=None):

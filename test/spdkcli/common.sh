@@ -7,7 +7,12 @@ spdkcli_job="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
 
 function on_error_exit() {
 	set +e
-	killprocess $spdk_tgt_pid
+	if [ ! -z $spdk_tgt_pid ]; then
+		killprocess $spdk_tgt_pid
+	fi
+	if [ ! -z $nvmf_tgt_pid ]; then
+		killprocess $nvmf_tgt_pid
+	fi
 	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
 	print_backtrace
 	exit 1
@@ -18,6 +23,13 @@ function run_spdk_tgt() {
 	spdk_tgt_pid=$!
 	waitforlisten $spdk_tgt_pid
 }
+
+function run_nvmf_tgt() {
+	$SPDKCLI_BUILD_DIR/app/nvmf_tgt/nvmf_tgt -m 0x3 -p 0 -s 4096 &
+	nvmf_tgt_pid=$!
+	waitforlisten $nvmf_tgt_pid
+}
+
 
 function check_match() {
 	$SPDKCLI_BUILD_DIR/scripts/spdkcli.py ll $SPDKCLI_BRANCH > $testdir/match_files/${MATCH_FILE}
