@@ -1021,7 +1021,7 @@ spdk_iscsi_reject(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		to_be32(&rsph->max_cmd_sn, 1);
 	}
 
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (void *)&rsp_pdu->bhs, ISCSI_BHS_LEN);
 
 	spdk_iscsi_conn_write_pdu(conn, rsp_pdu);
 
@@ -1090,8 +1090,8 @@ spdk_iscsi_op_login_response(struct spdk_iscsi_conn *conn,
 		to_be32(&rsph->max_cmd_sn, rsp_pdu->cmd_sn);
 	}
 
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)rsph, ISCSI_BHS_LEN);
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "DATA", rsp_pdu->data, rsp_pdu->data_segment_len);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)rsph, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "DATA", rsp_pdu->data, rsp_pdu->data_segment_len);
 
 	/* Set T/CSG/NSG to reserved if login error. */
 	if (rsph->status_class != 0) {
@@ -1762,7 +1762,7 @@ spdk_iscsi_op_login_rsp_init(struct spdk_iscsi_conn *conn,
 		rsph->stat_sn = reqh->exp_stat_sn;
 	}
 
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "PDU", (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN);
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "T=%d, C=%d, CSG=%d, NSG=%d, Min=%d, Max=%d, ITT=%x\n",
@@ -1879,8 +1879,8 @@ spdk_iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 				}
 			}
 
-			SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "Negotiated Auth Params",
-				       rsp_pdu->data, rsp_pdu->data_segment_len);
+			SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Auth Params",
+				     rsp_pdu->data, rsp_pdu->data_segment_len);
 		}
 		break;
 
@@ -2054,7 +2054,7 @@ spdk_iscsi_op_login_rsp_handle(struct spdk_iscsi_conn *conn,
 	}
 
 	rsp_pdu->data_segment_len = rc;
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "Negotiated Params", rsp_pdu->data, rc);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", rsp_pdu->data, rc);
 
 	/* handle the CSG bit case */
 	rc = spdk_iscsi_op_login_rsp_handle_csg_bit(conn, rsp_pdu, *params,
@@ -2266,7 +2266,7 @@ spdk_iscsi_op_text(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		}
 	}
 
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "Negotiated Params", data, data_len);
 
 	/* response PDU */
 	rsp_pdu = spdk_get_pdu();
@@ -2857,7 +2857,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	transfer_len = from_be32(&reqh->expected_data_xfer_len);
 	cdb = reqh->cdb;
 
-	SPDK_TRACEDUMP(SPDK_LOG_ISCSI, "CDB", cdb, 16);
+	SPDK_LOGDUMP(SPDK_LOG_ISCSI, "CDB", cdb, 16);
 
 	task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_cpl);
 	if (!task) {
