@@ -61,6 +61,7 @@ extern "C" {
 #define SPDK_SCSI_DEV_MAX_NAME			255
 
 #define SPDK_SCSI_PORT_MAX_NAME_LENGTH		255
+#define SPDK_SCSI_MAX_TRANSPORTID_LENGTH	255
 
 enum spdk_scsi_data_dir {
 	SPDK_SCSI_DIR_NONE = 0,
@@ -510,6 +511,16 @@ int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc);
  */
 void spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc);
 
+
+/**
+ * Set iSCSI Initiator port TransportID
+ *
+ * \param port SCSI initiator port.
+ * \param iscsi_name Initiator name.
+ * \param isid Session ID.
+ */
+void spdk_scsi_port_set_iscsi_transport_id(struct spdk_scsi_port *port,
+		char *iscsi_name, uint64_t isid);
 #ifdef __cplusplus
 }
 #endif
