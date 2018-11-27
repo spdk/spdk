@@ -983,3 +983,151 @@ spdk_t10dif_inject_error(struct iovec *iovs, int iovcnt,
 						 inject_flags, inject_offset_blocks);
 	}
 }
+
+static int
+t10dix_inject_error(struct iovec *iovs, int iovcnt, void *metadata_buf,
+		    uint32_t data_block_size, uint32_t metadata_size,
+		    uint32_t inject_flags, uint32_t inject_offset_blocks)
+{
+	uint32_t offset_blocks, iov_offset;
+	int iovpos;
+
+	offset_blocks = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		if (offset_blocks == inject_offset_blocks) {
+			return _t10dif_inject_error(metadata_buf,
+						    iovs[iovpos].iov_base + iov_offset,
+						    data_block_size, inject_flags);
+		}
+
+		metadata_buf += metadata_size;
+
+		offset_blocks++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return -1;
+}
+
+static int
+t10dix_inject_error_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
+			  uint32_t data_block_size, uint32_t metadata_size,
+			  uint32_t inject_flags, uint32_t inject_offset_blocks)
+{
+	uint32_t payload_offset, offset_blocks, offset_in_block;
+	uint32_t iov_offset, buf_len;
+	int iovpos, rc;
+	void *buf;
+	uint8_t contig_buf[4096];
+	bool copy_data = false;
+
+	payload_offset = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	/* copy splitted data first */
+	while (iovpos < iovcnt) {
+		offset_blocks = payload_offset / data_block_size;
+		offset_in_block = payload_offset % data_block_size;
+
+		buf = iovs[iovpos].iov_base + iov_offset;
+		buf_len = iovs[iovpos].iov_len - iov_offset;
+
+		if (offset_blocks != inject_offset_blocks) {
+			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
+			goto _skip_this_block1;
+		}
+
+		memcpy(&contig_buf[offset_in_block], buf, buf_len);
+
+		if (offset_in_block + buf_len == data_block_size) {
+			copy_data = true;
+		}
+
+_skip_this_block1:
+		payload_offset += buf_len;
+		iov_offset += buf_len;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	if (!copy_data) {
+		return -1;
+	}
+
+	metadata_buf += inject_offset_blocks * metadata_size;
+
+	/* bit flip to the copied data or dif */
+	rc = _t10dif_inject_error(metadata_buf, contig_buf, data_block_size, inject_flags);
+	if (rc != 0) {
+		return rc;
+	}
+
+	payload_offset = 0;
+	iovpos = 0;
+	iov_offset = 0;
+
+	/* copy data to the original range. */
+	while (iovpos < iovcnt) {
+		offset_blocks = payload_offset / data_block_size;
+		offset_in_block = payload_offset % data_block_size;
+
+		buf = iovs[iovpos].iov_base + iov_offset;
+		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
+				   data_block_size - offset_in_block);
+
+		if (offset_blocks != inject_offset_blocks) {
+			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
+			goto _skip_this_block2;
+		}
+
+		memcpy(buf, &contig_buf[offset_in_block], buf_len);
+
+_skip_this_block2:
+		payload_offset += buf_len;
+		iov_offset += buf_len;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_t10dix_inject_error(struct iovec *iovs, int iovcnt,
+			 void *metadata_buf, uint32_t metadata_buf_len,
+			 uint32_t data_block_size, uint32_t metadata_size,
+			 uint32_t inject_flags)
+{
+	uint32_t required_md_buf_len, inject_offset_blocks;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	required_md_buf_len = _get_iovs_len(iovs, iovcnt) * metadata_size / data_block_size;
+	if (metadata_buf_len < required_md_buf_len) {
+		return -1;
+	}
+
+	inject_offset_blocks = get_t10dif_inject_error_offset_blocks(iovs, iovcnt, data_block_size);
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return t10dix_inject_error(iovs, iovcnt, metadata_buf, data_block_size,
+					   metadata_size, inject_flags, inject_offset_blocks);
+	} else {
+		return t10dix_inject_error_split(iovs, iovcnt, metadata_buf, data_block_size,
+						 metadata_size, inject_flags, inject_offset_blocks);
+	}
+}
