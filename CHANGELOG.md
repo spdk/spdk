@@ -39,6 +39,12 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+### log
+
+"trace flags" are now referred to as "log flags" in the SPDK log API.  The
+set_trace_flag, clear_trace_flag and get_trace_flags RPCs are now deprecated,
+and set_log_flag, clear_log_flag and get_log_flags RPCs have been added.
+
 ## v18.10:
 
 ### nvme
