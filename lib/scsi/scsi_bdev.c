@@ -1522,6 +1522,162 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 	return rc;
 }
 
+static int
+spdk_scsi_pr_check(struct spdk_scsi_task *task)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_dev *dev;
+	uint8_t *cdb;
+	enum spdk_scsi_pr_type_code type;
+	enum spdk_scsi_pr_out_service_action_code action;
+	struct spdk_scsi_pr_registrant *reg;
+	bool all_regs = false;
+	bool dma_to_device = false;
+
+	lun = task->lun;
+	dev = lun->dev;
+	cdb = task->cdb;
+
+	/* no reservation holders */
+	if (dev->holder == NULL) {
+		return 0;
+	} else {
+		if (dev->type == SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS ||
+		    dev->type == SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS) {
+			all_regs = true;
+		}
+	}
+
+	type = dev->type;
+	assert(type != 0);
+
+	/* current I_T nexus hold the reservation */
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	if ((reg && (dev->holder == reg)) || (reg && all_regs)) {
+		return 0;
+	}
+
+	/* reservation is held by other I_T nexus */
+	switch (cdb[0]) {
+	case SPDK_SPC_INQUIRY:
+	case SPDK_SPC_REPORT_LUNS:
+	case SPDK_SPC_REQUEST_SENSE:
+	case SPDK_SPC_LOG_SENSE:
+	case SPDK_SPC_TEST_UNIT_READY:
+	case SPDK_SBC_START_STOP_UNIT:
+	case SPDK_SBC_READ_CAPACITY_10:
+	case SPDK_SPC_PERSISTENT_RESERVE_IN:
+	case SPDK_SPC_SERVICE_ACTION_IN_16:
+		return 0;
+	case SPDK_SPC_MODE_SELECT_6:
+	case SPDK_SPC_MODE_SELECT_10:
+	case SPDK_SPC_MODE_SENSE_6:
+	case SPDK_SPC_MODE_SENSE_10:
+	case SPDK_SPC_LOG_SELECT:
+		/* I_T nexus is registrant but not holder */
+		if (reg) {
+			return 0;
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CHECK: current I_T nexus "
+				      "is not registered, cdb 0x%x\n", cdb[0]);
+			return -1;
+		}
+		break;
+	case SPDK_SPC_PERSISTENT_RESERVE_OUT:
+		action = cdb[1] & 0x1f;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CHECK: PR OUT action %u\n", action);
+		switch (action) {
+		case SPDK_SCSI_PR_OUT_RELEASE:
+		case SPDK_SCSI_PR_OUT_CLEAR:
+		case SPDK_SCSI_PR_OUT_PREEMPT:
+		case SPDK_SCSI_PR_OUT_PREEMPT_AND_ABORT:
+			if (reg) {
+				return 0;
+			} else {
+				SPDK_ERRLOG("CHECK: PR OUT action %u\n", action);
+				return -1;
+			}
+			break;
+		case SPDK_SCSI_PR_OUT_REGISTER:
+		case SPDK_SCSI_PR_OUT_REG_AND_IGNORE_KEY:
+			return 0;
+		case SPDK_SCSI_PR_OUT_REG_AND_MOVE:
+			SPDK_ERRLOG("CHECK: PR OUT action %u\n", action);
+			return -1;
+		default:
+			SPDK_ERRLOG("CHECK: PR OUT invalid action %u\n", action);
+			return -1;
+		}
+
+	/* For most SBC R/W commands */
+	default:
+		break;
+	}
+
+	switch (cdb[0]) {
+	case SPDK_SBC_READ_6:
+	case SPDK_SBC_READ_10:
+	case SPDK_SBC_READ_12:
+	case SPDK_SBC_READ_16:
+		break;
+	case SPDK_SBC_WRITE_6:
+	case SPDK_SBC_WRITE_10:
+	case SPDK_SBC_WRITE_12:
+	case SPDK_SBC_WRITE_16:
+	case SPDK_SBC_UNMAP:
+	case SPDK_SBC_SYNCHRONIZE_CACHE_10:
+	case SPDK_SBC_SYNCHRONIZE_CACHE_16:
+		dma_to_device = true;
+		break;
+	default:
+		SPDK_ERRLOG("CHECK: unsupported SCSI command cdb 0x%x\n", cdb[0]);
+		return -1;
+	}
+
+	switch (type) {
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE:
+		if (dma_to_device) {
+			SPDK_ERRLOG("CHECK: Write Exclusive reservation type "
+				    "rejects command 0x%x\n", cdb[0]);
+			return -1;
+		} else {
+			return 0;
+		}
+		break;
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS:
+		SPDK_ERRLOG("CHECK: Exclusive Access reservation type "
+			    "rejects command 0x%x\n", cdb[0]);
+		return -1;
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY:
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS:
+		if (reg) {
+			return 0;
+		} else {
+			if (dma_to_device) {
+				SPDK_ERRLOG("CHECK: Registrants only reservation "
+					    "type  reject command 0x%x\n", cdb[0]);
+				return -1;
+			}
+			return 0;
+		}
+		break;
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS_REGS_ONLY:
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS:
+		if (reg) {
+			return 0;
+		} else {
+			SPDK_ERRLOG("CHECK: All Registrants reservation "
+				    "type  reject command 0x%x\n", cdb[0]);
+			return -1;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+}
+
 static void
 mode_sense_page_init(uint8_t *buf, int len, int page, int subpage)
 {
@@ -2823,6 +2979,15 @@ int
 spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 {
 	int rc;
+
+	rc = spdk_scsi_pr_check(task);
+	if (rc < 0) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
 
 	if ((rc = spdk_bdev_scsi_process_block(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 		if ((rc = spdk_bdev_scsi_process_primary(task)) == SPDK_SCSI_TASK_UNKNOWN) {
