@@ -104,8 +104,8 @@ static const struct option g_cmdline_options[] = {
 	{"no-pci",			no_argument,		NULL, NO_PCI_OPT_IDX},
 #define PCI_BLACKLIST_OPT_IDX	'B'
 	{"pci-blacklist",		required_argument,	NULL, PCI_BLACKLIST_OPT_IDX},
-#define TRACEFLAG_OPT_IDX	'L'
-	{"traceflag",			required_argument,	NULL, TRACEFLAG_OPT_IDX},
+#define LOGFLAG_OPT_IDX	'L'
+	{"logflag",			required_argument,	NULL, LOGFLAG_OPT_IDX},
 #define HUGE_UNLINK_OPT_IDX	'R'
 	{"huge-unlink",			no_argument,		NULL, HUGE_UNLINK_OPT_IDX},
 #define PCI_WHITELIST_OPT_IDX	'W'
@@ -897,7 +897,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 			break;
-		case TRACEFLAG_OPT_IDX:
+		case LOGFLAG_OPT_IDX:
 #ifndef DEBUG
 			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
 				argv[0]);
