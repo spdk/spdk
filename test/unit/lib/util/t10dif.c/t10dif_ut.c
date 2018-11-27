@@ -1938,6 +1938,59 @@ sec_512_md_8_prchk_4_multi_iovs_separate_inject(void)
 	free(md_buf);
 }
 
+static void
+sec_512_md_8_prchk_7_multi_iovs_split_data_separate_inject(void)
+{
+	struct iovec iovs[2];
+	uint32_t dif_flags, md_buf_len;
+	void *md_buf;
+	int rc;
+
+	dif_flags = SPDK_T10DIF_GUARD_CHECK | SPDK_T10DIF_APPTAG_CHECK | SPDK_T10DIF_REFTAG_CHECK;
+
+	iovs[0].iov_base = calloc(1, 256);
+	iovs[0].iov_len = 256;
+	SPDK_CU_ASSERT_FATAL(iovs[0].iov_base != NULL);
+
+	iovs[1].iov_base = calloc(1, 256);
+	iovs[1].iov_len = 256;
+	SPDK_CU_ASSERT_FATAL(iovs[1].iov_base != NULL);
+
+	md_buf = calloc(1, 8);
+	md_buf_len = 8;
+	SPDK_CU_ASSERT_FATAL(md_buf != NULL);
+
+	_data_pattern_generate(iovs, 2, 512, 0);
+
+	rc = spdk_t10dix_generate(iovs, 2, md_buf, md_buf_len, 512, 8, dif_flags, 22, 0x22);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dix_inject_error(iovs, 2, md_buf, md_buf_len, 512, 8, SPDK_T10DIF_GUARD_CHECK);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dix_verify(iovs, 2, md_buf, md_buf_len, 512, 8, dif_flags, 22, 0, 0x22);
+	CU_ASSERT(rc != 0);
+
+	rc = _data_pattern_verify(iovs, 2, 512, 0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dix_generate(iovs, 2, md_buf, md_buf_len, 512, 8, dif_flags, 22, 0x22);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dix_inject_error(iovs, 2, md_buf, md_buf_len, 512, 8, 0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dix_verify(iovs, 2, md_buf, md_buf_len, 512, 8, dif_flags, 22, 0, 0x22);
+	CU_ASSERT(rc != 0);
+
+	rc = _data_pattern_verify(iovs, 2, 512, 0);
+	CU_ASSERT(rc != 0);
+
+	free(iovs[0].iov_base);
+	free(iovs[1].iov_base);
+	free(md_buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2037,7 +2090,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "sec_512_md_8_prchk_2_multi_iovs_separate_inject",
 			    sec_512_md_8_prchk_2_multi_iovs_separate_inject) == NULL ||
 		CU_add_test(suite, "sec_512_md_8_prchk_4_multi_iovs_separate_inject",
-			    sec_512_md_8_prchk_4_multi_iovs_separate_inject) == NULL
+			    sec_512_md_8_prchk_4_multi_iovs_separate_inject) == NULL ||
+		CU_add_test(suite, "sec_512_md_8_prchk_7_multi_iovs_split_data_separate_inject",
+			    sec_512_md_8_prchk_7_multi_iovs_split_data_separate_inject) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
