@@ -1071,6 +1071,13 @@ spdk_nvmf_rdma_mem_notify(void *cb_ctx, struct spdk_mem_map *map,
 	return 0;
 }
 
+static int
+spdk_nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
+{
+	/* Two contiguous mappings will point to the same address which is the start of the RDMA MR. */
+	return addr_1 == addr_2;
+}
+
 typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
 
 static spdk_nvme_data_transfer_t
@@ -1537,7 +1544,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 	const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
 		.notify_cb = spdk_nvmf_rdma_mem_notify,
-		.are_contiguous = NULL
+		.are_contiguous = spdk_nvmf_rdma_check_contiguous_entries
 	};
 
 	rtransport = calloc(1, sizeof(*rtransport));

@@ -681,13 +681,20 @@ nvme_rdma_mr_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 }
 
 static int
+nvme_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
+{
+	/* Two contiguous mappings will point to the same address which is the start of the RDMA MR. */
+	return addr_1 == addr_2;
+}
+
+static int
 nvme_rdma_register_mem(struct nvme_rdma_qpair *rqpair)
 {
 	struct ibv_pd *pd = rqpair->cm_id->qp->pd;
 	struct spdk_nvme_rdma_mr_map *mr_map;
 	const struct spdk_mem_map_ops nvme_rdma_map_ops = {
 		.notify_cb = nvme_rdma_mr_map_notify,
-		.are_contiguous = NULL
+		.are_contiguous = nvme_rdma_check_contiguous_entries
 	};
 
 	pthread_mutex_lock(&g_rdma_mr_maps_mutex);
