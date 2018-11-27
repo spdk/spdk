@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "53cfbc7e_71f47612",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-27T21:17:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3621facb_74b075d8",
+      "revId": "b8ef622b2f14b9b223f33cfa39fffca7309d86f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8760dc15_0151600a",
         "filename": "lib/env_dpdk/memory.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-27T20:46:49Z",
       "side": 1,
       "message": "same here (VALUE_2MB)",
+      "revId": "b8ef622b2f14b9b223f33cfa39fffca7309d86f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e630c92f_a8f74c5d",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-27T21:17:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8760dc15_0151600a",
       "revId": "b8ef622b2f14b9b223f33cfa39fffca7309d86f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
