@@ -953,7 +953,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     # log
     @call_cmd
+    def set_log_flag(args):
+        rpc.log.set_log_flag(args.client, flag=args.flag)
+
+    p = subparsers.add_parser('set_log_flag', help='set log flag')
+    p.add_argument(
+        'flag', help='log flag we want to set. (for example "nvme").')
+    p.set_defaults(func=set_log_flag)
+
+    @call_cmd
     def set_trace_flag(args):
+	print("set_trace_flag is deprecated - use set_log_flag instead")
         rpc.log.set_trace_flag(args.client, flag=args.flag)
 
     p = subparsers.add_parser('set_trace_flag', help='set trace flag')
@@ -962,7 +972,17 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=set_trace_flag)
 
     @call_cmd
+    def clear_log_flag(args):
+        rpc.log.clear_log_flag(args.client, flag=args.flag)
+
+    p = subparsers.add_parser('clear_log_flag', help='clear log flag')
+    p.add_argument(
+        'flag', help='log flag we want to clear. (for example "nvme").')
+    p.set_defaults(func=clear_log_flag)
+
+    @call_cmd
     def clear_trace_flag(args):
+	print("clear_trace_flag is deprecated - use clear_log_flag instead")
         rpc.log.clear_trace_flag(args.client, flag=args.flag)
 
     p = subparsers.add_parser('clear_trace_flag', help='clear trace flag')
@@ -971,7 +991,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=clear_trace_flag)
 
     @call_cmd
+    def get_log_flags(args):
+        print_dict(rpc.log.get_log_flags(args.client))
+
+    p = subparsers.add_parser('get_log_flags', help='get log flags')
+    p.set_defaults(func=get_log_flags)
+
+    @call_cmd
     def get_trace_flags(args):
+	print("get_trace_flags is deprecated - use get_log_flags instead")
         print_dict(rpc.log.get_trace_flags(args.client))
 
     p = subparsers.add_parser('get_trace_flags', help='get trace flags')
