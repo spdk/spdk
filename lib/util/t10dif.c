@@ -556,3 +556,122 @@ spdk_t10dix_verify(struct iovec *iovs, int iovcnt,
 					   apptag_mask, app_tag);
 	}
 }
+
+static void
+t10dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
+		     uint32_t data_block_size, uint32_t block_size,
+		     uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos;
+	void *buf;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		/* copy data block */
+		buf = iovs[iovpos].iov_base + iov_offset;
+		memcpy(bounce_buf, buf, data_block_size);
+
+		/* generate and append T10 DIF */
+		_t10dif_generate(bounce_buf + data_block_size, bounce_buf,
+				 data_block_size, dif_flags, ref_tag, app_tag);
+
+		bounce_buf += block_size;
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+}
+
+int
+spdk_t10dif_generate_copy(void *bounce_buf, uint32_t bounce_buf_len, struct iovec *iovs,
+			  int iovcnt, uint32_t data_block_size, uint32_t metadata_size,
+			  uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t required_len, block_size;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	block_size = data_block_size + metadata_size;
+	required_len =  _get_iovs_len(iovs, iovcnt) * block_size / data_block_size;
+	if (bounce_buf_len < required_len) {
+		return -1;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		t10dif_generate_copy(bounce_buf, iovs, iovcnt, data_block_size,
+				     block_size, dif_flags, ref_tag, app_tag);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+		   uint32_t data_block_size, uint32_t block_size, uint32_t dif_flags,
+		   uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos, rc;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		rc = _t10dif_verify(bounce_buf + data_block_size, bounce_buf, data_block_size,
+				    dif_flags, ref_tag, apptag_mask, app_tag);
+		if (rc != 0) {
+			return rc;
+		}
+
+		memcpy(iovs[iovpos].iov_base + iov_offset, bounce_buf, data_block_size);
+
+		bounce_buf += block_size;
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+			uint32_t bounce_buf_len, uint32_t data_block_size,
+			uint32_t metadata_size, uint32_t dif_flags,
+			uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t required_len, block_size;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	block_size = data_block_size + metadata_size;
+	required_len =  _get_iovs_len(iovs, iovcnt) * block_size / data_block_size;
+	if (bounce_buf_len < required_len) {
+		return -1;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return t10dif_verify_copy(iovs, iovcnt, bounce_buf,
+					  data_block_size, block_size, dif_flags,
+					  ref_tag, apptag_mask, app_tag);
+	} else {
+		return -1;
+	}
+}
