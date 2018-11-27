@@ -16,6 +16,24 @@
       "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2eb9303_8150a8d5",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-27T22:13:28Z",
+      "side": 1,
+      "message": "In the current implementation of the function, the size we pass in is always set to zero immediately, so this is not an issue.\nOne could make the argument that this makes the unittest dependent upon the implementation, but I think that how we set the mapping is an integral side effect of the function.",
+      "parentUuid": "d9eb33fe_cd60675a",
+      "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
