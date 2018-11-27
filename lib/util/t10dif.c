@@ -57,6 +57,19 @@ _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 	return true;
 }
 
+static uint32_t
+_get_iovs_len(struct iovec *iovs, int iovcnt)
+{
+	int i;
+	uint32_t len = 0;
+
+	for (i = 0; i < iovcnt; i++) {
+		len += iovs[i].iov_len;
+	}
+
+	return len;
+}
+
 static void
 _t10dif_generate(void *_dif, void *data_buf, uint32_t data_block_size,
 		 uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
@@ -332,5 +345,117 @@ spdk_t10dif_verify(struct iovec *iovs, int iovcnt,
 	} else {
 		return t10dif_verify_split(iovs, iovcnt, data_block_size, block_size,
 					   dif_flags, ref_tag, apptag_mask, app_tag);
+	}
+}
+
+static void
+t10dix_generate(struct iovec *iovs, int iovcnt, void *metadata_buf,
+		uint32_t data_block_size, uint32_t metadata_size,
+		uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		_t10dif_generate(metadata_buf, iovs[iovpos].iov_base + iov_offset,
+				 data_block_size, dif_flags, ref_tag, app_tag);
+
+		metadata_buf += metadata_size;
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+}
+
+int
+spdk_t10dix_generate(struct iovec *iovs, int iovcnt,
+		     void *metadata_buf, uint32_t metadata_buf_len,
+		     uint32_t data_block_size, uint32_t metadata_size,
+		     uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t required_md_buf_len;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	required_md_buf_len = _get_iovs_len(iovs, iovcnt) * metadata_size / data_block_size;
+	if (metadata_buf_len < required_md_buf_len) {
+		return -1;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		t10dix_generate(iovs, iovcnt, metadata_buf, data_block_size,
+				metadata_size, dif_flags, ref_tag, app_tag);
+	} else {
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+t10dix_verify(struct iovec *iovs, int iovcnt, void *metadata_buf,
+	      uint32_t data_block_size, uint32_t metadata_size, uint32_t dif_flags,
+	      uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t iov_offset;
+	int iovpos, rc;
+
+	iovpos = 0;
+	iov_offset = 0;
+
+	while (iovpos < iovcnt) {
+		rc = _t10dif_verify(metadata_buf, iovs[iovpos].iov_base + iov_offset,
+				    data_block_size, dif_flags, ref_tag,
+				    apptag_mask, app_tag);
+		if (rc != 0) {
+			return rc;
+		}
+
+		metadata_buf += metadata_size;
+
+		ref_tag++;
+		iov_offset += data_block_size;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_t10dix_verify(struct iovec *iovs, int iovcnt,
+		   void *metadata_buf, uint32_t metadata_buf_len,
+		   uint32_t data_block_size, uint32_t metadata_size,
+		   uint32_t dif_flags, uint32_t ref_tag,
+		   uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t required_md_buf_len;
+
+	if (metadata_size == 0) {
+		return -1;
+	}
+
+	required_md_buf_len = _get_iovs_len(iovs, iovcnt) * metadata_size / data_block_size;
+	if (metadata_buf_len < required_md_buf_len) {
+		return -1;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return t10dix_verify(iovs, iovcnt, metadata_buf, data_block_size,
+				     metadata_size, dif_flags, ref_tag,
+				     apptag_mask, app_tag);
+	} else {
+		return -1;
 	}
 }
