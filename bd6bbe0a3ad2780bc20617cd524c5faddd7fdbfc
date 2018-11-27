@@ -147,6 +147,30 @@
     },
     {
       "key": {
+        "uuid": "c34defcb_ffeefabe",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-27T13:23:39Z",
+      "side": 1,
+      "message": "I agree this should create a single bdev and if more bdevs need to be created it should just be called multiple times. See the latest patch, it\u0027s changed there.",
+      "parentUuid": "a90c8940_a1727b85",
+      "range": {
+        "startLine": 951,
+        "startChar": 0,
+        "endLine": 951,
+        "endChar": 21
+      },
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c39ce2a5_e23f8f99",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 23
@@ -205,6 +229,30 @@
       "writtenOn": "2018-11-23T15:12:21Z",
       "side": 1,
       "message": "All nvme devices are probed using NULL argument here. This should only be used in initialization path to probe all devices not yet attached.",
+      "range": {
+        "startLine": 981,
+        "startChar": 21,
+        "endLine": 981,
+        "endChar": 25
+      },
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5479be9e_f478c5c3",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 981,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-27T13:23:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb4016e0_03bd0949",
       "range": {
         "startLine": 981,
         "startChar": 21,
