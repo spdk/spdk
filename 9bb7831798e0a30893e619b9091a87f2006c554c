@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0682d99b_007c7cf6",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-27T11:01:49Z",
+      "side": 1,
+      "message": "missing newline at the end",
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efd0e5bf_7a1d4ed1",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-27T11:01:49Z",
+      "side": 1,
+      "message": "since there are other comments, I might point this out as well",
+      "range": {
+        "startLine": 176,
+        "startChar": 17,
+        "endLine": 176,
+        "endChar": 18
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8a26491_732d42e1",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-27T11:01:49Z",
+      "side": 1,
+      "message": "missing newline at the end",
+      "range": {
+        "startLine": 189,
+        "startChar": 37,
+        "endLine": 189,
+        "endChar": 39
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
