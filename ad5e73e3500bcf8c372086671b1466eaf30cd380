@@ -34,6 +34,24 @@
       "revId": "ad5e73e3500bcf8c372086671b1466eaf30cd380",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71fbe057_802ab579",
+        "filename": "lib/bdev/part.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-27T00:58:11Z",
+      "side": 1,
+      "message": "OK, thanks.  I guess it looks a little funny to have \"base\" passed in as a parm to the open call.  Maybe its worth a short comment here? All of the \"part based\" vbdevs are confusing enough as it is :)",
+      "parentUuid": "8ae06d63_78e4857e",
+      "revId": "ad5e73e3500bcf8c372086671b1466eaf30cd380",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
