@@ -741,7 +741,7 @@ usage(void (*app_usage)(void))
 	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
 	printf("      --num-trace-entries <num>   number of trace entries for each core (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
-	spdk_tracelog_usage(stdout, "-L");
+	spdk_log_usage(stdout, "-L");
 	if (app_usage) {
 		app_usage();
 	}
@@ -904,7 +904,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			usage(app_usage);
 			goto out;
 #else
-			rc = spdk_log_set_trace_flag(optarg);
+			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(app_usage);

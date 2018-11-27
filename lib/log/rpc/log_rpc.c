@@ -250,7 +250,7 @@ spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_log_set_trace_flag(req.flag);
+	spdk_log_set_flag(req.flag);
 	free_rpc_trace_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
@@ -286,7 +286,7 @@ spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	spdk_log_clear_trace_flag(req.flag);
+	spdk_log_clear_flag(req.flag);
 	free_rpc_trace_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);

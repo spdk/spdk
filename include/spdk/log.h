@@ -140,47 +140,47 @@ void spdk_log(enum spdk_log_level level, const char *file, const int line, const
 	      const char *format, ...) __attribute__((__format__(__printf__, 5, 6)));
 
 /**
- * Dump the trace to a file.
+ * Log the contents of a raw buffer to a file.
  *
- * \param fp File to hold the trace.
+ * \param fp File to hold the log.
  * \param label Label to print to the file.
- * \param buf Buffer that holds the trace information.
- * \param len Length of trace to dump.
+ * \param buf Buffer that holds the log information.
+ * \param len Length of buffer to dump.
  */
-void spdk_trace_dump(FILE *fp, const char *label, const void *buf, size_t len);
+void spdk_log_dump(FILE *fp, const char *label, const void *buf, size_t len);
 
 /**
- * Check whether the trace flag exists and is enabled.
+ * Check whether the log flag exists and is enabled.
  *
  * \return true if enabled, or false otherwise.
  */
-bool spdk_log_get_trace_flag(const char *flag);
+bool spdk_log_get_flag(const char *flag);
 
 /**
- * Enable the trace flag.
+ * Enable the log flag.
  *
- * \param flag Trace flag to be enabled.
+ * \param flag Log flag to be enabled.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_log_set_trace_flag(const char *flag);
+int spdk_log_set_flag(const char *flag);
 
 /**
- * Clear a trace flag.
+ * Clear a log flag.
  *
- * \param flag Trace flag to clear.
+ * \param flag Log flag to clear.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_log_clear_trace_flag(const char *flag);
+int spdk_log_clear_flag(const char *flag);
 
 /**
- * Show all the log trace flags and their usage.
+ * Show all the log flags and their usage.
  *
  * \param f File to hold all the flags' information.
- * \param trace_arg Command line option to set/enable the trace flag.
+ * \param log_arg Command line option to set/enable the log flag.
  */
-void spdk_tracelog_usage(FILE *f, const char *trace_arg);
+void spdk_log_usage(FILE *f, const char *log_arg);
 
 #ifdef __cplusplus
 }

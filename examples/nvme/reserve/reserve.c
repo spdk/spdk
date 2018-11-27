@@ -109,7 +109,7 @@ get_host_identifier(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	if (get_host_id_successful) {
-		spdk_trace_dump(stdout, "Get Feature: Host Identifier:", host_id, host_id_size);
+		spdk_log_dump(stdout, "Get Feature: Host Identifier:", host_id, host_id_size);
 	}
 
 	return 0;
