@@ -78,6 +78,8 @@ struct rte_vhost_vring {
 	struct vring_desc	*desc;
 	struct vring_avail	*avail;
 	struct vring_used	*used;
+	uint8_t		*inflight_desc_array;
+	uint64_t		inflight_desc_size;
 	uint64_t		log_guest_addr;
 
 	int			callfd;
