@@ -180,6 +180,8 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	struct vring_avail *avail = vring->avail;
 	uint16_t size_mask = vring->size - 1;
 	uint16_t last_idx = vring->last_avail_idx, avail_idx = avail->idx;
+	uint8_t *inflight = vring->inflight_desc_array;
+	uint16_t idx;
 	uint16_t count, i;
 
 	count = avail_idx - last_idx;
@@ -197,12 +199,42 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	count = spdk_min(count, reqs_len);
 	vring->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
-		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
+		idx = vring->avail->ring[(last_idx + i) & size_mask];
+		reqs[i] = idx;
+		if (inflight) {
+			inflight[idx] = 1;
+		}
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "AVAIL: last_idx=%"PRIu16" avail_idx=%"PRIu16" count=%"PRIu16"\n",
 		      last_idx, avail_idx, count);
+
+	return count;
+}
+
+/*
+ * Get requests from inflight ring.
+ */
+uint16_t
+spdk_vhost_vq_inflight_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
+				uint16_t reqs_len)
+{
+	uint8_t *inflight = virtqueue->vring.inflight_desc_array;
+	uint16_t size = virtqueue->vring.inflight_desc_size;
+	uint16_t i = 0, j = 0;
+	uint16_t count;
+
+	if (inflight) {
+		for (i = 0; i < size; i++) {
+			if (inflight[i] != 0) {
+				reqs[j++] = i;
+			}
+		}
+	}
+	assert(j <= reqs_len);
+	count = spdk_min(j, reqs_len);
+	virtqueue->vring.last_avail_idx += count;
 
 	return count;
 }
@@ -382,6 +414,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
+	uint8_t *inflight = vring->inflight_desc_array;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
@@ -399,6 +432,10 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
 	spdk_vhost_log_used_vring_idx(vdev, virtqueue);
+
+	if (inflight) {
+		inflight[id] = 0;
+	}
 
 	/* Ensure all our used ring changes are visible to the guest at the time
 	 * of interrupt.

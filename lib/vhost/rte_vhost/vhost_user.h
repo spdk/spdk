@@ -54,13 +54,15 @@
 #define VHOST_USER_PROTOCOL_F_REPLY_ACK	3
 #define VHOST_USER_PROTOCOL_F_NET_MTU 4
 #define VHOST_USER_PROTOCOL_F_CONFIG 9
+#define VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD 12
 
 #define VHOST_USER_PROTOCOL_FEATURES	((1ULL << VHOST_USER_PROTOCOL_F_MQ) | \
 					 (1ULL << VHOST_USER_PROTOCOL_F_LOG_SHMFD) |\
 					 (1ULL << VHOST_USER_PROTOCOL_F_RARP) | \
 					 (1ULL << VHOST_USER_PROTOCOL_F_REPLY_ACK) | \
 					 (1ULL << VHOST_USER_PROTOCOL_F_NET_MTU) | \
-					 (1ULL << VHOST_USER_PROTOCOL_F_CONFIG))
+					 (1ULL << VHOST_USER_PROTOCOL_F_CONFIG) | \
+					 (1ULL << VHOST_USER_PROTOCOL_F_INFLIGHT_SHMFD))
 
 typedef enum VhostUserRequest {
 	VHOST_USER_NONE = 0,
@@ -86,6 +88,7 @@ typedef enum VhostUserRequest {
 	VHOST_USER_NET_SET_MTU = 20,
 	VHOST_USER_GET_CONFIG = 24,
 	VHOST_USER_SET_CONFIG = 25,
+	VHOST_USER_SET_ADDR_INFLIGHT = 31,
 	VHOST_USER_NVME_ADMIN = 80,
 	VHOST_USER_NVME_SET_CQ_CALL = 81,
 	VHOST_USER_NVME_GET_CAP = 82,
@@ -120,6 +123,11 @@ typedef struct VhostUserLog {
 	uint64_t mmap_offset;
 } VhostUserLog;
 
+typedef struct VhostUserInflight {
+	uint32_t size;
+	uint32_t vq_idx;
+} VhostUserInflight;
+
 typedef struct VhostUserConfig {
 	uint32_t offset;
 	uint32_t size;
@@ -143,6 +151,7 @@ typedef struct VhostUserMsg {
 		struct vhost_vring_addr addr;
 		VhostUserMemory memory;
 		VhostUserLog    log;
+		VhostUserInflight inflightaddr;
 		VhostUserConfig config;
 		struct nvme {
 			union {
