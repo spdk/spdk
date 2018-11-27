@@ -388,6 +388,5 @@ class UINVMfSubsystemNamespace(UINode):
         self.namespace = namespace
 
     def summary(self):
-        info = ", ".join([str(self.namespace['uuid']), self.namespace['name'],
-                          str(self.namespace['nsid'])])
+        info = ", ".join([self.namespace['name'], str(self.namespace['nsid'])])
         return info, None

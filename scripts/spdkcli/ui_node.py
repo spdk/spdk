@@ -759,7 +759,7 @@ class UIVhostBlk(UIVhost):
 
     def refresh(self):
         self._children = set([])
-        for ctrlr in self.get_root().get_vhost_ctrlrs(self.name):
+        for ctrlr in self.get_root().get_vhost_controllers(self.name):
             UIVhostBlkCtrlObj(ctrlr, self)
 
     def ui_command_create(self, name, bdev, cpumask=None, readonly=False):
@@ -793,7 +793,7 @@ class UIVhostScsi(UIVhost):
 
     def refresh(self):
         self._children = set([])
-        for ctrlr in self.get_root().get_vhost_ctrlrs(self.name):
+        for ctrlr in self.get_root().get_vhost_controllers(self.name):
             UIVhostScsiCtrlObj(ctrlr, self)
 
     def ui_command_create(self, name, cpumask=None):
@@ -853,7 +853,7 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
         try:
             self.get_root().remove_vhost_scsi_target(ctrlr=self.ctrlr.ctrlr,
                                                      scsi_target_num=int(target_num))
-            for ctrlr in self.get_root().get_vhost_ctrlrs("scsi"):
+            for ctrlr in self.get_root().get_vhost_controllers("scsi"):
                 if ctrlr.ctrlr == self.ctrlr.ctrlr:
                     self.ctrlr = ctrlr
         except JSONRPCException as e:
@@ -876,7 +876,7 @@ class UIVhostScsiCtrlObj(UIVhostCtrl):
             self.get_root().add_vhost_scsi_lun(ctrlr=self.ctrlr.ctrlr,
                                                scsi_target_num=int(target_num),
                                                bdev_name=bdev_name)
-            for ctrlr in self.get_root().get_vhost_ctrlrs("scsi"):
+            for ctrlr in self.get_root().get_vhost_controllers("scsi"):
                 if ctrlr.ctrlr == self.ctrlr.ctrlr:
                     self.ctrlr = ctrlr
         except JSONRPCException as e:

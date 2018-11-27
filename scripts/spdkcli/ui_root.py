@@ -20,11 +20,12 @@ class UIRoot(UINode):
         self.set_rpc_target(s)
         self.verbose = False
         self.is_init = self.check_init()
+        self.methods = []
 
     def refresh(self):
+        self.methods = self.get_rpc_methods(current=True)
         if self.is_init is False:
-            methods = self.get_rpc_methods(current=True)
-            methods = "\n".join(methods)
+            methods = "\n".join(self.methods)
             self.shell.log.warning("SPDK Application is not yet initialized.\n"
                                    "Please initialize subsystems with start_subsystem_init command.\n"
                                    "List of available commands in current state:\n"
@@ -59,6 +60,16 @@ class UIRoot(UINode):
             r = f(self, **kwargs)
             self.client.verbose = False
             return r
+        return w
+
+    def is_method_available(f):
+        # Check if method f is available for given spdk target
+        def w(self, **kwargs):
+            if f.__name__ in self.methods:
+                return f(self, **kwargs)
+            # If given method is not avaialble return empty list
+            # similar to real get_* like rpc
+            return []
         return w
 
     def ui_command_start_subsystem_init(self):
@@ -243,7 +254,8 @@ class UIRoot(UINode):
         if self.is_init:
             self.current_vhost_ctrls = rpc.vhost.get_vhost_controllers(self.client)
 
-    def get_vhost_ctrlrs(self, ctrlr_type):
+    @is_method_available
+    def get_vhost_controllers(self, ctrlr_type):
         if self.is_init:
             self.list_vhost_ctrls()
             for ctrlr in [x for x in self.current_vhost_ctrls if ctrlr_type in list(x["backend_specific"].keys())]:
@@ -290,6 +302,7 @@ class UIRoot(UINode):
         if self.is_init:
             self.current_nvmf_subsystems = rpc.nvmf.get_nvmf_subsystems(self.client)
 
+    @is_method_available
     def get_nvmf_subsystems(self):
         if self.is_init:
             self.list_nvmf_subsystems()
@@ -336,11 +349,13 @@ class UIRoot(UINode):
     def nvmf_subsystem_allow_any_host(self, **kwargs):
         rpc.nvmf.nvmf_subsystem_allow_any_host(self.client, **kwargs)
 
+    @is_method_available
     def get_scsi_devices(self):
         if self.is_init:
             for device in rpc.iscsi.get_scsi_devices(self.client):
                 yield ScsiObj(device)
 
+    @is_method_available
     def get_target_nodes(self):
         if self.is_init:
             for tg in rpc.iscsi.get_target_nodes(self.client):
@@ -354,11 +369,13 @@ class UIRoot(UINode):
     def delete_target_node(self, **kwargs):
         rpc.iscsi.delete_target_node(self.client, **kwargs)
 
+    @is_method_available
     def get_portal_groups(self):
         if self.is_init:
             for pg in rpc.iscsi.get_portal_groups(self.client):
                 yield ScsiObj(pg)
 
+    @is_method_available
     def get_initiator_groups(self):
         if self.is_init:
             for ig in rpc.iscsi.get_initiator_groups(self.client):
@@ -380,6 +397,7 @@ class UIRoot(UINode):
     def delete_initiator_group(self, **kwargs):
         rpc.iscsi.delete_initiator_group(self.client, **kwargs)
 
+    @is_method_available
     @verbose
     def get_iscsi_connections(self, **kwargs):
         if self.is_init:
@@ -410,6 +428,7 @@ class UIRoot(UINode):
     def delete_secret_from_iscsi_auth_group(self, **kwargs):
         rpc.iscsi.delete_secret_from_iscsi_auth_group(self.client, **kwargs)
 
+    @is_method_available
     @verbose
     def get_iscsi_auth_groups(self, **kwargs):
         return rpc.iscsi.get_iscsi_auth_groups(self.client, **kwargs)
@@ -434,6 +453,7 @@ class UIRoot(UINode):
     def set_iscsi_discovery_auth(self, **kwargs):
         rpc.iscsi.set_iscsi_discovery_auth(self.client, **kwargs)
 
+    @is_method_available
     @verbose
     def get_iscsi_global_params(self, **kwargs):
         return rpc.iscsi.get_iscsi_global_params(self.client, **kwargs)

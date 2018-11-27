@@ -11,9 +11,9 @@ timing_enter spdkcli_nvmf
 trap 'on_error_exit; revert_soft_roce' ERR
 rdma_device_init
 
-timing_enter run_spdk_tgt
-run_spdk_tgt
-timing_exit run_spdk_tgt
+timing_enter run_nvmf_tgt
+run_nvmf_tgt
+timing_exit run_nvmf_tgt
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
@@ -78,7 +78,7 @@ $spdkcli_job "/bdevs/malloc delete Malloc2" "Malloc2"
 $spdkcli_job "/bdevs/malloc delete Malloc1" "Malloc1"
 timing_exit spdkcli_clear_nvmf_config
 
-killprocess $spdk_tgt_pid
+killprocess $nvmf_tgt_pid
 #revert_soft_roce
 timing_exit spdkcli_nvmf
 report_test_completion spdk_cli_nvmf
