@@ -52,6 +52,24 @@
       "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a16e8a49_a834ee3b",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-11-27T22:32:56Z",
+      "side": 1,
+      "message": "Ok, I gotcha. 0 is the wrong value though since then we will only get back VALUE_2MB - VALUE_4KB. setting mapping_length to VALUE_2MB satisfies the requirements you were talking about.",
+      "parentUuid": "727d0fcc_317b2b0f",
+      "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
