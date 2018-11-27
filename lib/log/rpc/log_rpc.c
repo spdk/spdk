@@ -36,7 +36,7 @@
 
 #include "spdk_internal/log.h"
 
-struct rpc_trace_flag {
+struct rpc_log_flag {
 	char *flag;
 };
 
@@ -45,7 +45,7 @@ struct rpc_log_level {
 };
 
 static void
-free_rpc_trace_flag(struct rpc_trace_flag *p)
+free_rpc_log_flag(struct rpc_log_flag *p)
 {
 	free(p->flag);
 }
@@ -56,8 +56,8 @@ free_rpc_log_level(struct rpc_log_level *p)
 	free(p->level);
 }
 
-static const struct spdk_json_object_decoder rpc_trace_flag_decoders[] = {
-	{"flag", offsetof(struct rpc_trace_flag, flag), spdk_json_decode_string},
+static const struct spdk_json_object_decoder rpc_log_flag_decoders[] = {
+	{"flag", offsetof(struct rpc_log_flag, flag), spdk_json_decode_string},
 };
 
 static const struct spdk_json_object_decoder rpc_log_level_decoders[] = {
@@ -147,7 +147,7 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_trace_flags requires no parameters");
+						 "get_log_print_level requires no parameters");
 		return;
 	}
 
@@ -220,7 +220,7 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_trace_flags requires no parameters");
+						 "get_log_level requires no parameters");
 		return;
 	}
 
@@ -244,14 +244,14 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 SPDK_RPC_REGISTER("get_log_level", spdk_rpc_get_log_level, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
-			const struct spdk_json_val *params)
+spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
+		      const struct spdk_json_val *params)
 {
-	struct rpc_trace_flag req = {};
+	struct rpc_log_flag req = {};
 	struct spdk_json_write_ctx *w;
 
-	if (spdk_json_decode_object(params, rpc_trace_flag_decoders,
-				    SPDK_COUNTOF(rpc_trace_flag_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
+				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -262,7 +262,7 @@ spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_log_set_flag(req.flag);
-	free_rpc_trace_flag(&req);
+	free_rpc_log_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -275,19 +275,29 @@ spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_trace_flag(&req);
+	free_rpc_log_flag(&req);
 }
+SPDK_RPC_REGISTER("set_log_flag", spdk_rpc_set_log_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_set_trace_flag(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
+{
+	SPDK_ERRLOG("set_log_flag is deprecated\n");
+	spdk_rpc_set_log_flag(request, params);
+}
+
 SPDK_RPC_REGISTER("set_trace_flag", spdk_rpc_set_trace_flag, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
-			  const struct spdk_json_val *params)
+spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,
+			const struct spdk_json_val *params)
 {
-	struct rpc_trace_flag req = {};
+	struct rpc_log_flag req = {};
 	struct spdk_json_write_ctx *w;
 
-	if (spdk_json_decode_object(params, rpc_trace_flag_decoders,
-				    SPDK_COUNTOF(rpc_trace_flag_decoders), &req)) {
+	if (spdk_json_decode_object(params, rpc_log_flag_decoders,
+				    SPDK_COUNTOF(rpc_log_flag_decoders), &req)) {
 		SPDK_DEBUGLOG(SPDK_LOG_LOG, "spdk_json_decode_object failed\n");
 		goto invalid;
 	}
@@ -298,7 +308,7 @@ spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_log_clear_flag(req.flag);
-	free_rpc_trace_flag(&req);
+	free_rpc_log_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -311,21 +321,32 @@ spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_trace_flag(&req);
+	free_rpc_log_flag(&req);
 }
+SPDK_RPC_REGISTER("clear_log_flag", spdk_rpc_clear_log_flag,
+		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_clear_trace_flag(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	SPDK_ERRLOG("clear_log_flag RPC is deprecated\n");
+	spdk_rpc_clear_log_flag(request, params);
+}
+
 SPDK_RPC_REGISTER("clear_trace_flag", spdk_rpc_clear_trace_flag,
 		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
 
 static void
-spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
-			 const struct spdk_json_val *params)
+spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
+		       const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
 	struct spdk_log_flag *flag;
 
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "get_trace_flags requires no parameters");
+						 "get_log_flags requires no parameters");
 		return;
 	}
 
@@ -344,4 +365,14 @@ spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);
 }
+SPDK_RPC_REGISTER("get_log_flags", spdk_rpc_get_log_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_trace_flags(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	SPDK_ERRLOG("get_trace_flags RPC is deprecated\n");
+	spdk_rpc_get_log_flags(request, params);
+}
+
 SPDK_RPC_REGISTER("get_trace_flags", spdk_rpc_get_trace_flags, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
