@@ -80,6 +80,7 @@ static const char *vhost_message_str[VHOST_USER_MAX] = {
 	[VHOST_USER_NET_SET_MTU]  = "VHOST_USER_NET_SET_MTU",
 	[VHOST_USER_GET_CONFIG] = "VHOST_USER_GET_CONFIG",
 	[VHOST_USER_SET_CONFIG] = "VHOST_USER_SET_CONFIG",
+	[VHOST_USER_SET_ADDR_INFLIGHT] = "VHOST_USER_SET_ADDR_INFLIGHT",
 	[VHOST_USER_NVME_ADMIN] = "VHOST_USER_NVME_ADMIN",
 	[VHOST_USER_NVME_SET_CQ_CALL] = "VHOST_USER_NVME_SET_CQ_CALL",
 	[VHOST_USER_NVME_GET_CAP] = "VHOST_USER_NVME_GET_CAP",
@@ -743,6 +744,48 @@ virtio_is_ready(struct virtio_net *dev)
 	return 0;
 }
 
+/*
+ * The virtio device sends us the inflight array addresses.
+ * This function then converts these to our address space.
+ */
+static int
+vhost_user_set_vring_inflight_addr(struct virtio_net *dev, VhostUserMsg *msg)
+{
+	int fd = msg->fds[0];
+	uint32_t size, idx;
+
+	struct vhost_virtqueue *vq;
+
+	if (fd < 0) {
+		RTE_LOG(ERR, VHOST_CONFIG, "invalid inflightaddr fd: %d\n", fd);
+		return -1;
+	}
+
+	size = msg->payload.inflightaddr.size;
+	idx = msg->payload.inflightaddr.vq_idx;
+
+	/* addr->index refers to the queue index. The txq 1, rxq is 0. */
+	vq = dev->virtqueue[idx];
+
+	/* The addresses are converted from QEMU virtual to Vhost virtual. */
+	if (vq->inflight_desc_array != NULL) {
+		munmap((void *)vq->inflight_desc_array, vq->inflight_desc_size);
+	}
+	vq->inflight_desc_array = mmap(0, size, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+	vq->inflight_desc_size = size;
+	close(fd);
+
+	if (vq->inflight_desc_array == MAP_FAILED) {
+		vq->inflight_desc_size = 0;
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"(%d) failed to find desc ring address.\n",
+			dev->vid);
+		return -1;
+	}
+
+	return 0;
+}
+
 static void
 vhost_user_set_vring_call(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 {
@@ -1374,6 +1417,10 @@ vhost_user_msg_handler(int vid, int fd)
 		vhost_user_get_vring_base(dev, &msg);
 		msg.size = sizeof(msg.payload.state);
 		send_vhost_message(fd, &msg);
+		break;
+
+	case VHOST_USER_SET_ADDR_INFLIGHT:
+		vhost_user_set_vring_inflight_addr(dev, &msg);
 		break;
 
 	case VHOST_USER_SET_VRING_KICK:
