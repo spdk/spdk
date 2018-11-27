@@ -45,6 +45,30 @@
       "revId": "dd7b64f3d9a6bef1d4776de5a719af8b6439af8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f16bca7_d1e29b5e",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-27T14:56:47Z",
+      "side": 1,
+      "message": "LOL, my bad. Gerrithub line folding made it look like it was unnecesarily moved around, but instead you moved it out of \"if\" section. That\u0027s OK.",
+      "parentUuid": "b35f62f1_e8aeaccb",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 212,
+        "endChar": 3
+      },
+      "revId": "dd7b64f3d9a6bef1d4776de5a719af8b6439af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
