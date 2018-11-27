@@ -485,6 +485,17 @@ struct spdk_scsi_port_desc {
 	uint8_t tgt_desc[];
 };
 
+/* iSCSI initiator port TransportID header */
+struct spdk_scsi_iscsi_transportid {
+	uint8_t protocol_id	: 4;
+	uint8_t reserved1	: 2;
+	uint8_t format		: 2;
+	uint8_t reserved2;
+	uint16_t additional_len;
+	uint8_t name[];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_iscsi_transportid) == 4, "Incorrect size");
+
 /* SCSI UNMAP block descriptor */
 struct spdk_scsi_unmap_bdesc {
 	/* UNMAP LOGICAL BLOCK ADDRESS */
