@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "f6c42b09_763f9283",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 861,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-27T15:08:55Z",
+      "side": 1,
+      "message": "You\u0027re right, for sure we don\u0027t want to attach to a controller that doesn\u0027t support Open Channel. However, I don\u0027t think it\u0027s a good idea to prohibits SSDs with OC support from being used by bdev_nvme.  If there\u0027s an SSD that supports both modes of operation (OC as well as regular block mode) we\u0027d certainly want the user to be able to chose the one he wants.",
+      "parentUuid": "6ec4975e_875cce22",
+      "revId": "bd6bbe0a3ad2780bc20617cd524c5faddd7fdbfc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a90c8940_a1727b85",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 23
