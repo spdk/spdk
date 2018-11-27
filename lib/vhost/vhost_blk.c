@@ -664,6 +664,78 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 	return 0;
 }
 
+static void
+submit_inflight_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
+{
+	struct spdk_vhost_blk_task *task;
+	struct spdk_vhost_session *vsession = &bvdev->vdev.session;
+	int rc;
+	uint16_t *reqs = NULL;
+	uint16_t reqs_cnt, i;
+
+	reqs = calloc(vq->vring.size, sizeof(uint16_t));
+	if (reqs == NULL) {
+		SPDK_ERRLOG("Failed to allocate memory for inflight reqs.\n");
+		return;
+	}
+
+	reqs_cnt = spdk_vhost_vq_inflight_ring_get(vq, reqs, vq->vring.size);
+	if (!reqs_cnt) {
+		free(reqs);
+		return;
+	}
+
+	for (i = 0; i < reqs_cnt; i++) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Starting processing request idx %"PRIu16"======\n",
+			      reqs[i]);
+
+		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
+			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
+				    bvdev->vdev.name, reqs[i], vq->vring.size);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
+			continue;
+		}
+
+		task = &((struct spdk_vhost_blk_task *)vq->tasks)[reqs[i]];
+		if (spdk_unlikely(task->used)) {
+			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
+				    bvdev->vdev.name, reqs[i]);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
+			continue;
+		}
+
+		vsession->task_cnt++;
+
+		task->used = true;
+		task->iovcnt = SPDK_COUNTOF(task->iovs);
+		task->status = NULL;
+		task->used_len = 0;
+
+		rc = process_blk_request(task, bvdev, vq);
+		if (rc == 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
+				      reqs[i]);
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d failed ======\n", task, reqs[i]);
+		}
+	}
+	free(reqs);
+}
+
+static void
+vdev_inflight_event(void *arg1, void *arg2)
+{
+	struct spdk_vhost_blk_dev *bvdev = arg1;
+	struct spdk_vhost_session *vsession = &bvdev->vdev.session;
+	uint16_t q_idx;
+
+	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+		submit_inflight_vq(bvdev, &vsession->virtqueue[q_idx]);
+	}
+
+	spdk_vhost_session_used_signal(vsession);
+}
+
 /*
  * A new device is added to a data core. First the device is added to the main linked list
  * and then allocated to a specific data core.
@@ -676,6 +748,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_blk_session *bvsession;
 	int i, rc = 0;
+	struct spdk_event *event;
 
 	bvsession = to_blk_session(vsession);
 	if (bvsession == NULL) {
@@ -710,6 +783,8 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 			rc = -1;
 			goto out;
 		}
+		event = spdk_event_allocate(vdev->lcore, vdev_inflight_event, bvdev, NULL);
+		spdk_event_call(event);
 	}
 
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
