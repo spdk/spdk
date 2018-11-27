@@ -34,6 +34,24 @@
       "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "727d0fcc_317b2b0f",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-27T22:19:33Z",
+      "side": 1,
+      "message": "I don\u0027t think this really makes it dependent upon the implementation.  The header says this is mapping_length will be updated with the length for which the mapping is valid.  So I think we want to initialize this to a value we know is invalid - ensuring that spdk_mem_map_translate() will modify it.",
+      "parentUuid": "b2eb9303_8150a8d5",
+      "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
