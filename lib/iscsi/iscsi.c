@@ -1522,6 +1522,11 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 					     0, initiator_port_name);
 		conn->sess->isid = spdk_iscsi_get_isid(rsph->isid);
 		conn->sess->target = target;
+		/* Initiator port TransportID */
+		spdk_scsi_port_set_iscsi_transport_id(conn->sess->initiator_port,
+						      conn->initiator_name,
+						      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI,
+						      conn->sess->isid);
 
 		/* Discovery sessions will not have a target. */
 		if (target != NULL) {
