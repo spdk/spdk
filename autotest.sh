@@ -56,19 +56,22 @@ fi
 timing_enter cleanup
 # Remove old domain socket pathname just in case
 rm -f /var/tmp/spdk*.sock
+
+# Load the kernel driver
+./scripts/setup.sh reset
+
+# Let the kernel discover any filesystems or partitions
+sleep 10
+
+# Delete all leftover lvols and gpt partitions
+# Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+	dd if=/dev/zero of="$dev" bs=1M count=1
+done
+
+sync
+
 if [ $(uname -s) = Linux ]; then
-	# Load the kernel driver
-	./scripts/setup.sh reset
-
-	# Let the kernel discover any filesystems or partitions
-	sleep 10
-
-	# Delete all partitions on NVMe devices
-	devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
-	for dev in $devs; do
-		parted -s /dev/$dev mklabel msdos
-	done
-
 	# Load RAM disk driver if available
 	modprobe brd || true
 fi
