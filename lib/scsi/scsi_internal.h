@@ -54,6 +54,8 @@ struct spdk_scsi_port {
 	uint8_t			is_used;
 	uint64_t		id;
 	uint16_t		index;
+	uint16_t		transport_id_len;
+	char			transport_id[SPDK_SCSI_MAX_TRANSPORT_ID_LENGTH];
 	char			name[SPDK_SCSI_PORT_MAX_NAME_LENGTH];
 };
 
