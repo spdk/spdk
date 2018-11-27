@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9eb33fe_cd60675a",
+        "filename": "test/env/memory/memory_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-27T22:04:59Z",
+      "side": 1,
+      "message": "should we set mapping_length to 0 here?\n\nmy concern is that we want to make sure spdk_mem_map_translate sets it to the correct value - if it didn\u0027t touch the size variable at all, this test would still pass",
+      "revId": "575477ee2c3779f9848cbb512e7273a10623f80e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
