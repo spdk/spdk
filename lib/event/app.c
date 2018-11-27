@@ -1035,12 +1035,10 @@ spdk_rpc_subsystem_init_poller_ctx(void *ctx)
 
 	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
 		w = spdk_jsonrpc_begin_result(poller_ctx->request);
-		if (w == NULL) {
-			SPDK_ERRLOG("Unable to allocate memory for RPC response\n");
-		} else {
+		if (w != NULL) {
 			spdk_json_write_bool(w, true);
+			spdk_jsonrpc_end_result(poller_ctx->request, w);
 		}
-		spdk_jsonrpc_end_result(poller_ctx->request, w);
 		spdk_poller_unregister(&poller_ctx->init_poller);
 		free(poller_ctx);
 	}
