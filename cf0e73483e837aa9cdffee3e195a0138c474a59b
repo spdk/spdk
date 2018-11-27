@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "a2f1115d_897def32",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "nit - but the last sentence seems to contradict the previous one. Suggest changing to :\nIn this case, the size of the backing storage device would be at least as big as the\ncompressed block device.  In practice it needs to be a little bigger as since this algorithm\nensures atomicity by never overwriting data\nin place, some additional backing storage is required to temporarily store data for writes in\nprogress before the associated metadata is updated.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e2e3cc4_00a970bf",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "another nit - maybe use something other than N – you use N above this for num backing io units.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "da0210cf_7f05e96d",
         "filename": "doc/compression.md",
         "patchSetId": 6
@@ -13,6 +47,91 @@
       "writtenOn": "2018-11-27T21:13:26Z",
       "side": 1,
       "message": "I’d suggest using a 12k buffer for destination rather than 16k. i.e. size of (num blocks per chunk-1). Because unless you save at least one disk block there’s no point in compressing and the uncompressed data can be saved instead.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0b0aaf2_c93f554d",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "– Assuming SGLs are supported by PMD, an 8k block can be allocated, zeroed and set as first segment in chain. The user buffer can be chained as 2nd segment so no data copy necessary.\nThere’s no need for a 3rd block of zeros for the last 4k segment if when reading back it’s decompressed into a zeroed 16k buffer.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a322e5c0_e87edb49",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "How do you know the compressed data size? i.e. 3k of compressed data is stored in a 4k backing io block. Only the 3k should be passed to the engine for decompress, not the whole 4k block.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89e84959_14c6599c",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "Proposal for a slightly more complicated and maybe more efficient algorithm which reolves some of my above comments:- \nIf only asked to write 4k, it seems unhelpful to extend it to 12 or 16k, then compress and end up possibly storing in 2 blocks when 1 would have been enough for the original data.\nThe following algorithm may improve this.\nFor empty chunks:\n    In chunk map store offset into chunk and length and a flag indicating whether compressed or not.\n    If size \u003c\u003d backing io block, don’t compress, store uncompressed data in 1 block.\n    If size \u003e backing io block, compress. Use destination buffer size \u003d 1 backing block less than would be needed to store uncompressed data. (rather than 1 block less than chunk size as I suggested above)\nFor chunks with data:\n    Read into zeroed chunk sized block (16k) using flag to decompress or not and\n    offset and length to position correctly.\n    Overwrite new data, adjust offset and length and follow logic as for empty chunks.\n \nThe compressdev API has offsets which facilitate this.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cdea463_a46d21f3",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "isn’t there a problem if power loss after updating the chunk map for one of the chunks, but not the other in the multi-chunk scenario? Would need to not free any of the backing blocks until all chunk maps are updated. And catch this incomplete case so the first chunk could be reverted after power is restored?\nThis also has implications for the number of extra backing blocks needed.",
+      "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d81bd452_311510fe",
+        "filename": "doc/compression.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1015483
+      },
+      "writtenOn": "2018-11-27T21:57:42Z",
+      "side": 1,
+      "message": "Seems like quite a performance impact to have to detect this case? Wouldn’t you have to scan the full 16k buffer after EVERY write to see if it was all-zero?",
       "revId": "cf0e73483e837aa9cdffee3e195a0138c474a59b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
