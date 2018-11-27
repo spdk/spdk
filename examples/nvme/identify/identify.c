@@ -1588,7 +1588,7 @@ usage(const char *program_name)
 	printf("     subnqn      Subsystem NQN (default: %s)\n", SPDK_NVMF_DISCOVERY_NQN);
 	printf("    Example: -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420'\n");
 
-	spdk_tracelog_usage(stdout, "-L");
+	spdk_log_usage(stdout, "-L");
 
 	printf(" -i         shared memory group ID\n");
 	printf(" -p         core number in decimal to run this application which started from 0\n");
@@ -1632,7 +1632,7 @@ parse_args(int argc, char **argv)
 			g_hex_dump = true;
 			break;
 		case 'L':
-			rc = spdk_log_set_trace_flag(optarg);
+			rc = spdk_log_set_flag(optarg);
 			if (rc < 0) {
 				fprintf(stderr, "unknown flag\n");
 				usage(argv[0]);
