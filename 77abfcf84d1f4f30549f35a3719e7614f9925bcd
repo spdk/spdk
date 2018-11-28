@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "646921d9_45be9ea5",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T14:08:03Z",
+      "side": 1,
+      "message": "In same cases (depends on which point bdev_ocssd_create fails) we need to call spdk_nvme_detach also?",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ea55fd2_bc5a8579",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 33
