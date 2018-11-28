@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "77d23a6e_af7768dc",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-28T07:35:41Z",
+      "side": 1,
+      "message": "The doc says that _spdk_jsonrpc_client_poll returns the number of polled messages, so this should just return 0.\nThe rpc_client_test that you\u0027ve introduced would have failed on -EAGAIN, as it\u0027s not handled anyhow different from e.g. -ENOMEM.",
+      "range": {
+        "startLine": 151,
+        "startChar": 8,
+        "endLine": 151,
+        "endChar": 16
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0682d99b_007c7cf6",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 21
@@ -47,6 +70,30 @@
       "writtenOn": "2018-11-28T05:31:11Z",
       "side": 1,
       "message": "when EINTR is returned, should we return here and retry the whole function? I don\u0027t think valid fd is returned in this case.",
+      "range": {
+        "startLine": 156,
+        "startChar": 2,
+        "endLine": 156,
+        "endChar": 3
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d844fbc_3c6afd98",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-28T07:35:41Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we actually return 0 in such case? Currently we would return -1 which is not even documented.",
+      "parentUuid": "2d878445_829bdd44",
       "range": {
         "startLine": 156,
         "startChar": 2,
