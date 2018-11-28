@@ -302,11 +302,18 @@ test_nvmf_tcp_poll_group_create(void)
 {
 	struct spdk_nvmf_tcp_transport ttransport;
 	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_thread *thread;
+
+	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
+	SPDK_CU_ASSERT_FATAL(thread != NULL);
+	spdk_set_thread(thread);
 
 	memset(&ttransport, 0, sizeof(ttransport));
 	group = spdk_nvmf_tcp_poll_group_create(&ttransport.transport);
 	CU_ASSERT_PTR_NOT_NULL(group);
 	spdk_nvmf_tcp_poll_group_destroy(group);
+
+	spdk_free_thread();
 }
 
 static void
