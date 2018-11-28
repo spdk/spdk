@@ -70,6 +70,67 @@ _get_iovs_len(struct iovec *iovs, int iovcnt)
 	return len;
 }
 
+/* Context to iterate a scatter gather list. */
+struct _iovec_iter {
+	/* Current iovec in the iteration */
+	struct iovec *iov;
+
+	/* Remaining count of iovecs in the iteration. */
+	int iovcnt;
+
+	/* Current offset in the iovec */
+	uint32_t iov_offset;
+
+	/* Current offset in virtually contiguous payload */
+	uint32_t payload_offset;
+};
+
+static inline void
+_iovec_iter_init(struct _iovec_iter *i, struct iovec *iovs, int iovcnt)
+{
+	i->iov = iovs;
+	i->iovcnt = iovcnt;
+	i->iov_offset = 0;
+	i->payload_offset = 0;
+}
+
+static inline bool
+_iovec_iter_cont(struct _iovec_iter *i)
+{
+	return i->iovcnt != 0;
+}
+
+static inline void
+_iovec_iter_advance(struct _iovec_iter *i, uint32_t step)
+{
+	i->payload_offset += step;
+	i->iov_offset += step;
+	if (i->iov_offset == i->iov->iov_len) {
+		i->iov++;
+		i->iovcnt--;
+		i->iov_offset = 0;
+	}
+}
+
+static inline void *
+_iovec_iter_get_buf(struct _iovec_iter *i)
+{
+	return i->iov->iov_base + i->iov_offset;
+}
+
+static inline void
+_iovec_iter_get_buf_and_len(struct _iovec_iter *i, void **_buf, uint32_t *_buf_len)
+{
+	*_buf = i->iov->iov_base + i->iov_offset;
+	*_buf_len = i->iov->iov_len - i->iov_offset;
+}
+
+static inline uint32_t
+_iovec_iter_get_payload_offset(struct _iovec_iter *i)
+{
+	return i->payload_offset;
+}
+
 static void
 _t10dif_generate(void *_dif, void *data_buf, uint32_t data_block_size,
 		 uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
@@ -96,24 +157,18 @@ t10dif_generate(struct iovec *iovs, int iovcnt,
 		uint32_t data_block_size, uint32_t block_size,
 		uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos;
+	struct _iovec_iter iter;
 	void *buf;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		buf = iovs[iovpos].iov_base + iov_offset;
+	while (_iovec_iter_cont(&iter)) {
+		buf = _iovec_iter_get_buf(&iter);
 		_t10dif_generate(buf + data_block_size, buf, data_block_size,
 				 dif_flags, ref_tag, app_tag);
 
 		ref_tag++;
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, block_size);
 	}
 }
 
@@ -122,24 +177,21 @@ t10dif_generate_split(struct iovec *iovs, int iovcnt,
 		      uint32_t data_block_size, uint32_t block_size,
 		      uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
 	void *buf;
 	uint8_t contig_buf[4096], contig_dif[8] = {0};
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_in_block < data_block_size) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -157,12 +209,7 @@ t10dif_generate_split(struct iovec *iovs, int iovcnt,
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 }
 
@@ -243,15 +290,14 @@ t10dif_verify(struct iovec *iovs, int iovcnt,
 	      uint32_t dif_flags, uint32_t ref_tag,
 	      uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	int rc;
 	void *buf;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		buf = iovs[iovpos].iov_base + iov_offset;
+	while (_iovec_iter_cont(&iter)) {
+		buf = _iovec_iter_get_buf(&iter);
 
 		rc = _t10dif_verify(buf + data_block_size, buf, data_block_size,
 				    dif_flags, ref_tag, apptag_mask, app_tag);
@@ -260,11 +306,7 @@ t10dif_verify(struct iovec *iovs, int iovcnt,
 		}
 
 		ref_tag++;
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, block_size);
 	}
 
 	return 0;
@@ -276,24 +318,22 @@ t10dif_verify_split(struct iovec *iovs, int iovcnt,
 		    uint32_t dif_flags, uint32_t ref_tag,
 		    uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
+	int rc;
 	void *buf;
 	uint8_t contig_buf[4096], contig_dif[8] = {0};
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_in_block < data_block_size) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -314,12 +354,7 @@ t10dif_verify_split(struct iovec *iovs, int iovcnt,
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;
@@ -353,24 +388,18 @@ t10dix_generate(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		uint32_t data_block_size, uint32_t metadata_size,
 		uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos;
+	struct _iovec_iter iter;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		_t10dif_generate(metadata_buf, iovs[iovpos].iov_base + iov_offset,
+	while (_iovec_iter_cont(&iter)) {
+		_t10dif_generate(metadata_buf, _iovec_iter_get_buf(&iter),
 				 data_block_size, dif_flags, ref_tag, app_tag);
 
 		metadata_buf += metadata_size;
 
 		ref_tag++;
-		iov_offset += data_block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, data_block_size);
 	}
 }
 
@@ -379,26 +408,23 @@ t10dix_generate_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		      uint32_t data_block_size, uint32_t metadata_size,
 		      uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
 	void *buf;
 	uint8_t contig_buf[4096];
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
 		/* copy data block */
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
-				   data_block_size - offset_in_block);
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 
 		if (dif_flags & SPDK_T10DIF_GUARD_CHECK) {
 			memcpy(&contig_buf[offset_in_block], buf, buf_len);
@@ -410,12 +436,7 @@ t10dix_generate_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 			metadata_buf += metadata_size;
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 }
 
@@ -453,14 +474,13 @@ t10dix_verify(struct iovec *iovs, int iovcnt, void *metadata_buf,
 	      uint32_t data_block_size, uint32_t metadata_size, uint32_t dif_flags,
 	      uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	int rc;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		rc = _t10dif_verify(metadata_buf, iovs[iovpos].iov_base + iov_offset,
+	while (_iovec_iter_cont(&iter)) {
+		rc = _t10dif_verify(metadata_buf, _iovec_iter_get_buf(&iter),
 				    data_block_size, dif_flags, ref_tag,
 				    apptag_mask, app_tag);
 		if (rc != 0) {
@@ -470,11 +490,7 @@ t10dix_verify(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		metadata_buf += metadata_size;
 
 		ref_tag++;
-		iov_offset += data_block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, data_block_size);
 	}
 
 	return 0;
@@ -485,25 +501,23 @@ t10dix_verify_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		    uint32_t data_block_size, uint32_t metadata_size, uint32_t dif_flags,
 		    uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
 	void *buf;
-	int iovpos, rc;
+	int rc;
 	uint8_t contig_buf[4096];
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
-				   data_block_size - offset_in_block);
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 
 		if (dif_flags & SPDK_T10DIF_GUARD_CHECK) {
 			memcpy(&contig_buf[offset_in_block], buf, buf_len);
@@ -517,12 +531,7 @@ t10dix_verify_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 			metadata_buf += metadata_size;
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;
@@ -562,17 +571,13 @@ t10dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
 		     uint32_t data_block_size, uint32_t block_size,
 		     uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos;
-	void *buf;
+	struct _iovec_iter iter;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
+	while (_iovec_iter_cont(&iter)) {
 		/* copy data block */
-		buf = iovs[iovpos].iov_base + iov_offset;
-		memcpy(bounce_buf, buf, data_block_size);
+		memcpy(bounce_buf, _iovec_iter_get_buf(&iter), data_block_size);
 
 		/* generate and append T10 DIF */
 		_t10dif_generate(bounce_buf + data_block_size, bounce_buf,
@@ -581,11 +586,7 @@ t10dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
 		bounce_buf += block_size;
 
 		ref_tag++;
-		iov_offset += data_block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, data_block_size);
 	}
 }
 
@@ -594,25 +595,22 @@ t10dif_generate_copy_split(void *bounce_buf, struct iovec *iovs, int iovcnt,
 			   uint32_t data_block_size, uint32_t block_size,
 			   uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
 	void *buf;
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
 		/* copy data block */
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
-				   data_block_size - offset_in_block);
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 
 		memcpy(bounce_buf + offset_in_block, buf, buf_len);
 
@@ -623,12 +621,7 @@ t10dif_generate_copy_split(void *bounce_buf, struct iovec *iovs, int iovcnt,
 			bounce_buf += block_size;
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 }
 
@@ -665,29 +658,24 @@ t10dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
 		   uint32_t data_block_size, uint32_t block_size, uint32_t dif_flags,
 		   uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t iov_offset;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	int rc;
 
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
+	while (_iovec_iter_cont(&iter)) {
 		rc = _t10dif_verify(bounce_buf + data_block_size, bounce_buf, data_block_size,
 				    dif_flags, ref_tag, apptag_mask, app_tag);
 		if (rc != 0) {
 			return rc;
 		}
 
-		memcpy(iovs[iovpos].iov_base + iov_offset, bounce_buf, data_block_size);
+		memcpy(_iovec_iter_get_buf(&iter), bounce_buf, data_block_size);
 
 		bounce_buf += block_size;
 
 		ref_tag++;
-		iov_offset += data_block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, data_block_size);
 	}
 
 	return 0;
@@ -698,18 +686,17 @@ t10dif_verify_copy_split(struct iovec *iovs, int iovcnt, void *bounce_buf,
 			 uint32_t data_block_size, uint32_t block_size, uint32_t dif_flags,
 			 uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len, _ref_tag;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, _ref_tag;
+	int rc;
 	void *buf;
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
 		_ref_tag = ref_tag + offset_blocks;
 
@@ -722,9 +709,8 @@ t10dif_verify_copy_split(struct iovec *iovs, int iovcnt, void *bounce_buf,
 			}
 		}
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
-				   data_block_size - offset_in_block);
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 
 		memcpy(buf, bounce_buf + offset_in_block, buf_len);
 
@@ -732,12 +718,7 @@ t10dif_verify_copy_split(struct iovec *iovs, int iovcnt, void *bounce_buf,
 			bounce_buf += block_size;
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;
@@ -828,27 +809,21 @@ t10dif_inject_error(struct iovec *iovs, int iovcnt,
 		    uint32_t data_block_size, uint32_t block_size,
 		    uint32_t inject_flags, uint32_t inject_offset_blocks)
 {
-	uint32_t offset_blocks, iov_offset;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks;
 	void *buf;
 
-	offset_blocks = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / block_size;
 		if (offset_blocks == inject_offset_blocks) {
-			buf = iovs[iovpos].iov_base + iov_offset;
+			buf = _iovec_iter_get_buf(&iter);
 			return _t10dif_inject_error(buf + data_block_size, buf,
 						    data_block_size, inject_flags);
 		}
 
-		offset_blocks++;
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, block_size);
 	}
 
 	return -1;
@@ -859,24 +834,22 @@ t10dif_inject_error_split(struct iovec *iovs, int iovcnt,
 			  uint32_t data_block_size, uint32_t block_size,
 			  uint32_t inject_flags, uint32_t inject_offset_blocks)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len;
+	int rc;
 	void *buf;
 	uint8_t contig_buf[4096], contig_dif[8];
 	bool copy_data = false, copy_dif = false;
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
 	/* copy splitted data and dif first */
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_blocks != inject_offset_blocks) {
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
@@ -900,13 +873,7 @@ t10dif_inject_error_split(struct iovec *iovs, int iovcnt,
 		}
 
 _skip_this_block1:
-		payload_offset += buf_len;
-
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	if (!copy_data || !copy_dif) {
@@ -919,17 +886,14 @@ _skip_this_block1:
 		return rc;
 	}
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
 	/* copy flipped data and dif to the original range. */
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_blocks != inject_offset_blocks) {
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
@@ -947,13 +911,7 @@ _skip_this_block1:
 		}
 
 _skip_this_block2:
-		payload_offset += buf_len;
-
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;
@@ -989,28 +947,22 @@ t10dix_inject_error(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		    uint32_t data_block_size, uint32_t metadata_size,
 		    uint32_t inject_flags, uint32_t inject_offset_blocks)
 {
-	uint32_t offset_blocks, iov_offset;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks;
 
-	offset_blocks = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
 		if (offset_blocks == inject_offset_blocks) {
 			return _t10dif_inject_error(metadata_buf,
-						    iovs[iovpos].iov_base + iov_offset,
+						    _iovec_iter_get_buf(&iter),
 						    data_block_size, inject_flags);
 		}
 
 		metadata_buf += metadata_size;
 
-		offset_blocks++;
-		iov_offset += data_block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, data_block_size);
 	}
 
 	return -1;
@@ -1021,24 +973,22 @@ t10dix_inject_error_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 			  uint32_t data_block_size, uint32_t metadata_size,
 			  uint32_t inject_flags, uint32_t inject_offset_blocks)
 {
-	uint32_t payload_offset, offset_blocks, offset_in_block;
-	uint32_t iov_offset, buf_len;
-	int iovpos, rc;
+	struct _iovec_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len;
+	int rc;
 	void *buf;
 	uint8_t contig_buf[4096];
 	bool copy_data = false;
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
 	/* copy splitted data first */
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_blocks != inject_offset_blocks) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -1052,12 +1002,7 @@ t10dix_inject_error_split(struct iovec *iovs, int iovcnt, void *metadata_buf,
 		}
 
 _skip_this_block1:
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	if (!copy_data) {
@@ -1072,18 +1017,15 @@ _skip_this_block1:
 		return rc;
 	}
 
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
 	/* copy data to the original range. */
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / data_block_size;
-		offset_in_block = payload_offset % data_block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_blocks = _iovec_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % data_block_size;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = spdk_min(iovs[iovpos].iov_len - iov_offset,
-				   data_block_size - offset_in_block);
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
+		buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
 
 		if (offset_blocks != inject_offset_blocks) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -1093,12 +1035,7 @@ _skip_this_block1:
 		memcpy(buf, &contig_buf[offset_in_block], buf_len);
 
 _skip_this_block2:
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;

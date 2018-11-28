@@ -43,21 +43,18 @@ static void
 _data_pattern_generate(struct iovec *iovs, int iovcnt,
 		       uint32_t data_block_size, uint32_t metadata_size)
 {
-	uint32_t block_size, payload_offset, offset_in_block;
-	uint32_t iov_offset, buf_len;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t block_size, offset_in_block;
+	uint32_t buf_len;
 	void *buf;
 
 	block_size = data_block_size + metadata_size;
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		if (offset_in_block < data_block_size) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -67,12 +64,7 @@ _data_pattern_generate(struct iovec *iovs, int iovcnt,
 			memset(buf, 0, buf_len);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 }
 
@@ -80,21 +72,18 @@ static int
 _data_pattern_verify(struct iovec *iovs, int iovcnt,
 		     uint32_t data_block_size, uint32_t metadata_size)
 {
-	uint32_t block_size, payload_offset, offset_in_block;
-	uint32_t iov_offset, buf_len, i;
-	int iovpos;
+	struct _iovec_iter iter;
+	uint32_t block_size, offset_in_block;
+	uint32_t buf_len, i;
 	uint8_t *buf;
 
 	block_size = data_block_size + metadata_size;
-	payload_offset = 0;
-	iovpos = 0;
-	iov_offset = 0;
+	_iovec_iter_init(&iter, iovs, iovcnt);
 
-	while (iovpos < iovcnt) {
-		offset_in_block = payload_offset % block_size;
+	while (_iovec_iter_cont(&iter)) {
+		offset_in_block = _iovec_iter_get_payload_offset(&iter) % block_size;
 
-		buf = (uint8_t *)(iovs[iovpos].iov_base + iov_offset);
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iovec_iter_get_buf_and_len(&iter, (void **)&buf, &buf_len);
 
 		if (offset_in_block < data_block_size) {
 			buf_len = spdk_min(buf_len, data_block_size - offset_in_block);
@@ -107,12 +96,7 @@ _data_pattern_verify(struct iovec *iovs, int iovcnt,
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iovec_iter_advance(&iter, buf_len);
 	}
 
 	return 0;
