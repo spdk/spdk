@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba78f214_1f2f702a",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T04:59:31Z",
+      "side": 1,
+      "message": "Just a question. Is it OK to call rte_eal_device_remove() when RTE_VERSION \u003e\u003d 17.05.0.0 and RTE_VERSION \u003c 17.05.0.3 ?",
+      "revId": "12428a5ce09c3f1f72acb3ad3df3b6e34285d1d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
