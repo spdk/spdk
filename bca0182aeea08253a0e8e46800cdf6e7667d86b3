@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d954681_36a43ab7",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-28T18:39:11Z",
+      "side": 1,
+      "message": "I thought it would be clear how these IOVs would be used but I\u0027m not positive now - can you maybe either in code comments or just here in the review briefly explain the usage of (their relation to various objects, actions, each other)?\n\n*buf\n*buf_iov\n\nand in the vol\n\n*bufspace\n*buf_iov_mem",
+      "revId": "bca0182aeea08253a0e8e46800cdf6e7667d86b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c8ea9cb_e30d8ba5",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-28T18:39:11Z",
+      "side": 1,
+      "message": "so there\u0027s 3 calculated values updated in vol after the read now so either UT or at least a comment where they\u0027re set prior to writing remaindering anyone adding new ones to update after reading would be good I think",
+      "revId": "bca0182aeea08253a0e8e46800cdf6e7667d86b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eeb8ca1f_3c0a778b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-28T18:39:11Z",
+      "side": 1,
+      "message": "can you explain this case and why a simple return is sufficient?",
+      "revId": "bca0182aeea08253a0e8e46800cdf6e7667d86b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82896fab_a8365bfe",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 891,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-28T18:39:11Z",
+      "side": 1,
+      "message": "just curious, expecting a lot of 0 length reads?",
+      "revId": "bca0182aeea08253a0e8e46800cdf6e7667d86b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
