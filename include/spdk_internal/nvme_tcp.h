@@ -271,4 +271,36 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 	return NVME_TCP_CONNECTION_FATAL;
 }
 
+static int
+spdk_nvme_tcp_qpair_sock_init(struct spdk_sock *sock)
+{
+
+	int rc;
+	int buf_size;
+
+	/* set recv buffer size */
+	buf_size = 2 * 1024 * 1024;
+	rc = spdk_sock_set_recvbuf(sock, buf_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
+		return rc;
+	}
+
+	/* set send buffer size */
+	rc = spdk_sock_set_sendbuf(sock, buf_size);
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
+		return rc;
+	}
+
+	/* set low water mark */
+	rc = spdk_sock_set_recvlowat(sock, sizeof(struct spdk_nvme_tcp_c2h_data_hdr));
+	if (rc != 0) {
+		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
+		return rc;
+	}
+
+	return 0;
+}
+
 #endif /* SPDK_INTERNAL_NVME_TCP_H */

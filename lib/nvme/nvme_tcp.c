@@ -1666,6 +1666,12 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
+	rc =  spdk_nvme_tcp_qpair_sock_init(tqpair->sock);
+	if (rc != 0) {
+		SPDK_ERRLOG("Cannot set sock opt for tqpair=%p\n", tqpair);
+		return -1;
+	}
+
 	tqpair->max_r2t = NVME_TCP_MAX_R2T_DEFAULT;
 	rc = nvme_tcp_alloc_reqs(tqpair);
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
