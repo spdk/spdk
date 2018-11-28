@@ -115,6 +115,13 @@ struct spdk_scsi_lun {
 
 	/** pending tasks */
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;
+
+	/** submitted management tasks */
+	TAILQ_HEAD(mgmt_tasks, spdk_scsi_task) mgmt_tasks;
+
+	/** pending management tasks */
+	TAILQ_HEAD(pending_mgmt_tasks, spdk_scsi_task) pending_mgmt_tasks;
+
 };
 
 struct spdk_lun_db_entry {
@@ -135,7 +142,9 @@ _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
 void spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
-int spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task);
+void spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+void spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun);
+bool spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 bool spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun);

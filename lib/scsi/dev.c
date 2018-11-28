@@ -252,7 +252,8 @@ spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
 	assert(task != NULL);
 
 	task->function = func;
-	spdk_scsi_lun_task_mgmt_execute(task);
+	spdk_scsi_lun_append_mgmt_task(task->lun, task);
+	spdk_scsi_lun_execute_mgmt_task(task->lun);
 }
 
 void
@@ -406,7 +407,9 @@ spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
 	int i;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; ++i) {
-		if (dev->lun[i] && spdk_scsi_lun_has_pending_tasks(dev->lun[i])) {
+		if (dev->lun[i] &&
+		    (spdk_scsi_lun_has_pending_tasks(dev->lun[i]) ||
+		     spdk_scsi_lun_has_pending_mgmt_tasks(dev->lun[i]))) {
 			return true;
 		}
 	}
