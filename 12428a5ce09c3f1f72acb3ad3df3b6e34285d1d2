@@ -34,6 +34,24 @@
       "revId": "12428a5ce09c3f1f72acb3ad3df3b6e34285d1d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbd1fd31_597064f5",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:52:23Z",
+      "side": 1,
+      "message": "Thank you for careful explanation. I got it.",
+      "parentUuid": "91444b51_af371cb3",
+      "revId": "12428a5ce09c3f1f72acb3ad3df3b6e34285d1d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
