@@ -2126,6 +2126,57 @@ sec_512_md_8_prchk_4_multi_iovs_copy_inject(void)
 	free(bounce_iov.iov_base);
 }
 
+static void
+sec_512_md_8_prchk_7_multi_iovs_split_data_copy_inject(void)
+{
+	struct iovec iovs[2], bounce_iov;
+	uint32_t dif_flags;
+	int rc;
+
+	dif_flags = SPDK_T10DIF_GUARD_CHECK | SPDK_T10DIF_APPTAG_CHECK | SPDK_T10DIF_REFTAG_CHECK;
+
+	iovs[0].iov_base = calloc(1, 256);
+	iovs[0].iov_len = 256;
+	SPDK_CU_ASSERT_FATAL(iovs[0].iov_base != NULL);
+
+	iovs[1].iov_base = calloc(1, 256);
+	iovs[1].iov_len = 256;
+	SPDK_CU_ASSERT_FATAL(iovs[1].iov_base != NULL);
+
+	bounce_iov.iov_base = calloc(1, 512 + 8);
+	bounce_iov.iov_len = 512 + 8;
+	SPDK_CU_ASSERT_FATAL(bounce_iov.iov_base != NULL);
+
+	_data_pattern_generate(iovs, 2, 512, 0);
+
+	rc = spdk_t10dif_generate_copy(bounce_iov.iov_base, bounce_iov.iov_len, iovs, 2,
+				       512, 8, dif_flags, 22, 0x22);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dif_inject_error(&bounce_iov, 1, 512, 8, SPDK_T10DIF_GUARD_CHECK);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dif_verify_copy(iovs, 2, bounce_iov.iov_base, bounce_iov.iov_len,
+				     512, 8, dif_flags, 22, 0, 0x22);
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_t10dif_generate_copy(bounce_iov.iov_base, bounce_iov.iov_len, iovs, 2,
+				       512, 8, dif_flags, 22, 0x22);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dif_inject_error(&bounce_iov, 1, 512, 8, 0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_t10dif_verify_copy(iovs, 2, bounce_iov.iov_base, bounce_iov.iov_len,
+				     512, 8, dif_flags, 22, 0, 0x22);
+	CU_ASSERT(rc != 0);
+
+
+	free(iovs[0].iov_base);
+	free(iovs[1].iov_base);
+	free(bounce_iov.iov_base);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -2233,7 +2284,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "sec_512_md_8_prchk_2_multi_iovs_copy_inject",
 			    sec_512_md_8_prchk_2_multi_iovs_copy_inject) == NULL ||
 		CU_add_test(suite, "sec_512_md_8_prchk_4_multi_iovs_copy_inject",
-			    sec_512_md_8_prchk_4_multi_iovs_copy_inject) == NULL
+			    sec_512_md_8_prchk_4_multi_iovs_copy_inject) == NULL ||
+		CU_add_test(suite, "sec_512_md_8_prchk_7_multi_iovs_split_data_copy_inject",
+			    sec_512_md_8_prchk_7_multi_iovs_split_data_copy_inject) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
