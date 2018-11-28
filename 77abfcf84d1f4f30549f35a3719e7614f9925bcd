@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e070f92c_bf3d7e48",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "Maybe we should initialize those to be consitent with other globals.",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38b1d2d8_8f0edc55",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "Should we decrease ref_cnt if fail to detach? We jump to out with decreased ref_cnt without removing it from list..",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4108ba0e_dc1ef6f4",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "Thid should be also called in during bdev_ocssd_delete_bdev",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ea55fd2_bc5a8579",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 866,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "I think that we try to avoid using bools? I see that SPDK is using it, but if we want also do that maybe we should be consitent in it (at least at BDEV)",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f99c8e9_2b887e29",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "I had impression that bdev_ocssd_check_init_done is called only during initialization - do we really need this flag? Isn\u0027t checking num_bdevs \u003d\u003d g_num_init_bdevs good enough?",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7b7c5c9_f7ead07c",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 879,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "I\u0027m not sure we we are counting fial_bdevs. If this is used only for initialization case we could only count how many bdev\u0027s done with init (regardless if it pass or fial) instead keeping in separate couter failed bdevs and counting good bdevs from the list?",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89876d64_9b465020",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 898,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "We could probably get rid of this if we count only the number of bdev_ocssd_init_cb calls?",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f0d1c3f3_7679312c",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:10:20Z",
+      "side": 1,
+      "message": "UUID if device state is restored from disk",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
