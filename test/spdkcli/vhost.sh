@@ -9,9 +9,9 @@ testdir=$(readlink -f $(dirname $0))
 
 timing_enter spdk_cli_vhost
 trap 'on_error_exit' ERR
-timing_enter run_spdk_tgt
-run_spdk_tgt
-timing_exit run_spdk_tgt
+timing_enter run_vhost_tgt
+run_vhost_tgt
+timing_exit run_vhost_tgt
 
 timing_enter spdkcli_create_bdevs_config
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc0" "Malloc0" True
@@ -100,7 +100,7 @@ rm -f $testdir/config_vhost.json
 rm -f /tmp/sample_aio
 timing_exit spdkcli_load_config
 
-killprocess $spdk_tgt_pid
+killprocess $vhost_tgt_pid
 
 timing_exit spdk_cli_vhost
 report_test_completion spdk_cli_vhost

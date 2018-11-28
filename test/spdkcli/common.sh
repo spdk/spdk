@@ -16,6 +16,9 @@ function on_error_exit() {
 	if [ ! -z $iscsi_tgt_pid ]; then
 		killprocess $iscsi_tgt_pid
 	fi
+	if [ ! -z $vhost_tgt_pid ]; then
+		killprocess $vhost_tgt_pid
+	fi
 	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
 	print_backtrace
 	exit 1
@@ -37,6 +40,12 @@ function run_iscsi_tgt() {
 	$SPDKCLI_BUILD_DIR/app/iscsi_tgt/iscsi_tgt -m 0x3 -p 0 -s 4096 &
 	iscsi_tgt_pid=$!
 	waitforlisten $iscsi_tgt_pid
+}
+
+function run_vhost_tgt() {
+	$SPDKCLI_BUILD_DIR/app/vhost/vhost -m 0x3 -p 0 -s 4096 &
+	vhost_tgt_pid=$!
+	waitforlisten $vhost_tgt_pid
 }
 
 function check_match() {
