@@ -177,8 +177,8 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace)
 
 struct nvme_tcp_req  {
 	struct spdk_nvmf_request		req;
-	struct spdk_nvme_cpl			rsp;
 	struct spdk_nvme_cmd			cmd;
+	struct spdk_nvme_cpl			rsp;
 
 	/* In-capsule data buffer */
 	uint8_t					*buf;
@@ -389,8 +389,7 @@ spdk_nvmf_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 		return NULL;
 	}
 
-	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd));
-	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
+	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd) + sizeof(tcp_req->rsp));
 	tcp_req->next_expected_r2t_offset = 0;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->c2h_data_offset = 0;
