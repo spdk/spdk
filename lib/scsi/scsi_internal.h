@@ -124,6 +124,9 @@ struct spdk_scsi_lun {
 
 	/** The LUN is being reset */
 	bool resetting;
+
+	/** poller to check completion of tasks prior to reset */
+	struct spdk_poller *reset_poller;
 };
 
 struct spdk_lun_db_entry {
