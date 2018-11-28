@@ -67,6 +67,7 @@ spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_ta
 	task->cpl_fn(task);
 
 	spdk_scsi_lun_execute_mgmt_task(lun);
+	spdk_scsi_lun_execute_tasks(lun);
 }
 
 static void
@@ -77,6 +78,7 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 	task->cpl_fn(task);
 
 	spdk_scsi_lun_execute_mgmt_task(lun);
+	spdk_scsi_lun_execute_tasks(lun);
 }
 
 static void
@@ -173,7 +175,13 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 }
 
 void
-spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
+	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
+}
+
+static void
+_spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	int rc;
 
@@ -200,6 +208,21 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 
 	default:
 		abort();
+	}
+}
+
+void
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+{
+	struct spdk_scsi_task *task, *task_tmp;
+
+	if (lun->resetting) {
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
+		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
+		_spdk_scsi_lun_execute_task(lun, task);
 	}
 }
 
@@ -338,6 +361,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	}
 
 	TAILQ_INIT(&lun->tasks);
+	TAILQ_INIT(&lun->pending_tasks);
 	TAILQ_INIT(&lun->pending_mgmt_tasks);
 
 	lun->bdev = bdev;
@@ -465,7 +489,7 @@ spdk_scsi_lun_get_dev(const struct spdk_scsi_lun *lun)
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->tasks);
+	return !TAILQ_EMPTY(&lun->pending_tasks) || !TAILQ_EMPTY(&lun->tasks);
 }
 
 bool
