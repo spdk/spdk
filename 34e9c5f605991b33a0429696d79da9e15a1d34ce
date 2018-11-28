@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad56d620_a9d1b16a",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-28T23:30:06Z",
+      "side": 1,
+      "message": "I think a small comment here might be helpful:\n\n/* Try to execute any pending mgmt tasks. */",
+      "revId": "34e9c5f605991b33a0429696d79da9e15a1d34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "567c0693_db219d03",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-28T23:30:06Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "34e9c5f605991b33a0429696d79da9e15a1d34ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
