@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bf7eb3a2_0fa6b2c6",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-28T18:24:40Z",
+      "side": 1,
+      "message": "Yep - good idea.  I\u0027ll change it.",
+      "parentUuid": "360ab18a_76bddba3",
+      "revId": "a972f7d0d70bbe7f02328b6895d0eab3f977c037",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8fd60c2b_004ad5d2",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 1
