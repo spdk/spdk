@@ -608,6 +608,7 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_tcp_transport	*ttransport;
 
+	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	if (spdk_mempool_count(ttransport->data_buf_pool) != (ttransport->max_queue_depth * 4)) {
