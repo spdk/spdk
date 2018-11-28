@@ -177,8 +177,11 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 
 struct nvme_tcp_req  {
 	struct spdk_nvmf_request		req;
-	struct spdk_nvme_cpl			rsp;
-	struct spdk_nvme_cmd			cmd;
+
+	struct nvme_cmd_cpl {
+		struct spdk_nvme_cmd		cmd;
+		struct spdk_nvme_cpl		rsp;
+	} s;
 
 	/* In-capsule data buffer */
 	uint8_t					*buf;
@@ -385,8 +388,7 @@ spdk_nvmf_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 		return NULL;
 	}
 
-	memset(&tcp_req->cmd, 0, sizeof(tcp_req->cmd));
-	memset(&tcp_req->rsp, 0, sizeof(tcp_req->rsp));
+	memset(&tcp_req->s, 0, sizeof(tcp_req->s));
 	tcp_req->next_expected_r2t_offset = 0;
 	tcp_req->r2tl_remain = 0;
 	tcp_req->c2h_data_offset = 0;
@@ -1003,8 +1005,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 		}
 
 		/* Set the cmdn and rsp */
-		tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->rsp;
-		tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->cmd;
+		tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->s.rsp;
+		tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->s.cmd;
 
 		/* Initialize request state to FREE */
 		tcp_req->state = TCP_REQUEST_STATE_FREE;
@@ -1047,9 +1049,9 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * transport->opts.in_capsule_data_size));
 			}
 
-			/* Set the cmdn and rsp */
-			tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->rsp;
-			tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->cmd;
+			/* Set the cmds and rsp */
+			tcp_req->req.rsp = (union nvmf_c2h_msg *)&tcp_req->s.rsp;
+			tcp_req->req.cmd = (union nvmf_h2c_msg *)&tcp_req->s.cmd;
 
 			/* Initialize request state to FREE */
 			tcp_req->state = TCP_REQUEST_STATE_FREE;
@@ -2476,7 +2478,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			spdk_trace_record(TRACE_TCP_REQUEST_STATE_NEW, 0, 0, (uintptr_t)tcp_req, 0);
 
 			/* copy the cmd from the receive pdu */
-			tcp_req->cmd = tqpair->pdu_in_progress.hdr.capsule_cmd.ccsqe;
+			tcp_req->s.cmd = tqpair->pdu_in_progress.hdr.capsule_cmd.ccsqe;
 
 			/* The next state transition depends on the data transfer needs of this request. */
 			tcp_req->req.xfer = spdk_nvmf_tcp_req_get_xfer(tcp_req);
