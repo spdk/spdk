@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6da173ca_6364cb58",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-11-28T17:47:48Z",
+      "side": 1,
+      "message": "can we maybe call this req_buffers or something a little more descriptive? The \u0027buf\u0027 earlier is clear enough because its in a request struct.\n\nAlso a little info like what you have in the commit message would be good here as well (how/when this space is used)",
+      "revId": "f1b88a760a3ca28486741f90edaf221db5d747bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
