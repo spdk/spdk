@@ -3217,6 +3217,13 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->tag = task_tag;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
 
+	if (task->scsi.lun == NULL) {
+		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_INVALID_LUN;
+		spdk_iscsi_task_mgmt_response(conn, task);
+		spdk_iscsi_task_put(task);
+		return 0;
+	}
+
 	switch (function) {
 	/* abort task identified by Referenced Task Tag field */
 	case ISCSI_TASK_FUNC_ABORT_TASK:
