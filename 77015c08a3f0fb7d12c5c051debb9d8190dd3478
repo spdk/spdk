@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6ee03e14_aac5d40b",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-28T09:25:25Z",
+      "side": 1,
+      "message": "This was already there, but only for Linux so far. I\u0027ll leave refactoring this code to someone else. :)",
+      "parentUuid": "6b53f1fc_b57a3538",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 8
+      },
+      "revId": "77015c08a3f0fb7d12c5c051debb9d8190dd3478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b94d6847_04332d01",
         "filename": "autotest.sh",
         "patchSetId": 4
