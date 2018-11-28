@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "287aa753_c66b28ad",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2018-11-28T08:45:35Z",
+      "side": 1,
+      "message": "Please add comment that these values are related to the ones above",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
