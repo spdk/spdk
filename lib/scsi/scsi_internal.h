@@ -113,8 +113,11 @@ struct spdk_scsi_lun {
 	/** List of open descriptors for this LUN. */
 	TAILQ_HEAD(, spdk_scsi_desc) open_descs;
 
-	/** pending tasks */
+	/** submitted tasks */
 	TAILQ_HEAD(tasks, spdk_scsi_task) tasks;
+
+	/** pending tasks */
+	TAILQ_HEAD(pending_tasks, spdk_scsi_task) pending_tasks;
 
 	/** pending management tasks */
 	TAILQ_HEAD(pending_mgmt_tasks, spdk_scsi_task) pending_mgmt_tasks;
@@ -140,7 +143,8 @@ _spdk_scsi_lun *spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 					void *hotremove_ctx);
 void spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun);
 
-void spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+void spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
+void spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
 void spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun);
 void spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task);
