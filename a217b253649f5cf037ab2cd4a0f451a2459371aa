@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebfc8fef_ceddd6b3",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "If client wan\u0027t to use event after returning from callback it needs to...",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 117
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6590388f_13a20dd1",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "-\u003e JSON RPC or JSON\nall over this file.",
+      "range": {
+        "startLine": 58,
+        "startChar": 86,
+        "endLine": 58,
+        "endChar": 89
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "817bf72e_eacc84aa",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "Maybe \"get_json\",  or something more specific. \"object\" is quite wide term.",
+      "range": {
+        "startLine": 59,
+        "startChar": 13,
+        "endLine": 59,
+        "endChar": 35
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c874ca4_5b1f8d32",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "We should seriously think if we need this function. Above function should be sufficient to do the work.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 62
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d86562b_f71be547",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "Get notifications.",
+      "range": {
+        "startLine": 74,
+        "startChar": 30,
+        "endLine": 74,
+        "endChar": 49
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ffee6158_814ced22",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "This line is too long.",
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acced3be_6ba7dd48",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "This example should be valid JSON RPC request",
+      "range": {
+        "startLine": 84,
+        "startChar": 3,
+        "endLine": 84,
+        "endChar": 44
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f11b2de6_5218ef14",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "The same as above\n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { ... } }\n\nBut we this format (returning one object) will close further expansion. It should be an array\n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { ... } }\n\nor object containing array \n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { events\u003d[ {event1}, {event2}, ..., {eventN} ] } }\n\nFor now we will always return one element in array but we can expand this in the feature.",
+      "range": {
+        "startLine": 89,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 76
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9d4a13a_507332f2",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "This line is too long.",
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e857815_90cf5e02",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T11:23:25Z",
+      "side": 1,
+      "message": "Which list?",
+      "range": {
+        "startLine": 118,
+        "startChar": 105,
+        "endLine": 118,
+        "endChar": 159
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
