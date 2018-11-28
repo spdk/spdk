@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f55d780b_ad6f155f",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "637d2b00_5ef01943",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a22de03a_2b1b3d9d",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 6
@@ -30,6 +48,30 @@
       "writtenOn": "2018-11-28T09:06:33Z",
       "side": 1,
       "message": "Why not just else if (rc !\u003d 0)?",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1338,
+        "endChar": 2
+      },
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e9ac57f_c74402cd",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1338,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "This should now retrun 0 in EAGAIN case, so not sure if adding else if and setting rc \u003d 0 is more readable.",
+      "parentUuid": "a22de03a_2b1b3d9d",
       "range": {
         "startLine": 1333,
         "startChar": 0,
@@ -82,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "18a255b8_9a94ab2d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "I will remove it.",
+      "parentUuid": "287aa753_c66b28ad",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6740d223_1a5daa0f",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 6
@@ -93,6 +153,42 @@
       "writtenOn": "2018-11-28T09:06:33Z",
       "side": 1,
       "message": "Please explain what\u0027s going on here.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45319bb8_2b0ecf1a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "I will remove it.",
+      "parentUuid": "6740d223_1a5daa0f",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35b265b8_6111382b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "This probably don\u0027t prevent from this corner case - I will remove it.",
+      "parentUuid": "6740d223_1a5daa0f",
       "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -116,6 +212,24 @@
     },
     {
       "key": {
+        "uuid": "31ba3b49_d2c3062c",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "Bdev layer has similar naming convention. But I will not insist on it.",
+      "parentUuid": "6a92ad3e_3bb4a849",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9e7bf96_3336a8c6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 6
@@ -127,6 +241,24 @@
       "writtenOn": "2018-11-28T09:06:33Z",
       "side": 1,
       "message": "Exceeds 100 char limit.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22a2feba_478a95d8",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-28T13:52:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d9e7bf96_3336a8c6",
       "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
