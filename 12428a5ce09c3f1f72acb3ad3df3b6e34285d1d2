@@ -16,6 +16,24 @@
       "revId": "12428a5ce09c3f1f72acb3ad3df3b6e34285d1d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91444b51_af371cb3",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-28T07:22:54Z",
+      "side": 1,
+      "message": "I haven\u0027t really checked. Those are just release candidates and nobody\u0027s using them. I\u0027m pretty sure the vast majority of them is actually broken just by themselves. The release versions are always xx.xx.x.16 and I\u0027d vote for supporting nothing but them.",
+      "parentUuid": "ba78f214_1f2f702a",
+      "revId": "12428a5ce09c3f1f72acb3ad3df3b6e34285d1d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
