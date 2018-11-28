@@ -1114,38 +1114,6 @@ spdk_nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 	return 0;
 }
 
-static int
-spdk_nvmf_tcp_qpair_sock_init(struct nvme_tcp_qpair *tqpair)
-{
-
-	int rc;
-	int buf_size;
-
-	/* set recv buffer size */
-	buf_size = 2 * 1024 * 1024;
-	rc = spdk_sock_set_recvbuf(tqpair->sock, buf_size);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvbuf failed\n");
-		return rc;
-	}
-
-	/* set send buffer size */
-	rc = spdk_sock_set_sendbuf(tqpair->sock, buf_size);
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_sendbuf failed\n");
-		return rc;
-	}
-
-	/* set low water mark */
-	rc = spdk_sock_set_recvlowat(tqpair->sock, sizeof(struct spdk_nvme_tcp_c2h_data_hdr));
-	if (rc != 0) {
-		SPDK_ERRLOG("spdk_sock_set_recvlowat() failed\n");
-		return rc;
-	}
-
-	return 0;
-}
-
 static void
 _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 			      struct spdk_nvmf_tcp_port *port,
@@ -2623,7 +2591,7 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
-	rc =  spdk_nvmf_tcp_qpair_sock_init(tqpair);
+	rc =  spdk_nvme_tcp_qpair_sock_init(tqpair->sock);
 	if (rc != 0) {
 		SPDK_ERRLOG("Cannot set sock opt for tqpair=%p\n", tqpair);
 		spdk_nvmf_tcp_qpair_destroy(tqpair);
