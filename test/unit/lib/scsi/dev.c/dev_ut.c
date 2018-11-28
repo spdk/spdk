@@ -111,10 +111,16 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-int
-spdk_scsi_lun_task_mgmt_execute(struct spdk_scsi_task *task)
+void
+spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	return 0;
+	;
+}
+
+void
+spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
+{
+	;
 }
 
 void
