@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "d79177d5_cdf3bf86",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "I have a same question.\n\nAllocating, resetting, and passing spdk_histogram_data by the caller of spdk_histogram_get() is not possible?\nspdk_bdev_get_device_stat() takes this approach.\n\nIf do this, histogram data per channel are kept but aggregation of them is temporal?",
+      "parentUuid": "3090691c_c8156ac2",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4635f360_e9150237",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3

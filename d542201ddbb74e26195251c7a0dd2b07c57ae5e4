@@ -1,0 +1,118 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0943abbc_b305a960",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 1115,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "You missed to remove this.",
+      "range": {
+        "startLine": 1106,
+        "startChar": 0,
+        "endLine": 1115,
+        "endChar": 19
+      },
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "606388f5_70ab8223",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4085,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "this idea is very nice",
+      "range": {
+        "startLine": 4085,
+        "startChar": 1,
+        "endLine": 4085,
+        "endChar": 11
+      },
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b9c48e8_433b3b98",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4091,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "Jim\u0027s feedback is not taken yet.",
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62547edb_b4929f2e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4195,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "please remove this empty line.",
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5cae9147_59965250",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "Jim\u0027s feedback is not done yet.",
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36bdcd5c_1ce7c1b4",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4255,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T07:48:38Z",
+      "side": 1,
+      "message": "please remove this empty line.",
+      "revId": "d542201ddbb74e26195251c7a0dd2b07c57ae5e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
