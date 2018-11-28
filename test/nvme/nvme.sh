@@ -65,6 +65,7 @@ if [ `uname` = Linux ]; then
 		mkfs.ext4 -F /dev/${blkname}p1
 		mkdir -p /tmp/nvmetest
 		mount /dev/${blkname}p1 /tmp/nvmetest
+		sleep 1
 		$rootdir/scripts/setup.sh
 		driver=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
 		# check that the nvme driver is still loaded against the device
