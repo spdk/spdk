@@ -356,6 +356,30 @@
     },
     {
       "key": {
+        "uuid": "ae9b90a0_c7df33e9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1382,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Let\u0027s have a\nint _ftl_write(struct ftl_io *)\nthan that does what the _spdk_ftl_write does but returns an error code. Use it in _spdk_ftl_write and here.",
+      "parentUuid": "28669d32_a490d414",
+      "range": {
+        "startLine": 1376,
+        "startChar": 0,
+        "endLine": 1382,
+        "endChar": 2
+      },
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "974adfcc_faf1e12d",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -526,6 +550,24 @@
       "side": 1,
       "message": "I would like to avoid more dependecies from SPDK not existing API. I\u0027ve changed the name of this varaible already.",
       "parentUuid": "37228104_16fdeae5",
+      "revId": "22095a8a7b97df0abe02398074e07035476e399f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1115eab_45ac9bcd",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "It does seem like a good extension to the mempool API though.",
+      "parentUuid": "59d9a27e_ded700bb",
       "revId": "22095a8a7b97df0abe02398074e07035476e399f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

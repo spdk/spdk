@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "637d2b00_5ef01943",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Let\u0027s just call this user_io_pool_size.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a22de03a_2b1b3d9d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1338,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Why not just else if (rc !\u003d 0)?",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1338,
+        "endChar": 2
+      },
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "287aa753_c66b28ad",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 6
@@ -16,6 +56,80 @@
       "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4ecd6b3_e7cffe5f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "I\u0027m not sure we want to make this configurable... It only depends on other configuration options (max_reloc_qdepth, max_active_relocs) and the behaviour of our code. I don\u0027t see any reason for changing this value.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 41
+      },
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6740d223_1a5daa0f",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Please explain what\u0027s going on here.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a92ad3e_3bb4a849",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Why change the name? I think ftl_io_alloc\u0027s better.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9e7bf96_3336a8c6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-28T09:06:33Z",
+      "side": 1,
+      "message": "Exceeds 100 char limit.",
+      "revId": "4f13de892f0ffdffa17b39d0d35bfc763c76eadc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
