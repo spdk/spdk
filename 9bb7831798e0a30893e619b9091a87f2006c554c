@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "a546535e_081662cf",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:08:59Z",
+      "side": 1,
+      "message": "Yes, this is leftover from previous implementation. Will remove it and return proper value.",
+      "parentUuid": "77d23a6e_af7768dc",
+      "range": {
+        "startLine": 151,
+        "startChar": 8,
+        "endLine": 151,
+        "endChar": 16
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0682d99b_007c7cf6",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 21
@@ -94,6 +118,30 @@
       "side": 1,
       "message": "Shouldn\u0027t we actually return 0 in such case? Currently we would return -1 which is not even documented.",
       "parentUuid": "2d878445_829bdd44",
+      "range": {
+        "startLine": 156,
+        "startChar": 2,
+        "endLine": 156,
+        "endChar": 3
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e617639_b927ac54",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:08:59Z",
+      "side": 1,
+      "message": "True, fix it.",
+      "parentUuid": "5d844fbc_3c6afd98",
       "range": {
         "startLine": 156,
         "startChar": 2,
@@ -163,6 +211,30 @@
       "writtenOn": "2018-11-28T05:31:11Z",
       "side": 1,
       "message": "same as above. should we return here and retry the whole function when errno is EINTR ?",
+      "range": {
+        "startLine": 191,
+        "startChar": 2,
+        "endLine": 191,
+        "endChar": 3
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09ab8017_a093dc24",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:08:59Z",
+      "side": 1,
+      "message": "As this is poll mode, we can just pretend here that nothing happen and let the user call this function again. It just simplify user code if we don\u0027t return error on EINTR.",
+      "parentUuid": "537a0f1d_eec12adf",
       "range": {
         "startLine": 191,
         "startChar": 2,
