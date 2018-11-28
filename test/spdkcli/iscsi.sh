@@ -10,9 +10,9 @@ testdir=$(readlink -f $(dirname $0))
 timing_enter spdkcli_iscsi
 trap 'on_error_exit;' ERR
 
-timing_enter run_spdk_tgt
-run_spdk_tgt
-timing_exit run_spdk_tgt
+timing_enter run_iscsi_tgt
+run_iscsi_tgt
+timing_exit run_iscsi_tgt
 
 timing_enter spdkcli_create_iscsi_config
 $spdkcli_job "/bdevs/malloc create 32 512 Malloc0" "Malloc0" True
@@ -60,6 +60,6 @@ $spdkcli_job "/bdevs/malloc delete Malloc1" "Malloc1"
 $spdkcli_job "/bdevs/malloc delete Malloc0" "Malloc0"
 timing_exit spdkcli_clear_iscsi_config
 
-killprocess $spdk_tgt_pid
+killprocess $iscsi_tgt_pid
 timing_exit spdkcli_iscsi
 report_test_completion spdk_cli
