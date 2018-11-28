@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebb8235b_03e13316",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:41:26Z",
+      "side": 1,
+      "message": "Is this protocol extension upstreamed and ACKed by qemu community? I can\u0027t find  any trace for that. Also, we can find patches for QEMU that implement this?",
+      "range": {
+        "startLine": 65,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 51
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47767aec_0910487d",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:41:26Z",
+      "side": 1,
+      "message": "reqs_len?",
+      "range": {
+        "startLine": 228,
+        "startChar": 18,
+        "endLine": 228,
+        "endChar": 22
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e752e39f_22a526ab",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:41:26Z",
+      "side": 1,
+      "message": "I think this is wrong but I think I might not understand how this works. How fetching inflight descriptors can affect last_avail_idx? Can you describe it?",
+      "range": {
+        "startLine": 236,
+        "startChar": 1,
+        "endLine": 236,
+        "endChar": 42
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8268e2e6_552509f0",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-28T09:41:26Z",
+      "side": 1,
+      "message": "memory alloc in IO path is not performance friendly.",
+      "range": {
+        "startLine": 548,
+        "startChar": 1,
+        "endLine": 548,
+        "endChar": 49
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
