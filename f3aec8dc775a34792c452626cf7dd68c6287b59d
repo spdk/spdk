@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f1a058a_07345f39",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-28T08:52:11Z",
+      "side": 1,
+      "message": "Does the init should succeed if io_unit_size \u003c backing_blocklen ?\nIf so, please look at next comment.",
+      "range": {
+        "startLine": 437,
+        "startChar": 31,
+        "endLine": 437,
+        "endChar": 34
+      },
+      "revId": "f3aec8dc775a34792c452626cf7dd68c6287b59d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fca83753_5c5140df",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-11-28T08:52:11Z",
+      "side": 1,
+      "message": "You\u0027re doing init_backing_dev and load tests with io_unit_size (512) \u003c backing_blocklen (4096), but do not test write path with that combination.",
+      "range": {
+        "startLine": 521,
+        "startChar": 31,
+        "endLine": 521,
+        "endChar": 35
+      },
+      "revId": "f3aec8dc775a34792c452626cf7dd68c6287b59d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
