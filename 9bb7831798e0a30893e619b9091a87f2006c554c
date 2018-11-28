@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "33819401_9cd34562",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T05:31:11Z",
+      "side": 1,
+      "message": "can be removed.",
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0682d99b_007c7cf6",
         "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
         "patchSetId": 21
@@ -16,6 +33,29 @@
       "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d878445_829bdd44",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T05:31:11Z",
+      "side": 1,
+      "message": "when EINTR is returned, should we return here and retry the whole function? I don\u0027t think valid fd is returned in this case.",
+      "range": {
+        "startLine": 156,
+        "startChar": 2,
+        "endLine": 156,
+        "endChar": 3
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -62,6 +102,52 @@
       "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "537a0f1d_eec12adf",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T05:31:11Z",
+      "side": 1,
+      "message": "same as above. should we return here and retry the whole function when errno is EINTR ?",
+      "range": {
+        "startLine": 191,
+        "startChar": 2,
+        "endLine": 191,
+        "endChar": 3
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26a29ed7_0d5b1949",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-28T05:31:11Z",
+      "side": 1,
+      "message": "confuse",
+      "range": {
+        "startLine": 193,
+        "startChar": 45,
+        "endLine": 193,
+        "endChar": 52
+      },
+      "revId": "9bb7831798e0a30893e619b9091a87f2006c554c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
