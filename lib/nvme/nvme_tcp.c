@@ -590,7 +590,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	}
 
 	/* Only for fabrics command */
-	if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) && (tqpair->in_capsule_data_size != 0) &&
+	if ((tqpair->in_capsule_data_size != 0) &&
 	    (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) &&
 	    (req->payload_size <= tqpair->in_capsule_data_size)) {
 		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
