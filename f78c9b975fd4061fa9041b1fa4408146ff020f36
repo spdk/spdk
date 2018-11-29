@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "59ac904c_d88aabc5",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-29T10:29:45Z",
+      "side": 1,
+      "message": "thanks, yes, it\u0027s additional length.",
+      "parentUuid": "6c0bfdb5_4e127ac7",
+      "range": {
+        "startLine": 494,
+        "startChar": 10,
+        "endLine": 494,
+        "endChar": 13
+      },
+      "revId": "f78c9b975fd4061fa9041b1fa4408146ff020f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d5530b7_8ca02e47",
         "filename": "lib/scsi/port.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-29T09:27:13Z",
       "side": 1,
       "message": "SPC says \"The additional length shall be at least 20 and shall be a multiple of four\". The former is vefiried in this function?",
+      "range": {
+        "startLine": 105,
+        "startChar": 0,
+        "endLine": 105,
+        "endChar": 37
+      },
+      "revId": "f78c9b975fd4061fa9041b1fa4408146ff020f36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "778b3a85_81633834",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-29T10:29:45Z",
+      "side": 1,
+      "message": "thanks, I should add 20 bytes verification too.",
+      "parentUuid": "3d5530b7_8ca02e47",
       "range": {
         "startLine": 105,
         "startChar": 0,
