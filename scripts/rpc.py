@@ -951,6 +951,34 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('get_scsi_devices', help='Display SCSI devices')
     p.set_defaults(func=get_scsi_devices)
 
+    # trace
+    @call_cmd
+    def set_tpoint_group_mask(args):
+        rpc.trace.set_tpoint_group_mask(args.client, name=args.name)
+
+    p = subparsers.add_parser('set_tpoint_group_mask', help='set trace point group mask')
+    p.add_argument(
+        'name', help="""trace group name we want to set in tpoint_group_mask.
+        (for example "bdev" for bdev trace group, "all" for all trace groups).""")
+    p.set_defaults(func=set_tpoint_group_mask)
+
+    @call_cmd
+    def clear_tpoint_group_mask(args):
+        rpc.trace.clear_tpoint_group_mask(args.client, name=args.name)
+
+    p = subparsers.add_parser('clear_tpoint_group_mask', help='clear trace point group mask')
+    p.add_argument(
+        'name', help="""trace group name we want to clear in tpoint_group_mask.
+        (for example "bdev" for bdev trace group, "all" for all trace groups).""")
+    p.set_defaults(func=clear_tpoint_group_mask)
+
+    @call_cmd
+    def get_tpoint_group_mask(args):
+        print_dict(rpc.trace.get_tpoint_group_mask(args.client))
+
+    p = subparsers.add_parser('get_tpoint_group_mask', help='get trace point group mask')
+    p.set_defaults(func=get_tpoint_group_mask)
+
     # log
     @call_cmd
     def set_trace_flag(args):
