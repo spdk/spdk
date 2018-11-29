@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7a688e3_33e57455",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:32:37Z",
+      "side": 1,
+      "message": "is the semicolon necessary?  usually we don\u0027t include this in SPDK",
+      "revId": "d65e310cc21b745f2f97949343752fc35a1f91ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
