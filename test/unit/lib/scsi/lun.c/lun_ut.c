@@ -245,7 +245,8 @@ lun_task_mgmt_execute_abort_task_not_supported(void)
 	task.lun = lun;
 	task.cdb = cdb;
 
-	spdk_scsi_lun_execute_task(lun, &task);
+	spdk_scsi_lun_append_task(lun, &task);
+	spdk_scsi_lun_execute_tasks(lun);
 
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -289,7 +290,8 @@ lun_task_mgmt_execute_abort_task_all_not_supported(void)
 	task.lun = lun;
 	task.cdb = cdb;
 
-	spdk_scsi_lun_execute_task(lun, &task);
+	spdk_scsi_lun_append_task(lun, &task);
+	spdk_scsi_lun_execute_tasks(lun);
 
 	/* task should now be on the tasks list */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -453,7 +455,8 @@ lun_execute_scsi_task_pending(void)
 	 */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
 
-	spdk_scsi_lun_execute_task(lun, &task);
+	spdk_scsi_lun_append_task(lun, &task);
+	spdk_scsi_lun_execute_tasks(lun);
 
 	/* Assert the task has been successfully added to the tasks queue */
 	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
@@ -490,7 +493,8 @@ lun_execute_scsi_task_complete(void)
 	 */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
 
-	spdk_scsi_lun_execute_task(lun, &task);
+	spdk_scsi_lun_append_task(lun, &task);
+	spdk_scsi_lun_execute_tasks(lun);
 
 	/* Assert the task has not been added to the tasks queue */
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
