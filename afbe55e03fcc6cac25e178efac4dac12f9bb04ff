@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb4c50a9_3a4c092a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T05:30:40Z",
+      "side": 1,
+      "message": "This should be the title?\n\nAnd the part of \"use nvmf_tgt for nvmf tests\" can be separated to the next patch?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 53
+      },
+      "revId": "afbe55e03fcc6cac25e178efac4dac12f9bb04ff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
