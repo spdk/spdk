@@ -1469,7 +1469,7 @@ spdk_iscsi_conn_logout(struct spdk_iscsi_conn *conn)
 	conn->logout_timer = spdk_poller_register(logout_timeout, conn, ISCSI_LOGOUT_TIMEOUT * 1000000);
 }
 
-SPDK_TRACE_REGISTER_FN(iscsi_conn_trace)
+SPDK_TRACE_REGISTER_FN(iscsi_conn_trace, "iscsi_conn", TRACE_GROUP_ISCSI)
 {
 	spdk_trace_register_owner(OWNER_ISCSI_CONN, 'c');
 	spdk_trace_register_object(OBJECT_ISCSI_PDU, 'p');

@@ -711,8 +711,6 @@ usage(void (*app_usage)(void))
 	printf(" -c, --config <config>     config file (default %s)\n",
 	       g_default_opts.config_file != NULL ? g_default_opts.config_file : "none");
 	printf(" -d, --limit-coredump      do not set max coredump size to RLIM_INFINITY\n");
-	printf(" -e, --tpoint-group-mask <mask>\n");
-	printf("                           tracepoint group mask for spdk trace buffers (default 0x0)\n");
 	printf(" -g, --single-file-segments\n");
 	printf("                           force creating just one hugetlbfs file\n");
 	printf(" -h, --help                show this usage\n");
@@ -742,6 +740,7 @@ usage(void (*app_usage)(void))
 	printf("      --num-trace-entries <num>   number of trace entries for each core (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
 	spdk_tracelog_usage(stdout, "-L");
+	spdk_trace_mask_usage(stdout, "-e");
 	if (app_usage) {
 		app_usage();
 	}

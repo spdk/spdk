@@ -56,7 +56,7 @@ spdk_scsi_fini(void)
 	pthread_mutex_destroy(&g_spdk_scsi.mutex);
 }
 
-SPDK_TRACE_REGISTER_FN(scsi_trace)
+SPDK_TRACE_REGISTER_FN(scsi_trace, "scsi", TRACE_GROUP_SCSI)
 {
 	spdk_trace_register_owner(OWNER_SCSI_DEV, 'd');
 	spdk_trace_register_object(OBJECT_SCSI_TASK, 't');
