@@ -31,21 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = nvmf_tgt
+C_SRCS = trace_rpc.c
+LIBNAME = trace_rpc
 
-C_SRCS := nvmf_main.c
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_nvmf event_net
-SPDK_LIB_LIST += nvmf event log trace conf thread util bdev copy rpc jsonrpc json net sock
-SPDK_LIB_LIST += app_rpc log_rpc trace_rpc bdev_rpc
-
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

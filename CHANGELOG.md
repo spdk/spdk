@@ -53,6 +53,13 @@ planned shutdown.
 set_trace_flag, clear_trace_flag and get_trace_flags RPCs are now deprecated,
 and set_log_flag, clear_log_flag and get_log_flags RPCs have been added.
 
+### trace
+
+New `get_tpoint_group_mask` RPC was added to get current tpoint_group_mask, and
+each tpoint group status.
+New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
+disable a specific tpoint group.
+
 ## v18.10:
 
 ### nvme

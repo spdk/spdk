@@ -162,17 +162,26 @@ void
 spdk_trace_cleanup(void)
 {
 	bool unlink;
+	int i;
+	struct spdk_trace_history *lcore_history;
 
 	if (g_trace_histories == NULL) {
 		return;
 	}
 
 	/*
-	 * Only unlink the shm if there were no tracepoints enabled.  This ensures the file
+	 * Only unlink the shm if there were no trace_entry recorded. This ensures the file
 	 * can be used after this process exits/crashes for debugging.
 	 * Note that we have to calculate this value before g_trace_histories gets unmapped.
 	 */
-	unlink = spdk_mem_all_zero(g_trace_flags->tpoint_mask, sizeof(g_trace_flags->tpoint_mask));
+	for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
+		lcore_history = spdk_get_per_lcore_history(g_trace_histories, i);
+		unlink = lcore_history->entries[0].tsc == 0;
+		if (!unlink) {
+			break;
+		}
+	}
+
 	munmap(g_trace_histories, sizeof(struct spdk_trace_histories));
 	g_trace_histories = NULL;
 	close(g_trace_fd);
