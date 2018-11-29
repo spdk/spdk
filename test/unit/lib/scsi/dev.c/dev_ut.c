@@ -114,13 +114,11 @@ spdk_bdev_get_by_name(const char *bdev_name)
 void
 spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
-	;
 }
 
 void
 spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 {
-	;
 }
 
 bool
@@ -130,7 +128,12 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 }
 
 void
-spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
+}
+
+void
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 {
 }
 
