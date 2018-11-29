@@ -38,7 +38,7 @@
 #include "env_dpdk/pci.c"
 
 static void
-pci_test(void)
+pci_claim_test(void)
 {
 	int rc = 0;
 	pid_t childPid;
@@ -64,6 +64,161 @@ pci_test(void)
 	}
 }
 
+static struct spdk_pci_driver ut_pci_driver = {
+	.is_registered = true,
+};
+
+struct ut_pci_dev {
+	struct spdk_pci_device pci;
+	char config[16];
+	char bar[16];
+	bool attached;
+};
+
+static int
+ut_map_bar(struct spdk_pci_device *dev, uint32_t bar,
+	   void **mapped_addr, uint64_t *phys_addr, uint64_t *size)
+{
+	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
+
+	/* just one bar */
+	if (bar > 0) {
+		return -1;
+	}
+
+	*mapped_addr = ut_dev->bar;
+	*phys_addr = 0;
+	*size = sizeof(ut_dev->bar);
+	return 0;
+}
+
+static int
+ut_unmap_bar(struct spdk_pci_device *device, uint32_t bar, void *addr)
+{
+	return 0;
+}
+
+static int
+ut_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
+
+	if (len + offset >= sizeof(ut_dev->config)) {
+		return -1;
+	}
+
+	memcpy(value, (void *)((uintptr_t)ut_dev->config + offset), len);
+	return 0;
+}
+
+static int ut_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len, uint32_t offset)
+{
+	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
+
+	if (len + offset >= sizeof(ut_dev->config)) {
+		return -1;
+	}
+
+	memcpy((void *)((uintptr_t)ut_dev->config + offset), value, len);
+	return 0;
+}
+
+
+static int
+ut_enum_cb(void *ctx, struct spdk_pci_device *dev)
+{
+	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
+
+	ut_dev->attached = true;
+	return 0;
+}
+
+static void
+ut_detach(struct spdk_pci_device *dev)
+{
+	struct ut_pci_dev *ut_dev = (struct ut_pci_dev *)dev;
+
+	ut_dev->attached = false;
+}
+
+static void
+pci_hook_test(void)
+{
+	struct ut_pci_dev ut_dev = {};
+	uint32_t value_32;
+	void *bar0_vaddr;
+	uint64_t bar0_paddr, bar0_size;
+	int rc;
+
+	ut_dev.pci.addr.domain = 0x10000;
+	ut_dev.pci.addr.bus = 0x0;
+	ut_dev.pci.addr.dev = 0x1;
+	ut_dev.pci.addr.func = 0x0;
+	ut_dev.pci.id.vendor_id = 0x4;
+	ut_dev.pci.id.device_id = 0x8;
+
+	ut_dev.pci.map_bar = ut_map_bar;
+	ut_dev.pci.unmap_bar = ut_unmap_bar;
+	ut_dev.pci.cfg_read = ut_cfg_read;
+	ut_dev.pci.cfg_write = ut_cfg_write;
+	ut_dev.pci.detach = ut_detach;
+
+	/* hook the device into the PCI layer */
+	spdk_pci_hook_device(&ut_pci_driver, &ut_dev.pci);
+
+	/* try to attach a device with the matching driver and bdf */
+	rc = spdk_pci_device_attach(&ut_pci_driver, ut_enum_cb, NULL, &ut_dev.pci.addr);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(ut_dev.pci.internal.attached);
+	CU_ASSERT(ut_dev.attached);
+
+	/* check PCI config writes and reads */
+	value_32 = 0xDEADBEEF;
+	rc = spdk_pci_device_cfg_write32(&ut_dev.pci, value_32, 0);
+	CU_ASSERT(rc == 0);
+
+	value_32 = 0x0BADF00D;
+	rc = spdk_pci_device_cfg_write32(&ut_dev.pci, value_32, 4);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_pci_device_cfg_read32(&ut_dev.pci, &value_32, 0);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(value_32 == 0xDEADBEEF);
+	CU_ASSERT(memcmp(&value_32, &ut_dev.config[0], 4) == 0);
+
+	rc = spdk_pci_device_cfg_read32(&ut_dev.pci, &value_32, 4);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(value_32 == 0x0BADF00D);
+	CU_ASSERT(memcmp(&value_32, &ut_dev.config[4], 4) == 0);
+
+	/* out-of-bounds write */
+	rc = spdk_pci_device_cfg_read32(&ut_dev.pci, &value_32, sizeof(ut_dev.config));
+	CU_ASSERT(rc != 0);
+
+	/* map a bar */
+	rc = spdk_pci_device_map_bar(&ut_dev.pci, 0, &bar0_vaddr, &bar0_paddr, &bar0_size);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(bar0_vaddr == ut_dev.bar);
+	CU_ASSERT(bar0_size == sizeof(ut_dev.bar));
+	spdk_pci_device_unmap_bar(&ut_dev.pci, 0, bar0_vaddr);
+
+	/* map an inaccessible bar */
+	rc = spdk_pci_device_map_bar(&ut_dev.pci, 1, &bar0_vaddr, &bar0_paddr, &bar0_size);
+	CU_ASSERT(rc != 0);
+
+	/* detach and verify our callback was called */
+	spdk_pci_device_detach(&ut_dev.pci);
+	CU_ASSERT(!ut_dev.attached);
+	CU_ASSERT(!ut_dev.pci.internal.attached);
+
+	/* unhook the device */
+	spdk_pci_unhook_device(&ut_dev.pci);
+
+	/* try to attach the same device again */
+	rc = spdk_pci_device_attach(&ut_pci_driver, ut_enum_cb, NULL, &ut_dev.pci.addr);
+	CU_ASSERT(rc != 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -80,7 +235,8 @@ int main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "pci_ut1", pci_test) == NULL
+		CU_add_test(suite, "pci_claim", pci_claim_test) == NULL ||
+		CU_add_test(suite, "pci_hook", pci_hook_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
