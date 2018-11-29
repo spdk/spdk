@@ -1532,6 +1532,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_vbdev_register;
 		}
 		SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", name->vbdev_name);
+		break;
 	}
 
 	return rc;
