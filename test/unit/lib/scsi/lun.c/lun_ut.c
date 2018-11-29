@@ -77,6 +77,16 @@ void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 {
 }
 
+uint64_t spdk_get_ticks(void)
+{
+	return 0;
+}
+
+uint64_t spdk_get_ticks_hz(void)
+{
+	return 0;
+}
+
 static void
 spdk_lun_ut_cpl_task(struct spdk_scsi_task *task)
 {
