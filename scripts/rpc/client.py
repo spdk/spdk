@@ -18,7 +18,9 @@ class JSONRPCClient(object):
         self.sock = None
         self.verbose = verbose
         self.timeout = timeout
-        self.request_id = 0
+        self._request_id = 0
+        self._recv_buf = ""
+        self._reqs = []
         try:
             if os.path.exists(addr):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -40,11 +42,11 @@ class JSONRPCClient(object):
             self.sock.close()
 
     def send(self, method, params=None):
-        self.request_id += 1
+        self._request_id += 1
         req = {
             'jsonrpc': '2.0',
             'method': method,
-            'id': self.request_id
+            'id': self._request_id
         }
 
         if params:
@@ -58,10 +60,18 @@ class JSONRPCClient(object):
         self.sock.sendall(reqstr.encode("utf-8"))
         return req
 
+    def decode_one_response(self):
+        try:
+            buf = self._recv_buf.lstrip()
+            obj, idx = json.JSONDecoder().raw_decode(buf)
+            self._recv_buf = buf[idx:]
+            return obj
+        except ValueError:
+            return None
+
     def recv(self):
         start_time = time.clock()
-        response = None
-        buf = ''
+        response = self.decode_one_response()
         while not response:
             try:
                 timeout = self.timeout - (time.clock() - start_time)
@@ -70,16 +80,16 @@ class JSONRPCClient(object):
                 if not newdata:
                     self.sock.close()
                     self.sock = None
-                    raise JSONRPCException("Connection closed with partial response:\n%s\n" % buf)
-                buf += newdata.decode("utf-8")
-                response = json.loads(buf)
+                    raise JSONRPCException("Connection closed with partial response:\n%s\n" % self._recv_buf)
+                self._recv_buf += newdata.decode("utf-8")
+                response = self.decode_one_response()
             except socket.timeout:
                 break  # throw exception after loop to avoid Python freaking out about nested exceptions
             except ValueError:
                 continue  # incomplete response; keep buffering
 
         if not response:
-            raise JSONRPCException("Timeout while waiting for response:\n%s\n" % buf)
+            raise JSONRPCException("Timeout while waiting for response:\n%s\n" % self._recv_buf)
 
         if self.verbose:
             print("response:")
