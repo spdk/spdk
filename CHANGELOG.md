@@ -39,6 +39,11 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+### trace
+
+Add 3 RPC methods to get/set/clear trace point group mask in order to enable or
+disable trace facility for a specific trace group.
+
 ## v18.10:
 
 ### nvme

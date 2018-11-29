@@ -50,7 +50,7 @@ endif
 
 SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event_nvmf event
 SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc bdev_rpc net sock
+SPDK_LIB_LIST += app_rpc log_rpc trace_rpc bdev_rpc net sock
 
 ifeq ($(OS),Linux)
 SPDK_LIB_LIST += event_nbd nbd
