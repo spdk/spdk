@@ -49,6 +49,23 @@
     },
     {
       "key": {
+        "uuid": "1962ef50_f99fdfa5",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-29T05:05:15Z",
+      "side": 1,
+      "message": "Hi, Lin\njust checked vhost_user.c in QEMU. seems \"26\" is already occupied.\nOne way is to start it on another nubmer segment, like what vhost-user-nvme did; But seems QEMU would like to value it successively.\nanother way is let\u0027s just wait for the acceptance of its QEMU part, in order to confirm its value.",
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "47767aec_0910487d",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
