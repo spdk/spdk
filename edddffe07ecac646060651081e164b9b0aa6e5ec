@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acd52cee_04fae538",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:39:25Z",
+      "side": 1,
+      "message": "this can return 1\n\nthese return values are not well documented currently - any poller function should return 0 if it did no real work, \u003e\u003d 1 if it did some real work, or -1 if it is not known currently\n\nwe use these to determine TSC stats per reactor - there is work in progress to get data to see if the pollers are doing real work or mostly idle - when we started on it, we changed all pollers to return -1, and then fix them to return a more meaningful value as we had time to do so",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d929c64c_6df12d05",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:39:25Z",
+      "side": 1,
+      "message": "should we have any kind of timeout?\n\ni am concerned that a buggy bdev may successfully return GOOD status, but some I/O are still outstanding - in this case, the reset task would never complete\n\nif you think that is the correct behavior, I am OK with it - just want to make sure",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8e2832a_f51dcb67",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:39:25Z",
+      "side": 1,
+      "message": "extra whitespace change",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca6fbb1c_364f544c",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:39:25Z",
+      "side": 1,
+      "message": "this comment could go in previous patch (only mentioning this since you may need to edit this patch; then you could also remove semicolons from previous patch)",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
