@@ -49,9 +49,10 @@ rpc_param = {
 
 class RpcException(Exception):
 
-    def __init__(self, retval, *args):
-        super(RpcException, self).__init__(*args)
+    def __init__(self, retval, msg):
+        super(RpcException, self).__init__(msg)
         self.retval = retval
+        self.message = msg
 
 
 class spdk_rpc(object):
