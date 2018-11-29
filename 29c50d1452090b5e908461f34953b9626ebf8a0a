@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac68018b_981bec52",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T23:14:46Z",
+      "side": 1,
+      "message": "return by 0 here may be better?",
+      "range": {
+        "startLine": 54,
+        "startChar": 4,
+        "endLine": 54,
+        "endChar": 11
+      },
+      "revId": "29c50d1452090b5e908461f34953b9626ebf8a0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e00f7262_1908287c",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T23:14:46Z",
+      "side": 1,
+      "message": "this condition is overwritten at the line 175 and OK?",
+      "range": {
+        "startLine": 136,
+        "startChar": 31,
+        "endLine": 136,
+        "endChar": 50
+      },
+      "revId": "29c50d1452090b5e908461f34953b9626ebf8a0a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
