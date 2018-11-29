@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "8cbbca7a_e7a898b4",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-29T10:24:44Z",
+      "side": 1,
+      "message": "I\u0027m aware that globals are initialized to 0. I\u0027m just saying that we should be consistent with other globals initialization in this section. g_timeout is initialized to 0 so we could remove it or add initialization to all of them...",
+      "parentUuid": "bbf3732f_ed7d445a",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "38b1d2d8_8f0edc55",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 33
@@ -72,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "239df0a1_62b2cafc",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-29T10:24:44Z",
+      "side": 1,
+      "message": "So how we free ctrlr in this case?",
+      "parentUuid": "049df1c6_f8a36719",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4108ba0e_dc1ef6f4",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 33
@@ -101,6 +137,24 @@
       "side": 1,
       "message": "Are you sure? I think, once the bdev is registered, spdk_io_device_unregister will becalled by bdev.c in spdk_bdev_fini() during bdev destruction.",
       "parentUuid": "4108ba0e_dc1ef6f4",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e797b6c4_9239c3bc",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-29T10:24:44Z",
+      "side": 1,
+      "message": "This is called in module_finish - we should unregister device during removal?",
+      "parentUuid": "c03cedbf_29a26bdd",
       "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -311,6 +365,24 @@
       "side": 1,
       "message": "What\u0027s the difference?",
       "parentUuid": "f0d1c3f3_7679312c",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f728a49e_78298b18",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-29T10:24:44Z",
+      "side": 1,
+      "message": "I was thinking to avoid using SSD term (disk or drive is better in my opinion). I also think that saying that we are restoring some state of device instead device itself is better.",
+      "parentUuid": "29d529d5_db9d24ce",
       "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
