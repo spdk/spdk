@@ -116,11 +116,13 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 }
 
 void
-spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
-				 uint64_t offset, uint32_t length)
+spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
+				 uint64_t offset, uint32_t iovcnt, uint32_t length)
 {
 	size_t copy_len = 0;
-	size_t zero_len = length;
+	size_t total_copy_len = 0;
+	size_t zero_len = 0;
+	struct iovec *tmp;
 
 	if (tgt->discovery_log_page == NULL ||
 	    tgt->discovery_log_page->genctr != tgt->discovery_genctr) {
@@ -128,17 +130,25 @@ spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, void *buffer,
 	}
 
 	/* Copy the valid part of the discovery log page, if any */
-	if (tgt->discovery_log_page && offset < tgt->discovery_log_page_size) {
-		copy_len = spdk_min(tgt->discovery_log_page_size - offset, length);
-		zero_len -= copy_len;
-		memcpy(buffer, (char *)tgt->discovery_log_page + offset, copy_len);
+	if (tgt->discovery_log_page) {
+		for (tmp = iov; tmp < iov + iovcnt; tmp++) {
+			copy_len = spdk_min(tgt->discovery_log_page_size - offset, spdk_min(tmp->iov_len,
+					    length - total_copy_len));
+
+			memcpy(tmp->iov_base, (char *)tgt->discovery_log_page + offset, copy_len);
+
+			offset += copy_len;
+			total_copy_len += copy_len;
+			zero_len = spdk_min(tmp->iov_len - copy_len, length - total_copy_len);
+
+			if (tgt->discovery_log_page_size <= offset) {
+				break;
+			}
+		}
 	}
 
-	/* Zero out the rest of the buffer */
+	/* Zero out the rest of the current iov */
 	if (zero_len) {
-		memset((char *)buffer + copy_len, 0, zero_len);
+		memset((char *)tmp->iov_base + copy_len, 0, zero_len);
 	}
-
-	/* We should have copied or zeroed every byte of the output buffer. */
-	assert(copy_len + zero_len == length);
 }
