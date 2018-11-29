@@ -408,7 +408,8 @@ if $INSTALL; then
     libibverbs-utils \
     gdisk \
     socat \
-    sshfs
+    sshfs \
+    btrfs-progs
 fi
 
 sudo mkdir -p /usr/src
