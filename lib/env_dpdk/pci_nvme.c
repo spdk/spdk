@@ -77,4 +77,10 @@ spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
 	return spdk_pci_enumerate(&g_nvme_pci_drv, enum_cb, enum_ctx);
 }
 
+struct spdk_pci_driver *
+spdk_pci_nvme_get_driver(void)
+{
+	return &g_nvme_pci_drv;
+}
+
 SPDK_PMD_REGISTER_PCI(g_nvme_pci_drv);

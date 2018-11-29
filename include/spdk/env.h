@@ -600,6 +600,16 @@ struct spdk_pci_device {
 	struct spdk_pci_id		id;
 	int				socket_id;
 
+	int (*map_bar)(struct spdk_pci_device *dev, uint32_t bar,
+		       void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
+	int (*unmap_bar)(struct spdk_pci_device *dev, uint32_t bar,
+			 void *addr);
+	int (*cfg_read)(struct spdk_pci_device *dev, void *value,
+			uint32_t len, uint32_t offset);
+	int (*cfg_write)(struct spdk_pci_device *dev, void *value,
+			 uint32_t len, uint32_t offset);
+	void (*detach)(struct spdk_pci_device *dev);
+
 	struct _spdk_pci_device_internal {
 		struct spdk_pci_driver		*driver;
 		bool				attached;
@@ -608,6 +618,13 @@ struct spdk_pci_device {
 };
 
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
+
+/**
+ * Get the NVMe PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
  * Enumerate all NVMe devices on the PCI bus and try to attach those that
@@ -967,6 +984,23 @@ int spdk_pci_addr_parse(struct spdk_pci_addr *addr, const char *bdf);
  * \return 0 on success, or a negated errno on failure.
  */
 int spdk_pci_addr_fmt(char *bdf, size_t sz, const struct spdk_pci_addr *addr);
+
+/**
+ * Hook a custom PCI device into the PCI layer. The device will be attachable,
+ * enumerable, and will call provided callbacks on each PCI resource access
+ * request.
+ *
+ * \param drv driver that will be able to attach the device
+ * \param dev fully initialized PCI device struct
+ */
+void spdk_pci_hook_device(struct spdk_pci_driver *drv, struct spdk_pci_device *dev);
+
+/**
+ * Un-hook a custom PCI device from the PCI layer. The device must not be attached.
+ *
+ * \param dev fully initialized PCI device struct
+ */
+void spdk_pci_unhook_device(struct spdk_pci_device *dev);
 
 /**
  * Remove any CPU affinity from the current thread.
