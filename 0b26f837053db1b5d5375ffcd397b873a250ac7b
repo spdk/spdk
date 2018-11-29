@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4554c956_5a8c45be",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:21:59Z",
+      "side": 1,
+      "message": "I think this should be part of the spdk_nvme_ctrlr_opts structure.  The transport ID defines the unique endpoint, and the digest options don\u0027t have anything to do with that.\n\nThat might mean that tools or RPCs need to add new options for digests, but we already do that similarly for iSCSI.\n\nWhen you put it in the ctrlr_opts structure, let\u0027s just make it two bools, instead of an enum.",
+      "revId": "0b26f837053db1b5d5375ffcd397b873a250ac7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
