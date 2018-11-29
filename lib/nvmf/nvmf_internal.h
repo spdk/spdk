@@ -275,9 +275,8 @@ void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt,
-				      void *buffer, uint64_t offset,
-				      uint32_t length);
+void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
+				      uint32_t iovcnt, uint64_t offset, uint32_t length);
 
 void spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr);
 int spdk_nvmf_ctrlr_process_fabrics_cmd(struct spdk_nvmf_request *req);

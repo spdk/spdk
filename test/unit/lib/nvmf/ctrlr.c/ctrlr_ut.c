@@ -116,7 +116,7 @@ DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 	    false);
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
-	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length));
+	      (struct spdk_nvmf_tgt *tgt, struct iovec *iov, uint32_t iovcnt, uint64_t offset, uint32_t length));
 
 DEFINE_STUB(spdk_nvmf_request_complete,
 	    int,
