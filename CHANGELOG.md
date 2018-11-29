@@ -39,6 +39,13 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+### trace
+
+New `get_tpoint_group_mask` RPC was added to get current tpoint_group_mask, and
+each tpoint group status.
+New `enable_tpoint_group` and `disable_tpoint_group`RPC were added to enable or
+disable a specific tpoint group.
+
 ## v18.10:
 
 ### nvme
