@@ -670,7 +670,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	int				rc;
 #endif
 
-	if (rqpair->refcnt == 0) {
+	if (rqpair->refcnt != 0) {
 		return;
 	}
 
@@ -2208,6 +2208,40 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	return 0;
 }
 
+static void
+_nvmf_rdma_qpair_last_wqe(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	struct spdk_nvmf_rdma_qpair *rqpair;
+	struct ibv_send_wr send_wr = {};
+	struct ibv_send_wr *bad_send_wr;
+	int rc;
+
+	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	spdk_nvmf_rdma_qpair_dec_refcnt(rqpair);
+
+	/* This event is only expected when QP is being disconnected. */
+	if (!(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING)) {
+		SPDK_WARNLOG("Unexpected LAST_WQE_REACHED event on QP %d\n",
+			     qpair->qid);
+		return;
+	}
+
+	rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
+
+	/* Now it's time to drain the send queue. */
+	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
+	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
+	send_wr.opcode = IBV_WR_SEND;
+	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
+	if (rc) {
+		SPDK_ERRLOG("Failed to post dummy send WR, errno %d\n", errno);
+		assert(false);
+		return;
+	}
+}
+
+
 #ifdef DEBUG
 static const char *CM_EVENT_STR[] = {
 	"RDMA_CM_EVENT_ADDR_RESOLVED",
@@ -2338,7 +2372,14 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_disconnect, &rqpair->qpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		/* This event only occurs for shared receive queues, which are not currently supported. */
+		/* This event occurs when closing QP attached to SRQ. */
+#ifdef SPDK_CONFIG_RDMA_SRQ
+		rqpair = event.element.qp->qp_context;
+		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
+				  (uintptr_t)rqpair->cm_id, event.event_type);
+		spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
+		spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_last_wqe, &rqpair->qpair);
+#endif
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
@@ -2807,10 +2848,10 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 #ifndef SPDK_CONFIG_RDMA_SRQ
 	struct ibv_recv_wr recv_wr = {};
 	struct ibv_recv_wr *bad_recv_wr;
-#endif
 	struct ibv_send_wr send_wr = {};
 	struct ibv_send_wr *bad_send_wr;
 	int rc;
+#endif
 
 	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
 		return;
@@ -2822,6 +2863,10 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
 
+	/* In case of SRQ we should first wait for LAST_WQE_REACHED
+	 * event before draining the send queue. Receive queue should
+	 * not be drained in this case.
+	 */
 #ifndef SPDK_CONFIG_RDMA_SRQ
 	rqpair->drain_recv_wr.type = RDMA_WR_TYPE_DRAIN_RECV;
 	recv_wr.wr_id = (uintptr_t)&rqpair->drain_recv_wr;
@@ -2831,9 +2876,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		assert(false);
 		return;
 	}
-#else
-	rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
-#endif
+
 	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
 	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
 	send_wr.opcode = IBV_WR_SEND;
@@ -2843,6 +2886,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		assert(false);
 		return;
 	}
+#endif
 }
 
 #ifdef SPDK_CONFIG_RDMA_SRQ
