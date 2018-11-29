@@ -130,8 +130,15 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 }
 
 void
-spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
+	;
+}
+
+void
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+{
+	;
 }
 
 int

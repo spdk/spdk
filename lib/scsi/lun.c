@@ -38,6 +38,7 @@
 #include "spdk/thread.h"
 #include "spdk/event.h"
 #include "spdk/util.h"
+#include "spdk/likely.h"
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -127,12 +128,21 @@ spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 	struct spdk_scsi_task *task;
 
 	task = TAILQ_FIRST(&lun->pending_mgmt_tasks);
-	if (task == NULL) {
+	if (spdk_likely(task == NULL)) {
+		/* Try to execute all pending tasks */
+		spdk_scsi_lun_execute_tasks(lun);
 		return;
 	}
 	TAILQ_REMOVE(&lun->pending_mgmt_tasks, task, scsi_link);
 
 	_spdk_scsi_lun_execute_mgmt_task(lun, task);
+}
+
+static bool
+spdk_scsi_lun_check_pending_mgmt_tasks(struct spdk_scsi_lun *lun)
+{
+	return !TAILQ_EMPTY(&lun->mgmt_tasks) ||
+	       !TAILQ_EMPTY(&lun->pending_mgmt_tasks);
 }
 
 void
@@ -172,8 +182,8 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 	}
 }
 
-void
-spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+static void
+_spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	int rc;
 
@@ -200,6 +210,29 @@ spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *tas
 
 	default:
 		abort();
+	}
+}
+
+void
+spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+{
+	TAILQ_INSERT_TAIL(&lun->pending_tasks, task, scsi_link);
+}
+
+void
+spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
+{
+	struct spdk_scsi_task *task, *task_tmp;
+
+	if (spdk_scsi_lun_check_pending_mgmt_tasks(lun)) {
+		/* Pending IO tasks will wait for completion of existing mgmt tasks.
+		 */
+		return;
+	}
+
+	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
+		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
+		_spdk_scsi_lun_execute_task(lun, task);
 	}
 }
 
@@ -340,6 +373,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 	}
 
 	TAILQ_INIT(&lun->tasks);
+	TAILQ_INIT(&lun->pending_tasks);
 	TAILQ_INIT(&lun->mgmt_tasks);
 	TAILQ_INIT(&lun->pending_mgmt_tasks);
 
@@ -475,7 +509,8 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
-	return !TAILQ_EMPTY(&lun->tasks);
+	return !TAILQ_EMPTY(&lun->pending_tasks) ||
+	       !TAILQ_EMPTY(&lun->tasks);
 }
 
 bool
