@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "66c09e58_e4aa4175",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-11-29T03:18:51Z",
+      "side": 1,
+      "message": "Hi Pawel Wodkowski，yes，my colleagues will be submitting related patches to QEMU later. \n（Requests for VHOST_USER_SET_INFLIGHT_ADDR need to be added to QEMU）",
+      "parentUuid": "ebb8235b_03e13316",
+      "range": {
+        "startLine": 65,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 51
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47767aec_0910487d",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-28T09:41:26Z",
       "side": 1,
       "message": "reqs_len?",
+      "range": {
+        "startLine": 228,
+        "startChar": 18,
+        "endLine": 228,
+        "endChar": 22
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a9c992e_622a5c52",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-11-29T03:18:51Z",
+      "side": 1,
+      "message": "It needs to traverse the inflight array, so it should be the size of the inflight array. \nIn fact, the size of the reqs_size and the inflight array are equal, equal to the size of vq.",
+      "parentUuid": "47767aec_0910487d",
       "range": {
         "startLine": 228,
         "startChar": 18,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d7a99067_1ae46d83",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-11-29T03:18:51Z",
+      "side": 1,
+      "message": "When Vhost disconnects, there are actually some IOs that are not processed. \nWhen Vhost reconnects to qemu, we send these IOs and update the last location at the same time. If not, these IOs may be sent again after poller starts up. This implementation is similar to vq_avail_ring_get.",
+      "parentUuid": "e752e39f_22a526ab",
+      "range": {
+        "startLine": 236,
+        "startChar": 1,
+        "endLine": 236,
+        "endChar": 42
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8268e2e6_552509f0",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2018-11-28T09:41:26Z",
       "side": 1,
       "message": "memory alloc in IO path is not performance friendly.",
+      "range": {
+        "startLine": 548,
+        "startChar": 1,
+        "endLine": 548,
+        "endChar": 49
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c829a159_3caaab5b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-11-29T03:18:51Z",
+      "side": 1,
+      "message": "For this problem, inflight IO processing is only run once at Vhost startup, \nwhich does not affect the normal IO path.",
+      "parentUuid": "8268e2e6_552509f0",
       "range": {
         "startLine": 548,
         "startChar": 1,
