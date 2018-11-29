@@ -36,9 +36,12 @@
 #include "spdk/env.h"
 #include "spdk/trace.h"
 #include "spdk/log.h"
+#include "spdk_internal/log.h"
 
 struct spdk_trace_flags *g_trace_flags = NULL;
 static struct spdk_trace_register_fn *g_reg_fn_head = NULL;
+
+SPDK_LOG_REGISTER_COMPONENT("trace", SPDK_LOG_TRACE)
 
 uint64_t
 spdk_trace_get_tpoint_mask(uint32_t group_id)
@@ -98,6 +101,88 @@ spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask)
 			spdk_trace_set_tpoints(i, -1ULL);
 		}
 	}
+}
+
+void
+spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask)
+{
+	int i;
+
+	for (i = 0; i < SPDK_TRACE_MAX_GROUP_ID; i++) {
+		if (tpoint_group_mask & (1ULL << i)) {
+			spdk_trace_clear_tpoints(i, -1ULL);
+		}
+	}
+}
+
+struct spdk_trace_register_fn *
+spdk_trace_get_first_register_fn(void)
+{
+	return g_reg_fn_head;
+}
+
+struct spdk_trace_register_fn *
+spdk_trace_get_next_register_fn(struct spdk_trace_register_fn *register_fn)
+{
+	return register_fn->next;
+}
+
+static uint64_t
+trace_create_tpoint_group_mask(const char *group_name)
+{
+	uint64_t tpoint_group_mask = 0;
+	struct spdk_trace_register_fn *register_fn;
+
+	register_fn = spdk_trace_get_first_register_fn();
+	if (strcmp(group_name, "all") == 0) {
+		while (register_fn) {
+			tpoint_group_mask |= (1UL << register_fn->tgroup_id);
+
+			register_fn = spdk_trace_get_next_register_fn(register_fn);
+		}
+	} else {
+		while (register_fn) {
+			if (strcmp(group_name, register_fn->name) == 0) {
+				break;
+			}
+
+			register_fn = spdk_trace_get_next_register_fn(register_fn);
+		}
+
+		if (register_fn != NULL) {
+			tpoint_group_mask |= (1UL << register_fn->tgroup_id);
+		}
+	}
+
+	return tpoint_group_mask;
+}
+
+int
+spdk_trace_enable_tpoint_group(const char *group_name)
+{
+	uint64_t tpoint_group_mask = 0;
+
+	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
+	if (tpoint_group_mask == 0) {
+		return -1;
+	}
+
+	spdk_trace_set_tpoint_group_mask(tpoint_group_mask);
+	return 0;
+}
+
+int
+spdk_trace_disable_tpoint_group(const char *group_name)
+{
+	uint64_t tpoint_group_mask = 0;
+
+	tpoint_group_mask = trace_create_tpoint_group_mask(group_name);
+	if (tpoint_group_mask == 0) {
+		return -1;
+	}
+
+	spdk_trace_clear_tpoint_group_mask(tpoint_group_mask);
+	return 0;
 }
 
 void
@@ -182,6 +267,12 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 
 	if (reg_fn->name == NULL) {
 		SPDK_ERRLOG("missing name for registering spdk trace tpoint group\n");
+		assert(false);
+		return;
+	}
+
+	if (strcmp(reg_fn->name, "all") == 0) {
+		SPDK_ERRLOG("illegal name (%s) for tpoint group\n", reg_fn->name);
 		assert(false);
 		return;
 	}
