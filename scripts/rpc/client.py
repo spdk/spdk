@@ -16,6 +16,7 @@ class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
         self.timeout = timeout
+        self._recv_buf = ""
         self.request_id = 0
         try:
             if addr.startswith('/'):
@@ -55,25 +56,33 @@ class JSONRPCClient(object):
         self.sock.sendall(reqstr.encode("utf-8"))
         return req
 
+    def _decode_one_response(self):
+        decoder = json.JSONDecoder()
+        self._recv_buf = self._recv_buf.lstrip()
+        try:
+            obj, idx = decoder.raw_decode(self._recv_buf)
+        except ValueError:
+            return None
+
+        self._recv_buf = self._recv_buf[idx:].lstrip()
+        return obj
+
     def recv(self):
         start_time = time.clock()
-        response = None
-        buf = ''
+        response = self._decode_one_response()
         while not response:
             try:
                 timeout = self.timeout - (time.clock() - start_time)
                 self.sock.settimeout(timeout)
                 newdata = self.sock.recv(4096)
-                buf += newdata.decode("utf-8")
-                response = json.loads(buf)
+                self._recv_buf += newdata.decode("utf-8")
+                response = self._decode_one_response()
             except socket.timeout:
                 raise JSONRPCException("Timeout while waiting for response:\n%s\n" % buf)
             except socket.error as e:
                 self.socket.close()
                 self.socket = None
                 raise JSONRPCException("Connection closed with partial response:\n%s\n" % buf)
-            except ValueError:
-                continue  # incomplete response; keep buffering
 
         if self.verbose:
             print("response:")
@@ -92,7 +101,7 @@ class JSONRPCClient(object):
             return self.recv()['result']
         except JSONRPCException as e:
             """ Don't expect response to kill """
-            if not self.sock and method != "kill_instance":
-                raise e
-            else:
+            if not self.sock and method == "kill_instance":
                 return {}
+            else:
+                raise e
