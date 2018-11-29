@@ -16,6 +16,7 @@ class JSONRPCClient(object):
     def __init__(self, addr, port=None, verbose=False, timeout=60.0):
         self.verbose = verbose
         self.timeout = timeout
+        self.request_id = 0
         try:
             if addr.startswith('/'):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -36,10 +37,11 @@ class JSONRPCClient(object):
         self.sock.close()
 
     def call(self, method, params={}, verbose=False):
+        self.request_id += 1
         req = {}
         req['jsonrpc'] = '2.0'
         req['method'] = method
-        req['id'] = 1
+        req['id'] = self.request_id
         if (params):
             req['params'] = params
         reqstr = json.dumps(req)
