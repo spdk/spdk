@@ -526,8 +526,8 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 			    str_ibv_qp_state[state]);
 		return -1;
 	}
-	SPDK_NOTICELOG("IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
-		       str_ibv_qp_state[state]);
+	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "IBV QP#%u changed to: %s\n", rqpair->qpair.qid,
+		      str_ibv_qp_state[state]);
 	return 0;
 }
 
