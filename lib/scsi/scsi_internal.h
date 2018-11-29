@@ -44,6 +44,8 @@
 
 #include "spdk_internal/log.h"
 
+#define SPDK_SCSI_MGMT_TASK_TIMEOUT	30	/* seconds */
+
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,
 	SPDK_SCSI_TASK_COMPLETE,
@@ -125,6 +127,8 @@ struct spdk_scsi_lun {
 	/** pending management tasks */
 	TAILQ_HEAD(pending_mgmt_tasks, spdk_scsi_task) pending_mgmt_tasks;
 
+	/** poller to check completion of tasks prior to reset */
+	struct spdk_poller *reset_poller;
 };
 
 struct spdk_lun_db_entry {
