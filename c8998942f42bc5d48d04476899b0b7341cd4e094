@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39525028_59f4a7da",
+        "filename": "lib/env_dpdk/pci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T06:23:08Z",
+      "side": 1,
+      "message": "adding fprintf(stderr) may be better.",
+      "revId": "c8998942f42bc5d48d04476899b0b7341cd4e094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
