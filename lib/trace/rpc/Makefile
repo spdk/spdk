@@ -31,37 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-APP = iscsi_tgt
+C_SRCS = trace_rpc.c
+LIBNAME = trace_rpc
 
-# Add iSCSI library directory to include path
-# TODO: remove this once iSCSI has a public API header
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-
-C_SRCS := iscsi_tgt.c
-
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
-SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event
-SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev iscsi scsi copy trace conf
-SPDK_LIB_LIST += thread util log log_rpc trace_rpc app_rpc net sock
-
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-LIBS += $(SPDK_LIB_LINKER_ARGS)
-
-all : $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean :
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
