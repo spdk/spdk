@@ -345,7 +345,6 @@ error_return:
 	conn->shutdown_timer = NULL;
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Launching connection on acceptor thread\n");
 	conn->pending_task_cnt = 0;
-	conn->pending_activate_event = false;
 
 	conn->lcore = spdk_env_get_current_core();
 	__sync_fetch_and_add(&g_num_connections[conn->lcore], 1);

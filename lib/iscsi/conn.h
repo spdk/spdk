@@ -140,7 +140,6 @@ struct spdk_iscsi_conn {
 	uint32_t pending_task_cnt;
 	uint32_t data_out_cnt;
 	uint32_t data_in_cnt;
-	bool pending_activate_event;
 
 	int timeout;
 	uint64_t nopininterval;
