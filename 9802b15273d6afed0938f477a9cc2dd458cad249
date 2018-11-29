@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "801084d9_109d4da7",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:47:27Z",
+      "side": 1,
+      "message": "logical unit",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d23ebf2_9f08b755",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:47:27Z",
+      "side": 1,
+      "message": "mix of tabs and spaces (this one tabs to align, previous ones just use single space)\n\nin general a lot of the ones below are also inconsistent",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b6cd253_6d551cd5",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:47:27Z",
+      "side": 1,
+      "message": "spc4r26 shows:\n\nreserved3 : 3\nallow_commands : 3\n\nshould we use that instead? (not sure which SPC you are using)",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e3c1ffc_8f32e968",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:47:27Z",
+      "side": 1,
+      "message": "do we need a structure for pr_in_read_full_status_data?",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5558b0a_fb096833",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:47:27Z",
+      "side": 1,
+      "message": "param_data?",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
