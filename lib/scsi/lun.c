@@ -61,24 +61,44 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 	spdk_scsi_lun_execute_mgmt_task(lun);
 }
 
-/* This will be called in the callback to the bdev reset function. */
+static bool
+spdk_scsi_lun_has_outstanding_tasks(struct spdk_scsi_lun *lun)
+{
+	return !TAILQ_EMPTY(&lun->tasks);
+}
+
+/* Reset task have to wait until all prior outstanding tasks complete. */
+static int
+spdk_scsi_lun_reset_check_outstanding_tasks(void *arg)
+{
+	struct spdk_scsi_task *task = (struct spdk_scsi_task *)arg;
+	struct spdk_scsi_lun *lun = task->lun;
+
+	if (spdk_scsi_lun_has_outstanding_tasks(lun)) {
+		return -1;
+	}
+
+	spdk_poller_unregister(&lun->reset_poller);
+
+	spdk_scsi_lun_complete_mgmt_task(lun, task);
+	return -1;
+}
+
 void
 spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (task->status == SPDK_SCSI_STATUS_GOOD) {
-		/*
-		 * The backend LUN device was just reset. If there are active tasks
-		 * in the backend, it means that LUN reset fails, and we set failure
-		 * status to LUN reset task.
-		 */
-		if (spdk_scsi_lun_has_pending_tasks(lun)) {
-			SPDK_ERRLOG("lun->tasks should be empty after reset\n");
-			task->response = SPDK_SCSI_TASK_MGMT_RESP_TARGET_FAILURE;
+		if (spdk_scsi_lun_has_outstanding_tasks(lun)) {
+			lun->reset_poller =
+				spdk_poller_register(spdk_scsi_lun_reset_check_outstanding_tasks,
+						     task, 10);
+			return;
 		}
 	}
 
 	spdk_scsi_lun_complete_mgmt_task(lun, task);
 }
+
 
 static void
 _spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
@@ -499,6 +519,7 @@ spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
 	       !TAILQ_EMPTY(&lun->mgmt_tasks);
 }
 
+/* This check includes both pending and submitted (outstanding) tasks. */
 bool
 spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
 {
