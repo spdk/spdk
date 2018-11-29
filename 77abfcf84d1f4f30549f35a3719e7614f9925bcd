@@ -197,6 +197,24 @@
     },
     {
       "key": {
+        "uuid": "5f3bd7bc_7b9efd14",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-29T12:28:27Z",
+      "side": 1,
+      "message": "Actually I\u0027ve looked over the code in bdev.c and it\u0027s unregistering its own io_device, so you\u0027re right we should unregister inside our destroy callback. I\u0027ve fixed it.",
+      "parentUuid": "e797b6c4_9239c3bc",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "646921d9_45be9ea5",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 33
