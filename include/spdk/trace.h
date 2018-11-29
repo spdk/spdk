@@ -276,6 +276,13 @@ uint64_t spdk_trace_get_tpoint_group_mask(void);
 void spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask);
 
 /**
+ * For each tpoint group specified in the group mask, disable all of its tpoints.
+ *
+ * \param tpoint_group_mask Tpoint group mask that indicates which tpoints to disable.
+ */
+void spdk_trace_clear_tpoint_group_mask(uint64_t tpoint_group_mask);
+
+/**
  * Initialize the trace environment. Debug tool can read the information from
  * the given shared memory to post-process the tpoint entries and display in a
  * human-readable format.
@@ -331,6 +338,27 @@ void spdk_trace_register_description(const char *name, const char *short_name,
 				     uint16_t tpoint_id, uint8_t owner_type,
 				     uint8_t object_type, uint8_t new_object,
 				     uint8_t arg1_is_ptr, const char *arg1_name);
+
+struct spdk_trace_register_fn *spdk_log_get_first_trace_register_fn(void);
+
+struct spdk_trace_register_fn *spdk_log_get_next_trace_register_fn(struct spdk_trace_register_fn
+		*register_fn);
+
+/**
+ * Enable trace on specific tpoint group
+ *
+ * \param group_name Name of group to enable, "all" for enabling all groups.
+ * \return 0 on success, else non-zero indicates a failure.
+ */
+int spdk_trace_enable_tpoint_group(const char *group_name);
+
+/**
+ * Disable trace on specific tpoint group
+ *
+ * \param group_name Name of group to disable, "all" for disabling all groups.
+ * \return 0 on success, else non-zero indicates a failure.
+ */
+int spdk_trace_disable_tpoint_group(const char *group_name);
 
 /**
  * Show trace mask and its usage.
