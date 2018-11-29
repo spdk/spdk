@@ -45,6 +45,11 @@ struct spdk_bdev {
 	int x;
 };
 
+/* Unit test poller mockup */
+struct spdk_poller {
+	int y;
+};
+
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
@@ -52,18 +57,22 @@ struct spdk_scsi_globals g_spdk_scsi;
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
+static struct spdk_poller g_lun_ut_poller;
 
 struct spdk_poller *
 spdk_poller_register(spdk_poller_fn fn,
 		     void *arg,
 		     uint64_t period_microseconds)
 {
-	return NULL;
+	return &g_lun_ut_poller;
 }
 
 void
 spdk_poller_unregister(struct spdk_poller **ppoller)
 {
+	if (ppoller != NULL) {
+		*ppoller = NULL;
+	}
 }
 
 void
@@ -538,6 +547,128 @@ lun_construct_success(void)
 	CU_ASSERT_EQUAL(g_task_count, 0);
 }
 
+static void
+lun_reset_task_wait_scsi_task_complete(void)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_task task = { 0 };
+	struct spdk_scsi_task mgmt_task = { 0 };
+	struct spdk_scsi_dev dev = { 0 };
+
+	lun = lun_construct();
+	lun->dev = &dev;
+
+	ut_init_task(&task);
+	task.lun = lun;
+
+	g_lun_execute_fail = false;
+	g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
+
+	ut_init_task(&mgmt_task);
+	mgmt_task.lun = lun;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
+
+	/* Append a task to the pending task list. */
+	spdk_scsi_lun_append_task(lun, &task);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
+
+	/* Execute the task but it is still in the task list. */
+	spdk_scsi_lun_execute_tasks(lun);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun->pending_tasks));
+	CU_ASSERT(!TAILQ_EMPTY(&lun->tasks));
+
+	/* Append a reset task to the pending mgmt task list. */
+	spdk_scsi_lun_append_mgmt_task(lun, &mgmt_task);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_mgmt_tasks));
+
+	/* Execute the reset task */
+	spdk_scsi_lun_execute_mgmt_task(lun);
+
+	/* The reset task should be still on the submitted mgmt task list and
+	 * a poller is created because the task prior to the reset task is pending.
+	 */
+	CU_ASSERT(!TAILQ_EMPTY(&lun->mgmt_tasks));
+	CU_ASSERT(lun->reset_poller != NULL);
+
+	/* Execute the poller to check if the task prior to the reset task complete. */
+	spdk_scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->mgmt_tasks));
+	CU_ASSERT(lun->reset_poller != NULL);
+
+	/* Complete the task. */
+	spdk_scsi_lun_complete_task(lun, &task);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+
+	/* Execute the poller to check if the task prior to the reset task complete. */
+	spdk_scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun->mgmt_tasks));
+	CU_ASSERT(lun->reset_poller == NULL);
+	CU_ASSERT_EQUAL(mgmt_task.status, SPDK_SCSI_STATUS_GOOD);
+	CU_ASSERT_EQUAL(mgmt_task.response, SPDK_SCSI_TASK_MGMT_RESP_SUCCESS);
+
+	lun_destruct(lun);
+
+	CU_ASSERT_EQUAL(g_task_count, 0);
+}
+
+static void
+lun_reset_task_suspend_scsi_task(void)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_task task = { 0 };
+	struct spdk_scsi_task mgmt_task = { 0 };
+	struct spdk_scsi_dev dev = { 0 };
+
+	lun = lun_construct();
+	lun->dev = &dev;
+
+	ut_init_task(&task);
+	task.lun = lun;
+
+	g_lun_execute_fail = false;
+	g_lun_execute_status = SPDK_SCSI_TASK_COMPLETE;
+
+	ut_init_task(&mgmt_task);
+	mgmt_task.lun = lun;
+	mgmt_task.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
+
+	/* Append a reset task to the pending mgmt task list. */
+	spdk_scsi_lun_append_mgmt_task(lun, &mgmt_task);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_mgmt_tasks));
+
+	/* Append a task to the pending task list. */
+	spdk_scsi_lun_append_task(lun, &task);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
+
+	/* Execute the task but it is still on the pending task list. */
+	spdk_scsi_lun_execute_tasks(lun);
+
+	CU_ASSERT(!TAILQ_EMPTY(&lun->pending_tasks));
+
+	/* Execute the reset task. The task will be executed then. */
+	spdk_scsi_lun_execute_mgmt_task(lun);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun->mgmt_tasks));
+	CU_ASSERT(lun->reset_poller == NULL);
+	CU_ASSERT_EQUAL(mgmt_task.status, SPDK_SCSI_STATUS_GOOD);
+	CU_ASSERT_EQUAL(mgmt_task.response, SPDK_SCSI_TASK_MGMT_RESP_SUCCESS);
+
+	CU_ASSERT(TAILQ_EMPTY(&lun->pending_tasks));
+	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
+
+	lun_destruct(lun);
+
+	CU_ASSERT_EQUAL(g_task_count, 0);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -576,6 +707,10 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "destruct task - success", lun_destruct_success) == NULL
 		|| CU_add_test(suite, "construct - null ctx", lun_construct_null_ctx) == NULL
 		|| CU_add_test(suite, "construct - success", lun_construct_success) == NULL
+		|| CU_add_test(suite, "reset task wait for prior task completion",
+			       lun_reset_task_wait_scsi_task_complete) == NULL
+		|| CU_add_test(suite, "reset task suspend subsequent scsi task",
+			       lun_reset_task_suspend_scsi_task) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
