@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b24e4268_bdc3353c",
+        "filename": "include/spdk_internal/log.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-29T04:47:51Z",
+      "side": 1,
+      "message": "maybe we should also rename SPDK_TRACEDUMP to SPDK_LOG_DUMP",
+      "range": {
+        "startLine": 88,
+        "startChar": 8,
+        "endLine": 88,
+        "endChar": 22
+      },
+      "revId": "a88e2e51339ea73639616a97ccb5a714e0982438",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "067f2a5b_ed95c030",
+        "filename": "lib/event/app.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-29T04:47:51Z",
+      "side": 1,
+      "message": "also deprecate traceflag?",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 61
+      },
+      "revId": "a88e2e51339ea73639616a97ccb5a714e0982438",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
