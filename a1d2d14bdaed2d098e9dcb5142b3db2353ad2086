@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d0193ca_0fca57e1",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T05:38:07Z",
+      "side": 1,
+      "message": "If you test this, how about the following?\n\ncreate Nvme0 and Nvme1.\ndelete Nvme0\nget_nvme_controllers -n Nvme0",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 37
+      },
+      "revId": "a1d2d14bdaed2d098e9dcb5142b3db2353ad2086",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2e0bb20_408884ed",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-29T05:38:07Z",
+      "side": 1,
+      "message": "Generally, a single hyphen can be followed by multiple single-character flags and a double hyphen prefixes a single, multi character option.\n\nHence this should be  -e or --err",
+      "range": {
+        "startLine": 62,
+        "startChar": 31,
+        "endLine": 62,
+        "endChar": 35
+      },
+      "revId": "a1d2d14bdaed2d098e9dcb5142b3db2353ad2086",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
