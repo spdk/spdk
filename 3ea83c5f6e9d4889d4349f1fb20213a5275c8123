@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45f9f6fe_5659cd5c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:56:58Z",
+      "side": 1,
+      "message": "Let\u0027s list out the specific names of the RPC methods here in the changelog.",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2292e5f0_a004e004",
+        "filename": "lib/trace/rpc/trace_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:56:58Z",
+      "side": 1,
+      "message": "I think it would be clearer to hide this complexity inside of trace.c.\n\nInstead of iterator functions, have a function like \"spdk_trace_enable_tpoint_group(const char *group_name)\".  Then trace.c can do the iteration.\n\nI think the RPC names should also be changed to match this API.  These RPCs are not setting the tpoint group mask, they are enabling or disabling a tpoint group.",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9786532a_c308c572",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T23:56:58Z",
+      "side": 1,
+      "message": "next_entry still gets reset to 0 when it reaches the end of the entries array.  So if there was just one lcore, and that lcore happened to exactly fill the entries array, we would still unlink.\n\nI think the better way is to check the tsc on the first entry in every lcore\u0027s history.  If any of them are \u003e 0, then break.",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
