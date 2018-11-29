@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2a839f8_657b7387",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:39:02Z",
+      "side": 1,
+      "message": "I think since \"iscsi\" is in the function name, we do not need to pass protocol_id parameter.  If user calls this function, just always use SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI.",
+      "revId": "bcb4d2918079c70c658d539e32490764c2d20efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76af855d_fb218bb9",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-11-29T19:39:02Z",
+      "side": 1,
+      "message": "extra space after len\n\nbut maybe this should just be an assert instead?",
+      "revId": "bcb4d2918079c70c658d539e32490764c2d20efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
