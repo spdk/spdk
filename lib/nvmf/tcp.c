@@ -131,7 +131,7 @@ static const char *spdk_nvme_tcp_term_req_fes_str[] = {
 #define TRACE_TCP_FLUSH_WRITEBUF_DONE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xB)
 #define TRACE_TCP_FLUSH_WRITEBUF_PDU_DONE				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_TCP, 0xC)
 
-SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace)
+SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 {
 	spdk_trace_register_object(OBJECT_NVMF_TCP_IO, 'r');
 	spdk_trace_register_description("TCP_REQ_NEW", "",

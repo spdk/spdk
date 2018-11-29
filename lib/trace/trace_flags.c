@@ -101,6 +101,23 @@ spdk_trace_set_tpoint_group_mask(uint64_t tpoint_group_mask)
 }
 
 void
+spdk_trace_mask_usage(FILE *f, const char *tmask_arg)
+{
+	struct spdk_trace_register_fn *register_fn;
+
+	fprintf(f, " %s, --tpoint-group-mask <mask>\n", tmask_arg);
+	fprintf(f, "                           tracepoint group mask for spdk trace buffers (default 0x0");
+
+	register_fn = g_reg_fn_head;
+	while (register_fn) {
+		fprintf(f, ", %s 0x%x", register_fn->name, 1 << register_fn->tgroup_id);
+		register_fn = register_fn->next;
+	}
+
+	fprintf(f, ", all 0xffff)\n");
+}
+
+void
 spdk_trace_register_owner(uint8_t type, char id_prefix)
 {
 	struct spdk_trace_owner *owner;
@@ -164,7 +181,6 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 	reg_fn->next = g_reg_fn_head;
 	g_reg_fn_head = reg_fn;
 }
-
 
 void
 spdk_trace_flags_init(void)

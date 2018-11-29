@@ -134,7 +134,7 @@ enum spdk_nvmf_rdma_request_state {
 #define TRACE_RDMA_QP_DISCONNECT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xF)
 #define TRACE_RDMA_QP_DESTROY						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x10)
 
-SPDK_TRACE_REGISTER_FN(nvmf_trace)
+SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 {
 	spdk_trace_register_object(OBJECT_NVMF_RDMA_IO, 'r');
 	spdk_trace_register_description("RDMA_REQ_NEW", "",
