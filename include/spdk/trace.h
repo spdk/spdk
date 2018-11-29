@@ -332,7 +332,17 @@ void spdk_trace_register_description(const char *name, const char *short_name,
 				     uint8_t object_type, uint8_t new_object,
 				     uint8_t arg1_is_ptr, const char *arg1_name);
 
+/**
+ * Show trace mask and its usage.
+ *
+ * \param f File to hold the mask's information.
+ * \param tmask_arg Command line option to set the trace group mask.
+ */
+void spdk_trace_mask_usage(FILE *f, const char *tmask_arg);
+
 struct spdk_trace_register_fn {
+	const char *name;
+	uint8_t tgroup_id;
 	void (*reg_fn)(void);
 	struct spdk_trace_register_fn *next;
 };
@@ -344,9 +354,11 @@ struct spdk_trace_register_fn {
  */
 void spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn);
 
-#define SPDK_TRACE_REGISTER_FN(fn)				\
+#define SPDK_TRACE_REGISTER_FN(fn, name_str, _tgroup_id)	\
 	static void fn(void);					\
 	struct spdk_trace_register_fn reg_ ## fn = {		\
+		.name = name_str,				\
+		.tgroup_id = _tgroup_id,			\
 		.reg_fn = fn,					\
 		.next = NULL,					\
 	};							\
