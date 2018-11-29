@@ -125,6 +125,8 @@ struct spdk_scsi_lun {
 	/** pending management tasks */
 	TAILQ_HEAD(pending_mgmt_tasks, spdk_scsi_task) pending_mgmt_tasks;
 
+	/** poller to check completion of tasks prior to reset */
+	struct spdk_poller *reset_poller;
 };
 
 struct spdk_lun_db_entry {
