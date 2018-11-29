@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a85b13f9_a38d13dd",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-11-29T17:44:14Z",
+      "side": 1,
+      "message": "Currently there is no Ubuntu image available for libvirt provider but this sentence suggest it.",
+      "range": {
+        "startLine": 136,
+        "startChar": 60,
+        "endLine": 136,
+        "endChar": 66
+      },
+      "revId": "1a668eb150565463daf509a2c289e8e76df31a52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34883838_8e6390a3",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 7
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-11-29T17:44:14Z",
+      "side": 1,
+      "message": "This script works when running script on Fedora host system and using Fedora vm image but on Ubuntu it tries \"sudo update-grub\" on the same image and fails.",
+      "range": {
+        "startLine": 181,
+        "startChar": 2,
+        "endLine": 190,
+        "endChar": 5
+      },
+      "revId": "1a668eb150565463daf509a2c289e8e76df31a52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
