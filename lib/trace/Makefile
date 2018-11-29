@@ -37,4 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = trace.c trace_flags.c
 LIBNAME = trace
 
+DIRS-y = rpc
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
