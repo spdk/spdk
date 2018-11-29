@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "8b88e248_d68ccb6e",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-29T10:36:45Z",
+      "side": 1,
+      "message": "This variable is already gone in the latest patch.",
+      "parentUuid": "8cbbca7a_e7a898b4",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "38b1d2d8_8f0edc55",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 33
@@ -102,6 +120,24 @@
       "side": 1,
       "message": "So how we free ctrlr in this case?",
       "parentUuid": "049df1c6_f8a36719",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e02b25a_09e2d6a6",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-29T10:36:45Z",
+      "side": 1,
+      "message": "How are we suppose to free the controller? If we free it we\u0027ll never be able neither to detach it or use it ever again. So, the only reasonable thing to do in such case IMO is to leave it in our structures and try to use it if another bdev is to be created on it.",
+      "parentUuid": "239df0a1_62b2cafc",
       "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -383,6 +419,24 @@
       "side": 1,
       "message": "I was thinking to avoid using SSD term (disk or drive is better in my opinion). I also think that saying that we are restoring some state of device instead device itself is better.",
       "parentUuid": "29d529d5_db9d24ce",
+      "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81e1f941_f1afe225",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-29T10:36:45Z",
+      "side": 1,
+      "message": "I think the comment is clear enough.",
+      "parentUuid": "f728a49e_78298b18",
       "revId": "77abfcf84d1f4f30549f35a3719e7614f9925bcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
