@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1598fd0c_934a442c",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T07:07:58Z",
+      "side": 1,
+      "message": "%d, _reg_fn-\u003etgroup_id or\n0x%x, 1 \u003c\u003c _reg_fn-\u003etgroup_id ?",
+      "range": {
+        "startLine": 192,
+        "startChar": 48,
+        "endLine": 192,
+        "endChar": 61
+      },
+      "revId": "e3a17d7b955198324d8afe6f2754520b2bd81226",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
