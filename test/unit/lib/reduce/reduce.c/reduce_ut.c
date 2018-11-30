@@ -44,6 +44,7 @@ static int g_ziperrno;
 static char *g_volatile_pm_buf;
 static size_t g_volatile_pm_buf_len;
 static char *g_persistent_pm_buf;
+static size_t g_persistent_pm_buf_len;
 static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
 static const char *g_path;
@@ -159,17 +160,19 @@ pmem_map_file(const char *path, size_t len, int flags, mode_t mode,
 	      size_t *mapped_lenp, int *is_pmemp)
 {
 	CU_ASSERT(g_volatile_pm_buf == NULL);
-	g_volatile_pm_buf = calloc(1, len);
-	g_volatile_pm_buf_len = len;
 	g_path = path;
-	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
-	*mapped_lenp = len;
 	*is_pmemp = 1;
 
 	if (g_persistent_pm_buf == NULL) {
 		g_persistent_pm_buf = calloc(1, len);
+		g_persistent_pm_buf_len = len;
 		SPDK_CU_ASSERT_FATAL(g_persistent_pm_buf != NULL);
 	}
+
+	*mapped_lenp = g_persistent_pm_buf_len;
+	g_volatile_pm_buf = calloc(1, g_persistent_pm_buf_len);
+	SPDK_CU_ASSERT_FATAL(g_volatile_pm_buf != NULL);
+	g_volatile_pm_buf_len = g_persistent_pm_buf_len;
 
 	return g_volatile_pm_buf;
 }
@@ -181,6 +184,7 @@ pmem_unmap(void *addr, size_t len)
 	CU_ASSERT(len == g_volatile_pm_buf_len);
 	free(g_volatile_pm_buf);
 	g_volatile_pm_buf = NULL;
+	g_volatile_pm_buf_len = 0;
 
 	return 0;
 }
@@ -191,6 +195,7 @@ persistent_pm_buf_destroy(void)
 	CU_ASSERT(g_persistent_pm_buf != NULL);
 	free(g_persistent_pm_buf);
 	g_persistent_pm_buf = NULL;
+	g_persistent_pm_buf_len = 0;
 }
 
 static void
