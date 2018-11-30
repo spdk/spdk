@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3207f25f_e0f3833a",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-30T09:08:44Z",
+      "side": 1,
+      "message": "I think it\u0027s worth noting that it\u0027s related to the (de)initialization.",
+      "parentUuid": "3be5b97d_c1b270da",
+      "revId": "43c561fe7c3a174f2410c000a8f9ff6dff38b78b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64cc35e8_3110ab69",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 26
@@ -30,6 +48,30 @@
       "writtenOn": "2018-11-30T08:33:39Z",
       "side": 1,
       "message": "This section is duplicated in ftl_anm_free. Maybe we could move it to separate functions (init/deinit contex?)",
+      "range": {
+        "startLine": 452,
+        "startChar": 0,
+        "endLine": 462,
+        "endChar": 63
+      },
+      "revId": "43c561fe7c3a174f2410c000a8f9ff6dff38b78b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55364b8e_94b3b02e",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-11-30T09:08:44Z",
+      "side": 1,
+      "message": "What\u0027s the point? The only thing that\u0027s possible to extract here is the memory allocation and setting the cb/cb_arg, so I don\u0027t think it\u0027s worth it.",
+      "parentUuid": "64cc35e8_3110ab69",
       "range": {
         "startLine": 452,
         "startChar": 0,
