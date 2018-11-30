@@ -547,8 +547,8 @@ _load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
 
 	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
 	vol->pm_file.size = spdk_reduce_get_pm_file_size(&vol->params);
-	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, vol->pm_file.size,
-					    0, 0, &mapped_len, &vol->pm_file.pm_is_pmem);
+	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, 0, 0, 0, &mapped_len,
+					    &vol->pm_file.pm_is_pmem);
 	if (vol->pm_file.pm_buf == NULL) {
 		SPDK_ERRLOG("could not pmem_map_file(%s): %s\n", vol->pm_file.path, strerror(errno));
 		rc = -errno;
