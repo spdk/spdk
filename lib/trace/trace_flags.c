@@ -178,8 +178,43 @@ spdk_trace_register_description(const char *name, const char *short_name,
 void
 spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 {
-	reg_fn->next = g_reg_fn_head;
-	g_reg_fn_head = reg_fn;
+	struct spdk_trace_register_fn *_reg_fn;
+
+	if (reg_fn->name == NULL) {
+		SPDK_ERRLOG("missing name for registering spdk trace tpoint group\n");
+		assert(false);
+		return;
+	}
+
+	/* Ensure that no trace point group IDs and names are ever duplicated */
+	for (_reg_fn = g_reg_fn_head; _reg_fn; _reg_fn = _reg_fn->next) {
+		if (reg_fn->tgroup_id == _reg_fn->tgroup_id) {
+			SPDK_ERRLOG("duplicate tgroup_id (%d) with %s\n", _reg_fn->tgroup_id, _reg_fn->name);
+			assert(false);
+			return;
+		}
+
+		if (strcmp(reg_fn->name, _reg_fn->name) == 0) {
+			SPDK_ERRLOG("duplicate name with %s\n", _reg_fn->name);
+			assert(false);
+			return;
+		}
+	}
+
+	/* Arrange trace registration in order on tgroup_id */
+	if (g_reg_fn_head == NULL || reg_fn->tgroup_id < g_reg_fn_head->tgroup_id) {
+		reg_fn->next = g_reg_fn_head;
+		g_reg_fn_head = reg_fn;
+		return;
+	}
+
+	for (_reg_fn = g_reg_fn_head; _reg_fn; _reg_fn = _reg_fn->next) {
+		if (_reg_fn->next == NULL || reg_fn->tgroup_id < _reg_fn->next->tgroup_id) {
+			reg_fn->next = _reg_fn->next;
+			_reg_fn->next = reg_fn;
+			return;
+		}
+	}
 }
 
 void
