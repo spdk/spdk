@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "49d8af51_4a4516b3",
+        "filename": "autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-11-30T15:47:51Z",
+      "side": 1,
+      "message": "There is a bug in current version of qemu and readonly devices does not appear as \u0027readonly\u0027",
+      "parentUuid": "82e6844b_9206b215",
+      "range": {
+        "startLine": 203,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 24
+      },
+      "revId": "dd7b64f3d9a6bef1d4776de5a719af8b6439af8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b35f62f1_e8aeaccb",
         "filename": "autotest.sh",
         "patchSetId": 8
