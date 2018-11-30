@@ -226,6 +226,24 @@
       "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "742b1d4a_5a7be590",
+        "filename": "lib/ocssd/ocssd_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T10:18:28Z",
+      "side": 1,
+      "message": "I\u0027v removed this indirection from ftl lib.",
+      "parentUuid": "f123bb15_0cd6e6a3",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
