@@ -87,8 +87,6 @@ static const struct spdk_ftl_conf	g_default_conf = {
 	.max_active_relocs = 3,
 	/* IO pool size per user thread (this should be adjusted to thread IO qdepth) */
 	.user_io_pool_size = 2048,
-	/* Enable traces */
-	.trace = 0,
 };
 
 static void ftl_dev_free_sync(struct spdk_ftl_dev *dev);
