@@ -34,6 +34,11 @@
 #ifndef FTL_TRACE_H
 #define FTL_TRACE_H
 
+#include "ftl_utils.h"
+#include "ftl_ppa.h"
+
+#define FTL_TRACE_INVALID_ID ((uint64_t) -1)
+
 typedef uint64_t ftl_trace_group_t;
 
 enum ftl_trace_source {
@@ -47,18 +52,13 @@ enum ftl_trace_type {
 	FTL_TRACE_TYPE_WRITE,
 	FTL_TRACE_TYPE_MD_WRITE,
 	FTL_TRACE_TYPE_ERASE,
-	FTL_TRACE_TYPE_BAND_DEFRAG,
-	FTL_TRACE_TYPE_BAND_WRITE,
-	FTL_TRACE_TYPE_APPLIED_LIMITS,
-	FTL_TRACE_TYPE_MAX,
+	FTL_TRACE_TYPE_OTHER,
 };
 
 enum ftl_trace_point {
 	FTL_TRACE_POINT_SCHEDULED,
 	FTL_TRACE_POINT_RWB_FILL,
-	FTL_TRACE_POINT_RWB_POP,
 	FTL_TRACE_POINT_SUBMISSION,
-	FTL_TRACE_POINT_COMPLETION,
 	FTL_TRACE_POINT_OTHER,
 };
 
@@ -68,57 +68,18 @@ enum ftl_trace_completion {
 	FTL_TRACE_COMPLETION_DISK,
 };
 
-/* TODO: We should have a map linking these values with its */
-/* sizes to make sure the parser has up-to-date definitions. */
-enum ftl_trace_data_type {
-	FTL_TRACE_DATA_TRACE_TYPE,
-	FTL_TRACE_DATA_TRACE_POINT,
-	FTL_TRACE_DATA_SOURCE,
-	FTL_TRACE_DATA_PPA,
-	FTL_TRACE_DATA_LBA,
-	FTL_TRACE_DATA_LBK_CNT,
-	FTL_TRACE_DATA_BAND_ID,
-	FTL_TRACE_DATA_BAND_MERIT,
-	FTL_TRACE_DATA_RWB_USER_SIZE,
-	FTL_TRACE_DATA_RWB_INTERNAL_SIZE,
-	FTL_TRACE_DATA_LIMIT,
-	FTL_TRACE_DATA_VLD_CNT,
-	FTL_TRACE_DATA_COMPLETION,
-	FTL_TRACE_DATA_BAND_CNT,
-	FTL_TRACE_DATA_MAX,
-};
-
 struct ftl_event {
-	/* Timestamp (us granularity) */
-	uint64_t		ts;
-
 	/* Id used for grouping multiple events of the same request */
 	uint64_t		id;
-
-	/* Following data size */
-	uint8_t			size;
 } __attribute__((packed));
 
-#define FTL_TRACE_INVALID_ID ((uint64_t) -1)
-
-#ifndef FTL_TRACE_ENABLED
-#define FTL_TRACE_ENABLED 0
-#endif
-#ifndef FTL_INTERNAL
-#define FTL_INTERNAL 1
-#endif
-
-#if defined(FTL_INTERNAL)
-
-#include "ftl_utils.h"
-#include "ftl_ppa.h"
 
 struct ftl_trace;
 struct ftl_io;
 struct ftl_rwb_entry;
 struct ftl_band;
 
-#if enabled(FTL_TRACE)
+#if defined(FTL_TRACE_ENABLED)
 
 #define ftl_trace(fn, trace, ...) \
 	do { \
@@ -142,13 +103,10 @@ void	ftl_trace_completion(struct ftl_trace *trace,
 			     const struct ftl_io *io,
 			     enum ftl_trace_completion type);
 void	ftl_trace_limits(struct ftl_trace *trace, const size_t *limits, size_t num_free);
+
 #else
-
-#define ftl_trace_init(p) NULL
-#define ftl_trace_free(t)
-#define ftl_trace_alloc_group(t) FTL_TRACE_INVALID_ID
 #define ftl_trace(fn, trace, ...)
+#define ftl_trace_alloc_group(trace) FTL_TRACE_INVALID_ID
+#endif
 
-#endif /* enabled(FTL_TRACE) */
-#endif /* defined(FTL_INTERNAL) */
 #endif /* FTL_TRACE_H */
