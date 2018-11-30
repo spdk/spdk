@@ -417,7 +417,7 @@ ftl_reloc_io_reinit(struct ftl_io *io, struct ftl_band_reloc *breloc,
 		io->lbas[i] = breloc->band->md.lba_map[lbkoff];
 	}
 
-	ftl_trace(lba_io_init, ftl_dev_trace(io->dev), io);
+	ftl_trace_lba_io_init(io->dev, io);
 }
 
 static int
