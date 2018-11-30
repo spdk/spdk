@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "406b239a_bc241265",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-30T15:15:51Z",
+      "side": 1,
+      "message": "Yeah, need to rebase on that commit https://review.gerrithub.io/#/c/spdk/spdk/+/434599/",
+      "parentUuid": "a85b13f9_a38d13dd",
+      "range": {
+        "startLine": 136,
+        "startChar": 60,
+        "endLine": 136,
+        "endChar": 66
+      },
+      "revId": "1a668eb150565463daf509a2c289e8e76df31a52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34883838_8e6390a3",
         "filename": "scripts/vagrant/Vagrantfile",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-29T17:44:14Z",
       "side": 1,
       "message": "This script works when running script on Fedora host system and using Fedora vm image but on Ubuntu it tries \"sudo update-grub\" on the same image and fails.",
+      "range": {
+        "startLine": 181,
+        "startChar": 2,
+        "endLine": 190,
+        "endChar": 5
+      },
+      "revId": "1a668eb150565463daf509a2c289e8e76df31a52",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b9fd7bf_a23f75cf",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 7
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-11-30T15:15:51Z",
+      "side": 1,
+      "message": "this should have nothing to do with the host os, but ill check it out",
+      "parentUuid": "34883838_8e6390a3",
       "range": {
         "startLine": 181,
         "startChar": 2,
