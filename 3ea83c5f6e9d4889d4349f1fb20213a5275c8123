@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8e180047_75f7f730",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-30T05:03:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "45f9f6fe_5659cd5c",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2292e5f0_a004e004",
         "filename": "lib/trace/rpc/trace_rpc.c",
         "patchSetId": 2
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "1fe1df9f_6884daa3",
+        "filename": "lib/trace/rpc/trace_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-30T05:03:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2292e5f0_a004e004",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9786532a_c308c572",
         "filename": "lib/trace/trace.c",
         "patchSetId": 2
@@ -47,6 +83,24 @@
       "writtenOn": "2018-11-29T23:56:58Z",
       "side": 1,
       "message": "next_entry still gets reset to 0 when it reaches the end of the entries array.  So if there was just one lcore, and that lcore happened to exactly fill the entries array, we would still unlink.\n\nI think the better way is to check the tsc on the first entry in every lcore\u0027s history.  If any of them are \u003e 0, then break.",
+      "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b327c770_5489089c",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-11-30T05:03:49Z",
+      "side": 1,
+      "message": "Right. I forgot before this patch, next_entry hasn\u0027t been changed to one unceasing increased uint64_t.",
+      "parentUuid": "9786532a_c308c572",
       "revId": "3ea83c5f6e9d4889d4349f1fb20213a5275c8123",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
