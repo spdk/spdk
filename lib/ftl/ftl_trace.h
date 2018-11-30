@@ -78,8 +78,6 @@ struct ftl_io;
 struct ftl_rwb_entry;
 struct ftl_band;
 
-#if defined(FTL_TRACE_ENABLED)
-
 #define ftl_trace(fn, trace, ...) \
 	do { \
 		if (trace) { \
@@ -102,10 +100,5 @@ void	ftl_trace_completion(struct ftl_trace *trace,
 			     const struct ftl_io *io,
 			     enum ftl_trace_completion type);
 void	ftl_trace_limits(struct ftl_trace *trace, const size_t *limits, size_t num_free);
-
-#else
-#define ftl_trace(fn, trace, ...)
-#define ftl_trace_alloc_group(trace) FTL_TRACE_INVALID_ID
-#endif
 
 #endif /* FTL_TRACE_H */
