@@ -12,6 +12,8 @@ rpc_py="$rootdir/scripts/rpc.py"
 
 set -e
 
+nvmftestinit $1
+
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
 TYPES="TCP"
@@ -24,7 +26,7 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF -i 0 &
+$NVMF_APP -m 0xF -i 0 -s $2&
 nvmfpid=$!
 
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -108,4 +110,7 @@ done
 trap - SIGINT SIGTERM EXIT
 
 killprocess $nvmfpid
+
+nvmftestfini $1
+
 timing_exit perf
