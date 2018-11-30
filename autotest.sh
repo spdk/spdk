@@ -163,6 +163,11 @@ fi
 
 if [ $SPDK_TEST_VHOST -eq 1 ]; then
 	timing_enter vhost
+
+	timing_enter readonly
+	run_test suite ./test/vhost/spdk_vhost.sh --readonly
+	timing_exit readonly
+
 	timing_enter negative
 	run_test suite ./test/vhost/spdk_vhost.sh --negative
 	timing_exit negative
@@ -204,9 +209,6 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		run_test suite ./test/vhost/spdk_vhost.sh --migration
 		timing_exit vhost_migration
 
-		# timing_enter readonly
-		# run_test suite ./test/vhost/spdk_vhost.sh --readonly
-		# timing_exit readonly
 	fi
 
 	timing_enter integrity_lvol_scsi
