@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99c55d4d_9ba49a11",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-30T14:37:41Z",
+      "side": 1,
+      "message": "You can move this to setup.sh reset handler.\n\nThis is another 10s to tests execution time. Better would be to use partprobe or (k)partx. If there is not proper tool on FreeBSD you can then do a sleep.",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 8
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5f6ff2c_02c26ef1",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-30T14:37:41Z",
+      "side": 1,
+      "message": "This can be The Final test that someone will run on his setup xD\n\nThe setup.sh is detecting blkdevs with mounted file systems. This part just nukes all nvme devices... Is this what you want to do with DiskDestroyer tool here?\n\nAdditionaly, I would be good to provide some safety flag like SPDK_AUTOTEST_NUKE_NVME_DEVS. If this is not set confirmation propmpt might be shown or error thrown.",
+      "range": {
+        "startLine": 68,
+        "startChar": 13,
+        "endLine": 68,
+        "endChar": 40
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c73203c_46289bfd",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-11-30T14:37:41Z",
+      "side": 1,
+      "message": "dd do support both \u0027oflag\u003dsync,direct\u0027",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 4
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
