@@ -1521,7 +1521,17 @@ nvmf_rpc_create_transport(struct spdk_jsonrpc_request *request,
 	/* Initialize all the transport options (based on transport type) and decode the
 	 * parameters again to update any options passed in rpc create transport call.
 	 */
-	spdk_nvmf_transport_opts_init(trtype, &ctx->opts);
+	if (!spdk_nvmf_transport_opts_init(trtype, &ctx->opts)) {
+		/* This can happen if user specifies PCIE transport type which isn't valid for
+		 * NVMe-oF.
+		 */
+		SPDK_ERRLOG("Invalid transport type '%s'\n", ctx->trtype);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid transport type '%s'\n", ctx->trtype);
+		nvmf_rpc_create_transport_ctx_free(ctx);
+		return;
+	}
+
 	if (spdk_json_decode_object(params, nvmf_rpc_create_transport_decoder,
 				    SPDK_COUNTOF(nvmf_rpc_create_transport_decoder),
 				    ctx)) {
