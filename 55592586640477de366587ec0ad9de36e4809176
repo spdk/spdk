@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "10f9f0b3_c4187a7e",
+        "filename": "lib/vhost/rte_vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-30T10:20:23Z",
+      "side": 1,
+      "message": "Could you explain why we need (uintptr_t) here?",
+      "range": {
+        "startLine": 76,
+        "startChar": 17,
+        "endLine": 76,
+        "endChar": 28
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e061808_7e2d2886",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-30T10:20:23Z",
+      "side": 1,
+      "message": "ditto",
+      "range": {
+        "startLine": 767,
+        "startChar": 17,
+        "endLine": 767,
+        "endChar": 28
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ebb8235b_03e13316",
         "filename": "lib/vhost/rte_vhost/vhost_user.h",
         "patchSetId": 2
@@ -131,6 +177,23 @@
     },
     {
       "key": {
+        "uuid": "3c7b76f9_ce241fba",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-30T10:20:23Z",
+      "side": 1,
+      "message": "So, the j may greater than reqs_len, maybe you need check j before assign i to reqs[j++] in line 230",
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e752e39f_22a526ab",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
@@ -246,6 +309,40 @@
       "revId": "55592586640477de366587ec0ad9de36e4809176",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "845546fe_7f85ae61",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 556,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-30T10:20:23Z",
+      "side": 1,
+      "message": "Unnecessary if. The reqs is non-null, and free(reqs) will safe even if the reqs is null.",
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36d4bf6d_f095adbb",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-11-30T10:20:23Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
