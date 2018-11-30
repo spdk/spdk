@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "8f9384bc_08746b9b",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 569,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-11-30T03:12:47Z",
+      "side": 1,
+      "message": "In the inquiry command\u0027s implementation, SPDK return SPDK_SPC_VERSION_SPC3 is supported, so here I used spc3r23 as the reference.",
+      "parentUuid": "4b6cd253_6d551cd5",
+      "revId": "9802b15273d6afed0938f477a9cc2dd458cad249",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e3c1ffc_8f32e968",
         "filename": "include/spdk/scsi_spec.h",
         "patchSetId": 3
