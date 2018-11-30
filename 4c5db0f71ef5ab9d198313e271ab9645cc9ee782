@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8a0df0c2_be31526c",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-30T19:17:52Z",
+      "side": 1,
+      "message": "we should replace this with partprobe first, but that\u0027s not happening now\n\nthe sleep was already there, i just changed its indentation",
+      "parentUuid": "99c55d4d_9ba49a11",
+      "range": {
+        "startLine": 63,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 8
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5f6ff2c_02c26ef1",
         "filename": "autotest.sh",
         "patchSetId": 5
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "aba8b060_afb343e0",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-30T19:17:52Z",
+      "side": 1,
+      "message": "on linux we were already formatting each nvme namespace with parted. I see the issue, but it was there for a long time",
+      "parentUuid": "f5f6ff2c_02c26ef1",
+      "range": {
+        "startLine": 68,
+        "startChar": 13,
+        "endLine": 68,
+        "endChar": 40
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c73203c_46289bfd",
         "filename": "autotest.sh",
         "patchSetId": 5
@@ -59,6 +107,30 @@
       "writtenOn": "2018-11-30T14:37:41Z",
       "side": 1,
       "message": "dd do support both \u0027oflag\u003dsync,direct\u0027",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 4
+      },
+      "revId": "4c5db0f71ef5ab9d198313e271ab9645cc9ee782",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f26c43a6_1db1c606",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-11-30T19:17:52Z",
+      "side": 1,
+      "message": "not on freebsd. there\u0027s no way to do direct i/o with the default dd in there",
+      "parentUuid": "0c73203c_46289bfd",
       "range": {
         "startLine": 72,
         "startChar": 0,
