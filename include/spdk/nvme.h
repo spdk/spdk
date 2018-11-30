@@ -167,6 +167,20 @@ struct spdk_nvme_ctrlr_opts {
 	 * callback.
 	 */
 	uint32_t admin_timeout_ms;
+
+	/**
+	 * It is used for TCP transport.
+	 *
+	 * Set to true, means having header digest for the header in the NVMe/TCP PDU
+	 */
+	bool header_digest;
+
+	/**
+	 * It is used for TCP transport.
+	 *
+	 * Set to true, means having data digest for the data in the NVMe/TCP PDU
+	 */
+	bool data_digest;
 };
 
 /**
