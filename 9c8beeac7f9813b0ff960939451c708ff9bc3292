@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "c84af6c1_2b7d447d",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T10:15:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c67c02a3_602a5435",
+      "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "57c51e5a_45e9ba8e",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 12
@@ -81,6 +99,30 @@
       "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9a18a4e_bc878881",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T10:15:47Z",
+      "side": 1,
+      "message": "We\u0027ve changed this to direct nvme interface call.",
+      "parentUuid": "a7571d8a_5cf5b37c",
+      "range": {
+        "startLine": 277,
+        "startChar": 1,
+        "endLine": 277,
+        "endChar": 58
+      },
+      "revId": "9c8beeac7f9813b0ff960939451c708ff9bc3292",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
