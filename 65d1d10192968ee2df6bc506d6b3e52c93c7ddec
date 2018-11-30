@@ -194,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "9b033232_18c9bb7f",
+        "filename": "lib/ocssd/ocssd_io.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T09:15:05Z",
+      "side": 1,
+      "message": "I\u0027ve changed ftl_io_write/ftl_io_read interface to operate on spdk_io_channel with associated io pool. ftl_dev is now registered as spdk_io_device so upper layer can can get io channel for read/write operations.",
+      "parentUuid": "ce0f3c26_3e7127c1",
+      "revId": "65d1d10192968ee2df6bc506d6b3e52c93c7ddec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f123bb15_0cd6e6a3",
         "filename": "lib/ocssd/ocssd_nvme.c",
         "patchSetId": 6
