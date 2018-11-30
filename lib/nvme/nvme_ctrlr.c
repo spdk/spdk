@@ -497,7 +497,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t			ms_waited = 0;
 	uint32_t			shutdown_timeout_ms;
 
-	if (ctrlr->is_removed) {
+	if (ctrlr->is_removed || !ctrlr->adminq) {
 		return;
 	}
 
