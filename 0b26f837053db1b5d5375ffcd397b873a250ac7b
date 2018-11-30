@@ -16,6 +16,24 @@
       "revId": "0b26f837053db1b5d5375ffcd397b873a250ac7b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84054bb3_24125053",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-11-30T02:15:26Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nCould you see this patch: https://review.gerrithub.io/#/c/spdk/spdk/+/435563",
+      "parentUuid": "4554c956_5a8c45be",
+      "revId": "0b26f837053db1b5d5375ffcd397b873a250ac7b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
