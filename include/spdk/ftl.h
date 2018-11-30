@@ -69,9 +69,6 @@ struct spdk_ftl_conf {
 	/* Threshold for opening new band */
 	size_t					band_thld;
 
-	/* Trace enabled flag */
-	int					trace;
-
 	/* Maximum IO depth per band relocate */
 	size_t					max_reloc_qdepth;
 
