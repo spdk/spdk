@@ -894,14 +894,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
-	if (dev->conf.trace) {
-		dev->stats.trace = ftl_trace_init(dev->conf.trace_path);
-		if (!dev->stats.trace) {
-			SPDK_ERRLOG("Unable to initialize trace module\n");
-			goto fail_sync;
-		}
-	}
-
 	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size);
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
@@ -981,7 +973,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
 	ftl_free_tasks(dev);
-	ftl_trace_free(dev->stats.trace);
 
 	assert(LIST_EMPTY(&dev->wptr_list));
 
