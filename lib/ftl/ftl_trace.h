@@ -38,8 +38,6 @@
 
 #define FTL_TRACE_INVALID_ID ((uint64_t) -1)
 
-typedef uint64_t ftl_trace_group_t;
-
 enum ftl_trace_source {
 	FTL_TRACE_SOURCE_INTERNAL = 0x20,
 	FTL_TRACE_SOURCE_USER,
@@ -73,39 +71,26 @@ struct ftl_event {
 } __attribute__((packed));
 
 
+struct spdk_ftl_dev;
 struct ftl_trace;
 struct ftl_io;
 struct ftl_rwb_entry;
 struct ftl_band;
 
-#if defined(FTL_TRACE_ENABLED)
-
-#define ftl_trace(fn, trace, ...) \
-	do { \
-		if (trace) { \
-			ftl_trace_##fn(trace, ## __VA_ARGS__); \
-		} \
-	} while (0)
-
 struct ftl_trace *ftl_trace_init(void);
-void	ftl_trace_free(struct ftl_trace *trace);
-ftl_trace_group_t ftl_trace_alloc_group(struct ftl_trace *trace);
-void	ftl_trace_defrag_band(struct ftl_trace *trace, const struct ftl_band *band);
-void	ftl_trace_write_band(struct ftl_trace *trace, const struct ftl_band *band);
-void	ftl_trace_lba_io_init(struct ftl_trace *trace, const struct ftl_io *io);
-void	ftl_trace_rwb_fill(struct ftl_trace *trace, const struct ftl_io *io);
-void	ftl_trace_rwb_pop(struct ftl_trace *trace, const struct ftl_rwb_entry *entry);
-void	ftl_trace_submission(struct ftl_trace *trace,
-			     const struct ftl_io *io,
-			     struct ftl_ppa ppa, size_t ppa_cnt);
-void	ftl_trace_completion(struct ftl_trace *trace,
-			     const struct ftl_io *io,
-			     enum ftl_trace_completion type);
-void	ftl_trace_limits(struct ftl_trace *trace, const size_t *limits, size_t num_free);
-
-#else
-#define ftl_trace(fn, trace, ...)
-#define ftl_trace_alloc_group(trace) FTL_TRACE_INVALID_ID
-#endif
+void ftl_trace_free(struct ftl_trace *trace);
+uint64_t ftl_trace_alloc_group(struct spdk_ftl_dev *dev);
+void ftl_trace_defrag_band(struct spdk_ftl_dev *dev, const struct ftl_band *band);
+void ftl_trace_write_band(struct spdk_ftl_dev *dev, const struct ftl_band *band);
+void ftl_trace_lba_io_init(struct spdk_ftl_dev *dev, const struct ftl_io *io);
+void ftl_trace_rwb_fill(struct spdk_ftl_dev *dev, const struct ftl_io *io);
+void ftl_trace_rwb_pop(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry);
+void ftl_trace_submission(struct spdk_ftl_dev *dev,
+			  const struct ftl_io *io,
+			  struct ftl_ppa ppa, size_t ppa_cnt);
+void ftl_trace_completion(struct spdk_ftl_dev *dev,
+			  const struct ftl_io *io,
+			  enum ftl_trace_completion type);
+void ftl_trace_limits(struct spdk_ftl_dev *dev, const size_t *limits, size_t num_free);
 
 #endif /* FTL_TRACE_H */

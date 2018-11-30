@@ -177,7 +177,7 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->lba = FTL_LBA_INVALID;
 	io->cb.fn = fn;
 	io->cb.ctx = ctx;
-	io->trace = ftl_trace_alloc_group(dev->stats.trace);
+	io->trace = ftl_trace_alloc_group(dev);
 }
 
 struct ftl_io *
@@ -279,7 +279,7 @@ ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size
 		io->iov = *iov;
 	}
 
-	ftl_trace(lba_io_init, ftl_dev_trace(io->dev), io);
+	ftl_trace_lba_io_init(io->dev, io);
 }
 
 void

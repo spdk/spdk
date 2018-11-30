@@ -84,7 +84,7 @@ struct ftl_rwb_entry {
 	atomic_bool				valid;
 
 	/* Trace group id */
-	ftl_trace_group_t			trace;
+	uint64_t				trace;
 
 	/* Batch list entry */
 	LIST_ENTRY(ftl_rwb_entry)		list_entry;

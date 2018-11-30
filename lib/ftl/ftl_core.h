@@ -436,10 +436,4 @@ ftl_vld_map_size(const struct spdk_ftl_dev *dev)
 	return (size_t)spdk_divide_round_up(ftl_num_band_lbks(dev), CHAR_BIT);
 }
 
-static inline struct ftl_trace *
-ftl_dev_trace(struct spdk_ftl_dev *dev)
-{
-	return dev->stats.trace;
-}
-
 #endif /* FTL_CORE_H */

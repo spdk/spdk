@@ -195,7 +195,7 @@ struct ftl_io {
 	enum ftl_io_type			type;
 
 	/* Trace group id */
-	ftl_trace_group_t			trace;
+	uint64_t				trace;
 };
 
 /* Metadata IO */
