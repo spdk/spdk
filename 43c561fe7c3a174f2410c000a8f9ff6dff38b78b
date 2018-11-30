@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3be5b97d_c1b270da",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T08:33:39Z",
+      "side": 1,
+      "message": "Maybe flt_anm_ctx is goog enough.",
+      "revId": "43c561fe7c3a174f2410c000a8f9ff6dff38b78b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64cc35e8_3110ab69",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 462,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-11-30T08:33:39Z",
+      "side": 1,
+      "message": "This section is duplicated in ftl_anm_free. Maybe we could move it to separate functions (init/deinit contex?)",
+      "range": {
+        "startLine": 452,
+        "startChar": 0,
+        "endLine": 462,
+        "endChar": 63
+      },
+      "revId": "43c561fe7c3a174f2410c000a8f9ff6dff38b78b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
