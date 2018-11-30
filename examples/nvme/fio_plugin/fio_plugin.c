@@ -60,6 +60,7 @@ struct spdk_fio_options {
 	char	*hostnqn;
 	int	pi_act;
 	char	*pi_chk;
+	char	*digest_enable;
 };
 
 struct spdk_fio_request {
@@ -157,6 +158,17 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	if (fio_options->hostnqn) {
 		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", fio_options->hostnqn);
+	}
+
+	if (fio_options->digest_enable) {
+		if (strcasecmp(fio_options->digest_enable, "HEADER") == 0) {
+			opts->header_digest = true;
+		} else if (strcasecmp(fio_options->digest_enable, "DATA") == 0) {
+			opts->data_digest = true;
+		} else if (strcasecmp(fio_options->digest_enable, "BOTH") == 0) {
+			opts->header_digest = true;
+			opts->data_digest = true;
+		}
 	}
 
 	return true;
@@ -912,6 +924,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, pi_chk),
 		.def		= NULL,
 		.help		= "Control of Protection Information Checking (pi_chk=GUARD|REFTAG|APPTAG)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "digest_enable",
+		.lname		= "PDU digest choice for NVMe/TCP Transport(NONE|HEADER|DATA|BOTH)",
+		.type		= FIO_OPT_STR_STORE,
+		.off1		= offsetof(struct spdk_fio_options, digest_enable),
+		.def		= NULL,
+		.help		= "Control the NVMe/TCP control(digest_enable=NONE|HEADER|DATA|BOTH)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
