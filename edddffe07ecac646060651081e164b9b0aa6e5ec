@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ebfdc176_854638f8",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T06:20:05Z",
+      "side": 1,
+      "message": "OK, I want to contribute TSC stats. I change -1 to 1.\n\nBesides, the return when lun_has_outstanding_tasks is true is not known but no real work. Hence I change -1 to 0.",
+      "parentUuid": "acd52cee_04fae538",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d929c64c_6df12d05",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2018-11-29T23:39:25Z",
       "side": 1,
       "message": "should we have any kind of timeout?\n\ni am concerned that a buggy bdev may successfully return GOOD status, but some I/O are still outstanding - in this case, the reset task would never complete\n\nif you think that is the correct behavior, I am OK with it - just want to make sure",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f939beeb_18c0e802",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T06:20:05Z",
+      "side": 1,
+      "message": "Thank you for very reasonable idea.\n\nAfter this patch, What LUN reset do is just waiting. So we can add timeout.\n\nI think 30 seconds is generally enough as SCSI timeout and it can be changed by RPC later.\n\nI use target failure as the error status of timeout for now.",
+      "parentUuid": "d929c64c_6df12d05",
       "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "943f7f40_6c28806e",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T06:20:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8e2832a_f51dcb67",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca6fbb1c_364f544c",
         "filename": "lib/scsi/lun.c",
         "patchSetId": 8
@@ -64,6 +118,24 @@
       "writtenOn": "2018-11-29T23:39:25Z",
       "side": 1,
       "message": "this comment could go in previous patch (only mentioning this since you may need to edit this patch; then you could also remove semicolons from previous patch)",
+      "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d12478aa_aa6413ac",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T06:20:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca6fbb1c_364f544c",
       "revId": "edddffe07ecac646060651081e164b9b0aa6e5ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
