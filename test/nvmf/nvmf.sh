@@ -18,7 +18,7 @@ timing_enter nvmf_tgt
 #  run anything on the extra cores (and will sleep on master
 #  core 0) so there is no impact to the nvmf_tgt tests by
 #  specifying the bigger core mask.
-start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
+start_stub "-s 4096 -i 0 -m $NVMF_TEST_CORE_MASK"
 trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
 
 export NVMF_APP_SHM_ID="0"
