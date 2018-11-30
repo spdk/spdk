@@ -16,6 +16,24 @@
       "revId": "d65e310cc21b745f2f97949343752fc35a1f91ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2746da35_910708e4",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-11-30T06:57:28Z",
+      "side": 1,
+      "message": "OK. I did the same addition to mgmt tasks in the previous patch. To avoid rerun, I remove them in this patch too.",
+      "parentUuid": "b7a688e3_33e57455",
+      "revId": "d65e310cc21b745f2f97949343752fc35a1f91ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
