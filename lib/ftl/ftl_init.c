@@ -914,14 +914,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
-	if (dev->conf.trace) {
-		dev->stats.trace = ftl_trace_init();
-		if (!dev->stats.trace) {
-			SPDK_ERRLOG("Unabled to initialize trace module\n");
-			goto fail_sync;
-		}
-	}
-
 	if (ftl_dev_init_tasks(dev, opts)) {
 		SPDK_ERRLOG("Unable to initialize device threads\n");
 		goto fail_sync;

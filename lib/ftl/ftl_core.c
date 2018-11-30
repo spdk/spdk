@@ -133,7 +133,7 @@ ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
 		ftl_io_process_error(io, status);
 	}
 
-	ftl_trace(completion, ftl_dev_trace(io->dev), io, FTL_TRACE_COMPLETION_DISK);
+	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
 
 	if (!ftl_io_dec_req(io)) {
 		ftl_io_complete(io);
@@ -301,7 +301,7 @@ ftl_submit_erase(struct ftl_io *io)
 		ppa = ftl_erase_next_ppa(io, ppa, i);
 		ppa_packed = ftl_ppa_addr_pack(dev, ppa);
 
-		ftl_trace(submission, ftl_dev_trace(dev), io, ppa, 1);
+		ftl_trace_submission(dev, io, ppa, 1);
 		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
 				&ppa_packed, 1, NULL, ftl_io_cmpl_cb, io);
 		if (rc) {
@@ -430,7 +430,7 @@ ftl_add_wptr(struct spdk_ftl_dev *dev)
 	LIST_INSERT_HEAD(&dev->wptr_list, wptr, list_entry);
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "wptr: band %u\n", band->id);
-	ftl_trace(write_band, ftl_dev_trace(dev), band);
+	ftl_trace_write_band(dev, band);
 	return 0;
 }
 
@@ -652,7 +652,7 @@ ftl_apply_limits(struct spdk_ftl_dev *dev)
 	/* Clear the limits, since we don't need to apply them anymore */
 	rwb_limit[FTL_RWB_TYPE_USER] = ftl_rwb_entry_cnt(dev->rwb);
 apply:
-	ftl_trace(limits, ftl_dev_trace(dev), rwb_limit, dev->num_free);
+	ftl_trace_limits(dev, rwb_limit, dev->num_free);
 	ftl_rwb_set_limits(dev->rwb, rwb_limit);
 }
 
@@ -734,7 +734,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 
 		assert(lbk_cnt > 0);
 
-		ftl_trace(submission, ftl_dev_trace(dev), io, ppa, lbk_cnt);
+		ftl_trace_submission(dev, io, ppa, lbk_cnt);
 		rc = spdk_nvme_ns_cmd_read(dev->ns, ftl_get_read_qpair(dev),
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
@@ -796,16 +796,14 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 
 	/* If the PPA is invalid, skip it (the buffer should already be zero'ed) */
 	if (ftl_ppa_invalid(*ppa)) {
-		ftl_trace(completion, ftl_dev_trace(io->dev), io,
-			  FTL_TRACE_COMPLETION_INVALID);
+		ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_INVALID);
 		return 0;
 	}
 
 	if (ftl_ppa_cached(*ppa)) {
 		if (!ftl_ppa_cache_read(io, io->lba + lbk,
 					*ppa, ftl_io_iovec_addr(io))) {
-			ftl_trace(completion, ftl_dev_trace(io->dev), io,
-				  FTL_TRACE_COMPLETION_CACHE);
+			ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_CACHE);
 			return 0;
 		}
 
@@ -991,8 +989,7 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 		assert(iov[i].iov_len > 0);
 		assert(iov[i].iov_len / PAGE_SIZE == dev->xfer_size);
 
-		ftl_trace(submission, ftl_dev_trace(dev), io, wptr->ppa,
-			  iov[i].iov_len / PAGE_SIZE);
+		ftl_trace_submission(dev, io, wptr->ppa, iov[i].iov_len / PAGE_SIZE);
 		rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
 						    iov[i].iov_base, ftl_io_get_md(io),
 						    ftl_ppa_addr_pack(dev, wptr->ppa),
@@ -1084,7 +1081,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 
 		ftl_rwb_entry_set_valid(entry);
 
-		ftl_trace(rwb_pop, ftl_dev_trace(dev), entry);
+		ftl_trace_rwb_pop(dev, entry);
 		ftl_update_rwb_stats(dev, entry);
 
 		ppa = ftl_band_next_ppa(wptr->band, ppa, 1);
@@ -1184,7 +1181,7 @@ ftl_rwb_fill(struct ftl_io *io)
 		/* write completion callback when it's processed faster than */
 		/* L2P is set in update_l2p(). */
 		ftl_rwb_push(entry);
-		ftl_trace(rwb_fill, ftl_dev_trace(dev), io);
+		ftl_trace_rwb_fill(dev, io);
 	}
 
 	ftl_io_complete(io);
