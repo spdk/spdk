@@ -359,7 +359,7 @@ function waitforlisten() {
 			# To workaround this issue just try to use provided address.
 			# Second issue is that there might be no python3 so force 'python' interpreter
 			# XXX: This solution could be used for other distros.
-			if python $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods 1>&2 2>/dev/null; then
+			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods 1>&2 2>/dev/null; then
 				break
 			fi
 		fi
