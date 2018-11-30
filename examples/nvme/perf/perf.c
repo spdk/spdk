@@ -182,6 +182,8 @@ static int g_shm_id = -1;
 static uint32_t g_disable_sq_cmb;
 static bool g_no_pci;
 static bool g_warn;
+static bool g_header_digest;
+static bool g_data_digest;
 
 static const char *g_core_mask;
 
@@ -921,6 +923,8 @@ static void usage(char *program_name)
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)]\n");
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
+	printf("\t[-H enable header digest for TCP transport, default: disabled]\n");
+	printf("\t[-I enable data digest for TCP transport, default: disabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
 	printf("\t Format: 'key:value [key:value] ...'\n");
 	printf("\t Keys:\n");
@@ -1279,7 +1283,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DLM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1322,6 +1326,12 @@ parse_args(int argc, char **argv)
 			break;
 		case 'D':
 			g_disable_sq_cmb = 1;
+			break;
+		case 'H':
+			g_header_digest = 1;
+			break;
+		case 'I':
+			g_data_digest = 1;
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
@@ -1493,6 +1503,10 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 * the io_queue_size as much as possible.
 	 */
 	opts->io_queue_size = UINT16_MAX;
+
+	/* Set the header and data_digest */
+	opts->header_digest = g_header_digest;
+	opts->data_digest = g_data_digest;
 
 	return true;
 }
