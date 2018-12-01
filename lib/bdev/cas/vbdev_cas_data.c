@@ -56,6 +56,7 @@ opencas_data_from_spdk_io(void *io_ptr)
 		assert(bdev_io->u.bdev.iovs);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		break;
 	default:
 		SPDK_ERRLOG("Unsupported IO type %d\n", bdev_io->type);
