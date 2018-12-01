@@ -610,45 +610,48 @@ struct spdk_pci_device {
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
 
 /**
- * Enumerate NVMe devices.
+ * Enumerate all NVMe devices on the PCI bus and try to attach those that
+ * weren't attached yet. The provided callback will be called for each such
+ * device and its return code will decide whether that device is attached
+ * or not. Attached devices have to be manually detached with
+ * spdk_pci_device_detach() to be attach-able again.
  *
- * \param enum_cb Called when the enumerate operation completes.
- * \param enum_ctx Argument passed to the callback function.
+ * \param enum_cb Callback to be called for each non-attached NVMe device.
+ * The return code can be as follows:
+ *  -1 - device was not attached, the enumeration is stopped
+ *   0 - device attached successfully, enumeration continues
+ *   1 - device was not attached, enumeration continues
+ * \param enum_ctx Additional context passed to the callback function.
  *
- * \return 0 on success, -1 on failure.
+ * \return -1 if an internal error occured or the provided callback returned -1,
+ *         0 otherwise
  */
 int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
- * Enumerate I/OAT device.
+ * Enumerate all I/OAT devices on the PCI bus and try to attach those that
+ * weren't attached yet.
  *
- * \param enum_cb Called when the enumerate operation completes.
- * \param enum_ctx Argument passed to the callback function.
- *
- * \return 0 on success, -1 on failure.
+ * \see spdk_pci_nvme_enumerate
  */
 int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
- * Enumerate virtio device.
+ * Enumerate all Virtio devices on the PCI bus and try to attach those that
+ * weren't attached yet.
  *
- * \param enum_cb Called when the enumerate operation completes.
- * \param enum_ctx Argument passed to the callback function.
- *
- * \return 0 on success, -1 on failure.
+ * \see spdk_pci_nvme_enumerate
  */
 int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
- * Get a mapping of the virtual address to the BAR of the PCI device.
+ * Map a PCI BAR in the current process.
  *
  * \param dev PCI device.
- * \param bar Index to the BAR.
- * \param mapped_addr A pointer to the pointer to hold the virtual address of
- *  the mapping.
- * \param phys_addr A pointer to the variable to hold the physical address of
- * the mapping.
- * \param size A pointer to the variable to hold the mapped size in bytes.
+ * \param bar BAR number.
+ * \param mapped_addr A variable to store the virtual address of the mapping.
+ * \param phys_addr A variable to store the physical address of the mapping.
+ * \param size A variable to store the size of the bar (in bytes).
  *
  * \return 0 on success.
  */
@@ -656,122 +659,125 @@ int spdk_pci_device_map_bar(struct spdk_pci_device *dev, uint32_t bar,
 			    void **mapped_addr, uint64_t *phys_addr, uint64_t *size);
 
 /**
- * Remove the mapping of the virtual address to the BAR of the PCI device.
+ * Unmap a PCI BAR from the current process. This happens automatically when
+ * the PCI device is detached.
  *
  * \param dev PCI device.
- * \param bar Index to the BAR.
- * \param addr Virtual address to remove that must be the mapped_addr returned
- * by a previous call to spdk_pci_device_map_bar().
+ * \param bar BAR number.
+ * \param addr Virtual address of the bar.
  *
  * \return 0 on success.
  */
-int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar, void *addr);
+int spdk_pci_device_unmap_bar(struct spdk_pci_device *dev, uint32_t bar,
+			      void *mapped_addr);
 
 /**
- * Get the domain address of a PCI device.
+ * Get the domain of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the domain address of PCI device.
+ * \return PCI device domain.
  */
 uint32_t spdk_pci_device_get_domain(struct spdk_pci_device *dev);
 
 /**
- * Get the bus address of a PCI device.
+ * Get the bus number of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the bus address of PCI device.
+ * \return PCI bus number.
  */
 uint8_t spdk_pci_device_get_bus(struct spdk_pci_device *dev);
 
 /**
- * Get the device address of a PCI device.
+ * Get the device number within the PCI bus the device is on.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the device address of PCI device.
+ * \return PCI device number.
  */
 uint8_t spdk_pci_device_get_dev(struct spdk_pci_device *dev);
 
 /**
- * Get the function address of a PCI device.
+ * Get the particular function number represented by struct spdk_pci_device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the function address of PCI device.
+ * \return PCI function number.
  */
 uint8_t spdk_pci_device_get_func(struct spdk_pci_device *dev);
 
 /**
- * Get the PCI address of a PCI device.
+ * Get the full DomainBDF address of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the PCI address structure.
+ * \return PCI address.
  */
 struct spdk_pci_addr spdk_pci_device_get_addr(struct spdk_pci_device *dev);
 
 /**
  * Get the vendor ID of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the vendor ID of PCI device.
+ * \return vendor ID.
  */
 uint16_t spdk_pci_device_get_vendor_id(struct spdk_pci_device *dev);
 
 /**
  * Get the device ID of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the device ID of PCI device.
+ * \return device ID.
  */
 uint16_t spdk_pci_device_get_device_id(struct spdk_pci_device *dev);
 
 /**
  * Get the subvendor ID of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the subvendor ID of PCI device.
+ * \return subvendor ID.
  */
 uint16_t spdk_pci_device_get_subvendor_id(struct spdk_pci_device *dev);
 
 /**
  * Get the subdevice ID of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return the subdevice ID of PCI device.
+ * \return subdevice ID.
  */
 uint16_t spdk_pci_device_get_subdevice_id(struct spdk_pci_device *dev);
 
 /**
- * Allocate a PCI ID struct for the PCI device.
+ * Get the PCI ID of a PCI device.
  *
- * \param dev A pointer to the PCI device.
+ * \param dev PCI device.
  *
- * \return a PCI ID struct.
+ * \return PCI ID.
  */
 struct spdk_pci_id spdk_pci_device_get_id(struct spdk_pci_device *dev);
 
 /**
- * Get the NUMA socket ID of a PCI device.
+ * Get the NUMA node the PCI device is on.
  *
- * \param dev PCI device to get the socket ID of.
+ * \param dev PCI device.
  *
- * \return the socket ID (>= 0) of PCI device.
+ * \return NUMA node index (>= 0).
  */
 int spdk_pci_device_get_socket_id(struct spdk_pci_device *dev);
 
 /**
- * Get the serial number of a PCI device.
+ * Serialize the PCIe Device Serial Number into the provided buffer.
+ * The buffer will contain a 16-character-long serial number followed by
+ * a NULL terminator.
  *
- * \param dev A pointer to the PCI device.
- * \param sn String to store the serial number.
- * \param len Length of the 'sn'.
+ * \param dev PCI device.
+ * \param sn Buffer to store the serial number in.
+ * \param len Length of buffer. Must be at least 17.
  *
  * \return 0 on success, -1 on failure.
  */
@@ -793,134 +799,137 @@ int spdk_pci_device_get_serial_number(struct spdk_pci_device *dev, char *sn, siz
 int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 
 /**
- * Detach a PCI device.
+ * Release all resources associated with the given device and detach it. As long
+ * as the PCI device is physically available, it will attachable again.
  *
- * \param device PCI device to detach.
+ * \param device PCI device.
  */
 void spdk_pci_device_detach(struct spdk_pci_device *device);
 
 /**
- * Attach a NVMe device.
+ * Attach a PCI NVMe device. This will bypass all blacklist rules and
+ * explicitly attach a PCI device at the provided address. The return code
+ * of the provided callback will decide whether that device is attached
+ * or not. Attached devices have to be manually detached with
+ * spdk_pci_device_detach() to be attach-able again.
  *
- * \param enum_cb Called when the attach operation completes.
- * \param enum_ctx Argument passed to the callback function.
- * \param pci_address PCI address of the NVMe device.
+ * \param enum_cb Callback to be called for the NVMe device once it's found.
+ * The return code can be as follows:
+ *  -1 - an error occured, fail the attach request entirely
+ *   0 - device attached successfully
+ *   1 - device was not attached, but do not fail the attach request
+ * \param enum_ctx Additional context passed to the callback function.
  *
- * \return 0 on success, -1 on failure.
+ * \return -1 if a device at the provided PCI address couldn't be found,
+ *         -1 if an internal error happened or the provided callback returned -1,
+ *         0 otherwise
  */
 int spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
 
 /**
- * Attach a I/OAT device.
+ * Attach a PCI I/OAT device.
  *
- * \param enum_cb Called when the attach operation completes.
- * \param enum_ctx Argument passed to the callback function.
- * \param pci_address PCI address of the I/OAT device.
- *
- * \return 0 on success, -1 on failure.
+ * \see spdk_pci_nvme_device_attach
  */
 int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
 
 /**
- * Attach a virtio device.
+ * Attach a PCI Virtio device.
  *
- * \param enum_cb Called when the attach operation completes.
- * \param enum_ctx Argument passed to the callback function.
- * \param pci_address PCI address of the virtio device.
- *
- * \return 0 on success, -1 on failure.
+ * \see spdk_pci_nvme_device_attach
  */
 int spdk_pci_virtio_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				  struct spdk_pci_addr *pci_address);
 
 /**
- * Read PCI configuration space in any specified size.
+ * Read \c len bytes from the PCI configuration space.
  *
  * \param dev PCI device.
- * \param value A pointer to the buffer to hold the value.
- * \param len Length in bytes to read.
- * \param offset Offset in bytes.
+ * \param buf A buffer to copy the data into.
+ * \param len Number of bytes to read.
+ * \param offset Offset (in bytes) in the PCI config space to start reading from.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *value, uint32_t len,
+int spdk_pci_device_cfg_read(struct spdk_pci_device *dev, void *buf, uint32_t len,
 			     uint32_t offset);
 
 /**
- * Write PCI configuration space in any specified size.
+ * Write \c len bytes into the PCI configuration space.
  *
  * \param dev PCI device.
- * \param value A pointer to the value to write.
- * \param len Length in bytes to write.
- * \param offset Offset in bytes.
+ * \param buf A buffer to copy the data from.
+ * \param len Number of bytes to write.
+ * \param offset Offset (in bytes) in the PCI config space to start writing to.
  *
  * \return 0 on success, -1 on failure.
  */
-int spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *value, uint32_t len,
+int spdk_pci_device_cfg_write(struct spdk_pci_device *dev, void *buf, uint32_t len,
 			      uint32_t offset);
+
 /**
- * Read 1 byte from PCI configuration space.
+ * Read 1 byte from the PCI configuration space.
  *
  * \param dev PCI device.
- * \param value A pointer to the buffer to hold the value.
- * \param offset Offset in bytes.
+ * \param value A buffer to copy the data into.
+ * \param offset Offset (in bytes) in the PCI config space to start reading from.
  *
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_read8(struct spdk_pci_device *dev, uint8_t *value, uint32_t offset);
 
 /**
- * Write 1 byte to PCI configuration space.
+ * Write 1 byte into the PCI configuration space.
  *
  * \param dev PCI device.
  * \param value A value to write.
- * \param offset Offset in bytes.
+ * \param offset Offset (in bytes) in the PCI config space to start writing to.
  *
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_write8(struct spdk_pci_device *dev, uint8_t value, uint32_t offset);
 
 /**
- * Read 2 bytes from PCI configuration space.
+ * Read 2 bytes from the PCI configuration space.
  *
  * \param dev PCI device.
- * \param value A pointer to the buffer to hold the value.
- * \param offset Offset in bytes.
+ * \param value A buffer to copy the data into.
+ * \param offset Offset (in bytes) in the PCI config space to start reading from.
  *
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_read16(struct spdk_pci_device *dev, uint16_t *value, uint32_t offset);
 
 /**
- * Write 2 bytes to PCI configuration space.
+ * Write 2 bytes into the PCI configuration space.
  *
  * \param dev PCI device.
  * \param value A value to write.
- * \param offset Offset in bytes.
+ * \param offset Offset (in bytes) in the PCI config space to start writing to.
  *
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_write16(struct spdk_pci_device *dev, uint16_t value, uint32_t offset);
 
 /**
- * Read 4 bytes from PCI configuration space.
+ * Read 4 bytes from the PCI configuration space.
  *
  * \param dev PCI device.
- * \param value A pointer to the buffer to hold the value.
- * \param offset Offset in bytes.
+ * \param value A buffer to copy the data into.
+ * \param offset Offset (in bytes) in the PCI config space to start reading from.
  *
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uint32_t offset);
 
 /**
- * Write 4 bytes to PCI configuration space.
+ * Write 4 bytes into the PCI configuration space.
  *
  * \param dev PCI device.
  * \param value A value to write.
- * \param offset Offset in bytes.
+ * \param offset Offset (in bytes) in the PCI config space to start writing to.
  *
  * \return 0 on success, -1 on failure.
  */
