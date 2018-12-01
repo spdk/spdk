@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2683,11 +2683,16 @@ spdk_nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_tcp_close_qpair(struct spdk_nvmf_qpair *qpair,
+			  spdk_nvmf_transport_qpair_fini_cb cb,
+			  void *ctx)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 
 	spdk_nvmf_tcp_qpair_destroy(SPDK_CONTAINEROF(qpair, struct nvme_tcp_qpair, qpair));
+	if (cb) {
+		cb(ctx);
+	}
 }
 
 static void

@@ -321,6 +321,8 @@ struct spdk_nvmf_rdma_qpair {
 	uint32_t				disconnect_flags;
 	struct spdk_nvmf_rdma_wr		drain_send_wr;
 	struct spdk_nvmf_rdma_wr		drain_recv_wr;
+	spdk_nvmf_transport_qpair_fini_cb	disconnect_cb;
+	void					*disconnect_ctx;
 
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
@@ -669,6 +671,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	int				rc;
 #endif
+	spdk_nvmf_transport_qpair_fini_cb disconnect_cb = rqpair->disconnect_cb;
+	void				  *disconnect_ctx = rqpair->disconnect_ctx;
 
 	if (rqpair->refcnt != 0) {
 		return;
@@ -728,6 +732,10 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	free(rqpair->recvs);
 #endif
 	free(rqpair);
+
+	if (disconnect_cb) {
+		disconnect_cb(disconnect_ctx);
+	}
 }
 
 static int
@@ -1429,6 +1437,13 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 		if (rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER) {
 			TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
+		} else if (rdma_req->state == RDMA_REQUEST_STATE_NEW) {
+			rdma_recv = rdma_req->recv;
+#ifndef SPDK_CONFIG_RDMA_SRQ
+			TAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, link);
+#else
+			TAILQ_REMOVE(&rqpair->poller->incoming_queue, rdma_recv, link);
+#endif
 		}
 		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 	}
@@ -1606,7 +1621,21 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
+#ifdef SPDK_CONFIG_RDMA_SRQ
+			if (rdma_req->recv != NULL) {
+				struct ibv_recv_wr *bad_recv_wr = NULL;
 
+				/* This may only happen when qpair is being disconnected. */
+				assert((rqpair->qpair.state == SPDK_NVMF_QPAIR_DEACTIVATING) ||
+				       (rqpair->qpair.state == SPDK_NVMF_QPAIR_ERROR));
+				rc = ibv_post_srq_recv(rqpair->poller->srq, &rdma_req->recv->wr, &bad_recv_wr);
+				if (rc) {
+					SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+					return rc;
+				}
+				rdma_req->recv = NULL;
+			}
+#endif
 			if (rdma_req->data_from_pool) {
 				/* Put the buffer/s back in the pool */
 				for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
@@ -2208,6 +2237,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	return 0;
 }
 
+#ifdef SPDK_CONFIG_RDMA_SRQ
 static void
 _nvmf_rdma_qpair_last_wqe(void *ctx)
 {
@@ -2240,7 +2270,7 @@ _nvmf_rdma_qpair_last_wqe(void *ctx)
 		return;
 	}
 }
-
+#endif
 
 #ifdef DEBUG
 static const char *CM_EVENT_STR[] = {
@@ -2802,6 +2832,21 @@ spdk_nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
+#ifdef SPDK_CONFIG_RDMA_SRQ
+	if (rdma_req->recv != NULL) {
+		struct ibv_recv_wr *bad_recv_wr = NULL;
+		struct spdk_nvmf_rdma_qpair *rqpair;
+		int rc;
+
+		rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+		rc = ibv_post_srq_recv(rqpair->poller->srq, &rdma_req->recv->wr, &bad_recv_wr);
+		if (rc) {
+			SPDK_ERRLOG("Unable to re-post rx descriptor\n");
+			return rc;
+		}
+		rdma_req->recv = NULL;
+	}
+#endif
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer/s back in the pool */
 		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
@@ -2842,7 +2887,9 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 }
 
 static void
-spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
+spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair,
+			   spdk_nvmf_transport_qpair_fini_cb cb,
+			   void *ctx)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 #ifndef SPDK_CONFIG_RDMA_SRQ
@@ -2856,6 +2903,9 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
 		return;
 	}
+
+	rqpair->disconnect_cb = cb;
+	rqpair->disconnect_ctx = ctx;
 
 	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
 
