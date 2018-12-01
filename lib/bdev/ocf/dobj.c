@@ -283,6 +283,26 @@ prepare_submit(struct ocf_io *io)
 static void
 vbdev_ocf_dobj_submit_flush(struct ocf_io *io)
 {
+	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(io->obj);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
+	int status;
+
+	if (base->is_cache) {
+		io->end(io, 0);
+		return;
+	}
+
+	prepare_submit(io);
+
+	status = spdk_bdev_flush(
+			 base->desc, io_ctx->ch,
+			 io->addr, io->bytes,
+			 vbdev_ocf_dobj_submit_io_cb, io);
+	if (status) {
+		/* Since callback is not called, we need to do it manually to free io structures */
+		SPDK_ERRLOG("Submission failed with status=%d\n", status);
+		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+	}
 }
 
 static void
