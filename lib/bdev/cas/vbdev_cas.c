@@ -630,13 +630,31 @@ register_vbdev(struct vbdev_cas *vbdev)
 	return result;
 }
 
+/* When base device gets unpluged this is called
+ * We will unregister cache vbdev here */
+static void
+hotremove_cb(void *ctx)
+{
+	struct vbdev_cas_base *base = ctx;
+	struct spdk_bdev *bdev = base->bdev;
+
+	if (base->parent->state.doing_finish) {
+		return;
+	}
+
+	SPDK_NOTICELOG("Deinitializing \"%s\" because its %s device \"%s\" was removed\n",
+		       base->parent->name, base->is_cache ? "cache" : "core", bdev->name);
+
+	spdk_bdev_unregister(&base->parent->exp_bdev, NULL, NULL);
+}
+
 /* Open base SPDK bdev for writing */
 static int
 open_base(struct vbdev_cas_base *base)
 {
 	int status;
 
-	status = spdk_bdev_open(base->bdev, true, NULL, NULL, &base->desc);
+	status = spdk_bdev_open(base->bdev, true, hotremove_cb, base, &base->desc);
 	if (status) {
 		SPDK_ERRLOG("Can't open device %s for writing\n", base->name);
 		return status;
