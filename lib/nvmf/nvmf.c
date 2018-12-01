@@ -705,20 +705,10 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 }
 
 static void
-_spdk_nvmf_qpair_destroy(void *ctx, int status)
+_spdk_nvmf_qpair_destroy_cb(void *ctx)
 {
 	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
-	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
-	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
-
-	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
-	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
-	qpair_ctx->qid = qpair->qid;
-
-	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
-	qpair->group = NULL;
-
-	spdk_nvmf_transport_qpair_fini(qpair);
+	struct spdk_nvmf_ctrlr *ctrlr = qpair_ctx->ctrlr;
 
 	if (!ctrlr || !ctrlr->thread) {
 		if (qpair_ctx->cb_fn) {
@@ -728,9 +718,23 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 		return;
 	}
 
-	qpair_ctx->ctrlr = ctrlr;
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 
+}
+
+static void
+_spdk_nvmf_qpair_destroy(void *ctx, int status)
+{
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_qpair *qpair = qpair_ctx->qpair;
+
+	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
+	qpair_ctx->qid = qpair->qid;
+	qpair_ctx->ctrlr = qpair->ctrlr;
+	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
+
+	spdk_nvmf_transport_qpair_fini(qpair, _spdk_nvmf_qpair_destroy_cb, qpair_ctx);
 }
 
 int
@@ -740,7 +744,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
-		spdk_nvmf_transport_qpair_fini(qpair);
+		spdk_nvmf_transport_qpair_fini(qpair, NULL, NULL);
 		if (cb_fn) {
 			cb_fn(ctx);
 		}
