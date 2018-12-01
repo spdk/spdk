@@ -780,6 +780,24 @@ vbdev_ocf_module_fini(void)
 	vbdev_ocf_ctx_cleanup();
 }
 
+/* When base device gets unpluged this is called
+ * We will unregister cache vbdev here */
+static void
+hotremove_cb(void *ctx)
+{
+	struct vbdev_ocf_base *base = ctx;
+	struct spdk_bdev *bdev = base->bdev;
+
+	if (base->parent->state.doing_finish) {
+		return;
+	}
+
+	SPDK_NOTICELOG("Deinitializing '%s' because its %s device '%s' was removed\n",
+		       base->parent->name, base->is_cache ? "cache" : "core", bdev->name);
+
+	vbdev_ocf_delete(base->parent);
+}
+
 /* Open base SPDK bdev and claim it */
 static int
 attach_base(struct vbdev_ocf_base *base)
@@ -790,7 +808,7 @@ attach_base(struct vbdev_ocf_base *base)
 		return -EALREADY;
 	}
 
-	status = spdk_bdev_open(base->bdev, true, NULL, NULL, &base->desc);
+	status = spdk_bdev_open(base->bdev, true, hotremove_cb, base, &base->desc);
 	if (status) {
 		SPDK_ERRLOG("Unable to open device '%s' for writing\n", base->name);
 		return status;
