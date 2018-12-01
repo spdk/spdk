@@ -45,7 +45,8 @@ BLOCKDEV_MODULES_LIST += ocfenv
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
-BLOCKDEV_MODULES_LIST += bdev_compress
+BLOCKDEV_MODULES_LIST += bdev_compress reduce
+SYS_LIBS += -lpmem
 endif
 
 ifeq ($(CONFIG_RDMA),y)
