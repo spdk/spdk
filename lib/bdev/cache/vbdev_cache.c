@@ -214,8 +214,10 @@ io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
 		dir = bdev_io->type == SPDK_BDEV_IO_TYPE_READ ? OCF_READ : OCF_WRITE;
 		ocf_io_configure(io, offset, len, dir, 0, 0);
 		return ocf_submit_io(io);
-	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		ocf_io_configure(io, offset, len, 0, 0, 0);
+		return ocf_submit_discard(io);
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
@@ -282,9 +284,9 @@ vbdev_cache_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 		}
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
 		io_handle(bdev_io);
 		break;
-	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
@@ -302,8 +304,8 @@ vbdev_cache_io_type_supported(void *opaque, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		return true;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return true;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
