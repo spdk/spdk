@@ -31,40 +31,13 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_VTUNE),y)
-CFLAGS += -I$(CONFIG_VTUNE_DIR)/include -I$(CONFIG_VTUNE_DIR)/sdk/src/ittnotify
-endif
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 
-C_SRCS = bdev.c part.c scsi_nvme.c
-C_SRCS-$(CONFIG_VTUNE) += vtune.c
-LIBNAME = bdev
-
-DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
-
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto
-endif
-
-ifeq ($(CONFIG_OCF), y)
-DIRS-y += ocf
-DIRS-y += ocf/env
-DEPDIRS-ocf := ocf/env
-endif
-
-ifeq ($(CONFIG_REDUCE),y)
-DIRS-y += compress
-endif
-
-ifeq ($(OS),Linux)
-DIRS-y += aio
-DIRS-$(CONFIG_ISCSI_INITIATOR) += iscsi
-DIRS-$(CONFIG_VIRTIO) += virtio
-DIRS-$(CONFIG_PMDK) += pmem
-endif
-
-DIRS-$(CONFIG_RBD) += rbd
+C_SRCS = vbdev_compress.c vbdev_compress_rpc.c
+LIBNAME = bdev_compress
+CFLAGS += $(ENV_CFLAGS)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
