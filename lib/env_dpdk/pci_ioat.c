@@ -88,7 +88,7 @@ static struct rte_pci_id ioat_driver_id[] = {
 	{ .vendor_id = 0, /* sentinel */ },
 };
 
-static struct spdk_pci_enum_ctx g_ioat_pci_drv = {
+static struct spdk_pci_driver g_ioat_pci_drv = {
 	.driver = {
 		.drv_flags	= RTE_PCI_DRV_NEED_MAPPING,
 		.id_table	= ioat_driver_id,
