@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -162,12 +162,20 @@ spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 		return;
 	}
 
-	/* Check if the subsystem is paused (if there is a subsystem) */
+	/* Check if the subsystem is paused or deactivated (if there is a subsystem) */
 	if (qpair->ctrlr) {
 		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
-		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
-			/* The subsystem is not currently active. Queue this request. */
+		if (sgroup->state == SPDK_NVMF_SUBSYSTEM_PAUSED) {
+			/* The subsystem is currently paused. Queue this request. */
 			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+			return;
+		} else if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			/* The subsystem is not active. Fail this request. */
+			req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+			req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+			/* Place the request on the outstanding list so we can keep track of it */
+			TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+			spdk_nvmf_request_complete(req);
 			return;
 		}
 

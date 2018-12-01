@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -46,6 +46,8 @@ struct spdk_nvmf_transport {
 
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
+
+typedef void (*spdk_nvmf_transport_qpair_fini_cb)(void *ctx);
 
 struct spdk_nvmf_transport_ops {
 	/**
@@ -129,7 +131,9 @@ struct spdk_nvmf_transport_ops {
 	/*
 	 * Deinitialize a connection.
 	 */
-	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair);
+	void (*qpair_fini)(struct spdk_nvmf_qpair *qpair,
+			   spdk_nvmf_transport_qpair_fini_cb cb,
+			   void *ctx);
 
 	/*
 	 * True if the qpair has no pending IO.
@@ -184,7 +188,9 @@ int spdk_nvmf_transport_req_free(struct spdk_nvmf_request *req);
 
 int spdk_nvmf_transport_req_complete(struct spdk_nvmf_request *req);
 
-void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair);
+void spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair,
+				    spdk_nvmf_transport_qpair_fini_cb cb,
+				    void *ctx);
 
 bool spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair);
 
