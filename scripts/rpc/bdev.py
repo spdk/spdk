@@ -15,6 +15,32 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
     return client.call('set_bdev_options', params)
 
 
+def construct_compress_bdev(client, base_bdev_name, name, comp_pmd):
+    """Construct a compress virtual block device.
+
+    Args:
+        base_bdev_name: name of the underlying base bdev
+        name: name for the compress vbdev
+        comp_pmd: name of of the DPDK compression driver to use
+
+    Returns:
+        Name of created virtual block device.
+    """
+    params = {'base_bdev_name': base_bdev_name, 'name': name, 'comp_pmd': comp_pmd}
+
+    return client.call('construct_compress_bdev', params)
+
+
+def delete_compress_bdev(client, name):
+    """Delete compress virtual block device.
+
+    Args:
+        name: name of compress vbdev to delete
+    """
+    params = {'name': name}
+    return client.call('delete_compress_bdev', params)
+
+
 def construct_crypto_bdev(client, base_bdev_name, name, crypto_pmd, key):
     """Construct a crypto virtual block device.
 
