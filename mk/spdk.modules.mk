@@ -40,8 +40,7 @@ BLOCKDEV_MODULES_LIST += bdev_crypto
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
-BLOCKDEV_MODULES_LIST += bdev_compress reduce
-BLOCKDEV_MODULES_DEPS += -lpmem
+BLOCKDEV_MODULES_LIST += bdev_compress
 endif
 
 ifeq ($(CONFIG_RDMA),y)
