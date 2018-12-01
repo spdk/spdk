@@ -131,9 +131,7 @@ remove_base(struct vbdev_cache_base *base)
 	if (base->bdev->internal.claim_module != NULL) {
 		spdk_bdev_module_release_bdev(base->bdev);
 	}
-	if (!g_shutdown_started && base->desc) {
-		spdk_bdev_close(base->desc);
-	}
+	spdk_bdev_close(base->desc);
 
 	base->attached = false;
 	return rc;
@@ -699,13 +697,31 @@ vbdev_cache_module_fini(void)
 	opencas_cleanup();
 }
 
+/* When base device gets unpluged this is called
+ * We will unregister cache vbdev here */
+static void
+hotremove_cb(void *ctx)
+{
+	struct vbdev_cache_base *base = ctx;
+	struct spdk_bdev *bdev = base->bdev;
+
+	if (base->parent->state.doing_finish) {
+		return;
+	}
+
+	SPDK_NOTICELOG("Cache disk \"%s\" lost it's child \"%s\" -> deinitializing\n",
+		       base->parent->name, bdev->name);
+
+	spdk_bdev_unregister(&base->parent->exp_bdev, NULL, NULL);
+}
+
 /* Open base SPDK bdev */
 static int
 attach_base(struct vbdev_cache_base *base, struct spdk_bdev *bdev)
 {
 	int status = 0;
 
-	status = spdk_bdev_open(bdev, true, NULL, NULL, &base->desc);
+	status = spdk_bdev_open(bdev, true, hotremove_cb, base, &base->desc);
 
 	if (status) {
 		SPDK_ERRLOG("Can't open device %s for writing\n", spdk_bdev_get_name(bdev));
