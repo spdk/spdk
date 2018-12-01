@@ -252,6 +252,21 @@ prepare_submit(struct ocf_io *io)
 static void
 opencas_dobj_submit_flush(struct ocf_io *io)
 {
+	struct vbdev_cache_base *base = *(void **)ocf_data_obj_get_uuid(io->obj)->data;
+	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
+	int status = 0;
+
+	prepare_submit(io);
+
+	status = spdk_bdev_flush(
+			 base->desc, io_ctnr->ch,
+			 io->addr, io->bytes,
+			 opencas_dobj_submit_io_cb, io);
+	if (status) {
+		/* Since callback is not called, we need to do it manually to free io scructures */
+		SPDK_ERRLOG("Submission failed with status=%d\n", status);
+		opencas_dobj_submit_io_cb(NULL, false, io);
+	}
 }
 
 static void
