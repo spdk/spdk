@@ -351,7 +351,7 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 		if (!write_zeroes) {
 			initialize_buffer(&tx_buf, pattern, data_length);
 			initialize_buffer(&rx_buf, 0, data_length);
-
+			raise(SIGINT);
 			blockdev_write(target, tx_buf, offset, data_length, iov_len);
 		} else {
 			initialize_buffer(&tx_buf, 0, data_length);
@@ -366,6 +366,7 @@ blockdev_write_read(uint32_t data_length, uint32_t iov_len, int pattern, uint64_
 		} else {
 			CU_ASSERT_EQUAL(g_completion_success, false);
 		}
+		raise(SIGINT);
 		blockdev_read(target, rx_buf, offset, data_length, iov_len);
 
 		if (expected_rc == 0) {
@@ -869,6 +870,7 @@ __run_ut_thread(void *arg1, void *arg2)
 
 	if (
 		CU_add_test(suite, "blockdev write read 4k", blockdev_write_read_4k) == NULL
+#if 0
 		|| CU_add_test(suite, "blockdev write zeroes read 4k", blockdev_write_zeroes_read_4k) == NULL
 		|| CU_add_test(suite, "blockdev write zeroes read 1m", blockdev_write_zeroes_read_1m) == NULL
 		|| CU_add_test(suite, "blockdev write zeroes read 3m", blockdev_write_zeroes_read_3m) == NULL
@@ -898,6 +900,7 @@ __run_ut_thread(void *arg1, void *arg2)
 			       blockdev_writev_readv_size_gt_128k_two_iov) == NULL
 		|| CU_add_test(suite, "blockdev reset",
 			       blockdev_test_reset) == NULL
+#endif
 	) {
 		CU_cleanup_registry();
 		stop_init_thread(CU_get_error());
