@@ -628,6 +628,13 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
 struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
+ * Get the VMD PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_vmd_get_driver(void);
+
+/**
  * Enumerate all PCI devices supported by the provided driver and try to
  * attach those that weren't attached yet. The provided callback will be
  * called for each such device and its return code will decide whether that
