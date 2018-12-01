@@ -40,6 +40,7 @@
 #define SPDK_ENV_H
 
 #include "spdk/stdinc.h"
+#include "spdk/queue.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -65,8 +66,6 @@ extern "C" {
  * Memzone flags
  */
 #define SPDK_MEMZONE_NO_IOVA_CONTIG 0x00100000 /**< no iova contiguity */
-
-struct spdk_pci_device;
 
 /**
  * \brief Environment initialization options
@@ -593,6 +592,19 @@ struct spdk_pci_id {
 	uint16_t	device_id;
 	uint16_t	subvendor_id;
 	uint16_t	subdevice_id;
+};
+
+struct spdk_pci_device {
+	void				*dev_handle;
+	struct spdk_pci_addr		addr;
+	struct spdk_pci_id		id;
+	int				socket_id;
+
+	struct _spdk_pci_device_internal {
+		struct spdk_pci_driver		*driver;
+		bool				attached;
+		TAILQ_ENTRY(spdk_pci_device)	tailq;
+	} internal;
 };
 
 typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev);
