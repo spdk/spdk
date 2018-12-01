@@ -367,8 +367,21 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 static void
 vbdev_ocf_dobj_submit_discard(struct ocf_io *io)
 {
-	/* TODO [unmap support] */
-	io->end(io, 0);
+	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(io->obj);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
+	int status = 0;
+
+	prepare_submit(io);
+
+	status = spdk_bdev_unmap(
+			 base->desc, io_ctx->ch,
+			 io->addr, io->bytes,
+			 vbdev_ocf_dobj_submit_io_cb, io);
+	if (status) {
+		/* Since callback is not called, we need to do it manually to free io scructures */
+		SPDK_ERRLOG("Submission failed with status=%d\n", status);
+		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+	}
 }
 
 static void
