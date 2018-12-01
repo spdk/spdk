@@ -242,6 +242,24 @@ function configure_linux_pci {
 	done
 	rm $TMP
 
+	# VMD
+	TMP=`mktemp`
+	#collect all the device_id info of vmd devices.
+	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}' > $TMP
+
+	for dev_id in `cat $TMP`; do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted VMD device at $bdf"
+				continue
+			fi
+
+			linux_bind_driver "$bdf" "$driver_name"
+		done
+	done
+	rm $TMP
+
 	echo "1" > "/sys/bus/pci/rescan"
 }
 
@@ -420,6 +438,31 @@ function reset_linux_pci {
 	done
 	rm $TMP
 
+	# VMD
+	TMP=`mktemp`
+	#collect all the device_id info of vmd devices.
+	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}' > $TMP
+
+	set +e
+	check_for_driver vmd
+	driver_loaded=$?
+	set -e
+	for dev_id in `cat $TMP`; do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			if pci_can_bind $bdf == "0" ; then
+				echo "Skipping un-whitelisted VMD device at $bdf"
+				continue
+			fi
+			if [ $driver_loaded -ne 0 ]; then
+				linux_bind_driver "$bdf" vmd
+			else
+				linux_unbind_driver "$bdf"
+			fi
+		done
+	done
+	rm $TMP
+
 	echo "1" > "/sys/bus/pci/rescan"
 }
 
@@ -504,6 +547,20 @@ function status_linux {
 			echo -e "$bdf\t$node\t\t$driver\t\t$blknames"
 		done
 	done
+
+	echo "VMD"
+
+	#collect all the device_id info of vmd devices.
+	TMP=`grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}'`
+	echo -e "BDF\t\tNuma Node\tDriver Name"
+	for dev_id in $TMP; do
+		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+			driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}'`
+			node=`cat /sys/bus/pci/devices/$bdf/numa_node`;
+			echo -e "$bdf\t$node\t\t$driver"
+		done
+	done
 }
 
 function configure_freebsd_pci {
@@ -514,6 +571,13 @@ function configure_freebsd_pci {
 
 	# IOAT
 	grep "PCI_DEVICE_ID_INTEL_IOAT" $rootdir/include/spdk/pci_ids.h \
+	| awk -F"x" '{print $2}' > $TMP
+	for dev_id in `cat $TMP`; do
+		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
+	done
+
+	# VMD
+	grep "PCI_DEVICE_ID_INTEL_VMD" $rootdir/include/spdk/pci_ids.h \
 	| awk -F"x" '{print $2}' > $TMP
 	for dev_id in `cat $TMP`; do
 		GREP_STR="${GREP_STR}\|chip=0x${dev_id}8086"
