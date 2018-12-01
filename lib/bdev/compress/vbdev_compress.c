@@ -33,6 +33,7 @@
 
 #include "vbdev_compress.h"
 
+#include "spdk/reduce.h"
 #include "spdk/stdinc.h"
 #include "spdk/rpc.h"
 #include "spdk/env.h"
@@ -54,6 +55,8 @@
 #define NUM_MAX_INFLIGHT_OPS 512
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 64
+
+#define TEST_MD_PATH "/tmp"
 
 /* To add support for new device types, follow the examples of the following...
  * Note that the string names are defined by the DPDK PMD in question so be
@@ -96,6 +99,8 @@ struct vbdev_compress {
 	char				*drv_name;	/* name of the compression device driver */
 	struct comp_io_channel		*reduce_ch;	/* all IOs are funneled through these */
 	struct spdk_thread		*reduce_thread;
+	struct spdk_reduce_vol_params	params;		/* params for the reduce volume */
+	struct spdk_reduce_backing_dev	backing_dev;	/* backing device info for the reduce volume */
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
@@ -639,6 +644,172 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
+{
+	struct vbdev_compress *init_ctx = cb_arg;
+
+	/* Done with direct md access to base bdev */
+	spdk_put_io_channel(init_ctx->base_ch);
+	spdk_bdev_close(init_ctx->base_desc);
+
+	if (ziperrno == 0) {
+		vbdev_compress_claim((struct vbdev_compress *)init_ctx->base_bdev);
+	} else {
+		SPDK_ERRLOG("for vol %s, error %u\n",
+			    spdk_bdev_get_name(init_ctx->base_bdev), ziperrno);
+	}
+
+	free(init_ctx);
+}
+
+/* Callback for the function used by reduceLib to perform IO to/rom the backing device. We just
+ * call the callback provided by reduceLib when it called the write function and
+ * free the bdev_io.
+ */
+static void
+comp_reduce_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *arg)
+{
+	struct spdk_reduce_vol_cb_args *cb_args = arg;
+	int bserrno;
+
+	if (success) {
+		bserrno = 0;
+	} else {
+		bserrno = -EIO;
+	}
+	cb_args->cb_fn(cb_args->cb_arg, bserrno);
+	spdk_bdev_free_io(bdev_io);
+}
+
+/* This is the function provided to the reduceLib for sending reads directly to
+ * the backing device.
+ */
+static void
+_comp_reduce_readv(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
+		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+					   backing_dev);
+	int rc;
+
+	rc = spdk_bdev_readv_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
+				    iov, iovcnt, lba, lba_count,
+				    comp_reduce_io_cb,
+				    args);
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io.\n");
+			/* TODO: there's no bdev_io to queue */
+		} else {
+			SPDK_ERRLOG("error submitting readv request\n");
+		}
+	}
+}
+
+/* This is the function provided to the reduceLib for sending writes directly to
+ * the backing device.
+ */
+static void
+_comp_reduce_writev(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int iovcnt,
+		    uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+					   backing_dev);
+	int rc;
+
+	rc = spdk_bdev_writev_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
+				     iov, iovcnt, lba, lba_count,
+				     comp_reduce_io_cb,
+				     args);
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io.\n");
+			/* TODO: there's no bdev_io to queue */
+		} else {
+			SPDK_ERRLOG("error submitting writev request\n");
+		}
+	}
+}
+
+/* This is the function provided to the reduceLib for sending umaps directly to
+ * the backing device.
+ */
+static void
+_comp_reduce_unmap(struct spdk_reduce_backing_dev *dev,
+		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(dev, struct vbdev_compress,
+					   backing_dev);
+	int rc;
+
+	rc = spdk_bdev_unmap_blocks(comp_bdev->base_desc, comp_bdev->base_ch,
+				    lba, lba_count,
+				    comp_reduce_io_cb,
+				    args);
+
+	if (rc) {
+		if (rc == -ENOMEM) {
+			SPDK_ERRLOG("No memory, start to queue io.\n");
+			/* TODO: there's no bdev_io to queue */
+		} else {
+			SPDK_ERRLOG("error submitting unmap request\n");
+		}
+	}
+}
+
+/* TODO: determine which parms we want user configurable, HC for now */
+/* params.vol_size
+ * params.chunk_size
+ * TEST_MD_PATH
+ */
+/* Call reduceLib to initialize the volume and backing device.  This will
+ * indirectly generate IO to the backing device (metadata). We use the
+ * struct vbdev_compress as our init_ctx as it has the main elements that
+ * we need to do IO to the base bdev for init metadata operations, then
+ * we free it when complete.
+ */
+
+static void
+vbdev_init_reduce(struct spdk_bdev *bdev)
+{
+	int rc;
+	struct vbdev_compress *init_ctx;
+
+	init_ctx = calloc(1, sizeof(struct vbdev_compress));
+	if (init_ctx == NULL) {
+		SPDK_ERRLOG("failed to alloc init contexs\n");
+		return;
+	}
+
+	rc = spdk_bdev_open(bdev, true, NULL, bdev, &init_ctx->base_desc);
+	if (rc) {
+		SPDK_ERRLOG("failed to open bdev for metadata operations\n");
+		free(init_ctx);
+		return;
+	}
+
+	init_ctx->base_bdev = bdev;
+	init_ctx->base_ch = spdk_bdev_get_io_channel(init_ctx->base_desc);
+	init_ctx->backing_dev.unmap = _comp_reduce_unmap;
+	init_ctx->backing_dev.readv = _comp_reduce_readv;
+	init_ctx->backing_dev.writev = _comp_reduce_writev;
+
+	init_ctx->backing_dev.blocklen = bdev->blocklen;
+	init_ctx->backing_dev.blockcnt = bdev->blockcnt;
+
+	/* TODO, pending reducelib updates around vol size determination */
+	init_ctx->params.vol_size = bdev->blocklen * bdev->blockcnt;
+	init_ctx->params.vol_size = 1024 * 1024 * 1024;
+	init_ctx->params.chunk_size = 16 * 1024;
+	init_ctx->params.backing_io_unit_size = init_ctx->backing_dev.blocklen;
+
+	spdk_reduce_vol_init(&init_ctx->params, &init_ctx->backing_dev,
+			     TEST_MD_PATH,
+			     vbdev_reduce_init_cb,
+			     init_ctx);
+}
+
 /* We provide this callback for the SPDK channel code to create a channel using
  * the channel struct we provided in our module get_io_channel() entry point. Here
  * we get and save off an underlying base channel of the device below us so that
@@ -726,7 +897,7 @@ create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *
 		return -ENODEV;
 	}
 
-	/* TODO: vbdev_init_reduce(bdev); goes here */
+	vbdev_init_reduce(bdev);
 
 	return 0;
 }
@@ -791,14 +962,6 @@ static struct spdk_bdev_module compress_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&compress_if)
 
-/* Claim isn't called until a future series but removing this function
- * alone generates many other warnings about basic vbdev stuff (function
- * tables, etc..  I think it's better to have all the base functionality
- * in this first patch, I'll remove the pragmas as soon as claim is called
- * which happens after reduce is integrated.
- */
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-function"
 static void
 vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 {
@@ -874,7 +1037,6 @@ error_drv_name:
 error_bdev_name:
 	free(comp_bdev);
 }
-#pragma GCC diagnostic pop
 
 void
 delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
