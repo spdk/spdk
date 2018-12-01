@@ -74,7 +74,7 @@ extern struct rte_pci_bus rte_pci_bus;
 
 struct spdk_pci_device {
 	struct rte_pci_device		*dev_handle;
-	struct spdk_pci_enum_ctx	*enum_ctx;
+	struct spdk_pci_driver		*driver;
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
 	int				socket_id;
@@ -82,7 +82,7 @@ struct spdk_pci_device {
 	TAILQ_ENTRY(spdk_pci_device)	tailq;
 };
 
-struct spdk_pci_enum_ctx {
+struct spdk_pci_driver {
 	struct rte_pci_driver	driver;
 	spdk_pci_enum_cb	cb_fn;
 	void			*cb_arg;
@@ -92,8 +92,8 @@ struct spdk_pci_enum_ctx {
 int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int spdk_pci_device_fini(struct rte_pci_device *device);
 
-int spdk_pci_enumerate(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx);
-int spdk_pci_device_attach(struct spdk_pci_enum_ctx *ctx, spdk_pci_enum_cb enum_cb, void *enum_ctx,
+int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
+int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx,
 			   struct spdk_pci_addr *pci_address);
 
 int spdk_mem_map_init(void);
