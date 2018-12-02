@@ -79,13 +79,16 @@ __attribute__((constructor)) static void pci_drv ## _register(void)					\
 }
 
 struct spdk_pci_device {
-	struct rte_pci_device		*dev_handle;
-	struct spdk_pci_driver		*driver;
+	void				*dev_handle;
 	struct spdk_pci_addr		addr;
 	struct spdk_pci_id		id;
 	int				socket_id;
-	bool				attached;
-	TAILQ_ENTRY(spdk_pci_device)	tailq;
+
+	struct _spdk_pci_device_internal {
+		struct spdk_pci_driver		*driver;
+		bool				attached;
+		TAILQ_ENTRY(spdk_pci_device)	tailq;
+	} internal;
 };
 
 struct spdk_pci_driver {
