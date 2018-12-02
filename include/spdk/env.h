@@ -628,13 +628,13 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
 struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
- * Enumerate all NVMe devices on the PCI bus and try to attach those that
- * weren't attached yet. The provided callback will be called for each such
- * device and its return code will decide whether that device is attached
- * or not. Attached devices have to be manually detached with
- * spdk_pci_device_detach() to be attach-able again.
+ * Enumerate all PCI devices supported by the provided driver and try to
+ * attach those that weren't attached yet. The provided callback will be
+ * called for each such device and its return code will decide whether that
+ * device is attached or not. Attached devices have to be manually detached
+ * with spdk_pci_device_detach() to be attach-able again.
  *
- * \param enum_cb Callback to be called for each non-attached NVMe device.
+ * \param enum_cb Callback to be called for each non-attached PCI device.
  * The return code can be as follows:
  *  -1 - device was not attached, the enumeration is stopped
  *   0 - device attached successfully, enumeration continues
@@ -644,13 +644,21 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  * \return -1 if an internal error occured or the provided callback returned -1,
  *         0 otherwise
  */
+int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
+
+/**
+ * Enumerate all NVMe devices on the PCI bus and try to attach those that
+ * weren't attached yet.
+ *
+ * \see spdk_pci_enumerate
+ */
 int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
  * Enumerate all I/OAT devices on the PCI bus and try to attach those that
  * weren't attached yet.
  *
- * \see spdk_pci_nvme_enumerate
+ * \see spdk_pci_enumerate
  */
 int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
@@ -658,7 +666,7 @@ int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
  * Enumerate all Virtio devices on the PCI bus and try to attach those that
  * weren't attached yet.
  *
- * \see spdk_pci_nvme_enumerate
+ * \see spdk_pci_enumerate
  */
 int spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
@@ -825,13 +833,13 @@ int spdk_pci_device_claim(const struct spdk_pci_addr *pci_addr);
 void spdk_pci_device_detach(struct spdk_pci_device *device);
 
 /**
- * Attach a PCI NVMe device. This will bypass all blacklist rules and
- * explicitly attach a PCI device at the provided address. The return code
- * of the provided callback will decide whether that device is attached
- * or not. Attached devices have to be manually detached with
- * spdk_pci_device_detach() to be attach-able again.
+ * Attach a PCI device. This will bypass all blacklist rules and explicitly
+ * attach a device at the provided address. The return code of the provided
+ * callback will decide whether that device is attached or not. Attached
+ * devices have to be manually detached with spdk_pci_device_detach() to be
+ * attach-able again.
  *
- * \param enum_cb Callback to be called for the NVMe device once it's found.
+ * \param enum_cb Callback to be called for the PCI device once it's found.
  * The return code can be as follows:
  *  -1 - an error occured, fail the attach request entirely
  *   0 - device attached successfully
@@ -842,13 +850,21 @@ void spdk_pci_device_detach(struct spdk_pci_device *device);
  *         -1 if an internal error happened or the provided callback returned -1,
  *         0 otherwise
  */
+int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
+			   void *enum_ctx, struct spdk_pci_addr *pci_address);
+
+/**
+ * Attach a PCI NVMe device.
+ *
+ * \see spdk_pci_device_attach
+ */
 int spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
 
 /**
  * Attach a PCI I/OAT device.
  *
- * \see spdk_pci_nvme_device_attach
+ * \see spdk_pci_device_attach
  */
 int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				struct spdk_pci_addr *pci_address);
@@ -856,7 +872,7 @@ int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 /**
  * Attach a PCI Virtio device.
  *
- * \see spdk_pci_nvme_device_attach
+ * \see spdk_pci_device_attach
  */
 int spdk_pci_virtio_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
 				  struct spdk_pci_addr *pci_address);
