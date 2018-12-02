@@ -325,6 +325,26 @@ vbdev_cache_get_io_channel(void *opaque)
 static int
 vbdev_cache_dump_config_json(void *opaque, struct spdk_json_write_ctx *w)
 {
+	struct vbdev_cache *vbdev = (struct vbdev_cache *)opaque;
+
+	spdk_json_write_named_object_begin(w, "cache_device");
+	spdk_json_write_named_string(w, "name", vbdev->cache.name);
+	spdk_json_write_named_uint32(w, "internal_id", vbdev->cache.id);
+	spdk_json_write_named_uint32(w, "core_count", ocf_cache_get_core_count(vbdev->ocf_cache));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_object_begin(w, "core_device");
+	spdk_json_write_named_string(w, "name", vbdev->core.name);
+	spdk_json_write_named_uint32(w, "internal_id", vbdev->core.id);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_string(w, "mode",
+				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
+	spdk_json_write_named_uint32(w, "cache_line_size",
+				     ocf_cache_get_line_size(vbdev->ocf_cache));
+	spdk_json_write_named_bool(w, "metadata_volatile",
+				   vbdev->cfg.cache.metadata_volatile);
+
 	return 0;
 }
 
