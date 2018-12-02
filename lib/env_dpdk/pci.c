@@ -108,7 +108,6 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	}
 
 	dev->dev_handle = _dev;
-	dev->driver = driver;
 
 	dev->addr.domain = _dev->addr.domain;
 	dev->addr.bus = _dev->addr.bus;
@@ -120,16 +119,18 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	dev->id.subdevice_id = _dev->id.subsystem_device_id;
 	dev->socket_id = _dev->device.numa_node;
 
+	dev->internal.driver = driver;
+
 	if (driver->cb_fn != NULL) {
 		rc = driver->cb_fn(driver->cb_arg, dev);
 		if (rc != 0) {
 			free(dev);
 			return rc;
 		}
-		dev->attached = true;
+		dev->internal.attached = true;
 	}
 
-	TAILQ_INSERT_TAIL(&g_pci_devices, dev, tailq);
+	TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
 	spdk_vtophys_pci_device_added(dev->dev_handle);
 	return 0;
 }
@@ -139,19 +140,19 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 {
 	struct spdk_pci_device *dev;
 
-	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (dev->dev_handle == _dev) {
 			break;
 		}
 	}
 
-	if (dev == NULL || dev->attached) {
+	if (dev == NULL || dev->internal.attached) {
 		/* The device might be still referenced somewhere in SPDK. */
 		return -1;
 	}
 
 	spdk_vtophys_pci_device_removed(dev->dev_handle);
-	TAILQ_REMOVE(&g_pci_devices, dev, tailq);
+	TAILQ_REMOVE(&g_pci_devices, dev, internal.tailq);
 	free(dev);
 	return 0;
 
@@ -162,8 +163,8 @@ spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
 	struct rte_pci_device *device = dev->dev_handle;
 
-	assert(dev->attached);
-	dev->attached = false;
+	assert(dev->internal.attached);
+	dev->internal.attached = false;
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	char bdf[32];
 	int i = 0, rc;
@@ -204,21 +205,21 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 
 	pthread_mutex_lock(&g_pci_mutex);
 
-	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
 			break;
 		}
 	}
 
-	if (dev != NULL && dev->driver == driver) {
-		if (dev->attached) {
+	if (dev != NULL && dev->internal.driver == driver) {
+		if (dev->internal.attached) {
 			pthread_mutex_unlock(&g_pci_mutex);
 			return -1;
 		}
 
 		rc = enum_cb(enum_ctx, dev);
 		if (rc == 0) {
-			dev->attached = true;
+			dev->internal.attached = true;
 		}
 		pthread_mutex_unlock(&g_pci_mutex);
 		return rc;
@@ -278,14 +279,14 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 
 	pthread_mutex_lock(&g_pci_mutex);
 
-	TAILQ_FOREACH(dev, &g_pci_devices, tailq) {
-		if (dev->attached || dev->driver != driver) {
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+		if (dev->internal.attached || dev->internal.driver != driver) {
 			continue;
 		}
 
 		rc = enum_cb(enum_ctx, dev);
 		if (rc == 0) {
-			dev->attached = true;
+			dev->internal.attached = true;
 		} else if (rc < 0) {
 			pthread_mutex_unlock(&g_pci_mutex);
 			return -1;
