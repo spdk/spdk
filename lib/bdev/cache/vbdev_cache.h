@@ -44,7 +44,8 @@ struct vbdev_cache;
 /* Important non-deterministic state infos */
 struct vbdev_cache_state {
 	bool                         doing_finish;
-	bool                         doing_reset;
+	int                          doing_reset;
+	int                          reset_failed;
 	int                          unfinished_io_cnt;
 };
 

@@ -174,6 +174,71 @@ vbdev_cache_get_by_name(const char *name)
 	return NULL;
 }
 
+/* After reset of one of base devices completed this is called */
+static void
+reset_cb(struct spdk_bdev_io *base_bdev_io, bool success, void *opaque)
+{
+	struct spdk_bdev_io *bdev_io = opaque;
+	struct vbdev_cache *vbdev = bdev_io->bdev->ctxt;
+
+	if (!success) {
+		vbdev->state.reset_failed++;
+	}
+
+	vbdev->state.doing_reset--;
+	if (vbdev->state.doing_reset == 0) {
+		if (vbdev->state.reset_failed) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		} else {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		}
+	}
+}
+
+/* Submit synchronous purge requests to OCF
+ * Then submit resets to base SPDK bdevs */
+static int
+submit_reset(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_cache *vbdev = bdev_io->bdev->ctxt;
+	struct spdk_io_channel *cache_ch = spdk_bdev_get_io_channel(vbdev->cache.desc);
+	struct spdk_io_channel *core_ch = spdk_bdev_get_io_channel(vbdev->core.desc);
+	int rc = 0, status = 0;
+
+	vbdev->state.doing_reset = 2;
+	vbdev->state.reset_failed = 0;
+
+	/* Purge OCF objects */
+	rc = ocf_mngt_core_purge(vbdev->ocf_cache, vbdev->core.id, false);
+	if (rc) {
+		SPDK_ERRLOG("Purge of core object \"%s\" failed\n", vbdev->core.name);
+		status |= rc;
+		vbdev->state.reset_failed++;
+	}
+	rc = ocf_mngt_cache_purge(vbdev->ocf_cache, false);
+	if (rc) {
+		SPDK_ERRLOG("Purge of cache object \"%s\" failed\n", vbdev->cache.name);
+		status |= rc;
+		vbdev->state.reset_failed++;
+	}
+
+	/* Reset SPDK bdevs */
+	rc = spdk_bdev_reset(vbdev->cache.desc, cache_ch, reset_cb, bdev_io);
+	if (rc) {
+		SPDK_ERRLOG("Reset of cache bdev \"%s\" failed\n", vbdev->cache.name);
+		reset_cb(NULL, false, bdev_io);
+		status |= rc;
+	}
+	rc = spdk_bdev_reset(vbdev->core.desc, core_ch, reset_cb, bdev_io);
+	if (rc) {
+		SPDK_ERRLOG("Reset of core bdev \"%s\" failed\n", vbdev->core.name);
+		reset_cb(NULL, false, bdev_io);
+		status |= rc;
+	}
+
+	return status;
+}
+
 /* Called from OCF when SPDK_IO is completed  */
 static void
 opencas_io_submit_cb(struct ocf_io *io, int error)
@@ -274,9 +339,11 @@ vbdev_cache_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		io_handle(ch, bdev_io);
 		break;
+	case SPDK_BDEV_IO_TYPE_RESET:
+		submit_reset(ch, bdev_io);
+		break;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
 		SPDK_ERRLOG("Unknown I/O type %d\n", bdev_io->type);
@@ -292,10 +359,10 @@ vbdev_cache_io_type_supported(void *opaque, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
 		return false;
