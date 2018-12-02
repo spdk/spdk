@@ -215,9 +215,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 	/* We always init AESNI_MB */
 	rc = rte_vdev_init(AESNI_MB, NULL);
-	if (rc == 0) {
-		SPDK_NOTICELOG("created virtual PMD %s\n", AESNI_MB);
-	} else {
+	if (rc) {
 		SPDK_ERRLOG("error creating virtual PMD %s\n", AESNI_MB);
 		return -EINVAL;
 	}
@@ -1069,8 +1067,6 @@ crypto_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 		    (device_qp->in_use == false)) {
 			crypto_ch->device_qp = device_qp;
 			device_qp->in_use = true;
-			SPDK_NOTICELOG("Device queue pair assignment: ch %p device %p qpid %u %s\n",
-				       crypto_ch, device_qp->device, crypto_ch->device_qp->qp, crypto_bdev->drv_name);
 			break;
 		}
 	}
@@ -1396,8 +1392,8 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		if (strcmp(name->bdev_name, bdev->name) != 0) {
 			continue;
 		}
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "Match on %s\n", bdev->name);
 
-		SPDK_NOTICELOG("Match on %s\n", bdev->name);
 		vbdev = calloc(1, sizeof(struct vbdev_crypto));
 		if (!vbdev) {
 			SPDK_ERRLOG("could not allocate crypto_bdev\n");
@@ -1531,7 +1527,8 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			rc = -EINVAL;
 			goto error_vbdev_register;
 		}
-		SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", name->vbdev_name);
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "registered io_device and virtual bdev for: %s\n",
+			      name->vbdev_name);
 		break;
 	}
 
