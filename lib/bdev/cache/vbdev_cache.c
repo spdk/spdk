@@ -323,6 +323,36 @@ vbdev_cache_get_io_channel(void *opaque)
 static int
 vbdev_cache_dump_config_json(void *opaque, struct spdk_json_write_ctx *w)
 {
+	struct vbdev_cache *vbdev = (struct vbdev_cache *)opaque;
+
+	spdk_json_write_name(w, "cache_device");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, vbdev->cache.name);
+	spdk_json_write_name(w, "internal_id");
+	spdk_json_write_uint32(w, vbdev->cache.id);
+	spdk_json_write_name(w, "core_count");
+	spdk_json_write_uint32(w, ocf_cache_get_core_count(vbdev->ocf_cache));
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "core_device");
+	spdk_json_write_object_begin(w);
+	spdk_json_write_name(w, "name");
+	spdk_json_write_string(w, vbdev->core.name);
+	spdk_json_write_name(w, "internal_id");
+	spdk_json_write_uint32(w, vbdev->core.id);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_name(w, "mode");
+	spdk_json_write_string(w,
+			       ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
+	spdk_json_write_name(w, "cache_line_size");
+	spdk_json_write_uint32(w,
+			       ocf_cache_get_line_size(vbdev->ocf_cache));
+	spdk_json_write_name(w, "metadata_volatile");
+	spdk_json_write_bool(w,
+			     vbdev->cfg.cache.metadata_volatile);
+
 	return 0;
 }
 
