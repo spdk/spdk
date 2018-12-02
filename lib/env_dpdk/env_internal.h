@@ -90,10 +90,6 @@ void spdk_pci_driver_register(struct spdk_pci_driver *driver);
 int spdk_pci_device_init(struct rte_pci_driver *driver, struct rte_pci_device *device);
 int spdk_pci_device_fini(struct rte_pci_device *device);
 
-int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
-int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx,
-			   struct spdk_pci_addr *pci_address);
-
 void spdk_pci_init(void);
 int spdk_mem_map_init(void);
 int spdk_vtophys_init(void);
