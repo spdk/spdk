@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/thread.h"
 #include "spdk/event.h"
+#include "spdk/vmd.h"
 
 #include "CUnit/Basic.h"
 
@@ -101,12 +102,19 @@ __get_io_channel(void *arg1, void *arg2)
 	wake_ut_thread();
 }
 
+extern int bdev_nvme_hotplug(void *arg);
+
 static int
 bdevio_construct_targets(void)
 {
 	struct spdk_bdev *bdev;
 	struct io_target *target;
 	int rc;
+
+	/* attach all VMD devices */
+	spdk_vmd_probe();
+	/* attach newly exposed devices behind VMDs and create NVMe bdevs on top */
+	bdev_nvme_hotplug(NULL);
 
 	printf("I/O targets:\n");
 
