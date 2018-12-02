@@ -1112,7 +1112,9 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-static int
+int bdev_nvme_hotplug(void *arg);
+
+int
 bdev_nvme_hotplug(void *arg)
 {
 	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
