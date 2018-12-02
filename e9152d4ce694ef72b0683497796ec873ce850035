@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4cb10f91_f992c81f",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-02T21:23:21Z",
+      "side": 1,
+      "message": "lexicographical",
+      "range": {
+        "startLine": 64,
+        "startChar": 32,
+        "endLine": 64,
+        "endChar": 47
+      },
+      "revId": "e9152d4ce694ef72b0683497796ec873ce850035",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
