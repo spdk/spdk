@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3de91a48_08cf02f1",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 328,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T22:01:41Z",
+      "side": 1,
+      "message": "This can all be simplified with spdk_json_write_named_object_begin, spdk_json_write_named_string, etc.",
+      "revId": "3125679b32dbfad201f90137b54f9eb07af47a78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
