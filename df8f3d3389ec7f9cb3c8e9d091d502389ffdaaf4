@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "50cd4f57_081cea55",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T22:21:25Z",
+      "side": 1,
+      "message": "it\u0027s a nit for sure - but could we sleep at the end of the loop instead?  saves us 0.5 seconds if the app is already ready at this point",
+      "revId": "df8f3d3389ec7f9cb3c8e9d091d502389ffdaaf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6291fa9_55ccc870",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 368,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T22:21:25Z",
+      "side": 1,
+      "message": "could we put magic number 40 into some kind of variable?",
+      "revId": "df8f3d3389ec7f9cb3c8e9d091d502389ffdaaf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
