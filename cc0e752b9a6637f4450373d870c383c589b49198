@@ -260,6 +260,23 @@
     },
     {
       "key": {
+        "uuid": "50d14280_1edb36f4",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1015547
+      },
+      "writtenOn": "2018-12-03T08:25:34Z",
+      "side": 1,
+      "message": "so looks like all the notification will be sent to all the registered clients irrespective of subscription or subscription has been removed now?",
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e69c7f29_f4acda08",
         "filename": "lib/notify/notify.c",
         "patchSetId": 12
