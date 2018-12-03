@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88e36305_708732de",
+        "filename": "lib/env_dpdk/env_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T10:30:18Z",
+      "side": 1,
+      "message": "this struct should have its own type, otherwise doxygen build will fail once we move this to public headers",
+      "range": {
+        "startLine": 87,
+        "startChar": 8,
+        "endLine": 87,
+        "endChar": 9
+      },
+      "revId": "5f404895c41b6308ac4c2a16bce7a3b6a8c9a180",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
