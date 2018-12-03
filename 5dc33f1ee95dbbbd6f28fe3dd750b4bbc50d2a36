@@ -22,6 +22,30 @@
       "revId": "5dc33f1ee95dbbbd6f28fe3dd750b4bbc50d2a36",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb9a1be7_e55e9a3b",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:48:27Z",
+      "side": 1,
+      "message": "OK, I\u0027ll do but this patch series is a little long. Hence is it OK to add the test case in separate patch?",
+      "parentUuid": "00098757_acd72416",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 50
+      },
+      "revId": "5dc33f1ee95dbbbd6f28fe3dd750b4bbc50d2a36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
