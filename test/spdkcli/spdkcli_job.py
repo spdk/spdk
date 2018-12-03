@@ -2,6 +2,7 @@
 import pexpect
 import os
 import sys
+import re
 
 
 def execute_command(cmd, element=None, element_exists=False):
@@ -27,12 +28,26 @@ def execute_command(cmd, element=None, element_exists=False):
 
 if __name__ == "__main__":
     socket = "/var/tmp/spdk.sock"
-    if len(sys.argv) == 5:
-        socket = sys.argv[4]
+    if len(sys.argv) == 3:
+        socket = sys.argv[2]
     testdir = os.path.dirname(os.path.realpath(sys.argv[0]))
     child = pexpect.spawn(os.path.join(testdir, "../../scripts/spdkcli.py") + " -s %s" % socket)
     child.expect(">")
     child.sendline("cd /")
     child.expect("/>")
 
-    execute_command(*sys.argv[1:4])
+    cmd_lines = sys.argv[1].strip().split("\n")
+    for line in cmd_lines:
+        data = line.strip()
+        p = re.compile('\'(.*?)\'')
+        cmd = p.findall(data)
+        if data[-1] != "\'":
+            cmd.append(data.rsplit(" ", 1)[1].strip())
+            if cmd[-1] == "False":
+                cmd[-1] = False
+            else:
+                cmd[-1] = True
+        else:
+            cmd.append(False)
+        print("Executing command: %s" % cmd)
+        execute_command(*cmd[0:3])
