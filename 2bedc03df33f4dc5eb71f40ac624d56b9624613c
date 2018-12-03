@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20956eb5_aee17b89",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1400,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T09:52:03Z",
+      "side": 0,
+      "message": "could we change this to SPDK_DEBUGLOG instead of removing it?\nI feel like this is exactly the type of message I\u0027d like to see after enabling crypto debuglogs.",
+      "range": {
+        "startLine": 1399,
+        "startChar": 0,
+        "endLine": 1400,
+        "endChar": 14
+      },
+      "revId": "2bedc03df33f4dc5eb71f40ac624d56b9624613c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb4122fd_ab2b5da5",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1534,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T09:52:03Z",
+      "side": 0,
+      "message": "^ same here",
+      "range": {
+        "startLine": 1534,
+        "startChar": 2,
+        "endLine": 1534,
+        "endChar": 16
+      },
+      "revId": "2bedc03df33f4dc5eb71f40ac624d56b9624613c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbd71ae1_969cae2d",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1610,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T09:52:03Z",
+      "side": 1,
+      "message": "I just noticed we don\u0027t use it anywhere yet.",
+      "revId": "8e1cf9e57368a2aecc1c6dccd5d9b07ea5ae2a17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
