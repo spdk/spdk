@@ -54,6 +54,13 @@
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 
+struct spdk_app_affinity_group {
+	TAILQ_ENTRY(spdk_app_affinity_group) link;
+	char *name;
+	struct spdk_cpuset *cpuset;
+};
+TAILQ_HEAD(, spdk_app_affinity_group) g_app_affinity_groups;
+
 struct spdk_app {
 	struct spdk_conf		*config;
 	int				shm_id;
@@ -69,6 +76,79 @@ static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
+
+
+
+struct spdk_cpuset *
+spdk_app_get_affinity_group(const char *name) {
+	struct spdk_app_affinity_group *affinity_group;
+	TAILQ_FOREACH(affinity_group, &g_app_affinity_groups, link) {
+		if (strcmp(affinity_group->name, name) == 0) {
+			return affinity_group->cpuset;
+		}
+	}
+
+	/* TODO: This should return default affinity e.g. reactors mask or ~0 */
+	return spdk_app_get_core_mask();
+}
+
+int
+spdk_app_add_affinity_group(const char *name, const char *cpumask) {
+	struct spdk_app_affinity_group *affinity_group;
+
+	affinity_group = calloc(sizeof(struct spdk_app_affinity_group), 1);
+	affinity_group->name = strdup(name);
+	affinity_group->cpuset = spdk_cpuset_alloc();
+
+	if (spdk_cpuset_parse(affinity_group->cpuset, cpumask) != 0) {
+		/* Parse error */
+		return -1;
+	}
+
+	TAILQ_INSERT_TAIL(&g_app_affinity_groups, affinity_group, link);
+
+	return 0;
+}
+
+int
+spdk_app_parse_affinity_groups(const char *affinity_groups) {
+	char *groups = strdup(affinity_groups);
+	char *name = groups;
+	char *cpumask = groups;
+	char *end = groups;
+
+	bool finish = false;
+
+	do {
+		name = end;
+		cpumask = name;
+		while (*cpumask != '@') {
+			cpumask++;
+		}
+		*cpumask = '\0';
+		cpumask++;
+
+		end = cpumask;
+		while (*end != ' ' && *end != '\0' && *end != '@') {
+			end++;
+		}
+		finish = (*end == '\0');
+		*end = '\0';
+		end++;
+
+		if (spdk_app_add_affinity_group(name, cpumask) != 0) {
+			free(groups);
+			return -1;
+		}
+	} while (finish);
+
+
+	free(groups);
+	return 0;
+}
+
+
+
 
 int
 spdk_app_get_shm_id(void)
@@ -118,6 +198,8 @@ static const struct option g_cmdline_options[] = {
 	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
 #define NUM_TRACE_ENTRIES_OPT_IDX	260
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
+#define CPU_AFFINITY_GROUPS_IDX	261
+	{"cpu-affinity-groups",		required_argument,	NULL, CPU_AFFINITY_GROUPS_IDX},
 };
 
 /* Global section */
@@ -942,6 +1024,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				usage(app_usage);
 				goto out;
 			}
+			break;
+		case CPU_AFFINITY_GROUPS_IDX:
+			spdk_app_parse_affinity_groups(optarg);
 			break;
 		case '?':
 			/*
