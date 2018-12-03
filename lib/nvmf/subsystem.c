@@ -279,6 +279,8 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
+	pthread_mutex_init(&subsystem->reservation_lock, NULL);
+	TAILQ_INIT(&subsystem->reg_head);
 
 	if (num_ns != 0) {
 		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
@@ -314,6 +316,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	struct spdk_nvmf_listener	*listener, *listener_tmp;
 	struct spdk_nvmf_host		*host, *host_tmp;
 	struct spdk_nvmf_ctrlr		*ctrlr, *ctrlr_tmp;
+	struct spdk_nvmf_registrant	*reg, *reg_tmp;
 	struct spdk_nvmf_ns		*ns;
 
 	if (!subsystem) {
@@ -350,6 +353,11 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	subsystem->tgt->subsystems[subsystem->id] = NULL;
 	subsystem->tgt->discovery_genctr++;
 
+	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, reg_tmp) {
+		TAILQ_REMOVE(&subsystem->reg_head, reg, link);
+		free(reg);
+	}
+	pthread_mutex_destroy(&subsystem->reservation_lock);
 	free(subsystem);
 }
 
