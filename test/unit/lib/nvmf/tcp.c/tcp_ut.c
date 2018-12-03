@@ -158,6 +158,8 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 	    (struct spdk_nvmf_request *req),
 	    0);
 
+DEFINE_STUB_V(spdk_nvmf_subsystem_reservation_request, (void *ctx));
+
 struct spdk_trace_histories *g_trace_histories;
 
 struct spdk_bdev {

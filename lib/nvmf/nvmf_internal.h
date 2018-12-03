@@ -172,6 +172,16 @@ struct spdk_nvmf_request {
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 
+struct spdk_nvmf_registrant {
+	struct spdk_nvmf_ctrlr *ctrlr;
+	TAILQ_ENTRY(spdk_nvmf_registrant) link;
+	struct spdk_uuid hostid;
+	/* Registration key */
+	uint64_t rkey;
+	/* reservation head */
+	TAILQ_HEAD(, spdk_nvmf_ns) ns_head;
+};
+
 struct spdk_nvmf_ns {
 	uint32_t nsid;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -180,6 +190,13 @@ struct spdk_nvmf_ns {
 	struct spdk_nvmf_ns_opts opts;
 	/* reservation notificaton mask */
 	uint32_t mask;
+	/* current reservation key */
+	uint64_t crkey;
+	/* reservation type */
+	enum spdk_nvme_reservation_type rtype;
+	/* reservation holder */
+	struct spdk_nvmf_registrant *holder;
+	TAILQ_ENTRY(spdk_nvmf_ns) link;
 };
 
 struct spdk_nvmf_qpair {
@@ -272,6 +289,13 @@ struct spdk_nvmf_subsystem {
 	TAILQ_HEAD(, spdk_nvmf_listener)	listeners;
 
 	TAILQ_ENTRY(spdk_nvmf_subsystem)	entries;
+
+	/* generation code */
+	uint32_t gen;
+	/* number of registered controllers */
+	uint32_t regctl;
+	/* registrants head */
+	TAILQ_HEAD(, spdk_nvmf_registrant)	reg_head;
 };
 
 typedef void(*spdk_nvmf_poll_group_mod_done)(void *cb_arg, int status);
@@ -328,6 +352,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_subsystem_reservation_request(void *ctx);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
