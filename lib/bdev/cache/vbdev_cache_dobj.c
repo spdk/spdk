@@ -43,8 +43,6 @@
 #include "ctx.h"
 #include "vbdev_cache.h"
 
-static env_allocator *opencas_dobj_io_allocator;
-
 static int
 opencas_dobj_open(ocf_data_obj_t obj)
 {
@@ -72,12 +70,12 @@ static int
 opencas_dobj_io_set_data(struct ocf_io *io, ctx_data_t *data,
 			 uint32_t offset)
 {
-	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 
-	io_ctnr->offset = offset;
-	io_ctnr->data = data;
+	io_ctx->offset = offset;
+	io_ctx->data = data;
 
-	if (io_ctnr->data && offset >= io_ctnr->data->size) {
+	if (io_ctx->data && offset >= io_ctx->data->size) {
 		return -ENOBUFS;
 	}
 
@@ -87,29 +85,29 @@ opencas_dobj_io_set_data(struct ocf_io *io, ctx_data_t *data,
 static ctx_data_t *
 opencas_dobj_io_get_data(struct ocf_io *io)
 {
-	return ocf_io_to_bdev_io(io)->data;
+	return ocf_get_io_ctx(io)->data;
 }
 
 static void
 opencas_dobj_io_get(struct ocf_io *io)
 {
-	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 
-	atomic_inc(&io_ctnr->ref);
+	atomic_inc(&io_ctx->ref);
 }
 
 static void
 opencas_dobj_io_put(struct ocf_io *io)
 {
-	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int value;
 
-	value = env_atomic_sub_return(1, &io_ctnr->ref);
+	value = env_atomic_sub_return(1, &io_ctx->ref);
 	if (value) {
 		return;
 	}
 
-	env_allocator_del(opencas_dobj_io_allocator, io_ctnr);
+	ocf_data_obj_del_io(io);
 }
 
 static const struct ocf_io_ops opencas_dobj_io_ops = {
@@ -122,20 +120,22 @@ static const struct ocf_io_ops opencas_dobj_io_ops = {
 static struct ocf_io *
 opencas_dobj_new_io(ocf_data_obj_t obj)
 {
-	struct ocf_io_container *io;
+	struct ocf_io *io;
+	struct ocf_io_ctx *io_ctx;
 
-	io = env_allocator_new(opencas_dobj_io_allocator);
+	io = ocf_data_obj_new_io(obj);
 	if (io == NULL) {
 		return NULL;
 	}
 
-	atomic_set(&io->rq_cnt, 0);
-	atomic_set(&io->ref, 1);
-	io->error = 0;
-	io->base.obj = obj;
-	io->base.ops = &opencas_dobj_io_ops;
+	io->ops = &opencas_dobj_io_ops;
 
-	return &io->base;
+	io_ctx = ocf_get_io_ctx(io);
+	atomic_set(&io_ctx->rq_cnt, 0);
+	atomic_set(&io_ctx->ref, 1);
+	io_ctx->error = 0;
+
+	return io;
 }
 
 static int
@@ -184,24 +184,24 @@ static void
 opencas_dobj_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *opaque)
 {
 	struct ocf_io *io;
-	struct ocf_io_container *io_ctnr;
+	struct ocf_io_ctx *io_ctx;
 
 	ENV_BUG_ON(!opaque);
 
 	io = opaque;
-	io_ctnr = ocf_io_to_bdev_io(io);
+	io_ctx = ocf_get_io_ctx(io);
 
-	ENV_BUG_ON(!io_ctnr);
+	ENV_BUG_ON(!io_ctx);
 
 	if (!success) {
-		io_ctnr->error |= 1;
+		io_ctx->error |= 1;
 	}
 
-	if (env_atomic_sub_return(1, &io_ctnr->rq_cnt)) {
+	if (env_atomic_sub_return(1, &io_ctx->rq_cnt)) {
 		return;
 	}
 
-	if (io_ctnr->offset) {
+	if (io_ctx->offset) {
 		switch (bdev_io->type) {
 		case SPDK_BDEV_IO_TYPE_READ:
 		case SPDK_BDEV_IO_TYPE_WRITE:
@@ -212,14 +212,14 @@ opencas_dobj_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *opaq
 			break;
 		}
 	}
-	if (io_ctnr->error) {
-		SPDK_ERRLOG("ERROR: %d\n", io_ctnr->error);
+	if (io_ctx->error) {
+		SPDK_ERRLOG("ERROR: %d\n", io_ctx->error);
 	}
 
-	io_ctnr->base.end(&io_ctnr->base, io_ctnr->error);
+	io->end(io, io_ctx->error);
 
 	/* TODO [multichannel0]: need to remove this work-around defer to dedicated thread */
-	spdk_put_io_channel(io_ctnr->ch); /* decreasing reference, because we created this channel */
+	spdk_put_io_channel(io_ctx->ch); /* decreasing reference, because we created this channel */
 	opencas_dobj_io_put(io);
 
 	if (bdev_io) {
@@ -236,16 +236,16 @@ spdk_get_ref_io_channel(struct spdk_io_channel *ch)
 static void
 prepare_submit(struct ocf_io *io)
 {
-	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
-	if (atomic_read(&io_ctnr->rq_cnt) == 0) {
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
+	if (atomic_read(&io_ctx->rq_cnt) == 0) {
 		/* increase the ref counts */
-		atomic_inc(&io_ctnr->rq_cnt);
+		atomic_inc(&io_ctx->rq_cnt);
 		opencas_dobj_io_get(io);
 
 		/* TODO [multichannel0]: need to remove this work-around defer to dedicated thread */
 		struct vbdev_cache_base *base = *(void **)ocf_data_obj_get_uuid(io->obj)->data;
-		io_ctnr->ch = base->base_channel;
-		spdk_get_ref_io_channel(io_ctnr->ch);
+		io_ctx->ch = base->base_channel;
+		spdk_get_ref_io_channel(io_ctx->ch);
 	}
 }
 
@@ -258,12 +258,12 @@ static void
 opencas_dobj_submit_io(struct ocf_io *io)
 {
 	struct vbdev_cache_base *base = *(void **)ocf_data_obj_get_uuid(io->obj)->data;
-	struct ocf_io_container *io_ctnr = ocf_io_to_bdev_io(io);
+	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
 	int iovcnt, status = 0, i, offset;
 	uint64_t addr, len;
 
-	if (io_ctnr->base.flags == OCF_WRITE_FLUSH) {
+	if (io->flags == OCF_WRITE_FLUSH) {
 		opencas_dobj_submit_flush(io);
 		return;
 	}
@@ -273,10 +273,10 @@ opencas_dobj_submit_io(struct ocf_io *io)
 	/* IO fields */
 	addr = io->addr;
 	len = io->bytes;
-	offset = io_ctnr->offset;
+	offset = io_ctx->offset;
 
 	if (offset) {
-		i = get_starting_vec(io_ctnr->data->iovs, io_ctnr->data->iovcnt, &offset);
+		i = get_starting_vec(io_ctx->data->iovs, io_ctx->data->iovcnt, &offset);
 
 		if (i < 0) {
 			SPDK_ERRLOG("offset bigger than data size");
@@ -284,7 +284,7 @@ opencas_dobj_submit_io(struct ocf_io *io)
 			return;
 		}
 
-		iovcnt = io_ctnr->data->iovcnt - i;
+		iovcnt = io_ctx->data->iovcnt - i;
 
 		iovs = env_malloc(sizeof(*iovs) * iovcnt, ENV_MEM_NOIO);
 
@@ -294,18 +294,18 @@ opencas_dobj_submit_io(struct ocf_io *io)
 			return;
 		}
 
-		initialize_cpy_vector(iovs, io_ctnr->data->iovcnt, &io_ctnr->data->iovs[i],
-				      io_ctnr->data->iovcnt - i, offset, len);
+		initialize_cpy_vector(iovs, io_ctx->data->iovcnt, &io_ctx->data->iovs[i],
+				      io_ctx->data->iovcnt - i, offset, len);
 	} else {
-		iovs = io_ctnr->data->iovs;
-		iovcnt = io_ctnr->data->iovcnt;
+		iovs = io_ctx->data->iovs;
+		iovcnt = io_ctx->data->iovcnt;
 	}
 
 	if (io->dir == OCF_READ) {
-		status = spdk_bdev_readv(base->desc, io_ctnr->ch,
+		status = spdk_bdev_readv(base->desc, io_ctx->ch,
 					 iovs, iovcnt, addr, len, opencas_dobj_submit_io_cb, io);
 	} else if (io->dir == OCF_WRITE) {
-		status = spdk_bdev_writev(base->desc, io_ctnr->ch,
+		status = spdk_bdev_writev(base->desc, io_ctx->ch,
 					  iovs, iovcnt, addr, len, opencas_dobj_submit_io_cb, io);
 	}
 
@@ -337,7 +337,7 @@ opencas_dobj_get_max_io_size(ocf_data_obj_t obj)
 
 static struct ocf_data_obj_properties opencas_dobj_props = {
 	.name = "SPDK block device",
-	.io_context_size = 0,
+	.io_context_size = sizeof(struct ocf_io_ctx),
 	.caps = {
 		.atomic_writes = 0 /* to enable need to have ops->submit_metadata */
 	},
@@ -357,16 +357,13 @@ static struct ocf_data_obj_properties opencas_dobj_props = {
 int
 opencas_dobj_init(void)
 {
-	opencas_dobj_io_allocator = env_allocator_create(sizeof(struct ocf_io_container),
-				    "opencas_spdk_io");
 	return ocf_ctx_register_data_obj_type(opencas_ctx, SPDK_OBJECT, &opencas_dobj_props);
 }
 
 void
 opencas_dobj_cleanup(void)
 {
-	env_allocator_destroy(opencas_dobj_io_allocator);
-	opencas_dobj_io_allocator = NULL;
+	ocf_ctx_unregister_data_obj_type(opencas_ctx, SPDK_OBJECT);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_cache_dobj", SPDK_TRACE_VBDEV_CACHE_DOBJ)

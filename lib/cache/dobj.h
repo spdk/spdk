@@ -41,8 +41,9 @@
 
 struct bdev_ocf_data;
 
-struct ocf_io_container {
-	struct ocf_io base;
+/* ocf_io context
+ * but it's initialized from per-device info, not per-io */
+struct ocf_io_ctx {
 	struct bdev_ocf_data *data;
 	struct spdk_io_channel *ch;
 	uint32_t offset;
@@ -51,14 +52,12 @@ struct ocf_io_container {
 	int error;
 };
 
-struct cache_base_info;
-
 int opencas_dobj_init(void);
 void opencas_dobj_cleanup(void);
 
-static inline struct ocf_io_container *ocf_io_to_bdev_io(struct ocf_io *ocf_io)
+static inline struct ocf_io_ctx *ocf_get_io_ctx(struct ocf_io *io)
 {
-	return container_of(ocf_io, struct ocf_io_container, base);
+	return ocf_data_obj_get_data_from_io(io);
 }
 
 #endif
