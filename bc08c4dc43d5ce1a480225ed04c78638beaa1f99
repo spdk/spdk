@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bff1e829_8bd34a28",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T20:33:12Z",
+      "side": 1,
+      "message": "This can be removed since you also removed the timeout.",
+      "revId": "bc08c4dc43d5ce1a480225ed04c78638beaa1f99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
