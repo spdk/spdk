@@ -51,6 +51,24 @@
       "revId": "4b796c0f758aaffbc40ba8b8064686cad7dfef25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48ff1b01_ac50bc15",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-03T16:22:29Z",
+      "side": 1,
+      "message": "Please employ the URL fragment formatted source line as previously requested.   That results in the base filename on github (e.g. v18.10.tar.gz) to become renamed to spdk-18.10.1.tar.gz in the SOURCES subdirectory of the rpmbuild tree tree.   Such naming is consistent with other packages and is also helpful when one is building multiple rpm\u0027s from a single rpmbuild tree.   In other words, if one were otherwise to inspect the SOURCES subdir of the rpmbuild tree and only see a tarball named, \"v18.10.1.tar.gz\", then one has no idea (without the leading spdk- prefix) to know the contents without inspecting it via a tar cmd.",
+      "parentUuid": "0cada2d8_9b392010",
+      "revId": "4b796c0f758aaffbc40ba8b8064686cad7dfef25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
