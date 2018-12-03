@@ -45,6 +45,29 @@
       "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e8403ee_f484cb24",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T06:24:16Z",
+      "side": 1,
+      "message": "transport_id may be better.",
+      "range": {
+        "startLine": 635,
+        "startChar": 9,
+        "endLine": 635,
+        "endChar": 20
+      },
+      "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
