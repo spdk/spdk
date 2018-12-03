@@ -11,18 +11,7 @@ source $rootdir/test/nvmf/common.sh
 
 timing_enter nvmf_tgt
 
-# NVMF_TEST_CORE_MASK is the biggest core mask specified by
-#  any of the nvmf_tgt tests.  Using this mask for the stub
-#  ensures that if this mask spans CPU sockets, that we will
-#  allocate memory from both sockets.  The stub will *not*
-#  run anything on the extra cores (and will sleep on master
-#  core 0) so there is no impact to the nvmf_tgt tests by
-#  specifying the bigger core mask.
-start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
-trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-
-export NVMF_APP_SHM_ID="0"
-export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
+trap "exit 1" SIGINT SIGTERM EXIT
 
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh
@@ -52,7 +41,6 @@ run_test suite test/nvmf/nmic/nmic.sh
 
 timing_exit host
 trap - SIGINT SIGTERM EXIT
-kill_stub
 
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
