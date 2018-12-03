@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "02bd75c3_c562727c",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:06:48Z",
+      "side": 1,
+      "message": "pr_generation may be easier to understand.",
+      "range": {
+        "startLine": 539,
+        "startChar": 10,
+        "endLine": 539,
+        "endChar": 22
+      },
+      "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab0c8e35_11979a5c",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 560,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:06:48Z",
+      "side": 1,
+      "message": "For uint8_t, tab and space give the same effect but using space looks consistent in this patch.",
+      "range": {
+        "startLine": 560,
+        "startChar": 8,
+        "endLine": 560,
+        "endChar": 9
+      },
+      "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
