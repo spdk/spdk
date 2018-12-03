@@ -24,7 +24,11 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF &
+# Start the NVMe-oF target with preallocated memory because we will need to run perf.c
+# as a secondary process later, and secondary process memory allocation is broken with
+# the IOMMU.
+# todo: remove this when the proper fixes are merged into DPDK.
+$NVMF_APP -m 0xF -s 4096 &
 nvmfpid=$!
 
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
