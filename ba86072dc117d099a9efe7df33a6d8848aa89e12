@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d3778ff_9aa3d460",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-03T07:32:01Z",
+      "side": 1,
+      "message": "remove the whole line, we do not need this.",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 117,
+        "endChar": 2
+      },
+      "revId": "ba86072dc117d099a9efe7df33a6d8848aa89e12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ee832e0_b157248b",
+        "filename": "test/unit/lib/scsi/dev.c/dev_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-03T07:32:01Z",
+      "side": 1,
+      "message": "Remove the whole line, we do not need this ;",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 2
+      },
+      "revId": "ba86072dc117d099a9efe7df33a6d8848aa89e12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
