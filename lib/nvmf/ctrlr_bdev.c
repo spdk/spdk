@@ -602,6 +602,74 @@ nvmf_ctrlr_unregister_registrant(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+static uint32_t
+nvmf_ctrlr_unregister_registrants_by_key(struct spdk_nvmf_subsystem *subsystem,
+		uint64_t rkey)
+{
+	struct spdk_nvmf_registrant *reg, *tmp;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, tmp) {
+		if (reg->rkey == rkey) {
+			TAILQ_REMOVE(&subsystem->reg_head, reg, link);
+			nvmf_ctrlr_registrant_release_reservation(subsystem, reg);
+			free(reg);
+			subsystem->regctl--;
+			subsystem->gen++;
+			count++;
+		}
+	}
+	return count;
+}
+
+static uint32_t
+nvmf_ctrlr_unregister_all_other_registrants(struct spdk_nvmf_subsystem *subsystem,
+		struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *reg_tmp, *reg_tmp2;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH_SAFE(reg_tmp, &subsystem->reg_head, link, reg_tmp2) {
+		if (reg_tmp != reg) {
+			TAILQ_REMOVE(&subsystem->reg_head, reg_tmp, link);
+			nvmf_ctrlr_registrant_release_reservation(subsystem, reg_tmp);
+			free(reg_tmp);
+			count++;
+			subsystem->regctl--;
+			subsystem->gen++;
+		}
+	}
+	return count;
+}
+
+/* current registrant is reservation holder or not */
+static inline bool
+nvmf_ns_registrant_is_holder(struct spdk_nvmf_ns *ns, struct spdk_nvmf_registrant *reg)
+{
+	if (reg == NULL) {
+		return false;
+	}
+
+	if (ns->holder) {
+		return (ns->holder == reg ||
+			ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS ||
+			ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
+	}
+
+	return false;
+}
+
+static void
+nvmf_ns_acquire_reservation(struct spdk_nvmf_ns *ns, uint64_t key,
+			    enum spdk_nvme_reservation_type rtype,
+			    struct spdk_nvmf_registrant *holder)
+{
+	ns->rtype = rtype;
+	ns->crkey = key;
+	ns->holder = holder;
+	TAILQ_INSERT_TAIL(&holder->ns_head, ns, link);
+}
+
 static int
 nvmf_ns_reservation_register(struct spdk_nvmf_request *req,
 			     struct spdk_nvmf_ctrlr *ctrlr,
@@ -706,6 +774,120 @@ conflict:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ns_reservation_acquire(struct spdk_nvmf_request *req,
+			    struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	uint8_t racqa, iekey, rtype;
+	struct spdk_nvme_reservation_acquire_data key;
+	struct spdk_nvmf_registrant *reg;
+	bool all_regs = false;
+	uint32_t count = 0;
+
+	racqa = cmd->cdw10 & 0x7u;
+	iekey = (cmd->cdw10 >> 3) & 0x1u;
+	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	memcpy(&key, req->data, sizeof(key));
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIIRE: RACQA %u, IEKEY %u, RTYPE %u, "
+		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
+		      racqa, iekey, rtype, key.crkey, key.prkey);
+
+	pthread_mutex_lock(&subsystem->reservation_lock);
+
+	if (iekey) {
+		SPDK_ERRLOG("Ignore existing key field set to 1\n");
+		goto invalid;
+	}
+
+	reg = nvmf_ctrlr_get_registrant(subsystem, ctrlr);
+	/* must be registrant and CRKEY must match */
+	if (!reg || reg->rkey != key.crkey) {
+		SPDK_ERRLOG("No registrant or current key doesn't match "
+			    "with existing registrant key\n");
+		goto conflict;
+	}
+
+	all_regs = nvmf_ns_reservation_all_registrants_type(ns);
+
+	switch (racqa) {
+	case SPDK_NVME_RESERVE_ACQUIRE:
+		/* NS already has a valid holder */
+		if (ns->holder) {
+			if (ns->rtype != rtype ||
+			    !nvmf_ns_registrant_is_holder(ns, reg)) {
+				SPDK_ERRLOG("Invalid rtype or current "
+					    "registrant is not holder\n");
+				goto conflict;
+			}
+		} else {
+			/* fisrt time for the reservation */
+			nvmf_ns_acquire_reservation(ns, key.crkey, rtype, reg);
+		}
+		break;
+	case SPDK_NVME_RESERVE_PREEMPT:
+		/* no reservation holder */
+		if (!ns->holder) {
+			/* unregister with PRKEY */
+			nvmf_ctrlr_unregister_registrants_by_key(subsystem, key.prkey);
+			break;
+		}
+		/* only 1 reservation holder and reservation key is valid */
+		if (!all_regs) {
+			/* preempt itself */
+			if (nvmf_ns_registrant_is_holder(ns, reg) &&
+			    ns->crkey == key.prkey) {
+				ns->rtype = rtype;
+				break;
+			}
+
+			if (ns->crkey == key.prkey) {
+				nvmf_ctrlr_unregister_registrant(subsystem, ns->holder);
+				nvmf_ns_acquire_reservation(ns, key.crkey, rtype, reg);
+			} else if (key.prkey != 0) {
+				nvmf_ctrlr_unregister_registrants_by_key(subsystem, key.prkey);
+			} else {
+				/* PRKEY is zero */
+				SPDK_ERRLOG("Current PRKEY is zero\n");
+				goto conflict;
+			}
+		} else {
+			/* release all other registrants except for the current one */
+			if (key.prkey == 0) {
+				nvmf_ctrlr_unregister_all_other_registrants(subsystem, reg);
+				assert(ns->holder == reg);
+			} else {
+				count = nvmf_ctrlr_unregister_registrants_by_key(subsystem, key.prkey);
+				if (count == 0) {
+					SPDK_ERRLOG("PRKEY doesn't match any registrant\n");
+					goto conflict;
+				}
+			}
+		}
+		break;
+	default:
+		break;
+	}
+
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+invalid:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+conflict:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_RESERVATION_CONFLICT;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 int
 spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
@@ -761,6 +943,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req, NULL);
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		return nvmf_ns_reservation_register(req, ctrlr, ns);
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		return nvmf_ns_reservation_acquire(req, ctrlr, ns);
 	default:
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
