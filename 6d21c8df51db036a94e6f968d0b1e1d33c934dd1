@@ -68,6 +68,52 @@
       "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4136d1ad_b033bd4f",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-03T07:22:45Z",
+      "side": 1,
+      "message": "mix tab and space",
+      "range": {
+        "startLine": 680,
+        "startChar": 1,
+        "endLine": 687,
+        "endChar": 23
+      },
+      "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3682560d_f4716cdd",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-03T07:22:45Z",
+      "side": 1,
+      "message": "same with the previous comments",
+      "range": {
+        "startLine": 703,
+        "startChar": 1,
+        "endLine": 707,
+        "endChar": 23
+      },
+      "revId": "6d21c8df51db036a94e6f968d0b1e1d33c934dd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
