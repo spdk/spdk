@@ -36,6 +36,8 @@
 #include <rte_config.h>
 #include <rte_lcore.h>
 
+static struct spdk_cpuset *g_spdk_env_core_mask;
+
 uint32_t
 spdk_env_get_core_count(void)
 {
@@ -79,6 +81,23 @@ spdk_env_get_next_core(uint32_t prev_core)
 		return UINT32_MAX;
 	}
 	return lcore;
+}
+
+struct spdk_cpuset *
+spdk_env_get_core_mask(void)
+{
+	uint32_t i;
+
+	if (g_spdk_env_core_mask == NULL) {
+		g_spdk_env_core_mask = spdk_cpuset_alloc();
+	}
+	spdk_cpuset_zero(g_spdk_env_core_mask);
+
+	SPDK_ENV_FOREACH_CORE(i) {
+		spdk_cpuset_set_cpu(g_spdk_env_core_mask, i, true);
+	}
+
+	return g_spdk_env_core_mask;
 }
 
 uint32_t
