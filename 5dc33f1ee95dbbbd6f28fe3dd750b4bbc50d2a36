@@ -46,6 +46,30 @@
       "revId": "5dc33f1ee95dbbbd6f28fe3dd750b4bbc50d2a36",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2079d3ac_c6929253",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T08:15:26Z",
+      "side": 1,
+      "message": "I changed my idea. Adding in this patch will rerun the whole patch series but I will do it. Please wait shortly.",
+      "parentUuid": "cb9a1be7_e55e9a3b",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 50
+      },
+      "revId": "5dc33f1ee95dbbbd6f28fe3dd750b4bbc50d2a36",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
