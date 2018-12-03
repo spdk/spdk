@@ -117,14 +117,23 @@ spdk_iscsi_portal_create(const char *host, const char *port, const char *cpumask
 			SPDK_ERRLOG("cpumask (%s) is invalid\n", cpumask);
 			goto error_out;
 		}
-		if (spdk_cpuset_count(core_mask) == 0) {
-			SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%s)\n",
-				    cpumask, spdk_cpuset_fmt(spdk_app_get_core_mask()));
-			goto error_out;
-		}
 	} else {
 		spdk_cpuset_copy(core_mask, spdk_app_get_core_mask());
 	}
+
+	/* BEGIN: iscsi seculation */
+
+	/* Here we should to "AND" core_mask and mask for cpu seculation.
+	 * If group doesn't exist, return all CPUs available */
+
+	spdk_cpuset_and(core_mask, spdk_app_get_affinity_group("iscsi"));
+
+	if (spdk_cpuset_count(core_mask) == 0) {
+		SPDK_ERRLOG("cpumask (%s) does not contain core mask (0x%s)\n",
+			    cpumask, spdk_cpuset_fmt(spdk_app_get_core_mask()));
+		goto error_out;
+	}
+	/* END: iscsi seculation */
 
 	p->cpumask = core_mask;
 

@@ -41,6 +41,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
+#include "spdk/cpuset.h"
 
 #ifdef __cplusplus
 extern "C" {
