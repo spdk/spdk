@@ -80,7 +80,7 @@ kill -0 $pid
 # Test 2: Kill the target unexpectedly
 
 # Run bdevperf
-$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -i 0 -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
+$rootdir/test/bdev/bdevperf/bdevperf -r /var/tmp/bdevperf.sock -c $testdir/bdevperf.conf -q 64 -o 65536 -w verify -t 10 &
 perfpid=$!
 waitforlisten $perfpid /var/tmp/bdevperf.sock
 $rpc_py -s /var/tmp/bdevperf.sock wait_subsystem_init
