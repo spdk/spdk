@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e4e8999_33c9d79d",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:19:59Z",
+      "side": 1,
+      "message": "TRANSPORT_ID is easier to read?",
+      "range": {
+        "startLine": 64,
+        "startChar": 22,
+        "endLine": 64,
+        "endChar": 33
+      },
+      "revId": "fe356f0db46587a2b769a2af5e62a42088bc08ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dfb13001_d44d1681",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 489,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:19:59Z",
+      "side": 1,
+      "message": "transport_id may be easier to read.",
+      "range": {
+        "startLine": 489,
+        "startChar": 23,
+        "endLine": 489,
+        "endChar": 34
+      },
+      "revId": "fe356f0db46587a2b769a2af5e62a42088bc08ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e1b21f2_a2e15369",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1526,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:19:59Z",
+      "side": 1,
+      "message": "please be consistent for transport id, transportid or transport_id. Later will be better.",
+      "range": {
+        "startLine": 1526,
+        "startChar": 27,
+        "endLine": 1526,
+        "endChar": 39
+      },
+      "revId": "fe356f0db46587a2b769a2af5e62a42088bc08ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2036924c_a1ec51eb",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T04:19:59Z",
+      "side": 1,
+      "message": "I don\u0027t think assert is good manner. We should return failure and add the requirement to doc.",
+      "range": {
+        "startLine": 127,
+        "startChar": 1,
+        "endLine": 127,
+        "endChar": 19
+      },
+      "revId": "fe356f0db46587a2b769a2af5e62a42088bc08ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
