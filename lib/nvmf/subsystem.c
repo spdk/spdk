@@ -279,6 +279,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
 	TAILQ_INIT(&subsystem->ctrlrs);
+	TAILQ_INIT(&subsystem->reg_head);
 
 	if (num_ns != 0) {
 		subsystem->ns = calloc(num_ns, sizeof(struct spdk_nvmf_ns *));
