@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71a49d2c_0ae7911b",
+        "filename": "lib/nvme/nvme_fabric.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-03T18:24:28Z",
+      "side": 1,
+      "message": "What if another thread submits an admin command between line 59 and line 66?\n\nI think the real bug is in spdk_nvme_ctrlr_alloc_io_qpair - the call to nvme_ctrlr_get_cc needs to be inside the lock. The lock is recursive so this should be ok.",
+      "revId": "63789c8463070e5d878cdb49f4e342d4d714a669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
