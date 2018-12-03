@@ -63,30 +63,31 @@ if hash astyle; then
 	echo -n "Checking coding style..."
 	if [ "$(astyle -V)" \< "Artistic Style Version 3" ]
 	then
-		echo -n " Your astyle version is too old. This may cause failure on patch verification performed by CI. Please update astyle to at least 3.0.1 version..."
-	fi
-	rm -f astyle.log
-	touch astyle.log
-	# Exclude rte_vhost code imported from DPDK - we want to keep the original code
-	#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
-	#  rather than making diffs more complicated by a lot of changes to follow SPDK
-	#  coding standards.
-	git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
-		grep -v rte_vhost | grep -v cpp_headers | \
-		xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
-	if grep -q "^Formatted" astyle.log; then
-		echo " errors detected"
-		git diff
-		sed -i -e 's/  / /g' astyle.log
-		grep --color=auto "^Formatted.*" astyle.log
-		echo "Incorrect code style detected in one or more files."
-		echo "The files have been automatically formatted."
-		echo "Remember to add the files to your commit."
-		rc=1
+		echo -n " Your astyle version is too old so skipping coding style checks. Please update astyle to at least 3.0.1 version..."
 	else
-		echo " OK"
+		rm -f astyle.log
+		touch astyle.log
+		# Exclude rte_vhost code imported from DPDK - we want to keep the original code
+		#  as-is to enable ongoing work to synch with a generic upstream DPDK vhost library,
+		#  rather than making diffs more complicated by a lot of changes to follow SPDK
+		#  coding standards.
+		git ls-files '*.[ch]' '*.cpp' '*.cc' '*.cxx' '*.hh' '*.hpp' | \
+			grep -v rte_vhost | grep -v cpp_headers | \
+			xargs -P$(nproc) -n10 astyle --options=.astylerc >> astyle.log
+		if grep -q "^Formatted" astyle.log; then
+			echo " errors detected"
+			git diff
+			sed -i -e 's/  / /g' astyle.log
+			grep --color=auto "^Formatted.*" astyle.log
+			echo "Incorrect code style detected in one or more files."
+			echo "The files have been automatically formatted."
+			echo "Remember to add the files to your commit."
+			rc=1
+		else
+			echo " OK"
+		fi
+		rm -f astyle.log
 	fi
-	rm -f astyle.log
 else
 	echo "You do not have astyle installed so your code style is not being checked!"
 fi
