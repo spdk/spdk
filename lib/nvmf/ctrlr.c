@@ -2127,6 +2127,9 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return spdk_nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
 		return spdk_nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_subsystem_reservation_request, req);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 	default:
 		return spdk_nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
