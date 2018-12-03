@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13e79ce5_00600fbe",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T17:22:43Z",
+      "side": 1,
+      "message": "Comments from previous review not addressed.",
+      "revId": "b345137bdd38ae34096ab57be43d303ef66db384",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
