@@ -171,6 +171,68 @@ test_spdk_app_parse_args(void)
 	clean_opts(&opts);
 }
 
+static int
+cpuset_check_range(struct spdk_cpuset *core_mask, uint32_t min, uint32_t max, bool isset)
+{
+	uint32_t core;
+	for (core = min; core <= max; core++) {
+		if (isset != spdk_cpuset_get_cpu(core_mask, core)) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static void
+test_spdk_app_affinity_groups(void)
+{
+	struct spdk_cpuset *group;
+	spdk_app_parse_args_rvals_t rc;
+	struct spdk_app_opts opts = {};
+	char *valid_argv[2] = {"app_ut",
+			       "--cpu-affinity-groups=group1@1;group2@[1-3];group3@0xF0"
+			      };
+
+	/* Test valid arguments. Expected result: PASS */
+	rc = spdk_app_parse_args(2, valid_argv, &opts, "", NULL, unittest_parse_args, NULL);
+	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
+	optind = 1;
+
+	/* group1 - core 0 set */
+	group = spdk_app_get_affinity_group("group1");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 0, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 1, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group2 - core 1-3 set */
+	group = spdk_app_get_affinity_group("group2");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 0, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 1, 3, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 4, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group3 - core 4-7 set */
+	group = spdk_app_get_affinity_group("group3");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 3, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 4, 7, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group_not_defined */
+	group = spdk_app_get_affinity_group("group_not_defined");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 7, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, true) == 0);
+
+	/* get free cores */
+	group = spdk_app_get_free_core_mask();
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 7, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, true) == 0);
+
+	clean_opts(&opts);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -189,7 +251,9 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_spdk_app_parse_args",
-			    test_spdk_app_parse_args) == NULL
+			    test_spdk_app_parse_args) == NULL ||
+		CU_add_test(suite, "test_spdk_app_affinity_groups",
+			    test_spdk_app_affinity_groups) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
