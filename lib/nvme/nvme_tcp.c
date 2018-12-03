@@ -78,7 +78,6 @@ struct nvme_tcp_qpair {
 	TAILQ_HEAD(, nvme_tcp_req)		active_r2t_reqs;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
-	uint32_t				in_capsule_data_size;
 	struct nvme_tcp_pdu			recv_pdu;
 	struct nvme_tcp_pdu			send_pdu; /* only for error pdu and init pdu */
 	enum nvme_tcp_pdu_recv_state		recv_state;
@@ -555,12 +554,20 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_request *r
 	return 0;
 }
 
+static inline uint32_t
+nvme_tcp_icdsz_bytes(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return (ctrlr->cdata.nvmf_specific.ioccsz * 16 - sizeof(struct spdk_nvme_cmd));
+}
+
 static int
 nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 		  struct nvme_tcp_req *tcp_req)
 {
+	struct spdk_nvme_ctrlr *ctrlr = tqpair->qpair.ctrlr;
 	int rc = 0;
 	enum spdk_nvme_data_transfer xfer;
+	uint32_t max_incapsule_data_size;
 
 	tcp_req->req = req;
 	req->cmd.cid = tcp_req->cid;
@@ -588,19 +595,21 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	} else {
 		xfer = spdk_nvme_opc_get_data_transfer(req->cmd.opc);
 	}
+	if (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+		max_incapsule_data_size = nvme_tcp_icdsz_bytes(ctrlr);
+		if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) || nvme_qpair_is_admin_queue(&tqpair->qpair)) {
+			max_incapsule_data_size = spdk_min(max_incapsule_data_size, NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE);
+		}
 
-	/* Only for fabrics command */
-	if ((req->cmd.opc == SPDK_NVME_OPC_FABRIC) && (tqpair->in_capsule_data_size != 0) &&
-	    (xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) &&
-	    (req->payload_size <= tqpair->in_capsule_data_size)) {
-		req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
-		req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
-		req->cmd.dptr.sgl1.address = 0;
-		tcp_req->in_capsule_data = true;
+		if (req->payload_size <= max_incapsule_data_size) {
+			req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
+			req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+			req->cmd.dptr.sgl1.address = 0;
+			tcp_req->in_capsule_data = true;
+		}
 	}
 
 	return 0;
-
 }
 
 static void
@@ -1705,7 +1714,6 @@ nvme_tcp_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 		return NULL;
 	}
 
-	tqpair->in_capsule_data_size = NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE;
 	tqpair->num_entries = qsize;
 	qpair = &tqpair->qpair;
 
