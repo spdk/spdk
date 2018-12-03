@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a1c941ce_f1dd9267",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "Yes, thanks!",
+      "parentUuid": "d9a89adc_0206a5f5",
+      "range": {
+        "startLine": 123,
+        "startChar": 8,
+        "endLine": 123,
+        "endChar": 22
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88b04c07_9bdfd0b8",
         "filename": "lib/nvmf/ctrlr_discovery.c",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "48b4591f_b526b9fa",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "Thanks, I think that makes everything more readable. I think I will still avoid writing zeroes to all of the buffers at the beginning and instead loop over the remaining elements at the end to avoid filling the buffer twice unless you feel strongly about that.",
+      "parentUuid": "88b04c07_9bdfd0b8",
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "398757a2_3d237e00",
         "filename": "lib/nvmf/ctrlr_discovery.c",
         "patchSetId": 2
@@ -53,6 +95,30 @@
       "writtenOn": "2018-12-03T07:22:06Z",
       "side": 1,
       "message": "The following is easy to understand for me.\n\ncopy_len \u003d spdk_min(tgt-\u003ediscovery_log_page_size - offset, length - total__copy_len);\ncopy_len \u003d spdk_min(copy_len, tmp-\u003eiov_len);",
+      "range": {
+        "startLine": 135,
+        "startChar": 3,
+        "endLine": 136,
+        "endChar": 35
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f67968e_25cd8d6d",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "Good point, that is much more readable.",
+      "parentUuid": "398757a2_3d237e00",
       "range": {
         "startLine": 135,
         "startChar": 3,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "dac520ac_c3968807",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "I\u0027d still prefer to break just to avoid looping over unnecessary elements.",
+      "parentUuid": "e9310958_b72de812",
+      "range": {
+        "startLine": 144,
+        "startChar": 3,
+        "endLine": 146,
+        "endChar": 4
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "822864b1_c6b6e1b6",
         "filename": "lib/nvmf/ctrlr_discovery.c",
         "patchSetId": 2
@@ -99,6 +189,30 @@
       "writtenOn": "2018-12-03T07:22:06Z",
       "side": 1,
       "message": "zeroing out only the current iov has specific reason?",
+      "range": {
+        "startLine": 150,
+        "startChar": 17,
+        "endLine": 150,
+        "endChar": 41
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "378a6812_213abb78",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "Thanks for bringing this up. I think I got lazy here. The initial intent of the function was to zero out the rest of the data payload. In practice, we will only ever allocate as many IOVs as we need, so the last IOV is the only one we will ever need to zero out, but I think I should still make this a loop over the rest of the buffers so as to not tie this assumption with the implementation.",
+      "parentUuid": "822864b1_c6b6e1b6",
       "range": {
         "startLine": 150,
         "startChar": 17,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "cffb24fe_679c522f",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "However zero_len will also have to be 0 if tgt-\u003ediscovery_log_page is NULL so we still won\u0027t enter this conditional. But I will move this into the brackets under if (tgt-\u003ediscovery_log_page) to be sure and to make sure future implementations understand that intent.",
+      "parentUuid": "9ce619a3_c499c4da",
+      "range": {
+        "startLine": 152,
+        "startChar": 17,
+        "endLine": 152,
+        "endChar": 20
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9566dad8_793b7dc7",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 2
@@ -145,6 +283,30 @@
       "writtenOn": "2018-12-03T07:22:06Z",
       "side": 1,
       "message": "The following ordering of parameters sits well on me because offset and length are of source and iov and iovcnt are of destination.\n\nspdk_nvmf_get_discovery_log_page(tgt, iov, iovcnt, offset, length)\n\nThis ordering will follow bdev.",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 279,
+        "endChar": 61
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7accfc5a_ed59c5ee",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-03T17:37:11Z",
+      "side": 1,
+      "message": "Good call. Thank you!",
+      "parentUuid": "9566dad8_793b7dc7",
       "range": {
         "startLine": 278,
         "startChar": 0,
