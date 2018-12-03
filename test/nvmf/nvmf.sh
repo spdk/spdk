@@ -18,8 +18,7 @@ timing_enter nvmf_tgt
 #  run anything on the extra cores (and will sleep on master
 #  core 0) so there is no impact to the nvmf_tgt tests by
 #  specifying the bigger core mask.
-start_stub "-s 2048 -i 0 -m $NVMF_TEST_CORE_MASK"
-trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
+trap "exit 1" SIGINT SIGTERM EXIT
 
 export NVMF_APP_SHM_ID="0"
 export NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"
@@ -52,7 +51,6 @@ run_test suite test/nvmf/nmic/nmic.sh
 
 timing_exit host
 trap - SIGINT SIGTERM EXIT
-kill_stub
 
 # TODO: enable nvme device detachment for multi-process so that
 #  we can use the stub for this test
