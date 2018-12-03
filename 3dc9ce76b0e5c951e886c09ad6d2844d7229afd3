@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c03e573e_4c16bbf0",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T21:48:38Z",
+      "side": 1,
+      "message": "This part I\u0027m not sure about.  If a user has a mounted filesystem on an NVMe SSD behind a VMD endpoint, will this forcibly unmount that filesystem?\n\nI\u0027m wondering if VMD should be special cases.  Meaning we don\u0027t try to unbind VMD unless user specifically says UNBIND_VMD\u003d1 or something.  At least for now...",
+      "revId": "3dc9ce76b0e5c951e886c09ad6d2844d7229afd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
