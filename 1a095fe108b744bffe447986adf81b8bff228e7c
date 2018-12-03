@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "5210cc10_9e4f63a5",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-12-03T13:12:43Z",
+      "side": 1,
+      "message": "We have some single thread applications in SPDK example directory that use this code and I\u0027m trying to make it work with out remodeling them to use many threads. I\u0027m still searching for a right way to do this.",
+      "parentUuid": "a969f1ed_59d9a6f9",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c07d233d_b04d13c7",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 9
@@ -119,6 +137,24 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "c07d233d_b04d13c7",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c3f7831_8c267a78",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-12-03T13:12:43Z",
+      "side": 1,
+      "message": "I found out that disconnect related events don’t come on admin queue. Both CM events (when I pull out a cable) and IBV events (when I turn down network interface) are not present for admin queue, but instead I’m getting them for other qpairs. Because of that I actually have to check it for all qpairs. Any suggestions how can I do this on single thread so that we won\u0027t loose a performance?",
+      "parentUuid": "29575856_2fc7a0ac",
       "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
