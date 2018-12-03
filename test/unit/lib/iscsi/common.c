@@ -162,6 +162,12 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 	return 0;
 }
 
+struct spdk_cpuset *
+spdk_app_get_affinity_group(const char *name)
+{
+	return spdk_app_get_core_mask();
+}
+
 uint32_t
 spdk_env_get_current_core(void)
 {
