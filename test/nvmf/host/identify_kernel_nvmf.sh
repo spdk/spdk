@@ -6,6 +6,9 @@ source $rootdir/test/common/autotest_common.sh
 source $rootdir/test/nvmf/common.sh
 
 set -e
+# pass the parameter 'iso' to this script when running it in isolation to trigger rdma device initialization.
+# e.g. sudo ./identify_kernel_nvmf.sh iso
+nvmftestinit $1
 
 RDMA_IP_LIST=$(get_available_rdma_ips)
 NVMF_FIRST_TARGET_IP=$(echo "$RDMA_IP_LIST" | head -n 1)
@@ -77,4 +80,5 @@ rmmod nvmet-rdma
 rmmod null_blk
 rmmod nvmet
 
+nvmftestfini $1
 timing_exit identify_kernel_nvmf_tgt
