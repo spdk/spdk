@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a2d2d0ed_101085b9",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T10:21:50Z",
+      "side": 1,
+      "message": "The arguments seem to be swapped:\n# man calloc\nvoid *calloc(size_t nmemb, size_t size);",
+      "range": {
+        "startLine": 124,
+        "startChar": 30,
+        "endLine": 124,
+        "endChar": 39
+      },
+      "revId": "5dfe55c47cc9ff7793965fb976dcb0321dcc3cb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63c853f0_6f3bf7f6",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T10:21:50Z",
+      "side": 1,
+      "message": "swapped arguments, not that it makes any practical difference, but let\u0027s stick with the rest of SPDK",
+      "range": {
+        "startLine": 68,
+        "startChar": 16,
+        "endLine": 68,
+        "endChar": 32
+      },
+      "revId": "5dfe55c47cc9ff7793965fb976dcb0321dcc3cb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00d5b53d_3609f0cd",
+        "filename": "lib/bdev/rbd/bdev_rbd_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-03T10:21:50Z",
+      "side": 1,
+      "message": "^ same here",
+      "range": {
+        "startLine": 79,
+        "startChar": 15,
+        "endLine": 79,
+        "endChar": 45
+      },
+      "revId": "5dfe55c47cc9ff7793965fb976dcb0321dcc3cb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
