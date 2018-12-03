@@ -41,6 +41,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/queue.h"
+#include "spdk/cpuset.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -452,6 +453,8 @@ uint32_t spdk_env_get_next_core(uint32_t prev_core);
 	for (i = spdk_env_get_first_core();	\
 	     i < UINT32_MAX;			\
 	     i = spdk_env_get_next_core(i))
+
+struct spdk_cpuset *spdk_env_get_core_mask(void);
 
 /**
  * Get the socket ID for the given core.
