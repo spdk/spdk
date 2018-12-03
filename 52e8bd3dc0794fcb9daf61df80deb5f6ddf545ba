@@ -1,0 +1,159 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9a89adc_0206a5f5",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "can we use length as remaining length instead of total_copy_len ?",
+      "range": {
+        "startLine": 123,
+        "startChar": 8,
+        "endLine": 123,
+        "endChar": 22
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88b04c07_9bdfd0b8",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "How about the following?\n- write 0 to all iovecs.\n- use length as remaining lengt.\n- copy the valid part of the discovery log page.\n\nfor (tmp \u003d iov; tmp \u003c iov + iovcnt; tmp++) {\n  memcpy(tmp-\u003eiov_base, 0, tmp-\u003eiov_len);\n}\n\nif (tgt-\u003ediscovery_log_page) {\n  for (tmp \u003d iov; tmp \u003c iov + iovcnt; tmp++) {\n    copy_len \u003d spdk_min(tgt-\u003ediscovery_log_page_size - offset, length);\n    copy_len \u003d spdk_min(copy_len, tmp-\u003eiov_len);\n    memcpy(tmp-\u003eiov_base, (char *)tgt-\u003ediscovery_log_page + offset, copy_len);\n    length -\u003d copy_len;\n    offset +\u003d copy_len;\n  }\n}",
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "398757a2_3d237e00",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "The following is easy to understand for me.\n\ncopy_len \u003d spdk_min(tgt-\u003ediscovery_log_page_size - offset, length - total__copy_len);\ncopy_len \u003d spdk_min(copy_len, tmp-\u003eiov_len);",
+      "range": {
+        "startLine": 135,
+        "startChar": 3,
+        "endLine": 136,
+        "endChar": 35
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9310958_b72de812",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "if remaining length is 0, no copy is done and this break is not must to do.",
+      "range": {
+        "startLine": 144,
+        "startChar": 3,
+        "endLine": 146,
+        "endChar": 4
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "822864b1_c6b6e1b6",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "zeroing out only the current iov has specific reason?",
+      "range": {
+        "startLine": 150,
+        "startChar": 17,
+        "endLine": 150,
+        "endChar": 41
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ce619a3_c499c4da",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "tmp may be uninitialized if tgt-\u003ediscovery_log_page is NULL.",
+      "range": {
+        "startLine": 152,
+        "startChar": 17,
+        "endLine": 152,
+        "endChar": 20
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9566dad8_793b7dc7",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-03T07:22:06Z",
+      "side": 1,
+      "message": "The following ordering of parameters sits well on me because offset and length are of source and iov and iovcnt are of destination.\n\nspdk_nvmf_get_discovery_log_page(tgt, iov, iovcnt, offset, length)\n\nThis ordering will follow bdev.",
+      "range": {
+        "startLine": 278,
+        "startChar": 0,
+        "endLine": 279,
+        "endChar": 61
+      },
+      "revId": "52e8bd3dc0794fcb9daf61df80deb5f6ddf545ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
