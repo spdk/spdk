@@ -220,6 +220,25 @@ int spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask);
  */
 struct spdk_cpuset *spdk_app_get_core_mask(void);
 
+/**
+ * Get affinity group by name
+ *
+ * \param name string identifier of affinity group
+ *
+ * \return the bitmask of CPU cores in the group.
+ */
+struct spdk_cpuset *spdk_app_get_affinity_group(const char *name);
+
+/**
+ * Parse and add affinity groups
+ *
+ * \param affinity_groups "name@cpumask[;name@cpumask[...]]"
+ *
+ * \return 0 on success, -1 on failure
+ */
+int spdk_app_parse_affinity_groups(const char *affinity_groups);
+
+
 #define SPDK_APP_GETOPT_STRING "c:de:ghi:m:n:p:r:s:uB:L:RW:"
 
 enum spdk_app_parse_args_rvals {
