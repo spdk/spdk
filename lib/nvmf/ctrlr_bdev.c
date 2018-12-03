@@ -555,6 +555,67 @@ nvmf_ctrlr_remove_registrant(struct spdk_nvmf_subsystem *subsystem,
 	return 0;
 }
 
+static uint32_t
+nvmf_ctrlr_remove_registrants_by_key(struct spdk_nvmf_subsystem *subsystem,
+				     uint64_t rkey)
+{
+	struct spdk_nvmf_registrant *reg;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH(reg, &subsystem->reg_head, link) {
+		if (reg->rkey == rkey) {
+			TAILQ_REMOVE(&subsystem->reg_head, reg, link);
+			free(reg);
+			subsystem->regctl--;
+			count++;
+		}
+	}
+	return count;
+}
+
+static uint32_t
+nvmf_ctrlr_remove_all_other_registrants(struct spdk_nvmf_subsystem *subsystem,
+					struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *tmp;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH(tmp, &subsystem->reg_head, link) {
+		if (tmp != reg) {
+			TAILQ_REMOVE(&subsystem->reg_head, tmp, link);
+			free(tmp);
+			count++;
+			subsystem->regctl--;
+		}
+	}
+	return count;
+}
+
+/* current registrant is reservation holder or not */
+static inline bool
+nvmf_ns_registrant_is_hodler(struct spdk_nvmf_ns *ns, struct spdk_nvmf_registrant *reg)
+{
+	if (ns->holder) {
+		return (ns->holder == reg ||
+			ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS ||
+			ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
+	}
+
+	return false;
+}
+
+/* current reservation type is all registrants or not */
+static inline bool
+nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns)
+{
+	if (ns->holder) {
+		return (ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS ||
+			ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
+	}
+
+	return false;
+}
+
 static int
 nvmf_ns_reservation_register(struct spdk_nvmf_request *req,
 			     struct spdk_nvmf_ctrlr *ctrlr,
@@ -695,6 +756,132 @@ conflict:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ns_reservation_acquire(struct spdk_nvmf_request *req,
+			    struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	uint8_t racqa, iekey, rtype;
+	struct spdk_nvme_reservation_acquire_data key;
+	struct spdk_nvmf_registrant *reg;
+	bool all_regs = false;
+	uint32_t count = 0;
+
+	racqa = cmd->cdw10 & 0x7u;
+	iekey = (cmd->cdw10 >> 3) & 0x1u;
+	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	memcpy(&key, req->data, sizeof(key));
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIIRE: RACQA %u, IEKEY %u, RTYPE %u, "
+		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
+		      racqa, iekey, rtype, key.crkey, key.prkey);
+
+	pthread_mutex_lock(&subsystem->reservation_lock);
+
+	if (iekey) {
+		SPDK_ERRLOG("Ignore existing key field set to 1\n");
+		goto invalid;
+	}
+
+	reg = nvmf_ctrlr_get_registrant(subsystem, ctrlr);
+	/* must be registrant and CRKEY must match */
+	if (!reg || reg->rkey != key.crkey) {
+		SPDK_ERRLOG("No registrant or current key doesn't match "
+			    "with existing registrant key\n");
+		goto conflict;
+	}
+
+	all_regs = nvmf_ns_reservation_all_registrants_type(ns);
+
+	switch (racqa) {
+	case SPDK_NVME_RESERVE_ACQUIRE:
+		/* NS already has a valid holder */
+		if (ns->holder) {
+			if (ns->rtype != rtype ||
+			    (!nvmf_ns_registrant_is_hodler(ns, reg))) {
+				SPDK_ERRLOG("Invalid rtype or current "
+					    "registrant is not holder\n");
+				goto conflict;
+			}
+		} else {
+			/* fisrt time for the reservation */
+			ns->rtype = rtype;
+			ns->crkey = key.crkey;
+			ns->holder = reg;
+		}
+		break;
+	case SPDK_NVME_RESERVE_PREEMPT:
+		/* no reservation holder */
+		if (!ns->holder) {
+			/* unregister with PRKEY */
+			nvmf_ctrlr_remove_registrants_by_key(subsystem, key.prkey);
+			break;
+		}
+		/* only 1 reservation holder and reservation key is valid */
+		if (!all_regs) {
+			/* preempt itself */
+			if (nvmf_ns_registrant_is_hodler(ns, reg) &&
+			    ns->crkey == key.prkey) {
+				ns->rtype = rtype;
+				break;
+			}
+
+			if (ns->crkey == key.prkey) {
+				nvmf_ctrlr_remove_registrant(subsystem, ns->holder);
+				ns->rtype = rtype;
+				ns->holder = reg;
+			} else if (key.prkey != 0) {
+				nvmf_ctrlr_remove_registrants_by_key(subsystem, key.prkey);
+			} else {
+				/* PRKEY is zero */
+				SPDK_ERRLOG("Current PRKEY is zero\n");
+				goto conflict;
+			}
+		} else {
+			/* release all other registrants except for the current one */
+			if (key.prkey == 0) {
+				nvmf_ctrlr_remove_all_other_registrants(subsystem, reg);
+				ns->rtype = rtype;
+				ns->holder = reg;
+			} else {
+				count = nvmf_ctrlr_remove_registrants_by_key(subsystem, key.prkey);
+				if (count == 0) {
+					SPDK_ERRLOG("PRKEY doesn't match any registrant\n");
+					goto conflict;
+				}
+				if (TAILQ_EMPTY(&subsystem->reg_head)) {
+					ns->holder = NULL;
+					ns->rtype = 0;
+					ns->crkey = 0;
+				} else {
+					ns->holder = TAILQ_FIRST(&subsystem->reg_head);
+				}
+			}
+		}
+		break;
+	default:
+		break;
+	}
+
+	subsystem->gen++;
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+invalid:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+conflict:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_RESERVATION_CONFLICT;
+	pthread_mutex_unlock(&subsystem->reservation_lock);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 int
 spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
@@ -750,6 +937,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req, NULL);
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		return nvmf_ns_reservation_register(req, ctrlr, ns);
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		return nvmf_ns_reservation_acquire(req, ctrlr, ns);
 	default:
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
