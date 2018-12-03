@@ -24,7 +24,7 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF -i 0 &
+$NVMF_APP -m 0xF &
 nvmfpid=$!
 
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
@@ -53,7 +53,7 @@ function test_perf()
 
 	# Test multi-process access to local NVMe device
 	if [ -n "$local_nvme_trid" ]; then
-		$rootdir/examples/nvme/perf/perf -i 0 -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
+		$rootdir/examples/nvme/perf/perf -i $NVMF_APP_SHM_ID -q 32 -o 4096 -w randrw -M 50 -t 1 -r "$local_nvme_trid"
 	fi
 
 	$rootdir/examples/nvme/perf/perf -q 32 -o 4096 -w randrw -M 50 -t 1 -r "trtype:$TYPE adrfam:IPv4 traddr:$NVMF_TARGET_IP trsvcid:4420"
