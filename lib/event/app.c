@@ -55,6 +55,14 @@
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
 #define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
+struct spdk_app_affinity_group {
+	TAILQ_ENTRY(spdk_app_affinity_group) link;
+	char *name;
+	struct spdk_cpuset *cpuset;
+};
+TAILQ_HEAD(, spdk_app_affinity_group) g_app_affinity_groups;
+struct spdk_cpuset *g_app_free_core_mask;
+
 struct spdk_app {
 	struct spdk_conf		*config;
 	int				shm_id;
@@ -70,6 +78,132 @@ static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
 static struct spdk_app_opts g_default_opts;
+
+struct spdk_cpuset *
+spdk_app_get_free_core_mask(void)
+{
+	if (g_app_free_core_mask == NULL) {
+		g_app_free_core_mask = spdk_cpuset_alloc();
+		spdk_cpuset_negate(g_app_free_core_mask);
+	}
+	return g_app_free_core_mask;
+}
+
+struct spdk_cpuset *
+spdk_app_get_affinity_group(const char *name)
+{
+	struct spdk_app_affinity_group *affinity_group;
+	TAILQ_FOREACH(affinity_group, &g_app_affinity_groups, link) {
+		if (strcmp(affinity_group->name, name) == 0) {
+			return affinity_group->cpuset;
+		}
+	}
+	return spdk_app_get_free_core_mask();
+}
+
+static int
+spdk_app_add_affinity_group(const char *name, const char *cpumask)
+{
+	struct spdk_app_affinity_group *affinity_group;
+	struct spdk_cpuset *cpuset, *tmp;
+
+	TAILQ_FOREACH(affinity_group, &g_app_affinity_groups, link) {
+		if (strcmp(affinity_group->name, name) == 0) {
+			SPDK_ERRLOG("Affinity group '%s' already defined\n", name);
+			return -1;
+		}
+	}
+
+	cpuset = spdk_cpuset_alloc();
+	if (spdk_cpuset_parse(cpuset, cpumask) != 0) {
+		SPDK_ERRLOG("Parse error for affinity group '%s@%s'\n", name, cpumask);
+		spdk_cpuset_free(cpuset);
+		return -1;
+	}
+
+	/* FIXIT: Should we allow to create empty group? */
+
+	if (g_app_free_core_mask == NULL) {
+		g_app_free_core_mask = spdk_cpuset_alloc();
+		spdk_cpuset_negate(g_app_free_core_mask);
+	}
+
+	tmp = spdk_cpuset_alloc();
+	spdk_cpuset_copy(tmp, g_app_free_core_mask);
+	spdk_cpuset_and(tmp, cpuset);
+	if (spdk_cpuset_count(tmp) == 0) {
+		SPDK_ERRLOG("Affinity group '%s=%s' cannot use already associated cores (%s)\n",
+			    name, spdk_cpuset_fmt(cpuset), spdk_cpuset_fmt(g_app_free_core_mask));
+		spdk_cpuset_free(cpuset);
+		spdk_cpuset_free(tmp);
+		return -1;
+	}
+	spdk_cpuset_free(tmp);
+
+	affinity_group = calloc(sizeof(struct spdk_app_affinity_group), 1);
+	affinity_group->name = strdup(name);
+	affinity_group->cpuset = cpuset;
+	TAILQ_INSERT_TAIL(&g_app_affinity_groups, affinity_group, link);
+
+	spdk_cpuset_xor(g_app_free_core_mask, cpuset);
+
+	return 0;
+}
+
+static int
+spdk_app_free_affinity_groups(void)
+{
+	struct spdk_app_affinity_group *affinity_group;
+	struct spdk_app_affinity_group *tmp;
+
+	TAILQ_FOREACH_SAFE(affinity_group, &g_app_affinity_groups, link, tmp) {
+		spdk_cpuset_free(affinity_group->cpuset);
+		free(affinity_group->name);
+		free(affinity_group);
+	}
+
+	spdk_cpuset_free(g_app_free_core_mask);
+	g_app_free_core_mask = NULL;
+
+	return 0;
+}
+
+int
+spdk_app_parse_affinity_groups(const char *affinity_groups)
+{
+	char *groups = strdup(affinity_groups);
+	char *name = groups;
+	char *cpumask = groups;
+	char *end = groups;
+	bool finish = false;
+
+	do {
+		name = end;
+		cpumask = name;
+		while (*cpumask != '@') {
+			cpumask++;
+		}
+		*cpumask = '\0';
+		cpumask++;
+
+		end = cpumask;
+		while (*end != ' ' && *end != '\0' && *end != ';') {
+			end++;
+		}
+		finish = (*end == '\0');
+		*end = '\0';
+		end++;
+
+		if (spdk_app_add_affinity_group(name, cpumask) != 0) {
+			free(groups);
+			return -1;
+		}
+	} while (!finish);
+
+
+	free(groups);
+	return 0;
+}
 
 int
 spdk_app_get_shm_id(void)
@@ -121,6 +255,8 @@ static const struct option g_cmdline_options[] = {
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
 #define MAX_REACTOR_DELAY_OPT_IDX	261
 	{"max-delay",			required_argument,	NULL, MAX_REACTOR_DELAY_OPT_IDX},
+#define CPU_AFFINITY_GROUPS_IDX	262
+	{"cpu-affinity-groups",		required_argument,	NULL, CPU_AFFINITY_GROUPS_IDX},
 };
 
 /* Global section */
@@ -677,6 +813,7 @@ spdk_app_fini(void)
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
+	spdk_app_free_affinity_groups();
 	spdk_log_close();
 	spdk_thread_lib_fini();
 }
@@ -805,6 +942,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	}
 
 	g_executable_name = argv[0];
+	TAILQ_INIT(&g_app_affinity_groups);
 
 	while ((ch = getopt_long(argc, argv, cmdline_short_opts, cmdline_options, &opt_idx)) != -1) {
 		switch (ch) {
@@ -951,6 +1089,10 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				goto out;
 			}
 			opts->max_delay_us = atoi(optarg);
+		case CPU_AFFINITY_GROUPS_IDX:
+			if (spdk_app_parse_affinity_groups(optarg)) {
+				goto out;
+			}
 			break;
 		case '?':
 			/*
