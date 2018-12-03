@@ -3,10 +3,14 @@ set -xe
 testdir=$(readlink -f $(dirname $0))
 SPDKCLI_BUILD_DIR=$(readlink -f $testdir/../..)
 spdkcli_job="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job.py"
+spdkcli_job_m="$SPDKCLI_BUILD_DIR/test/spdkcli/spdkcli_job_m.py"
 . $SPDKCLI_BUILD_DIR/test/common/autotest_common.sh
 
 function on_error_exit() {
 	set +e
+	if [ ! -z $spdkcli_pid ];then
+       		kill -9 $spdkcli_pid
+	fi
 	killprocess $spdk_tgt_pid
 	rm -f $testdir/${MATCH_FILE} $testdir/match_files/spdkcli_details_vhost.test /tmp/sample_aio /tmp/sample_pmem
 	print_backtrace
