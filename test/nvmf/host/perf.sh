@@ -24,7 +24,7 @@ fi
 timing_enter perf
 timing_enter start_nvmf_tgt
 
-$NVMF_APP -m 0xF &
+$NVMF_APP -m 0xF -s 4096 &
 nvmfpid=$!
 
 trap "process_shm --id $NVMF_APP_SHM_ID; killprocess $nvmfpid; exit 1" SIGINT SIGTERM EXIT
