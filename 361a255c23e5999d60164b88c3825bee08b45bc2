@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07a63aad_8ba8c6d8",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T23:52:55Z",
+      "side": 1,
+      "message": "could we make an spdk_internal API for this?",
+      "revId": "361a255c23e5999d60164b88c3825bee08b45bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d912298_7f346c53",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T23:52:55Z",
+      "side": 1,
+      "message": "different patch?  or just refer to this change in the commit message",
+      "revId": "361a255c23e5999d60164b88c3825bee08b45bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f5decb3_983b5dee",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-03T23:52:55Z",
+      "side": 1,
+      "message": "(just picking a random one from this patch)\n\nshould spdk_free_thread() take a thread parameter at some point?  maybe that\u0027s coming later (doesn\u0027t need to be fixed in this patch)",
+      "revId": "361a255c23e5999d60164b88c3825bee08b45bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
