@@ -101,6 +101,21 @@ void spdk_cpuset_and(struct spdk_cpuset *dst, const struct spdk_cpuset *src);
 void spdk_cpuset_or(struct spdk_cpuset *dst, const struct spdk_cpuset *src);
 
 /**
+ * Perform XOR operation on two CPU sets. The result is stored in dst.
+ *
+ * \param dst First argument of operation. This value also stores the result of operation.
+ * \param src Second argument of operation.
+ */
+void spdk_cpuset_xor(struct spdk_cpuset *dst, const struct spdk_cpuset *src);
+
+/**
+ * Negate all CPUs in CPU set.
+ *
+ * \param set CPU set to be negated. This value also stores the result of operation.
+ */
+void spdk_cpuset_negate(struct spdk_cpuset *set);
+
+/**
  * Clear all CPUs in CPU set.
  *
  * \param set CPU set to be cleared.
