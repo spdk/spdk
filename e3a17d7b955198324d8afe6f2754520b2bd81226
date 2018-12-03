@@ -22,6 +22,30 @@
       "revId": "e3a17d7b955198324d8afe6f2754520b2bd81226",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "931f8333_db41715e",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-03T02:15:22Z",
+      "side": 1,
+      "message": "Good point, Shuhei.\nfixed.",
+      "parentUuid": "1598fd0c_934a442c",
+      "range": {
+        "startLine": 192,
+        "startChar": 48,
+        "endLine": 192,
+        "endChar": 61
+      },
+      "revId": "e3a17d7b955198324d8afe6f2754520b2bd81226",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
