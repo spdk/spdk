@@ -56,6 +56,7 @@
 #define DEFAULT_WINDOW_SIZE 15
 #define MAX_MBUFS_PER_OP 64
 
+/* TODO: need to get this from RPC on create or reduce metadata on load */
 #define TEST_MD_PATH "/tmp"
 
 /* To add support for new device types, follow the examples of the following...
@@ -90,22 +91,6 @@ struct device_qp {
 static TAILQ_HEAD(, device_qp) g_device_qp = TAILQ_HEAD_INITIALIZER(g_device_qp);
 static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 
-static void vbdev_compress_examine(struct spdk_bdev *bdev);
-static int vbdev_compress_claim(struct spdk_bdev *bdev);
-static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
-static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
-
-/* List of comp_bdev names and their base bdevs via configuration file.
- * Used so we can parse the conf once at init and use this list in examine().
- */
-struct bdev_names {
-	char			*vbdev_name;
-	char			*bdev_name;
-	char			*drv_name;	/* name of the compression device driver */
-	TAILQ_ENTRY(bdev_names)	link;
-};
-static TAILQ_HEAD(, bdev_names) g_bdev_names = TAILQ_HEAD_INITIALIZER(g_bdev_names);
-
 /* List of virtual bdevs and associated info for each. */
 struct vbdev_compress {
 	struct spdk_bdev		*base_bdev;	/* the thing we're attaching to */
@@ -115,6 +100,7 @@ struct vbdev_compress {
 	char				*drv_name;	/* name of the compression device driver */
 	struct spdk_reduce_vol_params	params;		/* params for the reduce volume */
 	struct spdk_reduce_backing_dev	backing_dev;	/* backing device info for the reduce volume */
+	struct spdk_reduce_vol		*vol;		/* the reduce volume */
 
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
@@ -143,6 +129,12 @@ struct comp_bdev_io {
 	uint64_t dest_offset_blocks;                    /* block offset on media */
 	struct iovec dest_iov;                          /* iov representing contig write buffer */
 };
+
+static void vbdev_compress_examine(struct spdk_bdev *bdev);
+static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
+static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
+static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
+struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev);
 
 /* Shared mempools between all devices on this system */
 static struct spdk_mempool *g_mbuf_mp = NULL;			/* mbuf mempool */
@@ -395,10 +387,10 @@ comp_dev_poller(void *args)
 	return 0;
 }
 
-/* Note src and dest in this function refer to the CompressDev infterface */
 static int
 _compress_operation(struct spdk_bdev_io *bdev_io, enum rte_comp_xform_type operation)
 {
+	return 0;
 }
 
 /* This function is called after all channels have been quiesced following
@@ -624,7 +616,7 @@ _device_unregister_cb(void *io_device)
 {
 	struct vbdev_compress *comp_bdev = io_device;
 
-	/* Done with this crypto_bdev. */
+	/* Done with this comp_bdev. */
 	free(comp_bdev->drv_name);
 	free(comp_bdev->comp_bdev.name);
 	free(comp_bdev);
@@ -708,23 +700,28 @@ vbdev_compress_config_json(struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+/* Callback from reduce for then init is complete. We'll pass the vbdev_comp struct
+ * used for initial metadata operations to claim where it will be further filled out
+ * and added to the global list.
+ */
 static void
 vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 {
-	struct vbdev_compress *init_ctx = cb_arg;
-
-	/* Done with direct md access to base bdev */
-	spdk_put_io_channel(init_ctx->base_ch);
-	spdk_bdev_close(init_ctx->base_desc);
+	struct vbdev_compress *meta_ctx = cb_arg;
 
 	if (ziperrno == 0) {
-		vbdev_compress_claim(init_ctx->base_bdev);
+		meta_ctx->vol = vol;
+		vbdev_compress_claim(meta_ctx);
 	} else {
 		SPDK_ERRLOG("for vol %s, error %u\n",
-			    spdk_bdev_get_name(init_ctx->base_bdev), ziperrno);
+			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
+		spdk_bdev_close(meta_ctx->base_desc);
+		TAILQ_REMOVE(&g_vbdev_comp, meta_ctx, link);
+		spdk_io_device_unregister(meta_ctx, NULL);
+		free(meta_ctx->drv_name);
+		free(meta_ctx->comp_bdev.name);
+		free(meta_ctx);
 	}
-
-	free(init_ctx);
 }
 
 /* Callback for the function used by reduceLib to perform IO to/rom the backing device. We just
@@ -817,59 +814,87 @@ _comp_reduce_close(struct spdk_reduce_backing_dev *dev)
 	spdk_bdev_close(comp_bdev->base_desc);
 }
 
-/* TODO: determine which parms we want user configurable, HC for now */
-/* params.vol_size
+/* Called when the underlying base bdev goes away. */
+static void
+vbdev_compress_base_bdev_hotremove_cb(void *ctx)
+{
+	struct vbdev_compress *comp_bdev, *tmp;
+	struct spdk_bdev *bdev_find = ctx;
+
+	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
+		if (bdev_find == comp_bdev->base_bdev) {
+			spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
+		}
+	}
+}
+
+/* TODO: determine which parms we want user configurable, HC for now
+ * params.vol_size
  * params.chunk_size
+ * compression PMD, algorithm, window size, comp level, etc.
  * TEST_MD_PATH
  */
-/* Call reduceLib to initialize the volume and backing device.  This will
- * indirectly generate IO to the backing device (metadata). We use the
- * struct vbdev_compress as our init_ctx as it has the main elements that
- * we need to do IO to the base bdev for init metadata operations, then
- * we free it when complete.
- */
 
-static void
-vbdev_init_reduce(struct spdk_bdev *bdev)
+/* Common function for init and load to allocate and populat the minimal
+ * information for reducelib to init or load.
+ */
+struct vbdev_compress *
+_prepare_for_load_init(struct spdk_bdev *bdev)
 {
 	int rc;
-	struct vbdev_compress *init_ctx;
+	struct vbdev_compress *meta_ctx;
 
-	init_ctx = calloc(1, sizeof(struct vbdev_compress));
-	if (init_ctx == NULL) {
+	meta_ctx = calloc(1, sizeof(struct vbdev_compress));
+	if (meta_ctx == NULL) {
 		SPDK_ERRLOG("failed to alloc init contexs\n");
-		return;
+		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, NULL,
-			    bdev, &init_ctx->base_desc);
+	rc = spdk_bdev_open(bdev, true, vbdev_compress_base_bdev_hotremove_cb,
+			    bdev, &meta_ctx->base_desc);
 	if (rc) {
 		SPDK_ERRLOG("failed to open bdev for metadata operations\n");
-		free(init_ctx);
+		free(meta_ctx);
+		return NULL;
+	}
+
+	meta_ctx->base_bdev = bdev;
+	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
+	meta_ctx->backing_dev.close = _comp_reduce_close;
+	meta_ctx->backing_dev.unmap = _comp_reduce_unmap;
+	meta_ctx->backing_dev.readv = _comp_reduce_readv;
+	meta_ctx->backing_dev.writev = _comp_reduce_writev;
+	meta_ctx->backing_dev.blocklen = bdev->blocklen;
+	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
+
+	/* TODO, pending reducelib updates around vol size determination */
+	meta_ctx->params.vol_size = bdev->blocklen * bdev->blockcnt;
+	meta_ctx->params.vol_size = 1024 * 1024 * 1024;
+	meta_ctx->params.chunk_size = 16 * 1024;
+	meta_ctx->params.backing_io_unit_size = meta_ctx->backing_dev.blocklen;
+
+	return meta_ctx;
+}
+
+/* Call reducelib to initialize a new volume */
+static void
+vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *comp_pmd)
+{
+	struct vbdev_compress *meta_ctx;
+
+	meta_ctx = _prepare_for_load_init(bdev);
+	if (meta_ctx == NULL) {
 		return;
 	}
 
-	init_ctx->base_bdev = bdev;
-	init_ctx->base_ch = spdk_bdev_get_io_channel(init_ctx->base_desc);
-	init_ctx->backing_dev.close = _comp_reduce_close;
-	init_ctx->backing_dev.unmap = _comp_reduce_unmap;
-	init_ctx->backing_dev.readv = _comp_reduce_readv;
-	init_ctx->backing_dev.writev = _comp_reduce_writev;
-	/* TODO: so far only write has been tested */
-
-	init_ctx->backing_dev.blocklen = bdev->blocklen;
-	init_ctx->backing_dev.blockcnt = bdev->blockcnt;
-
-	/* TODO, pending reducelib updates around vol size determination */
-	init_ctx->params.vol_size = bdev->blocklen * bdev->blockcnt;
-	init_ctx->params.vol_size = 1024 * 1024 * 1024;
-	init_ctx->params.chunk_size = 16 * 1024;
-	init_ctx->params.backing_io_unit_size = init_ctx->backing_dev.blocklen;
-
-	spdk_reduce_vol_init(&init_ctx->params, &init_ctx->backing_dev,
+	/* TODO: we'll want to pass name and compression parms to this
+	 * function so they can be persisted.  We'll need to retrieve them
+	 * in load.
+	 */
+	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
 			     TEST_MD_PATH,
 			     vbdev_reduce_init_cb,
-			     init_ctx);
+			     meta_ctx);
 }
 
 /* We provide this callback for the SPDK channel code to create a channel using
@@ -885,7 +910,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct vbdev_compress *comp_bdev = io_device;
 	struct device_qp *device_qp;
 
-	comp_ch->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+	comp_ch->base_ch = comp_bdev->base_ch;
 	comp_ch->poller = spdk_poller_register(comp_dev_poller, comp_ch, 0);
 	comp_ch->device_qp = NULL;
 
@@ -926,151 +951,31 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(comp_ch->base_ch);
 }
 
-/* Create the compress association from the bdev and vbdev name and insert
- * on the global list. */
-static int
-vbdev_compress_insert_name(const char *bdev_name, const char *vbdev_name,
-			   const char *comp_pmd)
-{
-	struct bdev_names *name;
-	bool found = false;
-	int rc, j;
-
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(vbdev_name, name->vbdev_name) == 0) {
-			SPDK_ERRLOG("compress bdev %s already exists\n", vbdev_name);
-			return -EEXIST;
-		}
-	}
-
-	name = calloc(1, sizeof(struct bdev_names));
-	if (!name) {
-		SPDK_ERRLOG("could not allocate bdev_names\n");
-		return -ENOMEM;
-	}
-
-	name->bdev_name = strdup(bdev_name);
-	if (!name->bdev_name) {
-		SPDK_ERRLOG("could not allocate name->bdev_name\n");
-		rc = -ENOMEM;
-		goto error_alloc_bname;
-	}
-
-	name->vbdev_name = strdup(vbdev_name);
-	if (!name->vbdev_name) {
-		rc = -ENOMEM;
-		goto error_alloc_vname;
-	}
-
-	name->drv_name = strdup(comp_pmd);
-	if (!name->drv_name) {
-		SPDK_ERRLOG("could not allocate name->drv_name\n");
-		rc = -ENOMEM;
-		goto error_alloc_dname;
-	}
-	for (j = 0; j < MAX_NUM_DRV_TYPES ; j++) {
-		if (strcmp(comp_pmd, g_driver_names[j]) == 0) {
-			found = true;
-			break;
-		}
-	}
-	if (!found) {
-		SPDK_ERRLOG("invalid compression PMD type %s\n", comp_pmd);
-		rc = -EINVAL;
-		goto error_invalid_pmd;
-	}
-
-	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
-
-	return 0;
-	/* Error cleanup paths. */
-error_invalid_pmd:
-	free(name->drv_name);
-error_alloc_dname:
-	free(name->vbdev_name);
-error_alloc_vname:
-	free(name->bdev_name);
-error_alloc_bname:
-	free(name);
-	return rc;
-}
-
 /* RPC entry point for compression vbdev creation. */
 int
 create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
 {
-	struct spdk_bdev *bdev = NULL;
-	int rc = 0;
-
-
-	/* Insert the bdev into our global name list even if it doesn't exist yet,
-	 * it may show up soon...
-	 */
-	rc = vbdev_compress_insert_name(bdev_name, vbdev_name, comp_pmd);
-	if (rc) {
-		return rc;
-	}
+	struct spdk_bdev *bdev;
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (!bdev) {
+		/* TODO: without a global list ? */
 		/* This is OK, the bdev may show up later on. */
 		return 0;
 	}
 
-	vbdev_init_reduce(bdev);
+	vbdev_init_reduce(bdev, vbdev_name, comp_pmd);
 
 	return 0;
 }
 
-/* On init, just parse config file and build list of comp vbdevs and bdev name pairs. */
+/* On init, just init the compress drivers. All metadata is stored on disk. */
 static int
 vbdev_compress_init(void)
 {
-	struct spdk_conf_section *sp = NULL;
-	const char *conf_bdev_name = NULL;
-	const char *conf_vbdev_name = NULL;
-	const char *comp_pmd = NULL;
-	int i, rc;
-
-	rc = vbdev_init_compress_drivers();
-	if (rc) {
+	if (vbdev_init_compress_drivers()) {
 		SPDK_ERRLOG("Error setting up compression devices\n");
-		return rc;
-	}
-
-
-	sp = spdk_conf_find_section(NULL, "Compress");
-	if (sp == NULL) {
-		return 0;
-	}
-
-	for (i = 0; ; i++) {
-		if (!spdk_conf_section_get_nval(sp, "COMP", i)) {
-			break;
-		}
-
-		conf_bdev_name = spdk_conf_section_get_nmval(sp, "COMP", i, 0);
-		if (!conf_bdev_name) {
-			SPDK_ERRLOG("compress configuration missing bdev name\n");
-			break;
-		}
-
-		conf_vbdev_name = spdk_conf_section_get_nmval(sp, "COMP", i, 1);
-		if (!conf_vbdev_name) {
-			SPDK_ERRLOG("compress configuration missing comp_bdev name\n");
-			break;
-		}
-
-		comp_pmd = spdk_conf_section_get_nmval(sp, "COMP", i, 2);
-		if (!comp_pmd) {
-			SPDK_ERRLOG("compression configuration missing driver type\n");
-			return -EINVAL;
-		}
-
-		rc = vbdev_compress_insert_name(conf_bdev_name, conf_vbdev_name, comp_pmd);
-		if (rc) {
-			return rc;
-		}
+		return -EINVAL;
 	}
 
 	return 0;
@@ -1080,16 +985,7 @@ vbdev_compress_init(void)
 static void
 vbdev_compress_finish(void)
 {
-	struct bdev_names *name;
 	struct device_qp *dev_qp;
-
-	while ((name = TAILQ_FIRST(&g_bdev_names))) {
-		TAILQ_REMOVE(&g_bdev_names, name, link);
-		free(name->bdev_name);
-		free(name->vbdev_name);
-		free(name->drv_name);
-		free(name);
-	}
 
 	/* TODO: stop compress devices, anything w/reduce? */
 
@@ -1112,42 +1008,6 @@ vbdev_compress_get_ctx_size(void)
 	return sizeof(struct comp_bdev_io);
 }
 
-/* Called when SPDK wants to save the current config of this vbdev module to
- * a file.
- */
-static void
-vbdev_compress_get_spdk_running_config(FILE *fp)
-{
-	struct bdev_names *names = NULL;
-
-	fprintf(fp, "\n[compress]\n");
-	TAILQ_FOREACH(names, &g_bdev_names, link) {
-		fprintf(fp, "  %s %s\n", names->bdev_name, names->vbdev_name);
-	}
-	fprintf(fp, "\n");
-}
-
-/* Called when SPDK wants to output the bdev specific methods. */
-static void
-vbdev_compress_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
-{
-	/* No config per bdev needed */
-}
-
-/* Called when the underlying base bdev goes away. */
-static void
-vbdev_compress_base_bdev_hotremove_cb(void *ctx)
-{
-	struct vbdev_compress *comp_bdev, *tmp;
-	struct spdk_bdev *bdev_find = ctx;
-
-	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
-		if (bdev_find == comp_bdev->base_bdev) {
-			spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
-		}
-	}
-}
-
 /* When we register our bdev this is how we specify our entry points. */
 static const struct spdk_bdev_fn_table vbdev_compress_fn_table = {
 	.destruct		= vbdev_compress_destruct,
@@ -1155,13 +1015,13 @@ static const struct spdk_bdev_fn_table vbdev_compress_fn_table = {
 	.io_type_supported	= vbdev_compress_io_type_supported,
 	.get_io_channel		= vbdev_compress_get_io_channel,
 	.dump_info_json		= vbdev_compress_dump_info_json,
-	.write_config_json	= vbdev_compress_write_config_json,
+	.write_config_json	= NULL,
 };
 
 static struct spdk_bdev_module compress_if = {
 	.name = "compress",
 	.module_init = vbdev_compress_init,
-	.config_text = vbdev_compress_get_spdk_running_config,
+	.config_text = NULL,
 	.get_ctx_size = vbdev_compress_get_ctx_size,
 	.examine_config = vbdev_compress_examine,
 	.module_fini = vbdev_compress_finish,
@@ -1170,94 +1030,72 @@ static struct spdk_bdev_module compress_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&compress_if)
 
-static int
-vbdev_compress_claim(struct spdk_bdev *bdev)
+static void
+vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 {
-	struct bdev_names *name;
-	struct vbdev_compress *comp_bdev;
 	int rc;
 
-	/* Check our list of names from config versus this bdev and if
-	 * there's a match, create the comp_bdev & bdev accordingly.
+	/* TODO: we're going to read this from reducelib, it will get written in
+	 * the init path.
 	 */
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->bdev_name, bdev->name) != 0) {
-			continue;
-		}
-
-		SPDK_NOTICELOG("Match on %s\n", bdev->name);
-
-		comp_bdev = calloc(1, sizeof(struct vbdev_compress));
-		if (!comp_bdev) {
-			SPDK_ERRLOG("could not allocate comp_bdev\n");
-			rc = -ENOMEM;
-			goto error_vbdev_alloc;
-		}
-
-		/* The base bdev that we're attaching to. */
-		comp_bdev->base_bdev = bdev;
-		comp_bdev->comp_bdev.name = strdup(name->vbdev_name);
-		if (!comp_bdev->comp_bdev.name) {
-			SPDK_ERRLOG("could not allocate comp_bdev name\n");
-			rc = -ENOMEM;
-			goto error_bdev_name;
-		}
-
-		comp_bdev->drv_name = strdup(name->drv_name);
-		if (!comp_bdev->drv_name) {
-			SPDK_ERRLOG("could not allocate comb_bdev drv_name\n");
-			rc = -ENOMEM;
-			goto error_drv_name;
-		}
-
-		comp_bdev->comp_bdev.product_name = "compress";
-		comp_bdev->comp_bdev.write_cache = bdev->write_cache;
-		comp_bdev->comp_bdev.required_alignment = bdev->required_alignment;
-		comp_bdev->comp_bdev.optimal_io_boundary = bdev->optimal_io_boundary;
-		comp_bdev->comp_bdev.blocklen = bdev->blocklen;
-		comp_bdev->comp_bdev.blockcnt = bdev->blockcnt;
-
-		/* This is the context that is passed to us when the bdev
-		 * layer calls in so we'll save our comp_bdev node here.
-		 */
-		comp_bdev->comp_bdev.ctxt = comp_bdev;
-		comp_bdev->comp_bdev.fn_table = &vbdev_compress_fn_table;
-		comp_bdev->comp_bdev.module = &compress_if;
-
-		TAILQ_INSERT_TAIL(&g_vbdev_comp, comp_bdev, link);
-
-		spdk_io_device_register(comp_bdev, comp_bdev_ch_create_cb, comp_bdev_ch_destroy_cb,
-					sizeof(struct comp_io_channel),
-					name->vbdev_name);
-
-		rc = spdk_bdev_open(bdev, true, vbdev_compress_base_bdev_hotremove_cb,
-				    bdev, &comp_bdev->base_desc);
-		if (rc) {
-			SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
-			goto error_open;
-		}
-
-		rc = spdk_bdev_module_claim_bdev(bdev, comp_bdev->base_desc, comp_bdev->comp_bdev.module);
-		if (rc) {
-			SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(bdev));
-			goto error_claim;
-		}
-
-		rc = spdk_vbdev_register(&comp_bdev->comp_bdev, &comp_bdev->base_bdev, 1);
-		if (rc < 0) {
-			SPDK_ERRLOG("ERROR trying to register vbdev\n");
-			rc = -EINVAL;
-			goto error_vbdev_register;
-		}
-		SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", name->vbdev_name);
+	comp_bdev->comp_bdev.name = "TEST NAME";
+	if (!comp_bdev->comp_bdev.name) {
+		SPDK_ERRLOG("could not allocate comp_bdev name\n");
+		rc = -ENOMEM;
+		goto error_bdev_name;
 	}
 
-	return rc;
+	/* TODO: need to persist either PMD name or ALGO and a bunch of
+	 * other parms to reduce via init and read them back in the load path.
+	 */
+	comp_bdev->drv_name = ISAL;
+	if (!comp_bdev->drv_name) {
+		SPDK_ERRLOG("could not allocate comb_bdev drv_name\n");
+		rc = -ENOMEM;
+		goto error_drv_name;
+	}
+
+	comp_bdev->comp_bdev.product_name = "compress";
+	comp_bdev->comp_bdev.write_cache = comp_bdev->base_bdev->write_cache;
+	comp_bdev->comp_bdev.required_alignment = comp_bdev->base_bdev->required_alignment;
+	comp_bdev->comp_bdev.optimal_io_boundary = comp_bdev->base_bdev->optimal_io_boundary;
+	comp_bdev->comp_bdev.blocklen = comp_bdev->base_bdev->blocklen;
+	comp_bdev->comp_bdev.blockcnt = comp_bdev->base_bdev->blockcnt;
+
+	/* This is the context that is passed to us when the bdev
+	 * layer calls in so we'll save our comp_bdev node here.
+	 */
+	comp_bdev->comp_bdev.ctxt = comp_bdev;
+	comp_bdev->comp_bdev.fn_table = &vbdev_compress_fn_table;
+	comp_bdev->comp_bdev.module = &compress_if;
+
+	TAILQ_INSERT_TAIL(&g_vbdev_comp, comp_bdev, link);
+
+	spdk_io_device_register(comp_bdev, comp_bdev_ch_create_cb, comp_bdev_ch_destroy_cb,
+				sizeof(struct comp_io_channel),
+				comp_bdev->comp_bdev.name);
+
+	rc = spdk_bdev_module_claim_bdev(comp_bdev->base_bdev, comp_bdev->base_desc,
+					 comp_bdev->comp_bdev.module);
+	if (rc) {
+		SPDK_ERRLOG("could not claim bdev %s\n", spdk_bdev_get_name(comp_bdev->base_bdev));
+		goto error_claim;
+	}
+
+	rc = spdk_vbdev_register(&comp_bdev->comp_bdev, &comp_bdev->base_bdev, 1);
+	if (rc < 0) {
+		SPDK_ERRLOG("ERROR trying to register vbdev\n");
+		rc = -EINVAL;
+		goto error_vbdev_register;
+	}
+
+	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
+
+	return;
 	/* Error cleanup paths. */
 error_vbdev_register:
 error_claim:
 	spdk_bdev_close(comp_bdev->base_desc);
-error_open:
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 	spdk_io_device_unregister(comp_bdev, NULL);
 	free(comp_bdev->drv_name);
@@ -1265,56 +1103,63 @@ error_drv_name:
 	free(comp_bdev->comp_bdev.name);
 error_bdev_name:
 	free(comp_bdev);
-error_vbdev_alloc:
-	return rc;
 }
 
 void
 delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
-	struct bdev_names *name;
-
 	if (!bdev || bdev->module != &compress_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
 
-	/* Remove the association (vbdev, bdev) from g_bdev_names. This is required so that the
-	 * vbdev does not get re-created if the same bdev is constructed at some other time,
-	 * unless the underlying bdev was hot-removed.
-	 */
-	TAILQ_FOREACH(name, &g_bdev_names, link) {
-		if (strcmp(name->vbdev_name, bdev->name) == 0) {
-			TAILQ_REMOVE(&g_bdev_names, name, link);
-			free(name->bdev_name);
-			free(name->vbdev_name);
-			free(name->drv_name);
-			free(name);
-			break;
-		}
-	}
-
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
 
-/* Because we specified this function in our pt bdev function table when we
- * registered our pt bdev, we'll get this call anytime a new bdev shows up.
- * Here we need to decide if we care about it and if so what to do. We
- * parsed the config file at init so we check the new bdev against the list
- * we built up at that time and if the user configured us to attach to this
- * bdev, here's where we do it.
+/* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
+ * used for initial metadata operations to claim where it will be further filled out
+ * and added to the global list.
  */
 static void
-vbdev_compress_examine(struct spdk_bdev *bdev)
+vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 {
-	int rc;
+	struct vbdev_compress *meta_ctx = cb_arg;
 
-	rc = vbdev_compress_claim(bdev);
-	if (rc) {
-		spdk_bdev_module_examine_done(&compress_if);
+	if (ziperrno != 0) {
+		SPDK_ERRLOG("for vol %s, error %u\n",
+			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
+		spdk_bdev_close(meta_ctx->base_desc);
+		TAILQ_REMOVE(&g_vbdev_comp, meta_ctx, link);
+		spdk_io_device_unregister(meta_ctx, NULL);
+		free(meta_ctx->drv_name);
+		free(meta_ctx->comp_bdev.name);
+		free(meta_ctx);
 		return;
 	}
 
+	meta_ctx->vol = vol;
+	vbdev_compress_claim(meta_ctx);
+	return;
+}
+
+/* Try to load a reduce vol with backing device bdev */
+static void
+vbdev_reduce_load(struct spdk_bdev *bdev)
+{
+	struct vbdev_compress *meta_ctx;
+
+	meta_ctx = _prepare_for_load_init(bdev);
+	if (meta_ctx == NULL) {
+		return;
+	}
+
+	spdk_reduce_vol_load(&meta_ctx->backing_dev, vbdev_reduce_load_cb, meta_ctx);
+}
+
+static void
+vbdev_compress_examine(struct spdk_bdev *bdev)
+{
+	vbdev_reduce_load(bdev);
 	spdk_bdev_module_examine_done(&compress_if);
 }
 
