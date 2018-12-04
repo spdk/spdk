@@ -2128,7 +2128,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 nomem:
 	while (i) {
 		i--;
-		spdk_mempool_put(ttransport->data_buf_pool, tcp_req->req.iov[i].iov_base);
+		spdk_mempool_put(ttransport->data_buf_pool, tcp_req->buffers[i]);
 		tcp_req->req.iov[i].iov_base = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
 
