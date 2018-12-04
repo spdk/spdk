@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "693b7d9d_f2f1a1e0",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T12:59:51Z",
+      "side": 1,
+      "message": "Let\u0027s not restrict somebody from running the tests if they don\u0027t have a proxy set. This should be an option, not a necessity as not everybody uses proxy.",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 2
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab526cb6_a82cd125",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T12:59:51Z",
+      "side": 1,
+      "message": "I\u0027d recommend putting this inside scripts/pkgdep.sh, or even better in test/common/config/vm_setup.sh.\nI think a test script is not a place where we should issue commands which install stuff, as user does not have control over it and might not even be aware of install.\n\nFurthermore - \"yum\" will only work with RHEL based systems, this script would fail on Ubuntu for instance.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 27
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e74e4b2e_dd2ec44f",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T12:59:51Z",
+      "side": 1,
+      "message": "Maybe insetead of creating a new autorun-spdk.conf file we could just copy what is currently available on host system?",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6e48aba_9ea93d70",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T12:59:51Z",
+      "side": 1,
+      "message": "I\u0027d recommend using tabs for indentation as they\u0027re mostly used - see other files in scripts/vagrant or in autotest.sh",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 4
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f50cdce_fcb196e1",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T12:59:51Z",
+      "side": 1,
+      "message": "Could you give a comment why do we turn off -e flag and then re-enable it?",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 14
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
