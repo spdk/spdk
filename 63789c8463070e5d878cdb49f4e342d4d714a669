@@ -16,6 +16,24 @@
       "revId": "63789c8463070e5d878cdb49f4e342d4d714a669",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1920386a_6956d7c9",
+        "filename": "lib/nvme/nvme_fabric.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-04T02:26:13Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI adopted your comments and added the lock in spdk_nvme_ctrlr_alloc_io_qpair  function.",
+      "parentUuid": "71a49d2c_0ae7911b",
+      "revId": "63789c8463070e5d878cdb49f4e342d4d714a669",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
