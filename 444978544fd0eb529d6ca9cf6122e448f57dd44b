@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54fdd035_4adf9e8a",
+        "filename": "include/spdk/t10dif.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-04T12:52:03Z",
+      "side": 1,
+      "message": "I didn\u0027t look into T10 DIF specification a lot, but for NVMe specification and the detailed implementation for some Intel SSDs, the Protection Information is in last 8 bytes of the metadata.",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a104fe61_ebfee7fc",
+        "filename": "include/spdk/t10dif.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-04T12:52:03Z",
+      "side": 1,
+      "message": "How about just say block size here ? Bdev API should return the (512+8) for the block size API, for data_block_size, you may calculate later when metadata size \u003e 0.",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
