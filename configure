@@ -332,6 +332,12 @@ fi
 
 if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if [ "$OSTYPE" != "FreeBSD"* ]; then
+
+		if ! hash ldconfig; then
+			echo "OOOOOOOppppsssss! No ldconfig"
+			exit 1
+		fi
+
 		ibv_lib_file="$(ldconfig -p | grep 'libibverbs.so ' || true)"
 		if [ ! -z "$ibv_lib_file" ]; then
 			ibv_lib_file="${ibv_lib_file##*=> }"
