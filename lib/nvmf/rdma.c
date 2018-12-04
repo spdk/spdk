@@ -1147,13 +1147,14 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 {
 	void		*buf = NULL;
 	uint32_t	length = rdma_req->req.length;
+	uint64_t	translation_len;
 	uint32_t	i = 0;
 
 	rdma_req->req.iovcnt = 0;
 	while (length) {
 		buf = spdk_mempool_get(rtransport->data_buf_pool);
 		if (!buf) {
-			goto nomem;
+			goto err_exit;
 		}
 
 		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
@@ -1163,18 +1164,23 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.buffers[i] = buf;
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
 		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
+		translation_len = rdma_req->req.iov[i].iov_len;
 		rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						     (uint64_t)buf, NULL))->lkey;
-
+						     (uint64_t)buf, &translation_len))->lkey;
 		length -= rdma_req->req.iov[i].iov_len;
 		i++;
+
+		if (translation_len < rdma_req->req.iov[i].iov_len) {
+			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+			goto err_exit;
+		}
 	}
 
 	rdma_req->data_from_pool = true;
 
 	return 0;
 
-nomem:
+err_exit:
 	while (i) {
 		i--;
 		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.iov[i].iov_base);
