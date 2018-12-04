@@ -2607,6 +2607,7 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 
 	assert(tqpair != NULL);
 
+	printf("[sock_cb]tqpair=%p\n", tqpair);
 	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR) {
 		return;
 	}
