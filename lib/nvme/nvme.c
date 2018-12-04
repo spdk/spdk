@@ -811,6 +811,22 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				return -EINVAL;
 			}
 			memcpy(trid->subnqn, val, val_len + 1);
+		} else if (strcasecmp(key, "hostaddr") == 0) {
+			if (val_len > SPDK_NVMF_TRADDR_MAX_LEN) {
+				SPDK_ERRLOG("hostaddr length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRADDR_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(trid->hostaddr, val, val_len + 1);
+
+		} else if (strcasecmp(key, "hostsvcid") == 0) {
+			if (val_len > SPDK_NVMF_TRSVCID_MAX_LEN) {
+				SPDK_ERRLOG("trsvcid length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRSVCID_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(trid->hostsvcid, val, val_len + 1);
+
 		} else if (strcasecmp(key, "ns") == 0) {
 			/*
 			 * Special case.  The namespace id parameter may
