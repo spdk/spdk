@@ -473,6 +473,13 @@ void spdk_scsi_task_copy_status(struct spdk_scsi_task *dst, struct spdk_scsi_tas
 void spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task);
 
 /**
+ * Process the aborted SCSI task.
+ *
+ * \param task SCSI task.
+ */
+void spdk_scsi_task_process_abort(struct spdk_scsi_task *task);
+
+/**
  * Open a logical unit for I/O operations.
  *
  * The registered callback function must get all tasks from the upper layer
