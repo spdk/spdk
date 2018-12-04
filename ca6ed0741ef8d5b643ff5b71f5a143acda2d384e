@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e53fd94_6e175389",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-04T17:00:54Z",
+      "side": 1,
+      "message": "I think we need to add header_digest and data_digest to spdk_nvme_ctrlr_get_default_ctrlr_opts",
+      "revId": "ca6ed0741ef8d5b643ff5b71f5a143acda2d384e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
