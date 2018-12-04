@@ -880,6 +880,9 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 			(uint64_t)payload, &requested_size);
 
 	if (mr == NULL || requested_size < req->payload_size) {
+		if (mr) {
+			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+		}
 		return -EINVAL;
 	}
 
@@ -927,7 +930,11 @@ nvme_rdma_build_contig_request(struct nvme_rdma_qpair *rqpair,
 	requested_size = req->payload_size;
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)payload,
 			&requested_size);
+
 	if (mr == NULL || requested_size < req->payload_size) {
+		if (mr) {
+			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+		}
 		return -1;
 	}
 
@@ -988,6 +995,9 @@ nvme_rdma_build_sgl_request(struct nvme_rdma_qpair *rqpair,
 				&mr_length);
 
 		if (mr == NULL || mr_length < sge_length) {
+			if (mr) {
+				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+			}
 			return -1;
 		}
 
@@ -1081,6 +1091,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
 			&requested_size);
 	if (mr == NULL || requested_size < req->payload_size) {
+		if (mr) {
+			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+		}
 		return -1;
 	}
 
