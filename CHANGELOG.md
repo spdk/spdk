@@ -24,6 +24,9 @@ arg refers to a Discovery Controller or not.
 Added an API function `spdk_nvme_host_id_parse` and corresponding object `spdk_nvme_host_id`
 for parsing host address and host service ID arguments on a per connection basis.
 
+The RPC `construct_nvme_bdev` now allows a user to specify a source address and service id for the host to
+use when connecting to the controller backing the NVMe bdev.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.

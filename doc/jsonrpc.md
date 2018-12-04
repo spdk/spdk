@@ -1032,6 +1032,8 @@ Name                    | Optional | Type        | Description
 name                    | Required | string      | Name of the NVMe controller, prefix for each bdev name
 trtype                  | Required | string      | NVMe-oF target trtype: rdma or pcie
 traddr                  | Required | string      | NVMe-oF target address: ip or BDF
+hostaddr                | Optional | string      | NVMe-oF host address: ip or BDF
+hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
 adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, ipv6, ib, fc, intra_host
 trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
 subnqn                  | Optional | string      | NVMe-oF target subnqn

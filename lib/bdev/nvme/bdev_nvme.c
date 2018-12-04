@@ -1192,15 +1192,17 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_thread_fn cb, 
 
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		      struct spdk_nvme_host_id *hostid,
 		      const char *base_name,
 		      const char **names, size_t *count,
 		      const char *hostnqn)
 {
-	struct nvme_probe_ctx	*probe_ctx;
-	struct nvme_ctrlr	*nvme_ctrlr;
-	struct nvme_bdev	*nvme_bdev;
-	uint32_t		i, nsid;
-	size_t			j;
+	struct spdk_nvme_ctrlr_opts	opts;
+	struct spdk_nvme_ctrlr		*ctrlr;
+	struct nvme_ctrlr		*nvme_ctrlr;
+	struct nvme_bdev		*nvme_bdev;
+	uint32_t			i, nsid;
+	size_t				j;
 
 	if (nvme_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
@@ -1212,26 +1214,30 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	probe_ctx = calloc(1, sizeof(*probe_ctx));
-	if (probe_ctx == NULL) {
-		SPDK_ERRLOG("Failed to allocate probe_ctx\n");
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+
+	if (hostid->hostaddr[0] != '\0') {
+		snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", hostid->hostaddr);
+	}
+
+	if (hostid->hostsvcid[0] != '\0') {
+		snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", hostid->hostsvcid);
+	}
+
+	ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
+	if (!ctrlr) {
+		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
 	}
 
-	probe_ctx->count = 1;
-	probe_ctx->trids[0] = *trid;
-	probe_ctx->names[0] = base_name;
-	probe_ctx->hostnqn = hostnqn;
-	if (spdk_nvme_probe(trid, probe_ctx, probe_cb, attach_cb, NULL)) {
-		SPDK_ERRLOG("Failed to probe for new devices\n");
-		free(probe_ctx);
+	if (create_ctrlr(ctrlr, base_name, trid)) {
+		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
 	}
 
 	nvme_ctrlr = nvme_ctrlr_get(trid);
 	if (!nvme_ctrlr) {
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
-		free(probe_ctx);
 		return -1;
 	}
 
@@ -1253,14 +1259,11 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		} else {
 			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
 				    *count);
-			free(probe_ctx);
 			return -1;
 		}
 	}
 
 	*count = j;
-
-	free(probe_ctx);
 	return 0;
 }
 
