@@ -100,6 +100,19 @@ static struct vfio_cfg g_vfio = {
 #define DEBUG_PRINT(...)
 #endif
 
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
+/* This is a workaround for a DPDK bug where DPDK's memory allocated from
+ * a secondary process is not necessarily mapped in a VFIO container. With
+ * this flag we'll try mapping this memory manually and we'll ignore errors
+ * if the mapping already exists. We'll stop mapping this memory whenever
+ * we notice that DPDK picked it up (which right now happens when all
+ * devices are hotremoved and then hotplugged again)
+ */
+#define SPDK_TRY_REGISTER_DPDK_MEMORY 1
+#else
+#define SPDK_TRY_REGISTER_DPDK_MEMORY 0
+#endif
+
 struct spdk_vtophys_pci_device {
 	struct rte_pci_device *pci_device;
 	TAILQ_ENTRY(spdk_vtophys_pci_device) tailq;
@@ -110,6 +123,8 @@ static TAILQ_HEAD(, spdk_vtophys_pci_device) g_vtophys_pci_devices =
 	TAILQ_HEAD_INITIALIZER(g_vtophys_pci_devices);
 
 static struct spdk_mem_map *g_vtophys_map;
+
+static uint64_t vtophys_get_paddr_memseg(uint64_t vaddr);
 
 #if SPDK_VFIO_ENABLED
 static int
@@ -150,12 +165,38 @@ vtophys_iommu_map_dma(uint64_t vaddr, uint64_t iova, uint64_t size)
 		 * unconditionally until the first SPDK-managed device is
 		 * hotplugged.
 		 */
-		goto out_insert;
+
+#if SPDK_TRY_REGISTER_DPDK_MEMORY
+		/* This memory might be later partially used by a different
+		 * process which already has some devices attached.
+		 * Don't exit early in such case and try to map the memory here.
+		 */
+		if (spdk_process_is_primary()  ||
+		    vtophys_get_paddr_memseg(vaddr) == SPDK_VTOPHYS_ERROR)
+#endif
+		{
+			goto out_insert;
+		}
 	}
 
 	ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
 	if (ret) {
-		DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+#if SPDK_TRY_REGISTER_DPDK_MEMORY
+		if (ret != 0 && errno == EEXIST && !spdk_process_is_primary() &&
+		    vtophys_get_paddr_memseg(vaddr) != SPDK_VTOPHYS_ERROR) {
+			/* This memory is already registered either by DPDK or
+			 * another SPDK secondary process with this workaround.
+			 * Either way, we don't need to manage it locally in
+			 * our mappings list. Someone else already takes care
+			 * of it.
+			 */
+			ret = 0;
+		} else
+
+#endif
+		{
+			DEBUG_PRINT("Cannot set up DMA mapping, error %d\n", errno);
+		}
 		pthread_mutex_unlock(&g_vfio.mutex);
 		free(dma_map);
 		return ret;
@@ -384,6 +425,14 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 					}
 				}
 			}
+#if SPDK_TRY_REGISTER_DPDK_MEMORY && SPDK_VFIO_ENABLED
+			else if (!spdk_process_is_primary() && g_vfio.enabled) {
+				rc = vtophys_iommu_map_dma((uint64_t)vaddr, paddr, VALUE_2MB);
+				if (rc) {
+					return -EFAULT;
+				}
+			}
+#endif
 			/* Since PCI paddr can break the 2MiB physical alignment skip this check for that. */
 			if (!pci_phys && (paddr & MASK_2MB)) {
 				DEBUG_PRINT("invalid paddr 0x%" PRIx64 " - must be 2MB aligned\n", paddr);
@@ -526,7 +575,7 @@ spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 	pthread_mutex_unlock(&g_vtophys_pci_devices_mutex);
 
 #if SPDK_VFIO_ENABLED
-	struct spdk_vfio_dma_map *dma_map;
+	struct spdk_vfio_dma_map *dma_map, *tmp;
 	int ret;
 
 	if (!g_vfio.enabled) {
@@ -544,8 +593,16 @@ spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device)
 	 * IOMMU group might have been just been added to the DPDK vfio container.
 	 * From this point it is certain that the memory can be mapped now.
 	 */
-	TAILQ_FOREACH(dma_map, &g_vfio.maps, tailq) {
+	TAILQ_FOREACH_SAFE(dma_map, &g_vfio.maps, tailq, tmp) {
 		ret = ioctl(g_vfio.fd, VFIO_IOMMU_MAP_DMA, &dma_map->map);
+#if SPDK_TRY_REGISTER_DPDK_MEMORY
+		if (ret == -1 && errno == EEXIST && !spdk_process_is_primary() &&
+		    vtophys_get_paddr_memseg(dma_map->map.vaddr) != SPDK_VTOPHYS_ERROR) {
+			TAILQ_REMOVE(&g_vfio.maps, dma_map, tailq);
+			free(dma_map);
+			continue;
+		}
+#endif
 		if (ret) {
 			DEBUG_PRINT("Cannot update DMA mapping, error %d\n", errno);
 			break;
