@@ -3236,6 +3236,29 @@ spdk_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
+static int
+spdk_iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
+		struct spdk_scsi_lun *lun,
+		struct spdk_iscsi_pdu *pdu)
+{
+	struct spdk_iscsi_task *task, *task_tmp;
+	struct spdk_iscsi_pdu *pdu_tmp;
+	int rc;
+
+	TAILQ_FOREACH_SAFE(task, &conn->queued_datain_tasks, link, task_tmp) {
+		pdu_tmp = spdk_iscsi_task_get_pdu(task);
+		if ((lun == NULL || lun == task->scsi.lun) &&
+		    (pdu == NULL || SN32_LT(pdu_tmp->cmd_sn, pdu->cmd_sn))) {
+			rc = _spdk_iscsi_conn_abort_queued_datain_task(conn, task);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+	}
+
+	return 0;
+}
+
 struct iscsi_abort_task_ctx {
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_task *task;
@@ -3281,6 +3304,59 @@ spdk_iscsi_op_abort_task(struct spdk_iscsi_conn *conn,
 	ctx->task = task;
 	ctx->ref_task_tag = ref_task_tag;
 	ctx->poller = spdk_poller_register(_spdk_iscsi_op_abort_task, ctx, 10);
+	return 0;
+}
+
+struct iscsi_abort_task_set_ctx {
+	struct spdk_iscsi_conn *conn;
+	struct spdk_iscsi_task *task;
+	struct spdk_scsi_lun *lun;
+	struct spdk_iscsi_pdu *pdu;
+	uint8_t function;
+	struct spdk_poller *poller;
+};
+
+static int
+_spdk_iscsi_op_abort_task_set(void *arg)
+{
+	struct iscsi_abort_task_set_ctx *ctx = arg;
+	int rc;
+
+	rc = spdk_iscsi_conn_abort_queued_datain_tasks(ctx->conn, ctx->lun,
+			ctx->pdu);
+	if (rc != 0) {
+		return 0;
+	}
+	spdk_poller_unregister(&ctx->poller);
+
+	spdk_iscsi_queue_mgmt_task(ctx->conn, ctx->task, ctx->function);
+
+	free(ctx);
+	return 1;
+}
+
+static int
+spdk_iscsi_op_abort_task_set(struct spdk_iscsi_conn *conn,
+			     struct spdk_iscsi_task *task,
+			     struct spdk_scsi_lun *lun,
+			     struct spdk_iscsi_pdu *pdu,
+			     uint8_t function)
+{
+	struct iscsi_abort_task_set_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("calloc() failed for iscsi abort task set context\n");
+		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT;
+		return -1;
+	}
+
+	ctx->conn = conn;
+	ctx->task = task;
+	ctx->lun = lun;
+	ctx->pdu = pdu;
+	ctx->function = function;
+	ctx->poller = spdk_poller_register(_spdk_iscsi_op_abort_task_set, ctx, 10);
 	return 0;
 }
 
@@ -3349,10 +3425,12 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	/* abort all tasks issued via this session on the LUN */
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
 		SPDK_NOTICELOG("ABORT_TASK_SET\n");
-
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
-
-		return SPDK_SUCCESS;
+		rc = spdk_iscsi_op_abort_task_set(conn, task, task->scsi.lun, pdu,
+						  SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
+		if (rc == 0) {
+			return SPDK_SUCCESS;
+		}
+		break;
 
 	case ISCSI_TASK_FUNC_CLEAR_TASK_SET:
 		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT_FUNC_NOT_SUPPORTED;
@@ -3366,10 +3444,12 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	case ISCSI_TASK_FUNC_LOGICAL_UNIT_RESET:
 		SPDK_NOTICELOG("LOGICAL_UNIT_RESET\n");
-
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
-
-		return SPDK_SUCCESS;
+		rc = spdk_iscsi_op_abort_task_set(conn, task, task->scsi.lun, pdu,
+						  SPDK_SCSI_TASK_FUNC_LUN_RESET);
+		if (rc == 0) {
+			return SPDK_SUCCESS;
+		}
+		break;
 
 	case ISCSI_TASK_FUNC_TARGET_WARM_RESET:
 		SPDK_NOTICELOG("TARGET_WARM_RESET (Unsupported)\n");
