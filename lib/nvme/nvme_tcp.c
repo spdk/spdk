@@ -283,6 +283,10 @@ nvme_tcp_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
+	if (probe_cb) {
+		probe_cb(cb_ctx, trid, &discovery_opts);
+	}
+
 	discovery_ctrlr = nvme_tcp_ctrlr_construct(trid, &discovery_opts, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
