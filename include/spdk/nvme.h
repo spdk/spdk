@@ -280,6 +280,35 @@ struct spdk_nvme_transport_id {
 };
 
 /**
+ * NVMe host identifier
+ *
+ * Used for defining the host identity for an NVMe-oF connection.
+ *
+ * In terms of configuration, this object can be considered a subtype of TransportID
+ * Please see etc/spdk/nvmf.conf.in for more details.
+ *
+ * A string representation of this type may be converted to this type using
+ * spdk_nvme_host_id_parse().
+ */
+struct spdk_nvme_host_id {
+	/**
+	 * Transport address to be used by the host when connecting to the NVMe-oF endpoint.
+	 * May be an IP address or a zero length string for transports which
+	 * use IP addressing (e.g. RDMA).
+	 * For PCIe and FC this is always a zero length string.
+	 */
+	char hostaddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+
+	/**
+	 * Transport service ID used by the host when connecting to the NVMe.
+	 * May be a port number or a zero length string for transports which
+	 * use IP addressing (e.g. RDMA).
+	 * For PCIe and FC this is always a zero length string.
+	 */
+	char hostsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
+};
+
+/**
  * Parse the string representation of a transport ID.
  *
  * \param trid Output transport ID structure (must be allocated and initialized by caller).
@@ -303,6 +332,31 @@ struct spdk_nvme_transport_id {
  * values on failure.
  */
 int spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str);
+
+/**
+ * Parse the string representation of a host ID.
+ *
+ * \param hostid Output host ID structure (must be allocated and initialized by caller).
+ * \param str Input string representation of a transport ID to parse (hostid is a sub-configuration).
+ *
+ * str must be a zero-terminated C string containing one or more key:value pairs
+ * separated by whitespace.
+ *
+ * Key            | Value
+ * -------------- | -----
+ * hostaddr       | Transport address (e.g. 192.168.100.8 for RDMA)
+ * hostsvcid      | Transport service identifier (e.g. 4420)
+ *
+ * Unspecified fields of trid are left unmodified, so the caller must initialize
+ * hostid (for example, memset() to 0) before calling this function.
+ *
+ * This function should not be used with Fiber Channel or PCIe as these transports
+ * do not require host information for connections.
+ *
+ * \return 0 if parsing was successful and hostid is filled out, or negated errno
+ * values on failure.
+ */
+int spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str);
 
 /**
  * Parse the string representation of a transport ID tranport type.

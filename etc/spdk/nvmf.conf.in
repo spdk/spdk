@@ -102,6 +102,7 @@
   TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
   TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme2
   TransportID "trtype:PCIe traddr:0000:03:00.0" Nvme3
+  TransportID "trtypr:RDMA traddr:192.168.100.8 trsvcid:4420 hostaddr:192.168.100.9" Nvme4
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.

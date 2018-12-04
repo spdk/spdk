@@ -828,6 +828,10 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				return -EINVAL;
 			}
 			memcpy(trid->subnqn, val, val_len + 1);
+		} else if (strcasecmp(key, "hostaddr") == 0) {
+			continue;
+		} else if (strcasecmp(key, "hostsvcid") == 0) {
+			continue;
 		} else if (strcasecmp(key, "ns") == 0) {
 			/*
 			 * Special case.  The namespace id parameter may
@@ -840,6 +844,65 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 			 * it as an invalid key.
 			 */
 			continue;
+		} else {
+			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str)
+{
+
+	size_t key_size = 32;
+	size_t val_size = 1024;
+	size_t val_len;
+	char key[key_size];
+	char val[val_size];
+
+	if (hostid == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	while (*str != '\0') {
+
+		val_len = parse_next_key(&str, key, val, key_size, val_size);
+
+		if (val_len == 0) {
+			SPDK_ERRLOG("Failed to parse host ID\n");
+			return val_len;
+		}
+
+		/* Ignore the rest of the options from the transport ID. */
+		if (strcasecmp(key, "trtype") == 0) {
+			continue;
+		} else if (strcasecmp(key, "adrfam") == 0) {
+			continue;
+		} else if (strcasecmp(key, "traddr") == 0) {
+			continue;
+		} else if (strcasecmp(key, "trsvcid") == 0) {
+			continue;
+		} else if (strcasecmp(key, "subnqn") == 0) {
+			continue;
+		} else if (strcasecmp(key, "ns") == 0) {
+			continue;
+		} else if (strcasecmp(key, "hostaddr") == 0) {
+			if (val_len > SPDK_NVMF_TRADDR_MAX_LEN) {
+				SPDK_ERRLOG("hostaddr length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRADDR_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(hostid->hostaddr, val, val_len + 1);
+
+		} else if (strcasecmp(key, "hostsvcid") == 0) {
+			if (val_len > SPDK_NVMF_TRSVCID_MAX_LEN) {
+				SPDK_ERRLOG("trsvcid length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRSVCID_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(hostid->hostsvcid, val, val_len + 1);
 		} else {
 			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
 		}
