@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "ae7cc2d4_950ddd59",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T14:28:14Z",
+      "side": 1,
+      "message": "Instead of pipe \u0026 awk\u0027ing why not have variables with number of CPUs and MEMORY_SIZE?\n\nThen on line 165 you could do:\nVM_INFO_HASH[\"fedora28\"]\u003d\"$CPUS-$MEM-autorun-spdk.conf\"\ninstead of hardcoding \"16-16384-autorun-spdk.conf\"",
+      "range": {
+        "startLine": 180,
+        "startChar": 8,
+        "endLine": 182,
+        "endChar": 68
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f50cdce_fcb196e1",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
