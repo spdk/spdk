@@ -249,6 +249,8 @@ if __name__ == "__main__":
                                                  name=args.name,
                                                  trtype=args.trtype,
                                                  traddr=args.traddr,
+                                                 hostaddr=args.hostaddr,
+                                                 hostsvcid=args.hostsvcid,
                                                  adrfam=args.adrfam,
                                                  trsvcid=args.trsvcid,
                                                  subnqn=args.subnqn))
@@ -260,10 +262,14 @@ if __name__ == "__main__":
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
     p.add_argument('-a', '--traddr',
                    help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+    p.add_argument('-i', '--hostaddr',
+                   help='NVMe-oF host address: e.g., an ip address or BDF')
     p.add_argument('-f', '--adrfam',
                    help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
+    p.add_argument('-c', '--hostsvcid',
+                   help='NVMe-oF host svcid: e.g., a port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
     p.set_defaults(func=construct_nvme_bdev)
 
