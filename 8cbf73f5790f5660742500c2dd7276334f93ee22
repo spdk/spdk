@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d646c9bf_694b2478",
+        "filename": "lib/bdev/cache/vbdev_cache_dobj.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2018-12-04T13:37:09Z",
+      "side": 1,
+      "message": "env_atomic_sub_return",
+      "revId": "8cbf73f5790f5660742500c2dd7276334f93ee22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed4bc193_4b40857d",
+        "filename": "lib/bdev/cache/vbdev_cache_dobj.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2018-12-04T13:37:09Z",
+      "side": 1,
+      "message": "env_atomic_sub_return",
+      "revId": "8cbf73f5790f5660742500c2dd7276334f93ee22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "735813af_f8e91dd1",
+        "filename": "lib/bdev/cache/vbdev_cache_dobj.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2018-12-04T13:37:09Z",
+      "side": 1,
+      "message": "Typo: scructures -\u003e structures",
+      "revId": "8cbf73f5790f5660742500c2dd7276334f93ee22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2df9eab2_853f293b",
+        "filename": "lib/bdev/cache/vbdev_cache_dobj.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015371
+      },
+      "writtenOn": "2018-12-04T13:37:09Z",
+      "side": 1,
+      "message": "Change comment to ops-\u003esubmit_metadata",
+      "revId": "8cbf73f5790f5660742500c2dd7276334f93ee22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
