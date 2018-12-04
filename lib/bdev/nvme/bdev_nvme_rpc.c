@@ -163,6 +163,8 @@ struct rpc_construct_nvme {
 	char *adrfam;
 	char *traddr;
 	char *trsvcid;
+	char *srcaddr;
+	char *srcsvcid;
 	char *subnqn;
 	char *hostnqn;
 };
@@ -175,6 +177,8 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 	free(req->adrfam);
 	free(req->traddr);
 	free(req->trsvcid);
+	free(req->srcaddr);
+	free(req->srcsvcid);
 	free(req->subnqn);
 	free(req->hostnqn);
 }
@@ -187,7 +191,10 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"adrfam", offsetof(struct rpc_construct_nvme, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_construct_nvme, trsvcid), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
-	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true}
+	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true},
+	{"srcaddr", offsetof(struct rpc_construct_nvme, srcaddr), spdk_json_decode_string, true},
+	{"srcsvcid", offsetof(struct rpc_construct_nvme, srcsvcid), spdk_json_decode_string, true}
+
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -238,6 +245,14 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	/* Parse subnqn */
 	if (req.subnqn) {
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
+	}
+
+	if (req.srcaddr) {
+		snprintf(trid.srcaddr, sizeof(trid.srcaddr), "%s", req.srcaddr);
+	}
+
+	if (req.srcsvcid) {
+		snprintf(trid.srcsvcid, sizeof(trid.srcsvcid), "%s", req.srcsvcid);
 	}
 
 	count = NVME_MAX_BDEVS_PER_RPC;
