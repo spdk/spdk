@@ -722,63 +722,82 @@ spdk_nvme_transport_id_adrfam_str(enum spdk_nvmf_adrfam adrfam)
 	}
 }
 
-int
-spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str)
+static size_t
+parse_next_key(const char **str, char *key, char *val, size_t key_buf_size, size_t val_buf_size)
 {
+
 	const char *sep, *sep1;
 	const char *whitespace = " \t\n";
 	size_t key_len, val_len;
-	char key[32];
-	char val[1024];
+
+	*str += strspn(*str, whitespace);
+
+	sep = strchr(*str, ':');
+	if (!sep) {
+		sep = strchr(*str, '=');
+		if (!sep) {
+			SPDK_ERRLOG("Key without ':' or '=' separator\n");
+			return 0;
+		}
+	} else {
+		sep1 = strchr(*str, '=');
+		if ((sep1 != NULL) && (sep1 < sep)) {
+			sep = sep1;
+		}
+	}
+
+	key_len = sep - *str;
+	if (key_len >= key_buf_size) {
+		SPDK_ERRLOG("Key length %zu greater than maximum allowed %zu\n",
+			    key_len, key_buf_size - 1);
+		return 0;
+	}
+
+	memcpy(key, *str, key_len);
+	key[key_len] = '\0';
+
+	*str += key_len + 1; /* Skip key: */
+	val_len = strcspn(*str, whitespace);
+	if (val_len == 0) {
+		SPDK_ERRLOG("Key without value\n");
+		return 0;
+	}
+
+	if (val_len >= val_buf_size) {
+		SPDK_ERRLOG("Value length %zu greater than maximum allowed %zu\n",
+			    val_len, val_buf_size - 1);
+		return 0;
+	}
+
+	memcpy(val, *str, val_len);
+	val[val_len] = '\0';
+
+	*str += val_len;
+
+	return val_len;
+}
+
+int
+spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *str)
+{
+	size_t key_size = 32;
+	size_t val_size = 1024;
+	size_t val_len;
+	char key[key_size];
+	char val[val_size];
 
 	if (trid == NULL || str == NULL) {
 		return -EINVAL;
 	}
 
 	while (*str != '\0') {
-		str += strspn(str, whitespace);
 
-		sep = strchr(str, ':');
-		if (!sep) {
-			sep = strchr(str, '=');
-			if (!sep) {
-				SPDK_ERRLOG("Key without ':' or '=' separator\n");
-				return -EINVAL;
-			}
-		} else {
-			sep1 = strchr(str, '=');
-			if ((sep1 != NULL) && (sep1 < sep)) {
-				sep = sep1;
-			}
-		}
+		val_len = parse_next_key(&str, key, val, key_size, val_size);
 
-		key_len = sep - str;
-		if (key_len >= sizeof(key)) {
-			SPDK_ERRLOG("Transport key length %zu greater than maximum allowed %zu\n",
-				    key_len, sizeof(key) - 1);
-			return -EINVAL;
-		}
-
-		memcpy(key, str, key_len);
-		key[key_len] = '\0';
-
-		str += key_len + 1; /* Skip key: */
-		val_len = strcspn(str, whitespace);
 		if (val_len == 0) {
-			SPDK_ERRLOG("Key without value\n");
-			return -EINVAL;
+			SPDK_ERRLOG("Failed to parse transport ID\n");
+			return val_len;
 		}
-
-		if (val_len >= sizeof(val)) {
-			SPDK_ERRLOG("Transport value length %zu greater than maximum allowed %zu\n",
-				    val_len, sizeof(val) - 1);
-			return -EINVAL;
-		}
-
-		memcpy(val, str, val_len);
-		val[val_len] = '\0';
-
-		str += val_len;
 
 		if (strcasecmp(key, "trtype") == 0) {
 			if (spdk_nvme_transport_id_parse_trtype(&trid->trtype, val) != 0) {
@@ -811,6 +830,10 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 				return -EINVAL;
 			}
 			memcpy(trid->subnqn, val, val_len + 1);
+		} else if (strcasecmp(key, "hostaddr") == 0) {
+			continue;
+		} else if (strcasecmp(key, "hostsvcid") == 0) {
+			continue;
 		} else if (strcasecmp(key, "ns") == 0) {
 			/*
 			 * Special case.  The namespace id parameter may
@@ -823,6 +846,65 @@ spdk_nvme_transport_id_parse(struct spdk_nvme_transport_id *trid, const char *st
 			 * it as an invalid key.
 			 */
 			continue;
+		} else {
+			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
+		}
+	}
+
+	return 0;
+}
+
+int
+spdk_nvme_host_id_parse(struct spdk_nvme_host_id *hostid, const char *str)
+{
+
+	size_t key_size = 32;
+	size_t val_size = 1024;
+	size_t val_len;
+	char key[key_size];
+	char val[val_size];
+
+	if (hostid == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	while (*str != '\0') {
+
+		val_len = parse_next_key(&str, key, val, key_size, val_size);
+
+		if (val_len == 0) {
+			SPDK_ERRLOG("Failed to parse host ID\n");
+			return val_len;
+		}
+
+		/* Ignore the rest of the options from the transport ID. */
+		if (strcasecmp(key, "trtype") == 0) {
+			continue;
+		} else if (strcasecmp(key, "adrfam") == 0) {
+			continue;
+		} else if (strcasecmp(key, "traddr") == 0) {
+			continue;
+		} else if (strcasecmp(key, "trsvcid") == 0) {
+			continue;
+		} else if (strcasecmp(key, "subnqn") == 0) {
+			continue;
+		} else if (strcasecmp(key, "ns") == 0) {
+			continue;
+		} else if (strcasecmp(key, "hostaddr") == 0) {
+			if (val_len > SPDK_NVMF_TRADDR_MAX_LEN) {
+				SPDK_ERRLOG("hostaddr length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRADDR_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(hostid->hostaddr, val, val_len + 1);
+
+		} else if (strcasecmp(key, "hostsvcid") == 0) {
+			if (val_len > SPDK_NVMF_TRSVCID_MAX_LEN) {
+				SPDK_ERRLOG("trsvcid length %zu greater than maximum allowed %u\n",
+					    val_len, SPDK_NVMF_TRSVCID_MAX_LEN);
+				return -EINVAL;
+			}
+			memcpy(hostid->hostsvcid, val, val_len + 1);
 		} else {
 			SPDK_ERRLOG("Unknown transport ID key '%s'\n", key);
 		}

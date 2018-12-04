@@ -90,6 +90,7 @@ enum data_direction {
 struct nvme_probe_ctx {
 	size_t count;
 	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
+	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
 	const char *names[NVME_MAX_CONTROLLERS];
 	const char *hostnqn;
 };
@@ -1415,6 +1416,14 @@ bdev_nvme_library_init(void)
 
 			if (probe_ctx->hostnqn != NULL) {
 				snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", probe_ctx->hostnqn);
+			}
+
+			if (probe_ctx->hostids[i].hostaddr[0] != '\0') {
+				snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", probe_ctx->hostids[i].hostaddr);
+			}
+
+			if (probe_ctx->hostids[i].hostsvcid[0] != '\0') {
+				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->hostids[i].hostsvcid);
 			}
 
 			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
