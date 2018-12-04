@@ -86,6 +86,12 @@ struct rte_vhost_vring {
 
 	uint16_t		last_avail_idx;
 	uint16_t		last_used_idx;
+	uint16_t                overflow_count;
+
+	key_t                   recovery_shm_key;
+	int                     recovery_shm_id;
+	int                     recovery_shm_size;
+	void                    *recovery_shm_addr;
 };
 
 /**

@@ -172,6 +172,7 @@ spdk_vhost_log_used_vring_idx(struct spdk_vhost_dev *vdev, struct spdk_vhost_vir
 /*
  * Get available requests from avail ring.
  */
+#define MAX_OVERFLOW_COUNT 20000
 uint16_t
 spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *reqs,
 			     uint16_t reqs_len)
@@ -180,7 +181,25 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	struct vring_avail *avail = vring->avail;
 	uint16_t size_mask = vring->size - 1;
 	uint16_t last_idx = vring->last_avail_idx, avail_idx = avail->idx;
-	uint16_t count, i;
+	uint16_t count, i, j;
+	uint32_t *recovery_map = vring->recovery_shm_addr;
+	uint32_t recovery_value;
+
+	if (spdk_unlikely(vring->recovery_shm_size > 0)) {
+		count = reqs_len;
+		j = vring->size - vring->recovery_shm_size;
+		for (i = 0; i < count && j < vring->size; j++) {
+			assert(j < vring->size);
+			if ((recovery_map[j] & 0x00000001) == 1) {
+				reqs[i] = j;
+				i++;
+			}
+		}
+
+		vring->recovery_shm_size = vring->size - j;
+
+		return i;
+	}
 
 	count = avail_idx - last_idx;
 	if (spdk_likely(count == 0)) {
@@ -198,6 +217,14 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	vring->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
+		if ((uint16_t)(last_idx + i) == 0) {
+			vring->overflow_count++;
+			if (vring->overflow_count >= MAX_OVERFLOW_COUNT) {
+				vring->overflow_count = 0;
+			}
+		}
+		recovery_value = (((last_idx + i) << 16) + (vring->overflow_count << 1)) | 0x00000001;
+		recovery_map[reqs[i]] = recovery_value;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
@@ -206,6 +233,7 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 
 	return count;
 }
+#undef MAX_OVERFLOW_COUNT
 
 static bool
 spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
@@ -382,6 +410,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
 	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
+	uint32_t *recovery_map = vring->recovery_shm_addr;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
@@ -392,6 +421,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
+	recovery_map[id] = recovery_map[id] & 0xfffffffe;
 
 	/* Ensure the used ring is updated before we log it or increment used->idx. */
 	spdk_smp_wmb();
@@ -1032,7 +1062,6 @@ stop_device(int vid)
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
-
 	rc = _spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);

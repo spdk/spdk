@@ -115,6 +115,12 @@ struct vhost_virtqueue {
 
 	struct vring_used_elem  *shadow_used_ring;
 	uint16_t                shadow_used_idx;
+
+	key_t                   recovery_shm_key;
+	int                     recovery_shm_id;
+	int                     recovery_shm_size;
+	void                    *recovery_shm_addr;
+	uint16_t                overflow_count;
 } __rte_cache_aligned;
 
 /* Old kernels have no such macros defined */

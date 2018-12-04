@@ -41,6 +41,7 @@
 #include <asm/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/shm.h>
 #include <assert.h>
 #ifdef RTE_LIBRTE_VHOST_NUMA
 #include <numaif.h>
@@ -364,11 +365,15 @@ static int vhost_setup_mem_table(struct virtio_net *dev);
  * The virtio device sends us the desc, used and avail ring addresses.
  * This function then converts these to our address space.
  */
+#define SHM_PAGE_SIZE 4096
 static int
 vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 {
 	struct vhost_virtqueue *vq;
 	uint64_t len;
+	uint32_t *recovery_map;
+	uint16_t overflow, idx;
+	int i;
 
 	/* Remove from the data plane. */
 	if (dev->flags & VIRTIO_DEV_RUNNING) {
@@ -426,16 +431,63 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 		return -1;
 	}
 
-	if (vq->last_used_idx != vq->used->idx) {
-		RTE_LOG(WARNING, VHOST_CONFIG,
-			"last_used_idx (%u) and vq->used->idx (%u) mismatches; "
-			"some packets maybe resent for Tx and dropped for Rx\n",
-			vq->last_used_idx, vq->used->idx);
-		vq->last_used_idx  = vq->used->idx;
-		vq->last_avail_idx = vq->used->idx;
+	vq->log_guest_addr = msg->payload.addr.log_guest_addr;
+
+	vq->recovery_shm_key = msg->payload.addr.recovery_shm_key;
+	vq->recovery_shm_id = shmget(vq->recovery_shm_key, SHM_PAGE_SIZE, 0666);
+
+	RTE_LOG(INFO, VHOST_CONFIG, "vring idx:%d shm_key:%d\n", msg->payload.addr.index, vq->recovery_shm_key);
+	RTE_LOG(INFO, VHOST_CONFIG, "vring idx:%d shm_id:%d\n", msg->payload.addr.index, vq->recovery_shm_id);
+
+	if (vq->recovery_shm_id == -1) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"shmget failed.\n");
+		return -1;
+	}
+	vq->recovery_shm_addr = shmat(vq->recovery_shm_id, 0, 0);
+	if (vq->recovery_shm_addr == (void *)-1) {
+		RTE_LOG(ERR, VHOST_CONFIG,
+			"shmat failed.\n");
+		return -1;
 	}
 
-	vq->log_guest_addr = msg->payload.addr.log_guest_addr;
+	vq->last_used_idx  = vq->used->idx;
+	vq->recovery_shm_size = vq->size;
+	vq->last_avail_idx = 0;
+	vq->overflow_count = 0;
+	recovery_map = vq->recovery_shm_addr;
+
+	for (i = 0; i < vq->recovery_shm_size; i++) {
+		if (recovery_map[i] == 0)
+			continue;
+		if (recovery_map[i] & 0x00000001) {
+			RTE_LOG(INFO, VHOST_CONFIG, "unfinish IO:%d\n", i);
+		}
+		idx = recovery_map[i] >> 16;
+		overflow = (recovery_map[i] & 0x0000fffe) >> 1;
+		if (vq->overflow_count < overflow) {
+			RTE_LOG(INFO, VHOST_CONFIG, "update set last_avail_idx to :%d, last_used_idx:%d, overflow_count:%d, %d\n", idx, vq->last_used_idx, vq->overflow_count, overflow);
+			vq->last_avail_idx = idx;
+			vq->overflow_count = overflow;
+		}
+		if (vq->overflow_count == overflow && vq->last_avail_idx < idx) {
+			RTE_LOG(INFO, VHOST_CONFIG, "update last_avail_idx to :%d, last_used_idx:%d, overflow_count:%d, %d\n", idx, vq->last_used_idx, vq->overflow_count, overflow);
+			vq->last_avail_idx = idx;
+		}
+
+	}
+	if (vq->last_avail_idx == 0) {
+		vq->last_avail_idx = vq->last_used_idx;
+		RTE_LOG(INFO, VHOST_CONFIG, "update last_avail_idx to last_used_idx:%d\n", vq->last_used_idx);
+	} else {
+		vq->last_avail_idx++;
+		RTE_LOG(INFO, VHOST_CONFIG, "update last_avail_idx to :%d, last_used_idx:%d\n", vq->last_avail_idx, vq->last_used_idx);
+	}
+
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "set vring addr, last used:%u\n", vq->used->idx);
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "set vring addr, last avail idx:%u\n", vq->last_avail_idx);
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "set vring addr, avail idx:%u\n", vq->avail->idx);
+	VHOST_LOG_DEBUG(VHOST_CONFIG, "set vring addr, overflow count:%u\n", vq->overflow_count);
 
 	VHOST_LOG_DEBUG(VHOST_CONFIG, "(%d) mapped address desc: %p\n",
 			dev->vid, vq->desc);
@@ -448,6 +500,7 @@ vhost_user_set_vring_addr(struct virtio_net *dev, VhostUserMsg *msg)
 
 	return 0;
 }
+#undef SHM_PAGE_SIZE
 
 /*
  * The virtio device sends us the available ring last used index.
@@ -718,7 +771,8 @@ vq_is_ready(struct vhost_virtqueue *vq)
 	       vq->kickfd != VIRTIO_UNINITIALIZED_EVENTFD &&
 	       vq->callfd != VIRTIO_UNINITIALIZED_EVENTFD &&
 	       vq->kickfd != VIRTIO_INVALID_EVENTFD &&
-	       vq->callfd != VIRTIO_INVALID_EVENTFD;
+	       vq->callfd != VIRTIO_INVALID_EVENTFD &&
+	       vq->recovery_shm_addr != NULL;
 }
 
 static int
@@ -733,14 +787,15 @@ virtio_is_ready(struct virtio_net *dev)
 	for (i = 0; i < dev->nr_vring; i++) {
 		vq = dev->virtqueue[i];
 
-		if (vq_is_ready(vq)) {
-			RTE_LOG(INFO, VHOST_CONFIG,
-				"virtio is now ready for processing.\n");
-			return 1;
+		if (!vq_is_ready(vq)) {
+			return 0;
 		}
 	}
 
-	return 0;
+	RTE_LOG(INFO, VHOST_CONFIG,
+		"virtio is now ready for processing.\n");
+
+	return 1;
 }
 
 static void

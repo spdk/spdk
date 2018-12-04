@@ -36,6 +36,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <sys/shm.h>
 #ifdef RTE_LIBRTE_VHOST_NUMA
 #include <numaif.h>
 #endif
@@ -67,6 +68,10 @@ get_device(int vid)
 static void
 cleanup_vq(struct vhost_virtqueue *vq, int destroy)
 {
+	if (vq->recovery_shm_addr)
+		shmdt(vq->recovery_shm_addr);
+	vq->recovery_shm_addr = NULL;
+
 	if ((vq->callfd >= 0) && (destroy != 0))
 		close(vq->callfd);
 	if (vq->kickfd >= 0)
@@ -388,6 +393,12 @@ rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
 
 	vring->last_avail_idx = vq->last_avail_idx;
 	vring->last_used_idx = vq->last_used_idx;
+	vring->overflow_count = vq->overflow_count;
+
+	vring->recovery_shm_key = vq->recovery_shm_key;
+	vring->recovery_shm_id = vq->recovery_shm_id;
+	vring->recovery_shm_size = vq->recovery_shm_size;
+	vring->recovery_shm_addr = vq->recovery_shm_addr;
 
 	return 0;
 }

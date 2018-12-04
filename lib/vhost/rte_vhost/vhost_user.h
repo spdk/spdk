@@ -127,6 +127,29 @@ typedef struct VhostUserConfig {
 	uint8_t region[VHOST_USER_MAX_CONFIG_SIZE];
 } VhostUserConfig;
 
+struct vhost_vring_addr_recovery {
+        unsigned int index;
+        /* Option flags. */
+        unsigned int flags;
+        /* Flag values: */
+        /* Whether log address is valid. If set enables logging. */
+#define VHOST_VRING_F_LOG 0
+
+        /* Start of array of descriptors (virtually contiguous) */
+        __u64 desc_user_addr;
+        /* Used structure address. Must be 32 bit aligned */
+        __u64 used_user_addr;
+        /* Available structure address. Must be 16 bit aligned */
+        __u64 avail_user_addr;
+        /* Logging support. */
+        /* Log writes to used structure, at offset calculated from specified
+         * address. Address must be 32 bit aligned. */
+        __u64 log_guest_addr;
+        /* save virtio status */
+        key_t recovery_shm_key;
+};
+
+
 typedef struct VhostUserMsg {
 	VhostUserRequest request;
 
@@ -140,7 +163,7 @@ typedef struct VhostUserMsg {
 #define VHOST_USER_VRING_NOFD_MASK  (0x1<<8)
 		uint64_t u64;
 		struct vhost_vring_state state;
-		struct vhost_vring_addr addr;
+		struct vhost_vring_addr_recovery addr;
 		VhostUserMemory memory;
 		VhostUserLog    log;
 		VhostUserConfig config;
