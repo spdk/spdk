@@ -254,6 +254,17 @@ struct spdk_nvme_transport_id {
 	 * Subsystem NQN of the NVMe over Fabrics endpoint. May be a zero length string.
 	 */
 	char subnqn[SPDK_NVMF_NQN_MAX_LEN + 1];
+
+	/**
+	 * Transport address to be used by the host when connecting to the NVMe-oF endpoint.
+	 * May be a zero length string.
+	 */
+	char srcaddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+
+	/**
+	 * Transport service ID used by the host when connecting to the NVMe. May be a zero length string.
+	 */
+	char srcsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
 
 /**

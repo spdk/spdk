@@ -1417,6 +1417,14 @@ bdev_nvme_library_init(void)
 				snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", probe_ctx->hostnqn);
 			}
 
+			if (probe_ctx->trids[i].srcaddr[0] != '\0') {
+				snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", probe_ctx->trids[i].srcaddr);
+			}
+
+			if (probe_ctx->trids[i].srcsvcid[0] != '\0') {
+				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->trids[i].srcsvcid);
+			}
+
 			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
 			if (ctrlr == NULL) {
 				SPDK_ERRLOG("Unable to connect to provided trid (traddr: %s)\n",
