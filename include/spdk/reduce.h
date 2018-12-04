@@ -70,20 +70,16 @@ struct spdk_reduce_vol_params {
 	uint32_t		chunk_size;
 
 	/**
-	 * Total size in bytes of the compressed volume.  Must be
-	 *  an even multiple of chunk_size.  Must be greater than 0.
+	 * Total size in bytes of the compressed volume.  During
+	 *  initialization, the size is calculated from the size of
+	 *  backing device size, so this must be set to 0 in the
+	 *  structure passed to spdk_reduce_vol_init().  After
+	 *  initialization, or a successful load, this field will
+	 *  contain the total size which will be an even multiple
+	 *  of the chunk size.
 	 */
 	uint64_t		vol_size;
 };
-
-/**
- * Get the required size for the pm file for a compressed volume.
- *
- * \param params Parameters for the compressed volume
- * \return Size of the required pm file (in bytes) needed to create the
- *         compressed volume.  Returns -EINVAL if params is invalid.
- */
-int64_t spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params);
 
 /**
  * Get the required size for the backing device for a compressed volume.

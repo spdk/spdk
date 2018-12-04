@@ -76,30 +76,13 @@ static void
 get_pm_file_size(void)
 {
 	struct spdk_reduce_vol_params params;
-	int64_t pm_size, expected_pm_size;
+	uint64_t pm_size, expected_pm_size;
 
-	params.vol_size = 0;
-	params.chunk_size = 0;
-	params.backing_io_unit_size = 0;
-	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -EINVAL);
-
-	/*
-	 * Select a valid backing_io_unit_size.  This should still fail since
-	 *  vol_size and chunk_size are still 0.
-	 */
 	params.backing_io_unit_size = 4096;
-	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -EINVAL);
-
-	/*
-	 * Select a valid chunk_size.  This should still fail since val_size
-	 *  is still 0.
-	 */
 	params.chunk_size = 4096 * 4;
-	CU_ASSERT(spdk_reduce_get_pm_file_size(&params) == -EINVAL);
-
-	/* Select a valid vol_size.  This should return a proper pm_size. */
 	params.vol_size = 4096 * 4 * 100;
-	pm_size = spdk_reduce_get_pm_file_size(&params);
+
+	pm_size = _get_pm_file_size(&params);
 	expected_pm_size = sizeof(struct spdk_reduce_vol_superblock);
 	/* 100 chunks in logical map * 8 bytes per chunk */
 	expected_pm_size += 100 * sizeof(uint64_t);
@@ -116,43 +99,13 @@ get_pm_file_size(void)
 }
 
 static void
-get_backing_device_size(void)
+get_vol_size(void)
 {
-	struct spdk_reduce_vol_params params;
-	int64_t backing_size, expected_backing_size;
+	uint64_t chunk_size, backing_dev_size;
 
-	params.vol_size = 0;
-	params.chunk_size = 0;
-	params.backing_io_unit_size = 0;
-	params.logical_block_size = 512;
-	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -EINVAL);
-
-	/*
-	 * Select a valid backing_io_unit_size.  This should still fail since
-	 *  vol_size and chunk_size are still 0.
-	 */
-	params.backing_io_unit_size = 4096;
-	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -EINVAL);
-
-	/*
-	 * Select a valid chunk_size.  This should still fail since val_size
-	 *  is still 0.
-	 */
-	params.chunk_size = 4096 * 4;
-	CU_ASSERT(spdk_reduce_get_backing_device_size(&params) == -EINVAL);
-
-	/* Select a valid vol_size.  This should return a proper backing device size. */
-	params.vol_size = 4096 * 4 * 100;
-	backing_size = spdk_reduce_get_backing_device_size(&params);
-	expected_backing_size = params.vol_size;
-	/* reduce allocates some extra chunks too for in-flight writes when logical map
-	 * is full.  REDUCE_EXTRA_CHUNKS is a private #ifdef in reduce.c.  Backing device
-	 * must have space allocated for these extra chunks.
-	 */
-	expected_backing_size += REDUCE_NUM_EXTRA_CHUNKS * params.chunk_size;
-	/* Account for superblock as well. */
-	expected_backing_size += sizeof(struct spdk_reduce_vol_superblock);
-	CU_ASSERT(backing_size == expected_backing_size);
+	chunk_size = 16 * 1024;
+	backing_dev_size = 16 * 1024 * 1000;
+	CU_ASSERT(_get_vol_size(chunk_size, backing_dev_size) < backing_dev_size);
 }
 
 void *
@@ -225,13 +178,17 @@ init_failure(void)
 	struct spdk_reduce_backing_dev backing_dev = {};
 
 	backing_dev.blocklen = 512;
+	/* This blockcnt is too small for a reduce vol - there needs to be
+	 *  enough space for at least REDUCE_NUM_EXTRA_CHUNKS + 1 chunks.
+	 */
+	backing_dev.blockcnt = 20;
 
-	params.vol_size = 1024 * 1024; /* 1MB */
+	params.vol_size = 0;
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = backing_dev.blocklen;
 	params.logical_block_size = 512;
 
-	/* backing_dev and pm_file have an invalid size.  This should fail. */
+	/* backing_dev has an invalid size.  This should fail. */
 	g_vol = NULL;
 	g_reduce_errno = 0;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
@@ -241,7 +198,7 @@ init_failure(void)
 	/* backing_dev now has valid size, but backing_dev still has null
 	 *  function pointers.  This should fail.
 	 */
-	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
+	backing_dev.blockcnt = 20000;
 
 	g_vol = NULL;
 	g_reduce_errno = 0;
@@ -313,7 +270,7 @@ backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce
 {
 	int64_t size;
 
-	size = spdk_reduce_get_backing_device_size(params);
+	size = 4 * 1024 * 1024;
 	backing_dev->blocklen = backing_blocklen;
 	backing_dev->blockcnt = size / backing_dev->blocklen;
 	backing_dev->readv = backing_dev_readv;
@@ -334,7 +291,6 @@ init_md(void)
 	struct spdk_uuid uuid;
 	uint64_t *entry;
 
-	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
 	params.logical_block_size = 512;
@@ -386,7 +342,6 @@ _init_backing_dev(uint32_t backing_blocklen)
 	struct spdk_reduce_vol_params *persistent_params;
 	struct spdk_reduce_backing_dev backing_dev = {};
 
-	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
 	params.logical_block_size = 512;
@@ -437,7 +392,6 @@ _load(uint32_t backing_blocklen)
 	struct spdk_reduce_backing_dev backing_dev = {};
 	char pmem_file_path[REDUCE_PATH_MAX];
 
-	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 512;
 	params.logical_block_size = 512;
@@ -521,7 +475,6 @@ _write_maps(uint32_t backing_blocklen)
 	uint64_t old_chunk0_map_index, new_chunk0_map_index;
 	uint64_t *old_chunk0_map, *new_chunk0_map;
 
-	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 4096;
 	params.logical_block_size = 512;
@@ -613,7 +566,6 @@ _read_write(uint32_t backing_blocklen)
 	char compare_buf[16 * 1024];
 	uint32_t i;
 
-	params.vol_size = 1024 * 1024; /* 1MB */
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 4096;
 	params.logical_block_size = 512;
@@ -701,7 +653,7 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "get_pm_file_size", get_pm_file_size) == NULL ||
-		CU_add_test(suite, "get_backing_device_size", get_backing_device_size) == NULL ||
+		CU_add_test(suite, "get_vol_size", get_vol_size) == NULL ||
 		CU_add_test(suite, "init_failure", init_failure) == NULL ||
 		CU_add_test(suite, "init_md", init_md) == NULL ||
 		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL ||

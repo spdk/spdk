@@ -188,8 +188,16 @@ _reduce_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
 static int
 _validate_vol_params(struct spdk_reduce_vol_params *params)
 {
-	if (params->vol_size == 0 || params->chunk_size == 0 ||
-	    params->backing_io_unit_size == 0 || params->logical_block_size == 0) {
+	if (params->vol_size > 0) {
+		/**
+		 * User does not pass in the vol size - it gets calculated by libreduce from
+		 *  values in this structure plus the size of the backing device.
+		 */
+		return -EINVAL;
+	}
+
+	if (params->chunk_size == 0 || params->backing_io_unit_size == 0 ||
+	    params->logical_block_size == 0) {
 		return -EINVAL;
 	}
 
@@ -203,48 +211,33 @@ _validate_vol_params(struct spdk_reduce_vol_params *params)
 		return -1;
 	}
 
-	/* Volume size must be an even multiple of the chunk size. */
-	if ((params->vol_size % params->chunk_size) != 0) {
-		return -EINVAL;
-	}
-
 	return 0;
 }
 
-int64_t
-spdk_reduce_get_pm_file_size(struct spdk_reduce_vol_params *params)
+static uint64_t
+_get_vol_size(uint64_t chunk_size, uint64_t backing_dev_size)
+{
+	uint64_t num_chunks;
+
+	num_chunks = backing_dev_size / chunk_size;
+	if (num_chunks <= REDUCE_NUM_EXTRA_CHUNKS) {
+		return 0;
+	}
+
+	num_chunks -= REDUCE_NUM_EXTRA_CHUNKS;
+	return num_chunks * chunk_size;
+}
+
+static uint64_t
+_get_pm_file_size(struct spdk_reduce_vol_params *params)
 {
 	uint64_t total_pm_size;
-	int rc;
-
-	rc = _validate_vol_params(params);
-	if (rc != 0) {
-		return rc;
-	}
 
 	total_pm_size = sizeof(struct spdk_reduce_vol_superblock);
 	total_pm_size += _get_pm_logical_map_size(params->vol_size, params->chunk_size);
 	total_pm_size += _get_pm_total_chunks_size(params->vol_size, params->chunk_size,
 			 params->backing_io_unit_size);
 	return total_pm_size;
-}
-
-int64_t
-spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params)
-{
-	uint64_t total_backing_size, num_chunks;
-	int rc;
-
-	rc = _validate_vol_params(params);
-	if (rc != 0) {
-		return rc;
-	}
-
-	num_chunks = _get_total_chunks(params->vol_size, params->chunk_size);
-	total_backing_size = num_chunks * params->chunk_size;
-	total_backing_size += sizeof(struct spdk_reduce_vol_superblock);
-
-	return total_backing_size;
 }
 
 const struct spdk_uuid *
@@ -396,7 +389,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 {
 	struct spdk_reduce_vol *vol;
 	struct reduce_init_load_ctx *init_ctx;
-	int64_t size, size_needed;
+	uint64_t backing_dev_size;
 	size_t mapped_len;
 	int dir_len, max_dir_len, rc;
 
@@ -424,11 +417,10 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	size_needed = spdk_reduce_get_backing_device_size(params);
-	size = backing_dev->blockcnt * backing_dev->blocklen;
-	if (size_needed > size) {
-		SPDK_ERRLOG("backing device size %" PRIi64 " but %" PRIi64 " needed\n",
-			    size, size_needed);
+	backing_dev_size = backing_dev->blockcnt * backing_dev->blocklen;
+	params->vol_size = _get_vol_size(params->chunk_size, backing_dev_size);
+	if (params->vol_size == 0) {
+		SPDK_ERRLOG("backing device is too small\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
 	}
@@ -475,7 +467,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	vol->pm_file.path[dir_len] = '/';
 	spdk_uuid_fmt_lower(&vol->pm_file.path[dir_len + 1], SPDK_UUID_STRING_LEN,
 			    &params->uuid);
-	vol->pm_file.size = spdk_reduce_get_pm_file_size(params);
+	vol->pm_file.size = _get_pm_file_size(params);
 	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, vol->pm_file.size,
 					    PMEM_FILE_CREATE | PMEM_FILE_EXCL, 0600,
 					    &mapped_len, &vol->pm_file.pm_is_pmem);
@@ -547,7 +539,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *load_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = load_ctx->vol;
-	int64_t size, size_needed;
+	uint64_t backing_dev_size;
 	size_t mapped_len;
 	int rc;
 
@@ -569,17 +561,16 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		goto error;
 	}
 
-	size_needed = spdk_reduce_get_backing_device_size(&vol->params);
-	size = vol->backing_dev->blockcnt * vol->backing_dev->blocklen;
-	if (size_needed > size) {
-		SPDK_ERRLOG("backing device size %" PRIi64 " but %" PRIi64 " expected\n",
-			    size, size_needed);
+	backing_dev_size = vol->backing_dev->blockcnt * vol->backing_dev->blocklen;
+	if (_get_vol_size(vol->params.chunk_size, backing_dev_size) < vol->params.vol_size) {
+		SPDK_ERRLOG("backing device size %" PRIi64 " smaller than expected\n",
+			    backing_dev_size);
 		rc = -EILSEQ;
 		goto error;
 	}
 
 	memcpy(vol->pm_file.path, load_ctx->path, sizeof(vol->pm_file.path));
-	vol->pm_file.size = spdk_reduce_get_pm_file_size(&vol->params);
+	vol->pm_file.size = _get_pm_file_size(&vol->params);
 	vol->pm_file.pm_buf = pmem_map_file(vol->pm_file.path, 0, 0, 0, &mapped_len,
 					    &vol->pm_file.pm_is_pmem);
 	if (vol->pm_file.pm_buf == NULL) {
