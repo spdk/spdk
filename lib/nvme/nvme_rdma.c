@@ -1121,8 +1121,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	struct ibv_mr *mr;
 	uint32_t length;
 	uint64_t requested_size;
+	uint32_t remaining_payload;
 	void *virt_addr;
-	int rc;
+	int rc, i;
 
 	assert(req->payload_size != 0);
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL);
@@ -1130,24 +1131,43 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	/* TODO: for now, we only support a single SGL entry */
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
-	if (rc) {
-		return -1;
-	}
+	remaining_payload = req->payload_size;
+	rdma_req->send_wr.num_sge = 1;
 
-	if (length < req->payload_size) {
-		SPDK_ERRLOG("multi-element SGL currently not supported for RDMA\n");
-		return -1;
-	}
-
-	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
-			&requested_size);
-	if (mr == NULL || requested_size < req->payload_size) {
-		if (mr) {
-			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+	do {
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+		if (rc) {
+			return -1;
 		}
+
+		assert(length <= remaining_payload);
+
+		requested_size = length;
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
+				&requested_size);
+		if (mr == NULL || requested_size < length) {
+			for (i = 1; i < rdma_req->send_wr.num_sge; i++) {
+				rdma_req->send_sgl[i].addr = 0;
+				rdma_req->send_sgl[i].length = 0;
+				rdma_req->send_sgl[i].lkey = 0;
+			}
+
+			if (mr) {
+				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+			}
+			return -1;
+		}
+
+		rdma_req->send_sgl[rdma_req->send_wr.num_sge].addr = (uint64_t)virt_addr;
+		rdma_req->send_sgl[rdma_req->send_wr.num_sge].length = length;
+		rdma_req->send_sgl[rdma_req->send_wr.num_sge].lkey = mr->lkey;
+		rdma_req->send_wr.num_sge++;
+
+		remaining_payload -= length;
+	} while (remaining_payload && rdma_req->send_wr.num_sge < (int64_t)rqpair->max_send_sge);
+
+	if (remaining_payload) {
+		SPDK_ERRLOG("Unable to prepare request. Too many SGL elements\n");
 		return -1;
 	}
 
@@ -1156,15 +1176,6 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 	 * we only need the first 64 bytes corresponding to
 	 * the NVMe command. */
 	rdma_req->send_sgl[0].length = sizeof(struct spdk_nvme_cmd);
-
-	rdma_req->send_sgl[1].addr = (uint64_t)virt_addr;
-	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
-	rdma_req->send_sgl[1].lkey = mr->lkey;
-
-	/* The RDMA SGL contains two elements. The first describes
-	 * the NVMe command and the second describes the data
-	 * payload. */
-	rdma_req->send_wr.num_sge = 2;
 
 	req->cmd.psdt = SPDK_NVME_PSDT_SGL_MPTR_CONTIG;
 	req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
