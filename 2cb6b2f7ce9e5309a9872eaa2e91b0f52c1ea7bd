@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4b651896_6e289d99",
+        "filename": "autorun_post.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-04T11:54:29Z",
+      "side": 1,
+      "message": "Any OS provisioning should be done via vm_setup.sh, pkgdep.sh or some other designated script.\nWe shouldn\u0027t call these kind of commands in other utility scripts, especially that it\u0027s kind of hidden from user.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 23
+      },
+      "revId": "2cb6b2f7ce9e5309a9872eaa2e91b0f52c1ea7bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
