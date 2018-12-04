@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76139ada_a473d3b5",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-04T22:50:25Z",
+      "side": 1,
+      "message": "This is the same format as initiator_port_name passed to spdk_scsi_port_create().\n\nmore than 20 bytes and multiple of four are not checked for inititor_port_name though.\n\nCan you share port-\u003ename and port-\u003etransport_id-\u003ename?",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 51
+      },
+      "revId": "c59b1a6c48b4cdfed62106ae562a5df07e66febd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
