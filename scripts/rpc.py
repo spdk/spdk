@@ -251,7 +251,9 @@ if __name__ == "__main__":
                                                  traddr=args.traddr,
                                                  adrfam=args.adrfam,
                                                  trsvcid=args.trsvcid,
-                                                 subnqn=args.subnqn))
+                                                 subnqn=args.subnqn,
+                                                 hostaddr=args.hostaddr,
+                                                 hostsvcid=args.hostsvcid))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -260,11 +262,16 @@ if __name__ == "__main__":
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
     p.add_argument('-a', '--traddr',
                    help='NVMe-oF target address: e.g., an ip address or BDF', required=True)
+
     p.add_argument('-f', '--adrfam',
                    help='NVMe-oF target adrfam: e.g., ipv4, ipv6, ib, fc, intra_host')
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.add_argument('-i', '--hostaddr',
+                   help='NVMe-oF host address: e.g., an ip address or BDF')
+    p.add_argument('-c', '--hostsvcid',
+                   help='NVMe-oF host svcid: e.g., a port number')
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):
