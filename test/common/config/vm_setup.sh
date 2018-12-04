@@ -6,9 +6,9 @@
 
 # The purpose of this script is to provide a simple procedure for spinning up a new
 # virtual test environment capable of running our whole test suite. This script, when
-# applied to a fresh install of fedora 26 server will install all of the necessary dependencies
-# to run almost the complete test suite. The main exception being VHost. Vhost requires the
-# configuration of a second virtual machine. instructions for how to configure
+# applied to a fresh install of fedora 26 or ubuntu 16,18 server will install all of the
+# necessary dependencies to run almost the complete test suite. The main exception being VHost.
+# Vhost requires the configuration of a second virtual machine. instructions for how to configure
 # that vm are included in the file TEST_ENV_SETUP_README inside this repository
 
 # it is important to enable nesting for vms in kernel command line of your machine for the vhost tests.
@@ -25,6 +25,9 @@ VM_SETUP_PATH=$(readlink -f ${BASH_SOURCE%/*})
 UPGRADE=false
 INSTALL=false
 CONF="librxe,iscsi,rocksdb,fio,flamegraph,tsocks,qemu,vpp,libiscsi,nvmecli,qat,ocf"
+
+OSID=$(source /etc/os-release && echo $ID)
+PACKAGEMNG='undefined'
 
 function install_rxe_cfg()
 {
@@ -301,18 +304,35 @@ function install_ocf()
 
 function usage()
 {
-    echo "This script is intended to automate the environment setup for a fedora linux virtual machine."
+    echo "This script is intended to automate the environment setup for a linux virtual machine."
     echo "Please run this script as your regular user. The script will make calls to sudo as needed."
     echo ""
     echo "./vm_setup.sh"
     echo "  -h --help"
-    echo "  -u --upgrade Run dnf upgrade"
-    echo "  -i --install-deps Install dnf based dependencies"
+    echo "  -u --upgrade Run $PACKAGEMNG upgrade"
+    echo "  -i --install-deps Install $PACKAGEMNG based dependencies"
     echo "  -t --test-conf List of test configurations to enable (${CONF})"
     echo "  -c --conf-path Path to configuration file"
     exit 0
 }
 
+# Get package manager #
+if hash dnf &>/dev/null; then
+    PACKAGEMNG=dnf
+elif hash apt-get &>/dev/null; then
+    PACKAGEMNG=apt-get
+else
+    echo 'Supported package manager not found. Script supports "dnf" and "apt-get".'
+fi
+
+if [ $PACKAGEMNG == 'apt-get' ] && [ $OSID != 'ubuntu' ]; then
+    echo 'Located apt-get package manager, but it was tested for Ubuntu only'
+fi
+if [ $PACKAGEMNG == 'dnf' ] && [ $OSID != 'fedora' ]; then
+    echo 'Located dnf package manager, but it was tested for Fedora only'
+fi
+
+# Parse input arguments #
 while getopts 'iuht:c:-:' optchar; do
     case "$optchar" in
         -)
@@ -365,11 +385,14 @@ cd ~
 jobs=$(($(nproc)*2))
 
 if $UPGRADE; then
-    sudo dnf upgrade -y
+    if [ $PACKAGEMNG == 'apt-get' ]; then
+        sudo $PACKAGEMNG update
+    fi
+    sudo $PACKAGEMNG upgrade -y
 fi
 
 if $INSTALL; then
-    sudo dnf install -y git
+    sudo $PACKAGEMNG install -y git
 fi
 
 mkdir -p spdk_repo/output
@@ -386,49 +409,118 @@ git -C spdk_repo/spdk submodule update --init --recursive
 if $INSTALL; then
     sudo spdk_repo/spdk/scripts/pkgdep.sh -i
 
-    if echo $CONF | grep -q tsocks; then
-        sudo dnf install -y tsocks
-    fi
+    if [ $PACKAGEMNG == 'dnf' ]; then
+        if echo $CONF | grep -q tsocks; then
+            sudo dnf install -y tsocks
+        fi
 
-    sudo dnf install -y \
-    valgrind \
-    jq \
-    nvme-cli \
-    ceph \
-    gdb \
-    fio \
-    librbd-devel \
-    kernel-devel \
-    gflags-devel \
-    libasan \
-    libubsan \
-    autoconf \
-    automake \
-    libtool \
-    libmount-devel \
-    iscsi-initiator-utils \
-    isns-utils-devel \
-    pmempool \
-    perl-open \
-    glib2-devel \
-    pixman-devel \
-    astyle-devel \
-    elfutils \
-    elfutils-libelf-devel \
-    flex \
-    bison \
-    targetcli \
-    perl-Switch \
-    librdmacm-utils \
-    libibverbs-utils \
-    gdisk \
-    socat \
-    sshfs \
-    sshpass \
-    python3-pandas \
-    btrfs-progs \
-    rpm-build \
-    iptables
+        sudo dnf install -y \
+        valgrind \
+        jq \
+        nvme-cli \
+        ceph \
+        gdb \
+        fio \
+        librbd-devel \
+        kernel-devel \
+        gflags-devel \
+        libasan \
+        libubsan \
+        autoconf \
+        automake \
+        libtool \
+        libmount-devel \
+        iscsi-initiator-utils \
+        isns-utils-devel \
+        pmempool \
+        perl-open \
+        glib2-devel \
+        pixman-devel \
+        astyle-devel \
+        elfutils \
+        elfutils-libelf-devel \
+        flex \
+        bison \
+        targetcli \
+        perl-Switch \
+        librdmacm-utils \
+        libibverbs-utils \
+        gdisk \
+        socat \
+        sshfs \
+        sshpass \
+        python3-pandas \
+        btrfs-progs \
+        rpm-build \
+        iptables
+
+    elif [ $PACKAGEMNG == 'apt-get' ]; then
+        echo "Package perl-open is not available at Ubuntu repositories" >&2
+
+        if echo $CONF | grep -q tsocks; then
+            sudo apt-get install -y tsocks
+        fi
+
+        # asan an ubsan have to be installed together to not mix up gcc versions
+        if sudo apt-get install -y libasan5; then
+            sudo apt-get install -y libubsan1
+        else
+            echo "Latest libasan5 is not available" >&2
+            echo "  installing libasan2 and corresponding libubsan0" >&2
+            sudo apt-get install -y libasan2
+            sudo apt-get install -y libubsan0
+        fi
+
+        if ! sudo apt-get install -y libpmempool1; then
+            echo "Package libpmempool1 is available at Ubuntu 18 [universe] repositorium" >&2
+        fi
+        if ! sudo apt-get install -y open-isns-utils; then
+            echo "Package open-isns-utils is available at Ubuntu 18 [universe] repositorium" >&2
+        fi
+
+        # Package name for Ubuntu 18 is targetcli-fb but for Ubuntu 16 it's targetcli
+        if ! sudo apt-get install -y targetcli-fb; then
+            sudo apt-get install -y targetcli
+        fi
+
+        sudo apt-get install -y \
+        valgrind \
+        jq \
+        nvme-cli \
+        ceph \
+        gdb \
+        fio \
+        librbd-dev \
+        linux-headers-generic \
+        libgflags-dev \
+        autoconf \
+        automake \
+        libtool \
+        libmount-dev \
+        open-iscsi \
+        libglib2.0-dev \
+        libpixman-1-dev \
+        astyle \
+        elfutils \
+        libelf-dev \
+        flex \
+        bison \
+        libswitch-perl \
+        rdmacm-utils \
+        ibverbs-utils \
+        gdisk \
+        socat \
+        sshfs \
+        sshpass \
+        python3-pandas \
+        btrfs-tools
+
+        # rpm-build is not used
+        # iptables installed by default
+
+    else
+        echo "Package manager is undefined, skipping INSTALL step"
+    fi
 fi
 
 sudo mkdir -p /usr/src
