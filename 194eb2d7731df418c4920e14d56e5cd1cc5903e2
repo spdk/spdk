@@ -16,6 +16,24 @@
       "revId": "194eb2d7731df418c4920e14d56e5cd1cc5903e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10cd5778_1d77706e",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-04T00:15:11Z",
+      "side": 1,
+      "message": "ok, will add an error message in next version.",
+      "parentUuid": "39aa2f70_39afafcc",
+      "revId": "194eb2d7731df418c4920e14d56e5cd1cc5903e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
