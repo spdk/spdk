@@ -254,3 +254,40 @@ spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
 	dst->sense_data_len = src->sense_data_len;
 	dst->status = src->status;
 }
+
+void
+spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
+{
+	uint8_t buffer[36];
+	uint32_t allocation_len;
+	uint32_t data_len;
+
+	task->length = task->transfer_len;
+	if (task->cdb[0] == SPDK_SPC_INQUIRY) {
+		/*
+		 * SPC-4 states that INQUIRY commands to an unsupported LUN
+		 *  must be served with PERIPHERAL QUALIFIER = 0x3 and
+		 *  PERIPHERAL DEVICE TYPE = 0x1F.
+		 */
+		data_len = sizeof(buffer);
+
+		memset(buffer, 0, data_len);
+		/* PERIPHERAL QUALIFIER(7-5) PERIPHERAL DEVICE TYPE(4-0) */
+		buffer[0] = 0x03 << 5 | 0x1f;
+		/* ADDITIONAL LENGTH */
+		buffer[4] = data_len - 5;
+
+		allocation_len = from_be16(&task->cdb[3]);
+		if (spdk_scsi_task_scatter_data(task, buffer, spdk_min(allocation_len, data_len)) >= 0) {
+			task->data_transferred = data_len;
+			task->status = SPDK_SCSI_STATUS_GOOD;
+		}
+	} else {
+		/* LOGICAL UNIT NOT SUPPORTED */
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_LOGICAL_UNIT_NOT_SUPPORTED,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		task->data_transferred = 0;
+	}
+}
