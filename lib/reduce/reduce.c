@@ -433,13 +433,6 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (size_needed > size) {
-		SPDK_ERRLOG("pm file size %" PRIi64 " but %" PRIi64 " needed\n",
-			    size, size_needed);
-		cb_fn(cb_arg, NULL, -EINVAL);
-		return;
-	}
-
 	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
 	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
