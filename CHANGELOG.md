@@ -7,6 +7,9 @@
 admin_timeout_ms was added to NVMe controller initialization options, users
 can change the default value when probing a controller.
 
+The RPC `construct_nvme_bdev` now allows a user to specify a source address and service id for the host to
+use when connecting to the controller backing the NVMe bdev.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
