@@ -69,12 +69,19 @@ struct spdk_reduce_vol_params {
 	 */
 	uint32_t		chunk_size;
 
+	/** Must be set to 0. */
+	uint32_t		reserved;
+
 	/**
 	 * Total size in bytes of the compressed volume.  Must be
 	 *  an even multiple of chunk_size.  Must be greater than 0.
 	 */
 	uint64_t		vol_size;
+
+	/** Must be set to 0. */
+	uint32_t		reserved1[6];
 };
+SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_params) == 64, "size incorrect");
 
 /**
  * Get the required size for the pm file for a compressed volume.
