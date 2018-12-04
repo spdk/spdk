@@ -6,7 +6,16 @@ import argparse
 import os
 import glob
 import re
-import pandas as pd
+
+try:
+    import pandas as pd
+except ImportError as e:
+    print("This machine hasn't installed the pandas package yet, install it by commands.")
+    subprocess.call("pip3 install pandas", shell=True)
+    try:
+        import pandas as pd
+    except ImportError as e:
+        print(e.message)
 
 
 def highest_value(inp):
