@@ -1938,7 +1938,7 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
 			pdu = &tqpair->pdu_in_progress;
-			if (pdu->hd_is_read) {
+			if (pdu->tcp_req) {
 				break;
 			}
 
@@ -1976,8 +1976,6 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 					return NVME_TCP_PDU_IN_PROGRESS;
 				}
 			}
-
-			pdu->hd_is_read = true;
 
 			/* All header(ch, psh, head digist) of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_psh_handle(tqpair);
