@@ -167,10 +167,7 @@ _spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 	if (!lun->removed) {
 		rc = spdk_bdev_scsi_execute(task);
 	} else {
-		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
-					  SPDK_SCSI_SENSE_ABORTED_COMMAND,
-					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
-					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		spdk_scsi_task_process_abort(task);
 		rc = SPDK_SCSI_TASK_COMPLETE;
 	}
 

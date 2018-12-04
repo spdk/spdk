@@ -291,3 +291,12 @@ spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
 		task->data_transferred = 0;
 	}
 }
+
+void
+spdk_scsi_task_process_abort(struct spdk_scsi_task *task)
+{
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ABORTED_COMMAND,
+				  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+}
