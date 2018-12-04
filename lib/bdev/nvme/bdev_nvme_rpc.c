@@ -163,6 +163,8 @@ struct rpc_construct_nvme {
 	char *adrfam;
 	char *traddr;
 	char *trsvcid;
+	char *hostaddr;
+	char *hostsvcid;
 	char *subnqn;
 	char *hostnqn;
 };
@@ -175,6 +177,8 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 	free(req->adrfam);
 	free(req->traddr);
 	free(req->trsvcid);
+	free(req->hostaddr);
+	free(req->hostsvcid);
 	free(req->subnqn);
 	free(req->hostnqn);
 }
@@ -187,7 +191,10 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"adrfam", offsetof(struct rpc_construct_nvme, adrfam), spdk_json_decode_string, true},
 	{"trsvcid", offsetof(struct rpc_construct_nvme, trsvcid), spdk_json_decode_string, true},
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
-	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true}
+	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true},
+	{"hostaddr", offsetof(struct rpc_construct_nvme, hostaddr), spdk_json_decode_string, true},
+	{"hostsvcid", offsetof(struct rpc_construct_nvme, hostsvcid), spdk_json_decode_string, true}
+
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -199,6 +206,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_nvme req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_host_id hostid = {};
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	size_t count;
 	size_t i;
@@ -240,8 +248,16 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
 	}
 
+	if (req.hostaddr) {
+		snprintf(hostid.hostaddr, sizeof(hostid.hostaddr), "%s", req.hostaddr);
+	}
+
+	if (req.hostsvcid) {
+		snprintf(hostid.hostsvcid, sizeof(hostid.hostsvcid), "%s", req.hostsvcid);
+	}
+
 	count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, req.name, names, &count, req.hostnqn)) {
+	if (spdk_bdev_nvme_create(&trid, &hostid, req.name, names, &count, req.hostnqn)) {
 		goto invalid;
 	}
 
