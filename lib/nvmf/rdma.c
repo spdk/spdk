@@ -1177,7 +1177,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 nomem:
 	while (i) {
 		i--;
-		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->req.iov[i].iov_base);
+		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
 		rdma_req->req.iov[i].iov_base = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
