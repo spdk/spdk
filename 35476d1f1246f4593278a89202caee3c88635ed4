@@ -50,6 +50,24 @@
       "revId": "35476d1f1246f4593278a89202caee3c88635ed4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be76cee4_b8446ad0",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-04T02:37:06Z",
+      "side": 1,
+      "message": "Hi Jim, I can do it in the separate patch. From the TP 8000 spec, it does not differentiate the discovery controller with the other controllers",
+      "parentUuid": "de579f89_0ee2ba19",
+      "revId": "35476d1f1246f4593278a89202caee3c88635ed4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
