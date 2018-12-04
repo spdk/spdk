@@ -3173,6 +3173,113 @@ spdk_get_transfer_task(struct spdk_iscsi_conn *conn, uint32_t transfer_tag)
 	return NULL;
 }
 
+static bool
+_spdk_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
+		struct spdk_iscsi_task *task)
+{
+	struct spdk_iscsi_task *subtask;
+	uint32_t remaining_size;
+
+	while (conn->data_in_cnt < MAX_LARGE_DATAIN_PER_CONNECTION) {
+		assert(task->current_datain_offset <= task->scsi.transfer_len);
+
+		/* If no IO is submitted yet, just abort the primary task. */
+		if (task->current_datain_offset == 0) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+			spdk_scsi_task_process_abort(&task->scsi);
+			spdk_iscsi_task_cpl(&task->scsi);
+			return 0;
+		}
+
+		/* If any IO is submitted already, abort all subtasks by repetition. */
+		if (task->current_datain_offset < task->scsi.transfer_len) {
+			remaining_size = task->scsi.transfer_len - task->current_datain_offset;
+			subtask = spdk_iscsi_task_get(conn, task, spdk_iscsi_task_cpl);
+			assert(subtask != NULL);
+			subtask->scsi.offset = task->current_datain_offset;
+			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			spdk_scsi_task_set_data(&subtask->scsi, NULL, 0);
+			task->current_datain_offset += subtask->scsi.length;
+			conn->data_in_cnt++;
+
+			subtask->scsi.transfer_len = subtask->scsi.length;
+			spdk_scsi_task_process_abort(&subtask->scsi);
+			spdk_iscsi_task_cpl(&subtask->scsi);
+
+			/* Remove the primary task from the list if this is the last subtask */
+			if (task->current_datain_offset == task->scsi.transfer_len) {
+				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+				return 0;
+			}
+		}
+	}
+
+	return -1;
+}
+
+static int
+spdk_iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
+		uint32_t ref_task_tag)
+{
+	struct spdk_iscsi_task *task;
+
+	TAILQ_FOREACH(task, &conn->queued_datain_tasks, link) {
+		if (task->tag == ref_task_tag) {
+			return _spdk_iscsi_conn_abort_queued_datain_task(conn, task);
+		}
+	}
+
+	return 0;
+}
+
+struct iscsi_abort_task_ctx {
+	struct spdk_iscsi_conn *conn;
+	struct spdk_iscsi_task *task;
+	uint32_t ref_task_tag;
+	struct spdk_poller *poller;
+};
+
+static int
+_spdk_iscsi_op_abort_task(void *arg)
+{
+	struct iscsi_abort_task_ctx *ctx = arg;
+	int rc;
+
+	rc = spdk_iscsi_conn_abort_queued_datain_task(ctx->conn, ctx->ref_task_tag);
+	if (rc != 0) {
+		return 0;
+	}
+	spdk_poller_unregister(&ctx->poller);
+
+	spdk_iscsi_queue_mgmt_task(ctx->conn, ctx->task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
+
+	free(ctx);
+	return 1;
+}
+
+static int
+spdk_iscsi_op_abort_task(struct spdk_iscsi_conn *conn,
+			 struct spdk_iscsi_task *task,
+			 uint32_t ref_task_tag)
+{
+	struct iscsi_abort_task_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("calloc() failed for iscsi abort task context\n");
+		task->scsi.response = SPDK_SCSI_TASK_MGMT_RESP_REJECT;
+		return -1;
+	}
+
+	task->scsi.abort_id = ref_task_tag;
+
+	ctx->conn = conn;
+	ctx->task = task;
+	ctx->ref_task_tag = ref_task_tag;
+	ctx->poller = spdk_poller_register(_spdk_iscsi_op_abort_task, ctx, 10);
+	return 0;
+}
+
 static int
 spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
@@ -3184,6 +3291,7 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int lun_i;
 	struct spdk_iscsi_task *task;
 	struct spdk_scsi_dev *dev;
+	int rc;
 
 	if (conn->sess->session_type != SESSION_TYPE_NORMAL) {
 		SPDK_ERRLOG("ISCSI_OP_TASK not allowed in discovery and invalid session\n");
@@ -3228,12 +3336,11 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	/* abort task identified by Referenced Task Tag field */
 	case ISCSI_TASK_FUNC_ABORT_TASK:
 		SPDK_NOTICELOG("ABORT_TASK\n");
-
-		task->scsi.abort_id = ref_task_tag;
-
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
-
-		return SPDK_SUCCESS;
+		rc = spdk_iscsi_op_abort_task(conn, task, ref_task_tag);
+		if (rc == 0) {
+			return SPDK_SUCCESS;
+		}
+		break;
 
 	/* abort all tasks issued via this session on the LUN */
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
