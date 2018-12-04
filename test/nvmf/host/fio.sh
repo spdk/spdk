@@ -55,7 +55,7 @@ $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# Test fio_plugin as host with nvme lvol backend
 	bdfs=$(iter_pci_class_code 01 08 02)
-	$rpc_py construct_nvme_bdev -b Nvme0 -t PCIe -a $(echo $bdfs | awk '{ print $1 }')
+	$rpc_py construct_nvme_bdev -b Nvme0 -t PCIe -a $(echo $bdfs | awk '{ print $1 }') -i $NVMF_FIRST_TARGET_IP
 	ls_guid=$($rpc_py construct_lvol_store Nvme0n1 lvs_0)
 	get_lvs_free_mb $ls_guid
 	lb_guid=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_0 $free_mb)

@@ -1192,6 +1192,7 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_thread_fn cb, 
 
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
+		      struct spdk_nvme_host_id *hostid,
 		      const char *base_name,
 		      const char **names, size_t *count,
 		      const char *hostnqn)
@@ -1214,6 +1215,14 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+
+	if (hostid->hostaddr[0] != '\0') {
+		snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", hostid->hostaddr);
+	}
+
+	if (hostid->hostsvcid[0] != '\0') {
+		snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", hostid->hostsvcid);
+	}
 
 	ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
 	if (!ctrlr) {
