@@ -1036,6 +1036,8 @@ adrfam                  | Optional | string      | NVMe-oF target adrfam: ipv4, 
 trsvcid                 | Optional | string      | NVMe-oF target trsvcid: port number
 subnqn                  | Optional | string      | NVMe-oF target subnqn
 hostnqn                 | Optional | string      | NVMe-oF target hostnqn
+hostaddr                | Optional | string      | NVMe-oF host address: ip address
+hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
 
 ### Example
 
