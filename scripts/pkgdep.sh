@@ -74,6 +74,9 @@ if [ -s /etc/redhat-release ]; then
 	if ! echo "$ID $VERSION_ID" | egrep -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
 	fi
+    if [ $ID = 'fedora' ]; then
+        pip3 install pandas
+    fi
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
