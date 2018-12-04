@@ -93,7 +93,6 @@ struct nvme_tcp_pdu {
 
 	uint32_t                                        ch_valid_bytes;
 	uint32_t                                        psh_valid_bytes;
-	bool                                            hd_is_read;
 	uint32_t                                        data_valid_bytes;
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
