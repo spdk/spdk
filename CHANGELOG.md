@@ -21,6 +21,9 @@ same TCP/IP support.
 Added API, spdk_nvme_ctrlr_is_discovery(), to indicate whether the ctrlr
 arg refers to a Discovery Controller or not.
 
+Added an API function `spdk_nvme_host_id_parse` and corresponding object `spdk_nvme_host_id`
+for parsing host address and host service ID arguments on a per connection basis.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
