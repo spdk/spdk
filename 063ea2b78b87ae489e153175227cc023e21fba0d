@@ -16,6 +16,24 @@
       "revId": "063ea2b78b87ae489e153175227cc023e21fba0d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "259d7eda_b1cad781",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 818,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-05T08:35:03Z",
+      "side": 1,
+      "message": "Thanks, I updated the list of return values.\n\nBoth NVMe and Virtio can potentially return 1 from this callback. I didn\u0027t bother going into details with the documentation here, because it seems like this entire behavior could use a slight refactor. We might want to return some actual error codes here and there.",
+      "parentUuid": "74f9994b_3491a093",
+      "revId": "063ea2b78b87ae489e153175227cc023e21fba0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
