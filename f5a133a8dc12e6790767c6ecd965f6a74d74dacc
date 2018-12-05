@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7a97b72f_d2e2dba4",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-12-05T02:32:25Z",
+      "side": 1,
+      "message": "\"For some regions, you need to setup the correct proxy to download, but for others, you don\u0027t need, you can move on to next step.\" @Dong, you may state like this",
+      "parentUuid": "693b7d9d_f2f1a1e0",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 2
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab526cb6_a82cd125",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "70fbfe28_6f09f296",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-12-05T02:32:25Z",
+      "side": 1,
+      "message": "@Dong, @Karol, we may put the lines that not merged yet \"pip3 install pandas\" into the vm_setup.sh script instead of here.",
+      "parentUuid": "ab526cb6_a82cd125",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 27
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e74e4b2e_dd2ec44f",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-04T12:59:51Z",
       "side": 1,
       "message": "Maybe insetead of creating a new autorun-spdk.conf file we could just copy what is currently available on host system?",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bb8fe23_602894fd",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011885
+      },
+      "writtenOn": "2018-12-05T02:32:25Z",
+      "side": 1,
+      "message": "@Dong, i agree with Karol to put it to a config file, and this will be more easier to change the config file not to change the script when you have different configuration",
+      "parentUuid": "e74e4b2e_dd2ec44f",
       "range": {
         "startLine": 28,
         "startChar": 0,
