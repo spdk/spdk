@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "bd0fa687_0bb0d038",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "thanks,remove exit ,and add print to notice or overlook.",
+      "parentUuid": "7a97b72f_d2e2dba4",
+      "range": {
+        "startLine": 6,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 2
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ab526cb6_a82cd125",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "@Dong, @Karol, we may put the lines that not merged yet \"pip3 install pandas\" into the vm_setup.sh script instead of here.",
       "parentUuid": "ab526cb6_a82cd125",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 27
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e97498b_024726ce",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "you are right ,I removed this.",
+      "parentUuid": "70fbfe28_6f09f296",
       "range": {
         "startLine": 17,
         "startChar": 0,
@@ -143,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "948f1623_b083bc57",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "thanks ,add condition to this for debug. if some cases failed ,we can find which item leads to it. that it can be edited without commit code.",
+      "parentUuid": "1bb8fe23_602894fd",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a6e48aba_9ea93d70",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
@@ -154,6 +226,30 @@
       "writtenOn": "2018-12-04T12:59:51Z",
       "side": 1,
       "message": "I\u0027d recommend using tabs for indentation as they\u0027re mostly used - see other files in scripts/vagrant or in autotest.sh",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 4
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6245dd5c_7e9de098",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "thanks, done.",
+      "parentUuid": "a6e48aba_9ea93d70",
       "range": {
         "startLine": 109,
         "startChar": 0,
@@ -189,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "c38b7286_3552d760",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "remove this and follow your suggestion.",
+      "parentUuid": "ae7cc2d4_950ddd59",
+      "range": {
+        "startLine": 180,
+        "startChar": 8,
+        "endLine": 182,
+        "endChar": 68
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f50cdce_fcb196e1",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 8
@@ -200,6 +320,30 @@
       "writtenOn": "2018-12-04T12:59:51Z",
       "side": 1,
       "message": "Could you give a comment why do we turn off -e flag and then re-enable it?",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 14
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b0e5be0_154d9de2",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-05T08:30:45Z",
+      "side": 1,
+      "message": "run cases exit with error, but the following destroy vm need to execute to the end.",
+      "parentUuid": "1f50cdce_fcb196e1",
       "range": {
         "startLine": 206,
         "startChar": 0,
