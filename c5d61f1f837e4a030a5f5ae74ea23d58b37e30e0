@@ -16,6 +16,24 @@
       "revId": "c5d61f1f837e4a030a5f5ae74ea23d58b37e30e0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44ea8b32_f0b170fc",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-05T19:02:28Z",
+      "side": 1,
+      "message": "This is searching for \u0027libibverbs.so (libc6,x86-64) \u003d\u003e\u0027. Your solution should also work. Mater of taste I think.",
+      "parentUuid": "9273a897_d586990e",
+      "revId": "c5d61f1f837e4a030a5f5ae74ea23d58b37e30e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
