@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9273a897_d586990e",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1014177
+      },
+      "writtenOn": "2018-12-05T16:32:39Z",
+      "side": 1,
+      "message": "You might want to use ldconfig -p | grep \u0027libibverbs.so$\u0027 instead of that trailing space.",
+      "revId": "c5d61f1f837e4a030a5f5ae74ea23d58b37e30e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
