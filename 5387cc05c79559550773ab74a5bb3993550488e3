@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddb187ce_9fb6cc8b",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T04:18:46Z",
+      "side": 1,
+      "message": "same as the previous one, you can call _t10dif_inject_error twice, the first one is for the data block, you don\u0027t have to copy all the data, the other one is for the PI area, then you don\u0027t need to have two loops here.",
+      "revId": "5387cc05c79559550773ab74a5bb3993550488e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
