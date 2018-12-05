@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a2d297b_8e22fb27",
+        "filename": "include/spdk/t10dif.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T01:52:23Z",
+      "side": 1,
+      "message": "same as the previous patch, I think block_size is better for the parameter.",
+      "revId": "11d61c078d9a53629b12bb6c2bfee97a2a507f8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be11e19d_4cf54150",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T01:52:23Z",
+      "side": 1,
+      "message": "would be better to use malloc for the allocation with block_size bytes.",
+      "revId": "11d61c078d9a53629b12bb6c2bfee97a2a507f8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
