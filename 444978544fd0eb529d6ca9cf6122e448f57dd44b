@@ -36,6 +36,23 @@
     },
     {
       "key": {
+        "uuid": "d6f0a6f1_d86a61e9",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T01:44:18Z",
+      "side": 1,
+      "message": "It would be better to use malloc to allocate data_block_size bytes memory.",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "688af17c_3ca8e4c7",
         "filename": "lib/util/t10dif.c",
         "patchSetId": 15
