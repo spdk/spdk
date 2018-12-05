@@ -3263,7 +3263,7 @@ _spdk_iscsi_op_abort_task(void *arg)
 	rc = spdk_iscsi_conn_abort_queued_datain_task(task->conn,
 			task->scsi.abort_id);
 	if (rc != 0) {
-		return 0;
+		return 1;
 	}
 
 	spdk_poller_unregister(&task->mgmt_poller);
@@ -3288,7 +3288,7 @@ _spdk_iscsi_op_abort_task_set(void *arg)
 	rc = spdk_iscsi_conn_abort_queued_datain_tasks(task->conn, task->scsi.lun,
 			task->pdu);
 	if (rc != 0) {
-		return 0;
+		return 1;
 	}
 
 	spdk_poller_unregister(&task->mgmt_poller);
