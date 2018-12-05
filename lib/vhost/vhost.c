@@ -1084,6 +1084,14 @@ start_device(int vid)
 		goto out;
 	}
 
+	for (i = 0; i < vsession->mem->nregions; i++) {
+		if (vsession->mem->regions[i].size & MASK_2MB) {
+			SPDK_ERRLOG("vhost device %d: Guest memory size is not a 2MB multiple\n", vid);
+			free(vsession->mem);
+			goto out;
+		}
+	}
+
 	/*
 	 * Not sure right now but this look like some kind of QEMU bug and guest IO
 	 * might be frozed without kicking all queues after live-migration. This look like
