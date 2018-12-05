@@ -22,6 +22,30 @@
       "revId": "c59b1a6c48b4cdfed62106ae562a5df07e66febd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94df54bf_54c8b1c8",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T00:47:34Z",
+      "side": 1,
+      "message": "Hi Shuhei, you are right, I think it through, the TransportID is defined in SPC specification, but not iSCSI, so put it in SCSI module makes more sense.",
+      "parentUuid": "76139ada_a473d3b5",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 51
+      },
+      "revId": "c59b1a6c48b4cdfed62106ae562a5df07e66febd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
