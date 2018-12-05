@@ -16,6 +16,24 @@
       "revId": "265dd5d6cdce2b8b4def35d53dbea29488432c72",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "949784d2_3a20623c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T23:36:09Z",
+      "side": 1,
+      "message": "talked about this extensively with Ziye offline - the code here does appear right\n\nthe trick is that rsp_pdu-\u003ehdr.common.plen is the same as c2h_term_req-\u003ecommon.plen which was initialized at line 1316\n\nso I think here we should not use rsp_pdu-\u003ehdr.common.plen - let\u0027s use c2h_term_req-\u003ecommon.plen instead (both line 1326 and 1327)",
+      "parentUuid": "12585108_85d5cb7a",
+      "revId": "265dd5d6cdce2b8b4def35d53dbea29488432c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
