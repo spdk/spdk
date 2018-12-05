@@ -78,7 +78,7 @@ spdk_rpc_construct_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = create_compress_disk(req.base_bdev_name, req.name, req.comp_pmd);
+	rc = create_compress_bdev(req.base_bdev_name, req.name, req.comp_pmd);
 	if (rc != 0) {
 		goto invalid;
 	}
@@ -150,7 +150,7 @@ spdk_rpc_delete_compress_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	delete_compress_disk(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
+	delete_compress_bdev(bdev, _spdk_rpc_delete_compress_bdev_cb, request);
 
 	free_rpc_delete_compress(&req);
 
