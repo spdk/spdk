@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f627f93_047af1ba",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 30
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T17:37:07Z",
+      "side": 1,
+      "message": "I think this commit message could use some more work.\n\nThis isn\u0027t creating a pool of wrs - it\u0027s creating a pool of the new spdk_nvmf_rdma_request_data structures.",
+      "revId": "adfb0ce5c3e8409d85e53c38ed22993e3e3180e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d27042b_363075df",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 30
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T17:37:07Z",
+      "side": 1,
+      "message": "\"uncoupling the data ibv_wr from the data ibv_wr\" \u003d\u003e I\u0027m not understanding this",
+      "revId": "adfb0ce5c3e8409d85e53c38ed22993e3e3180e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
