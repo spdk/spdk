@@ -86,10 +86,10 @@ elif [ -f /etc/debian_version ]; then
 	apt-get install -y libnuma-dev nasm
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
-	# Additional dependencies for SPDK CLI
-	apt-get install -y python-pip python3-pip
-	pip install configshell_fb pexpect
-	pip3 install configshell_fb pexpect
+	# Additional dependencies for SPDK CLI - not available on older Ubuntus
+	if [[ $(lsb_release -rs) > "16.01" ]]; then
+		apt-get install -y python3-configshell-fb python3-pexpect
+	fi
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
