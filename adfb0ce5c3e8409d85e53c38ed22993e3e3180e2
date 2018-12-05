@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fbec6f7a_eda0705b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 30
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-05T21:45:52Z",
+      "side": 1,
+      "message": "Yeah, it sure can haha. I have updated it to be much more intelligible",
+      "parentUuid": "6f627f93_047af1ba",
+      "revId": "adfb0ce5c3e8409d85e53c38ed22993e3e3180e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d27042b_363075df",
         "filename": "/COMMIT_MSG",
         "patchSetId": 30
