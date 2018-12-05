@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34a4f94f_f1897af1",
+        "filename": "lib/jsonrpc/jsonrpc_client_tcp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-05T09:38:15Z",
+      "side": 1,
+      "message": "if we\u0027re just receiving a message [e.g. when (pfd.revents \u0026 POLLOUT) \u003d\u003d 0 for whatever reason], then this check will always fail, as rc will be greater than 0. Could we maybe replace it with `rc \u003e\u003d 0`?",
+      "range": {
+        "startLine": 167,
+        "startChar": 6,
+        "endLine": 167,
+        "endChar": 13
+      },
+      "revId": "d47041e5a4851bdaa7f6a68656e431aa00ee782b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
