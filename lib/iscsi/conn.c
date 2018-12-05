@@ -512,7 +512,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 
 	rc = spdk_iscsi_conn_free_tasks(conn);
 	if (rc < 0) {
-		return -1;
+		return 0;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer);
@@ -520,7 +520,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 	spdk_iscsi_conn_stop(conn);
 	_spdk_iscsi_conn_free(conn);
 
-	return -1;
+	return 1;
 }
 
 static void
@@ -550,14 +550,14 @@ _spdk_iscsi_conn_check_pending_tasks(void *arg)
 	struct spdk_iscsi_conn *conn = arg;
 
 	if (conn->dev != NULL && spdk_scsi_dev_has_pending_tasks(conn->dev)) {
-		return -1;
+		return 0;
 	}
 
 	spdk_poller_unregister(&conn->shutdown_timer);
 
 	_spdk_iscsi_conn_destruct(conn);
 
-	return -1;
+	return 1;
 }
 
 void
@@ -620,14 +620,16 @@ spdk_iscsi_conn_check_shutdown(void *arg)
 {
 	struct spdk_event *event;
 
-	if (spdk_iscsi_get_active_conns() == 0) {
-		spdk_poller_unregister(&g_shutdown_timer);
-		event = spdk_event_allocate(spdk_env_get_current_core(),
-					    spdk_iscsi_conn_check_shutdown_cb, NULL, NULL);
-		spdk_event_call(event);
+	if (spdk_iscsi_get_active_conns() != 0) {
+		return 0;
 	}
 
-	return -1;
+	spdk_poller_unregister(&g_shutdown_timer);
+	event = spdk_event_allocate(spdk_env_get_current_core(),
+				    spdk_iscsi_conn_check_shutdown_cb, NULL, NULL);
+	spdk_event_call(event);
+
+	return 1;
 }
 
 static void
@@ -1238,7 +1240,8 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 		if (rc == 0 && conn->flush_poller != NULL) {
 			spdk_poller_unregister(&conn->flush_poller);
 		} else if (rc == 1 && conn->flush_poller == NULL) {
-			conn->flush_poller = spdk_poller_register(spdk_iscsi_conn_flush_pdus, conn, 50);
+			conn->flush_poller = spdk_poller_register(spdk_iscsi_conn_flush_pdus,
+					     conn, 50);
 		}
 	} else {
 		/*
@@ -1261,7 +1264,7 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 		conn->state = ISCSI_CONN_STATE_EXITING;
 	}
 
-	return -1;
+	return rc;
 }
 
 void
