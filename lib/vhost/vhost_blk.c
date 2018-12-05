@@ -282,7 +282,7 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 	switch (type) {
 	case VIRTIO_BLK_T_IN:
 	case VIRTIO_BLK_T_OUT:
-		if (spdk_unlikely((payload_len & (512 - 1)) != 0)) {
+		if (spdk_unlikely(payload_len == 0 || (payload_len & (512 - 1)) != 0)) {
 			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
 				    type ? "WRITE" : "READ", task->req_idx);
 			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
