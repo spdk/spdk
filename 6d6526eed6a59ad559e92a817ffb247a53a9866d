@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd48a264_eec59bfa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1941,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T18:24:37Z",
+      "side": 1,
+      "message": "is there any case where we could hit this?\n\nif so, I think we would just stay stuck in this state - maybe this should be assert(pdu-\u003etcp_req \u003d\u003d NULL)?",
+      "revId": "6d6526eed6a59ad559e92a817ffb247a53a9866d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
