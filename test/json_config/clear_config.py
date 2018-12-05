@@ -56,6 +56,7 @@ def get_bdev_destroy_method(bdev):
                           'construct_virtio_dev': "remove_virtio_bdev",
                           'construct_crypto_bdev': "delete_crypto_bdev",
                           'construct_passthru_bdev': "delete_passthru_bdev",
+                          'construct_compress_bdev': 'delete_compress_bdev',
                           }
     destroy_method = None
     if 'method' in bdev:
