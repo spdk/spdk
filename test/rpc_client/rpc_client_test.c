@@ -146,6 +146,105 @@ rpc_test_method_runtime(struct spdk_jsonrpc_request *request, const struct spdk_
 }
 SPDK_RPC_REGISTER("test_method_runtime", rpc_test_method_runtime, SPDK_RPC_RUNTIME)
 
+static bool g_conn_close_detected;
+
+static void
+rpc_test_conn_close_cb(struct spdk_jsonrpc_server_conn *conn, void *ctx)
+{
+	assert((intptr_t)ctx == 42);
+	g_conn_close_detected = true;
+}
+
+static void
+rpc_hook_conn_close(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_jsonrpc_server_conn *conn = spdk_jsonrpc_get_conn(request);
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	rc = spdk_jsonrpc_conn_add_close_cb(conn, rpc_test_conn_close_cb, (void *)(intptr_t)(42));
+	if (rc != 0) {
+
+		rc = spdk_jsonrpc_conn_add_close_cb(conn, rpc_test_conn_close_cb, (void *)(intptr_t)(42));
+		assert(rc == -ENOSPC);
+	}
+
+	rc = spdk_jsonrpc_conn_add_close_cb(conn, rpc_test_conn_close_cb, (void *)(intptr_t)(42));
+	if (rc != -EEXIST) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "rpc_test_method_conn_close_detect(): rc != -EEXIST");
+		return;
+	}
+
+	rc = spdk_jsonrpc_conn_add_close_cb(conn, rpc_test_conn_close_cb, (void *)(intptr_t)(43));
+	if (rc != -ENOSPC) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "rpc_test_method_conn_close_detect(): rc != -ENOSPC");
+		return;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	assert(w != NULL);
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+
+}
+SPDK_RPC_REGISTER("hook_conn_close", rpc_hook_conn_close, SPDK_RPC_RUNTIME | SPDK_RPC_STARTUP)
+
+static int
+spdk_jsonrpc_client_hook_conn_close(struct spdk_jsonrpc_client *client)
+{
+	int rc;
+	bool res = false;
+	struct spdk_jsonrpc_client_response *json_resp = NULL;
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_client_request *request;
+
+	request = spdk_jsonrpc_client_create_request();
+	if (request == NULL) {
+		return -ENOMEM;
+	}
+
+	w = spdk_jsonrpc_begin_request(request, 1, "hook_conn_close");
+	spdk_jsonrpc_end_request(request, w);
+	spdk_jsonrpc_client_send_request(client, request);
+
+	do {
+		rc = spdk_jsonrpc_client_poll(client, 1);
+	} while (rc == 0 || rc == -ENOTCONN);
+
+	if (rc != 0) {
+		goto out;
+	}
+
+	json_resp = spdk_jsonrpc_client_get_response(client);
+	if (json_resp == NULL) {
+		SPDK_ERRLOG("spdk_jsonrpc_client_get_response() failed\n");
+		rc = -errno;
+		goto out;
+
+	}
+
+	/* Check for error response */
+	if (json_resp->error != NULL) {
+		SPDK_ERRLOG("Unexpected error response: %*s\n", json_resp->error->len,
+			    (char *)json_resp->error->start);
+		rc = -EIO;
+		goto out;
+	}
+
+	assert(json_resp->result);
+	if (spdk_json_decode_bool(json_resp->result, &res) != 0 || res != true) {
+		SPDK_ERRLOG("Response is not and boolean or if not 'true'\n");
+		rc = -EINVAL;
+		goto out;
+	}
+
+out:
+	spdk_jsonrpc_client_free_response(json_resp);
+	return rc;
+}
+
 /* Helper function */
 static int
 _sem_timedwait(sem_t *sem, __time_t sec)
@@ -213,6 +312,12 @@ rpc_client_th(void *arg)
 	rc = spdk_jsonrpc_client_check_rpc_method(client, method_name);
 	if (rc) {
 		fprintf(stderr, "spdk_jsonrpc_client_check_rpc_method() failed: %d\n", errno);
+		goto out;
+	}
+
+	rc = spdk_jsonrpc_client_hook_conn_close(client);
+	if (rc) {
+		fprintf(stderr, "spdk_jsonrpc_client_hook_conn_close() failed: %d\n", errno);
 		goto out;
 	}
 
@@ -284,6 +389,11 @@ out:
 			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", (int)th_rc);
 			err_cnt++;
 		}
+	}
+
+	if (g_conn_close_detected == false) {
+		fprintf(stderr, "Connection close not detected\n");
+		err_cnt++;
 	}
 
 	sem_destroy(&g_rpc_server_th_listening);
