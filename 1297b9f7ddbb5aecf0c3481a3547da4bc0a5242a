@@ -16,6 +16,23 @@
       "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10041d35_746ccf64",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T04:10:47Z",
+      "side": 1,
+      "message": "Can we combine into the same loop as the previous one? I mean actually we don\u0027t need copy whole block data and DIF for the error injection.",
+      "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
