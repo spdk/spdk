@@ -439,6 +439,7 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 }
 
 #define VALUE_2MB		0x200000
+#define MASK_2MB		(VALUE_2MB - 1)
 #define _2MB_OFFSET(ptr)	((ptr) & (VALUE_2MB - 1))
 
 int
@@ -1105,6 +1106,13 @@ start_device(int vid)
 	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		goto out;
+	}
+
+	for (i = 0; i < vdev->mem->nregions; i++) {
+		if (vdev->mem->regions[i].size & MASK_2MB) {
+			SPDK_ERRLOG("vhost device %d: Guest memory size is not a 2MB multiple\n", vid);
+			goto out;
+		}
 	}
 
 	/*
