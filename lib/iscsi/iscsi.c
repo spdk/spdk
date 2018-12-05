@@ -3331,7 +3331,7 @@ _spdk_iscsi_op_abort_task_set(void *arg)
 	return 1;
 }
 
-static int
+int
 spdk_iscsi_op_abort_task_set(struct spdk_iscsi_conn *conn,
 			     struct spdk_iscsi_task *task,
 			     struct spdk_scsi_lun *lun,

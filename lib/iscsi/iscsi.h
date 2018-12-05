@@ -444,6 +444,11 @@ uint32_t spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu);
 void spdk_put_pdu(struct spdk_iscsi_pdu *pdu);
 struct spdk_iscsi_pdu *spdk_get_pdu(void);
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn);
+int spdk_iscsi_op_abort_task_set(struct spdk_iscsi_conn *conn,
+				 struct spdk_iscsi_task *task,
+				 struct spdk_scsi_lun *lun,
+				 struct spdk_iscsi_pdu *pdu,
+				 uint8_t function);
 
 static inline int
 spdk_get_immediate_data_buffer_size(void)
