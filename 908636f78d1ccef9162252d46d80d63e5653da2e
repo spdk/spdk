@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c236e6e5_6774b763",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-05T06:34:25Z",
+      "side": 1,
+      "message": "Could we use test/app/match/match for this kind of tests? Its output is much more helpful in case something breaks.",
+      "revId": "908636f78d1ccef9162252d46d80d63e5653da2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d972b193_247b5dea",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-05T06:34:25Z",
+      "side": 1,
+      "message": "construct_nvme_bdev RPCs are only called if an NVMe exists, but this one is called unconditionally. Something\u0027s inconsistent here.",
+      "revId": "908636f78d1ccef9162252d46d80d63e5653da2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
