@@ -89,6 +89,10 @@ typedef void (*spdk_jsonrpc_handle_request_fn)(
 	const struct spdk_json_val *method,
 	const struct spdk_json_val *params);
 
+struct spdk_jsonrpc_server_conn;
+
+typedef void (*spdk_jsonrpc_conn_closed_fn)(struct spdk_jsonrpc_server_conn *conn, void *arg);
+
 /**
  * Function for specific RPC method response parsing handlers.
  *
@@ -133,6 +137,46 @@ int spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server);
  * \param server JSON-RPC server.
  */
 void spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server);
+
+/**
+ * Return connection asociated to \c request
+ *
+ * \param request JSON-RPC request
+ * \return JSON RPC server connection
+ */
+struct spdk_jsonrpc_server_conn *spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request);
+
+/**
+ * Add callback called when connection is closed. Pair of  \c cb and \c ctx must be unique or error is returned.
+ * Registered callback is called only once and there is no need to call  \c spdk_jsonrpc_conn_del_close_cb
+ * inside form \c cb.
+ *
+ * \note Current implementation allow only one close callback per connection.
+ *
+ * \param conn JSON RPC server connection
+ * \param cb calback function
+ * \param ctx argument for \c cb
+ *
+ * \return 0 on success, or negated errno code:
+ *  -EEXIST \c cb and \c ctx is already registered
+ *  -ENOTCONN Calback can't be added because connection is closed.
+ *  -ENOSPC no more space to register callback.
+ */
+int spdk_jsonrpc_conn_add_close_cb(struct spdk_jsonrpc_server_conn *conn,
+				   spdk_jsonrpc_conn_closed_fn cb, void *ctx);
+
+/**
+ * Remove registered close callback.
+ *
+ * \param conn JSON RPC server connection
+ * \param cb calback function
+ * \param ctx argument for \c cb
+ *  *
+ * \return 0 on success, or negated errno code:
+ *  -ENOENT \c cb and \c ctx pair is not registered
+ */
+int spdk_jsonrpc_conn_del_close_cb(struct spdk_jsonrpc_server_conn *conn,
+				   spdk_jsonrpc_conn_closed_fn cb, void *ctx);
 
 /**
  * Begin building a response to a JSON-RPC request.
