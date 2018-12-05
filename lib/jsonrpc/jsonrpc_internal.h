@@ -81,6 +81,9 @@ struct spdk_jsonrpc_server_conn {
 
 	struct spdk_jsonrpc_request *send_request;
 
+	spdk_jsonrpc_conn_closed_fn close_cb;
+	void *close_cb_ctx;
+
 	TAILQ_ENTRY(spdk_jsonrpc_server_conn) link;
 };
 
