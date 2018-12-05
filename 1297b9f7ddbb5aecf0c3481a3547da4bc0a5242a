@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68b64080_18b48e3c",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T03:14:07Z",
+      "side": 1,
+      "message": "Does it better to use \u0026 instead of \u003d\u003d here ? I\u0027m wondering if can simulate GUARD and REF error at the same time.",
+      "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
