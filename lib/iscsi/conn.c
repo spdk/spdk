@@ -434,14 +434,16 @@ static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
 	int idx;
 	uint32_t i, j;
 
-	idx = -1;
+	assert(sess->connection > 0);
+
 	sess = conn->sess;
-	conn->sess = NULL;
 	if (sess == NULL) {
 		spdk_iscsi_conn_free(conn);
 		return;
 	}
+	conn->sess = NULL;
 
+	idx = -1;
 	for (i = 0; i < sess->connections; i++) {
 		if (sess->conns[i] == conn) {
 			idx = i;
@@ -449,29 +451,24 @@ static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	if (sess->connections < 1) {
-		SPDK_ERRLOG("zero connection\n");
-		sess->connections = 0;
+	if (idx < 0) {
+		SPDK_ERRLOG("remove conn not found\n");
 	} else {
-		if (idx < 0) {
-			SPDK_ERRLOG("remove conn not found\n");
-		} else {
-			for (j = idx; j < sess->connections - 1; j++) {
-				sess->conns[j] = sess->conns[j + 1];
-			}
-			sess->conns[sess->connections - 1] = NULL;
+		for (j = idx; j < sess->connections - 1; j++) {
+			sess->conns[j] = sess->conns[j + 1];
 		}
+		sess->conns[sess->connections - 1] = NULL;
 		sess->connections--;
-	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Terminating connections(tsih %d): %d\n",
-		      sess->tsih, sess->connections);
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "Terminating connections(tsih %d): %d\n",
+			      sess->tsih, sess->connections);
 
-	if (sess->connections == 0) {
-		/* cleanup last connection */
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
-			      "cleanup last conn free sess\n");
-		spdk_free_sess(sess);
+		if (sess->connections == 0) {
+			/* cleanup last connection */
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+				      "cleanup last conn free sess\n");
+			spdk_free_sess(sess);
+		}
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
