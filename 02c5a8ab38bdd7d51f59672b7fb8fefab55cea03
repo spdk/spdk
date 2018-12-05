@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c1d7d23_1a0a0624",
+        "filename": "lib/bdev/pmem/bdev_pmem_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-05T06:10:56Z",
+      "side": 1,
+      "message": "why not errlog? The rest of SPDK uses errlog in such cases.",
+      "range": {
+        "startLine": 337,
+        "startChar": 2,
+        "endLine": 337,
+        "endChar": 14
+      },
+      "revId": "02c5a8ab38bdd7d51f59672b7fb8fefab55cea03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
