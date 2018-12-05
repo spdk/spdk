@@ -16,6 +16,24 @@
       "revId": "6d6526eed6a59ad559e92a817ffb247a53a9866d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfc04be5_b523bc93",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1941,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T23:47:40Z",
+      "side": 1,
+      "message": "ok - I talked with Ziye about this further\n\nthis is a temporary check for now - further changes will allow removing this tcp_req check",
+      "parentUuid": "dd48a264_eec59bfa",
+      "revId": "6d6526eed6a59ad559e92a817ffb247a53a9866d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
