@@ -474,14 +474,14 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
 	/* Wipe the requests waiting for R2t  */
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T], link,
-			   req_tmp) {
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_r2t_tcp_req, link, req_tmp) {
 		TAILQ_REMOVE(&tqpair->queued_r2t_tcp_req, tcp_req, link);
 	}
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
 
 	/* Wipe the requests waiting for buffer from the global list */
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_NEED_BUFFER], link, req_tmp) {
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_NEED_BUFFER], state_link,
+			   req_tmp) {
 		TAILQ_REMOVE(&tqpair->ch->pending_data_buf_queue, tcp_req, link);
 	}
 
