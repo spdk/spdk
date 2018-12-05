@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be444213_55445440",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T21:41:19Z",
+      "side": 1,
+      "message": "i think both of these should add text similar to traddr and trsvcid, that for PCIe (and FC?) these must be 0 length strings.\n\nIt looks like we don\u0027t actually enforce this for traddr and trsvcid, but I think we should put it here anyways in the comment.",
+      "revId": "1e845e979dee798ac866eff0b65a24f370d4ca14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
