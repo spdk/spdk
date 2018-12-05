@@ -43,12 +43,12 @@ typedef void (*spdk_delete_compress_complete)(void *cb_arg, int bdeverrno);
 /**
  * Create new compression bdev.
  *
- * \param bdev_name Bdev on which compression vbdev will be created.
- * \param vbdev_name Vbdev name.
+ * \param bdev_name Bdev on which compression bdev will be created.
+ * \param vbdev_name Compression bdev name.
  * \param comp_pmd Compression PMD name.
  * \return 0 on success, other on failure.
  */
-int create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *comp_pmd);
+int create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *comp_pmd);
 
 /**
  * Delete compress bdev.
@@ -57,7 +57,7 @@ int create_compress_disk(const char *bdev_name, const char *vbdev_name, const ch
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
+void delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn,
 			  void *cb_arg);
 
 #endif /* SPDK_VBDEV_COMPRESS_H */
