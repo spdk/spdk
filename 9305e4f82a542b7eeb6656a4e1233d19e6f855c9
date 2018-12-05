@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f807797f_f79f07c9",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T07:40:29Z",
+      "side": 1,
+      "message": "Since all other commands here use yum package manager, could you change this to\nyum install -y python3-pandas ?",
+      "range": {
+        "startLine": 77,
+        "startChar": 4,
+        "endLine": 79,
+        "endChar": 6
+      },
+      "revId": "9305e4f82a542b7eeb6656a4e1233d19e6f855c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "834d6e4d_d59851ed",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T07:40:29Z",
+      "side": 1,
+      "message": "Since all other commands here use yum package manager, could you change this to\nyum install -y python3-pandas ?",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 6
+      },
+      "revId": "9305e4f82a542b7eeb6656a4e1233d19e6f855c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
