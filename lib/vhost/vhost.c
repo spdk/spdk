@@ -438,7 +438,8 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
 
-#define _2MB_OFFSET(ptr)	((ptr) & (0x200000 - 1))
+#define VALUE_2MB		0x200000
+#define _2MB_OFFSET(ptr)	((ptr) & (VALUE_2MB - 1))
 
 int
 spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
@@ -460,7 +461,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
 			return -1;
 		}
-		to_boundary = 0x200000 - _2MB_OFFSET(payload);
+		to_boundary = VALUE_2MB - _2MB_OFFSET(payload);
 		if (spdk_likely(remaining <= to_boundary)) {
 			len = remaining;
 		} else {
@@ -477,7 +478,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 				if (vva + len != (uintptr_t)rte_vhost_gpa_to_vva(vdev->mem, payload + len)) {
 					break;
 				}
-				len += spdk_min(remaining - len, 0x200000);
+				len += spdk_min(remaining - len, VALUE_2MB);
 			}
 		}
 		iov[*iov_index].iov_base = (void *)vva;
