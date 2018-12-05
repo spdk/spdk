@@ -18,6 +18,9 @@ Add a new TCP/IP transport(located in lib/nvme/nvme_tcp.c) in nvme driver. With
 this new transport, it can be used to connect the NVMe-oF target with the
 same TCP/IP support.
 
+Added API, spdk_nvme_ctrlr_is_discovery(), to indicate whether the ctrlr
+arg refers to a Discovery Controller or not.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
