@@ -139,6 +139,24 @@
       "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6171a822_90ddd531",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T02:21:19Z",
+      "side": 1,
+      "message": "Got it, thanks.",
+      "parentUuid": "c49b2a90_c19e97c6",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
