@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3652216c_64e022e8",
+        "filename": "test/spdkcli/iscsi.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T08:27:59Z",
+      "side": 1,
+      "message": "Wouldn\u0027t it be better to use docstring marks (\"\"\") instead of normal string quotes (\")?\nThat way you don\u0027t even have to escape quote characters like you do for example in lines 22 or 34.\n\nYou\u0027d have to do .format() then for variables of course.\nUp to you.",
+      "range": {
+        "startLine": 18,
+        "startChar": 12,
+        "endLine": 18,
+        "endChar": 15
+      },
+      "revId": "8d00701455a2a576b2b3c2920415f42bcc18d5fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8af92170_bbff7f68",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T08:27:59Z",
+      "side": 1,
+      "message": "It\u0027d be more readable if you assigned this to a variable at the start of \"main\", like you do for socket on line 32",
+      "range": {
+        "startLine": 39,
+        "startChar": 16,
+        "endLine": 39,
+        "endChar": 27
+      },
+      "revId": "8d00701455a2a576b2b3c2920415f42bcc18d5fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a5a2528_af013438",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T08:27:59Z",
+      "side": 1,
+      "message": "I think there should be no need for doing strip() here",
+      "range": {
+        "startLine": 40,
+        "startChar": 8,
+        "endLine": 40,
+        "endChar": 27
+      },
+      "revId": "8d00701455a2a576b2b3c2920415f42bcc18d5fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "baff63a0_fbeb8f05",
+        "filename": "test/spdkcli/spdkcli_job.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-05T08:27:59Z",
+      "side": 1,
+      "message": "Is it necessary to change string to bool? I know inside SPDKCLI it is a bool parameter, but it shoulnt really matter when you pass it as a runtime argument",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 30
+      },
+      "revId": "8d00701455a2a576b2b3c2920415f42bcc18d5fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
