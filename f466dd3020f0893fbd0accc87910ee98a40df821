@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "1972b745_fe705641",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-05T02:45:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e98b34e_265d5b80",
+      "range": {
+        "startLine": 61,
+        "startChar": 37,
+        "endLine": 61,
+        "endChar": 49
+      },
+      "revId": "f466dd3020f0893fbd0accc87910ee98a40df821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e73daa7_5ae13445",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 4
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "the same as above",
       "parentUuid": "7e73daa7_5ae13445",
+      "range": {
+        "startLine": 69,
+        "startChar": 37,
+        "endLine": 69,
+        "endChar": 48
+      },
+      "revId": "f466dd3020f0893fbd0accc87910ee98a40df821",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02aa223e_b3082c33",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-05T02:45:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8023dfe8_7049aec4",
       "range": {
         "startLine": 69,
         "startChar": 37,
