@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e6c5fb6f_74b04856",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1354,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-05T21:44:26Z",
+      "side": 1,
+      "message": "Yes, I have that in the common case, but not in the error path.",
+      "parentUuid": "6696786b_89bef03e",
+      "revId": "698e360fe684bcad083b967f308eeaa0f4081217",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bce38a10_7753f5ab",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 33
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a78b085a_fc1528b6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 2646,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-05T21:44:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bce38a10_7753f5ab",
+      "revId": "698e360fe684bcad083b967f308eeaa0f4081217",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e0d3e99_7234aa95",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 33
@@ -47,6 +83,24 @@
       "writtenOn": "2018-12-05T17:46:09Z",
       "side": 1,
       "message": "decrement rdma_req-\u003enum_outstanding_wr again?  this seems counter-intuitive to me",
+      "revId": "698e360fe684bcad083b967f308eeaa0f4081217",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f156972c_e37ee9b2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 2864,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-05T21:44:26Z",
+      "side": 1,
+      "message": "I think I was messing with two different ways of doing this logic. Thank you for catching this.",
+      "parentUuid": "7e0d3e99_7234aa95",
       "revId": "698e360fe684bcad083b967f308eeaa0f4081217",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
