@@ -188,6 +188,12 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	return end - json;
 }
 
+struct spdk_jsonrpc_server_conn *
+spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request)
+{
+	return request->conn;
+}
+
 static int
 spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
 {
