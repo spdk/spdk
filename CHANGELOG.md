@@ -6,11 +6,6 @@
 
 A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
 
-### nvme
-
-admin_timeout_ms was added to NVMe controller initialization options, users
-can change the default value when probing a controller.
-
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
@@ -24,9 +19,15 @@ Related to the previous change, the rpc `set_nvmf_target_options` has been renam
 
 ### nvme
 
+admin_timeout_ms was added to NVMe controller initialization options, users
+can change the default value when probing a controller.
+
 Add a new TCP/IP transport(located in lib/nvme/nvme_tcp.c) in nvme driver. With
 this new transport, it can be used to connect the NVMe-oF target with the
 same TCP/IP support.
+
+Added API, spdk_nvme_ctrlr_is_discovery(), to indicate whether the ctrlr
+arg refers to a Discovery Controller or not.
 
 ### nvmf
 
