@@ -16,6 +16,24 @@
       "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d19714fd_ba44ee35",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T21:54:47Z",
+      "side": 1,
+      "message": "I just meant it as the \"complete_req\" callback for the \"write\" code path.\n\nI can remove it in a later patch if you think it\u0027s too confusing.",
+      "parentUuid": "f0415864_2f7fc58a",
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
