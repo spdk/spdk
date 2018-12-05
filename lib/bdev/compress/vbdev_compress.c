@@ -292,11 +292,21 @@ vbdev_init_compress_drivers(void)
 	struct device_qp *dev_qp;
 	struct vbdev_dev *device;
 	int rc;
+	uint8_t pool_id;
+	char pool_name[32] = "";
+
+	if (rte_eal_process_type() == RTE_PROC_PRIMARY) {
+		pool_id = 0;
+	} else {
+		pool_id = 1;
+	}
 
 	/* We always init ISAL */
 	rc = rte_vdev_init(ISAL, NULL);
 	if (rc == 0) {
 		SPDK_NOTICELOG("created virtual PMD %s\n", ISAL);
+	} else if (rc == -EEXIST) {
+		SPDK_NOTICELOG("virtual PMD %s already exists.\n", ISAL);
 	} else {
 		SPDK_ERRLOG("error creating virtual PMD %s\n", ISAL);
 		return -EINVAL;
@@ -312,7 +322,8 @@ vbdev_init_compress_drivers(void)
 		return -EINVAL;
 	}
 
-	g_mbuf_mp = spdk_mempool_create("comp_mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
+	snprintf(pool_name, sizeof(pool_name), "comp_mbuf_mp_%u", pool_id);
+	g_mbuf_mp = spdk_mempool_create(pool_name, NUM_MBUFS, sizeof(struct rte_mbuf),
 					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					SPDK_ENV_SOCKET_ID_ANY);
 	if (g_mbuf_mp == NULL) {
@@ -321,7 +332,8 @@ vbdev_init_compress_drivers(void)
 		goto error_create_mbuf;
 	}
 
-	g_comp_op_mp = rte_comp_op_pool_create("comp_op_pool", NUM_MBUFS, POOL_CACHE_SIZE,
+	snprintf(pool_name, sizeof(pool_name), "comp_op_pool_%u", pool_id);
+	g_comp_op_mp = rte_comp_op_pool_create(pool_name, NUM_MBUFS, POOL_CACHE_SIZE,
 					       0, rte_socket_id());
 	if (g_comp_op_mp == NULL) {
 		SPDK_ERRLOG("Cannot create comp op pool\n");
@@ -917,7 +929,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
+create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
 {
 	struct spdk_bdev *bdev;
 
@@ -1065,7 +1077,7 @@ error_bdev_name:
 }
 
 void
-delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	if (!bdev || bdev->module != &compress_if) {
 		cb_fn(cb_arg, -ENODEV);
