@@ -300,6 +300,8 @@ vbdev_init_compress_drivers(void)
 	rc = rte_vdev_init(ISAL_PMD, NULL);
 	if (rc == 0) {
 		SPDK_NOTICELOG("created virtual PMD %s\n", ISAL_PMD);
+	} else if (rc == -EEXIST) {
+		SPDK_NOTICELOG("virtual PMD %s already exists.\n", ISAL_PMD);
 	} else {
 		SPDK_ERRLOG("error creating virtual PMD %s\n", ISAL_PMD);
 		return -EINVAL;
@@ -976,7 +978,7 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 
 /* RPC entry point for compression vbdev creation. */
 int
-create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
+create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *comp_pmd)
 {
 	struct spdk_bdev *bdev;
 
@@ -1142,7 +1144,7 @@ error_bdev_name:
 }
 
 void
-delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
+delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
 	struct vbdev_compress *comp_bdev = NULL;
 
