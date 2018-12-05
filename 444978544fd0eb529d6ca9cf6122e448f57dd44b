@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "42b25e70_c004ab19",
+        "filename": "include/spdk/t10dif.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-05T01:59:34Z",
+      "side": 1,
+      "message": "Thank you for providing nice feedback.\n\nWhy I limited to support the first 8 bytes was that calculating CRC for separate metadata is complex because I have to combine data block and metadata field excluding the last 8 byte to calculate CRC.\n\nThe priority of extended LBA is higher than of separate metadata.\n\nI locally developed the case of the last 8 bytes locally for extended LBA.\nI\u0027ll refine the patch.",
+      "parentUuid": "54fdd035_4adf9e8a",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a104fe61_ebfee7fc",
         "filename": "include/spdk/t10dif.h",
         "patchSetId": 15
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-04T12:52:03Z",
       "side": 1,
       "message": "How about just say block size here ? Bdev API should return the (512+8) for the block size API, for data_block_size, you may calculate later when metadata size \u003e 0.",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49a18faf_b4719b73",
+        "filename": "include/spdk/t10dif.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-05T01:59:34Z",
+      "side": 1,
+      "message": "Make sense and I\u0027ll do it. Thank you.",
+      "parentUuid": "a104fe61_ebfee7fc",
       "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f88c19e1_6d23b706",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-05T01:59:34Z",
+      "side": 1,
+      "message": "OK, I\u0027ll do it.",
+      "parentUuid": "d6f0a6f1_d86a61e9",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "688af17c_3ca8e4c7",
         "filename": "lib/util/t10dif.c",
         "patchSetId": 15
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-04T13:05:57Z",
       "side": 1,
       "message": "should 8 be replaced with metadata size here? I\u0027m wondering we should add the support with metadata size can be 16 bytes or 64 bytes.",
+      "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c49b2a90_c19e97c6",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-05T01:59:34Z",
+      "side": 1,
+      "message": "This 8 is not for the whole metadata field but the DIF field or PI field. I\u0027ll replace 8 by sizeof(struct spdk_t10dif).\n\nPI in NVMe specification have the same format as T10 DIF. Hence 8 or sizeof(struct spdk_t10dif) will cover all cases for now.",
+      "parentUuid": "688af17c_3ca8e4c7",
       "revId": "444978544fd0eb529d6ca9cf6122e448f57dd44b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
