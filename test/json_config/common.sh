@@ -156,6 +156,15 @@ function create_bdev_subsystem_config() {
 			$rpc_py construct_crypto_bdev -b Malloc3 -c CryMalloc3 -d crypto_qat -k 0123456789123456
 		fi
 	fi
+        if [ $SPDK_TEST_REDUCE -eq 1 ]; then
+                $rpc_py create_compress_bdev 8 1024 --name Malloc5
+                if [ $(lspci -d:37c8 | wc -l) -eq 0 ]; then
+                        $rpc_py create_compress_bdev -b Malloc5 -c CompMalloc5 -d compress_isal
+                # TODO: once QAT for comp is enabled in this series
+		#else
+                #       $rpc_py create_compress_bdev -b Malloc5 -c CompMalloc5 -d compress_qat
+                fi
+        fi
 	$rpc_py construct_malloc_bdev 8 1024 --name Malloc4
 	$rpc_py construct_passthru_bdev -b Malloc4 -p PTMalloc4
 	$rpc_py construct_error_bdev Malloc2
