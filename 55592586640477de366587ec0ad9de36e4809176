@@ -154,6 +154,23 @@
     },
     {
       "key": {
+        "uuid": "68089084_63db1ad9",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T06:17:26Z",
+      "side": 1,
+      "message": "For the purpose to recover from crash, the shared memory in SPDK should just store last_avail_idx and last_used_idx for each queue, that\u0027s enough for the recovery, I\u0027m confused about the inflight, what do we store to the inflight_desc_array area ?",
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47767aec_0910487d",
         "filename": "lib/vhost/vhost.c",
         "patchSetId": 2
