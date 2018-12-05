@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "12585108_85d5cb7a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1327,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T18:27:38Z",
+      "side": 1,
+      "message": "where does rsp_pdu-\u003ehdr.common.plen get initialized?\n\nat this point, nothing in the rsp_pdu-\u003ehdr has been written - this memcpy is what fills out the hdr",
+      "revId": "265dd5d6cdce2b8b4def35d53dbea29488432c72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
