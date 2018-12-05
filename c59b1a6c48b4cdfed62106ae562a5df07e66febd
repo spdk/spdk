@@ -46,6 +46,30 @@
       "revId": "c59b1a6c48b4cdfed62106ae562a5df07e66febd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df1dc9d5_ab02d3be",
+        "filename": "lib/scsi/port.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-05T06:35:11Z",
+      "side": 1,
+      "message": "RFC7143 or RFC3720 says\n\nThe SCSI initiator port name and SCSI initiator port identifier are both defined to be the iSCSI Initiator Name together with (a) a label that identifies it as an initiator port name/identifier and (b) the ISID portion of the session identifier.\n\nHence iSCSI name in RFC7143/3720 is as same as in SPC, and you can share, I think.",
+      "parentUuid": "94df54bf_54c8b1c8",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 122,
+        "endChar": 51
+      },
+      "revId": "c59b1a6c48b4cdfed62106ae562a5df07e66febd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
