@@ -122,7 +122,7 @@ timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
 
-if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
+if [[ $SPDK_TEST_CRYPTO -eq 1 || $SPDK_TEST_REDUCE -eq 1 ]]; then
 	if grep -q '#define SPDK_CONFIG_IGB_UIO_DRIVER 1' $rootdir/include/spdk/config.h; then
 		./scripts/qat_setup.sh igb_uio
 	else
