@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0415864_2f7fc58a",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 697,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-05T10:08:08Z",
+      "side": 1,
+      "message": "two \"_\" means there are two recursive callback in the function ?",
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
