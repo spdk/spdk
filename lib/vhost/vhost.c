@@ -452,7 +452,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 	uintptr_t payload = desc->addr;
 	uintptr_t vva;
 
-	while (remaining) {
+	do {
 		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
 			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
 			return -1;
@@ -487,7 +487,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 		remaining -= len;
 		payload += len;
 		(*iov_index)++;
-	}
+	} while (remaining);
 
 	return 0;
 }
