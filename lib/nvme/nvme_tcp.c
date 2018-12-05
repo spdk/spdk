@@ -817,6 +817,7 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 
 	/* copy the error code into the buffer */
 	rsp_pdu->data = (uint8_t *)rsp_pdu->hdr.raw + h2c_term_req_hdr_len;
+	rsp_pdu->data_len = pdu->hdr.common.hlen;
 	memcpy((uint8_t *)rsp_pdu->data, pdu->hdr.raw, sizeof(pdu->hdr.common.hlen));
 
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);

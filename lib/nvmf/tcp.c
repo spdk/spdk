@@ -1312,7 +1312,7 @@ spdk_nvmf_tcp_send_c2h_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_p
 	c2h_term_req = &rsp_pdu->hdr.term_req;
 	c2h_term_req->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_C2H_TERM_REQ;
 	c2h_term_req->common.hlen = c2h_term_req_hdr_len;
-	/* It should contain the header the received pdu */
+	/* It should contain the header of the received pdu */
 	c2h_term_req->common.plen = c2h_term_req->common.hlen + pdu->hdr.common.hlen;
 
 	if ((fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD) ||
@@ -1322,8 +1322,9 @@ spdk_nvmf_tcp_send_c2h_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_p
 
 	/* copy the error code into the buffer */
 	rsp_pdu->data = (uint8_t *)rsp_pdu->hdr.raw + c2h_term_req_hdr_len;
-	if (pdu->hdr.common.plen <= SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE) {
-		memcpy((uint8_t *)rsp_pdu->data, pdu->hdr.raw, pdu->hdr.common.plen);
+	rsp_pdu->data_len = pdu->hdr.common.hlen;
+	if (rsp_pdu->hdr.common.plen <= SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE) {
+		memcpy((uint8_t *)rsp_pdu->data, pdu->hdr.raw, rsp_pdu->hdr.common.plen);
 	} else {
 		memcpy((uint8_t *)rsp_pdu->data, pdu->hdr.raw, SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE);
 	}
