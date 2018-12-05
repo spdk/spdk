@@ -33,6 +33,7 @@
 
 #include "jsonrpc_internal.h"
 #include "spdk/string.h"
+#include "spdk/util.h"
 
 struct spdk_jsonrpc_server *
 spdk_jsonrpc_server_listen(int domain, int protocol,
@@ -97,20 +98,6 @@ spdk_jsonrpc_server_listen(int domain, int protocol,
 	return server;
 }
 
-void
-spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
-{
-	struct spdk_jsonrpc_server_conn *conn;
-
-	close(server->sockfd);
-
-	TAILQ_FOREACH(conn, &server->conns, link) {
-		close(conn->sockfd);
-	}
-
-	free(server);
-}
-
 static void
 spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 {
@@ -119,7 +106,25 @@ spdk_jsonrpc_server_conn_close(struct spdk_jsonrpc_server_conn *conn)
 	if (conn->sockfd >= 0) {
 		close(conn->sockfd);
 		conn->sockfd = -1;
+
+		if (conn->close_cb) {
+			conn->close_cb(conn, conn->close_cb_ctx);
+		}
 	}
+}
+
+void
+spdk_jsonrpc_server_shutdown(struct spdk_jsonrpc_server *server)
+{
+	struct spdk_jsonrpc_server_conn *conn;
+
+	close(server->sockfd);
+
+	TAILQ_FOREACH(conn, &server->conns, link) {
+		spdk_jsonrpc_server_conn_close(conn);
+	}
+
+	free(server);
 }
 
 static void
@@ -134,6 +139,41 @@ spdk_jsonrpc_server_conn_remove(struct spdk_jsonrpc_server_conn *conn)
 
 	TAILQ_REMOVE(&server->conns, conn, link);
 	TAILQ_INSERT_HEAD(&server->free_conns, conn, link);
+}
+
+int
+spdk_jsonrpc_conn_add_close_cb(struct spdk_jsonrpc_server_conn *conn,
+			       spdk_jsonrpc_conn_closed_fn cb, void *ctx)
+{
+	int rc = 0;
+
+	pthread_spin_lock(&conn->queue_lock);
+	if (conn->close_cb == NULL) {
+		conn->close_cb = cb;
+		conn->close_cb_ctx = ctx;
+	} else {
+		rc = conn->close_cb == cb && conn->close_cb_ctx == ctx ? -EEXIST : -ENOSPC;
+	}
+	pthread_spin_unlock(&conn->queue_lock);
+
+	return rc;
+}
+
+int
+spdk_jsonrpc_conn_del_close_cb(struct spdk_jsonrpc_server_conn *conn,
+			       spdk_jsonrpc_conn_closed_fn cb, void *ctx)
+{
+	int rc = 0;
+
+	pthread_spin_lock(&conn->queue_lock);
+	if (conn->close_cb == NULL || conn->close_cb != cb || conn->close_cb_ctx != ctx) {
+		rc = -ENOENT;
+	} else {
+		conn->close_cb = NULL;
+	}
+	pthread_spin_unlock(&conn->queue_lock);
+
+	return rc;
 }
 
 static int
