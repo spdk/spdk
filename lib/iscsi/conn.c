@@ -336,10 +336,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	rc = spdk_iscsi_conn_params_init(&conn->params);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_conn_params_init() failed\n");
-error_return:
-		spdk_iscsi_param_free(conn->params);
-		free_conn(conn);
-		return -1;
+		goto error_return;
 	}
 	conn->logout_timer = NULL;
 	conn->shutdown_timer = NULL;
@@ -351,6 +348,11 @@ error_return:
 
 	spdk_iscsi_poll_group_add_conn(conn);
 	return 0;
+
+error_return:
+	spdk_iscsi_param_free(conn->params);
+	free_conn(conn);
+	return -1;
 }
 
 void
