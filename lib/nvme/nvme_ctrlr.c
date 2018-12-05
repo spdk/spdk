@@ -2733,3 +2733,12 @@ spdk_nvme_ctrlr_free_cmb_io_buffer(struct spdk_nvme_ctrlr *ctrlr, void *buf, siz
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 }
+
+bool
+spdk_nvme_ctrlr_is_discovery(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr);
+
+	return !strncmp(ctrlr->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN,
+			strlen(SPDK_NVMF_DISCOVERY_NQN));
+}
