@@ -48,7 +48,7 @@ to as virtual bdevs, or *vbdevs* for short.
 ## Initializing The Library
 
 The bdev layer depends on the generic message passing infrastructure
-abstracted by the header file include/io_channel.h. See @ref concurrency for a
+abstracted by the header file include/spdk/thread.h. See @ref concurrency for a
 full description. Most importantly, calls into the bdev library may only be
 made from threads that have been allocated with SPDK by calling
 spdk_allocate_thread().
