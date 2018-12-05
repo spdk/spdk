@@ -126,6 +126,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 	struct vring_desc *desc, *desc_table;
 	uint16_t out_cnt = 0, cnt = 0;
 	uint32_t desc_table_size, len = 0;
+	uint32_t desc_handled_cnt;
 	int rc;
 
 	rc = spdk_vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
@@ -134,6 +135,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 		return -1;
 	}
 
+	desc_handled_cnt = 0;
 	while (1) {
 		/*
 		 * Maximum cnt reached?
@@ -162,6 +164,14 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 			return -1;
 		} else if (desc == NULL) {
 			break;
+		}
+
+		desc_handled_cnt++;
+		if (spdk_unlikely(desc_handled_cnt > desc_table_size)) {
+			/* Break a cycle and report an error, if any. */
+			SPDK_ERRLOG("%s: found a cycle in the descriptor chain: desc_table_size = %d, desc_handled_cnt = %d.\n",
+				    vdev->name, desc_table_size, desc_handled_cnt);
+			return -1;
 		}
 	}
 
