@@ -716,8 +716,6 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 		SPDK_ERRLOG("for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
 		spdk_bdev_close(meta_ctx->base_desc);
-		TAILQ_REMOVE(&g_vbdev_comp, meta_ctx, link);
-		spdk_io_device_unregister(meta_ctx, NULL);
 		free(meta_ctx->drv_name);
 		free(meta_ctx->comp_bdev.name);
 		free(meta_ctx);
@@ -867,10 +865,9 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->backing_dev.blocklen = bdev->blocklen;
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
 
-	/* TODO, pending reducelib updates around vol size determination */
-	meta_ctx->params.vol_size = bdev->blocklen * bdev->blockcnt;
-	meta_ctx->params.vol_size = 1024 * 1024 * 1024;
+	/* TODO, configurable chunk size & logical block size */
 	meta_ctx->params.chunk_size = 16 * 1024;
+	meta_ctx->params.logical_block_size = 4096;
 	meta_ctx->params.backing_io_unit_size = meta_ctx->backing_dev.blocklen;
 
 	return meta_ctx;
@@ -959,8 +956,8 @@ create_compress_disk(const char *bdev_name, const char *vbdev_name, const char *
 
 	bdev = spdk_bdev_get_by_name(bdev_name);
 	if (!bdev) {
-		/* TODO: without a global list ? */
 		/* This is OK, the bdev may show up later on. */
+		SPDK_NOTICELOG("RPC for create %s deferred as base bdev does not yet exist\n", vbdev_name);
 		return 0;
 	}
 
@@ -1129,8 +1126,6 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 		SPDK_ERRLOG("for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
 		spdk_bdev_close(meta_ctx->base_desc);
-		TAILQ_REMOVE(&g_vbdev_comp, meta_ctx, link);
-		spdk_io_device_unregister(meta_ctx, NULL);
 		free(meta_ctx->drv_name);
 		free(meta_ctx->comp_bdev.name);
 		free(meta_ctx);
