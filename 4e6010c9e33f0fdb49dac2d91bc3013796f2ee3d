@@ -16,6 +16,24 @@
       "revId": "4e6010c9e33f0fdb49dac2d91bc3013796f2ee3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87e824e5_50c490d2",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-05T21:46:15Z",
+      "side": 1,
+      "message": "-e is the traceflag mask, but thanks for making me take a look at this, because I need to change it to 0xFFFF (Like it was before). I accidentally left off an F when transposing it.\n\nFYI this change completely gets rid of the NVMF_TEST_CORE_MASK variable. It was only used in the stub and was supposed to be equal to the maximum number of cores we would use in any of the NVMe-oF tests.",
+      "parentUuid": "493a38e1_da37c657",
+      "revId": "4e6010c9e33f0fdb49dac2d91bc3013796f2ee3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
