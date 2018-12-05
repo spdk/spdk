@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aca63cc0_3b4dc4bd",
+        "filename": "test/nvmf/host/perf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-05T16:24:51Z",
+      "side": 1,
+      "message": "Should we add a comment here explaining why the -s 4096 is needed?\n\nThe commit message is good, but readers might get confused seeing this -s 4096 without an explanation why.",
+      "revId": "3d85934e6c12c7c4b36c2c9f721625b53f44e6c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
