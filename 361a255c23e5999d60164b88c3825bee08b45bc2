@@ -50,6 +50,24 @@
       "revId": "361a255c23e5999d60164b88c3825bee08b45bc2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88c41d72_4c2471f5",
+        "filename": "test/unit/lib/thread/thread.c/thread_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T18:11:49Z",
+      "side": 1,
+      "message": "Yes - coming in future patch.",
+      "parentUuid": "6f5decb3_983b5dee",
+      "revId": "361a255c23e5999d60164b88c3825bee08b45bc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
