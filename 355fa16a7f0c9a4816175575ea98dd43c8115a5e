@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6415fb3e_6b1a0c97",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-06T18:56:32Z",
+      "side": 1,
+      "message": "This could be #ifdef DEBUG guarded.",
+      "range": {
+        "startLine": 362,
+        "startChar": 0,
+        "endLine": 364,
+        "endChar": 21
+      },
+      "revId": "355fa16a7f0c9a4816175575ea98dd43c8115a5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
