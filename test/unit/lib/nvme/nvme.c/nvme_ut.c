@@ -41,52 +41,24 @@
 
 #include "common/lib/test_env.c"
 
-DEFINE_STUB_V(nvme_ctrlr_fail,
-	      (struct spdk_nvme_ctrlr *ctrlr, bool hot_remove))
-
-DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr))
-
-DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr))
-
-DEFINE_STUB(spdk_pci_nvme_enumerate, int,
-	    (spdk_pci_enum_cb enum_cb, void *enum_ctx), -1)
-
-DEFINE_STUB(spdk_pci_device_get_id, struct spdk_pci_id,
-	    (struct spdk_pci_device *pci_dev),
-	    MOCK_STRUCT_INIT(.vendor_id = 0xffff, .device_id = 0xffff,
-			     .subvendor_id = 0xffff, .subdevice_id = 0xffff))
-
+DEFINE_STUB_V(nvme_ctrlr_proc_get_ref, (struct spdk_nvme_ctrlr *ctrlr));
+DEFINE_STUB_V(nvme_ctrlr_proc_put_ref, (struct spdk_nvme_ctrlr *ctrlr));
 DEFINE_STUB(spdk_nvme_transport_available, bool,
-	    (enum spdk_nvme_transport_type trtype), true)
-
+	    (enum spdk_nvme_transport_type trtype), true);
 /* return anything non-NULL, this won't be deferenced anywhere in this test */
 DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
-	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1)
-
-DEFINE_STUB(nvme_ctrlr_add_process, int,
-	    (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0)
-
+	    (struct spdk_nvme_ctrlr *ctrlr), (struct spdk_nvme_ctrlr_process *)(uintptr_t)0x1);
 DEFINE_STUB(nvme_ctrlr_process_init, int,
-	    (struct spdk_nvme_ctrlr *ctrlr), 0)
-
-DEFINE_STUB(spdk_pci_device_get_addr, struct spdk_pci_addr,
-	    (struct spdk_pci_device *pci_dev), {0})
-
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(nvme_ctrlr_get_ref_count, int,
-	    (struct spdk_nvme_ctrlr *ctrlr), 0)
-
+	    (struct spdk_nvme_ctrlr *ctrlr), 0);
 DEFINE_STUB(dummy_probe_cb, bool,
 	    (void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	     struct spdk_nvme_ctrlr_opts *opts), false)
-
+	     struct spdk_nvme_ctrlr_opts *opts), false);
 DEFINE_STUB(nvme_transport_ctrlr_construct, struct spdk_nvme_ctrlr *,
 	    (const struct spdk_nvme_transport_id *trid,
 	     const struct spdk_nvme_ctrlr_opts *opts,
-	     void *devhandle), NULL)
-
-DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
-	    (struct spdk_nvme_qpair *qpair,
-	     uint32_t max_completions), 0);
+	     void *devhandle), NULL);
 
 static bool ut_destruct_called = false;
 void

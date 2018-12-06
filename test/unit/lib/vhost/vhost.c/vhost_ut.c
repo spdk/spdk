@@ -77,13 +77,7 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 
 DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
-DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
-DEFINE_STUB_V(spdk_app_stop, (int rc));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
-DEFINE_STUB(spdk_poller_register, struct spdk_poller *, (spdk_poller_fn fn, void *arg,
-		uint64_t period_microseconds), NULL);
-DEFINE_STUB_V(spdk_poller_unregister, (struct spdk_poller **ppoller));
-DEFINE_STUB(spdk_iommu_mem_unregister, int, (uint64_t addr, uint64_t len), 0);
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
 DEFINE_STUB(rte_vhost_get_vhost_vring, int,
@@ -91,26 +85,18 @@ DEFINE_STUB(rte_vhost_get_vhost_vring, int,
 DEFINE_STUB(rte_vhost_enable_guest_notification, int,
 	    (int vid, uint16_t queue_id, int enable), 0);
 DEFINE_STUB(rte_vhost_get_ifname, int, (int vid, char *buf, size_t len), 0);
-DEFINE_STUB(rte_vhost_get_vring_num, uint16_t, (int vid), 0);
 DEFINE_STUB(rte_vhost_driver_start, int, (const char *name), 0);
 DEFINE_STUB(rte_vhost_driver_callback_register, int,
 	    (const char *path, struct vhost_device_ops const *const ops), 0);
 DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
-DEFINE_STUB_V(rte_vhost_log_used_vring, (int vid, uint16_t vring_idx, uint64_t offset,
-		uint64_t len));
-DEFINE_STUB_V(rte_vhost_log_write, (int vid, uint64_t addr, uint64_t len));
-DEFINE_STUB(spdk_vhost_scsi_controller_construct, int, (void), 0);
-DEFINE_STUB(spdk_vhost_blk_controller_construct, int, (void), 0);
 DEFINE_STUB(spdk_vhost_nvme_admin_passthrough, int, (int vid, void *cmd, void *cqe, void *buf), 0);
 DEFINE_STUB(spdk_vhost_nvme_set_cq_call, int, (int vid, uint16_t qid, int fd), 0);
 DEFINE_STUB(spdk_vhost_nvme_set_bar_mr, int, (int vid, void *bar, uint64_t bar_size), 0);
 DEFINE_STUB(spdk_vhost_nvme_get_cap, int, (int vid, uint64_t *cap), 0);
-DEFINE_STUB(spdk_vhost_nvme_controller_construct, int, (void), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
-DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)

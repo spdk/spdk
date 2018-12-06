@@ -44,9 +44,6 @@
 
 #define BDEV_UT_NUM_THREADS 3
 
-DEFINE_STUB_V(spdk_scsi_nvme_translate, (const struct spdk_bdev_io *bdev_io,
-		int *sc, int *sk, int *asc, int *ascq));
-
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *, (struct spdk_conf *cp,
 		const char *name), NULL);
 DEFINE_STUB(spdk_conf_section_get_nmval, char *,
