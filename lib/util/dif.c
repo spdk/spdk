@@ -37,6 +37,67 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
+/* Context to iterate a scatter gather list. */
+struct _iov_iter {
+	/* Current iovec in the iteration */
+	struct iovec *iov;
+
+	/* Remaining count of iovecs in the iteration. */
+	int iovcnt;
+
+	/* Current offset in the iovec */
+	uint32_t iov_offset;
+
+	/* Current offset in virtually contiguous payload */
+	uint32_t payload_offset;
+};
+
+static inline void
+_iov_iter_init(struct _iov_iter *i, struct iovec *iovs, int iovcnt)
+{
+	i->iov = iovs;
+	i->iovcnt = iovcnt;
+	i->iov_offset = 0;
+	i->payload_offset = 0;
+}
+
+static inline bool
+_iov_iter_cont(struct _iov_iter *i)
+{
+	return i->iovcnt != 0;
+}
+
+static inline void
+_iov_iter_advance(struct _iov_iter *i, uint32_t step)
+{
+	i->payload_offset += step;
+	i->iov_offset += step;
+	if (i->iov_offset == i->iov->iov_len) {
+		i->iov++;
+		i->iovcnt--;
+		i->iov_offset = 0;
+	}
+}
+
+static inline void *
+_iov_iter_get_buf(struct _iov_iter *i)
+{
+	return i->iov->iov_base + i->iov_offset;
+}
+
+static inline void
+_iov_iter_get_buf_and_len(struct _iov_iter *i, void **_buf, uint32_t *_buf_len)
+{
+	*_buf = i->iov->iov_base + i->iov_offset;
+	*_buf_len = i->iov->iov_len - i->iov_offset;
+}
+
+static inline uint32_t
+_iov_iter_get_payload_offset(struct _iov_iter *i)
+{
+	return i->payload_offset;
+}
+
 static bool
 _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 {
@@ -78,12 +139,13 @@ dif_generate(struct iovec *iovs, int iovcnt,
 	     uint32_t block_size, uint32_t guard_interval,
 	     uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t iov_offset = 0;
-	int iovpos = 0;
+	struct _iov_iter iter;
 	void *buf;
 
-	while (iovpos < iovcnt) {
-		buf = iovs[iovpos].iov_base + iov_offset;
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		buf = _iov_iter_get_buf(&iter);
 		_dif_generate(buf + guard_interval, buf, guard_interval,
 			      dif_flags, ref_tag, app_tag);
 
@@ -93,11 +155,7 @@ dif_generate(struct iovec *iovs, int iovcnt,
 		 */
 		ref_tag++;
 
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, block_size);
 	}
 
 	return 0;
@@ -108,9 +166,8 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 		   uint32_t block_size, uint32_t guard_interval,
 		   uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag)
 {
-	uint32_t payload_offset = 0, offset_blocks, offset_in_block;
-	uint32_t iov_offset = 0, buf_len, _ref_tag;
-	int iovpos = 0;
+	struct _iov_iter iter;
+	uint32_t offset_blocks, offset_in_block, buf_len, _ref_tag;
 	void *buf;
 	uint8_t *contig_buf, contig_dif[sizeof(struct spdk_dif)] = {0};
 
@@ -120,9 +177,11 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 		return -ENOMEM;
 	}
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		offset_blocks = _iov_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iov_iter_get_payload_offset(&iter) % block_size;
 
 		/* For Type 1 and 2, the Reference Tag is incremented for each
 		 * subsequent logical block. (TBD: For Type 3, the Reference Tag
@@ -130,8 +189,7 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 		 */
 		_ref_tag = ref_tag + offset_blocks;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iov_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		/* Logical block data over which CRC is computed. */
 		if (offset_in_block < guard_interval) {
@@ -161,12 +219,7 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 			buf_len = spdk_min(block_size - offset_in_block, buf_len);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, buf_len);
 	}
 
 	free(contig_buf);
@@ -294,12 +347,14 @@ dif_verify(struct iovec *iovs, int iovcnt,
 	   int dif_type, uint32_t dif_flags,
 	   uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t iov_offset = 0;
-	int iovpos = 0, rc;
+	struct _iov_iter iter;
+	int rc;
 	void *buf;
 
-	while (iovpos < iovcnt) {
-		buf = iovs[iovpos].iov_base + iov_offset;
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		buf = _iov_iter_get_buf(&iter);
 
 		rc = _dif_verify(buf + guard_interval, buf, guard_interval,
 				 dif_type, dif_flags,
@@ -314,11 +369,7 @@ dif_verify(struct iovec *iovs, int iovcnt,
 		 */
 		ref_tag++;
 
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, block_size);
 	}
 
 	return 0;
@@ -330,9 +381,9 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 		 int dif_type, uint32_t dif_flags,
 		 uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t payload_offset = 0, offset_blocks, offset_in_block;
-	uint32_t iov_offset = 0, buf_len, _ref_tag;
-	int iovpos = 0, rc;
+	struct _iov_iter iter;
+	uint32_t offset_blocks, offset_in_block, buf_len, _ref_tag;
+	int rc;
 	void *buf;
 	uint8_t *contig_buf, contig_dif[8] = {0};
 
@@ -342,9 +393,11 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 		return -ENOMEM;
 	}
 
-	while (iovpos < iovcnt) {
-		offset_blocks = payload_offset / block_size;
-		offset_in_block = payload_offset % block_size;
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		offset_blocks = _iov_iter_get_payload_offset(&iter) / block_size;
+		offset_in_block = _iov_iter_get_payload_offset(&iter) % block_size;
 
 		/* For Type 1 and 2, the Reference Tag is incremented for each
 		 * subsequent logical block. (TBD: For Type 3, the Reference Tag
@@ -352,8 +405,7 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 		 */
 		_ref_tag = ref_tag + offset_blocks;
 
-		buf = iovs[iovpos].iov_base + iov_offset;
-		buf_len = iovs[iovpos].iov_len - iov_offset;
+		_iov_iter_get_buf_and_len(&iter, &buf, &buf_len);
 
 		/* Logical block data over which CRC is computed. */
 		if (offset_in_block < guard_interval) {
@@ -386,12 +438,7 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 			buf_len = spdk_min(buf_len, block_size - offset_in_block);
 		}
 
-		payload_offset += buf_len;
-		iov_offset += buf_len;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, buf_len);
 	}
 
 	free(contig_buf);
