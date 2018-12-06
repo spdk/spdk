@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1e473a1a_09b3c868",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-06T06:49:38Z",
+      "side": 1,
+      "message": "Hi Pawel Wodkowski\nThe following link is QEMU patch that supports reconnection\n   https://patchwork.kernel.org/cover/10715305/",
+      "parentUuid": "66c09e58_e4aa4175",
+      "range": {
+        "startLine": 65,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 51
+      },
+      "revId": "55592586640477de366587ec0ad9de36e4809176",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1962ef50_f99fdfa5",
         "filename": "lib/vhost/rte_vhost/vhost_user.h",
         "patchSetId": 2
