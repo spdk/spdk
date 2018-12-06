@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "88e74850_3c635817",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T02:05:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ca132d06_1fa31633",
+      "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e57d0abc_04f11d5a",
         "filename": "lib/trace/trace_flags.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-04T16:57:12Z",
       "side": 1,
       "message": "register_fn can be initialized on line 134 - this is same here and line 144, so both of these lines could be removed",
+      "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee349304_1d02f364",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T02:05:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e57d0abc_04f11d5a",
       "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d108db97_7268f643",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T02:05:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4088d1b4_4b2f0333",
+      "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f09af12_862bd24a",
         "filename": "lib/trace/trace_flags.c",
         "patchSetId": 5
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-04T16:57:12Z",
       "side": 1,
       "message": "should make sure that reg_fn-\u003ename does not equal \"all\"",
+      "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d49a3f8_2520bb39",
+        "filename": "lib/trace/trace_flags.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T02:05:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f09af12_862bd24a",
       "revId": "49b10ea47a96933fbffcf641cec92a9f0528174c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
