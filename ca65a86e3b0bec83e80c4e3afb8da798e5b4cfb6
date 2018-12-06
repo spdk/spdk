@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b48e4859_0d6ddbee",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-06T13:53:46Z",
+      "side": 1,
+      "message": "Attempting to initialize an already initialized condition variable results in undefined behavior. Please remove PTHREAD_COND_INITIALIZER",
+      "revId": "ca65a86e3b0bec83e80c4e3afb8da798e5b4cfb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90f18c87_cee02379",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-06T13:53:46Z",
+      "side": 1,
+      "message": "Destroy cond variable in spdk_fio_finish_env()",
+      "revId": "ca65a86e3b0bec83e80c4e3afb8da798e5b4cfb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
