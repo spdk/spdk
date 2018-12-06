@@ -96,12 +96,12 @@ int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *param
 
 struct spdk_reduce_vol;
 
-typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int ziperrno);
+typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int reduce_errno);
 typedef void (*spdk_reduce_vol_op_with_handle_complete)(void *ctx,
 		struct spdk_reduce_vol *vol,
-		int ziperrno);
+		int reduce_errno);
 
-typedef void (*spdk_reduce_dev_cpl)(void *cb_arg, int ziperrno);
+typedef void (*spdk_reduce_dev_cpl)(void *cb_arg, int reduce_errno);
 
 struct spdk_reduce_vol_cb_args {
 	spdk_reduce_dev_cpl	cb_fn;
