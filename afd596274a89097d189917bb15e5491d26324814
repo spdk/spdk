@@ -34,6 +34,24 @@
       "revId": "afd596274a89097d189917bb15e5491d26324814",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5446de3a_1c28b2ea",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-06T04:32:51Z",
+      "side": 1,
+      "message": "Ah - I see this now.  The pending_data_buf_queue is shared (tqpair-\u003ech).  This patch is OK then.",
+      "parentUuid": "b3aeeb77_b39ad449",
+      "revId": "afd596274a89097d189917bb15e5491d26324814",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
