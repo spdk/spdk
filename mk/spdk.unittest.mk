@@ -39,6 +39,8 @@ C_SRCS = $(TEST_FILE)
 
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 CFLAGS += -I$(SPDK_ROOT_DIR)/test
+CFLAGS += -ffunction-sections
+LDFLAGS += -Wl,--gc-sections
 
 SPDK_LIB_LIST += thread util log sock
 

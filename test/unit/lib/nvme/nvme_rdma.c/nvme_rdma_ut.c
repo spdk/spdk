@@ -38,88 +38,11 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
-DEFINE_STUB(nvme_qpair_submit_request, int, (struct spdk_nvme_qpair *qpair,
-		struct nvme_request *req), 0);
-
-DEFINE_STUB(nvme_qpair_init, int, (struct spdk_nvme_qpair *qpair, uint16_t id,
-				   struct spdk_nvme_ctrlr *ctrlr, enum spdk_nvme_qprio qprio, uint32_t num_requests), 0);
-
-DEFINE_STUB_V(nvme_qpair_deinit, (struct spdk_nvme_qpair *qpair));
-
-DEFINE_STUB(nvme_ctrlr_probe, int, (const struct spdk_nvme_transport_id *trid, void *devhandle,
-				    spdk_nvme_probe_cb probe_cb, void *cb_ctx), 0);
-
-DEFINE_STUB(nvme_ctrlr_get_cap, int, (struct spdk_nvme_ctrlr *ctrlr,
-				      union spdk_nvme_cap_register *cap), 0);
-
-DEFINE_STUB(nvme_ctrlr_get_vs, int, (struct spdk_nvme_ctrlr *ctrlr,
-				     union spdk_nvme_vs_register *vs), 0);
-
-DEFINE_STUB_V(nvme_ctrlr_init_cap, (struct spdk_nvme_ctrlr *ctrlr,
-				    const union spdk_nvme_cap_register *cap, const union spdk_nvme_vs_register *vs));
-
-DEFINE_STUB(nvme_ctrlr_construct, int, (struct spdk_nvme_ctrlr *ctrlr), 0);
-
-DEFINE_STUB_V(nvme_ctrlr_destruct, (struct spdk_nvme_ctrlr *ctrlr));
-
-DEFINE_STUB(nvme_ctrlr_add_process, int, (struct spdk_nvme_ctrlr *ctrlr, void *devhandle), 0);
-
-DEFINE_STUB_V(nvme_ctrlr_connected, (struct spdk_nvme_ctrlr *ctrlr));
-
-DEFINE_STUB(nvme_ctrlr_cmd_identify, int, (struct spdk_nvme_ctrlr *ctrlr, uint8_t cns,
-		uint16_t cntid, uint32_t nsid, void *payload, size_t payload_size, spdk_nvme_cmd_cb cb_fn,
-		void *cb_arg), 0);
-
-DEFINE_STUB_V(spdk_nvme_ctrlr_get_default_ctrlr_opts, (struct spdk_nvme_ctrlr_opts *opts,
-		size_t opts_size));
-
-DEFINE_STUB_V(nvme_completion_poll_cb, (void *arg, const struct spdk_nvme_cpl *cpl));
-
-DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process *,
-	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
-
-DEFINE_STUB(spdk_nvme_wait_for_completion, int, (struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status), 0);
-
-DEFINE_STUB(spdk_nvme_wait_for_completion_robust_lock, int, (struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status, pthread_mutex_t *robust_mutex), 0);
-
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);
 
 DEFINE_STUB(spdk_mem_map_clear_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size), 0);
-
-DEFINE_STUB(spdk_mem_map_alloc, struct spdk_mem_map *, (uint64_t default_translation,
-		const struct spdk_mem_map_ops *ops, void *cb_ctx), NULL);
-
-DEFINE_STUB_V(spdk_mem_map_free, (struct spdk_mem_map **pmap));
-
-DEFINE_STUB(nvme_fabric_qpair_connect, int, (struct spdk_nvme_qpair *qpair, uint32_t num_entries),
-	    0);
-
-DEFINE_STUB(nvme_transport_ctrlr_set_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
-		uint32_t value), 0);
-
-DEFINE_STUB(nvme_fabric_ctrlr_set_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
-		uint32_t value), 0);
-
-DEFINE_STUB(nvme_fabric_ctrlr_set_reg_8, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
-		uint64_t value), 0);
-
-DEFINE_STUB(nvme_fabric_ctrlr_get_reg_4, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
-		uint32_t *value), 0);
-
-DEFINE_STUB(nvme_fabric_ctrlr_get_reg_8, int, (struct spdk_nvme_ctrlr *ctrlr, uint32_t offset,
-		uint64_t *value), 0);
-
-DEFINE_STUB_V(nvme_ctrlr_destruct_finish, (struct spdk_nvme_ctrlr *ctrlr));
-
-DEFINE_STUB(nvme_request_check_timeout, int, (struct nvme_request *req, uint16_t cid,
-		struct spdk_nvme_ctrlr_process *active_proc, uint64_t now_tick), 0);
-
-DEFINE_STUB(nvme_fabric_ctrlr_discover, int, (struct spdk_nvme_ctrlr *ctrlr, void *cb_ctx,
-		spdk_nvme_probe_cb probe_cb), 0);
 
 /* used to mock out having to split an SGL over a memory region */
 uint64_t g_mr_size;
