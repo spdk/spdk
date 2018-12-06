@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cac7f99f_2a36f005",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 412,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-06T17:38:34Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "e4303e79_d8a1e918",
+      "revId": "961dbb0616f1a03eded8ad5355bc199d8835afaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d8c26d98_342b58f5",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-06T16:45:18Z",
       "side": 1,
       "message": "I think you should just assert(ctrlr !\u003d NULL) here.\n\nWe expect users to pass a ctrlr object.  See the code just before this one - it doesn\u0027t check if ctrlr is NULL, it just uses it.  An assert() would be good though.\n\nThen this could literally be return strncmp(...) \u003d\u003d 0.",
+      "revId": "961dbb0616f1a03eded8ad5355bc199d8835afaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5cf7da8_a8ec6b82",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-06T17:38:34Z",
+      "side": 1,
+      "message": "As this is library code, I thought we had adopted the philosophy of failing calls instead of using assert()\u0027s.   That aside, given that this is a library routine, I prefer to validate args; esp. pointers.",
+      "parentUuid": "d8c26d98_342b58f5",
       "revId": "961dbb0616f1a03eded8ad5355bc199d8835afaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
