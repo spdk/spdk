@@ -16,6 +16,24 @@
       "revId": "afd596274a89097d189917bb15e5491d26324814",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3aeeb77_b39ad449",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-06T00:49:18Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nI rechecked the code, for the wait buffer list, we should find the req in the state[TCP_REQUEST_STATE_NEED_BUFFER]  by state_link, Then we we can free it in the pending_data_buf_list maintained by the ch. Since we should not remove the reqs from the other qpairs.",
+      "parentUuid": "0ed20c78_9d09efba",
+      "revId": "afd596274a89097d189917bb15e5491d26324814",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
