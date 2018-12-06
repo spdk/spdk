@@ -4947,6 +4947,114 @@ Example response:
 }
 ~~~
 
+# Notifications
+
+## get_notification_types {#rpc_get_notification_types}
+
+Return list of all supported notification types.
+
+### Parameters
+
+None
+
+### Response
+
+The response is an array of strings - supported RPC notification types.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_notification_types",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "result": [
+    "construct_malloc_bdev",
+    "delete_malloc_bdev"
+  ],
+  "id": 1
+}
+~~~
+
+## get_notifications {#get_notifications}
+
+Request notifications. If timeout is given, notification request will complete after given timeout. If maximum events limit is specified
+notification request will complete after given limit is exceed.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+timeout_ms              | Optional | number      | Events request timeout in milliseconds (default: infinity)
+max_count               | Optional | number      | Maximum events to include in response (default: 1)
+
+### Response
+
+Response is an array of event objects.
+
+As a general rule for all configuration events each event object will match corresponding RPC
+call that could be issued to get the same result. E.g.: when some NVMe bdev is hot removed the event object will be
+[the same as delete_nvme_controller RPC call](@ref rpc_delete_nvme_controller). When NVMe controller is created
+(e.g. as a hotplug resul) the the event object will [the same as construct_nvme_bdev](@ref rpc_construct_nvme_bdev).
+
+Full documentation of available events and deviations (if any) from these rules are included in the documentation of
+individual modules.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_notifications",
+  "params": {
+    "timeout_ms": 2000,
+    "max_count": 2
+  }
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "method": "construct_malloc_bdev",
+      "params": {
+        "block_size": 512,
+        "name": "Malloc0",
+        "uuid": "9a878d47-a24b-44e8-86e0-95b8d7b7e597",
+        "num_blocks": 65536
+      }
+    },
+    {
+      "method": "construct_malloc_bdev",
+      "params": {
+        "block_size": 512,
+        "name": "Malloc1",
+        "uuid": "938487a2-ef56-45b2-a985-ca71a1a09ce6",
+        "num_blocks": 65536
+      }
+    }
+  ]
+}
+~~~
+
 ## send_nvme_cmd {#rpc_send_nvme_cmd}
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
