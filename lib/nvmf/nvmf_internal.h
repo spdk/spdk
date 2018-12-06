@@ -216,7 +216,7 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_request *aer_req;
 	union spdk_nvme_async_event_completion notice_event;
-	uint8_t hostid[16];
+	struct spdk_uuid  hostid;
 
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;

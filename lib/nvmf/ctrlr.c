@@ -182,7 +182,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->feat.number_of_queues.bits.nsqr = transport->opts.max_qpairs_per_ctrlr - 1 -
 			1;
 
-	memcpy(ctrlr->hostid, connect_data->hostid, sizeof(ctrlr->hostid));
+	spdk_uuid_copy(&ctrlr->hostid, (struct spdk_uuid *)connect_data->hostid);
 
 	ctrlr->vcprop.cap.raw = 0;
 	ctrlr->vcprop.cap.bits.cqr = 1; /* NVMe-oF specification required */
@@ -855,7 +855,7 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	memcpy(req->data, ctrlr->hostid, sizeof(ctrlr->hostid));
+	spdk_uuid_copy((struct spdk_uuid *)req->data, &ctrlr->hostid);
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
