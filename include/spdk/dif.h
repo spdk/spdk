@@ -41,6 +41,11 @@
 #define SPDK_DIF_APPTAG_CHECK	0x2
 #define SPDK_DIF_REFTAG_CHECK	0x4
 
+#define SPDK_DIF_GUARD_ERROR	0x1
+#define SPDK_DIF_APPTAG_ERROR	0x2
+#define SPDK_DIF_REFTAG_ERROR	0x4
+#define SPDK_DIF_DATA_ERROR	0x8
+
 struct spdk_dif {
 	uint16_t guard;
 	uint16_t app_tag;
@@ -88,4 +93,21 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt,
 		    uint32_t block_size, uint32_t md_size,
 		    bool dif_start, int dif_type, uint32_t dif_flags,
 		    uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Inject bit flip error to extended LBA payload.
+ *
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param block_size The block size in a block.
+ * \param md_size The metadata size in a block.
+ * \param dif_start The flag to specify the error injection action.
+ * \param inject_flags The flag to specify the action of error injection.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
+			  uint32_t block_size, uint32_t md_size, bool dif_start,
+			  uint32_t inject_flags);
+
 #endif /* SPDK_DIF_H */
