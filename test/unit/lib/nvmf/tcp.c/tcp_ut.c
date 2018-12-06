@@ -51,6 +51,7 @@
 #define UT_IO_UNIT_SIZE 1024
 #define UT_MAX_AQ_DEPTH 64
 #define UT_SQ_HEAD_MAX 128
+#define UT_NUM_SHARED_BUFFERS 128
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
@@ -132,6 +133,12 @@ struct spdk_bdev {
 	int ut_mock;
 	uint64_t blockcnt;
 };
+
+uint32_t
+spdk_env_get_last_core(void)
+{
+	return 0;
+}
 
 int
 spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
@@ -216,6 +223,7 @@ test_nvmf_tcp_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -239,6 +247,7 @@ test_nvmf_tcp_create(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_MAX_IO_SIZE + 1;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	/* expect success */
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
@@ -288,6 +297,7 @@ test_nvmf_tcp_destroy(void)
 	opts.max_io_size = UT_MAX_IO_SIZE;
 	opts.io_unit_size = UT_IO_UNIT_SIZE;
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	transport->opts = opts;
@@ -300,17 +310,29 @@ test_nvmf_tcp_destroy(void)
 static void
 test_nvmf_tcp_poll_group_create(void)
 {
-	struct spdk_nvmf_tcp_transport ttransport;
+	struct spdk_nvmf_transport *transport;
 	struct spdk_nvmf_transport_poll_group *group;
 	struct spdk_thread *thread;
+	struct spdk_nvmf_transport_opts opts;
 
 	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	spdk_set_thread(thread);
 
-	memset(&ttransport, 0, sizeof(ttransport));
-	group = spdk_nvmf_tcp_poll_group_create(&ttransport.transport);
+	memset(&opts, 0, sizeof(opts));
+	opts.max_queue_depth = UT_MAX_QUEUE_DEPTH;
+	opts.max_qpairs_per_ctrlr = UT_MAX_QPAIRS_PER_CTRLR;
+	opts.in_capsule_data_size = UT_IN_CAPSULE_DATA_SIZE;
+	opts.max_io_size = UT_MAX_IO_SIZE;
+	opts.io_unit_size = UT_IO_UNIT_SIZE;
+	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
+	opts.num_shared_buffers = UT_NUM_SHARED_BUFFERS;
+	transport = spdk_nvmf_tcp_create(&opts);
+	CU_ASSERT_PTR_NOT_NULL(transport);
+	transport->opts = opts;
+	group = spdk_nvmf_tcp_poll_group_create(transport);
 	CU_ASSERT_PTR_NOT_NULL(group);
+	group->transport = transport;
 	spdk_nvmf_tcp_poll_group_destroy(group);
 
 	spdk_free_thread();
