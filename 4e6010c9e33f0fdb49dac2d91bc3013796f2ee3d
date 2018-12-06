@@ -34,6 +34,24 @@
       "revId": "4e6010c9e33f0fdb49dac2d91bc3013796f2ee3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20d9d7cd_366b1ac9",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-06T00:24:13Z",
+      "side": 1,
+      "message": "haha - I drew a line between those two that wasn\u0027t there",
+      "parentUuid": "87e824e5_50c490d2",
+      "revId": "4e6010c9e33f0fdb49dac2d91bc3013796f2ee3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
