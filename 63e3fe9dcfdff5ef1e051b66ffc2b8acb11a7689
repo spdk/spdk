@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fcb37e3_0363a710",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-06T20:29:18Z",
+      "side": 1,
+      "message": "According to the spec, it is allowed for a discovery controller to return an error log page. Currently, our target just returns immediately, but I am not sure how the kernel target responds. I also can\u0027t think of the use case for the discovery controller returning this log page off the top of my head.\n\nswitch (lid) {\ncase SPDK_NVME_LOG_ERROR:\ncase SPDK_NVME_LOG_HEALTH_INFORMATION:\n\t\t/* TODO: actually fill out log page data */\n\t\treturn SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;",
+      "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
