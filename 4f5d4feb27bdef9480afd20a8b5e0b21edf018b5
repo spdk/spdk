@@ -34,6 +34,115 @@
       "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "388b449c_6903b15c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T00:14:35Z",
+      "side": 1,
+      "message": "Just transferring ziperrno passed as argument of the fuction to the completion function is what you expect?",
+      "range": {
+        "startLine": 732,
+        "startChar": 31,
+        "endLine": 732,
+        "endChar": 39
+      },
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "977507d8_19f3229b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T00:14:35Z",
+      "side": 1,
+      "message": "not not :)",
+      "range": {
+        "startLine": 753,
+        "startChar": 72,
+        "endLine": 754,
+        "endChar": 8
+      },
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88ac2162_576bf3f3",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 764,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T00:14:35Z",
+      "side": 1,
+      "message": "zip is the file format?",
+      "range": {
+        "startLine": 764,
+        "startChar": 34,
+        "endLine": 764,
+        "endChar": 37
+      },
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ab12fbc_7068cf5b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T00:14:35Z",
+      "side": 1,
+      "message": "ziperrno should be checked here?",
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "742f70a9_36998367",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T00:14:35Z",
+      "side": 1,
+      "message": "Specific reason not to do the following?\n\nif () {\n  _read_chunk()\n} else {\n  _write_chunk()\n}",
+      "range": {
+        "startLine": 812,
+        "startChar": 0,
+        "endLine": 813,
+        "endChar": 2
+      },
+      "revId": "4f5d4feb27bdef9480afd20a8b5e0b21edf018b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
