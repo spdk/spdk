@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "177aca0e_da4c8fcd",
+        "filename": "doc/stylesheet.css",
+        "patchSetId": 1
+      },
+      "lineNbr": 1389,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T23:22:38Z",
+      "side": 1,
+      "message": "Boiler-plate from the bootstrap documentation on how to make a site non-responsive.",
+      "revId": "ff1d750bd8ff2cfb4c26d71169ad2780c79237d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
