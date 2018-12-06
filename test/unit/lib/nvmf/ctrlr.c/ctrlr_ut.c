@@ -56,25 +56,9 @@ DEFINE_STUB(spdk_nvmf_poll_group_create,
 	    (struct spdk_nvmf_tgt *tgt),
 	    NULL);
 
-DEFINE_STUB_V(spdk_nvmf_poll_group_destroy,
-	      (struct spdk_nvmf_poll_group *group));
-
-DEFINE_STUB_V(spdk_nvmf_transport_qpair_fini,
-	      (struct spdk_nvmf_qpair *qpair));
-
-DEFINE_STUB(spdk_nvmf_poll_group_add,
-	    int,
-	    (struct spdk_nvmf_poll_group *group, struct spdk_nvmf_qpair *qpair),
-	    0);
-
 DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
 	    const char *,
 	    (const struct spdk_nvmf_subsystem *subsystem),
-	    NULL);
-
-DEFINE_STUB(spdk_nvmf_subsystem_get_ns,
-	    struct spdk_nvmf_ns *,
-	    (struct spdk_nvmf_subsystem *subsystem, uint32_t nsid),
 	    NULL);
 
 DEFINE_STUB(spdk_nvmf_subsystem_get_first_ns,
@@ -97,9 +81,6 @@ DEFINE_STUB(spdk_nvmf_subsystem_add_ctrlr,
 	    (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr),
 	    0);
 
-DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
-	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));
-
 DEFINE_STUB(spdk_nvmf_subsystem_get_ctrlr,
 	    struct spdk_nvmf_ctrlr *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint16_t cntlid),
@@ -119,11 +100,6 @@ DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
 	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length));
 
 DEFINE_STUB(spdk_nvmf_request_complete,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1);
-
-DEFINE_STUB(spdk_nvmf_request_free,
 	    int,
 	    (struct spdk_nvmf_request *req),
 	    -1);
