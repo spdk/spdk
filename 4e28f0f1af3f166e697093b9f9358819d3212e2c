@@ -68,6 +68,30 @@
       "revId": "4e28f0f1af3f166e697093b9f9358819d3212e2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eab443d7_c7257e7a",
+        "filename": "lib/util/string.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T17:38:04Z",
+      "side": 1,
+      "message": "I apologize for not spotting that much earlier in the review process. Pawel is right - let\u0027s drop this patch and just write spdk_sprintf_alloc(\"%s%s\", str1, str2); everywhere that you planned to use this function.",
+      "parentUuid": "9257983d_107248f5",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 36
+      },
+      "revId": "4e28f0f1af3f166e697093b9f9358819d3212e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
