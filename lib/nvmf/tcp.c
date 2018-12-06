@@ -295,6 +295,10 @@ struct spdk_nvmf_tcp_transport {
 struct spdk_nvmf_tcp_mgmt_channel {
 	/* Requests that are waiting to obtain a data buffer */
 	TAILQ_HEAD(, nvme_tcp_req)	pending_data_buf_queue;
+
+	/* Point to the transport polling group */
+	struct spdk_nvmf_tcp_poll_group	*tgroup;
+
 };
 
 static void spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
@@ -1274,6 +1278,7 @@ spdk_nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
 	spdk_poller_unregister(&tgroup->timeout_poller);
+
 	free(tgroup);
 }
 
@@ -2127,15 +2132,24 @@ static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct nvme_tcp_req *tcp_req)
 {
-	void		*buf = NULL;
-	uint32_t	length = tcp_req->req.length;
-	uint32_t	i = 0;
+	void			*buf = NULL;
+	uint32_t		length = tcp_req->req.length;
+	uint32_t		i = 0;
+	struct nvme_tcp_qpair	*tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct nvme_tcp_qpair, qpair);
+	struct spdk_nvmf_transport_poll_group  *group = &tqpair->ch->tgroup->group;
 
 	tcp_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
-		if (!buf) {
-			goto nomem;
+		if (group->current_cache_idx > 0) {
+			group->current_cache_idx--;
+			assert(group->buffer_cache[group->current_cache_idx] != NULL);
+			buf = group->buffer_cache[group->current_cache_idx];
+			group->buffer_cache[group->current_cache_idx] = NULL;
+		} else {
+			buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
+			if (!buf) {
+				goto nomem;
+			}
 		}
 
 		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
@@ -2148,13 +2162,19 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 	}
 
 	tcp_req->data_from_pool = true;
-
 	return 0;
 
 nomem:
 	while (i) {
 		i--;
-		spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
+		if (group->current_cache_idx < group->buf_cache_size) {
+			assert(group->buffer_cache[group->current_cache_idx] == NULL);
+			group->buffer_cache[group->current_cache_idx] = tcp_req->buffers[i];
+			assert(group->buffer_cache[group->current_cache_idx] != NULL);
+			group->current_cache_idx++;
+		} else {
+			spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
+		}
 		tcp_req->req.iov[i].iov_base = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
 
@@ -2438,9 +2458,12 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 	int				rc;
 	enum spdk_nvmf_tcp_req_state prev_state;
 	bool				progress = false;
+	struct spdk_nvmf_transport_poll_group *group;
 
 	tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair, struct nvme_tcp_qpair, qpair);
+	group = &tqpair->ch->tgroup->group;
 	assert(tcp_req->state != TCP_REQUEST_STATE_FREE);
+
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
@@ -2565,7 +2588,14 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			if (tcp_req->data_from_pool) {
 				/* Put the buffer/s back in the pool */
 				for (uint32_t i = 0; i < tcp_req->req.iovcnt; i++) {
-					spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
+					if (group->current_cache_idx < group->buf_cache_size) {
+						assert(group->buffer_cache[group->current_cache_idx] == NULL);
+						group->buffer_cache[group->current_cache_idx] = tcp_req->buffers[i];
+						assert(group->buffer_cache[group->current_cache_idx] != NULL);
+						group->current_cache_idx++;
+					} else {
+						spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
+					}
 					tcp_req->req.iov[i].iov_base = NULL;
 					tcp_req->buffers[i] = NULL;
 				}
@@ -2668,6 +2698,7 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 		return -1;
 	}
 
+	tqpair->ch->tgroup = tgroup;
 	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
 	tqpair->timeout = SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT;
 	tqpair->last_pdu_time = spdk_get_ticks();
