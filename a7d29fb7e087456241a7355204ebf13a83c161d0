@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b4c60f5_602ad419",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-06T14:24:24Z",
+      "side": 1,
+      "message": "It doesn\u0027t say if it is bytes or blocks. Can you name the parameter blockcnt and change description to something like \"New size of bdev in number of blocks\"?",
+      "range": {
+        "startLine": 733,
+        "startChar": 10,
+        "endLine": 733,
+        "endChar": 32
+      },
+      "revId": "a7d29fb7e087456241a7355204ebf13a83c161d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dca32e7e_3ea3aed5",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-06T14:24:24Z",
+      "side": 1,
+      "message": "You should specify that it returns -EBUSY if the bdev has open descriptors and user tries to shrink bdev.",
+      "range": {
+        "startLine": 734,
+        "startChar": 41,
+        "endLine": 734,
+        "endChar": 66
+      },
+      "revId": "a7d29fb7e087456241a7355204ebf13a83c161d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
