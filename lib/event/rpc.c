@@ -41,6 +41,8 @@
 
 #include "spdk_internal/event.h"
 
+#include "rpc/notify_rpc.h"
+
 #define RPC_SELECT_INTERVAL	4000 /* 4ms */
 
 static struct spdk_poller *g_rpc_poller = NULL;
@@ -56,6 +58,7 @@ void
 spdk_rpc_initialize(const char *listen_addr)
 {
 	int rc;
+	struct spdk_jsonrpc_server *srv;
 
 	if (listen_addr == NULL) {
 		return;
@@ -68,6 +71,7 @@ spdk_rpc_initialize(const char *listen_addr)
 		return;
 	}
 
+	srv = spdk_rpc_get_server();
 	spdk_rpc_set_state(SPDK_RPC_STARTUP);
 
 	/* Register a poller to periodically check for RPCs */
