@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8724111d_fc97d95b",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-06T19:45:35Z",
+      "side": 1,
+      "message": "I still don\u0027t think this is quite right.  This seems to be adding hostaddr and hostsvcid to the transport ID structure solely to help with parsing in the bdev driver.  The NVMe driver itself won\u0027t use these - it will always use the src_addr and src_svcid provided in the ctrlr_opts struct.  My concern is that users will think that if they fill out hostaddr and hostsvcid in the transport_id for spdk_nvme_connect, that these values will then be used when connecting to the target.",
+      "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
