@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-C_SRCS = app_rpc.c subsystem_rpc.c
+C_SRCS = app_rpc.c subsystem_rpc.c notify_rpc.c
 LIBNAME = app_rpc
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
