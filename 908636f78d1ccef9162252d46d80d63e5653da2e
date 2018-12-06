@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "09ab98fa_c6cc8cec",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-06T07:26:21Z",
+      "side": 1,
+      "message": "Hi Darek,\nThe test/app/match/match only display the json data between the examples and the output line by line but can\u0027t judge whether it is expected. So i think should add the test/app/match/match before these judge and keep these judge.",
+      "parentUuid": "c236e6e5_6774b763",
+      "revId": "908636f78d1ccef9162252d46d80d63e5653da2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d972b193_247b5dea",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-05T06:34:25Z",
       "side": 1,
       "message": "construct_nvme_bdev RPCs are only called if an NVMe exists, but this one is called unconditionally. Something\u0027s inconsistent here.",
+      "revId": "908636f78d1ccef9162252d46d80d63e5653da2e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75c96355_bf4f8434",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-06T07:26:21Z",
+      "side": 1,
+      "message": "Hi Darek,\nI have checked the $nvme_num before call the construct_nvme_bdev method. There are NVMe exists if the $nvme_num less than 0.",
+      "parentUuid": "d972b193_247b5dea",
       "revId": "908636f78d1ccef9162252d46d80d63e5653da2e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
