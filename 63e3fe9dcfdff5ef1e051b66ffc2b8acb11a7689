@@ -34,6 +34,24 @@
       "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b70a0918_c60716f8",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-06T20:58:59Z",
+      "side": 1,
+      "message": "Sounds good to me!",
+      "parentUuid": "f2dc40e9_2ce4994b",
+      "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
