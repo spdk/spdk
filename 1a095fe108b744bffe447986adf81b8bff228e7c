@@ -158,6 +158,24 @@
       "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8226d317_1fdf0554",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1658,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T17:08:14Z",
+      "side": 1,
+      "message": "The events come in on the event channel which can be shared across all of the queue pairs for a given controller or on the ibv_async_event call which is based on a file descriptor in the ibv_context which is again shared across all qpairs. You should be able to poll these two mechanisms just when the admin queue is polled and receive events for all qpairs in the system.",
+      "parentUuid": "6c3f7831_8c267a78",
+      "revId": "1a095fe108b744bffe447986adf81b8bff228e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
