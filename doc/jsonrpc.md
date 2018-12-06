@@ -5015,6 +5015,106 @@ Example response:
 }
 ~~~
 
+# Notifications
+
+## get_notification_types {#rpc_get_notification_types}
+
+Return list of all supported notification types.
+
+### Parameters
+
+None
+
+### Response
+
+The response is an array of strings - supported RPC notification types.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_notification_types",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "id": 1,
+  "result": [
+    "bdev_register",
+    "bdev_unregister"
+  ],
+  "jsonrpc": "2.0"
+}
+~~~
+
+## get_notifications {#get_notifications}
+
+Request notifications. Returns array of notifications that happend since the specified id (or first that is available).
+
+Notice: Notifications are kept in circular buffer with limited size. Older notifications might be inaccesible due to being overwritten by new ones.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+id                      | Optional | number      | First Event ID to fetch (default: first available).
+max                     | Optional | number      | Maximum number of event to return (default: no limit).
+
+### Response
+
+Response is an array of event objects.
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+id                      | Optional | number      | Event ID.
+type                    | Optional | number      | Type of the event.
+ctx                     | Optional | string      | Event context.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "id": 1,
+  "jsonrpc": "2.0",
+  "method": "get_notifications",
+  "params": {
+    "id": 1,
+    "max": 10
+  }
+}
+
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "ctx": "Malloc0",
+      "type": "bdev_register",
+      "id": 1
+    },
+    {
+      "ctx": "Malloc2",
+      "type": "bdev_register",
+      "id": 2
+    }
+  ]
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## send_nvme_cmd {#rpc_send_nvme_cmd}
