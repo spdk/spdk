@@ -50,6 +50,24 @@
       "revId": "4d840fd15f53568293dd49bde38b4572d1458c27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5c11cda_d104ea33",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T22:01:18Z",
+      "side": 1,
+      "message": "Seth and I discussed this and I\u0027m on board with just implementing a time out. The time out is useful in other scenarios anyway, so it is the cleaner solution.",
+      "parentUuid": "dfdced13_1dca76c4",
+      "revId": "4d840fd15f53568293dd49bde38b4572d1458c27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
