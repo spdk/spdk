@@ -34,6 +34,24 @@
       "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbf176c9_23184bae",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-06T20:56:27Z",
+      "side": 1,
+      "message": "Another option might be to take all three of them out of the trid structure, and change the configuration file format and parsing code. Which do you think would be better?",
+      "parentUuid": "5af5817c_fdb73733",
+      "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
