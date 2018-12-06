@@ -559,8 +559,10 @@ num_blocks_test(void)
 	spdk_bdev_notify_blockcnt_change(&bdev, 50);
 
 	/* Growing block number */
+	CU_ASSERT(spdk_bdev_blockcnt_changeable(&bdev, 70) == 0);
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 70) == 0);
 	/* Shrinking block number */
+	CU_ASSERT(spdk_bdev_blockcnt_changeable(&bdev, 30) == 0);
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 30) == 0);
 
 	/* In case bdev opened */
@@ -569,8 +571,10 @@ num_blocks_test(void)
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* Growing block number */
+	CU_ASSERT(spdk_bdev_blockcnt_changeable(&bdev, 80) == 0);
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 80) == 0);
 	/* Shrinking block number */
+	CU_ASSERT(spdk_bdev_blockcnt_changeable(&bdev, 20) != 0);
 	CU_ASSERT(spdk_bdev_notify_blockcnt_change(&bdev, 20) != 0);
 
 	spdk_bdev_close(desc);

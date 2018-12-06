@@ -2274,6 +2274,24 @@ spdk_bdev_set_qd_sampling_period(struct spdk_bdev *bdev, uint64_t period)
 }
 
 int
+spdk_bdev_blockcnt_changeable(struct spdk_bdev *bdev, uint64_t size)
+{
+	int ret = 0;
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+
+	/* bdev has open descriptors */
+	if (!TAILQ_EMPTY(&bdev->internal.open_descs) &&
+	    bdev->blockcnt > size) {
+		ret = -EBUSY;
+	}
+
+	pthread_mutex_unlock(&bdev->internal.mutex);
+
+	return ret;
+}
+
+int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
 	int ret;
