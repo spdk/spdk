@@ -133,6 +133,12 @@ struct spdk_bdev {
 	uint64_t blockcnt;
 };
 
+uint32_t
+spdk_env_get_last_core(void)
+{
+	return 0;
+}
+
 int
 spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 			       const struct spdk_nvme_transport_id *trid2)
