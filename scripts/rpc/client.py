@@ -3,6 +3,7 @@ import socket
 import time
 import os
 import logging
+import copy
 
 
 def print_dict(d):
@@ -64,7 +65,7 @@ class JSONRPCClient(object):
         if getattr(self, "sock", None):
             self.sock.close()
 
-    def send(self, method, params=None):
+    def add_request(self, method, params):
         self._request_id += 1
         req = {
             'jsonrpc': '2.0',
@@ -73,12 +74,22 @@ class JSONRPCClient(object):
         }
 
         if params:
-            req['params'] = params
+            req['params'] = copy.deepcopy(params)
 
-        reqstr = json.dumps(req,  indent=2)
-        self._logger.info("request:\n%s\n", reqstr)
+        self._logger.debug("append request:\n%s\n", LazyString(lambda: json.dumps(req)))
+        self._reqs.append(req)
+
+    def flush(self):
+        self._logger.debug("Flushing buffer")
+        # TODO: We can drop indent parameter
+        reqstr = "\n".join(json.dumps(req, indent=2) for req in self._reqs)
+        self._reqs = []
+        self._logger.info("Requests:\n%s\n", reqstr)
         self.sock.sendall(reqstr.encode("utf-8"))
-        return req
+
+    def send(self, method, params=None):
+        self.add_request(method, params)
+        self.flush()
 
     def decode_one_response(self):
         try:
