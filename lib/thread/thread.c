@@ -380,7 +380,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		}
 
 #ifdef DEBUG
-		if (rc == -1) {
+		if (poller_rc == -1) {
 			SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Poller %p returned -1\n", poller);
 		}
 #endif
