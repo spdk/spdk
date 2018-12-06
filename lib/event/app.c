@@ -53,6 +53,7 @@
 #define SPDK_APP_DPDK_DEFAULT_MASTER_CORE	-1
 #define SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_APP_DPDK_DEFAULT_CORE_MASK		"0x1"
+#define SPDK_APP_DEFAULT_CORE_LIMIT		0x140000000 /* 5 GiB */
 
 struct spdk_app {
 	struct spdk_conf		*config;
@@ -584,7 +585,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	if (opts->enable_coredump) {
 		struct rlimit core_limits;
 
-		core_limits.rlim_cur = core_limits.rlim_max = RLIM_INFINITY;
+		core_limits.rlim_cur = core_limits.rlim_max = SPDK_APP_DEFAULT_CORE_LIMIT;
 		setrlimit(RLIMIT_CORE, &core_limits);
 	}
 #endif
