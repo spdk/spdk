@@ -11,7 +11,7 @@ set -e
 export ASAN_OPTIONS=new_delete_type_mismatch=0
 
 PS4=' \t	\$ '
-ulimit -c unlimited
+ulimit -c 5000000
 
 : ${RUN_NIGHTLY:=0}
 export RUN_NIGHTLY
