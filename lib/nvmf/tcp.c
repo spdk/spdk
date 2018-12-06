@@ -454,6 +454,7 @@ spdk_nvmf_tcp_drain_state_queue(struct nvme_tcp_qpair *tqpair,
 	struct nvme_tcp_req *tcp_req, *req_tmp;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[state], state_link, req_tmp) {
+		printf("[drain]tqpair=%p, state=%d\n", tqpair, state);
 		nvmf_tcp_request_free(tcp_req);
 	}
 }
@@ -582,7 +583,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	ttransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
-				    ttransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    ttransport->max_queue_depth/16, /* The 4 is arbitrarily chosen. Needs to be configurable. */
 				    ttransport->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
@@ -610,10 +611,10 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (ttransport->max_queue_depth * 4)) {
+	if (spdk_mempool_count(ttransport->data_buf_pool) != (ttransport->max_queue_depth / 16)) {
 		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 			    spdk_mempool_count(ttransport->data_buf_pool),
-			    ttransport->max_queue_depth * 4);
+			    ttransport->max_queue_depth/16);
 	}
 
 	spdk_mempool_free(ttransport->data_buf_pool);
@@ -2553,6 +2554,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 				/* Put the buffer/s back in the pool */
 				for (uint32_t i = 0; i < tcp_req->req.iovcnt; i++) {
 					spdk_mempool_put(ttransport->data_buf_pool, tcp_req->buffers[i]);
+					printf("afer put: buffer num=%d\n", spdk_mempool_count(ttransport->data_buf_pool));
 					tcp_req->req.iov[i].iov_base = NULL;
 					tcp_req->buffers[i] = NULL;
 				}
