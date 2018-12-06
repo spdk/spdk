@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "178616ad_ba8eedc0",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T20:59:11Z",
+      "side": 1,
+      "message": "If another management task is currently executing, this will still send this task down won\u0027t it? Is that what you intended here?",
+      "revId": "d33ac24c0fd8228cc9c5273c09f366038f69ac6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
