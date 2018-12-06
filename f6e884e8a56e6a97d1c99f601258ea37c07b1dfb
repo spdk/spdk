@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c831161_ae41237f",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T03:14:25Z",
+      "side": 1,
+      "message": "Group id 0x5 is already occupied by nvmf_tcp.\nso please use 0x6 or higher ID.",
+      "range": {
+        "startLine": 52,
+        "startChar": 8,
+        "endLine": 52,
+        "endChar": 24
+      },
+      "revId": "f6e884e8a56e6a97d1c99f601258ea37c07b1dfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15c42991_d037b0c7",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T03:14:25Z",
+      "side": 1,
+      "message": "FTL_TRACE_SOURCE_USER ?",
+      "range": {
+        "startLine": 79,
+        "startChar": 52,
+        "endLine": 79,
+        "endChar": 77
+      },
+      "revId": "f6e884e8a56e6a97d1c99f601258ea37c07b1dfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a13a8bef_3b187b80",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 33
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-06T03:14:25Z",
+      "side": 1,
+      "message": "After using the trace facility in SPDK, predefinition also can be removed.\nUsing parameter  --tpoint-group-mask with one proper mask value can enable/disable FTL trace.\nif TRACE_GROUP_FTL is 0x6, then its mask is 0x40 (1 \u003c\u003c 6).",
+      "range": {
+        "startLine": 82,
+        "startChar": 12,
+        "endLine": 82,
+        "endChar": 29
+      },
+      "revId": "f6e884e8a56e6a97d1c99f601258ea37c07b1dfb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
