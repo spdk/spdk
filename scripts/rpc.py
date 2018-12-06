@@ -1770,6 +1770,24 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=send_nvme_cmd)
 
+    # Notifications
+    def get_notification_types(args):
+        print_dict(rpc.notify.get_notification_types(args.client))
+
+    p = subparsers.add_parser('get_notification_types', help='List available notifications that user can subscribe to.')
+    p.set_defaults(func=get_notification_types)
+
+    def get_notifications(args):
+        ret = rpc.notify.get_notifications(args.client,
+                                           id=args.id,
+                                           max=args.max)
+        print_dict(ret)
+
+    p = subparsers.add_parser('get_notifications', help='Get notifications')
+    p.add_argument('-i', '--id', help="""First ID to start fetching from""", type=int)
+    p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
+    p.set_defaults(func=get_notifications)
+
     args = parser.parse_args()
 
     with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
