@@ -2,6 +2,7 @@
 
 from rpc.client import print_dict, JSONRPCException
 
+import logging
 import argparse
 import rpc
 import sys
@@ -27,8 +28,10 @@ if __name__ == "__main__":
     parser.add_argument('-t', dest='timeout',
                         help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=60.0, type=float)
-    parser.add_argument('-v', dest='verbose',
-                        help='Verbose mode', action='store_true')
+    parser.add_argument('-v', dest='verbose', action='store_const', const="INFO",
+                        help='Set verbose mode to INFO', default="ERROR")
+    parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
+                        help="""Set verbose level. """)
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def start_subsystem_init(args):
@@ -1735,7 +1738,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     args = parser.parse_args()
 
     try:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
+        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
         args.func(args)
     except JSONRPCException as ex:
         print("Exception:")
