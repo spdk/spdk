@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "c7fe629e_65e3f8b2",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T22:40:19Z",
+      "side": 1,
+      "message": "This part looks obsolete and hence I remove this.",
+      "range": {
+        "startLine": 1223,
+        "startChar": 0,
+        "endLine": 1230,
+        "endChar": 20
+      },
+      "revId": "e23151fdd206b6b3127cff627bc64401f8cc69a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f2e3058_e505dce6",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 1
