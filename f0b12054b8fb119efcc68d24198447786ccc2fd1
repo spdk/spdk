@@ -16,6 +16,24 @@
       "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5af5817c_fdb73733",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-06T20:47:56Z",
+      "side": 1,
+      "message": "I see. That is also how the hostnqn is already used though.\nNot saying that is right, and I see how that confusion could happen. If I were to take the  assignments for hostnqn, hostsvcid and hostaddr out of bdev_nvme_library_init and place them in spdk_nvme_connect, would that work?",
+      "parentUuid": "8724111d_fc97d95b",
+      "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
