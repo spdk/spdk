@@ -9,6 +9,7 @@ from . import log
 from . import lvol
 from . import nbd
 from . import net
+from . import notify
 from . import nvme
 from . import nvmf
 from . import pmem
