@@ -295,7 +295,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 }
 
 static void
-_init_write_super_cpl(void *cb_arg, int ziperrno)
+_init_write_super_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	int rc;
@@ -307,7 +307,7 @@ _init_write_super_cpl(void *cb_arg, int ziperrno)
 		return;
 	}
 
-	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, ziperrno);
+	init_ctx->cb_fn(init_ctx->cb_arg, init_ctx->vol, reduce_errno);
 	/* Only clean up the ctx - the vol has been passed to the application
 	 *  for use now that initialization was successful.
 	 */
@@ -315,7 +315,7 @@ _init_write_super_cpl(void *cb_arg, int ziperrno)
 }
 
 static void
-_init_write_path_cpl(void *cb_arg, int ziperrno)
+_init_write_path_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *init_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = init_ctx->vol;
@@ -511,7 +511,7 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 }
 
 static void
-_load_read_super_and_path_cpl(void *cb_arg, int ziperrno)
+_load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 {
 	struct reduce_init_load_ctx *load_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = load_ctx->vol;

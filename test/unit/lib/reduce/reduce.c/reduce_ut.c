@@ -40,7 +40,7 @@
 #include "common/lib/test_env.c"
 
 static struct spdk_reduce_vol *g_vol;
-static int g_ziperrno;
+static int g_reduce_errno;
 static char *g_volatile_pm_buf;
 static size_t g_volatile_pm_buf_len;
 static char *g_persistent_pm_buf;
@@ -199,23 +199,23 @@ persistent_pm_buf_destroy(void)
 }
 
 static void
-init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
+init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	g_vol = vol;
-	g_ziperrno = ziperrno;
+	g_reduce_errno = reduce_errno;
 }
 
 static void
-load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
+load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
 	g_vol = vol;
-	g_ziperrno = ziperrno;
+	g_reduce_errno = reduce_errno;
 }
 
 static void
-unload_cb(void *cb_arg, int ziperrno)
+unload_cb(void *cb_arg, int reduce_errno)
 {
-	g_ziperrno = ziperrno;
+	g_reduce_errno = reduce_errno;
 }
 
 static void
@@ -233,9 +233,9 @@ init_failure(void)
 
 	/* backing_dev and pm_file have an invalid size.  This should fail. */
 	g_vol = NULL;
-	g_ziperrno = 0;
+	g_reduce_errno = 0;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == -EINVAL);
+	CU_ASSERT(g_reduce_errno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 
 	/* backing_dev now has valid size, but backing_dev still has null
@@ -244,9 +244,9 @@ init_failure(void)
 	backing_dev.blockcnt = spdk_reduce_get_backing_device_size(&params) / backing_dev.blocklen;
 
 	g_vol = NULL;
-	g_ziperrno = 0;
+	g_reduce_errno = 0;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == -EINVAL);
+	CU_ASSERT(g_reduce_errno == -EINVAL);
 	SPDK_CU_ASSERT_FATAL(g_vol == NULL);
 }
 
@@ -341,9 +341,9 @@ init_md(void)
 	backing_dev_init(&backing_dev, &params);
 
 	g_vol = NULL;
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	/* Confirm that reduce persisted the params to metadata. */
 	CU_ASSERT(memcmp(g_persistent_pm_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
@@ -367,10 +367,10 @@ init_md(void)
 	CU_ASSERT(spdk_uuid_parse(&uuid, &g_path[strlen(TEST_MD_PATH) + 1]) == 0);
 	CU_ASSERT(spdk_uuid_compare(&uuid, spdk_reduce_vol_get_uuid(g_vol)) == 0);
 
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	g_backing_dev_closed = false;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	CU_ASSERT(g_backing_dev_closed == true);
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 
@@ -395,9 +395,9 @@ init_backing_dev(void)
 
 	g_vol = NULL;
 	g_path = NULL;
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	/* Confirm that libreduce persisted the params to the backing device. */
@@ -412,10 +412,10 @@ init_backing_dev(void)
 			  g_backing_dev_buf + REDUCE_BACKING_DEV_PATH_OFFSET,
 			  REDUCE_PATH_MAX) == 0);
 
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	g_backing_dev_closed = false;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	CU_ASSERT(g_backing_dev_closed == true);
 
 	persistent_pm_buf_destroy();
@@ -438,22 +438,22 @@ load(void)
 	backing_dev_init(&backing_dev, &params);
 
 	g_vol = NULL;
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	memcpy(pmem_file_path, g_path, sizeof(pmem_file_path));
 
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 
 	g_vol = NULL;
 	g_path = NULL;
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
 	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	CU_ASSERT(strncmp(g_path, pmem_file_path, sizeof(pmem_file_path)) == 0);
@@ -461,9 +461,9 @@ load(void)
 	CU_ASSERT(g_vol->params.chunk_size == params.chunk_size);
 	CU_ASSERT(g_vol->params.backing_io_unit_size == params.backing_io_unit_size);
 
-	g_ziperrno = -1;
+	g_reduce_errno = -1;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
-	CU_ASSERT(g_ziperrno == 0);
+	CU_ASSERT(g_reduce_errno == 0);
 
 	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);
