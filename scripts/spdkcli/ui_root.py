@@ -57,9 +57,9 @@ class UIRoot(UINode):
         # Do not use for "get_*" methods so that output is not
         # flooded.
         def w(self, **kwargs):
-            self.client.verbose = self.verbose
+            self.client.set_log_level("INFO" if self.verbose else "ERROR")
             r = f(self, **kwargs)
-            self.client.verbose = False
+            self.client.set_log_level("ERROR")
             return r
         return w
 
