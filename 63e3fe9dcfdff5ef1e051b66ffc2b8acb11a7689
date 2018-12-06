@@ -52,6 +52,23 @@
       "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "179f2de8_4a32b39d",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-06T22:53:34Z",
+      "side": 1,
+      "message": "re: ctrlr \u003d\u003d NULL check\n\nBut this goes against how the driver operates today.  If there\u0027s a desire to add ctrlr checks in all of the SPDK functions, that should be part of a discussion and patches separately from this patch.  For this patch it should just be an assert() at best.",
+      "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
