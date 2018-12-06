@@ -232,7 +232,6 @@ struct nvme_tcp_qpair {
 
 	uint32_t				maxr2t;
 	uint32_t				pending_r2t;
-	TAILQ_HEAD(, nvme_tcp_req)		queued_r2t_tcp_req;
 	TAILQ_HEAD(, nvme_tcp_req)		queued_c2h_data_tcp_req;
 
 	uint8_t					cpda;
@@ -473,10 +472,6 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
-	/* Wipe the requests waiting for R2t  */
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_r2t_tcp_req, link, req_tmp) {
-		TAILQ_REMOVE(&tqpair->queued_r2t_tcp_req, tcp_req, link);
-	}
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
 
 	/* Wipe the requests waiting for buffer from the global list */
@@ -1094,7 +1089,6 @@ spdk_nvmf_tcp_qpair_init(struct spdk_nvmf_qpair *qpair)
 
 	TAILQ_INIT(&tqpair->send_queue);
 	TAILQ_INIT(&tqpair->free_queue);
-	TAILQ_INIT(&tqpair->queued_r2t_tcp_req);
 	TAILQ_INIT(&tqpair->queued_c2h_data_tcp_req);
 
 	/* Initialise request state queues of the qpair */
@@ -1516,8 +1510,7 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 }
 
 static void
-spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_transport *ttransport,
-			   struct nvme_tcp_qpair *tqpair,
+spdk_nvmf_tcp_send_r2t_pdu(struct nvme_tcp_qpair *tqpair,
 			   struct nvme_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *rsp_pdu;
@@ -1552,6 +1545,23 @@ spdk_nvmf_tcp_send_r2t_pdu(struct spdk_nvmf_tcp_transport *ttransport,
 }
 
 static void
+spdk_nvmf_tcp_handle_queued_r2t_req(struct nvme_tcp_qpair *tqpair)
+{
+	struct nvme_tcp_req *tcp_req, *req_tmp;
+
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T],
+			   state_link, req_tmp) {
+		if (tqpair->pending_r2t < tqpair->maxr2t) {
+			tqpair->pending_r2t++;
+			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
+		} else {
+			break;
+		}
+	}
+}
+
+static void
 spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport,
 				      struct nvme_tcp_qpair *tqpair,
 				      struct nvme_tcp_pdu *pdu)
@@ -1575,14 +1585,10 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 			spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_READY_TO_EXECUTE);
 			spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 
-			/* fetch next */
-			tcp_req = TAILQ_FIRST(&tqpair->queued_r2t_tcp_req);
-			if (tcp_req) {
-				spdk_nvmf_tcp_req_process(ttransport, tcp_req);
-			}
+			spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 		} else {
 			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Send r2t pdu for tcp_req=%p on tqpair=%p\n", tcp_req, tqpair);
-			spdk_nvmf_tcp_send_r2t_pdu(ttransport, tqpair, tcp_req);
+			spdk_nvmf_tcp_send_r2t_pdu(tqpair, tcp_req);
 		}
 	}
 }
@@ -2383,8 +2389,8 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct spdk_nvmf_tcp_transport *ttransport,
 		spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY);
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Will send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req, tqpair);
 		tcp_req->next_expected_r2t_offset = 0;
-		TAILQ_INSERT_TAIL(&tqpair->queued_r2t_tcp_req, tcp_req, link);
 		spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
+		spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 
 	} else {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Not need to send r2t for tcp_req(%p) on tqpair=%p\n", tcp_req,
@@ -2487,14 +2493,8 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 		case TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T:
 			spdk_trace_record(TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T, 0, 0,
 					  (uintptr_t)tcp_req, 0);
-
-			if (tqpair->pending_r2t < tqpair->maxr2t) {
-				tqpair->pending_r2t++;
-				TAILQ_REMOVE(&tqpair->queued_r2t_tcp_req, tcp_req, link);
-				spdk_nvmf_tcp_send_r2t_pdu(ttransport, tqpair, tcp_req);
-				spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			}
-
+			/* Some external code must kick a request into TCP_REQUEST_STATE_DATA_PENDING_R2T
+			 * to escape this state. */
 			break;
 
 		case TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
@@ -2565,13 +2565,7 @@ spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
 {
 	struct nvme_tcp_req *tcp_req, *req_tmp;
 
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_r2t_tcp_req, link, req_tmp) {
-		if (tqpair->pending_r2t < tqpair->maxr2t) {
-			if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
-				break;
-			}
-		}
-	}
+	spdk_nvmf_tcp_handle_queued_r2t_req(tqpair);
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->ch->pending_data_buf_queue, link, req_tmp) {
 		if (spdk_nvmf_tcp_req_process(ttransport, tcp_req) == false) {
