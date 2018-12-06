@@ -2,6 +2,10 @@
 
 ## v19.01: (Upcoming Release)
 
+### util
+
+A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
+
 ### nvme
 
 admin_timeout_ms was added to NVMe controller initialization options, users

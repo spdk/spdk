@@ -93,6 +93,14 @@ int spdk_uuid_compare(const struct spdk_uuid *u1, const struct spdk_uuid *u2);
  */
 void spdk_uuid_generate(struct spdk_uuid *uuid);
 
+/**
+ * Copy a UUID.
+ *
+ * \param src Source UUID to copy from.
+ * \param dst Destination UUID to store.
+ */
+void spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src);
+
 #ifdef __cplusplus
 }
 #endif

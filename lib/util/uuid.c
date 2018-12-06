@@ -65,3 +65,9 @@ spdk_uuid_generate(struct spdk_uuid *uuid)
 {
 	uuid_generate((void *)uuid);
 }
+
+void
+spdk_uuid_copy(struct spdk_uuid *dst, const struct spdk_uuid *src)
+{
+	uuid_copy((void *)dst, (void *)src);
+}
