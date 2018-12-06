@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "becd9929_19bf1e1f",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 813,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T09:25:53Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion.\n\nI used 0 to inject error to data block and 0 cannot be enabled with 1, 2, or 4 simultaneously. Hence I used \u003d\u003d.\n\nBut multiple injections is nice to have and I\u0027ll create dedicated flags for error injection.\n\nPlease review the new version.",
+      "parentUuid": "68b64080_18b48e3c",
+      "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10041d35_746ccf64",
         "filename": "lib/util/t10dif.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-05T04:10:47Z",
       "side": 1,
       "message": "Can we combine into the same loop as the previous one? I mean actually we don\u0027t need copy whole block data and DIF for the error injection.",
+      "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8131dc6f_948dbe2a",
+        "filename": "lib/util/t10dif.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T09:25:53Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion too!\n\nI refined the whole patch to take your feedback. Please review the new version.",
+      "parentUuid": "10041d35_746ccf64",
       "revId": "1297b9f7ddbb5aecf0c3481a3547da4bc0a5242a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
