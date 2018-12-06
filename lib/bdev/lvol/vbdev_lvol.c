@@ -1135,6 +1135,7 @@ void
 vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
+	int ret;
 
 	if (lvol == NULL) {
 		SPDK_ERRLOG("lvol does not exist\n");
@@ -1143,6 +1144,14 @@ vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_
 	}
 
 	assert(lvol->bdev != NULL);
+
+	ret = spdk_bdev_blockcnt_changeable(lvol->bdev, sz / lvol->bdev->blocklen);
+	if (ret != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev lvol %s with error no: %d.\n",
+			    lvol->name, ret);
+		cb_fn(cb_arg, ret);
+		return;
+	}
 
 	req = calloc(1, sizeof(*req));
 	if (req == NULL) {

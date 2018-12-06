@@ -406,6 +406,12 @@ spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn
 }
 
 int
+spdk_bdev_blockcnt_changeable(struct spdk_bdev *bdev, uint64_t size)
+{
+	return 0;
+}
+
+int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
 	bdev->blockcnt = size;
