@@ -583,7 +583,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	ttransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
-				    opts->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    opts->max_queue_depth / 16, /* The 4 is arbitrarily chosen. Needs to be configurable. */
 				    opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
@@ -611,10 +611,10 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.max_queue_depth * 4)) {
+	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.max_queue_depth / 16)) {
 		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 			    spdk_mempool_count(ttransport->data_buf_pool),
-			    transport->opts.max_queue_depth * 4);
+			    transport->opts.max_queue_depth / 16);
 	}
 
 	spdk_mempool_free(ttransport->data_buf_pool);
