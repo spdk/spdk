@@ -52,6 +52,24 @@
       "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1d9a212_f392d7fe",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-06T22:18:17Z",
+      "side": 1,
+      "message": "I think you should take just these two new ones out of this structure and update the config file parser to handle them there (as additional arguments to TransportID). It might make sense to allow per-connection HostNQN specification in the future too, but I don\u0027t want to mix that up with this patch.",
+      "parentUuid": "bbf176c9_23184bae",
+      "revId": "f0b12054b8fb119efcc68d24198447786ccc2fd1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
