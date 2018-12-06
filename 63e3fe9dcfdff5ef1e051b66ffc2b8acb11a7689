@@ -16,6 +16,24 @@
       "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2dc40e9_2ce4994b",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 419,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-06T20:47:28Z",
+      "side": 1,
+      "message": "I do concede that the NVMe-over-Fabrics-1_0a-2018.07.23 spec, Figure 32:   Discovery Controller – Log Page Identifiers, does show that the Error Information (Log Identifier 01h) is indeed optional.   However, the lib/nvmf/ctrlr.c:spdk_nvmf_ctrlr_get_log_page() code which I believe you cite above, is written such that just before that code, a check is made for a subsystem-\u003esubtype \u003d\u003d SPDK_NVMF_SUBTYPE_DISCOVERY and thus takes that path instead where it fails all log ids other than SPDK_NVME_LOG_DISCOVERY.   If we want to think about altering that behavior, I would propose that be done in a separate patch.   Until such time, I would propose we retain this patch\u0027s reduced command set (when targeting Discovery) thus eliminating the error messages to the screen (on both initiator and target sides) which might otherwise alarm or confuse users.",
+      "parentUuid": "3fcb37e3_0363a710",
+      "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
