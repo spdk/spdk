@@ -69,6 +69,24 @@
       "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccec7aa0_160e7127",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2734,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-06T23:19:20Z",
+      "side": 1,
+      "message": "Very well.   I\u0027ll change it to an assert() then.   I had figured that returning instead of failing went part and parcel with the batch of changes I did a long while back to the lib code where I removed abort()\u0027s and exit()\u0027s, but we\u0027ll perhaps take up the topic of assert()\u0027s (or otherwise param checking) another time.",
+      "parentUuid": "179f2de8_4a32b39d",
+      "revId": "63e3fe9dcfdff5ef1e051b66ffc2b8acb11a7689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
