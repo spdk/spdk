@@ -267,6 +267,12 @@ spdk_rpc_close(void)
 	}
 }
 
+struct spdk_jsonrpc_server *
+spdk_rpc_get_server(void)
+{
+	return g_jsonrpc_server;
+}
+
 struct rpc_get_rpc_methods {
 	bool current;
 };

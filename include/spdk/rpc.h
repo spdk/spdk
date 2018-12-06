@@ -62,6 +62,14 @@ void spdk_rpc_accept(void);
 void spdk_rpc_close(void);
 
 /**
+ * Get RPC server instance.
+ *
+ * \return RPC server instance or NULL if server is not listening
+ */
+struct spdk_jsonrpc_server *spdk_rpc_get_server(void);
+
+
+/**
  * Function signature for RPC request handlers.
  *
  * \param request RPC request to handle.
