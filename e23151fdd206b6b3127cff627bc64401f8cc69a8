@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f2e3058_e505dce6",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-06T16:53:51Z",
+      "side": 1,
+      "message": "I think maybe this should always just return 1.\n\nFor example, on line 1239, it would return 0 if we were able to flush all of the PDUs.  We should count this as real work and return 1 here.\n\nI think even if we tried to flush pdus, but could not flush all of them (even if we don\u0027t flush any of them) it is OK to count it as real work.",
+      "revId": "e23151fdd206b6b3127cff627bc64401f8cc69a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
