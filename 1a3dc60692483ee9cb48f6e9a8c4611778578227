@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da0a9210_13ea2fdd",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-06T10:58:34Z",
+      "side": 1,
+      "message": "Can you explain why? Maybe in commit message?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 18
+      },
+      "revId": "1a3dc60692483ee9cb48f6e9a8c4611778578227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1854ce5a_d533095f",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-06T10:58:34Z",
+      "side": 1,
+      "message": "Not related to this patch but I grep whole SPDK repo and can\u0027t find out what is this. Someone know something about this?",
+      "range": {
+        "startLine": 14,
+        "startChar": 41,
+        "endLine": 14,
+        "endChar": 62
+      },
+      "revId": "1a3dc60692483ee9cb48f6e9a8c4611778578227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
