@@ -42,11 +42,6 @@
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 
-DEFINE_STUB(spdk_bdev_module_claim_bdev,
-	    int,
-	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-	     struct spdk_bdev_module *module), 0);
-
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 

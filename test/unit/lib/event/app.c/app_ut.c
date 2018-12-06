@@ -39,23 +39,11 @@
 
 #define test_argc 6
 
-DEFINE_STUB_V(spdk_rpc_initialize, (const char *listen_addr));
-DEFINE_STUB_V(spdk_rpc_finish, (void));
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
-DEFINE_STUB_V(spdk_reactors_start, (void));
-DEFINE_STUB_V(spdk_reactors_stop, (void *arg1, void *arg2));
-DEFINE_STUB(spdk_reactors_init, int, (unsigned int max_delay_us), 0);
-DEFINE_STUB_V(spdk_reactors_fini, (void));
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *, (uint32_t core, spdk_event_fn fn, void *arg1,
 		void *arg2), NULL);
 DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
-DEFINE_STUB(spdk_app_get_core_mask, struct spdk_cpuset *, (void), NULL);
-DEFINE_STUB_V(spdk_subsystem_config, (FILE *fp));
 DEFINE_STUB_V(spdk_subsystem_init, (struct spdk_event *app_start_event));
-DEFINE_STUB_V(spdk_subsystem_fini, (struct spdk_event *app_stop_event));
-DEFINE_STUB(spdk_env_init, int, (const struct spdk_env_opts *opts), 0);
-DEFINE_STUB_V(spdk_env_opts_init, (struct spdk_env_opts *opts));
-DEFINE_STUB(spdk_env_get_core_count, uint32_t, (void), 1);
 DEFINE_STUB_V(spdk_rpc_register_method, (const char *method, spdk_rpc_method_handler func,
 		uint32_t state_mask));
 DEFINE_STUB_V(spdk_rpc_set_state, (uint32_t state));
