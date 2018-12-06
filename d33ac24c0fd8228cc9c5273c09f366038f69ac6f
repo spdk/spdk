@@ -16,6 +16,24 @@
       "revId": "d33ac24c0fd8228cc9c5273c09f366038f69ac6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bcb2661e_c3d91dc4",
+        "filename": "lib/scsi/lun.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-06T22:32:49Z",
+      "side": 1,
+      "message": "Hi Ben, you are correct. I introduced two queues and my intention was just what you questioned. I updated the code to return here if another management task is currently executing.",
+      "parentUuid": "178616ad_ba8eedc0",
+      "revId": "d33ac24c0fd8228cc9c5273c09f366038f69ac6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
