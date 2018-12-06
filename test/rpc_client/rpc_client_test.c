@@ -228,7 +228,7 @@ int main(int argc, char **argv)
 	pthread_t srv_tid, client_tid;
 	int srv_tid_valid;
 	int client_tid_valid = -1;
-	int th_rc = INT_MIN;
+	intptr_t th_rc = INTPTR_MIN;
 	int rc = 0, err_cnt = 0;
 
 	sem_init(&g_rpc_server_th_listening, 0, 0);
@@ -260,7 +260,7 @@ out:
 			fprintf(stderr, "pthread_join() on cliennt thread failed (rc: %d)\n", rc);
 			err_cnt++;
 		} else if (th_rc) {
-			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", th_rc);
+			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", (int)th_rc);
 			err_cnt++;
 		}
 	}
@@ -279,7 +279,7 @@ out:
 			fprintf(stderr, "pthread_join() on cliennt thread failed (rc: %d)\n", rc);
 			err_cnt++;
 		} else if (th_rc) {
-			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", th_rc);
+			fprintf(stderr, "cliennt thread failed reported failure(thread rc: %d)\n", (int)th_rc);
 			err_cnt++;
 		}
 	}
