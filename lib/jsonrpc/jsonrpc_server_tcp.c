@@ -279,21 +279,23 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 
 	conn->recv_len += rc;
 
-	rc = spdk_jsonrpc_parse_request(conn, conn->recv_buf, conn->recv_len);
-	if (rc < 0) {
-		SPDK_ERRLOG("jsonrpc parse request failed\n");
-		return -1;
-	}
+	do {
+		rc = spdk_jsonrpc_parse_request(conn, conn->recv_buf, conn->recv_len);
+		if (rc < 0) {
+			SPDK_ERRLOG("jsonrpc parse request failed\n");
+			return -1;
+		}
 
-	if (rc > 0) {
-		/*
-		 * Successfully parsed a request - move any data past the end of the
-		 * parsed request down to the beginning.
-		 */
-		assert((size_t)rc <= conn->recv_len);
-		memmove(conn->recv_buf, conn->recv_buf + rc, conn->recv_len - rc);
-		conn->recv_len -= rc;
-	}
+		if (rc > 0) {
+			/*
+			 * Successfully parsed a request - move any data past the end of the
+			 * parsed request down to the beginning.
+			 */
+			assert((size_t)rc <= conn->recv_len);
+			memmove(conn->recv_buf, conn->recv_buf + rc, conn->recv_len - rc);
+			conn->recv_len -= rc;
+		}
+	} while(rc > 0);
 
 	return 0;
 }

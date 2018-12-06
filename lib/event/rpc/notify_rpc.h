@@ -31,56 +31,12 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/stdinc.h"
 
-#include "spdk/conf.h"
-#include "spdk/env.h"
-#include "spdk/thread.h"
-#include "spdk/log.h"
-#include "spdk/rpc.h"
+#ifndef SPDK_RPC_NOTIFY_RPC_H_
+#define SPDK_RPC_NOTIFY_RPC_H_
 
-#include "spdk_internal/event.h"
+struct spdk_jsonrpc_server_conn;
 
-#include "rpc/notify_rpc.h"
+int spdk_rpc_notify_new_connection(struct spdk_jsonrpc_server_conn *conn, void *arg);
 
-#define RPC_SELECT_INTERVAL	4000 /* 4ms */
-
-static struct spdk_poller *g_rpc_poller = NULL;
-
-static int
-spdk_rpc_subsystem_poll(void *arg)
-{
-	spdk_rpc_accept();
-	return -1;
-}
-
-void
-spdk_rpc_initialize(const char *listen_addr)
-{
-	int rc;
-	struct spdk_jsonrpc_server *srv;
-
-	if (listen_addr == NULL) {
-		return;
-	}
-
-	/* Listen on the requested address */
-	rc = spdk_rpc_listen(listen_addr);
-	if (rc != 0) {
-		SPDK_ERRLOG("Unable to start RPC service at %s\n", listen_addr);
-		return;
-	}
-
-	srv = spdk_rpc_get_server();
-	spdk_rpc_set_state(SPDK_RPC_STARTUP);
-
-	/* Register a poller to periodically check for RPCs */
-	g_rpc_poller = spdk_poller_register(spdk_rpc_subsystem_poll, NULL, RPC_SELECT_INTERVAL);
-}
-
-void
-spdk_rpc_finish(void)
-{
-	spdk_rpc_close();
-	spdk_poller_unregister(&g_rpc_poller);
-}
+#endif /* SPDK_RPC_NOTIFY_RPC_H_ */
