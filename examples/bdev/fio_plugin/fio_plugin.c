@@ -262,6 +262,7 @@ spdk_fio_calc_timeout(struct timespec *ts, uint64_t us)
 static pthread_t g_init_thread_id = 0;
 static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_init_cond = PTHREAD_COND_INITIALIZER;
+static bool g_poll_loop = true;
 
 static void *
 spdk_init_thread_poll(void *arg)
@@ -359,13 +360,13 @@ spdk_init_thread_poll(void *arg)
 	pthread_mutex_lock(&g_init_mtx);
 	pthread_cond_signal(&g_init_cond);
 
-	while (true) {
+	while (g_poll_loop) {
 		spdk_fio_poll_thread(fio_thread);
 
-		clock_gettime(CLOCK_REALTIME, &ts);
+		clock_gettime(CLOCK_MONOTONIC, &ts);
 		spdk_fio_calc_timeout(&ts, fio_thread->timeout);
-		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
 
+		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
 		if (rc != ETIMEDOUT) {
 			break;
 		}
@@ -407,13 +408,28 @@ err_exit:
 static int
 spdk_fio_init_env(struct thread_data *td)
 {
-	int rc;
+	pthread_condattr_t attr;
+	int rc = -1;
+
+	if (pthread_condattr_init(&attr)) {
+		SPDK_ERRLOG("Unable to initialize condition variable\n");
+		return -1;
+	}
+
+	if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC)) {
+		SPDK_ERRLOG("Unable to initialize condition variable\n");
+		goto out;
+	}
+
+	if (pthread_cond_init(&g_init_cond, &attr)) {
+		SPDK_ERRLOG("Unable to initialize condition variable\n");
+		goto out;
+	}
 
 	/*
 	 * Spawn a thread to handle initialization operations and to poll things
 	 * like the admin queues periodically.
 	 */
-
 	rc = pthread_create(&g_init_thread_id, NULL, &spdk_init_thread_poll, td->eo);
 	if (rc != 0) {
 		SPDK_ERRLOG("Unable to spawn thread to poll admin queue. It won't be polled.\n");
@@ -423,8 +439,9 @@ spdk_fio_init_env(struct thread_data *td)
 	pthread_mutex_lock(&g_init_mtx);
 	pthread_cond_wait(&g_init_cond, &g_init_mtx);
 	pthread_mutex_unlock(&g_init_mtx);
-
-	return 0;
+out:
+	pthread_condattr_destroy(&attr);
+	return rc;
 }
 
 /* Called for each thread to fill in the 'real_file_size' member for
@@ -804,6 +821,7 @@ static void
 spdk_fio_finish_env(void)
 {
 	pthread_mutex_lock(&g_init_mtx);
+	g_poll_loop = false;
 	pthread_cond_signal(&g_init_cond);
 	pthread_mutex_unlock(&g_init_mtx);
 	pthread_join(g_init_thread_id, NULL);
