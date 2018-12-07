@@ -549,7 +549,8 @@ virtio_pci_dev_enumerate(virtio_pci_create_cb enum_cb, void *enum_ctx,
 	ctx.enum_ctx = enum_ctx;
 	ctx.device_id = pci_device_id;
 
-	return spdk_pci_virtio_enumerate(virtio_pci_dev_probe_cb, &ctx);
+	return spdk_pci_enumerate(spdk_pci_virtio_get_driver(),
+				  virtio_pci_dev_probe_cb, &ctx);
 }
 
 int
@@ -567,7 +568,8 @@ virtio_pci_dev_attach(virtio_pci_create_cb enum_cb, void *enum_ctx,
 	ctx.enum_ctx = enum_ctx;
 	ctx.device_id = pci_device_id;
 
-	return spdk_pci_virtio_device_attach(virtio_pci_dev_probe_cb, &ctx, pci_address);
+	return spdk_pci_device_attach(spdk_pci_virtio_get_driver(),
+				      virtio_pci_dev_probe_cb, &ctx, pci_address);
 }
 
 int
