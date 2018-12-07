@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edd971e0_618605c2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T22:24:08Z",
+      "side": 1,
+      "message": "rc should be aligned with other variable names",
+      "revId": "bd3787f4219e7050df1e53cedf5df92b74fb3aa3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
