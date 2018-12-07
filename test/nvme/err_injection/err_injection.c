@@ -219,7 +219,6 @@ int main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "err_injection";
 	opts.core_mask = "0x1";
-	opts.mem_size = 64;
 	opts.shm_id = 0;
 	if (spdk_env_init(&opts) < 0) {
 		fprintf(stderr, "Unable to initialize SPDK env\n");
