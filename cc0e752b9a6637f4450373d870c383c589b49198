@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f05e9194_856c36ac",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "338b2169_12a9a723",
+      "range": {
+        "startLine": 54,
+        "startChar": 7,
+        "endLine": 54,
+        "endChar": 25
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "225f68d6_bfbe74b6",
         "filename": "include/spdk/notify.h",
         "patchSetId": 12
@@ -45,6 +69,30 @@
       "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bc820bc_dd74005f",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "225f68d6_bfbe74b6",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 52
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +136,48 @@
     },
     {
       "key": {
+        "uuid": "9b58d96a_0e57c70b",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fde2ddfd_08dc1e30",
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "869852d5_2d9b0ef9",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c893e52b_aa007291",
+      "range": {
+        "startLine": 72,
+        "startChar": 7,
+        "endLine": 72,
+        "endChar": 18
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0b2be6a8_5f27a444",
         "filename": "include/spdk/notify.h",
         "patchSetId": 12
@@ -102,6 +192,24 @@
       "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59505bf6_490774a1",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0b2be6a8_5f27a444",
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -128,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "35c98d2b_ebd8dd95",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f7b9a08d_e9413b51",
+      "range": {
+        "startLine": 82,
+        "startChar": 10,
+        "endLine": 82,
+        "endChar": 16
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "203ea7c2_a3a3167f",
         "filename": "include/spdk/notify.h",
         "patchSetId": 12
@@ -139,6 +271,30 @@
       "writtenOn": "2018-11-30T13:43:59Z",
       "side": 1,
       "message": "This should take \u0027struct spdk_notify_type *\u0027 simmilar to how subsystems are registered.",
+      "range": {
+        "startLine": 91,
+        "startChar": 29,
+        "endLine": 91,
+        "endChar": 48
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8896b84d_77cc1885",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "are you sure that we should pass spdk_notify_type structure? subysytems are registered with callback.",
+      "parentUuid": "203ea7c2_a3a3167f",
       "range": {
         "startLine": 91,
         "startChar": 29,
@@ -168,6 +324,24 @@
     },
     {
       "key": {
+        "uuid": "7f77349c_51599ce5",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11894324_d92d9627",
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c5b8ce88_12623f40",
         "filename": "lib/notify/notify.c",
         "patchSetId": 12
@@ -188,6 +362,30 @@
       "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9729143b_2383b81b",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5b8ce88_12623f40",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 35
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -214,6 +412,30 @@
     },
     {
       "key": {
+        "uuid": "e7ad1d3c_c941376c",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b7328cdd_8e163975",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 25
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b152f10d_556e43ca",
         "filename": "lib/notify/notify.c",
         "patchSetId": 12
@@ -237,6 +459,30 @@
     },
     {
       "key": {
+        "uuid": "9041303d_4a6a720c",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b152f10d_556e43ca",
+      "range": {
+        "startLine": 68,
+        "startChar": 5,
+        "endLine": 68,
+        "endChar": 12
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "072f6663_586cae52",
         "filename": "lib/notify/notify.c",
         "patchSetId": 12
@@ -257,6 +503,30 @@
       "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "df560cc7_04670668",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "072f6663_586cae52",
+      "range": {
+        "startLine": 78,
+        "startChar": 5,
+        "endLine": 78,
+        "endChar": 12
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -318,6 +588,30 @@
     },
     {
       "key": {
+        "uuid": "a172e2ad_85bdda85",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e69c7f29_f4acda08",
+      "range": {
+        "startLine": 133,
+        "startChar": 18,
+        "endLine": 133,
+        "endChar": 22
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc0d95ee_ecfc150f",
         "filename": "lib/notify/notify.c",
         "patchSetId": 12
@@ -338,6 +632,30 @@
       "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96932085_0a44fac1",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T16:47:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc0d95ee_ecfc150f",
+      "range": {
+        "startLine": 137,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 37
+      },
+      "revId": "cc0e752b9a6637f4450373d870c383c589b49198",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
