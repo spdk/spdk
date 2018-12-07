@@ -307,6 +307,11 @@ void spdk_delay_us(unsigned int us)
 	rte_delay_us(us);
 }
 
+void spdk_pause(void)
+{
+	rte_pause();
+}
+
 void
 spdk_unaffinitize_thread(void)
 {
