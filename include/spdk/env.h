@@ -510,6 +510,11 @@ uint64_t spdk_get_ticks_hz(void);
  */
 void spdk_delay_us(unsigned int us);
 
+/**
+ * Pause CPU execution for a short while
+ */
+void spdk_pause(void);
+
 struct spdk_ring;
 
 enum spdk_ring_type {
