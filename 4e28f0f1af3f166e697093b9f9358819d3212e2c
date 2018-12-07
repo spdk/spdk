@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d771e480_a7c0b665",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-07T02:09:57Z",
+      "side": 1,
+      "message": "Thanks for your review.",
+      "parentUuid": "40e2d291_60c53564",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 1
+      },
+      "revId": "4e28f0f1af3f166e697093b9f9358819d3212e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0f5a518_00e974fa",
         "filename": "include/spdk/string.h",
         "patchSetId": 9
@@ -83,6 +107,30 @@
       "side": 1,
       "message": "I apologize for not spotting that much earlier in the review process. Pawel is right - let\u0027s drop this patch and just write spdk_sprintf_alloc(\"%s%s\", str1, str2); everywhere that you planned to use this function.",
       "parentUuid": "9257983d_107248f5",
+      "range": {
+        "startLine": 98,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 36
+      },
+      "revId": "4e28f0f1af3f166e697093b9f9358819d3212e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a85f17ec_a3fc1039",
+        "filename": "lib/util/string.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-07T02:09:57Z",
+      "side": 1,
+      "message": "Thanks for reviewing.",
+      "parentUuid": "eab443d7_c7257e7a",
       "range": {
         "startLine": 98,
         "startChar": 0,
