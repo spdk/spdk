@@ -115,10 +115,22 @@ int
 spdk_nvme_wait_for_completion_robust_lock(
 	struct spdk_nvme_qpair *qpair,
 	struct nvme_completion_poll_status *status,
-	pthread_mutex_t *robust_mutex)
+	pthread_mutex_t *robust_mutex,
+	uint64_t timeout_us)
 {
+	uint64_t timeout_value_us = 0;
+
 	memset(&status->cpl, 0, sizeof(status->cpl));
 	status->done = false;
+
+	if (timeout_us) {
+		timeout_value_us = spdk_get_ticks() / spdk_get_ticks_hz();
+		if (timeout_us > UINT64_MAX - timeout_value_us) {
+			SPDK_ERRLOG("Timeout too long, falling back to infinite timeout\n");
+			timeout_value_us = 0;
+		}
+		timeout_value_us = timeout_value_us + timeout_us;
+	}
 
 	while (status->done == false) {
 		if (robust_mutex) {
@@ -130,6 +142,12 @@ spdk_nvme_wait_for_completion_robust_lock(
 		if (robust_mutex) {
 			nvme_robust_mutex_unlock(robust_mutex);
 		}
+
+		if (timeout_value_us && spdk_get_ticks() / spdk_get_ticks_hz() > timeout_value_us) {
+			if (status->done == false) {
+				return -EIO;
+			}
+		}
 	}
 
 	return spdk_nvme_cpl_is_error(&status->cpl) ? -EIO : 0;
@@ -137,9 +155,10 @@ spdk_nvme_wait_for_completion_robust_lock(
 
 int
 spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-			      struct nvme_completion_poll_status *status)
+			      struct nvme_completion_poll_status *status,
+			      uint64_t timeout_us)
 {
-	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL, timeout_us);
 }
 
 static void
@@ -243,7 +262,7 @@ nvme_request_check_timeout(struct nvme_request *req, uint16_t cid,
 		return 0;
 	}
 
-	if (req->submit_tick + active_proc->timeout_ticks > now_tick) {
+	if (req->submit_tick + active_proc->timeout_us > now_tick) {
 		return 1;
 	}
 

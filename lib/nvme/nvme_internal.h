@@ -579,7 +579,7 @@ struct spdk_nvme_ctrlr_process {
 	 */
 	spdk_nvme_timeout_cb		timeout_cb_fn;
 	void				*timeout_cb_arg;
-	uint64_t			timeout_ticks;
+	uint64_t			timeout_us;
 };
 
 /*
@@ -778,11 +778,14 @@ int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t size, uint32_t offset, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
+/* timeout_us value of 0 means infinite timeout (legacy_behavior) */
 int	spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
-				      struct nvme_completion_poll_status *status);
+				      struct nvme_completion_poll_status *status,
+				      uint64_t timeout_us);
 int	spdk_nvme_wait_for_completion_robust_lock(struct spdk_nvme_qpair *qpair,
 		struct nvme_completion_poll_status *status,
-		pthread_mutex_t *robust_mutex);
+		pthread_mutex_t *robust_mutex,
+		uint64_t timeout_us);
 
 struct spdk_nvme_ctrlr_process *spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr,
 		pid_t pid);

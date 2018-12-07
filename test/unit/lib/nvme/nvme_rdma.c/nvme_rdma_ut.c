@@ -79,10 +79,10 @@ DEFINE_STUB(spdk_nvme_ctrlr_get_current_process, struct spdk_nvme_ctrlr_process 
 	    (struct spdk_nvme_ctrlr *ctrlr), NULL);
 
 DEFINE_STUB(spdk_nvme_wait_for_completion, int, (struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status), 0);
+		struct nvme_completion_poll_status *status, uint64_t timeout_us), 0);
 
 DEFINE_STUB(spdk_nvme_wait_for_completion_robust_lock, int, (struct spdk_nvme_qpair *qpair,
-		struct nvme_completion_poll_status *status, pthread_mutex_t *robust_mutex), 0);
+		struct nvme_completion_poll_status *status, pthread_mutex_t *robust_mutex, uint64_t timeout_us), 0);
 
 DEFINE_STUB(spdk_mem_map_set_translation, int, (struct spdk_mem_map *map, uint64_t vaddr,
 		uint64_t size, uint64_t translation), 0);
