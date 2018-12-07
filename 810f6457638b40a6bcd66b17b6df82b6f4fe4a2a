@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ea89f855_1c79944b",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T17:08:58Z",
+      "side": 1,
+      "message": "Good catch - fixed in next rev.",
+      "parentUuid": "4fbe04af_d8f584a2",
+      "range": {
+        "startLine": 287,
+        "startChar": 2,
+        "endLine": 287,
+        "endChar": 6
+      },
+      "revId": "810f6457638b40a6bcd66b17b6df82b6f4fe4a2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5316f369_a876f34a",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 6
