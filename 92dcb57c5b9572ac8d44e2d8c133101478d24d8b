@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "3ff4bf61_e59c3bd6",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "Still don\u0027t get it. Did you hit a condition when there was iovcnt \u003d\u003d 0? I don\u0027t think this is (should be) possible in SPDK bdev. Also all other bdev type just call spdk_bdev_io_get_buf(). So why this case is different?",
+      "range": {
+        "startLine": 259,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 65
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ccb267d_5459e340",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 16
@@ -91,6 +114,53 @@
       "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65df2e2e_8f842d7e",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "Why spdk_bdev_register and not spdk_vbdev_register?",
+      "parentUuid": "f5c67b27_db2df450",
+      "range": {
+        "startLine": 459,
+        "startChar": 1,
+        "endLine": 459,
+        "endChar": 20
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f329638e_d6a1433f",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "+ empty line after \u0027}\u0027 all over this patch",
+      "range": {
+        "startLine": 507,
+        "startChar": 1,
+        "endLine": 508,
+        "endChar": 1
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {

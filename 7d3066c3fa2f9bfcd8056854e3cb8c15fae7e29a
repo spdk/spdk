@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "976249ad_13c4c0a0",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "Why you can\u0027t just use spdk_get_ticks() ?",
+      "parentUuid": "3a536abf_403ba50e",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 21
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cb1eb10_cba5b220",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -354,6 +378,30 @@
       "side": 1,
       "message": "I agree, this seems dangerous, but the deal is that OCF copies that pointer memory. We cannot just do \u0026dev-\u003ecache because in that case OCF would copy memory of vbdev_cache_base structure but we want reference to it, not copy of it made at initialization.",
       "parentUuid": "93ce8452_81f14106",
+      "range": {
+        "startLine": 381,
+        "startChar": 29,
+        "endLine": 381,
+        "endChar": 38
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06731617_06f8f181",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "I understand your\u0027s explanation it doesn\u0027t make me less woried. If this is true what you are saying you should make \u0027device\u0027 local or at least set it to NULL before returnig from this function. We musn\u0027t have dangling pointers in internal structures. This is just not right.",
+      "parentUuid": "37d62d0b_aff0c348",
       "range": {
         "startLine": 381,
         "startChar": 29,
@@ -883,6 +931,30 @@
     },
     {
       "key": {
+        "uuid": "f472fd94_34f07515",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "79923f7d_a1724787",
+      "range": {
+        "startLine": 774,
+        "startChar": 1,
+        "endLine": 774,
+        "endChar": 21
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fb1b139_d35f55e8",
         "filename": "lib/bdev/cache/vbdev_cache_data.c",
         "patchSetId": 13
@@ -1071,6 +1143,30 @@
     },
     {
       "key": {
+        "uuid": "ce15e358_74d1c382",
+        "filename": "lib/cache/stats.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "so they can also not fit into \"%5.1\" format. Printing \u003e1% would do the trick. From other side why bothering something stats less than 1%\n\nBut OK, if you need it leave it as is.",
+      "parentUuid": "26d98ae0_bb1fc10d",
+      "range": {
+        "startLine": 39,
+        "startChar": 7,
+        "endLine": 39,
+        "endChar": 12
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bfc06ba_f6fe0216",
         "filename": "lib/cache/stats.c",
         "patchSetId": 13
@@ -1153,6 +1249,30 @@
       "side": 1,
       "message": "I will remove this file completely for now, ok?",
       "parentUuid": "d17a1cc7_e2c9021b",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 67
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b576cdd6_ffb023e9",
+        "filename": "lib/cache/stats.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T15:58:57Z",
+      "side": 1,
+      "message": "I don\u0027t mind this file. I just admire your work :D",
+      "parentUuid": "bf638cf3_5065aa5f",
       "range": {
         "startLine": 47,
         "startChar": 0,
