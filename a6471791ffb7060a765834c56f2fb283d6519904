@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "544c0fd1_d4feb72d",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T05:24:24Z",
+      "side": 1,
+      "message": "Sounds good. Thank you, I\u0027ll do it.",
+      "parentUuid": "684719b3_ef3422a4",
+      "revId": "a6471791ffb7060a765834c56f2fb283d6519904",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3022b6cf_973bdb06",
         "filename": "test/unit/lib/util/dif.c/Makefile",
         "patchSetId": 20
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "02b9516c_edb99a4c",
+        "filename": "test/unit/lib/util/dif.c/Makefile",
+        "patchSetId": 20
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T05:24:24Z",
+      "side": 1,
+      "message": "Ack. Thank you!",
+      "parentUuid": "3022b6cf_973bdb06",
+      "revId": "a6471791ffb7060a765834c56f2fb283d6519904",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93bf24a6_baa1b337",
         "filename": "test/unit/lib/util/dif.c/dif_ut.c",
         "patchSetId": 20
@@ -47,6 +83,24 @@
       "writtenOn": "2018-12-07T03:00:06Z",
       "side": 1,
       "message": "Hi Shuhei, really appreciate that you add so detailed unit test here, can you also add 2 more unit tests for PI in the last 8 bytes of the metadata ?",
+      "revId": "a6471791ffb7060a765834c56f2fb283d6519904",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51f681d4_51a9a587",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T05:24:24Z",
+      "side": 1,
+      "message": "OK, I\u0027ll add the case that 4096 + 128 and PI is the last 8 byte.",
+      "parentUuid": "93bf24a6_baa1b337",
       "revId": "a6471791ffb7060a765834c56f2fb283d6519904",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
