@@ -59,17 +59,10 @@ static struct spdk_pci_driver g_virtio_pci_drv = {
 	.is_registered = false,
 };
 
-int
-spdk_pci_virtio_device_attach(spdk_pci_enum_cb enum_cb,
-			      void *enum_ctx, struct spdk_pci_addr *pci_address)
+struct spdk_pci_driver *
+spdk_pci_virtio_get_driver(void)
 {
-	return spdk_pci_device_attach(&g_virtio_pci_drv, enum_cb, enum_ctx, pci_address);
-}
-
-int
-spdk_pci_virtio_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
-{
-	return spdk_pci_enumerate(&g_virtio_pci_drv, enum_cb, enum_ctx);
+	return &g_virtio_pci_drv;
 }
 
 SPDK_PMD_REGISTER_PCI(g_virtio_pci_drv);
