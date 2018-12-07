@@ -533,6 +533,236 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t block_size,
 	}
 }
 
+static int
+dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
+		  uint32_t block_size, uint32_t data_block_size,
+		  uint32_t guard_interval, enum spdk_dif_type dif_type,
+		  uint32_t dif_flags, uint32_t init_ref_tag, uint16_t app_tag)
+{
+	struct _iov_iter iter;
+	uint32_t ref_tag;
+	void *buf;
+
+	_iov_iter_init(&iter, iovs, iovcnt);
+	ref_tag = init_ref_tag;
+
+	while (_iov_iter_cont(&iter)) {
+		/* Copy data block to bounce buffer. */
+		_iov_iter_get_buf(&iter, &buf, NULL);
+		memcpy(bounce_buf, buf, data_block_size);
+
+		/* Generate and append DIF. */
+		_dif_generate(bounce_buf + guard_interval, bounce_buf,
+			      guard_interval, dif_flags, ref_tag, app_tag);
+
+		/* For type 1 and 2, the reference tag is incremented for each
+		 * subsequent logical block. For type 3, the reference tag is
+		 * remains the same as the initial reference tag.
+		 */
+		if (dif_type != 3) {
+			ref_tag++;
+		}
+
+		_iov_iter_advance(&iter, data_block_size);
+		bounce_buf += block_size;
+	}
+
+	return 0;
+}
+
+static int
+dif_generate_copy_split(void *bounce_buf, struct iovec *iovs, int iovcnt,
+			uint32_t block_size, uint32_t data_block_size,
+			uint32_t guard_interval, enum spdk_dif_type dif_type,
+			uint32_t dif_flags, uint32_t init_ref_tag, uint16_t app_tag)
+{
+	struct _iov_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, ref_tag;
+	void *buf;
+
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		offset_blocks = _iov_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iov_iter_get_payload_offset(&iter) % data_block_size;
+
+		/* For type 1 and 2, the reference tag is incremented for each
+		 * subsequent logical block. For type 3, the reference tag is
+		 * remains the same as the initial reference tag.
+		 */
+		if (dif_type != 3) {
+			ref_tag = init_ref_tag + offset_blocks;
+		} else {
+			ref_tag = init_ref_tag;
+		}
+
+		_iov_iter_get_buf(&iter, &buf, &buf_len);
+		buf_len = spdk_min(data_block_size - offset_in_block, buf_len);
+
+		/* Copy split data block to contiguous bounce buffer. */
+		memcpy(bounce_buf + offset_in_block, buf, buf_len);
+
+		if (offset_in_block + buf_len == data_block_size) {
+			/* If a whole block data is parsed, generate and append DIF. */
+			_dif_generate(bounce_buf + guard_interval, bounce_buf,
+				      guard_interval, dif_flags, ref_tag, app_tag);
+			bounce_buf += block_size;
+		}
+
+		_iov_iter_advance(&iter, buf_len);
+	}
+
+	return 0;
+}
+
+int
+spdk_dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
+		       uint32_t block_size, uint32_t md_size,
+		       bool dif_start, enum spdk_dif_type dif_type,
+		       uint32_t dif_flags, uint32_t init_ref_tag, uint16_t app_tag)
+{
+	uint32_t data_block_size, guard_interval;
+
+	if (md_size == 0) {
+		SPDK_ERRLOG("Metadata size is 0\n");
+		return -EINVAL;
+	}
+
+	data_block_size = block_size - md_size;
+	guard_interval = _dif_get_guard_interval(block_size, md_size, dif_start);
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return dif_generate_copy(bounce_buf, iovs, iovcnt, block_size,
+					 data_block_size, guard_interval, dif_type,
+					 dif_flags, init_ref_tag, app_tag);
+	} else {
+		return dif_generate_copy_split(bounce_buf, iovs, iovcnt, block_size,
+					       data_block_size, guard_interval, dif_type,
+					       dif_flags, init_ref_tag, app_tag);
+	}
+}
+
+static int
+dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+		uint32_t block_size, uint32_t data_block_size,
+		uint32_t guard_interval, enum spdk_dif_type dif_type,
+		uint32_t dif_flags, uint32_t init_ref_tag,
+		uint16_t apptag_mask, uint16_t app_tag)
+{
+	struct _iov_iter iter;
+	uint32_t ref_tag;
+	int rc;
+	void *buf;
+
+	_iov_iter_init(&iter, iovs, iovcnt);
+	ref_tag = init_ref_tag;
+
+	while (_iov_iter_cont(&iter)) {
+		rc = _dif_verify(bounce_buf + guard_interval, bounce_buf, guard_interval,
+				 dif_type, dif_flags, ref_tag, apptag_mask, app_tag);
+		if (rc != 0) {
+			return rc;
+		}
+
+		_iov_iter_get_buf(&iter, &buf, NULL);
+		memcpy(buf, bounce_buf, data_block_size);
+
+		/* For type 1 and 2, the reference tag is incremented for each
+		 * subsequent logical block. For type 3, the reference tag is
+		 * remains the same as the initial reference tag.
+		 */
+		if (dif_type != 3) {
+			ref_tag++;
+		}
+
+		_iov_iter_advance(&iter, data_block_size);
+		bounce_buf += block_size;
+	}
+
+	return 0;
+}
+
+static int
+dif_verify_copy_split(struct iovec *iovs, int iovcnt, void *bounce_buf,
+		      uint32_t block_size, uint32_t data_block_size,
+		      uint32_t guard_interval, enum spdk_dif_type dif_type,
+		      uint32_t dif_flags, uint32_t init_ref_tag,
+		      uint16_t apptag_mask, uint16_t app_tag)
+{
+	struct _iov_iter iter;
+	uint32_t offset_blocks, offset_in_block;
+	uint32_t buf_len, ref_tag;
+	int rc;
+	void *buf;
+
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	while (_iov_iter_cont(&iter)) {
+		offset_blocks = _iov_iter_get_payload_offset(&iter) / data_block_size;
+		offset_in_block = _iov_iter_get_payload_offset(&iter) % data_block_size;
+
+		/* For type 1 and 2, the reference tag is incremented for each
+		 * subsequent logical block. For type 3, the reference tag is
+		 * remains the same as the initial reference tag.
+		 */
+		if (dif_type != 3) {
+			ref_tag = init_ref_tag + offset_blocks;
+		} else {
+			ref_tag = init_ref_tag;
+		}
+
+		if (offset_in_block == 0) {
+			rc = _dif_verify(bounce_buf + guard_interval, bounce_buf,
+					 guard_interval, dif_type, dif_flags,
+					 ref_tag, apptag_mask, app_tag);
+			if (rc != 0) {
+				return rc;
+			}
+		}
+
+		_iov_iter_get_buf(&iter, &buf, &buf_len);
+		buf_len = spdk_min(data_block_size - offset_in_block, buf_len);
+
+		memcpy(buf, bounce_buf + offset_in_block, buf_len);
+
+		if (offset_in_block + buf_len == data_block_size) {
+			bounce_buf += block_size;
+		}
+
+		_iov_iter_advance(&iter, buf_len);
+	}
+
+	return 0;
+}
+
+int
+spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+		     uint32_t block_size, uint32_t md_size, bool dif_start,
+		     enum spdk_dif_type dif_type, uint32_t dif_flags,
+		     uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t data_block_size, guard_interval;
+
+	if (md_size == 0) {
+		SPDK_ERRLOG("Metadata size is 0\n");
+		return -EINVAL;
+	}
+
+	data_block_size = block_size - md_size;
+	guard_interval = _dif_get_guard_interval(block_size, md_size, dif_start);
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
+		return dif_verify_copy(iovs, iovcnt, bounce_buf, block_size,
+				       data_block_size, guard_interval, dif_type,
+				       dif_flags, init_ref_tag, apptag_mask, app_tag);
+	} else {
+		return dif_verify_copy_split(iovs, iovcnt, bounce_buf, block_size,
+					     data_block_size, guard_interval, dif_type,
+					     dif_flags, init_ref_tag, apptag_mask, app_tag);
+	}
+}
+
 static void
 _bit_flip(uint8_t *buf, uint32_t flip_bit)
 {

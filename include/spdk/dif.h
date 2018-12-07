@@ -102,6 +102,51 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t block_size,
 		    uint16_t app_tag);
 
 /**
+ * Copy data and generate DIF for extended LBA payload.
+ *
+ * \param bounce_buf A contiguous buffer forming extended LBA payload.
+ * \param iovs A scatter gather list of buffers to be written from.
+ * \param iovcnt The number of elements in iovs.
+ * \param block_size The block size in a block.
+ * \param md_size The metadata size in a block.
+ * \param dif_start DIF is set in the first eight bytes of metadata if true,
+ * or in the last eight bytes of metadata otherwise.
+ * \param dif_type The type of DIF.
+ * \param dif_flags The flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param app_tag Application Tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_generate_copy(void *bounce_buf, struct iovec *iovs, int iovcnt,
+			   uint32_t block_size, uint32_t md_size,
+			   bool dif_start, enum spdk_dif_type dif_type,
+			   uint32_t dif_flags, uint32_t init_ref_tag, uint16_t app_tag);
+
+/**
+ * Verify DIF and copy data for extended LBA payload.
+ *
+ * \param iovs A scatter gather list of buffers to be read to.
+ * \param iovcnt The number of elements in iovs.
+ * \param bounce_buf A contiguous buffer forming extended LBA payload.
+ * \param block_size The block size in a block.
+ * \param md_size The metadata size in a block.
+ * \param dif_start DIF is set in the first eight bytes of metadata if true,
+ * or in the last eight bytes of metadata otherwise.
+ * \param dif_type The type of DIF.
+ * \param dif_flags The flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param apptag_mask Application Tag Mask.
+ * \param app_tag Application Tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, void *bounce_buf,
+			 uint32_t block_size, uint32_t md_size, bool dif_start,
+			 enum spdk_dif_type dif_type, uint32_t dif_flags,
+			 uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
+/**
  * Inject bit flip error to extended LBA payload.
  *
  * \param iovs A scatter gather list of buffers to be read to.
