@@ -121,8 +121,9 @@ spdk_fio_init_thread(struct thread_data *td)
 }
 
 static void
-spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
+spdk_fio_bdev_close_targets(void *arg)
 {
+	struct spdk_fio_thread *fio_thread = arg;
 	struct spdk_fio_target *target, *tmp;
 
 	TAILQ_FOREACH_SAFE(target, &fio_thread->targets, link, tmp) {
@@ -131,6 +132,12 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 		spdk_bdev_close(target->desc);
 		free(target);
 	}
+}
+
+static void
+spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
+{
+	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
 	while (spdk_fio_poll_thread(fio_thread) > 0) {}
 
