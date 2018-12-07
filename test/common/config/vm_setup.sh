@@ -176,7 +176,7 @@ function install_qemu()
 {
     if echo $CONF | grep -q qemu; then
         # Qemu is used in the vhost tests.
-        SPDK_QEMU_BRANCH=spdk-2.12
+        SPDK_QEMU_BRANCH=spdk-3.0.0
         mkdir -p qemu
         if [ ! -d "qemu/$SPDK_QEMU_BRANCH" ]; then
             git -C ./qemu clone "${GIT_REPO_QEMU}" -b "$SPDK_QEMU_BRANCH" "$SPDK_QEMU_BRANCH"
