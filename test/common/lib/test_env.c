@@ -40,6 +40,7 @@
 
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
+DEFINE_STUB(spdk_pci_nvme_get_driver, struct spdk_pci_driver *, (void), NULL)
 
 /*
  * These mocks don't use the DEFINE_STUB macros because

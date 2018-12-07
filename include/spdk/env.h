@@ -647,14 +647,6 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
- * Enumerate all NVMe devices on the PCI bus and try to attach those that
- * weren't attached yet.
- *
- * \see spdk_pci_enumerate
- */
-int spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
-
-/**
  * Enumerate all I/OAT devices on the PCI bus and try to attach those that
  * weren't attached yet.
  *
@@ -854,14 +846,6 @@ void spdk_pci_device_detach(struct spdk_pci_device *device);
  */
 int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
 			   void *enum_ctx, struct spdk_pci_addr *pci_address);
-
-/**
- * Attach a PCI NVMe device.
- *
- * \see spdk_pci_device_attach
- */
-int spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
-				struct spdk_pci_addr *pci_address);
 
 /**
  * Attach a PCI I/OAT device.

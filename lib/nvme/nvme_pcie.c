@@ -752,9 +752,11 @@ nvme_pcie_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (enum_ctx.has_pci_addr == false) {
-		return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
+		return spdk_pci_enumerate(spdk_pci_nvme_get_driver(),
+					  pcie_nvme_enum_cb, &enum_ctx);
 	} else {
-		return spdk_pci_nvme_device_attach(pcie_nvme_enum_cb, &enum_ctx, &enum_ctx.pci_addr);
+		return spdk_pci_device_attach(spdk_pci_nvme_get_driver(),
+					      pcie_nvme_enum_cb, &enum_ctx, &enum_ctx.pci_addr);
 	}
 }
 
@@ -768,7 +770,7 @@ nvme_pcie_ctrlr_attach(spdk_nvme_probe_cb probe_cb, void *cb_ctx, struct spdk_pc
 	enum_ctx.has_pci_addr = true;
 	enum_ctx.pci_addr = *pci_addr;
 
-	return spdk_pci_nvme_enumerate(pcie_nvme_enum_cb, &enum_ctx);
+	return spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pcie_nvme_enum_cb, &enum_ctx);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,

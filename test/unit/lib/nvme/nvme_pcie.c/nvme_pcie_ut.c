@@ -122,14 +122,14 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 }
 
 int
-spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
+spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	abort();
 }
 
 int
-spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
-			    struct spdk_pci_addr *pci_address)
+spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx,
+		       struct spdk_pci_addr *pci_address)
 {
 	abort();
 }
