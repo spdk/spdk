@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a35b483c_4aacea42",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "This can be inlined:\n\n  echo \"Uname -a:\"\n  uname -a\n\nAnd in all other places.",
+      "range": {
+        "startLine": 31,
+        "startChar": 1,
+        "endLine": 31,
+        "endChar": 20
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b50242c6_c06c033a",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "Can this be changed to something like this\n\n  if linux; then\n    \u003c\u003c common linux part \u003e\u003e\n    if OS1; then\n      \u003c\u003c OS1 specific part\u003e\u003e\n    elif OS2; then\n      \u003c\u003c OS2 specific part\u003e\u003e\n    fi\n  elif FreeBSD; then\n    \u003c\u003c FreeBSD part \u003e\u003e\n  else \n    \u003c\u003c error \u003e\u003e\n  fi",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 35
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1abf4cc4_d985fa6e",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "Is this redhat/fedora specific?\n\nYou could also include output from\n\n  grep Huge /proc/meminfo",
+      "range": {
+        "startLine": 43,
+        "startChar": 2,
+        "endLine": 43,
+        "endChar": 9
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "679b1ed8_eab8f5b0",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "This tool is also present on fedora 28.",
+      "range": {
+        "startLine": 49,
+        "startChar": 2,
+        "endLine": 49,
+        "endChar": 7
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0ba6b1d_272c6638",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "The same.",
+      "range": {
+        "startLine": 50,
+        "startChar": 2,
+        "endLine": 50,
+        "endChar": 6
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0276b57b_2185bee2",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "Why you sed it? I think \u0027nasm -v\u0027 is fine",
+      "range": {
+        "startLine": 80,
+        "startChar": 20,
+        "endLine": 80,
+        "endChar": 73
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27d1557d_6b027acd",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-07T09:35:58Z",
+      "side": 1,
+      "message": "This could also print info that some tool is not present or you can just remove \"2\u003e/dev/null\" part so message will be shown form \u0027hash\u0027 command.\n\nYou can just do\n\n  echo \"Astyle version:\"\n  hash astyle \u0026\u0026 astyle -V\n\nFor all these commands",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 31
+      },
+      "revId": "cb2bb7b4dfdf0a383eea7175d8d4addf614a5b70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
