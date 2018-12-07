@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a407e9f_5b150d6c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T15:52:36Z",
+      "side": 1,
+      "message": "we should probably return a different errno (-EINVAL?) for the multi-MR error case",
+      "revId": "72dbdb6bae060f48ddc9e5fd23f0d37c1ea686f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
