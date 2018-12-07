@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5748c19a_ae94acca",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3251,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:13:03Z",
+      "side": 1,
+      "message": "should pdu \u003d\u003d NULL check be an assert instead?\n\ni\u0027m not sure how we could get here with pdu \u003d\u003d NULL",
+      "revId": "bbda3fef5f5c456326e9fe528cecbb29b1d1fc8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "874a5531_66426738",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3354,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:13:03Z",
+      "side": 1,
+      "message": "similar to previous patch - maybe we can remove this ctx completely?\n\nspdk_iscsi_task already has conn and pdu members\nspdk_scsi_task (contained in spdk_iscsi_task) already has lun and function members\npoller member may be added to spdk_iscsi_task in previous patch",
+      "revId": "bbda3fef5f5c456326e9fe528cecbb29b1d1fc8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a49997e_56a1b078",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3406,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:13:03Z",
+      "side": 1,
+      "message": "side note (related to other comments on this patch)\n\nnote that spdk_scsi_task already has function member - maybe we should set that member here, instead of in spdk_scsi_dev_queue_mgmt_task?  then remove func parameter from that API",
+      "revId": "bbda3fef5f5c456326e9fe528cecbb29b1d1fc8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "228aa4e1_da99a044",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:13:03Z",
+      "side": 1,
+      "message": "add new line after closing brace\n\n(by the way - these unit tests are awesome!)",
+      "revId": "bbda3fef5f5c456326e9fe528cecbb29b1d1fc8e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
