@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d1e2146_b97376f2",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T15:04:39Z",
+      "side": 1,
+      "message": "insert empty line after declarations",
+      "range": {
+        "startLine": 161,
+        "startChar": 1,
+        "endLine": 161,
+        "endChar": 27
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ccb267d_5459e340",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T15:04:39Z",
+      "side": 1,
+      "message": "insert empty line after declarations",
+      "range": {
+        "startLine": 408,
+        "startChar": 1,
+        "endLine": 408,
+        "endChar": 39
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85e9b2ad_79ecec2c",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T15:04:39Z",
+      "side": 1,
+      "message": "insert empty line after declarations",
+      "range": {
+        "startLine": 417,
+        "startChar": 1,
+        "endLine": 417,
+        "endChar": 38
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5c67b27_db2df450",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T15:04:39Z",
+      "side": 1,
+      "message": "use just spdk_bdev_register",
+      "range": {
+        "startLine": 459,
+        "startChar": 1,
+        "endLine": 459,
+        "endChar": 20
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "893eaa20_2177708e",
+        "filename": "lib/cache/ctx.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-07T15:04:39Z",
+      "side": 1,
+      "message": "Change all occurences of printf to SPDK_LOG_*",
+      "range": {
+        "startLine": 356,
+        "startChar": 1,
+        "endLine": 356,
+        "endChar": 7
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
