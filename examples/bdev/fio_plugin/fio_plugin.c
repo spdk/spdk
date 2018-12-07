@@ -140,12 +140,6 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 }
 
 static void
-spdk_fio_module_finish_done(void *cb_arg)
-{
-	*(bool *)cb_arg = true;
-}
-
-static void
 spdk_fio_calc_timeout(struct timespec *ts, uint64_t us)
 {
 	uint64_t timeout = ts->tv_sec * SPDK_SEC_TO_NSEC + ts->tv_nsec;
@@ -178,6 +172,28 @@ spdk_fio_bdev_init_start(void *arg)
 	spdk_bdev_initialize(spdk_fio_bdev_init_done, done);
 }
 
+static void
+spdk_fio_bdev_fini_done(void *cb_arg)
+{
+	*(bool *)cb_arg = true;
+}
+
+static void
+spdk_fio_copy_fini_start(void *arg)
+{
+	bool *done = arg;
+
+	spdk_copy_engine_finish(spdk_fio_bdev_fini_done, done);
+}
+
+static void
+spdk_fio_bdev_fini_start(void *arg)
+{
+	bool *done = arg;
+
+	spdk_bdev_finish(spdk_fio_copy_fini_start, done);
+}
+
 static void *
 spdk_init_thread_poll(void *arg)
 {
@@ -187,7 +203,6 @@ spdk_init_thread_poll(void *arg)
 	struct spdk_env_opts		opts;
 	bool				done;
 	int				rc;
-	size_t				count;
 	struct timespec			ts;
 	struct thread_data		td = {};
 
@@ -284,27 +299,15 @@ spdk_init_thread_poll(void *arg)
 
 	pthread_mutex_unlock(&g_init_mtx);
 
+	/* Finalize the bdev layer */
 	done = false;
-	spdk_bdev_finish(spdk_fio_module_finish_done, &done);
+	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_fini_start, &done);
 
 	do {
 		spdk_fio_poll_thread(fio_thread);
 	} while (!done);
 
-	do {
-		count = spdk_fio_poll_thread(fio_thread);
-	} while (count > 0);
-
-	done = false;
-	spdk_copy_engine_finish(spdk_fio_module_finish_done, &done);
-
-	do {
-		spdk_fio_poll_thread(fio_thread);
-	} while (!done);
-
-	do {
-		count = spdk_fio_poll_thread(fio_thread);
-	} while (count > 0);
+	while (spdk_fio_poll_thread(fio_thread) > 0) {};
 
 	spdk_fio_cleanup_thread(fio_thread);
 
