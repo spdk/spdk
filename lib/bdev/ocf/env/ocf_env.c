@@ -101,7 +101,9 @@ env_completion_init(env_completion *completion)
 void
 env_completion_wait(env_completion *completion)
 {
-	while (atomic_read(&completion->atom));
+	while (atomic_read(&completion->atom)) {
+		spdk_pause();
+	}
 }
 
 void
