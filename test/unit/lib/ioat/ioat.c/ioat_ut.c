@@ -40,7 +40,7 @@
 #include "common/lib/test_env.c"
 
 int
-spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
+spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx)
 {
 	return -1;
 }
