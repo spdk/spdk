@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "4878d1ce_0a1eca3e",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-07T23:29:14Z",
+      "side": 1,
+      "message": "When non-numeric strings get added like that, frankly, I don\u0027t know how yum/rpm handles it when performing version number comparisons (say for an update operation).   Do you?   Is this a case where one might want to rely on Epoch?   I\u0027m only vaguely aware of that entity, so I\u0027m unclear on this point.",
+      "revId": "5dde2257d165a847838799cfcc2af182842fc86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "425affa1_028c9b2d",
         "filename": "pkg/spdk.spec",
         "patchSetId": 3
