@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "385ffe87_2a9d4854",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "Ok, will make it like that",
+      "parentUuid": "7661b075_57bceca7",
+      "range": {
+        "startLine": 34,
+        "startChar": 11,
+        "endLine": 34,
+        "endChar": 33
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4d9ad04_b9b98f06",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-04T14:04:28Z",
       "side": 1,
       "message": "Is there any reason this can\u0027t be inlined moved close to $INSTALL \u0026\u0026 $UPGRADE",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 1
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d51df097_a61084e4",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "Maybe for readability, but you are right",
+      "parentUuid": "c4d9ad04_b9b98f06",
       "range": {
         "startLine": 29,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "e05451e4_620be72b",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "c122f740_78006dc3",
+      "range": {
+        "startLine": 378,
+        "startChar": 4,
+        "endLine": 378,
+        "endChar": 31
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f25ef3f_4910a837",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 8
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-04T14:04:28Z",
       "side": 1,
       "message": "Maybe silly question but spdk/scripts/pkgdep.sh is used to install deps so why you need to install anything else? What package is missing there?",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 17
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2b4dccf_5ec4bba6",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "pkgdep misses a lot of packages for testing\nAs README says this script is for setup of tetsing machine",
+      "parentUuid": "4f25ef3f_4910a837",
       "range": {
         "startLine": 396,
         "startChar": 0,
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "a01056c9_cb569a06",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "1d4510a7_c9b084e9",
+      "range": {
+        "startLine": 449,
+        "startChar": 5,
+        "endLine": 452,
+        "endChar": 10
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d9356c41_4d156e37",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 8
@@ -163,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "f22dca85_d6846d72",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "If we find appropriate dependencies than of course\nThis patch doesn\u0027t do it",
+      "parentUuid": "d9356c41_4d156e37",
+      "range": {
+        "startLine": 454,
+        "startChar": 62,
+        "endLine": 454,
+        "endChar": 64
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a7450d5_e973225e",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 8
@@ -174,6 +318,30 @@
       "writtenOn": "2018-12-04T14:04:28Z",
       "side": 1,
       "message": "is this for target-cli or for python libs? If former this should be python3-configshell-fb.",
+      "range": {
+        "startLine": 457,
+        "startChar": 37,
+        "endLine": 457,
+        "endChar": 49
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ccca5905_4ca7c082",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T13:02:50Z",
+      "side": 1,
+      "message": "It\u0027s for target-cli",
+      "parentUuid": "8a7450d5_e973225e",
       "range": {
         "startLine": 457,
         "startChar": 37,
