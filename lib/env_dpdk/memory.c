@@ -594,6 +594,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	uint64_t total_size = 0;
 	uint64_t cur_size;
 	uint64_t prev_translation;
+	uint64_t orig_translation;
 
 	if (size != NULL) {
 		total_size = *size;
@@ -625,7 +626,8 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		return map_2mb->translation_2mb;
 	}
 
-	prev_translation = map_2mb->translation_2mb;;
+	orig_translation = map_2mb->translation_2mb;
+	prev_translation = orig_translation;
 	while (cur_size < total_size) {
 		vfn_2mb++;
 		idx_256tb = MAP_256TB_IDX(vfn_2mb);
@@ -646,7 +648,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	}
 
 	*size = cur_size;
-	return prev_translation;
+	return orig_translation;
 }
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 05, 0, 0)
