@@ -84,7 +84,7 @@ static bool g_hex_dump = false;
 
 static int g_shm_id = -1;
 
-static int g_dpdk_mem = 64;
+static int g_dpdk_mem = 0;
 
 static int g_master_core = 0;
 

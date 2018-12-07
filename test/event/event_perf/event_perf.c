@@ -144,7 +144,6 @@ main(int argc, char **argv)
 	int rc = 0;
 
 	opts.name = "event_perf";
-	opts.mem_size = 256;
 
 	g_time_in_sec = 0;
 

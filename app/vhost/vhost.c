@@ -38,18 +38,7 @@
 
 #include "spdk/vhost.h"
 
-
-#define SPDK_VHOST_DEFAULT_MEM_SIZE 1024
-
 static const char *g_pid_path = NULL;
-
-static void
-vhost_app_opts_init(struct spdk_app_opts *opts)
-{
-	spdk_app_opts_init(opts);
-	opts->name = "vhost";
-	opts->mem_size = SPDK_VHOST_DEFAULT_MEM_SIZE;
-}
 
 static void
 vhost_usage(void)
@@ -97,7 +86,8 @@ main(int argc, char *argv[])
 	struct spdk_app_opts opts = {};
 	int rc;
 
-	vhost_app_opts_init(&opts);
+	spdk_app_opts_init(&opts);
+	opts.name = "vhost";
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:", NULL,
 				      vhost_parse_arg, vhost_usage)) !=
