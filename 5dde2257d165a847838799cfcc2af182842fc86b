@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae65bcd3_3a082654",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T23:20:54Z",
+      "side": 1,
+      "message": "this should probably be 18.10.1-pre, not 18.10.1 - just to make it clear that if some builds this package from something other than the exact 18.10.1 tag, that it will be clearly marked as such",
+      "revId": "5dde2257d165a847838799cfcc2af182842fc86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "425affa1_028c9b2d",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T23:20:54Z",
+      "side": 1,
+      "message": "same here - this should pull from v18.10.x.tar.gz, meaning it would be the HEAD of the v18.10.x branch\n\nalso pull in the changes that Lance requested to add an spdk- prefix to the local file",
+      "revId": "5dde2257d165a847838799cfcc2af182842fc86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
