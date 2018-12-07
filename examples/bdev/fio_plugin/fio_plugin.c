@@ -73,6 +73,7 @@ struct spdk_fio_thread {
 	uint64_t			timeout; /* polling timeout */
 
 	TAILQ_HEAD(, spdk_fio_target)	targets;
+	bool				failed; /* true if the thread failed to initialize */
 
 	struct io_u		**iocq;		/* io completion queue */
 	unsigned int		iocq_count;	/* number of iocq entries filled by last getevents */
@@ -400,18 +401,14 @@ spdk_fio_setup(struct thread_data *td)
 	return 0;
 }
 
-/* Called for each thread, on that thread, shortly after the thread
- * starts.
- */
-static int
-spdk_fio_init(struct thread_data *td)
+static void
+spdk_fio_bdev_open(void *arg)
 {
+	struct thread_data *td = arg;
 	struct spdk_fio_thread *fio_thread;
 	unsigned int i;
 	struct fio_file *f;
 	int rc;
-
-	spdk_fio_init_thread(td);
 
 	fio_thread = td->io_ops_data;
 
@@ -421,21 +418,24 @@ spdk_fio_init(struct thread_data *td)
 		target = calloc(1, sizeof(*target));
 		if (!target) {
 			SPDK_ERRLOG("Unable to allocate memory for I/O target.\n");
-			return -1;
+			fio_thread->failed = true;
+			return;
 		}
 
 		target->bdev = spdk_bdev_get_by_name(f->file_name);
 		if (!target->bdev) {
 			SPDK_ERRLOG("Unable to find bdev with name %s\n", f->file_name);
 			free(target);
-			return -1;
+			fio_thread->failed = true;
+			return;
 		}
 
 		rc = spdk_bdev_open(target->bdev, true, NULL, NULL, &target->desc);
 		if (rc) {
 			SPDK_ERRLOG("Unable to open bdev %s\n", f->file_name);
 			free(target);
-			return -1;
+			fio_thread->failed = true;
+			return;
 		}
 
 		target->ch = spdk_bdev_get_io_channel(target->desc);
@@ -443,12 +443,35 @@ spdk_fio_init(struct thread_data *td)
 			SPDK_ERRLOG("Unable to get I/O channel for bdev.\n");
 			spdk_bdev_close(target->desc);
 			free(target);
-			return -1;
+			fio_thread->failed = true;
+			return;
 		}
 
 		f->engine_data = target;
 
 		TAILQ_INSERT_TAIL(&fio_thread->targets, target, link);
+	}
+}
+
+/* Called for each thread, on that thread, shortly after the thread
+ * starts.
+ */
+static int
+spdk_fio_init(struct thread_data *td)
+{
+	struct spdk_fio_thread *fio_thread;
+
+	spdk_fio_init_thread(td);
+
+	fio_thread = td->io_ops_data;
+	fio_thread->failed = false;
+
+	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_open, td);
+
+	while (spdk_fio_poll_thread(fio_thread) > 0) {}
+
+	if (fio_thread->failed) {
+		return -1;
 	}
 
 	return 0;
