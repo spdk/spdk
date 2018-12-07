@@ -865,7 +865,6 @@ main(int argc, char **argv)
 	opts.name = "bdevperf";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = NULL;
-	opts.mem_size = 1024;
 	opts.shutdown_cb = spdk_bdevperf_shutdown_cb;
 
 	/* default value */
