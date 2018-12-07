@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3082898e_6262847b",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-07T09:13:56Z",
+      "side": 1,
+      "message": "There\u0027s an apt package for that, try not to use pip. Let\u0027s try to keep pip deps to a minumum\n\nklateck@GrizzlyPass7:~/work/spdk$ sudo apt search pandas\npython3-pandas/xenial,xenial 0.17.1-3ubuntu2 all\n  data structures for \"relational\" or \"labeled\" data - Python 3",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 20
+      },
+      "revId": "b5e633070e474d7d6f9910b92930f71c98d4c323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
