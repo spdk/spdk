@@ -411,7 +411,8 @@ static int spdk_iscsi_conn_free_tasks(struct spdk_iscsi_conn *conn)
 	return 0;
 }
 
-static void spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
+static void
+_spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 {
 	if (conn == NULL) {
 		return;
@@ -428,18 +429,40 @@ static void spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 	free_conn(conn);
 }
 
-static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
+static void
+spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
+{
+	int rc;
+	struct spdk_iscsi_tgt_node *target;
+
+	if (conn->sess->connections > 1) {
+		/* connection specific cleanup */
+	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
+		/* clean up all tasks to all LUNs for session */
+		target = conn->sess->target;
+		if (target != NULL) {
+			rc = spdk_iscsi_tgt_node_cleanup_luns(conn, target);
+			if (rc < 0) {
+				SPDK_ERRLOG("target abort failed\n");
+			}
+		}
+	}
+}
+
+static void
+spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
 {
 	struct spdk_iscsi_sess *sess;
 	int idx;
 	uint32_t i, j;
 
+	pthread_mutex_lock(&g_conns_mutex);
+
 	idx = -1;
 	sess = conn->sess;
 	conn->sess = NULL;
 	if (sess == NULL) {
-		spdk_iscsi_conn_free(conn);
-		return;
+		goto end;
 	}
 
 	for (i = 0; i < sess->connections; i++) {
@@ -474,35 +497,10 @@ static void spdk_iscsi_remove_conn(struct spdk_iscsi_conn *conn)
 		spdk_free_sess(sess);
 	}
 
+end:
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "cleanup free conn\n");
-	spdk_iscsi_conn_free(conn);
-}
+	_spdk_iscsi_conn_free(conn);
 
-static void
-spdk_iscsi_conn_cleanup_backend(struct spdk_iscsi_conn *conn)
-{
-	int rc;
-	struct spdk_iscsi_tgt_node *target;
-
-	if (conn->sess->connections > 1) {
-		/* connection specific cleanup */
-	} else if (!g_spdk_iscsi.AllowDuplicateIsid) {
-		/* clean up all tasks to all LUNs for session */
-		target = conn->sess->target;
-		if (target != NULL) {
-			rc = spdk_iscsi_tgt_node_cleanup_luns(conn, target);
-			if (rc < 0) {
-				SPDK_ERRLOG("target abort failed\n");
-			}
-		}
-	}
-}
-
-static void
-_spdk_iscsi_conn_free(struct spdk_iscsi_conn *conn)
-{
-	pthread_mutex_lock(&g_conns_mutex);
-	spdk_iscsi_remove_conn(conn);
 	pthread_mutex_unlock(&g_conns_mutex);
 }
 
@@ -520,7 +518,7 @@ _spdk_iscsi_conn_check_shutdown(void *arg)
 	spdk_poller_unregister(&conn->shutdown_timer);
 
 	spdk_iscsi_conn_stop(conn);
-	_spdk_iscsi_conn_free(conn);
+	spdk_iscsi_conn_free(conn);
 
 	return 1;
 }
@@ -542,7 +540,7 @@ _spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 		conn->shutdown_timer = spdk_poller_register(_spdk_iscsi_conn_check_shutdown, conn, 1000);
 	} else {
 		spdk_iscsi_conn_stop(conn);
-		_spdk_iscsi_conn_free(conn);
+		spdk_iscsi_conn_free(conn);
 	}
 }
 
