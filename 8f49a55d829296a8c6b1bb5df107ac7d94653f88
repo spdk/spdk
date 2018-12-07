@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d52be53_a3b144f3",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-07T09:22:33Z",
+      "side": 1,
+      "message": "This doesn\u0027t change anything. SPDK apps always call setrlimit(RLIMIT_CORE, ... RLIM_INFINITY) on init. Since they\u0027re run as root, they have full permission to do so.",
+      "revId": "8f49a55d829296a8c6b1bb5df107ac7d94653f88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
