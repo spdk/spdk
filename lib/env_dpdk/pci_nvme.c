@@ -64,19 +64,6 @@ static struct spdk_pci_driver g_nvme_pci_drv = {
 	.is_registered = false,
 };
 
-int
-spdk_pci_nvme_device_attach(spdk_pci_enum_cb enum_cb,
-			    void *enum_ctx, struct spdk_pci_addr *pci_address)
-{
-	return spdk_pci_device_attach(&g_nvme_pci_drv, enum_cb, enum_ctx, pci_address);
-}
-
-int
-spdk_pci_nvme_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx)
-{
-	return spdk_pci_enumerate(&g_nvme_pci_drv, enum_cb, enum_ctx);
-}
-
 struct spdk_pci_driver *
 spdk_pci_nvme_get_driver(void)
 {
