@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55bae0d4_498374cf",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-07T12:35:38Z",
+      "side": 1,
+      "message": "\".sometimes\" -\u003e \". Sometime\"\nOverall I think we can remove this line.",
+      "range": {
+        "startLine": 17,
+        "startChar": 23,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "b8f63e108eae5a0c899b59f99a7c8bb33bf634ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

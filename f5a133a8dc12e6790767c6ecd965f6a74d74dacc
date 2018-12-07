@@ -353,6 +353,30 @@
       "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cbe40204_74d52344",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-07T12:35:38Z",
+      "side": 1,
+      "message": "Then you should not disable \"-e\" flag and use \"trap\" instead if you expect errors.\nSee other test scripts (test/vhost/) for examples",
+      "parentUuid": "5b0e5be0_154d9de2",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 14
+      },
+      "revId": "f5a133a8dc12e6790767c6ecd965f6a74d74dacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
