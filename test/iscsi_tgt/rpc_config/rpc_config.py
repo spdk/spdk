@@ -77,17 +77,17 @@ def verify(expr, retcode, msg):
 def verify_log_flag_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_log_flags()
-    jsonvalue = json.loads(output)
+    jsonvalue = json.loads(output.decode("utf-8"))
     verify(not jsonvalue[rpc_param['log_flag']], 1,
            "get_log_flags returned {}, expected false".format(jsonvalue))
     rpc.set_log_flag(rpc_param['log_flag'])
     output = rpc.get_log_flags()
-    jsonvalue = json.loads(output)
+    jsonvalue = json.loads(output.decode("utf-8"))
     verify(jsonvalue[rpc_param['log_flag']], 1,
            "get_log_flags returned {}, expected true".format(jsonvalue))
     rpc.clear_log_flag(rpc_param['log_flag'])
     output = rpc.get_log_flags()
-    jsonvalue = json.loads(output)
+    jsonvalue = json.loads(output.decode("utf-8"))
     verify(not jsonvalue[rpc_param['log_flag']], 1,
            "get_log_flags returned {}, expected false".format(jsonvalue))
 
@@ -97,7 +97,7 @@ def verify_log_flag_rpc_methods(rpc_py, rpc_param):
 def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_iscsi_connections()
-    jsonvalue = json.loads(output)
+    jsonvalue = json.loads(output.decode("utf-8"))
     verify(not jsonvalue, 1,
            "get_iscsi_connections returned {}, expected empty".format(jsonvalue))
 
@@ -110,9 +110,9 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
-    name = json.loads(rpc.get_target_nodes())[0]['name']
+    name = json.loads(rpc.get_target_nodes().decode("utf-8"))[0]['name']
     output = rpc.get_iscsi_connections()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(jsonvalues[0]['target_node_name'] == rpc_param['target_name'], 1,
            "target node name vaule is {}, expected {}".format(jsonvalues[0]['target_node_name'], rpc_param['target_name']))
     verify(jsonvalues[0]['id'] == 0, 1,
@@ -128,7 +128,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
     rpc.delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
     output = rpc.get_iscsi_connections()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_iscsi_connections returned {}, expected empty".format(jsonvalues))
 
@@ -138,7 +138,7 @@ def verify_iscsi_connection_rpc_methods(rpc_py):
 def verify_scsi_devices_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_scsi_devices()
-    jsonvalue = json.loads(output)
+    jsonvalue = json.loads(output.decode("utf-8"))
     verify(not jsonvalue, 1,
            "get_scsi_devices returned {}, expected empty".format(jsonvalue))
 
@@ -151,12 +151,12 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     check_output('iscsiadm -m discovery -t st -p {}'.format(rpc_param['target_ip']), shell=True)
     check_output('iscsiadm -m node --login', shell=True)
-    name = json.loads(rpc.get_target_nodes())[0]['name']
+    name = json.loads(rpc.get_target_nodes().decode("utf-8"))[0]['name']
     output = rpc.get_iscsi_global_params()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     nodebase = jsonvalues['node_base']
     output = rpc.get_scsi_devices()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(jsonvalues[0]['device_name'] == nodebase + ":" + rpc_param['target_name'], 1,
            "device name vaule is {}, expected {}".format(jsonvalues[0]['device_name'], rpc_param['target_name']))
     verify(jsonvalues[0]['id'] == 0, 1,
@@ -168,7 +168,7 @@ def verify_scsi_devices_rpc_methods(rpc_py):
     rpc.delete_portal_group(portal_tag)
     rpc.delete_target_node(name)
     output = rpc.get_scsi_devices()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_scsi_devices returned {}, expected empty".format(jsonvalues))
 
@@ -187,12 +187,12 @@ def create_malloc_bdevs_rpc_methods(rpc_py, rpc_param):
 def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_portal_groups()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_portal_groups returned {} groups, expected empty".format(jsonvalues))
 
     lo_ip = (target_ip, other_ip)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.get_interfaces().decode("utf-8"))
     for x in nics:
         if x["ifc_index"] == 'lo':
             rpc.add_ip_address(x["ifc_index"], lo_ip[1])
@@ -201,7 +201,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
         tag = idx + 1
         rpc.add_portal_group(tag, "{}:{}@{}".format(value, rpc_param['port'], rpc_param['cpumask']))
         output = rpc.get_portal_groups()
-        jsonvalues = json.loads(output)
+        jsonvalues = json.loads(output.decode("utf-8"))
         verify(len(jsonvalues) == tag, 1,
                "get_portal_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
@@ -220,7 +220,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
     for idx, value in enumerate(tag_list):
         rpc.delete_portal_group(value)
         output = rpc.get_portal_groups()
-        jsonvalues = json.loads(output)
+        jsonvalues = json.loads(output.decode("utf-8"))
         verify(len(jsonvalues) == (len(tag_list) - (idx + 1)), 1,
                "get_portal_group returned {} groups, expected {}".format(len(jsonvalues), (len(tag_list) - (idx + 1))))
         if not jsonvalues:
@@ -246,7 +246,7 @@ def verify_portal_groups_rpc_methods(rpc_py, rpc_param):
 def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_initiator_groups()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_initiator_groups returned {}, expected empty".format(jsonvalues))
     for idx, value in enumerate(rpc_param['netmask']):
@@ -254,7 +254,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
         tag = idx + 1
         rpc.add_initiator_group(tag, rpc_param['initiator_name'], value)
         output = rpc.get_initiator_groups()
-        jsonvalues = json.loads(output)
+        jsonvalues = json.loads(output.decode("utf-8"))
         verify(len(jsonvalues) == tag, 1,
                "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
@@ -273,7 +273,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
         rpc.delete_initiators_from_initiator_group(tag, '-n', rpc_param['initiator_name'], '-m', value)
 
     output = rpc.get_initiator_groups()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(len(jsonvalues) == tag, 1,
            "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
@@ -291,7 +291,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
         tag = idx + 1
         rpc.add_initiators_to_initiator_group(tag, '-n', rpc_param['initiator_name'], '-m', value)
     output = rpc.get_initiator_groups()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(len(jsonvalues) == tag, 1,
            "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), tag))
 
@@ -308,7 +308,7 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
     for idx, value in enumerate(tag_list):
         rpc.delete_initiator_group(value)
         output = rpc.get_initiator_groups()
-        jsonvalues = json.loads(output)
+        jsonvalues = json.loads(output.decode("utf-8"))
         verify(len(jsonvalues) == (len(tag_list) - (idx + 1)), 1,
                "get_initiator_groups returned {} groups, expected {}".format(len(jsonvalues), (len(tag_list) - (idx + 1))))
         if not jsonvalues:
@@ -327,10 +327,10 @@ def verify_initiator_groups_rpc_methods(rpc_py, rpc_param):
 def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     rpc = spdk_rpc(rpc_py)
     output = rpc.get_iscsi_global_params()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     nodebase = jsonvalues['node_base']
     output = rpc.get_target_nodes()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_target_nodes returned {}, expected empty".format(jsonvalues))
 
@@ -342,7 +342,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     net_mapping = portal_tag + ":" + initiator_tag
     rpc.construct_target_node(rpc_param['target_name'], rpc_param['alias_name'], lun_mapping, net_mapping, rpc_param['queue_depth'], '-d')
     output = rpc.get_target_nodes()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(len(jsonvalues) == 1, 1,
            "get_target_nodes returned {} nodes, expected 1".format(len(jsonvalues)))
     bdev_name = jsonvalues[0]['luns'][0]['bdev_name']
@@ -376,7 +376,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     lun_id = '1'
     rpc.target_node_add_lun(name, bdev_name, "-i", lun_id)
     output = rpc.get_target_nodes()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(jsonvalues[0]['luns'][1]['bdev_name'] == "Malloc" + str(rpc_param['lun_total']), 1,
            "bdev_name value is {}, expected Malloc{}".format(jsonvalues[0]['luns'][0]['bdev_name'], str(rpc_param['lun_total'])))
     verify(jsonvalues[0]['luns'][1]['lun_id'] == 1, 1,
@@ -384,7 +384,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     verify(not jsonvalues, 1,
            "get_target_nodes returned {}, expected empty".format(jsonvalues))
 
@@ -394,7 +394,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
     rpc.delete_initiator_group(initiator_tag)
     rpc.delete_target_node(name)
     output = rpc.get_target_nodes()
-    jsonvalues = json.loads(output)
+    jsonvalues = json.loads(output.decode("utf-8"))
     if not jsonvalues:
         print("This issue will be fixed later.")
 
@@ -403,7 +403,7 @@ def verify_target_nodes_rpc_methods(rpc_py, rpc_param):
 
 def verify_get_interfaces(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.get_interfaces().decode("utf-8"))
     nics_names = set(x["name"] for x in nics)
     # parse ip link show to verify the get_interfaces result
     ip_show = ns_cmd + " ip link show"
@@ -414,7 +414,7 @@ def verify_get_interfaces(rpc_py):
 
 def help_get_interface_ip_list(rpc_py, nic_name):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.get_interfaces().decode("utf-8"))
     nic = list([x for x in nics if x["name"] == nic_name])
     verify(len(nic) != 0, 1,
            "Nic name: {} is not found in {}".format(nic_name, [x["name"] for x in nics]))
@@ -423,7 +423,7 @@ def help_get_interface_ip_list(rpc_py, nic_name):
 
 def verify_add_delete_ip_address(rpc_py):
     rpc = spdk_rpc(rpc_py)
-    nics = json.loads(rpc.get_interfaces())
+    nics = json.loads(rpc.get_interfaces().decode("utf-8"))
     # add ip on up to first 2 nics
     for x in nics[:2]:
         faked_ip = "123.123.{}.{}".format(random.randint(1, 254), random.randint(1, 254))
