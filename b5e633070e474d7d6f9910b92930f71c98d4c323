@@ -22,6 +22,30 @@
       "revId": "b5e633070e474d7d6f9910b92930f71c98d4c323",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d29404be_389a59b1",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-07T09:33:01Z",
+      "side": 1,
+      "message": "Also, a second thought - shouldn\u0027t this be in test/common/config/vm_setup.sh?\n\npkgdep.sh (as Darek pointed out in our conversation) in for dependencies which we need for SPDK build (configshell being an exception, but it\u0027s used for a management tool, so it should be here), and all test dependencies (which also include flamegraph used in autotest.sh) are located in vm_setup.sh",
+      "parentUuid": "3082898e_6262847b",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 20
+      },
+      "revId": "b5e633070e474d7d6f9910b92930f71c98d4c323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
