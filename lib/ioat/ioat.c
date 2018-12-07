@@ -559,7 +559,7 @@ spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_cb a
 	enum_ctx.attach_cb = attach_cb;
 	enum_ctx.cb_ctx = cb_ctx;
 
-	rc = spdk_pci_ioat_enumerate(ioat_enum_cb, &enum_ctx);
+	rc = spdk_pci_enumerate(spdk_pci_ioat_get_driver(), ioat_enum_cb, &enum_ctx);
 
 	pthread_mutex_unlock(&g_ioat_driver.lock);
 

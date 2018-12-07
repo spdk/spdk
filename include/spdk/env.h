@@ -627,6 +627,13 @@ typedef int (*spdk_pci_enum_cb)(void *enum_ctx, struct spdk_pci_device *pci_dev)
 struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
 
 /**
+ * Get the I/OAT PCI driver object.
+ *
+ * \return PCI driver.
+ */
+struct spdk_pci_driver *spdk_pci_ioat_get_driver(void);
+
+/**
  * Enumerate all PCI devices supported by the provided driver and try to
  * attach those that weren't attached yet. The provided callback will be
  * called for each such device and its return code will decide whether that
@@ -645,14 +652,6 @@ struct spdk_pci_driver *spdk_pci_nvme_get_driver(void);
  *         0 otherwise
  */
 int spdk_pci_enumerate(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb, void *enum_ctx);
-
-/**
- * Enumerate all I/OAT devices on the PCI bus and try to attach those that
- * weren't attached yet.
- *
- * \see spdk_pci_enumerate
- */
-int spdk_pci_ioat_enumerate(spdk_pci_enum_cb enum_cb, void *enum_ctx);
 
 /**
  * Enumerate all Virtio devices on the PCI bus and try to attach those that
@@ -846,14 +845,6 @@ void spdk_pci_device_detach(struct spdk_pci_device *device);
  */
 int spdk_pci_device_attach(struct spdk_pci_driver *driver, spdk_pci_enum_cb enum_cb,
 			   void *enum_ctx, struct spdk_pci_addr *pci_address);
-
-/**
- * Attach a PCI I/OAT device.
- *
- * \see spdk_pci_device_attach
- */
-int spdk_pci_ioat_device_attach(spdk_pci_enum_cb enum_cb, void *enum_ctx,
-				struct spdk_pci_addr *pci_address);
 
 /**
  * Attach a PCI Virtio device.
