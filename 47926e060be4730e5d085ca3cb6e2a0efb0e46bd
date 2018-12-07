@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3f489bf_2bb54f8e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T10:34:56Z",
+      "side": 1,
+      "message": "This should be changed too",
+      "range": {
+        "startLine": 543,
+        "startChar": 0,
+        "endLine": 543,
+        "endChar": 2
+      },
+      "revId": "47926e060be4730e5d085ca3cb6e2a0efb0e46bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
