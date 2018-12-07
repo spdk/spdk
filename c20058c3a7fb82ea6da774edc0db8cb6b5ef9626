@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e89a699_1ce0825e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "current_data_wr-\u003ewr.next may match the usage in the following while loop.",
+      "range": {
+        "startLine": 557,
+        "startChar": 11,
+        "endLine": 557,
+        "endChar": 33
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05f08f8b_38f313d7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "multiple optional RDMA WRITEs or optional RDMA WRITEs ?",
+      "range": {
+        "startLine": 926,
+        "startChar": 41,
+        "endLine": 927,
+        "endChar": 14
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bf3d053_16ffbff9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "the return value of get_next_data_wr() is checked but if spdk_mempool_get() fails, should return NULL immediately.",
+      "range": {
+        "startLine": 1203,
+        "startChar": 0,
+        "endLine": 1203,
+        "endChar": 16
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b460172b_4284feda",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "WR",
+      "range": {
+        "startLine": 1282,
+        "startChar": 14,
+        "endLine": 1282,
+        "endChar": 16
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2332ffed_6086d3e5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "WR",
+      "range": {
+        "startLine": 1282,
+        "startChar": 50,
+        "endLine": 1282,
+        "endChar": 52
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a020b93d_42f3465f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-07T02:31:27Z",
+      "side": 1,
+      "message": "this is the next iovec and match your expectation?",
+      "range": {
+        "startLine": 1324,
+        "startChar": 37,
+        "endLine": 1324,
+        "endChar": 48
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
