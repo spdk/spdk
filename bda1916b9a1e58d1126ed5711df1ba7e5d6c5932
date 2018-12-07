@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "bedcdf19_004380f2",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-07T15:21:50Z",
+      "side": 1,
+      "message": "Actually pkgdep.sh only has deps for building \u0026 running SPDK, while this script is purely for test purposes",
+      "parentUuid": "b2b4dccf_5ec4bba6",
+      "range": {
+        "startLine": 396,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 17
+      },
+      "revId": "bda1916b9a1e58d1126ed5711df1ba7e5d6c5932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "919a96d3_cd6d25fd",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 8
