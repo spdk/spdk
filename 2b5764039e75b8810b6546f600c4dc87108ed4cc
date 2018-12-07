@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8af16f29_9a443fe1",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:02:00Z",
+      "side": 1,
+      "message": "can we avoid the context completely?  and just use the spdk_iscsi_task as the poller context\n\ntask already has a pointer to the connection\nref_task_tag can be saved in scsi.abort_id\n\nwe just need to add a poller pointer to spdk_iscsi_task\n\nspdk_iscsi_task is already 384 bytes, another 8 bytes may not be too bad; it would avoid some complexity, as well as no need to worry about calloc failure",
+      "revId": "2b5764039e75b8810b6546f600c4dc87108ed4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0c83408_05951cab",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:02:00Z",
+      "side": 1,
+      "message": "is ref_task_tag needed, or can we just use ctx-\u003etask-\u003escsi.abort_id?",
+      "revId": "2b5764039e75b8810b6546f600c4dc87108ed4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
