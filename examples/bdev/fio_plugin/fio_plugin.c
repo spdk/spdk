@@ -88,12 +88,6 @@ static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 /* Default polling timeout (us) */
 #define SPDK_FIO_POLLING_TIMEOUT 1000000UL
 
-static void
-spdk_fio_bdev_init_done(void *cb_arg, int rc)
-{
-	*(bool *)cb_arg = true;
-}
-
 static int
 spdk_fio_init_thread(struct thread_data *td)
 {
@@ -165,6 +159,24 @@ static pthread_t g_init_thread_id = 0;
 static pthread_mutex_t g_init_mtx = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_init_cond;
 static bool g_poll_loop = true;
+
+static void
+spdk_fio_bdev_init_done(void *cb_arg, int rc)
+{
+	*(bool *)cb_arg = true;
+}
+
+static void
+spdk_fio_bdev_init_start(void *arg)
+{
+	bool *done = arg;
+
+	/* Initialize the copy engine */
+	spdk_copy_engine_initialize();
+
+	/* Initialize the bdev layer */
+	spdk_bdev_initialize(spdk_fio_bdev_init_done, done);
+}
 
 static void *
 spdk_init_thread_poll(void *arg)
@@ -240,23 +252,13 @@ spdk_init_thread_poll(void *arg)
 
 	fio_thread = td.io_ops_data;
 
-	/* Initialize the copy engine */
-	spdk_copy_engine_initialize();
-
 	/* Initialize the bdev layer */
 	done = false;
-	spdk_bdev_initialize(spdk_fio_bdev_init_done, &done);
+	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_init_start, &done);
 
-	/* First, poll until initialization is done. */
 	do {
 		spdk_fio_poll_thread(fio_thread);
 	} while (!done);
-
-	/*
-	 * Continue polling until there are no more events.
-	 * This handles any final events posted by pollers.
-	 */
-	while (spdk_fio_poll_thread(fio_thread) > 0) {};
 
 	/* Set condition variable */
 	pthread_mutex_lock(&g_init_mtx);
