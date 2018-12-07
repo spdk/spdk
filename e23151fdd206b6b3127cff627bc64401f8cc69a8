@@ -57,6 +57,24 @@
       "revId": "e23151fdd206b6b3127cff627bc64401f8cc69a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24e1abcf_58c00068",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-07T21:15:55Z",
+      "side": 1,
+      "message": "Oh - I forgot about that comment.  Yes - you are right to remove this - we changed this logic as part of the poll_group changes that Ziye made.",
+      "parentUuid": "5687a771_17fc124e",
+      "revId": "e23151fdd206b6b3127cff627bc64401f8cc69a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
