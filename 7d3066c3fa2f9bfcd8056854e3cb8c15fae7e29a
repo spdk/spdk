@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "38113519_cd8590a9",
+        "filename": "configure",
+        "patchSetId": 13
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "c420e88c_74201500",
+      "range": {
+        "startLine": 66,
+        "startChar": 34,
+        "endLine": 66,
+        "endChar": 52
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2dc53afb_2e0364f8",
         "filename": "include/spdk/stdinc.h",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "What for it is needed?",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 21
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a536abf_403ba50e",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "function env_get_tick_count requieres gettimeofday",
+      "parentUuid": "2dc53afb_2e0364f8",
       "range": {
         "startLine": 82,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0ff02bfb_f77d7bb5",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "1cb1eb10_cba5b220",
+      "range": {
+        "startLine": 66,
+        "startChar": 7,
+        "endLine": 66,
+        "endChar": 10
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8e236e30_a70446fb",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "How this can be NULL?",
+      "range": {
+        "startLine": 167,
+        "startChar": 6,
+        "endLine": 167,
+        "endChar": 12
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f754e00e_66d8063b",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack. It cannnot",
+      "parentUuid": "8e236e30_a70446fb",
       "range": {
         "startLine": 167,
         "startChar": 6,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "dc887725_0f9cf9f6",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "763050ea_78637c24",
+      "range": {
+        "startLine": 184,
+        "startChar": 5,
+        "endLine": 184,
+        "endChar": 15
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42dce598_c39bf95c",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -134,6 +254,24 @@
     },
     {
       "key": {
+        "uuid": "c7e7fefe_a3196f42",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 189,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "42dce598_c39bf95c",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8160506f_35426fe3",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -145,6 +283,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "This needs some good comment.",
+      "range": {
+        "startLine": 267,
+        "startChar": 2,
+        "endLine": 267,
+        "endChar": 79
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c22bfbac_e235e870",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "8160506f_35426fe3",
       "range": {
         "startLine": 267,
         "startChar": 2,
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "37d62d0b_aff0c348",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "I agree, this seems dangerous, but the deal is that OCF copies that pointer memory. We cannot just do \u0026dev-\u003ecache because in that case OCF would copy memory of vbdev_cache_base structure but we want reference to it, not copy of it made at initialization.",
+      "parentUuid": "93ce8452_81f14106",
+      "range": {
+        "startLine": 381,
+        "startChar": 29,
+        "endLine": 381,
+        "endChar": 38
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98eb90cd_b05d5e42",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -191,6 +377,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 398,
+        "startChar": 0,
+        "endLine": 399,
+        "endChar": 42
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2205566_058639c1",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "98eb90cd_b05d5e42",
       "range": {
         "startLine": 398,
         "startChar": 0,
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "092d6ffa_3735c35d",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "4038b067_08d158fb",
+      "range": {
+        "startLine": 495,
+        "startChar": 0,
+        "endLine": 496,
+        "endChar": 36
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16b00f36_1427ce54",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -237,6 +471,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "pls do it in one line or declare each of these on it\u0027s own.",
+      "range": {
+        "startLine": 595,
+        "startChar": 0,
+        "endLine": 598,
+        "endChar": 18
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdaf7057_3001ccb1",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "16b00f36_1427ce54",
       "range": {
         "startLine": 595,
         "startChar": 0,
@@ -272,6 +530,30 @@
     },
     {
       "key": {
+        "uuid": "d3e5225b_99c472e9",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 600,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "55f95006_05e3a40f",
+      "range": {
+        "startLine": 600,
+        "startChar": 11,
+        "endLine": 600,
+        "endChar": 15
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6389c40b_d771dd25",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -283,6 +565,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "-\u003e \u003d",
+      "range": {
+        "startLine": 642,
+        "startChar": 10,
+        "endLine": 642,
+        "endChar": 12
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44b7d6d5_f78e42d7",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "6389c40b_d771dd25",
       "range": {
         "startLine": 642,
         "startChar": 10,
@@ -318,6 +624,30 @@
     },
     {
       "key": {
+        "uuid": "379a27b2_f60610c9",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack. No reason",
+      "parentUuid": "c4650f02_419bdefb",
+      "range": {
+        "startLine": 668,
+        "startChar": 2,
+        "endLine": 668,
+        "endChar": 15
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "72c03a09_5ad5e36c",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -329,6 +659,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "Not needed.",
+      "range": {
+        "startLine": 678,
+        "startChar": 12,
+        "endLine": 678,
+        "endChar": 15
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bd215f0_28d41bb2",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "72c03a09_5ad5e36c",
       "range": {
         "startLine": 678,
         "startChar": 12,
@@ -364,6 +718,30 @@
     },
     {
       "key": {
+        "uuid": "cf8e3ff0_f38f010c",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "It\u0027s implemented in separate patch because I see it more like a feature than a bug.",
+      "parentUuid": "fe0ec024_cc19dc9f",
+      "range": {
+        "startLine": 680,
+        "startChar": 1,
+        "endLine": 680,
+        "endChar": 62
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5edeac83_710eb5e5",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -375,6 +753,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "Why _SAFE version?",
+      "range": {
+        "startLine": 750,
+        "startChar": 1,
+        "endLine": 750,
+        "endChar": 19
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f81af57e_381812e2",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack. No reason",
+      "parentUuid": "5edeac83_710eb5e5",
       "range": {
         "startLine": 750,
         "startChar": 1,
@@ -410,6 +812,30 @@
     },
     {
       "key": {
+        "uuid": "ab705d61_ebab7dc3",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 751,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack. It cannot",
+      "parentUuid": "a978b9c0_ca6ef5da",
+      "range": {
+        "startLine": 751,
+        "startChar": 7,
+        "endLine": 751,
+        "endChar": 12
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd51f213_a72ea339",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -421,6 +847,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "In final version it is required to implement RPC methods.",
+      "range": {
+        "startLine": 774,
+        "startChar": 1,
+        "endLine": 774,
+        "endChar": 21
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79923f7d_a1724787",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack\nI will make a separate patch for this, ok?",
+      "parentUuid": "cd51f213_a72ea339",
       "range": {
         "startLine": 774,
         "startChar": 1,
@@ -456,6 +906,30 @@
     },
     {
       "key": {
+        "uuid": "37ca0218_c48a98b5",
+        "filename": "lib/bdev/cache/vbdev_cache_data.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "It was like that, but I changed it because declaration of this function is at lib/ level so I didn\u0027t want to mention bdevs there.",
+      "parentUuid": "7fb1b139_d35f55e8",
+      "range": {
+        "startLine": 100,
+        "startChar": 26,
+        "endLine": 100,
+        "endChar": 38
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf9659fb_58b7518e",
         "filename": "lib/cache/libocf/Makefile",
         "patchSetId": 13
@@ -467,6 +941,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "tab",
+      "range": {
+        "startLine": 40,
+        "startChar": 6,
+        "endLine": 40,
+        "endChar": 7
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1ed8974_e2b1d433",
+        "filename": "lib/cache/libocf/Makefile",
+        "patchSetId": 13
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "cf9659fb_58b7518e",
       "range": {
         "startLine": 40,
         "startChar": 6,
@@ -502,6 +1000,30 @@
     },
     {
       "key": {
+        "uuid": "feb1251d_96f0540e",
+        "filename": "lib/cache/libocf/ocf_env.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "22ef37fe_37072589",
+      "range": {
+        "startLine": 156,
+        "startChar": 39,
+        "endLine": 156,
+        "endChar": 40
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f359ea6a_020e0ace",
         "filename": "lib/cache/stats.c",
         "patchSetId": 13
@@ -513,6 +1035,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "double is also fine, especially when \u002710.\u0027 instead of \u002710.0f\u0027 and passing it to printf() which will convert it back to double anyway :P\n\nBut the question is: do you need 0.1% accuracy in these stats?",
+      "range": {
+        "startLine": 39,
+        "startChar": 7,
+        "endLine": 39,
+        "endChar": 12
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26d98ae0_bb1fc10d",
+        "filename": "lib/cache/stats.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "Okay, but 0.1% is needed since some stats do not cover 0-100% but rather some part of that.",
+      "parentUuid": "f359ea6a_020e0ace",
       "range": {
         "startLine": 39,
         "startChar": 7,
@@ -548,6 +1094,30 @@
     },
     {
       "key": {
+        "uuid": "1cd771eb_8e684415",
+        "filename": "lib/cache/stats.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "This module yes. \nOCF accepts different sizes, so we will make it configurable in future.",
+      "parentUuid": "9bfc06ba_f6fe0216",
+      "range": {
+        "startLine": 50,
+        "startChar": 45,
+        "endLine": 50,
+        "endChar": 56
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d17a1cc7_e2c9021b",
         "filename": "lib/cache/stats.c",
         "patchSetId": 13
@@ -559,6 +1129,30 @@
       "writtenOn": "2018-12-06T12:25:13Z",
       "side": 1,
       "message": "Wow! ASCII art table :D",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 67
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf638cf3_5065aa5f",
+        "filename": "lib/cache/stats.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-07T11:49:53Z",
+      "side": 1,
+      "message": "I will remove this file completely for now, ok?",
+      "parentUuid": "d17a1cc7_e2c9021b",
       "range": {
         "startLine": 47,
         "startChar": 0,
