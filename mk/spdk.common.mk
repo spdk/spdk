@@ -196,6 +196,11 @@ ifeq ($(CONFIG_LOG_BACKTRACE),y)
 SYS_LIBS += -lunwind
 endif
 
+SYS_LIBS += -lz
+SYS_LIBS += -lnl
+SYS_LIBS += -lm
+SYS_LIBS += -ldl
+
 MAKEFLAGS += --no-print-directory
 
 C_SRCS += $(C_SRCS-y)
