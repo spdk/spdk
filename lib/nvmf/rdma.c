@@ -624,6 +624,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		spdk_put_io_channel(rqpair->mgmt_channel);
 	}
 
+	rqpair->qpair.magic = NVMF_QPAIR_MAGIC & FREE_MARK;
 	/* Free all memory */
 	spdk_dma_free(rqpair->cmds);
 	spdk_dma_free(rqpair->cpls);
@@ -1028,6 +1029,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->max_rw_depth = max_rw_depth;
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
+	rqpair->qpair.magic = NVMF_QPAIR_MAGIC;
 	rqpair->qpair.transport = transport;
 	TAILQ_INIT(&rqpair->incoming_queue);
 	event->id->context = &rqpair->qpair;
@@ -2019,6 +2021,11 @@ _nvmf_rdma_disconnect_retry(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 	struct spdk_nvmf_poll_group *group;
+
+	if (qpair == NULL || qpair->magic != NVMF_QPAIR_MAGIC) {
+		SPDK_ERRLOG("disconnect retry: not a nvmf qpair\n");
+		return;
+	}
 
 	/* Read the group out of the qpair. This is normally set and accessed only from
 	 * the thread that created the group. Here, we're not on that thread necessarily.
