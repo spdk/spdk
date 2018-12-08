@@ -165,7 +165,10 @@ struct spdk_nvmf_ns {
 	struct spdk_nvmf_ns_opts opts;
 };
 
+#define NVMF_QPAIR_MAGIC 0x6e766d665f7170   /* nvmf_qp ASCII */
+
 struct spdk_nvmf_qpair {
+	uint64_t				magic;
 	enum spdk_nvmf_qpair_state		state;
 	spdk_nvmf_state_change_done		state_cb;
 	void					*state_cb_arg;
