@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "272e3e6e_5966702f",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-08T14:55:56Z",
+      "side": 1,
+      "message": "Ok I will remove iovcnt check here",
+      "parentUuid": "3ff4bf61_e59c3bd6",
+      "range": {
+        "startLine": 259,
+        "startChar": 0,
+        "endLine": 260,
+        "endChar": 65
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ccb267d_5459e340",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 16
@@ -248,6 +272,30 @@
       "writtenOn": "2018-12-07T15:58:57Z",
       "side": 1,
       "message": "+ empty line after \u0027}\u0027 all over this patch",
+      "range": {
+        "startLine": 507,
+        "startChar": 1,
+        "endLine": 508,
+        "endChar": 1
+      },
+      "revId": "92dcb57c5b9572ac8d44e2d8c133101478d24d8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da9ba331_1852e47d",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 508,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-08T14:55:56Z",
+      "side": 1,
+      "message": "We dont follow that style in SPDK and IMO this concrete place musn\u0027t have empty line",
+      "parentUuid": "f329638e_d6a1433f",
       "range": {
         "startLine": 507,
         "startChar": 1,

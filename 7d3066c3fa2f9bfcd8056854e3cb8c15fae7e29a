@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "41be918d_f647596c",
+        "filename": "include/spdk/stdinc.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-08T14:55:56Z",
+      "side": 1,
+      "message": "Good point\nDone",
+      "parentUuid": "976249ad_13c4c0a0",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 21
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1cb1eb10_cba5b220",
         "filename": "lib/bdev/cache/vbdev_cache.c",
         "patchSetId": 13
@@ -402,6 +426,30 @@
       "side": 1,
       "message": "I understand your\u0027s explanation it doesn\u0027t make me less woried. If this is true what you are saying you should make \u0027device\u0027 local or at least set it to NULL before returnig from this function. We musn\u0027t have dangling pointers in internal structures. This is just not right.",
       "parentUuid": "37d62d0b_aff0c348",
+      "range": {
+        "startLine": 381,
+        "startChar": 29,
+        "endLine": 381,
+        "endChar": 38
+      },
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3056f78_c3c0b639",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-08T14:55:56Z",
+      "side": 1,
+      "message": "Ok I understand.\nI will make that pointer dynamically allocated and then free it in free_vbdev.\nI don\u0027t see a good way if not to use dynamic memory.\nWould that be ok?",
+      "parentUuid": "06731617_06f8f181",
       "range": {
         "startLine": 381,
         "startChar": 29,
