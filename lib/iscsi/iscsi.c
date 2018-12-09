@@ -1702,13 +1702,8 @@ spdk_iscsi_op_login_phase_none(struct spdk_iscsi_conn *conn,
 		}
 	}
 
-	rc = spdk_iscsi_op_login_set_target_info(conn, rsp_pdu, session_type,
+	return spdk_iscsi_op_login_set_target_info(conn, rsp_pdu, session_type,
 			alloc_len, target);
-	if (rc < 0) {
-		return rc;
-	}
-
-	return rc;
 }
 
 /*
@@ -2910,23 +2905,14 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			SPDK_ERRLOG("data segment len(=%d) > task transfer len(=%d)\n",
 				    (int)pdu->data_segment_len, transfer_len);
 			spdk_iscsi_task_put(task);
-			rc = spdk_iscsi_reject(conn, pdu,
-					       ISCSI_REASON_PROTOCOL_ERROR);
-			if (rc < 0) {
-				SPDK_ERRLOG("iscsi_reject() failed\n");
-			}
-			return rc;
+			return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
 		/* check the ImmediateData and also pdu->data_segment_len */
 		if ((!conn->sess->ImmediateData && (pdu->data_segment_len > 0)) ||
 		    (pdu->data_segment_len > conn->sess->FirstBurstLength)) {
 			spdk_iscsi_task_put(task);
-			rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-			if (rc < 0) {
-				SPDK_ERRLOG("iscsi_reject() failed\n");
-			}
-			return rc;
+			return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
 		if (F_bit && pdu->data_segment_len < transfer_len) {
@@ -3887,7 +3873,6 @@ spdk_iscsi_handle_data_ack(struct spdk_iscsi_conn *conn,
 	uint32_t run_length;
 	struct spdk_iscsi_pdu *old_pdu;
 	uint32_t old_datasn;
-	int rc;
 	struct iscsi_bhs_snack_req *reqh;
 	struct spdk_iscsi_task *task;
 	struct iscsi_bhs_data_in *datain_header;
@@ -3944,13 +3929,7 @@ spdk_iscsi_handle_data_ack(struct spdk_iscsi_conn *conn,
 	return 0;
 
 reject_return:
-	rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_SNACK);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_reject() failed\n");
-		return -1;
-	}
-
-	return 0;
+	return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_INVALID_SNACK);
 }
 
 /* This function is used to remove the r2t pdu from snack_pdu_list by < task, r2t_sn> info */
@@ -4048,12 +4027,7 @@ spdk_iscsi_op_snack(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	reqh = (struct iscsi_bhs_snack_req *)&pdu->bhs;
 	if (!conn->sess->ErrorRecoveryLevel) {
 		SPDK_ERRLOG("Got a SNACK request in ErrorRecoveryLevel=0\n");
-		rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-		if (rc < 0) {
-			SPDK_ERRLOG("iscsi_reject() failed\n");
-			return -1;
-		}
-		return rc;
+		return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
 	type = reqh->flags & ISCSI_FLAG_SNACK_TYPE_MASK;
@@ -4246,13 +4220,7 @@ send_r2t_recovery_return:
 	}
 
 reject_return:
-	rc = spdk_iscsi_reject(conn, pdu, reject_reason);
-	if (rc < 0) {
-		SPDK_ERRLOG("iscsi_reject() failed\n");
-		return SPDK_ISCSI_CONNECTION_FATAL;
-	}
-
-	return SPDK_SUCCESS;
+	return spdk_iscsi_reject(conn, pdu, reject_reason);
 }
 
 static int
@@ -4522,12 +4490,7 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	default:
 		SPDK_ERRLOG("unsupported opcode %x\n", opcode);
-		rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
-		if (rc < 0) {
-			SPDK_ERRLOG("spdk_iscsi_reject() failed\n");
-			return rc;
-		}
-		break;
+		return  spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 	}
 
 	return 0;
