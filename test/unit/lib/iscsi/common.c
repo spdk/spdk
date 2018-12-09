@@ -24,7 +24,10 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn,
 	struct spdk_iscsi_task *task;
 
 	task = calloc(1, sizeof(*task));
-
+	if (!task) {
+		return NULL;
+	}
+	task->scsi.iovs = &task->scsi.iov;
 	return task;
 }
 
@@ -73,6 +76,11 @@ spdk_get_pdu(void)
 
 void
 spdk_scsi_task_process_null_lun(struct spdk_scsi_task *task)
+{
+}
+
+void
+spdk_scsi_task_process_abort(struct spdk_scsi_task *task)
 {
 }
 
@@ -214,7 +222,12 @@ spdk_shutdown_iscsi_conns(void)
 void
 spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 {
+	struct spdk_iscsi_task *iscsi_task;
 
+	if (scsi_task != NULL) {
+		iscsi_task = spdk_iscsi_task_from_scsi_task(scsi_task);
+		free(iscsi_task);
+	}
 }
 
 void
