@@ -1769,7 +1769,7 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 
 	rc = nvme_ctrlr_construct(&tctrlr->ctrlr);
 	if (rc != 0) {
-		nvme_ctrlr_destruct(&tctrlr->ctrlr);
+		free(tctrlr);
 		return NULL;
 	}
 
@@ -1777,7 +1777,7 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 			       SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES, 0, SPDK_NVMF_MIN_ADMIN_QUEUE_ENTRIES);
 	if (!tctrlr->ctrlr.adminq) {
 		SPDK_ERRLOG("failed to create admin qpair\n");
-		nvme_ctrlr_destruct(&tctrlr->ctrlr);
+		nvme_tcp_ctrlr_destruct(&tctrlr->ctrlr);
 		return NULL;
 	}
 
