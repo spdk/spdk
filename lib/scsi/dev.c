@@ -246,12 +246,10 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 void
 spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
-			      struct spdk_scsi_task *task,
-			      enum spdk_scsi_task_func func)
+			      struct spdk_scsi_task *task)
 {
 	assert(task != NULL);
 
-	task->function = func;
 	spdk_scsi_lun_append_mgmt_task(task->lun, task);
 	spdk_scsi_lun_execute_mgmt_task(task->lun);
 }

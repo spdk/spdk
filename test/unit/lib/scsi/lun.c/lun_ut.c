@@ -168,8 +168,7 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
-				   struct spdk_scsi_task *task,
-				   enum spdk_scsi_task_func func)
+				   struct spdk_scsi_task *task)
 {
 }
 

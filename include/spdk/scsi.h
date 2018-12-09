@@ -248,13 +248,14 @@ void spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev);
  * Execute the SCSI management task.
  *
  * The task can be constructed by the function spdk_scsi_task_construct().
+ * Code of task management function to be executed is set before calling this API.
  *
  * \param dev SCSI device.
  * \param task SCSI task to be executed.
  * \param func Task management function to be executed.
  */
-void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task,
-				   enum spdk_scsi_task_func func);
+void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev, struct spdk_scsi_task *task);
+
 /**
  * Execute the SCSI task.
  *

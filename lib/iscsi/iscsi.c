@@ -2746,10 +2746,9 @@ static void spdk_iscsi_queue_task(struct spdk_iscsi_conn *conn,
 }
 
 static void spdk_iscsi_queue_mgmt_task(struct spdk_iscsi_conn *conn,
-				       struct spdk_iscsi_task *task,
-				       enum spdk_scsi_task_func func)
+				       struct spdk_iscsi_task *task)
 {
-	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi, func);
+	spdk_scsi_dev_queue_mgmt_task(conn->dev, &task->scsi);
 }
 
 int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
@@ -2973,20 +2972,14 @@ static void
 spdk_abort_transfer_task_in_task_mgmt_resp(struct spdk_iscsi_conn *conn,
 		struct spdk_iscsi_task *task)
 {
-	struct iscsi_bhs_task_req *reqh;
 	struct spdk_iscsi_pdu *pdu;
-	uint32_t ref_task_tag;
-	uint8_t function;
 
 	pdu = spdk_iscsi_task_get_pdu(task);
-	reqh = (struct iscsi_bhs_task_req *)&pdu->bhs;
-	function = reqh->flags & ISCSI_TASK_FUNCTION_MASK;
-	ref_task_tag = from_be32(&reqh->ref_task_tag);
 
-	switch (function) {
+	switch (task->scsi.function) {
 	/* abort task identified by Reference Task Tag field */
 	case ISCSI_TASK_FUNC_ABORT_TASK:
-		spdk_del_transfer_task(conn, ref_task_tag);
+		spdk_del_transfer_task(conn, task->scsi.abort_id);
 		break;
 
 	/* abort all tasks issued via this session on the LUN */
@@ -3234,8 +3227,8 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 		SPDK_NOTICELOG("ABORT_TASK\n");
 
 		task->scsi.abort_id = ref_task_tag;
-
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_ABORT_TASK);
+		task->scsi.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
+		spdk_iscsi_queue_mgmt_task(conn, task);
 
 		return SPDK_SUCCESS;
 
@@ -3243,7 +3236,8 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	case ISCSI_TASK_FUNC_ABORT_TASK_SET:
 		SPDK_NOTICELOG("ABORT_TASK_SET\n");
 
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET);
+		task->scsi.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK_SET;
+		spdk_iscsi_queue_mgmt_task(conn, task);
 
 		return SPDK_SUCCESS;
 
@@ -3260,7 +3254,8 @@ spdk_iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	case ISCSI_TASK_FUNC_LOGICAL_UNIT_RESET:
 		SPDK_NOTICELOG("LOGICAL_UNIT_RESET\n");
 
-		spdk_iscsi_queue_mgmt_task(conn, task, SPDK_SCSI_TASK_FUNC_LUN_RESET);
+		task->scsi.function = SPDK_SCSI_TASK_FUNC_LUN_RESET;
+		spdk_iscsi_queue_mgmt_task(conn, task);
 
 		return SPDK_SUCCESS;
 
