@@ -93,6 +93,8 @@ struct spdk_iscsi_task {
 	 */
 	int lun_id;
 
+	struct spdk_poller *mgmt_poller;
+
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
 	TAILQ_HEAD(subtask_list, spdk_iscsi_task) subtask_list;
