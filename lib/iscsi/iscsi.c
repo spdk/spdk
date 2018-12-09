@@ -3296,7 +3296,7 @@ _spdk_iscsi_op_abort_task_set(void *arg)
 	return 1;
 }
 
-static void
+void
 spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task, uint8_t function)
 {
 	task->scsi.function = function;
