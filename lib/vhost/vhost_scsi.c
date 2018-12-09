@@ -269,7 +269,8 @@ static void
 mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func func)
 {
 	task->tmf_resp->response = VIRTIO_SCSI_S_OK;
-	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi, func);
+	task->scsi.function = func;
+	spdk_scsi_dev_queue_mgmt_task(task->scsi_dev, &task->scsi);
 }
 
 static void
