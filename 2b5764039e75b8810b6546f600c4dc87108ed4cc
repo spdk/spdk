@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f425c599_af453b99",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3271,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-09T22:36:10Z",
+      "side": 1,
+      "message": "I didn\u0027t dig into spdk_iscsi_task. Thank you, I update the patch based on your suggestion.",
+      "parentUuid": "8af16f29_9a443fe1",
+      "revId": "2b5764039e75b8810b6546f600c4dc87108ed4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0c83408_05951cab",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-07T21:02:00Z",
       "side": 1,
       "message": "is ref_task_tag needed, or can we just use ctx-\u003etask-\u003escsi.abort_id?",
+      "revId": "2b5764039e75b8810b6546f600c4dc87108ed4cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81da4de0_31fdb3f7",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 3282,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-09T22:36:10Z",
+      "side": 1,
+      "message": "Very reasonable, thank you.",
+      "parentUuid": "c0c83408_05951cab",
       "revId": "2b5764039e75b8810b6546f600c4dc87108ed4cc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
