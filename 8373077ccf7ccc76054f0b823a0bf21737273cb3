@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "beb7eebe_eaa98e1f",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T08:38:12Z",
+      "side": 1,
+      "message": "libpmempool on ubuntu16",
+      "range": {
+        "startLine": 452,
+        "startChar": 8,
+        "endLine": 454,
+        "endChar": 10
+      },
+      "revId": "8373077ccf7ccc76054f0b823a0bf21737273cb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "375565dd_36f96156",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T08:38:12Z",
+      "side": 1,
+      "message": "It\u0027s targetcli-fb on Ubuntu18, but jsut targetcli in Ubuntu16:\n\nklateck@GrizzlyPass7:~/Downloads$ sudo apt search targetcli | grep targetcli\ntargetcli/xenial,xenial,now 1:3.0~pre4.1~ga55d018-2 all [installed]",
+      "range": {
+        "startLine": 455,
+        "startChar": 0,
+        "endLine": 456,
+        "endChar": 93
+      },
+      "revId": "8373077ccf7ccc76054f0b823a0bf21737273cb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1b3cfce_a152b954",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T08:38:12Z",
+      "side": 1,
+      "message": "Seems this package is not available ind default Ubuntu 16 repositories. May want to inform on that.\nhttps://packages.ubuntu.com/search?keywords\u003dopen-isns-utils",
+      "range": {
+        "startLine": 458,
+        "startChar": 8,
+        "endLine": 460,
+        "endChar": 10
+      },
+      "revId": "8373077ccf7ccc76054f0b823a0bf21737273cb3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
