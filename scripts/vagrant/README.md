@@ -42,6 +42,17 @@ Quick start instructions for OSX:
 
 Following the generic instructions should be sufficient for most Linux distributions. For more thorough instructions on installing VirtualBox on your distribution of choice, please see the following [guide](https://www.virtualbox.org/wiki/Linux_Downloads).
 
+ Examples on Fedora26/Fedora27/Fedora28
+
+1. yum check-update
+2. yum update -y
+3. yum install qt*
+4. yum install libsdl*
+5. rpm -ivh VirtualBox-5.2-5.2.16_123759_fedora26-1.x86_64.rpm (select the right version in https://www.virtualbox.org/wiki/Linux_Downloads)
+6. VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-5.2.16.vbox-extpack(install the same pack as your installed version of VirtualBox)
+7. rpm -ivh vagrant_2.1.2_x86_64.rpm
+
+
 ## Configure Vagrant
 
 If you are behind a corporate firewall, configure the following proxy settings.
