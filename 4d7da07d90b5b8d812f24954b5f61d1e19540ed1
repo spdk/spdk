@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03068660_aefa83c1",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T21:12:10Z",
+      "side": 1,
+      "message": "Returning 0 may mean that the reactor will go to sleep. For shutdown operations, I don\u0027t think we ever want to go to sleep so you should always return 1.",
+      "revId": "4d7da07d90b5b8d812f24954b5f61d1e19540ed1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5772ed40_92b7cbd9",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T21:12:10Z",
+      "side": 1,
+      "message": "Same comment here",
+      "revId": "4d7da07d90b5b8d812f24954b5f61d1e19540ed1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3fe6bef_d430b93a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 623,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T21:12:10Z",
+      "side": 1,
+      "message": "You don\u0027t want the thread to go to sleep (even temporarily) on a shutdown operation, so return 1.",
+      "revId": "4d7da07d90b5b8d812f24954b5f61d1e19540ed1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
