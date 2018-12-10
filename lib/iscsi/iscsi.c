@@ -2881,6 +2881,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	task->scsi.target_port = conn->target_port;
 	task->scsi.initiator_port = conn->initiator_port;
 	task->parent = NULL;
+	task->rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
 
 	if (task->scsi.lun == NULL) {
 		spdk_scsi_task_process_null_lun(&task->scsi);
