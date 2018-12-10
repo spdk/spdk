@@ -16,6 +16,24 @@
       "revId": "9ae72e6a946636c8d0a395f62502855529e99366",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c8941fc_a8d02f6c",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T21:38:07Z",
+      "side": 1,
+      "message": "If everything is properly waiting for clean up to happen before it completes the initialization/finalization, there is no difference. I believe this was written this way only because we had some bugs that we\u0027ve now addressed.",
+      "parentUuid": "0d6f6f4c_8febee4f",
+      "revId": "9ae72e6a946636c8d0a395f62502855529e99366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
