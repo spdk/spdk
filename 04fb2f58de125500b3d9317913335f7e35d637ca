@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2946566c_d0bfad7b",
+        "filename": "scripts/perf/nvmf/spdk_tgt_template.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T23:57:39Z",
+      "side": 1,
+      "message": "could we use JSON-RPC instead?\n\nI know that we can\u0027t quite yet pass a JSON-RPC config file on the command line, but was thinking that maybe the python script could start the target with -w option, and then pass in the JSON-RPC\n\nwould just like to move away from old INI config file format when possible, rather than adding new tests that use it",
+      "revId": "04fb2f58de125500b3d9317913335f7e35d637ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be4b1c8d_ab375f5e",
+        "filename": "scripts/perf/nvmf/spdk_tgt_template.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T23:57:39Z",
+      "side": 1,
+      "message": "Rpc section is no longer needed.",
+      "revId": "04fb2f58de125500b3d9317913335f7e35d637ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
