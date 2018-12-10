@@ -65,7 +65,7 @@ class spdk_rpc(object):
             cmd = "{} {}".format(self.rpc_py, name)
             for arg in args:
                 cmd += " {}".format(arg)
-            return check_output(cmd, shell=True)
+            return check_output(cmd, shell=True).decode("utf-8")
         return call
 
 
