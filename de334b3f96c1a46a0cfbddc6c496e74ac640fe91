@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a6403ff_90c5404e",
+        "filename": "test/iscsi_tgt/rpc_config/rpc_config.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T09:22:19Z",
+      "side": 1,
+      "message": "Why not do it just inside class spdk_rpc? I think like 68 should suffice.\nreturn check_output(cmd, shell\u003dTrue, encoding\u003d\"utf-8\")",
+      "range": {
+        "startLine": 80,
+        "startChar": 33,
+        "endLine": 80,
+        "endChar": 50
+      },
+      "revId": "de334b3f96c1a46a0cfbddc6c496e74ac640fe91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
