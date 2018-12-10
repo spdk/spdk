@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "90cef506_d8d69ed4",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T13:03:04Z",
+      "side": 1,
+      "message": "add an implicit method to unset variables.",
+      "parentUuid": "6d76982c_d64cd48c",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 4
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79b5db89_e5d5aadc",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 12
