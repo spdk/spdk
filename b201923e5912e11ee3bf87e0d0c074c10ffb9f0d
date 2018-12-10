@@ -48,6 +48,29 @@
     },
     {
       "key": {
+        "uuid": "1df7c0c0_a715a31a",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2018-12-10T20:39:22Z",
+      "side": 1,
+      "message": "When I ran the script on my system I did not see a result directory, the result files are in the results directory. Is the results dir a temporary directory that get created during the run and then gets deleted after the run?\n\nHere is what I have in my results directory\n\nls -l results/\ntotal 164\n-rw-r--r-- 1 root root  134 Dec  6 14:43 config_100_nvme_1cpus_12_06_2018_143243_1_disks_0.fio\n-rw-r--r-- 1 root root  134 Dec  6 14:53 config_100_nvme_1cpus_12_06_2018_143243_1_disks_1.fio\n-rw-r--r-- 1 root root  134 Dec  6 15:04 config_100_nvme_1cpus_12_06_2018_143243_1_disks_2.fio\n-rw-r--r-- 1 root root  134 Dec  6 15:26 config_100_nvme_1cpus_12_06_2018_151542_1_disks_0.fio\n-rw-r--r-- 1 root root  134 Dec  6 15:36 config_100_nvme_1cpus_12_06_2018_151542_1_disks_1.fio\n-rw-r--r-- 1 root root  134 Dec  6 15:47 config_100_nvme_1cpus_12_06_2018_151542_1_disks_2.fio\n-rw-r--r-- 1 root root  134 Dec  6 17:23 config_100_nvme_1cpus_12_06_2018_171306_1_disks_0.fio\n-rw-r--r-- 1 root root  134 Dec  6 17:34 config_100_nvme_1cpus_12_06_2018_171306_1_disks_1.fio\n-rw-r--r-- 1 root root  134 Dec  6 17:44 config_100_nvme_1cpus_12_06_2018_171306_1_disks_2.fio\n-rw-r--r-- 1 root root  272 Dec  6 17:57 config_100_nvme_1cpus_12_06_2018_174628_4_disks_0.fio\n-rw-r--r-- 1 root root  272 Dec  6 18:07 config_100_nvme_1cpus_12_06_2018_174628_4_disks_1.fio\n-rw-r--r-- 1 root root  272 Dec  6 18:18 config_100_nvme_1cpus_12_06_2018_174628_4_disks_2.fio\n-rw-r--r-- 1 root root  152 Dec  6 14:18 perf_results_100_nvme_1cpus_12_06_2018_141316.csv\n-rw-r--r-- 1 root root 8011 Dec  6 14:43 perf_results_100_nvme_1cpus_12_06_2018_143243_1_disks_0.json\n-rw-r--r-- 1 root root 8011 Dec  6 14:53 perf_results_100_nvme_1cpus_12_06_2018_143243_1_disks_1.json\n-rw-r--r-- 1 root root 8011 Dec  6 15:04 perf_results_100_nvme_1cpus_12_06_2018_143243_1_disks_2.json\n-rw-r--r-- 1 root root  176 Dec  6 15:04 perf_results_100_nvme_1cpus_12_06_2018_143243.csv\n-rw-r--r-- 1 root root 7963 Dec  6 15:26 perf_results_100_nvme_1cpus_12_06_2018_151542_1_disks_0.json\n-rw-r--r-- 1 root root 7963 Dec  6 15:36 perf_results_100_nvme_1cpus_12_06_2018_151542_1_disks_1.json\n-rw-r--r-- 1 root root 7963 Dec  6 15:47 perf_results_100_nvme_1cpus_12_06_2018_151542_1_disks_2.json\n-rw-r--r-- 1 root root  168 Dec  6 15:47 perf_results_100_nvme_1cpus_12_06_2018_151542.csv\n-rw-r--r-- 1 root root 7986 Dec  6 17:23 perf_results_100_nvme_1cpus_12_06_2018_171306_1_disks_0.json\n-rw-r--r-- 1 root root 7986 Dec  6 17:34 perf_results_100_nvme_1cpus_12_06_2018_171306_1_disks_1.json\n-rw-r--r-- 1 root root 7986 Dec  6 17:44 perf_results_100_nvme_1cpus_12_06_2018_171306_1_disks_2.json\n-rw-r--r-- 1 root root  170 Dec  6 17:44 perf_results_100_nvme_1cpus_12_06_2018_171306.csv\n-rw-r--r-- 1 root root 8177 Dec  6 17:57 perf_results_100_nvme_1cpus_12_06_2018_174628_4_disks_0.json\n-rw-r--r-- 1 root root 8176 Dec  6 18:07 perf_results_100_nvme_1cpus_12_06_2018_174628_4_disks_1.json\n-rw-r--r-- 1 root root 8178 Dec  6 18:18 perf_results_100_nvme_1cpus_12_06_2018_174628_4_disks_2.json\n-rw-r--r-- 1 root root  171 Dec  6 18:18 perf_results_100_nvme_1cpus_12_06_2018_174628.csv",
+      "range": {
+        "startLine": 26,
+        "startChar": 30,
+        "endLine": 26,
+        "endChar": 41
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e2fbe78_b59e1c4e",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 32
