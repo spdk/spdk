@@ -577,20 +577,13 @@ public:
 	}
 };
 
-static void
-_spdk_send_msg(__attribute__((unused)) spdk_thread_fn fn,
-	       __attribute__((unused)) void *ctx,
-	       __attribute__((unused)) void *thread_ctx)
-{
-	/* Not supported */
-	assert(false);
-}
-
 void SpdkInitializeThread(void)
 {
+	struct spdk_thread *thread;
+
 	if (g_fs != NULL) {
-		/* TODO: Add an event lib call to dynamically register a thread */
-		spdk_allocate_thread(_spdk_send_msg, NULL, NULL, NULL, "spdk_rocksdb");
+		thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, "spdk_rocksdb");
+		spdk_set_thread(thread);
 		g_sync_args.channel = spdk_fs_alloc_io_channel_sync(g_fs);
 	}
 }
@@ -607,6 +600,8 @@ static void SpdkStartThreadWrapper(void *arg)
 	SpdkInitializeThread();
 	state->user_function(state->arg);
 	delete state;
+
+	spdk_free_thread();
 }
 
 void SpdkEnv::StartThread(void (*function)(void *arg), void *arg)
