@@ -41,6 +41,8 @@
 #include "scsi/dev.c"
 #include "scsi/port.c"
 
+#include "spdk_internal/mock.h"
+
 /* Unit test bdev mockup */
 struct spdk_bdev {
 	char name[100];
@@ -111,48 +113,26 @@ spdk_bdev_get_by_name(const char *bdev_name)
 	return NULL;
 }
 
-void
-spdk_scsi_lun_append_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_append_mgmt_task,
+	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
-void
-spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_execute_mgmt_task, (struct spdk_scsi_lun *lun));
 
-bool
-spdk_scsi_lun_has_pending_mgmt_tasks(const struct spdk_scsi_lun *lun)
-{
-	return false;
-}
+DEFINE_STUB(spdk_scsi_lun_has_pending_mgmt_tasks, bool,
+	    (const struct spdk_scsi_lun *lun), false);
 
-void
-spdk_scsi_lun_append_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_append_task,
+	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
-void
-spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_execute_tasks, (struct spdk_scsi_lun *lun));
 
-int
-_spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_lun *lun)
-{
-	return 0;
-}
+DEFINE_STUB(_spdk_scsi_lun_allocate_io_channel, int,
+	    (struct spdk_scsi_lun *lun), 0);
 
-void
-_spdk_scsi_lun_free_io_channel(struct spdk_scsi_lun *lun)
-{
-}
+DEFINE_STUB_V(_spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
 
-bool
-spdk_scsi_lun_has_pending_tasks(const struct spdk_scsi_lun *lun)
-{
-	return false;
-}
+DEFINE_STUB(spdk_scsi_lun_has_pending_tasks, bool,
+	    (const struct spdk_scsi_lun *lun), false);
 
 static void
 dev_destruct_null_dev(void)

@@ -38,6 +38,8 @@
 
 #include "spdk_cunit.h"
 
+#include "spdk_internal/mock.h"
+
 SPDK_LOG_REGISTER_COMPONENT("scsi", SPDK_LOG_SCSI)
 
 struct spdk_scsi_globals g_spdk_scsi;
@@ -91,17 +93,11 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	CU_ASSERT(0);
 }
 
-const char *
-spdk_bdev_get_name(const struct spdk_bdev *bdev)
-{
-	return "test";
-}
+DEFINE_STUB(spdk_bdev_get_name, const char *,
+	    (const struct spdk_bdev *bdev), "test");
 
-uint32_t
-spdk_bdev_get_block_size(const struct spdk_bdev *bdev)
-{
-	return 512;
-}
+DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 512);
 
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
@@ -109,17 +105,11 @@ spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 	return g_test_bdev_num_blocks;
 }
 
-const char *
-spdk_bdev_get_product_name(const struct spdk_bdev *bdev)
-{
-	return "test product";
-}
+DEFINE_STUB(spdk_bdev_get_product_name, const char *,
+	    (const struct spdk_bdev *bdev), "test product");
 
-bool
-spdk_bdev_has_write_cache(const struct spdk_bdev *bdev)
-{
-	return false;
-}
+DEFINE_STUB(spdk_bdev_has_write_cache, bool,
+	    (const struct spdk_bdev *bdev), false);
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -127,10 +117,8 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 	g_scsi_cb_called++;
 }
 
-void
-spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_complete_reset_task,
+	      (struct spdk_scsi_lun *lun, struct spdk_scsi_task *task));
 
 static void
 ut_put_task(struct spdk_scsi_task *task)
@@ -144,7 +132,6 @@ ut_put_task(struct spdk_scsi_task *task)
 	task->alloc_len = 0;
 	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&g_bdev_io_queue));
 }
-
 
 static void
 ut_init_task(struct spdk_scsi_task *task)
