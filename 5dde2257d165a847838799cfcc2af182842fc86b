@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "4ca94ef0_b37a9777",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-10T17:44:29Z",
+      "side": 1,
+      "message": "Yes, that works.   Though I don\u0027t anticipate one in general will have to worry about such suffixes and all, it\u0027s an area where one doing some testing needs to be careful.   For example, if one had yet another version of the package and it was labeled \u002718.10.1.post\u0027, then because \u0027post\u0027 is lexically less than \u0027pre\u0027, then it would be interpreted as an earlier version to \u0027.pre\u0027.   I just gave it a try and after installing the \u0027.pre\u0027, I did a \"yum downgrade spdk\u0027 and sure enough the version it thought that preceded \u0027.pre\u0027 was \u0027.post\u0027.",
+      "parentUuid": "0beced14_470ec046",
+      "revId": "5dde2257d165a847838799cfcc2af182842fc86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "425affa1_028c9b2d",
         "filename": "pkg/spdk.spec",
         "patchSetId": 3
