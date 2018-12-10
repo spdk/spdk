@@ -22,6 +22,30 @@
       "revId": "0aafd5e3d5b28c3682349371a85a838e054053b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e8d528f_3f477e52",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T10:27:39Z",
+      "side": 1,
+      "message": "in https://www.virtualbox.org/wiki/Linux_Downloads\nFedora 26 / 27 / 28  i386 |  AMD64  ,it seems use the same version, maybe there\u0027s some dependency issues,I just to give an example method to guide installing. which version decides by the developer.",
+      "parentUuid": "92482bf4_259165b4",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 36
+      },
+      "revId": "0aafd5e3d5b28c3682349371a85a838e054053b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
