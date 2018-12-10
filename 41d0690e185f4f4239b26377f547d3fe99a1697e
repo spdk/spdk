@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7654541e_5dc0225f",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T16:28:02Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nI missed this in last review.  Why use \"spdk_log\" in the name here?  This is not related to logging.  I think the names should be:\n\nspdk_trace_get_first_register_fn\nspdk_trace_get_next_register_fn\n\nRest of this patch looks good to me.\n\n-Jim",
+      "revId": "41d0690e185f4f4239b26377f547d3fe99a1697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
