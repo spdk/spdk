@@ -75,26 +75,18 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	}
 }
 
-void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx)
-{
-}
+DEFINE_STUB_V(spdk_thread_send_msg,
+	      (const struct spdk_thread *thread, spdk_thread_fn fn, void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
-void _spdk_trace_record(uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
-			uint32_t size, uint64_t object_id, uint64_t arg1)
-{
-}
 
-uint64_t spdk_get_ticks(void)
-{
-	return 0;
-}
+DEFINE_STUB_V(_spdk_trace_record,
+	      (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
+	       uint32_t size, uint64_t object_id, uint64_t arg1));
 
-uint64_t spdk_get_ticks_hz(void)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_get_ticks, uint64_t, (void), 0);
+
+DEFINE_STUB(spdk_get_ticks_hz, uint64_t, (void), 0);
 
 static void
 spdk_lun_ut_cpl_task(struct spdk_scsi_task *task)
@@ -149,34 +141,21 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 	CU_ASSERT(0);
 }
 
-int
-spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
-	       void *remove_ctx, struct spdk_bdev_desc **desc)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_bdev_open, int,
+	    (struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_cb,
+	     void *remove_ctx, struct spdk_bdev_desc **desc),
+	    0);
 
-void
-spdk_bdev_close(struct spdk_bdev_desc *desc)
-{
-}
+DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 
-const char *
-spdk_bdev_get_name(const struct spdk_bdev *bdev)
-{
-	return "test";
-}
+DEFINE_STUB(spdk_bdev_get_name, const char *,
+	    (const struct spdk_bdev *bdev), "test");
 
-void spdk_scsi_dev_queue_mgmt_task(struct spdk_scsi_dev *dev,
-				   struct spdk_scsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_scsi_dev_queue_mgmt_task,
+	      (struct spdk_scsi_dev *dev, struct spdk_scsi_task *task));
 
-void spdk_scsi_dev_delete_lun(struct spdk_scsi_dev *dev,
-			      struct spdk_scsi_lun *lun)
-{
-	return;
-}
+DEFINE_STUB_V(spdk_scsi_dev_delete_lun,
+	      (struct spdk_scsi_dev *dev, struct spdk_scsi_lun *lun));
 
 void
 spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
@@ -205,19 +184,15 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 	}
 }
 
-struct spdk_io_channel *
-spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
+	    (struct spdk_bdev_desc *desc), NULL);
 
-void
-spdk_put_io_channel(struct spdk_io_channel *ch)
-{
-}
+DEFINE_STUB_V(spdk_put_io_channel, (struct spdk_io_channel *ch));
 
-DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *, (struct spdk_io_channel *ch), NULL)
-DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL)
+DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *,
+	    (struct spdk_io_channel *ch), NULL);
+
+DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL);
 
 static _spdk_scsi_lun *
 lun_construct(void)
