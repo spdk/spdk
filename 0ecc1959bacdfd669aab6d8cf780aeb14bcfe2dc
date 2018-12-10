@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1f021e4_0d0bc411",
+        "filename": "include/spdk_internal/thread.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T16:52:28Z",
+      "side": 1,
+      "message": "I missed that we use this in the fio plugin as well.\n\nI guess I\u0027d still lean towards keeping this in an internal API header - but maybe the comment needs to be updated based on the fio plugin usage.",
+      "revId": "0ecc1959bacdfd669aab6d8cf780aeb14bcfe2dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ed799c6_84105df5",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T16:52:28Z",
+      "side": 1,
+      "message": "wondering if calling spdk_set_thread() would be better here (since that\u0027s what other code does to set the thread)\n\nbut this is fine how it is - up to you if you want to change or not",
+      "revId": "0ecc1959bacdfd669aab6d8cf780aeb14bcfe2dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
