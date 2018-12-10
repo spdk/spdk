@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92482bf4_259165b4",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T09:16:23Z",
+      "side": 1,
+      "message": "So in this example we suggest installing FC26 RPMs.\nIs the aim for everyone to use the same vagrant/virtualbox version? If so then I think this can be utilised via docker.\n\nIm just thinking \"out loud\", but won\u0027t installing old RPM versions on FC27/28 cause some dependency issues?",
+      "range": {
+        "startLine": 51,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 36
+      },
+      "revId": "0aafd5e3d5b28c3682349371a85a838e054053b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
