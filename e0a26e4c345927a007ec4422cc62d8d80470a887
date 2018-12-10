@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5cf0eb4d_29af4668",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T09:38:33Z",
+      "side": 1,
+      "message": "mixed tabs/spaces",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 8
+      },
+      "revId": "e0a26e4c345927a007ec4422cc62d8d80470a887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "083465dc_50f3648e",
+        "filename": "scripts/machine_details.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-10T09:38:33Z",
+      "side": 1,
+      "message": "How about FIO verion?\nSystem-wide and default test location (/usr/local/fio/fio) ?\n\nWe could also check if soft roce is installed (modinfo rdma_rxe) and print NICs status if any is/was used in soft roce (\"rxe_cfg status\" if rdma_rxe module is installed)",
+      "revId": "e0a26e4c345927a007ec4422cc62d8d80470a887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
