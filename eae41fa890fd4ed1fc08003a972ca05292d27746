@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b620fd41_8b567040",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "This nvme section is now located a few lines above.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12450988_9d30b3cc",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "Check if the transport type is RDMA. If it is not, the presence of this field is an error.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a49a879_900348c0",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "Can you also update etc/nvmf.conf.in? That\u0027s our example configuration file.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1663cc13_37666e44",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "Only write this out if the transport type is RDMA.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba5871e8_8024577e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2842,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "We never came to a full conclusion here, but this goes back to the discussion about which parts of the wc are valid on an error. The man page says qp_num is valid, but the specification says it does not have to be. The non-SRQ path does not rely on qp_num being valid.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d73f6b00_ef49210e",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "Is this change strictly related to the SRQ stuff, or is this a separate bug fix?",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e259777b_5faa6693",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-10T22:41:22Z",
+      "side": 1,
+      "message": "Put an RDMA only note into the help.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
