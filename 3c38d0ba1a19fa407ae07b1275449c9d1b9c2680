@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7bc866d9_76c2eca7",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T12:42:06Z",
+      "side": 1,
+      "message": "I need to freely choose switch.\nif we edit autorun-spdk.conf ,will report error.\n\nGenerated files missing from .gitignore:\n 00:16:39       # git status --porcelain\n M dpdk\n M scripts/vagrant/autorun-spdk.conf\n 00:16:39       # exit 1\nERROR\nConnection to 127.0.0.1 closed.",
+      "parentUuid": "11c2eff1_cea8c534",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 16
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5182778f_32682295",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-07T12:35:38Z",
       "side": 1,
       "message": "This looks a little inconsistent to me.\nThis argument here you get as script argument (getopt), while all others (VM_OS, MEMORY_SIZE, NCPU, etc.) you get from env variables.\nAlso there is not option here for eradicate and help.\n\nTry to pick one way to get arguments for the script.",
+      "range": {
+        "startLine": 148,
+        "startChar": 0,
+        "endLine": 170,
+        "endChar": 4
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d76982c_d64cd48c",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T12:42:06Z",
+      "side": 1,
+      "message": "this value VM_OS, MEMORY_SIZE, NCPU are experimental values for auto running to fit all cases. in fact , we don\u0027t want to open it.now left it can be revised.",
+      "parentUuid": "5182778f_32682295",
       "range": {
         "startLine": 148,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "aa4ff0cf_9b0ed685",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T12:42:06Z",
+      "side": 1,
+      "message": "it seems that our run-autorun.sh can only support fedora.\nat the beginning it is plan for tests in multiple system.",
+      "parentUuid": "79b5db89_e5d5aadc",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 23
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39acfd06_d7d7ff42",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 12
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "fb55b98b_e67b4006",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T12:42:06Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "39acfd06_d7d7ff42",
+      "range": {
+        "startLine": 184,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 65
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d47e9786_bc1c33e1",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 12
@@ -105,6 +201,30 @@
       "writtenOn": "2018-12-07T12:35:38Z",
       "side": 1,
       "message": "Change to \"Option unavailable\"?\nOr if it\u0027s not ready then maybe just don\u0027t support ubuntu18 and freebsd11 as arguments?",
+      "range": {
+        "startLine": 227,
+        "startChar": 13,
+        "endLine": 227,
+        "endChar": 22
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4395ca8_25c16c0d",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-10T12:42:06Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "d47e9786_bc1c33e1",
       "range": {
         "startLine": 227,
         "startChar": 13,
