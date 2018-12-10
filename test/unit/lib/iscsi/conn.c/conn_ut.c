@@ -38,6 +38,8 @@
 
 #include "iscsi/conn.c"
 
+#include "spdk_internal/mock.h"
+
 SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 
 #define DMIN32(A,B) ((uint32_t) ((uint32_t)(A) > (uint32_t)(B) ? (uint32_t)(B) : (uint32_t)(A)))
@@ -45,53 +47,26 @@ SPDK_LOG_REGISTER_COMPONENT("iscsi", SPDK_LOG_ISCSI)
 struct spdk_iscsi_globals g_spdk_iscsi;
 static TAILQ_HEAD(, spdk_iscsi_task) g_ut_read_tasks = TAILQ_HEAD_INITIALIZER(g_ut_read_tasks);
 
-int
-spdk_app_get_shm_id(void)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_app_get_shm_id, int, (void), 0);
 
-uint32_t
-spdk_env_get_current_core(void)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 
-uint32_t
-spdk_env_get_first_core(void)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 
-uint32_t
-spdk_env_get_last_core(void)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_env_get_last_core, uint32_t, (void), 0);
 
-uint32_t
-spdk_env_get_next_core(uint32_t prev_core)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
 
-struct spdk_event *
-spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
+	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2),
+	    NULL);
 
-void
-spdk_event_call(struct spdk_event *event)
-{
-}
+DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 
-int
-spdk_sock_getaddr(struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
-		  char *caddr, int clen, uint16_t *cport)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_getaddr, int,
+	    (struct spdk_sock *sock, char *saddr, int slen, uint16_t *sport,
+	     char *caddr, int clen, uint16_t *cport),
+	    0);
 
 int
 spdk_sock_close(struct spdk_sock **sock)
@@ -100,202 +75,105 @@ spdk_sock_close(struct spdk_sock **sock)
 	return 0;
 }
 
-ssize_t
-spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_recv, ssize_t,
+	    (struct spdk_sock *sock, void *buf, size_t len), 0);
 
-ssize_t
-spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_writev, ssize_t,
+	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
 
-int
-spdk_sock_set_recvlowat(struct spdk_sock *s, int nbytes)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_set_recvlowat, int, (struct spdk_sock *s, int nbytes), 0);
 
-int
-spdk_sock_set_recvbuf(struct spdk_sock *sock, int sz)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_set_recvbuf, int, (struct spdk_sock *sock, int sz), 0);
 
-int
-spdk_sock_set_sendbuf(struct spdk_sock *sock, int sz)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_set_sendbuf, int, (struct spdk_sock *sock, int sz), 0);
 
-int
-spdk_sock_group_add_sock(struct spdk_sock_group *group, struct spdk_sock *sock,
-			 spdk_sock_cb cb_fn, void *cb_arg)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_group_add_sock, int,
+	    (struct spdk_sock_group *group, struct spdk_sock *sock,
+	     spdk_sock_cb cb_fn, void *cb_arg),
+	    0);
 
-int
-spdk_sock_group_remove_sock(struct spdk_sock_group *group, struct spdk_sock *sock)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_sock_group_remove_sock, int,
+	    (struct spdk_sock_group *group, struct spdk_sock *sock), 0);
 
-void
-spdk_scsi_task_put(struct spdk_scsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_scsi_task_put, (struct spdk_scsi_task *task));
 
-struct spdk_scsi_lun *
-spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_scsi_dev_get_lun, struct spdk_scsi_lun *,
+	    (struct spdk_scsi_dev *dev, int lun_id), NULL);
 
-bool
-spdk_scsi_dev_has_pending_tasks(const struct spdk_scsi_dev *dev)
-{
-	return true;
-}
+DEFINE_STUB(spdk_scsi_dev_has_pending_tasks, bool,
+	    (const struct spdk_scsi_dev *dev), true);
 
-int
-spdk_scsi_lun_open(struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
-		   void *hotremove_ctx, struct spdk_scsi_desc **desc)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_scsi_lun_open, int,
+	    (struct spdk_scsi_lun *lun, spdk_scsi_remove_cb_t hotremove_cb,
+	     void *hotremove_ctx, struct spdk_scsi_desc **desc),
+	    0);
 
-void
-spdk_scsi_lun_close(struct spdk_scsi_desc *desc)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_close, (struct spdk_scsi_desc *desc));
 
-int spdk_scsi_lun_allocate_io_channel(struct spdk_scsi_desc *desc)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_scsi_lun_allocate_io_channel, int,
+	    (struct spdk_scsi_desc *desc), 0);
 
-void spdk_scsi_lun_free_io_channel(struct spdk_scsi_desc *desc)
-{
-}
+DEFINE_STUB_V(spdk_scsi_lun_free_io_channel, (struct spdk_scsi_desc *desc));
 
-int
-spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
 
-const char *
-spdk_scsi_port_get_name(const struct spdk_scsi_port *port)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_scsi_port_get_name, const char *,
+	    (const struct spdk_scsi_port *port), NULL);
 
-void
-spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
-			   struct spdk_scsi_task *src)
-{
-}
+DEFINE_STUB_V(spdk_scsi_task_copy_status,
+	      (struct spdk_scsi_task *dst, struct spdk_scsi_task *src));
 
-void
-spdk_put_pdu(struct spdk_iscsi_pdu *pdu)
-{
-}
+DEFINE_STUB_V(spdk_put_pdu, (struct spdk_iscsi_pdu *pdu));
 
-void
-spdk_iscsi_param_free(struct iscsi_param *params)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_param_free, (struct iscsi_param *params));
 
-int
-spdk_iscsi_conn_params_init(struct iscsi_param **params)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_conn_params_init, int, (struct iscsi_param **params), 0);
 
-void spdk_clear_all_transfer_task(struct spdk_iscsi_conn *conn,
-				  struct spdk_scsi_lun *lun,
-				  struct spdk_iscsi_pdu *pdu)
-{
-}
+DEFINE_STUB_V(spdk_clear_all_transfer_task,
+	      (struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun,
+	       struct spdk_iscsi_pdu *pdu));
 
-int
-spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
-			struct spdk_iscsi_pdu *pdu)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_build_iovecs, int,
+	    (struct spdk_iscsi_conn *conn, struct iovec *iovec,
+	     struct spdk_iscsi_pdu *pdu),
+	    0);
 
-bool spdk_iscsi_is_deferred_free_pdu(struct spdk_iscsi_pdu *pdu)
-{
-	return false;
-}
+DEFINE_STUB(spdk_iscsi_is_deferred_free_pdu, bool,
+	    (struct spdk_iscsi_pdu *pdu), false);
 
-void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
-			      struct spdk_iscsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_task_response,
+	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
-void
-spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
-			      struct spdk_iscsi_task *task)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_task_mgmt_response,
+	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *task));
 
-void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_send_nopin, (struct spdk_iscsi_conn *conn));
 
-int
-spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_execute, int,
+	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu), 0);
 
-void spdk_del_transfer_task(struct spdk_iscsi_conn *conn, uint32_t task_tag)
-{
-}
+DEFINE_STUB_V(spdk_del_transfer_task,
+	      (struct spdk_iscsi_conn *conn, uint32_t task_tag));
 
-int spdk_iscsi_conn_handle_queued_datain_tasks(struct spdk_iscsi_conn *conn)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_conn_handle_queued_datain_tasks, int,
+	    (struct spdk_iscsi_conn *conn), 0);
 
-int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_read_pdu, int,
+	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu), 0);
 
-void spdk_free_sess(struct spdk_iscsi_sess *sess)
-{
-}
+DEFINE_STUB_V(spdk_free_sess, (struct spdk_iscsi_sess *sess));
 
-int
-spdk_iscsi_tgt_node_cleanup_luns(struct spdk_iscsi_conn *conn,
-				 struct spdk_iscsi_tgt_node *target)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_tgt_node_cleanup_luns, int,
+	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_tgt_node *target),
+	    0);
 
-uint32_t
-spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_pdu_calc_header_digest, uint32_t,
+	    (struct spdk_iscsi_pdu *pdu), 0);
 
-uint32_t
-spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_pdu_calc_data_digest, uint32_t,
+	    (struct spdk_iscsi_pdu *pdu), 0);
 
-void
-spdk_shutdown_iscsi_conns_done(void)
-{
-}
+DEFINE_STUB_V(spdk_shutdown_iscsi_conns_done, (void));
 
 static struct spdk_iscsi_task *
 ut_conn_task_get(struct spdk_iscsi_task *parent)

@@ -40,29 +40,22 @@
 #include "../common.c"
 #include "iscsi/param.c"
 
+#include "spdk_internal/mock.h"
+
 struct spdk_iscsi_globals g_spdk_iscsi;
 
-struct spdk_iscsi_tgt_node *
-spdk_iscsi_find_tgt_node(const char *target_name)
-{
-	return NULL;
-}
+DEFINE_STUB(spdk_iscsi_find_tgt_node, struct spdk_iscsi_tgt_node *,
+	    (const char *target_name), NULL);
 
-bool
-spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
-			   struct spdk_iscsi_tgt_node *target,
-			   const char *iqn, const char *addr)
-{
-	return false;
-}
+DEFINE_STUB(spdk_iscsi_tgt_node_access, bool,
+	    (struct spdk_iscsi_conn *conn, struct spdk_iscsi_tgt_node *target,
+	     const char *iqn, const char *addr),
+	    false);
 
-int
-spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
-		     const char *iaddr,
-		     const char *tiqn, uint8_t *data, int alloc_len, int data_len)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_send_tgts, int,
+	    (struct spdk_iscsi_conn *conn, const char *iiqn, const char *iaddr,
+	     const char *tiqn, uint8_t *data, int alloc_len, int data_len),
+	    0);
 
 static void
 burst_length_param_negotation(int FirstBurstLength, int MaxBurstLength,

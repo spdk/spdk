@@ -47,6 +47,8 @@
 #include "scsi/scsi_internal.h"
 #include "common/lib/test_env.c"
 
+#include "spdk_internal/mock.h"
+
 #define UT_TARGET_NAME1		"iqn.2017-11.spdk.io:t0001"
 #define UT_TARGET_NAME2		"iqn.2017-11.spdk.io:t0002"
 #define UT_INITIATOR_NAME1	"iqn.2017-11.spdk.io:i0001"
@@ -74,35 +76,21 @@ spdk_iscsi_tgt_node_access(struct spdk_iscsi_conn *conn,
 	}
 }
 
-int
-spdk_iscsi_send_tgts(struct spdk_iscsi_conn *conn, const char *iiqn,
-		     const char *iaddr,
-		     const char *tiqn, uint8_t *data, int alloc_len, int data_len)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_send_tgts, int,
+	    (struct spdk_iscsi_conn *conn, const char *iiqn, const char *iaddr,
+	     const char *tiqn, uint8_t *data, int alloc_len, int data_len),
+	    0);
 
-void
-spdk_iscsi_portal_grp_close_all(void)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_portal_grp_close_all, (void));
 
-void
-spdk_iscsi_conn_migration(struct spdk_iscsi_conn *conn)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_conn_migration, (struct spdk_iscsi_conn *conn));
 
-void
-spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
-{
-}
+DEFINE_STUB_V(spdk_iscsi_conn_free_pdu,
+	      (struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu));
 
-int
-spdk_iscsi_chap_get_authinfo(struct iscsi_chap_auth *auth, const char *authuser,
-			     int ag_tag)
-{
-	return 0;
-}
+DEFINE_STUB(spdk_iscsi_chap_get_authinfo, int,
+	    (struct iscsi_chap_auth *auth, const char *authuser, int ag_tag),
+	    0);
 
 int
 spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
@@ -110,11 +98,8 @@ spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 	return lun->id;
 }
 
-bool
-spdk_scsi_lun_is_removing(const struct spdk_scsi_lun *lun)
-{
-	return true;
-}
+DEFINE_STUB(spdk_scsi_lun_is_removing, bool, (const struct spdk_scsi_lun *lun),
+	    true);
 
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
