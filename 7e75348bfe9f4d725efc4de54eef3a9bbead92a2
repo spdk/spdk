@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15f7744f_17fef769",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-10T16:42:45Z",
+      "side": 1,
+      "message": "Do you need to set *done to false here?  It\u0027s already done in the calling thread.\n\nThis is probably fine - but it threw me for a loop when reading it.",
+      "revId": "7e75348bfe9f4d725efc4de54eef3a9bbead92a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
