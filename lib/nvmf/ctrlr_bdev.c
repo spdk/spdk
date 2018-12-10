@@ -955,6 +955,58 @@ conflict:
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+nvmf_ns_reservation_report(struct spdk_nvmf_request *req,
+			   struct spdk_nvmf_ctrlr *ctrlr,
+			   struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_nvme_reservation_status_extended_data *status_data;
+	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
+	uint8_t *payload;
+	uint32_t len, count = 0;
+
+	/* NVMeoF uses Extended Data Structure */
+	if ((cmd->cdw11 & 0x00000001u) == 0) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	len = sizeof(*status_data) + sizeof(*ctrlr_data) * subsystem->regctl;
+	payload = calloc(1, len);
+	if (!payload) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
+	status_data->data.gen = subsystem->gen;
+	status_data->data.rtype = ns->rtype;
+	status_data->data.regctl = subsystem->regctl;
+	/* TODO: Don't support Persist Through Power Loss State for now */
+	status_data->data.ptpls = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, tmp) {
+		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
+			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * count);
+		ctrlr_data->cntlid = reg->ctrlr->cntlid;
+		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
+		ctrlr_data->rkey = reg->rkey;
+		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
+		count++;
+	}
+
+	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10 + 1) * 4));
+
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
 int
 spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
@@ -1010,6 +1062,8 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req, NULL);
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 		return nvmf_ns_reservation_register(req, ctrlr, ns);
+	case SPDK_NVME_OPC_RESERVATION_REPORT:
+		return nvmf_ns_reservation_report(req, ctrlr, ns);
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 		return nvmf_ns_reservation_acquire(req, ctrlr, ns);
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
