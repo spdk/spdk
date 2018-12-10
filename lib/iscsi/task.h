@@ -44,6 +44,10 @@ struct spdk_iscsi_task {
 
 	struct spdk_iscsi_task *parent;
 
+	uint8_t rsp_scsi_status;
+	uint8_t rsp_sense_data[32];
+	size_t rsp_sense_data_len;
+
 	struct spdk_iscsi_conn *conn;
 	struct spdk_iscsi_pdu *pdu;
 	uint32_t outstanding_r2t;

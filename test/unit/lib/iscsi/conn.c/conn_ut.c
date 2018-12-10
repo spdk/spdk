@@ -120,8 +120,12 @@ DEFINE_STUB(spdk_scsi_lun_get_id, int, (const struct spdk_scsi_lun *lun), 0);
 DEFINE_STUB(spdk_scsi_port_get_name, const char *,
 	    (const struct spdk_scsi_port *port), NULL);
 
-DEFINE_STUB_V(spdk_scsi_task_copy_status,
-	      (struct spdk_scsi_task *dst, struct spdk_scsi_task *src));
+void
+spdk_scsi_task_copy_status(struct spdk_scsi_task *dst,
+			   struct spdk_scsi_task *src)
+{
+	dst->status = src->status;
+}
 
 DEFINE_STUB_V(spdk_put_pdu, (struct spdk_iscsi_pdu *pdu));
 
@@ -264,6 +268,69 @@ read_task_split_in_order_case(void)
 	CU_ASSERT(TAILQ_EMPTY(&g_ut_read_tasks));
 }
 
+static void
+propagate_scsi_error_status_for_split_read_tasks(void)
+{
+	struct spdk_iscsi_task primary, task1, task2, task3, task4, task5, task6;
+
+	memset(&primary, 0, sizeof(struct spdk_iscsi_task));
+	primary.scsi.length = 512;
+	primary.scsi.status = SPDK_SCSI_STATUS_GOOD;
+	primary.rsp_scsi_status = SPDK_SCSI_STATUS_GOOD;
+	TAILQ_INIT(&primary.subtask_list);
+
+	memset(&task1, 0, sizeof(struct spdk_iscsi_task));
+	task1.scsi.offset = 512;
+	task1.scsi.length = 512;
+	task1.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	memset(&task2, 0, sizeof(struct spdk_iscsi_task));
+	task2.scsi.offset = 512 * 2;
+	task2.scsi.length = 512;
+	task2.scsi.status = SPDK_SCSI_STATUS_CHECK_CONDITION;
+
+	memset(&task3, 0, sizeof(struct spdk_iscsi_task));
+	task3.scsi.offset = 512 * 3;
+	task3.scsi.length = 512;
+	task3.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	memset(&task4, 0, sizeof(struct spdk_iscsi_task));
+	task4.scsi.offset = 512 * 4;
+	task4.scsi.length = 512;
+	task4.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	memset(&task5, 0, sizeof(struct spdk_iscsi_task));
+	task5.scsi.offset = 512 * 5;
+	task5.scsi.length = 512;
+	task5.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	memset(&task6, 0, sizeof(struct spdk_iscsi_task));
+	task6.scsi.offset = 512 * 6;
+	task6.scsi.length = 512;
+	task6.scsi.status = SPDK_SCSI_STATUS_GOOD;
+
+	/* task2 has check condition status, and verify if the check condition
+	 * status is propagated to remaining tasks correctly when these tasks complete
+	 * by the following order, task4, task3, task2, task1, primary, task5, and task6.
+	 */
+	process_read_task_completion(NULL, &task4, &primary);
+	process_read_task_completion(NULL, &task3, &primary);
+	process_read_task_completion(NULL, &task2, &primary);
+	process_read_task_completion(NULL, &task1, &primary);
+	process_read_task_completion(NULL, &primary, &primary);
+	process_read_task_completion(NULL, &task5, &primary);
+	process_read_task_completion(NULL, &task6, &primary);
+
+	CU_ASSERT(primary.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task1.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task2.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task3.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task4.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task5.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(task6.scsi.status == SPDK_SCSI_STATUS_CHECK_CONDITION);
+	CU_ASSERT(TAILQ_EMPTY(&primary.subtask_list));
+}
+
 int
 main(int argc, char **argv)
 {
@@ -281,7 +348,9 @@ main(int argc, char **argv)
 	}
 
 	if (
-		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL
+		CU_add_test(suite, "read task split in order", read_task_split_in_order_case) == NULL ||
+		CU_add_test(suite, "propagate_scsi_error_status_for_split_read_tasks",
+			    propagate_scsi_error_status_for_split_read_tasks) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
