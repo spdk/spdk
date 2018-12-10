@@ -915,6 +915,25 @@ spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 }
 
 static void
+spdk_iscsi_task_copy_to_rsp_scsi_status(struct spdk_iscsi_task *primary,
+					struct spdk_scsi_task *task)
+{
+	memcpy(primary->rsp_sense_data, task->sense_data, task->sense_data_len);
+	primary->rsp_sense_data_len = task->sense_data_len;
+	primary->rsp_scsi_status = task->status;
+}
+
+static void
+spdk_iscsi_task_copy_from_rsp_scsi_status(struct spdk_scsi_task *task,
+		struct spdk_iscsi_task *primary)
+{
+	memcpy(task->sense_data, primary->rsp_sense_data,
+	       primary->rsp_sense_data_len);
+	task->sense_data_len = primary->rsp_sense_data_len;
+	task->status = primary->rsp_scsi_status;
+}
+
+static void
 process_completed_read_subtask_list(struct spdk_iscsi_conn *conn,
 				    struct spdk_iscsi_task *primary)
 {
@@ -939,10 +958,23 @@ process_read_task_completion(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_task *tmp;
 
+	/* If the status of the completed subtask is the first failure,
+	 * copy it to out-of-order subtasks and remember it as the status
+	 * of the command,
+	 *
+	 * Even if the status of the completed task is success,
+	 * there are any failed subtask ever, copy the first failed status
+	 * to it.
+	 */
 	if (task->scsi.status != SPDK_SCSI_STATUS_GOOD) {
-		TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
-			spdk_scsi_task_copy_status(&tmp->scsi, &task->scsi);
+		if (primary->rsp_scsi_status == SPDK_SCSI_STATUS_GOOD) {
+			TAILQ_FOREACH(tmp, &primary->subtask_list, subtask_link) {
+				spdk_scsi_task_copy_status(&tmp->scsi, &task->scsi);
+			}
+			spdk_iscsi_task_copy_to_rsp_scsi_status(primary, &task->scsi);
 		}
+	} else if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
+		spdk_iscsi_task_copy_from_rsp_scsi_status(&task->scsi, primary);
 	}
 
 	if ((task != primary) &&
@@ -987,16 +1019,27 @@ spdk_iscsi_task_cpl(struct spdk_scsi_task *scsi_task)
 		process_read_task_completion(conn, task, primary);
 	} else {
 		primary->bytes_completed += task->scsi.length;
-		if (task != primary) {
-			if (task->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+
+		/* If the status of the subtask is the first failure, remember it as
+		 * the status of the command and set it to the status of the primary
+		 * task later.
+		 *
+		 * If the first failed task is the primary, two copies can be avoided
+		 * but code simplicity is prioritized.
+		 */
+		if (task->scsi.status == SPDK_SCSI_STATUS_GOOD) {
+			if (task != primary) {
 				primary->scsi.data_transferred += task->scsi.data_transferred;
-			} else {
-				spdk_scsi_task_copy_status(&primary->scsi, &task->scsi);
 			}
+		} else if (primary->rsp_scsi_status == SPDK_SCSI_STATUS_GOOD) {
+			spdk_iscsi_task_copy_to_rsp_scsi_status(primary, &task->scsi);
 		}
 
 		if (primary->bytes_completed == primary->scsi.transfer_len) {
 			spdk_del_transfer_task(conn, primary->tag);
+			if (primary->rsp_scsi_status != SPDK_SCSI_STATUS_GOOD) {
+				spdk_iscsi_task_copy_from_rsp_scsi_status(&primary->scsi, primary);
+			}
 			spdk_iscsi_task_response(conn, primary);
 			/*
 			 * Check if this is the last task completed for an iSCSI write
