@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b4ef1771_a2b697b0",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05eeebcf_8482abc3",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3deef936_7d618a1e",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-06T09:51:17Z",
       "side": 1,
       "message": "call `free_rpc_nvme_security_receive(ctx)` to free the memory ?",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a67c9cf4_fdde3f34",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 575,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3deef936_7d618a1e",
       "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0f148e85_a9994fad",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ebc69cf4_f58e049e",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "326a2786_70a125b0",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 10
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-06T09:51:17Z",
       "side": 1,
       "message": "may need to set `rc \u003d -ENOMEM` here too.",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab555ae5_8fedc482",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "326a2786_70a125b0",
       "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3569c81c_7fcf2012",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "removed",
+      "parentUuid": "8dd1f82a_8e99d0d0",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a1ec80fd_54898b3b",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 10
@@ -98,6 +188,24 @@
       "writtenOn": "2018-12-06T09:51:17Z",
       "side": 1,
       "message": "Is there any special purpose here using uint16_t ? can you just use uint8_t, and remove the cast?",
+      "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cea7319_86243990",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 659,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-10T02:49:05Z",
+      "side": 1,
+      "message": "Done. Thanks for reviewing my code",
+      "parentUuid": "a1ec80fd_54898b3b",
       "revId": "5fca9906bf69da0a3fc24a223344a0e9f0c7899b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
