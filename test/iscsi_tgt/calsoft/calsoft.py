@@ -37,7 +37,7 @@ known_failed_cases = ['tc_ffp_15_2', 'tc_ffp_29_2', 'tc_ffp_29_3', 'tc_ffp_29_4'
 
 def run_case(case, result_list, log_dir_path):
     try:
-        case_log = subprocess.check_output("{}/{}".format(CALSOFT_BIN_PATH, case), stderr=subprocess.STDOUT, shell=True)
+        case_log = subprocess.check_output("{}/{}".format(CALSOFT_BIN_PATH, case), stderr=subprocess.STDOUT, shell=True).decode('utf-8')
     except subprocess.CalledProcessError as e:
         result_list.append({"Name": case, "Result": "FAIL"})
         case_log = e.output
