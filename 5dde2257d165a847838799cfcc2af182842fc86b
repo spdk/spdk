@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "4e213470_de027eea",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-10T16:01:24Z",
+      "side": 1,
+      "message": "Just an FYI.  If one specifies Version with value \u002718.10.1-pre\u0027, an rpmbuild (for me) fails immediately with:\n\nerror: line 5: Illegal char \u0027-\u0027 in: Version: 18.10.1-pre\n\nSo, while we technically can provide that string in the file and commit it, one won\u0027t be able to build with it.",
+      "parentUuid": "ae65bcd3_3a082654",
+      "revId": "5dde2257d165a847838799cfcc2af182842fc86b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "425affa1_028c9b2d",
         "filename": "pkg/spdk.spec",
         "patchSetId": 3
