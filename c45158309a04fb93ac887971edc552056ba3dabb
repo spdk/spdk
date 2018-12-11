@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7ee7441_4267435d",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-11T08:30:16Z",
+      "side": 1,
+      "message": "As mentioned before - I think most of our indentation is done with tabs instead of spaces.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 4
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a282990a_50a4c606",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-11T08:30:16Z",
+      "side": 1,
+      "message": "This is basically the same piece of script. Can we shorten that?\nSmth like:\nif [ vm_recreate\u003dtrue || ! -d vagrant_dir]; then\n    if [ -d \"$VAGRANT_DIR\" ]; then\n            VM_UUID\u003d$(find [...])\n            vm_destroy $VM_OS-$PROVIDER\n    fi\n    vm_create $MEMORY_SIZE $NCPU $VM_OS\n    VM_UUID\u003d$(find [...])\n    vm_setup_env\n    vm_check_nvme_device\nelse\n    VM_UUID\u003d$(find [...])\n    vagrant_provision\nfi",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 32
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac058778_3d06da5c",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-11T08:30:16Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this trap be removed after vm_run_autotest finishes successfully?",
+      "range": {
+        "startLine": 177,
+        "startChar": 4,
+        "endLine": 177,
+        "endChar": 29
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
