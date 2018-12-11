@@ -87,8 +87,10 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for building docs
 	apt-get install -y doxygen mscgen graphviz
 	# Additional dependencies for SPDK CLI - not available on older Ubuntus
-	if [[ $(lsb_release -rs) > "16.01" ]]; then
+	if [[ $(lsb_release -rs) > "17.07" ]]; then
 		apt-get install -y python3-configshell-fb python3-pexpect
+	else
+		echo "Note: Some SPDK CLI dependencies could not be installed."
 	fi
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
