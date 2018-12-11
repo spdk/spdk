@@ -22,6 +22,30 @@
       "revId": "bd114e1cdcd3e1645ec063a8fe878df00882a1e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "911f5d67_b25c4ff2",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-11T20:24:54Z",
+      "side": 1,
+      "message": "Great catch Shuhei!\n\nI\u0027ve submitted new patch at the end of this series to fix this issue:\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/436878/\n\nIf you would prefer I fix it here, I can do that - only reason to put at the end of the patch is to avoid re-running all of the subsequent patches through the test pool.  Normally I would never do this, but since this is all new code I think it is OK.",
+      "parentUuid": "e591782b_2ded9140",
+      "range": {
+        "startLine": 712,
+        "startChar": 1,
+        "endLine": 712,
+        "endChar": 20
+      },
+      "revId": "bd114e1cdcd3e1645ec063a8fe878df00882a1e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
