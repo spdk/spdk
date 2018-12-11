@@ -21,10 +21,7 @@ fi
 
 timing_enter nvme_cli
 
-if [ `uname` = Linux ]; then
-	start_stub "-s 2048 -i 0 -m 0xF"
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-fi
+trap "exit 1" SIGINT SIGTERM EXIT
 
 # Build against the version of SPDK under test
 rm -f "$spdk_nvme_cli/spdk"
@@ -49,10 +46,6 @@ sed -i 's/shm_id=1/shm_id=0/g' spdk.conf
 ./nvme get-feature $bdf -n 1 -f 1 -s 1 -l 100
 ./nvme get-log $bdf -n 1 -i 1 -l 100
 ./nvme reset $bdf
-if [ `uname` = Linux ]; then
-	trap - SIGINT SIGTERM EXIT
-	kill_stub
-fi
 
 report_test_completion spdk_nvme_cli
 timing_exit nvme_cli
