@@ -16,6 +16,24 @@
       "revId": "41d0690e185f4f4239b26377f547d3fe99a1697e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff002236_5cd8aa74",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-11T02:32:16Z",
+      "side": 1,
+      "message": "Oh, forgot to refine these names.\n...\n(because it was started before trace_log was removed which mixed log and trace)",
+      "parentUuid": "7654541e_5dc0225f",
+      "revId": "41d0690e185f4f4239b26377f547d3fe99a1697e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
