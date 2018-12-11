@@ -34,5 +34,9 @@ fi
 $testdir/env_dpdk_post_init/env_dpdk_post_init $argv
 timing_exit env_dpdk_post_init
 
+timing_enter mem_callbacks
+$testdir/mem_callbacks/mem_callbacks
+timing_exit mem_callbacks
+
 report_test_completion "env"
 timing_exit env
