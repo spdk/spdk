@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9136311a_2440608d",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1772,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T05:01:13Z",
+      "side": 1,
+      "message": "should just free(tctrlr) here?\n\nnvme_rdma do this and it looks that you can follow it here.",
+      "range": {
+        "startLine": 1772,
+        "startChar": 2,
+        "endLine": 1772,
+        "endChar": 48
+      },
+      "revId": "e037e7bf1f8c63c6c321cb2671d8c316af7d0366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "478e2f9e_9dca0ee4",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1780,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T05:01:13Z",
+      "side": 1,
+      "message": "this file is nvme_tcp.c. Hence nvme_tcp_ctrlr_destruct() may be better?",
+      "range": {
+        "startLine": 1780,
+        "startChar": 2,
+        "endLine": 1780,
+        "endChar": 31
+      },
+      "revId": "e037e7bf1f8c63c6c321cb2671d8c316af7d0366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
