@@ -2027,13 +2027,14 @@ _nvmf_rdma_disconnect_retry(void *ctx)
 	 * non-NULL is thread safe in the x86_64 memory model. */
 	group = qpair->group;
 
-	if (group == NULL) {
+	if ((group == NULL) || (group->thread == NULL)) {
 		/* The qpair hasn't been assigned to a group yet, so we can't
 		 * process a disconnect. Send a message to ourself and try again. */
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_disconnect_retry, qpair);
 		return;
 	}
 
+	assert(group->thread != NULL);
 	spdk_thread_send_msg(group->thread, _nvmf_rdma_qpair_disconnect, qpair);
 }
 
@@ -2052,6 +2053,12 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 	if (qpair == NULL) {
 		SPDK_ERRLOG("disconnect request: no active connection\n");
 		return -1;
+	}
+
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "disconnect request: qpair %p is already in deactivating state\n",
+			      qpair);
+		return 0;
 	}
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
