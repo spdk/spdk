@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "542cdc8e_096aef3d",
+        "filename": "include/spdk/reduce.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:59:26Z",
+      "side": 1,
+      "message": "I saw that this is the key.",
+      "range": {
+        "startLine": 177,
+        "startChar": 32,
+        "endLine": 177,
+        "endChar": 51
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c698cff_2007ea94",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 8
@@ -65,6 +88,46 @@
         "endLine": 778,
         "endChar": 61
       },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "607094dd_8ea19d53",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:59:26Z",
+      "side": 1,
+      "message": "I understood that splitting will be done by using the same mechanism that RAID bdev have used.",
+      "range": {
+        "startLine": 924,
+        "startChar": 5,
+        "endLine": 924,
+        "endChar": 34
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3984866d_e08dd39c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1016,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:59:26Z",
+      "side": 1,
+      "message": "Can you enhance to skip the following copy if iovec array is single entry?",
       "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
