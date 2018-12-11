@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "50d133f0_c67afc65",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-11T03:07:12Z",
+      "side": 1,
+      "message": "remove it",
+      "parentUuid": "aa4ff0cf_9b0ed685",
+      "range": {
+        "startLine": 173,
+        "startChar": 0,
+        "endLine": 173,
+        "endChar": 23
+      },
+      "revId": "3c38d0ba1a19fa407ae07b1275449c9d1b9c2680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39acfd06_d7d7ff42",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 12
