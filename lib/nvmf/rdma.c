@@ -2027,7 +2027,7 @@ _nvmf_rdma_disconnect_retry(void *ctx)
 	 * non-NULL is thread safe in the x86_64 memory model. */
 	group = qpair->group;
 
-	if (group == NULL) {
+	if ((group == NULL) || (group->thread == NULL)) {
 		/* The qpair hasn't been assigned to a group yet, so we can't
 		 * process a disconnect. Send a message to ourself and try again. */
 		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_disconnect_retry, qpair);
