@@ -16,6 +16,24 @@
       "revId": "eb1f62cb4196d428611038fdcdf6236298bbdc25",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9815285e_2af4511e",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 715,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-11T21:14:09Z",
+      "side": 1,
+      "message": "Good catch - this should be spdk_thread_lib_fini().",
+      "parentUuid": "8b22ca47_77ce929d",
+      "revId": "eb1f62cb4196d428611038fdcdf6236298bbdc25",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
