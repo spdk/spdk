@@ -1050,6 +1050,75 @@ nvmf_ns_reservation_report(struct spdk_nvmf_request *req,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
+static int
+spdk_nvmf_reservation_filter(struct spdk_nvmf_request *req,
+			     struct spdk_nvmf_ctrlr *ctrlr,
+			     struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_registrant *reg;
+	uint8_t racqa;
+
+	/* NS must have valid reservation type */
+	if (!ns || !ns->holder || !ns->rtype) {
+		return 0;
+	}
+
+	reg = nvmf_ctrlr_get_registrant(subsystem, ctrlr);
+	if (nvmf_ns_registrant_is_holder(ns, reg)) {
+		return 0;
+	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_READ:
+	case SPDK_NVME_OPC_COMPARE:
+		if (ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+			goto conflict;
+		}
+		if ((ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY ||
+		     ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS) && !reg) {
+			goto conflict;
+		}
+		break;
+	case SPDK_NVME_OPC_FLUSH:
+	case SPDK_NVME_OPC_WRITE:
+	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+		if (ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE ||
+		    ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+			goto conflict;
+		}
+		if (!reg) {
+			goto conflict;
+		}
+		break;
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		racqa = cmd->cdw10 & 0x7u;
+		if (cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
+		    racqa == SPDK_NVME_RESERVE_ACQUIRE) {
+			goto conflict;
+		}
+		if (!reg) {
+			goto conflict;
+		}
+		break;
+	default:
+		break;
+	}
+
+	return 0;
+
+conflict:
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_RESERVATION_CONFLICT;
+	response->status.dnr = 1;
+	return -EINVAL;
+}
+
 int
 spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
@@ -1062,6 +1131,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	int rc;
 
 	/* pre-set response details for this command */
 	response->status.sc = SPDK_NVME_SC_SUCCESS;
@@ -1086,6 +1156,12 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
 		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
 		response->status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	rc = spdk_nvmf_reservation_filter(req, ctrlr, ns);
+	if (rc < 0) {
+		SPDK_ERRLOG("Reservation conflict for command %u\n", cmd->opc);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
