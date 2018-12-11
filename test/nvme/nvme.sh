@@ -87,10 +87,7 @@ if [ `uname` = Linux ]; then
 	fi
 fi
 
-if [ `uname` = Linux ]; then
-	start_stub "-s 4096 -i 0 -m 0xF"
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-fi
+trap "exit 1" SIGINT SIGTERM EXIT
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
@@ -165,10 +162,6 @@ if [ `uname` = Linux ]; then
 	timing_exit multi_secondary
 fi
 
-if [ `uname` = Linux ]; then
-	trap - SIGINT SIGTERM EXIT
-	kill_stub
-fi
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
 if [ -d /usr/src/fio ]; then
