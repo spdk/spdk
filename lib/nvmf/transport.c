@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -140,6 +140,9 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_transport_poll_group *group;
 
 	group = transport->ops->poll_group_create(transport);
+	if (!group) {
+		return NULL;
+	}
 	group->transport = transport;
 
 	return group;
