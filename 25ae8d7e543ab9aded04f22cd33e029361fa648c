@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b619b99_34c445c2",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-11T11:46:34Z",
+      "side": 1,
+      "message": "We should enclose all json objects in single json object in the json RPC response.\nCorrect me if I\u0027m wrong, but I think you should add additional  spdk_json_write_object_begin(w); /  spdk_json_write_object_end(w); at the beggining/end of this function.",
+      "range": {
+        "startLine": 330,
+        "startChar": 0,
+        "endLine": 346,
+        "endChar": 43
+      },
+      "revId": "25ae8d7e543ab9aded04f22cd33e029361fa648c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
