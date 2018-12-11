@@ -29,8 +29,7 @@ create_veth_interfaces $TEST_TYPE
 #  run anything on the extra cores (and will sleep on master
 #  core 0) so there is no impact to the iscsi_tgt tests by
 #  specifying the bigger core mask.
-start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
+trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
 run_test suite ./test/iscsi_tgt/sock/sock.sh
 run_test suite ./test/iscsi_tgt/calsoft/calsoft.sh
@@ -54,7 +53,6 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 fi
 
 trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
-kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
 	# TODO: enable remote NVMe controllers with multi-process so that
