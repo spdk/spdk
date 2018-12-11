@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdc59548_9438bc5e",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015583
+      },
+      "writtenOn": "2018-12-11T01:45:44Z",
+      "side": 1,
+      "message": "I think that even if you only support fedora28 at present, you should pay attention to the expansion of other systems, otherwise you will need to modify the test code in the future.",
+      "range": {
+        "startLine": 191,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 12
+      },
+      "revId": "a2aa75a7b88d464905086f8f8f5d711874cc3271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a073f72_eb5e5d02",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1015583
+      },
+      "writtenOn": "2018-12-11T01:45:44Z",
+      "side": 1,
+      "message": "The following logic code should be written as a function, which is similar to other systems.",
+      "range": {
+        "startLine": 201,
+        "startChar": 4,
+        "endLine": 201,
+        "endChar": 12
+      },
+      "revId": "a2aa75a7b88d464905086f8f8f5d711874cc3271",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
