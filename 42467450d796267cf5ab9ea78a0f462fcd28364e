@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c59d2179_828ff8a4",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T22:44:41Z",
+      "side": 1,
+      "message": "In other words, unlink the shm only if all trace entries were not recorded ?",
+      "range": {
+        "startLine": 173,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 61
+      },
+      "revId": "42467450d796267cf5ab9ea78a0f462fcd28364e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
