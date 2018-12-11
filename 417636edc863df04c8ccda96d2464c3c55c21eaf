@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c698cff_2007ea94",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:43:04Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nAs Piotr questioned in your UT patch, backing_lba_per_io_unit is 0 if params-\u003ebacking_io_unit_size is smaller than backing_dev-\u003eblocklen ?\n\nIncluding this in validation is necessary?\n\nBesies, you say in the design doc backing_io_unit_size is 4KB. Adding some comment in the header file may be kind for user.",
+      "range": {
+        "startLine": 500,
+        "startChar": 32,
+        "endLine": 500,
+        "endChar": 84
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88cf16e0_f483a36c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:43:04Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 565,
+        "startChar": 6,
+        "endLine": 565,
+        "endChar": 29
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2947bbd7_fbaa3b89",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T06:43:04Z",
+      "side": 1,
+      "message": "req-\u003ebuf looks contiguous but you split it per IO unit. The backing device will handle each IO unit in writev/readv?",
+      "range": {
+        "startLine": 777,
+        "startChar": 0,
+        "endLine": 778,
+        "endChar": 61
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
