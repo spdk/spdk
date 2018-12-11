@@ -12,7 +12,7 @@ NETMASK=$INITIATOR_IP/32
 INITIATOR_TAG=2
 INITIATOR_NAME=ANY
 PORTAL_TAG=1
-ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt -i 0"
+ISCSI_APP="$TARGET_NS_CMD ./app/iscsi_tgt/iscsi_tgt"
 ISCSI_TEST_CORE_MASK=0xFF
 
 function create_veth_interfaces() {
