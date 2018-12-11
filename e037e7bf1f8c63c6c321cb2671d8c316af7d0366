@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "08916118_96eee084",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1772,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T22:27:33Z",
+      "side": 1,
+      "message": "If nvme_ctrlr_construct failed it is safe to just free(tctrlr). The transport hasn\u0027t initialized anything yet.",
+      "parentUuid": "9136311a_2440608d",
+      "range": {
+        "startLine": 1772,
+        "startChar": 2,
+        "endLine": 1772,
+        "endChar": 48
+      },
+      "revId": "e037e7bf1f8c63c6c321cb2671d8c316af7d0366",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "478e2f9e_9dca0ee4",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 2
