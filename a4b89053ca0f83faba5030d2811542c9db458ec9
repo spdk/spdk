@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "54d04b5b_093e2bc2",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T13:06:31Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nISA-L supports crc16_t10dif_copy and it is intended to use in read strip and write insert. it stitches together CRC and memcpy operations eliminating extra dataread.\n\nThis API tries to follow the same idea.\n\nI admit that this API is not refined yet, but same bounce buffer must be used between generate and verify. Hence bounce buffer must be passed by argument.\n\nDoes this make sense to you?",
+      "parentUuid": "b5775be3_7818bf3d",
+      "revId": "a4b89053ca0f83faba5030d2811542c9db458ec9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd3d1283_88327f0d",
         "filename": "lib/util/dif.c",
         "patchSetId": 13
