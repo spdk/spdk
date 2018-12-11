@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9251f62a_31325b2b",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-11T11:36:21Z",
+      "side": 1,
+      "message": "Can we determine if we lost cache or core device and show appropriate message?\nSomething like: \"Removing CAS disk %s, because cache/core device %s was hot removed\"",
+      "range": {
+        "startLine": 479,
+        "startChar": 44,
+        "endLine": 479,
+        "endChar": 49
+      },
+      "revId": "1ea4a218dc74fa823e9b5b4adbe698b4132b7e4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
