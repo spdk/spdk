@@ -39,6 +39,11 @@
 
 #include "common/lib/test_env.c"
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE	(4096)
+#endif
+
+
 DEFINE_STUB(spdk_nvme_qpair_process_completions, int32_t,
 	    (struct spdk_nvme_qpair *qpair,
 	     uint32_t max_completions), 0);
