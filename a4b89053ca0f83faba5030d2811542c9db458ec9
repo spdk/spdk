@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5775be3_7818bf3d",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-11T09:57:31Z",
+      "side": 1,
+      "message": "Since you are talking about the internal usage scenarios, so I think you can remove the bounce_buf, and allocate inside the function.",
+      "revId": "a4b89053ca0f83faba5030d2811542c9db458ec9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd3d1283_88327f0d",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-11T09:57:31Z",
+      "side": 1,
+      "message": "the latest patch set is using macro instead of 3, :).",
+      "revId": "a4b89053ca0f83faba5030d2811542c9db458ec9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
