@@ -31,20 +31,11 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ENV_NAME := $(notdir $(CONFIG_ENV))
+UNIT_TEST_LINK_ENV = 1
+TEST_FILE = mem_callbacks.c
+CFLAGS += $(ENV_CFLAGS)
 
-DIRS-y = mem_callbacks vtophys
-
-ifeq ($(ENV_NAME),env_dpdk)
-DIRS-y += memory pci
-endif
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
