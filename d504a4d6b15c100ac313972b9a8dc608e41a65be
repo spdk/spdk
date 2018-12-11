@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdaa61d8_b9c95c88",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T17:55:51Z",
+      "side": 1,
+      "message": "Do you not want to support 17.07? The commit message says 16.04 is missing stuff, but that\u0027s a big jump to 18.04 (the next one after 17.07).",
+      "revId": "d504a4d6b15c100ac313972b9a8dc608e41a65be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5430d99b_4bedcc93",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T17:55:51Z",
+      "side": 1,
+      "message": "Also, now that I look at this, it is doing a string compare on these version numbers instead of an integer comparison. Here\u0027s a trick for decimal comparison:\n\nif [ $(awk -vversion\u003d$(lsb_release -rs) \u0027BEGIN{ print version \u003e\u003d 17.07 ? 1 : 0}\u0027) -eq 1 ]; then",
+      "revId": "d504a4d6b15c100ac313972b9a8dc608e41a65be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
