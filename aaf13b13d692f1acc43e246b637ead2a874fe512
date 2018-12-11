@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74d406cc_6f50c352",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T07:16:15Z",
+      "side": 1,
+      "message": "Is this the number of cycles in one second and not in one microsecond?\n\nBy the way, if the unit of timeout is microsecond, the usage of the timeout may be not for error detection but for other purpose. Second is enough?",
+      "range": {
+        "startLine": 127,
+        "startChar": 40,
+        "endLine": 127,
+        "endChar": 57
+      },
+      "revId": "aaf13b13d692f1acc43e246b637ead2a874fe512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a478149e_031d49a7",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T07:16:15Z",
+      "side": 1,
+      "message": "Checking if timeout is too large is very precise and secure! The following may be an alternative idea.\n\n  timeout_ticks \u003d 0;\n  if (timeout) {\n    timeout_ticks \u003d spdk_get_ticks() + timeout * spdk_get_ticks_hz();\n    if (timeout_ticks \u003c spdk_get_ticks())\n      timeout_ticks \u003d 0;\n  }\n\n\n  if (timeout_ticks \u0026\u0026 spdk_get_ticks() \u003e timeout_ticks)\n    if (status-\u003edone \u003d\u003d false)\n      return -EIO;",
+      "revId": "aaf13b13d692f1acc43e246b637ead2a874fe512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3786e812_98c29cbb",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T07:16:15Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 146,
+        "startChar": 45,
+        "endLine": 146,
+        "endChar": 62
+      },
+      "revId": "aaf13b13d692f1acc43e246b637ead2a874fe512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
