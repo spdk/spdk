@@ -22,6 +22,47 @@
       "revId": "2510ba36a33a715e44e53f8c837b29a04adebc89",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41caa2ed_fc0ad3b0",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T18:00:22Z",
+      "side": 1,
+      "message": "Some transports don\u0027t support this operation. Maybe if the return code is ENOTSUP, we just move on (without printing an error). Otherwise, we print an error.",
+      "parentUuid": "18839a89_129981ee",
+      "range": {
+        "startLine": 720,
+        "startChar": 8,
+        "endLine": 720,
+        "endChar": 45
+      },
+      "revId": "2510ba36a33a715e44e53f8c837b29a04adebc89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "162ca1f6_cefeade2",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T18:00:22Z",
+      "side": 1,
+      "message": "If the transport doesn\u0027t support removing qpairs from poll groups, this should return ENOTSUP. That way the upper layer in the code knows whether the operation failed and needs to be re-tried, or if it just isn\u0027t supported and should not expect it to ever work.",
+      "revId": "2510ba36a33a715e44e53f8c837b29a04adebc89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
