@@ -182,6 +182,8 @@ _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backi
 static uint64_t *
 _reduce_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
 {
+	assert(chunk_map_index < _get_total_chunks(vol->params.vol_size, vol->params.chunk_size));
+
 	return vol->pm_chunk_maps + (chunk_map_index * vol->backing_io_units_per_chunk);
 }
 
@@ -728,16 +730,18 @@ _write_complete_req(void *_req, int reduce_errno)
 	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
 
 	old_chunk_map_index = vol->pm_logical_map[logical_map_index];
-	old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
-	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		if (old_chunk[i] == REDUCE_EMPTY_MAP_ENTRY) {
-			break;
+	if (old_chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
+		old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
+		for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
+			if (old_chunk[i] == REDUCE_EMPTY_MAP_ENTRY) {
+				break;
+			}
+			assert(spdk_bit_array_get(vol->allocated_backing_io_units, old_chunk[i]) == true);
+			spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk[i]);
+			old_chunk[i] = REDUCE_EMPTY_MAP_ENTRY;
 		}
-		assert(spdk_bit_array_get(vol->allocated_backing_io_units, old_chunk[i]) == true);
-		spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk[i]);
-		old_chunk[i] = REDUCE_EMPTY_MAP_ENTRY;
+		spdk_bit_array_clear(vol->allocated_chunk_maps, old_chunk_map_index);
 	}
-	spdk_bit_array_clear(vol->allocated_chunk_maps, old_chunk_map_index);
 
 	/*
 	 * We don't need to persist the clearing of the old chunk map here.  The old chunk map
