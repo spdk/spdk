@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "62134b05_5bc84953",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0581b47a_f83b10b0",
+      "range": {
+        "startLine": 500,
+        "startChar": 5,
+        "endLine": 500,
+        "endChar": 8
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ae212fb_5ccb66db",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 14
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-11T05:23:12Z",
       "side": 1,
       "message": "each return value of spdk_sprintf_alloc() calls should be freed when no longer necessary. But I didn\u0027t see no pair between spdk_sprintf_alloc() and free() in dump_sec_buf().\n\nspdk_sprintf_alloc() is not realloc.",
+      "range": {
+        "startLine": 528,
+        "startChar": 7,
+        "endLine": 528,
+        "endChar": 25
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d848dd68_d03647d3",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Done. Thanks for pointing this out.",
+      "parentUuid": "7ae212fb_5ccb66db",
       "range": {
         "startLine": 528,
         "startChar": 7,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "6dbd643e_14c44337",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "307e4f3a_6d81a109",
+      "range": {
+        "startLine": 543,
+        "startChar": 9,
+        "endLine": 543,
+        "endChar": 10
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad1c1ccf_885cf799",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 14
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-11T05:23:12Z",
       "side": 1,
       "message": "you can remove this if block.",
+      "range": {
+        "startLine": 602,
+        "startChar": 1,
+        "endLine": 602,
+        "endChar": 11
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09235eae_32c144a8",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ad1c1ccf_885cf799",
       "range": {
         "startLine": 602,
         "startChar": 1,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "a8d18c4c_582bea7b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 1751,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Yes. Changed to recvlen",
+      "parentUuid": "a080afda_54ce124e",
+      "range": {
+        "startLine": 1751,
+        "startChar": 45,
+        "endLine": 1751,
+        "endChar": 57
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24449cb1_111ce00b",
         "filename": "scripts/rpc/nvme.py",
         "patchSetId": 14
@@ -128,6 +248,30 @@
       "writtenOn": "2018-12-11T05:23:12Z",
       "side": 1,
       "message": "same as rpc.py",
+      "range": {
+        "startLine": 65,
+        "startChar": 18,
+        "endLine": 65,
+        "endChar": 30
+      },
+      "revId": "e3b7e080e4a279d57737e68ca68702b7b6232462",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0ebbda9_e7d9dad3",
+        "filename": "scripts/rpc/nvme.py",
+        "patchSetId": 14
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-11T10:50:01Z",
+      "side": 1,
+      "message": "Done. Thank you for reviewing my code.",
+      "parentUuid": "24449cb1_111ce00b",
       "range": {
         "startLine": 65,
         "startChar": 18,
