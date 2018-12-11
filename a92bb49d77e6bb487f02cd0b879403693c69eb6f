@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e005fd16_8193773c",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T23:05:46Z",
+      "side": 1,
+      "message": "We don\u0027t provide a probe callback for the discovery controller in RDMA (or in PCIe, but there isn\u0027t one there), so this raises a good question. If the user is effectively scanning a bus in this call, which for this protocol involves connecting to a discovery controller and requesting a log page behind the scenes, should we expose that discovery controller to them? I\u0027m leaning toward no - it should just be an implementation detail of the scan. If it doesn\u0027t use digests, that seems like it is ok (or maybe it tries to turn on digests always by default, if the target supports it).",
+      "revId": "a92bb49d77e6bb487f02cd0b879403693c69eb6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
