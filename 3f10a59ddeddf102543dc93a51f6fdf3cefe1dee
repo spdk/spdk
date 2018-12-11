@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6945a200_972ab406",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T18:05:20Z",
+      "side": 1,
+      "message": "Don\u0027t you only want to do this check if the connection is waiting for a PDU from the client?",
+      "revId": "3f10a59ddeddf102543dc93a51f6fdf3cefe1dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "14d6254d_0848dac4",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-11T18:05:20Z",
+      "side": 1,
+      "message": "It would be better if you captured the tsc a single time in spdk_nvmf_tcp_poll_group_handle_timeout and passed it into this function.",
+      "revId": "3f10a59ddeddf102543dc93a51f6fdf3cefe1dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
