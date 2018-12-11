@@ -202,16 +202,16 @@ if [ $SPDK_TEST_VHOST -eq 1 ]; then
 		timing_enter integrity_lvol_blk_nightly
 		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
 		timing_exit integrity_lvol_blk_nightly
-
-		# timing_enter readonly
-		# run_test suite ./test/vhost/spdk_vhost.sh --readonly
-		# timing_exit readonly
 	fi
 
 	if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
 		timing_enter vhost_migration
 		run_test suite ./test/vhost/spdk_vhost.sh --migration
 		timing_exit vhost_migration
+
+		timing_enter readonly
+		run_test suite ./test/vhost/spdk_vhost.sh --readonly
+		timing_exit readonly
 	fi
 
 	timing_enter integrity_lvol_scsi
