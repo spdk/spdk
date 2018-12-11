@@ -34,5 +34,13 @@ fi
 $testdir/env_dpdk_post_init/env_dpdk_post_init $argv
 timing_exit env_dpdk_post_init
 
+if [ `uname` = Linux ]; then
+	# This tests the --match-allocations DPDK parameter which is only
+	# supported on Linux
+	timing_enter mem_callbacks
+	$testdir/mem_callbacks/mem_callbacks
+	timing_exit mem_callbacks
+fi
+
 report_test_completion "env"
 timing_exit env
