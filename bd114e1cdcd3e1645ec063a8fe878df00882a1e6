@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e591782b_2ded9140",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 712,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-11T04:43:32Z",
+      "side": 1,
+      "message": "Is this always valid? When this is REDUCE_EMPTY_MAP_ENTRY in spdk_reduce_vol_writev(), is this still invalid here?\n\nI read the next patch but this question was not gone. I may be missing something.",
+      "range": {
+        "startLine": 712,
+        "startChar": 1,
+        "endLine": 712,
+        "endChar": 20
+      },
+      "revId": "bd114e1cdcd3e1645ec063a8fe878df00882a1e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
