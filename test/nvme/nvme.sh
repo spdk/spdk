@@ -87,10 +87,7 @@ if [ `uname` = Linux ]; then
 	fi
 fi
 
-if [ `uname` = Linux ]; then
-	start_stub "-s 4096 -i 0 -m 0xF"
-	trap "kill_stub; exit 1" SIGINT SIGTERM EXIT
-fi
+trap "exit 1" SIGINT SIGTERM EXIT
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	# TODO: temporarily disabled - temperature AER doesn't fire on emulated controllers
@@ -105,17 +102,17 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 timing_enter identify
-$rootdir/examples/nvme/identify/identify -i 0
+$rootdir/examples/nvme/identify/identify
 for bdf in $(iter_pci_class_code 01 08 02); do
-	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}" -i 0
+	$rootdir/examples/nvme/identify/identify -r "trtype:PCIe traddr:${bdf}"
 done
-timing_exit identify
+timing_exit identify./
 
 timing_enter perf
-$rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL -i 0
+$rootdir/examples/nvme/perf/perf -q 128 -w read -o 12288 -t 1 -LL
 if [ -b /dev/ram0 ]; then
 	# Test perf with AIO device
-	$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL -i 0
+	$rootdir/examples/nvme/perf/perf /dev/ram0 -q 128 -w read -o 12288 -t 1 -LL
 	report_test_completion "nvme_perf"
 fi
 timing_exit perf
@@ -149,26 +146,22 @@ $testdir/overhead/overhead -s 4096 -t 1 -H
 timing_exit overhead
 
 timing_enter arbitration
-$rootdir/examples/nvme/arbitration/arbitration -t 3 -i 0
+$rootdir/examples/nvme/arbitration/arbitration -t 3
 timing_exit arbitration
 
 if [ `uname` = Linux ]; then
 	timing_enter multi_secondary
-	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x1 &
+	$rootdir/examples/nvme/perf/perf -q 16 -w read -o 4096 -t 3 -c 0x1 &
 	pid0=$!
-	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x2 &
+	$rootdir/examples/nvme/perf/perf -q 16 -w read -o 4096 -t 3 -c 0x2 &
 	pid1=$!
-	$rootdir/examples/nvme/perf/perf -i 0 -q 16 -w read -o 4096 -t 3 -c 0x4
+	$rootdir/examples/nvme/perf/perf -q 16 -w read -o 4096 -t 3 -c 0x4
 	wait $pid0
 	wait $pid1
 	report_test_completion "nvme_multi_secondary"
 	timing_exit multi_secondary
 fi
 
-if [ `uname` = Linux ]; then
-	trap - SIGINT SIGTERM EXIT
-	kill_stub
-fi
 PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 
 if [ -d /usr/src/fio ]; then
