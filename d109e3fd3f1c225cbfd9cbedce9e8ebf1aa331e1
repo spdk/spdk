@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2f7ba5b0_923a0c61",
+        "filename": "lib/event/app.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "ca4705c3_2b416ebe",
+      "range": {
+        "startLine": 125,
+        "startChar": 8,
+        "endLine": 125,
+        "endChar": 20
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07d13602_afaaae2a",
         "filename": "lib/event/app.c",
         "patchSetId": 30
@@ -65,6 +89,53 @@
     },
     {
       "key": {
+        "uuid": "05435985_ffd32584",
+        "filename": "lib/event/app.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "\u003e shouldn\u0027t we call spdk_app_start_application() here? spdk_app_start_application besides setting the RPC state to SPDK_RPC_RUNTIME also calls g_app_start_event, which is the callback passed to spdk_app_start. The callback doesn\u0027t do anything in some apps (e.g. vhost), but is crucial in others.\n\nThis exactly what we want to avoid here. Calling g_app_start_event event tells application that SPDK is ready, but it isn\u0027t. It\u0027ll be fired it after loading configuration (like we have it now with legacy configuration).\n\n\u003e Also, could we reuse spdk_app_start_rpc() for json configs? We can get rid of a few duplicated lines and make the code more readable.\n\nI would like to do this but I can\u0027t. I had to create temporary unix socket file to not confuse RPC client that it is operational. I was planning add support for \"no-UNIX socket\" mode in RPC server/client but after some POC I saw that amount of work would be tremendous. So this \"repomorary UNIX socket file\" is reasonable workaround.",
+      "parentUuid": "1cf83f8c_c080b334",
+      "range": {
+        "startLine": 366,
+        "startChar": 1,
+        "endLine": 366,
+        "endChar": 38
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48c206dc_50c3e72b",
+        "filename": "lib/event/app.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "This deserve some warning.",
+      "range": {
+        "startLine": 783,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 2
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "141613e0_92210ceb",
         "filename": "lib/event/json_config.c",
         "patchSetId": 30
@@ -76,6 +147,30 @@
       "writtenOn": "2018-12-12T10:57:30Z",
       "side": 1,
       "message": "typo - either all or none",
+      "range": {
+        "startLine": 330,
+        "startChar": 23,
+        "endLine": 330,
+        "endChar": 41
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43084dc6_f07a81dc",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "Haha ;)\n\nOK",
+      "parentUuid": "141613e0_92210ceb",
       "range": {
         "startLine": 330,
         "startChar": 23,
@@ -111,6 +206,30 @@
     },
     {
       "key": {
+        "uuid": "4ee1369b_92d965ef",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "Yeah, I don\u0027t like magic numbers either but in this case I don\u0027t think this is worth own label as this just a blind shot. It could be just a dry run (pass NULL and 0) to discover values_cnt...",
+      "parentUuid": "9bf2df35_0f6c3a53",
+      "range": {
+        "startLine": 467,
+        "startChar": 14,
+        "endLine": 467,
+        "endChar": 18
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2e0f4bbd_57f1a264",
         "filename": "lib/event/json_config.c",
         "patchSetId": 30
@@ -122,6 +241,24 @@
       "writtenOn": "2018-12-12T10:57:30Z",
       "side": 1,
       "message": "Mixing spdk_call_event() and spdk_thread_send_msg() looks like a mess to me.\n\nCan we require spdk_app_json_config_load() to be called after the reactors have started? E.g. app.c could call it from inside an event. Then we\u0027ll be able to use spdk_thread_send_msg() all the way. Managing lcores isn\u0027t required here.",
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90a322c7_3c2e82d5",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "send_msg is used (as I remember) only in line 242 (see  comment in line 241) so the benefit from it is greater than the \"mess\" it introduce.\n\n\u003e Can we require spdk_app_json_config_load() to be called after the reactors have started? E.g. app.c could call it from inside an event. Then we\u0027ll be able to use spdk_thread_send_msg() all the way. Managing lcores isn\u0027t required here.\n\n1. see comment in app.c@366\n2. I can move this function to spdk_app_json_config_load_ev() but we need one poller for RPC client so using lcore won\u0027t be eliminated.",
+      "parentUuid": "2e0f4bbd_57f1a264",
       "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -145,6 +282,24 @@
     },
     {
       "key": {
+        "uuid": "40941254_76ab6b33",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "Do you have any guide line how to handle critiacal errors before reactors start? I didn\u0027t find any?",
+      "parentUuid": "12aa010d_88efdedc",
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "69c504e6_eb96b297",
         "filename": "lib/event/json_config.c",
         "patchSetId": 30
@@ -156,6 +311,24 @@
       "writtenOn": "2018-12-12T10:57:30Z",
       "side": 1,
       "message": "There\u0027s no poller here, so I believe this comment is simply outdated.",
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15b460cd_7fa8ba80",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T12:18:31Z",
+      "side": 1,
+      "message": "s/poller/event/",
+      "parentUuid": "69c504e6_eb96b297",
       "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
