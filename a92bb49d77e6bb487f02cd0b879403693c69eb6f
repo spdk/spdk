@@ -16,6 +16,24 @@
       "revId": "a92bb49d77e6bb487f02cd0b879403693c69eb6f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d7914cb_e9477631",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-12T00:38:14Z",
+      "side": 1,
+      "message": "Hi Ben,\nThe digest feature is related with transport (especially TCP transport). Actually, whether supporting for discovery controller or not, which is OK for me. Let\u0027s leave the patch here.",
+      "parentUuid": "e005fd16_8193773c",
+      "revId": "a92bb49d77e6bb487f02cd0b879403693c69eb6f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
