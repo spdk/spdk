@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bad90799_9d3d7d67",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T15:11:34Z",
+      "side": 0,
+      "message": "I\u0027m not sure, but this might be still required. There could be still some I/O channels opened for the gpt or lvol scans. Since there won\u0027t be any I/O on this thread (like there is in other SPDK apps) those io_channels and their corresponding io queues will be simply wasted. The real I/O threads might expect them to be available.\n\nWe\u0027ve been noticing this a while ago with the Virtio driver, for which the max number of queues can be specified in config file. Fio_plugin couldn\u0027t do any I/O to a device with just 1 queue available, as at the time of init the queue was still occupied by this management thread.\n\nThe code changed since then, but I believe this is still relevant. This needs to be checked, but please don\u0027t touch it in this patch until we\u0027re sure.",
+      "range": {
+        "startLine": 259,
+        "startChar": 1,
+        "endLine": 259,
+        "endChar": 49
+      },
+      "revId": "074e787223d55eae276eb76925ce6344bbc101c7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
