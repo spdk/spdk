@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "3b13bbba_8d99ea98",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T00:59:27Z",
+      "side": 1,
+      "message": "Hi Ziye, Thank you. Your concern will be correct and the latest version is fine to me.",
+      "parentUuid": "7c65bd50_27b81306",
+      "range": {
+        "startLine": 720,
+        "startChar": 8,
+        "endLine": 720,
+        "endChar": 45
+      },
+      "revId": "2510ba36a33a715e44e53f8c837b29a04adebc89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "162ca1f6_cefeade2",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 9
