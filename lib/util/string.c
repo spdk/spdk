@@ -93,6 +93,52 @@ spdk_sprintf_alloc(const char *format, ...)
 }
 
 char *
+spdk_vsprintf_realloc(char *buffer, const char *format, va_list args)
+{
+	va_list args_copy;
+	char *new_buffer;
+	size_t orig_size = 0, new_size;
+
+	/* Original buffer size */
+	if (buffer) {
+		orig_size = strlen(buffer);
+	}
+
+	va_copy(args_copy, args);
+
+	/* Necessary buffer size. */
+	new_size = vsnprintf(NULL, 0, format, args_copy) + orig_size + 1;
+
+	new_buffer = realloc(buffer, new_size);
+	if (new_buffer == NULL) {
+		free(buffer);
+
+		va_end(args_copy);
+
+		return NULL;
+	}
+
+	vsnprintf(new_buffer + orig_size, new_size - orig_size, format, args_copy);
+
+	va_end(args_copy);
+
+	return new_buffer;
+}
+
+char *
+spdk_sprintf_realloc(char *buffer, const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_realloc(buffer, format, args);
+	va_end(args);
+
+	return ret;
+}
+
+char *
 spdk_strlwr(char *s)
 {
 	char *p;
