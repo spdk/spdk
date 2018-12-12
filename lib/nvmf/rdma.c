@@ -588,7 +588,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	int qd;
 
-	if (rqpair->refcnt == 0) {
+	if (rqpair->refcnt != 0) {
 		return;
 	}
 
