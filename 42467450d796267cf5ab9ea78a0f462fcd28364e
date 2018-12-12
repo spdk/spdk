@@ -22,6 +22,30 @@
       "revId": "42467450d796267cf5ab9ea78a0f462fcd28364e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aba0bdae_095c8ce0",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-12T01:29:49Z",
+      "side": 1,
+      "message": "Yes, Shuhei",
+      "parentUuid": "c59d2179_828ff8a4",
+      "range": {
+        "startLine": 173,
+        "startChar": 4,
+        "endLine": 173,
+        "endChar": 61
+      },
+      "revId": "42467450d796267cf5ab9ea78a0f462fcd28364e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
