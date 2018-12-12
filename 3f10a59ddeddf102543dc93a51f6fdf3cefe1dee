@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "25f1d3b2_d2e8f902",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-12T00:18:06Z",
+      "side": 1,
+      "message": "Hi Ben,\nIf it is in error state, it just returns. So I think that for other states, we do not need to check here.",
+      "parentUuid": "6945a200_972ab406",
+      "revId": "3f10a59ddeddf102543dc93a51f6fdf3cefe1dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "14d6254d_0848dac4",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-11T18:05:20Z",
       "side": 1,
       "message": "It would be better if you captured the tsc a single time in spdk_nvmf_tcp_poll_group_handle_timeout and passed it into this function.",
+      "revId": "3f10a59ddeddf102543dc93a51f6fdf3cefe1dee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "319acd31_cdd8c3e7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1249,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-12T00:18:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14d6254d_0848dac4",
       "revId": "3f10a59ddeddf102543dc93a51f6fdf3cefe1dee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
