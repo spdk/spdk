@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ce12721f_a5b1cb74",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T23:04:15Z",
+      "side": 1,
+      "message": "I\u0027m fine too if they are generally usable. Hence I update the commit message. Thank you.",
+      "parentUuid": "a12af1cb_88a311b3",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c48fb4d2_0505496b",
         "filename": "include/spdk/string.h",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2018-12-12T10:51:48Z",
       "side": 1,
       "message": "I think maybe we can call it buffer instead of src as caller might reuse the name of this buffer because the function is made for reallocation.",
+      "range": {
+        "startLine": 79,
+        "startChar": 10,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33602838_e01bb70b",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T23:04:15Z",
+      "side": 1,
+      "message": "Your suggestion is fine and I take it.",
+      "parentUuid": "c48fb4d2_0505496b",
       "range": {
         "startLine": 79,
         "startChar": 10,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "d1ce53b2_2a1b702d",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T23:04:15Z",
+      "side": 1,
+      "message": "this came from sprintf + strcat + realloc, but your suggestion is fine and I take it.",
+      "parentUuid": "9313a79c_8ae2ec40",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 67
+      },
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d823f0cf_4447bbbb",
         "filename": "lib/util/string.c",
         "patchSetId": 2
@@ -82,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "5091ef29_c221732e",
+        "filename": "lib/util/string.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T23:04:15Z",
+      "side": 1,
+      "message": "I think that free(src) should be done by the caller.\n\nvery simple implementation of realloc will be\n\nvoid *realloc(ptr, size)\n{\n  tmp \u003d malloc(size);\n  if (!tmp)\n    return NULL;\n  else {\n    memcpy(tmp, ptr, length of ptr);\n    free(ptr);\n    return tmp;\n  }\n}\n\nAnd caller of realloc() should be\n\n  tmp \u003d realloc(ptr, size);\n  if (!tmp)\n    error handling including free(ptr);\n  else\n    ptr \u003d tmp;",
+      "parentUuid": "d823f0cf_4447bbbb",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6b00681_f509f7d9",
         "filename": "lib/util/string.c",
         "patchSetId": 2
@@ -93,6 +177,24 @@
       "writtenOn": "2018-12-12T10:51:48Z",
       "side": 1,
       "message": "I think src also need to be freed here too.",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37944d4f_66725bd1",
+        "filename": "lib/util/string.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T23:04:15Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "e6b00681_f509f7d9",
       "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
