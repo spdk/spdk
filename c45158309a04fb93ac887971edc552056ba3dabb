@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "64b054fd_9b7b2e2a",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-12T04:54:42Z",
+      "side": 1,
+      "message": "thanks , I should pay more attention to the indention.",
+      "parentUuid": "c7ee7441_4267435d",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 24,
+        "endChar": 4
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a282990a_50a4c606",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 16
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "1667f0c6_a135599e",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-12T04:54:42Z",
+      "side": 1,
+      "message": "thanks ,done.",
+      "parentUuid": "a282990a_50a4c606",
+      "range": {
+        "startLine": 157,
+        "startChar": 0,
+        "endLine": 171,
+        "endChar": 32
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac058778_3d06da5c",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 16
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-11T08:30:16Z",
       "side": 1,
       "message": "Shouldn\u0027t this trap be removed after vm_run_autotest finishes successfully?",
+      "range": {
+        "startLine": 177,
+        "startChar": 4,
+        "endLine": 177,
+        "endChar": 29
+      },
+      "revId": "c45158309a04fb93ac887971edc552056ba3dabb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06ba5eac_ea9a479e",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-12T04:54:42Z",
+      "side": 1,
+      "message": "there\u0027s another meaning to stop former trap which would destroy VM .\nif environment setup ok, need to reuse VM , if eradicate VM  don\u0027t want to destroy VM again after trap errors.",
+      "parentUuid": "ac058778_3d06da5c",
       "range": {
         "startLine": 177,
         "startChar": 4,
