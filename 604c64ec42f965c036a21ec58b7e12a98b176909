@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb8a7c84_19d1c589",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "Pls follow convetion from other files.\n\n  w \u003d ...\n  if (w \u003d\u003d NULL) {\n    goto end;\n  }",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 2
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4d0041e_a9e16970",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "Simple switch in spdk_rpc_get_cache_stats() would do the work. Pls, don\u0027t overcomplicate this.",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 161,
+        "endChar": 1
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d167e3da_733cc52a",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "simple \u0027 \u003d {};\u0027 will be enought.",
+      "range": {
+        "startLine": 166,
+        "startChar": 34,
+        "endLine": 166,
+        "endChar": 40
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a086db8d_bfdf1bd2",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "This is not and error.",
+      "range": {
+        "startLine": 192,
+        "startChar": 4,
+        "endLine": 195,
+        "endChar": 5
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a475954_2c6b2270",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "Sorry, I just could not resist xD\n\nhttps://external-preview.redd.it/I1CShqp2wBguKcuv21m6XRnREKuw8kyAoCavCAGJPBI.jpg?auto\u003dwebp\u0026s\u003d819f73b35497078f717311ec509e8224b89b6e71\n\nPls, keep code flow as flat as possible. See other *_rpc.c files for the scheme.",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 14
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "768887cd_a5e85631",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "Comments like above.",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 26
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8146a72_3bd0034f",
+        "filename": "lib/cas/stats.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "delete empty line.",
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e134ccfd_4beba751",
+        "filename": "lib/cas/stats.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "Scheme is \n\n  rc \u003d do_something();\n  if (rc !\u003d OK) {\n    \u003c\u003c handle error \u003e\u003e\n  }\n\n  rc \u003d so_something_else();\n  if (rc !\u003d OK) {\n    \u003c\u003c handle error \u003e\u003e\n  }",
+      "range": {
+        "startLine": 183,
+        "startChar": 1,
+        "endLine": 187,
+        "endChar": 2
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "049e6c74_7d5ba8bd",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "call_cmd decorator is removed. need to be rebased.",
+      "range": {
+        "startLine": 169,
+        "startChar": 1,
+        "endLine": 169,
+        "endChar": 13
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a63d93b9_b4490f6c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T21:25:58Z",
+      "side": 1,
+      "message": "print? or print_dict?",
+      "range": {
+        "startLine": 186,
+        "startChar": 8,
+        "endLine": 186,
+        "endChar": 13
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
