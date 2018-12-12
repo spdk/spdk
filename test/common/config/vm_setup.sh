@@ -285,6 +285,21 @@ function install_libiscsi()
     fi
 }
 
+function install_python3_pandas()
+{
+	#Installing python3-pandas on different systems.
+	if [ -s /etc/redhat-release ]; then
+		. /etc/os-release
+		if [ $ID = 'fedora' ]; then
+			yum install -y python3-pandas
+		fi
+	elif [ -f /etc/debian_version ]; then
+		apt -y install python3-pandas
+	else
+		echo "***need to check python3-pandas installing command.***"
+	fi
+}
+
 function usage()
 {
     echo "This script is intended to automate the environment setup for a fedora linux virtual machine."
@@ -424,6 +439,7 @@ install_vpp&
 install_nvmecli&
 install_libiscsi&
 install_qat&
+install_python3_pandas&
 
 wait
 # create autorun-spdk.conf in home folder. This is sourced by the autotest_common.sh file.
