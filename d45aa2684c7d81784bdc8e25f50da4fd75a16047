@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f113d921_88f6ed10",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T03:18:16Z",
+      "side": 1,
+      "message": "Shuhei,\nI free tmp and return null so that the dest variable won\u0027t leak even a memory error happens.\nIn this case, I think there is no need to introduce another var in dump_sec_buf().\nPlease correct me if I misunderstand.",
+      "parentUuid": "6f8b18c6_44cf8de3",
+      "range": {
+        "startLine": 496,
+        "startChar": 2,
+        "endLine": 496,
+        "endChar": 14
+      },
+      "revId": "d45aa2684c7d81784bdc8e25f50da4fd75a16047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37c5b203_ebedbb20",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 15
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-11T23:00:22Z",
       "side": 1,
       "message": "You should save ret to tmp_ret before every realloc() call because ret will be lost and cannot be freed if realloc() fails.\n\nSomething like:\n\n  char *tmp \u003d NULL, *tmp_ret \u003d NULL;\n\n  ret \u003d spdk_sprintf_alloc(\"NVMe ...\");\n  if (!ret)\n    goto mem_err;\n\n  for_each(i) {\n    tmp_ret \u003d ret;\n    tmp \u003d spdk_sprintf_alloc(\" %x \", i);\n    ret \u003d spdk_sprintf_realloc(\"%s%s\", ret, tmp);\n    if (!tmp || !ret)\n      goto mem_err;\n  }\n\n\nmem_err:\n\tfree(tmp);\n\tfree(tmp_ret);",
+      "range": {
+        "startLine": 548,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 47
+      },
+      "revId": "d45aa2684c7d81784bdc8e25f50da4fd75a16047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "566bd452_e7468af1",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T03:18:16Z",
+      "side": 1,
+      "message": "Thanks for your review.",
+      "parentUuid": "37c5b203_ebedbb20",
       "range": {
         "startLine": 548,
         "startChar": 0,
