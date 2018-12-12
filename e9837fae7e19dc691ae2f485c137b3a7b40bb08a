@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "15b81107_43cc0c61",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 673,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T14:52:28Z",
+      "side": 1,
+      "message": "The fix is submitted as separate patch : https://review.gerrithub.io/c/spdk/spdk/+/436974",
+      "revId": "e9837fae7e19dc691ae2f485c137b3a7b40bb08a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
