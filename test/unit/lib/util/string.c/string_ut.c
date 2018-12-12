@@ -202,6 +202,34 @@ test_parse_capacity(void)
 	CU_ASSERT(rc != 0);
 }
 
+static void
+test_sprintf_cat_realloc(void)
+{
+	char *str;
+	char *cat_str;
+
+	str = spdk_sprintf_alloc("hello world\ngood morning\n" \
+				 "good afternoon\ngood evening\n");
+	SPDK_CU_ASSERT_FATAL(str != NULL);
+
+	cat_str = spdk_sprintf_alloc("hello world\n");
+	SPDK_CU_ASSERT_FATAL(cat_str);
+
+	cat_str = spdk_sprintf_cat_realloc(cat_str, "good morning\n");
+	SPDK_CU_ASSERT_FATAL(cat_str);
+
+	cat_str = spdk_sprintf_cat_realloc(cat_str, "good afternoon\n");
+	SPDK_CU_ASSERT_FATAL(cat_str);
+
+	cat_str = spdk_sprintf_cat_realloc(cat_str, "good evening\n");
+	SPDK_CU_ASSERT_FATAL(cat_str);
+
+	CU_ASSERT(strcmp(str, cat_str) == 0);
+
+	free(str);
+	free(cat_str);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -221,7 +249,9 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
 		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL ||
-		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL) {
+		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL ||
+		CU_add_test(suite, "test_sprintf_cat_realloc",
+			    test_sprintf_cat_realloc) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
