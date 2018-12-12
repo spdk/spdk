@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a12af1cb_88a311b3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T10:51:48Z",
+      "side": 1,
+      "message": "Hi Shuhei,\nThank you for this patch. But I think there is no need to mention what this is developed for as if this get merged, we all could use it.",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c48fb4d2_0505496b",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T10:51:48Z",
+      "side": 1,
+      "message": "I think maybe we can call it buffer instead of src as caller might reuse the name of this buffer because the function is made for reallocation.",
+      "range": {
+        "startLine": 79,
+        "startChar": 10,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9313a79c_8ae2ec40",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T10:51:48Z",
+      "side": 1,
+      "message": "I think the function name is not so intuitive. Do you think maybe we can changed it to spdk_strcat_realloc()? Just a suggestion.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 84,
+        "endChar": 67
+      },
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d823f0cf_4447bbbb",
+        "filename": "lib/util/string.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T10:51:48Z",
+      "side": 1,
+      "message": "I think src also need to be freed here.",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6b00681_f509f7d9",
+        "filename": "lib/util/string.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2018-12-12T10:51:48Z",
+      "side": 1,
+      "message": "I think src also need to be freed here too.",
+      "revId": "9e6d6ebf8079e119677f46e6a6955dbee2363f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
