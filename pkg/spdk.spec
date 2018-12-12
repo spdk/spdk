@@ -2,17 +2,17 @@
 %bcond_with doc
 
 Name: spdk
-Version: 18.10.x
+Version: 18.10.1
 Release: 0%{?dist}
 Epoch: 0
 URL: http://spdk.io
 
-Source: https://github.com/spdk/spdk/archive/v18.10.x.tar.gz#/%{name}-%{version}.tar.gz
+Source: https://github.com/spdk/spdk/archive/v18.10.1.tar.gz#/%{name}-%{version}.tar.gz
 Summary: Set of libraries and utilities for high performance user-mode storage
 
 # Assign to branch if new branch, e.g. %{name}-18.10.x
 # else it should be %{name}-%{version}
-%define spdk_build_dir %{name}-18.10.x
+%define spdk_build_dir %{name}-%{version}
 
 %define package_version %{epoch}:%{version}-%{release}
 
