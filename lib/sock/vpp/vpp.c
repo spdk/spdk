@@ -624,7 +624,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 
 SPDK_NET_IMPL_REGISTER(vpp, &g_vpp_net_impl);
 
-static int
+static void
 spdk_vpp_net_framework_init(void)
 {
 	int rc;
@@ -633,7 +633,8 @@ spdk_vpp_net_framework_init(void)
 	app_name = spdk_sprintf_alloc("SPDK_%d", getpid());
 	if (app_name == NULL) {
 		SPDK_ERRLOG("Cannot alloc memory for SPDK app name\n");
-		return -ENOMEM;
+		spdk_net_framework_init_next(-ENOMEM);
+		return;
 	}
 
 	rc = vppcom_app_create(app_name);
@@ -643,7 +644,7 @@ spdk_vpp_net_framework_init(void)
 
 	free(app_name);
 
-	return 0;
+	spdk_net_framework_init_next(0);
 }
 
 static void
