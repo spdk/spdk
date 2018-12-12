@@ -72,14 +72,10 @@ struct spdk_notify_type *spdk_notify_next(struct spdk_notify_type *prev);
 int spdk_notify_listen(spdk_notify_handler cb, void *ctx);
 int spdk_notify_unlisten(spdk_notify_handler cb, void *ctx);
 
-#define SPDK_NOTIFY_REGISTER(name, type, write_type_cb, write_info_cb) \
-struct spdk_notify_type type { \
-	.name = name, \
-	.write_info_cb = write_info_cb \
-};	\
+#define SPDK_NOTIFY_REGISTER(name, write_type_cb, write_info_cb) \
 static void __attribute__((constructor)) notify_register_##write_type_cb(void) \
 { \
-	spdk_notify_type_register(name, write_type_cb, write_info_cb); \
+ spdk_notify_type_register(name, write_type_cb, write_info_cb); \
 }
 
 #ifdef __cplusplus

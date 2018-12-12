@@ -46,6 +46,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -3525,6 +3526,7 @@ spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int 
 	}
 
 	spdk_bdev_start(vbdev);
+
 	return 0;
 }
 
