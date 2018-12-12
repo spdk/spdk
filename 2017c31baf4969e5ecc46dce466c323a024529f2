@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae1590eb_07d38833",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2018-12-12T14:48:47Z",
+      "side": 1,
+      "message": "Can we do same thing here? It may as well fail here. Thanks.",
+      "revId": "2017c31baf4969e5ecc46dce466c323a024529f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
