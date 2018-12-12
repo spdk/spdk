@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "8ca806f5_99ab868c",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-12T20:28:32Z",
+      "side": 1,
+      "message": "Yes - I need to add a check for this.  Will do that in a later patch.",
+      "parentUuid": "2c698cff_2007ea94",
+      "range": {
+        "startLine": 500,
+        "startChar": 32,
+        "endLine": 500,
+        "endChar": 84
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "88cf16e0_f483a36c",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 8
@@ -94,6 +118,30 @@
     },
     {
       "key": {
+        "uuid": "cfe3895d_45ff7a98",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-12T20:28:32Z",
+      "side": 1,
+      "message": "the buf is contiguous, but LBA on disk may not be - for example, we may need to write 4 io units to non-contiguous LBAs on disk\n\nin the future, this could be optimized to coalesce adjacent LBAs but leaving that complexity out for now",
+      "parentUuid": "2947bbd7_fbaa3b89",
+      "range": {
+        "startLine": 777,
+        "startChar": 0,
+        "endLine": 778,
+        "endChar": 61
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "607094dd_8ea19d53",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 8
@@ -117,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "7be23d95_78069748",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-12T20:28:32Z",
+      "side": 1,
+      "message": "yes - exactly!",
+      "parentUuid": "607094dd_8ea19d53",
+      "range": {
+        "startLine": 924,
+        "startChar": 5,
+        "endLine": 924,
+        "endChar": 34
+      },
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3984866d_e08dd39c",
         "filename": "lib/reduce/reduce.c",
         "patchSetId": 8
@@ -128,6 +200,24 @@
       "writtenOn": "2018-12-11T06:59:26Z",
       "side": 1,
       "message": "Can you enhance to skip the following copy if iovec array is single entry?",
+      "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56b61630_5473fd14",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1016,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-12T20:28:32Z",
+      "side": 1,
+      "message": "yes - I will do some of these optimizations in a future patch\n\nI did not communicate my intentions well.  Right now I am mostly focused on getting functionality correct, to allow Paul to continue development of bdev module using this library.  Then I will focus on future optimizations like what you have mentioned here.",
+      "parentUuid": "3984866d_e08dd39c",
       "revId": "417636edc863df04c8ccda96d2464c3c55c21eaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
