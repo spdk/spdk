@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "dfe8b0fd_481fa670",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T06:14:10Z",
+      "side": 1,
+      "message": "Your understanding is correct.",
+      "parentUuid": "f113d921_88f6ed10",
+      "range": {
+        "startLine": 496,
+        "startChar": 2,
+        "endLine": 496,
+        "endChar": 14
+      },
+      "revId": "d45aa2684c7d81784bdc8e25f50da4fd75a16047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37c5b203_ebedbb20",
         "filename": "lib/bdev/nvme/nvme_rpc.c",
         "patchSetId": 15
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Thanks for your review.",
       "parentUuid": "37c5b203_ebedbb20",
+      "range": {
+        "startLine": 548,
+        "startChar": 0,
+        "endLine": 549,
+        "endChar": 47
+      },
+      "revId": "d45aa2684c7d81784bdc8e25f50da4fd75a16047",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "139236a9_0a6a941f",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T06:14:10Z",
+      "side": 1,
+      "message": "aggregating alloc and realloc into a realloc may simplify the logic.",
+      "parentUuid": "566bd452_e7468af1",
       "range": {
         "startLine": 548,
         "startChar": 0,
