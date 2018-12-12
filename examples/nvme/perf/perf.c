@@ -1179,6 +1179,7 @@ unregister_trids(void)
 	struct trid_entry *trid_entry, *tmp;
 
 	TAILQ_FOREACH_SAFE(trid_entry, &g_trid_list, tailq, tmp) {
+		TAILQ_REMOVE(&g_trid_list, trid_entry, tailq);
 		free(trid_entry);
 	}
 }
