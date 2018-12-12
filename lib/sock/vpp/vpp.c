@@ -164,7 +164,7 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *
 		      char *caddr, int clen, uint16_t *cport)
 {
 	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
-	struct sockaddr sa;
+	struct sockaddr_storage sa;
 	socklen_t salen;
 	int rc;
 
