@@ -202,6 +202,53 @@ test_parse_capacity(void)
 	CU_ASSERT(rc != 0);
 }
 
+static void
+test_sprintf_realloc(void)
+{
+	char *str1, *str2, *str3, *str4;
+
+	/* Test basic functionality. */
+	str1 = spdk_sprintf_alloc("hello world\ngood morning\n" \
+				  "good afternoon\ngood evening\n");
+	SPDK_CU_ASSERT_FATAL(str1 != NULL);
+
+	str2 = spdk_sprintf_realloc(NULL, "hello world\n");
+	SPDK_CU_ASSERT_FATAL(str2);
+
+	str2 = spdk_sprintf_realloc(str2, "good morning\n");
+	SPDK_CU_ASSERT_FATAL(str2);
+
+	str2 = spdk_sprintf_realloc(str2, "good afternoon\n");
+	SPDK_CU_ASSERT_FATAL(str2);
+
+	str2 = spdk_sprintf_realloc(str2, "good evening\n");
+	SPDK_CU_ASSERT_FATAL(str2);
+
+	CU_ASSERT(strcmp(str1, str2) == 0);
+
+	free(str1);
+	free(str2);
+
+	/* Test doubling buffer size. */
+	str3 = spdk_sprintf_realloc(NULL, "aaaaaaaaaa\n");
+	str3 = spdk_sprintf_realloc(str3, "bbbbbbbbbb\n");
+	str3 = spdk_sprintf_realloc(str3, "cccccccccc\n");
+
+	str4 = malloc(33 + 1);
+	memset(&str4[0], 'a', 10);
+	str4[10] = '\n';
+	memset(&str4[11], 'b', 10);
+	str4[21] = '\n';
+	memset(&str4[22], 'c', 10);
+	str4[32] = '\n';
+	str4[33] = 0;
+
+	CU_ASSERT(strcmp(str3, str4) == 0);
+
+	free(str3);
+	free(str4);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -221,7 +268,8 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
 		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL ||
-		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL) {
+		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL ||
+		CU_add_test(suite, "test_sprintf_realloc", test_sprintf_realloc) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}
