@@ -113,6 +113,30 @@
     },
     {
       "key": {
+        "uuid": "fa8d6e29_e21c3bfe",
+        "filename": "lib/event/app.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T15:28:23Z",
+      "side": 1,
+      "message": "\u003e \u003e shouldn\u0027t we call spdk_app_start_application() here? spdk_app_start_application besides setting the RPC state to SPDK_RPC_RUNTIME also calls g_app_start_event, which is the callback passed to spdk_app_start. The callback doesn\u0027t do anything in some apps (e.g. vhost), but is crucial in others.\n\u003e \n\u003e This exactly what we want to avoid here. Calling g_app_start_event event tells application that SPDK is ready, but it isn\u0027t. It\u0027ll be fired it after loading configuration (like we have it now with legacy configuration).\n\nHmm, I really can\u0027t see it being possibly called anywhere if opts-\u003ejson_config is specified. Please help :)\n\n\u003e \u003e Also, could we reuse spdk_app_start_rpc() for json configs? We can get rid of a few duplicated lines and make the code more readable.\n\u003e \n\u003e I would like to do this but I can\u0027t. I had to create temporary unix socket file to not confuse RPC client that it is operational. I was planning add support for \"no-UNIX socket\" mode in RPC server/client but after some POC I saw that amount of work would be tremendous. So this \"repomorary UNIX socket file\" is reasonable workaround.",
+      "parentUuid": "05435985_ffd32584",
+      "range": {
+        "startLine": 366,
+        "startChar": 1,
+        "endLine": 366,
+        "endChar": 38
+      },
+      "revId": "d109e3fd3f1c225cbfd9cbedce9e8ebf1aa331e1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "48c206dc_50c3e72b",
         "filename": "lib/event/app.c",
         "patchSetId": 30
