@@ -1,0 +1,10 @@
+Code-Review+2: Jim Harris <james.r.harris@intel.com>
+Code-Review+2: Shuhei Matsumoto <shuhei.matsumoto.xt@hitachi.com>
+Code-Review+1: Yi Dong <dongx.yi@intel.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Chandler-Test-Pool+1: SPDK Automated Test System <sys_sgsw@intel.com>
+Submitted-by: Jim Harris <james.r.harris@intel.com>
+Submitted-at: Wed, 12 Dec 2018 15:26:21 +0000
+Reviewed-on: https://review.gerrithub.io/436858
+Project: spdk/spdk
+Branch: refs/heads/v18.10.x
