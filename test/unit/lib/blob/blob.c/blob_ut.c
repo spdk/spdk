@@ -109,7 +109,18 @@ _get_xattr_value_null(void *arg, const char *name,
 	*value = NULL;
 }
 
+static int
+_get_snapshots_count(struct spdk_blob_store *bs)
+{
+	struct spdk_blob_list *snapshot = NULL;
+	int count = 0;
 
+	TAILQ_FOREACH(snapshot, &bs->snapshots, link) {
+		count += 1;
+	}
+
+	return count;
+}
 
 static void
 bs_op_complete(void *cb_arg, int bserrno)
@@ -524,6 +535,7 @@ blob_snapshot(void)
 	struct spdk_blob_xattr_opts xattrs;
 	spdk_blob_id blobid;
 	spdk_blob_id snapshotid;
+	spdk_blob_id snapshotid2;
 	const void *value;
 	size_t value_len;
 	int rc;
@@ -551,9 +563,11 @@ blob_snapshot(void)
 	CU_ASSERT(spdk_blob_get_num_clusters(blob) == 10)
 
 	/* Create snapshot from blob */
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 0);
 	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
 	snapshotid = g_blobid;
 
 	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
@@ -577,9 +591,10 @@ blob_snapshot(void)
 	spdk_bs_create_snapshot(bs, blobid, &xattrs, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
-	blobid = g_blobid;
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
+	snapshotid2 = g_blobid;
 
-	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	spdk_bs_open_blob(bs, snapshotid2, blob_op_with_handle_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
 	snapshot2 = g_blob;
@@ -620,15 +635,28 @@ blob_snapshot(void)
 	spdk_bs_create_snapshot(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
 	CU_ASSERT(g_bserrno == -EINVAL);
 	CU_ASSERT(g_blobid == SPDK_BLOBID_INVALID);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
 
-	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 2);
 
 	spdk_blob_close(snapshot2, blob_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid2, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 1);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT_EQUAL(_get_snapshots_count(bs), 0);
 
 	spdk_bs_unload(g_bs, bs_op_complete, NULL);
 	CU_ASSERT(g_bserrno == 0);
