@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa32e9bb_a7e6573e",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-12T20:17:17Z",
+      "side": 1,
+      "message": "We normally use negated error values (-ENOTSUP), but I\u0027m ok with this.",
+      "revId": "a55470cee31b9a4b94f9dbd263040dd999d2a478",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
