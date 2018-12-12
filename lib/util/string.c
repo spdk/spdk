@@ -93,6 +93,68 @@ spdk_sprintf_alloc(const char *format, ...)
 }
 
 char *
+spdk_vsprintf_cat_realloc(char *src, const char *format, va_list args)
+{
+	va_list args_copy;
+	char *dest;
+	size_t src_size, dest_size;
+	int rc;
+
+	/* Size of the source string */
+	src_size = strlen(src);
+
+	/* Try with a small buffer first. */
+	dest_size = src_size + 32;
+
+	/* Limit maximum buffer size to something reasonable so we don't loop forever. */
+	while (dest_size <= 1024 * 1024) {
+		dest = malloc(dest_size);
+		if (dest == NULL) {
+			return NULL;
+		}
+
+		memcpy(dest, src, src_size);
+		dest[src_size] = '\0';
+
+		va_copy(args_copy, args);
+		rc = vsnprintf(dest + src_size, dest_size - src_size, format, args_copy);
+
+		/* If vnsprintf returned a count within our current buffer size minus
+		 * source buffer size, we are done. The count does not include the \0
+		 * terminator, so rc + src_size == dest_size is not OK.
+		 */
+		if (rc >= 0 && (size_t)rc + src_size < dest_size) {
+			free(src);
+			return dest;
+		}
+
+		/* vsnprintf() should return the required space, but some libc versions do not
+		 * implement this correctly, so just double the buffer size and try again.
+		 *
+		 * We don't need the data in buf, so rather than realloc(), use free() and malloc()
+		 * again to avoid a copy.
+		 */
+		free(src);
+		dest_size *= 2;
+	}
+
+	return NULL;
+}
+
+char *
+spdk_sprintf_cat_realloc(char *src, const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_cat_realloc(src, format, args);
+	va_end(args);
+
+	return ret;
+}
+
+char *
 spdk_strlwr(char *s)
 {
 	char *p;
