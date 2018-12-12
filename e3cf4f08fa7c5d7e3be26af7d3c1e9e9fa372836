@@ -1,0 +1,556 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7539302b_032a7e04",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "vbdev \u003d\u003d NULL",
+      "range": {
+        "startLine": 85,
+        "startChar": 5,
+        "endLine": 85,
+        "endChar": 18
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a27cd00_5e7d43ed",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "vbdev-\u003eocf_cache \u003d\u003d NULL",
+      "range": {
+        "startLine": 89,
+        "startChar": 5,
+        "endLine": 89,
+        "endChar": 30
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab34bc9d_be97dd35",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Put this before \u0027if\u0027 and compare if rc !\u003d 0",
+      "range": {
+        "startLine": 93,
+        "startChar": 6,
+        "endLine": 93,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a9aa904_658ffab7",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Put this before \u0027if\u0027 and compare if rc !\u003d 0",
+      "range": {
+        "startLine": 97,
+        "startChar": 5,
+        "endLine": 97,
+        "endChar": 48
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d774ada_26a400b2",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "return rc?",
+      "range": {
+        "startLine": 102,
+        "startChar": 8,
+        "endLine": 102,
+        "endChar": 9
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00b5446e_9e337794",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Could you assign just dir \u003d OCF_READ; and add separate case for SPDK_BDEV_IO_TYPE_WRITE?",
+      "range": {
+        "startLine": 206,
+        "startChar": 25,
+        "endLine": 206,
+        "endChar": 71
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87dac625_8f7e7257",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Wouldn\u0027t that look simpler?\n\nrc \u003d ocf_submit_io(io);\n\nreturn rc at the end of function.",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 27
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41db88ce_5eb246fc",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "There is not that much code, instead of using goto duplicate those functions in all three cases.",
+      "range": {
+        "startLine": 231,
+        "startChar": 2,
+        "endLine": 231,
+        "endChar": 20
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1cfa83d_2253ebc0",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "You don\u0027t have to check that.\nIt is done already in spdk_bdev_io_get_buf, so you can always call this function.",
+      "range": {
+        "startLine": 263,
+        "startChar": 2,
+        "endLine": 263,
+        "endChar": 49
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c78f163_94f4df24",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "break;",
+      "range": {
+        "startLine": 282,
+        "startChar": 2,
+        "endLine": 282,
+        "endChar": 9
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b04b0247_b9d5e2e8",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "empty line after declarations",
+      "range": {
+        "startLine": 307,
+        "startChar": 1,
+        "endLine": 307,
+        "endChar": 33
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cc22c2b_611446ca",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Could you write it like this:\nresult \u003d start_cache(vbdev)\nif (result !\u003d 0) {\n...",
+      "range": {
+        "startLine": 432,
+        "startChar": 6,
+        "endLine": 432,
+        "endChar": 33
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4324eefd_c6c764ed",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Change to single line comment:  Create exported spdk object",
+      "range": {
+        "startLine": 443,
+        "startChar": 4,
+        "endLine": 443,
+        "endChar": 45
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e4066d4_794ef3f5",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Do not use goto here. Duplicate free_vbdev in all cases. Introduce int rc;",
+      "range": {
+        "startLine": 619,
+        "startChar": 2,
+        "endLine": 619,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7d96df1_b228736f",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "return rc;",
+      "range": {
+        "startLine": 638,
+        "startChar": 1,
+        "endLine": 638,
+        "endChar": 13
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6a57455_fac00fc2",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "do not use goto, display error, return;",
+      "range": {
+        "startLine": 657,
+        "startChar": 2,
+        "endLine": 657,
+        "endChar": 11
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "beeb4c02_f270e818",
+        "filename": "lib/bdev/cas/vbdev_cas_dobj.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "len \u003d base-\u003ebdev-\u003eblocklen * base-\u003ebdev-\u003eblockcnt;",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 29
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faa98313_0cf143fe",
+        "filename": "lib/bdev/cas/vbdev_cas_dobj.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "why 256? At least introduce some define.",
+      "range": {
+        "startLine": 335,
+        "startChar": 8,
+        "endLine": 335,
+        "endChar": 11
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc6c302f_fbedd07e",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "There are similiar funcitons in bdev.c (_copy_buf_to_iovs, _copy_iovs_to_buf)\nMaybe its worth moving them to utils and use them here?\nYou can do this as separate patch preceding this one.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 78
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41becd05_85a48fe0",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "empty line after declarations",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 104,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "affe0da4_8dfc237b",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Look at comment in line 100",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 12
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f67d0963_04aaf993",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "empty line after declarations",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a443c962_a5c6c58a",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "Look at comment in line 100",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 10
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "372d1322_83cd74f6",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-12T16:04:14Z",
+      "side": 1,
+      "message": "empty line after declarations",
+      "range": {
+        "startLine": 168,
+        "startChar": 1,
+        "endLine": 168,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
