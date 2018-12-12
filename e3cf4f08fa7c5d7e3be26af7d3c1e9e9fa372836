@@ -301,6 +301,29 @@
     },
     {
       "key": {
+        "uuid": "e1cd7c3b_9c97755b",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-12T16:57:01Z",
+      "side": 1,
+      "message": "I checked in CAS source. I bet this is invalid. You should pass real data not-pointer-to-pointer-to-data. This way the pointer address will be the UUID. See _ocf_mngt_cache_validate_device_cfg(). But I would rise an issue in CAS github repo asking for meaningfull examples or tests that you can base on.",
+      "range": {
+        "startLine": 561,
+        "startChar": 1,
+        "endLine": 574,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e4066d4_794ef3f5",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
