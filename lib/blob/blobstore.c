@@ -2361,11 +2361,6 @@ _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 	free(clone_entry);
 
 	snapshot_entry->clone_count--;
-	if (snapshot_entry->clone_count == 0) {
-		/* Snapshot have no more clones */
-		TAILQ_REMOVE(&blob->bs->snapshots, snapshot_entry, link);
-		free(snapshot_entry);
-	}
 
 	return 0;
 }
@@ -4956,6 +4951,7 @@ static void
 _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
+	struct spdk_blob_list *snapshot = NULL;
 	uint32_t page_num;
 
 	if (bserrno != 0) {
@@ -4987,6 +4983,16 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	 *  get returned after this point by _spdk_blob_lookup().
 	 */
 	TAILQ_REMOVE(&blob->bs->blobs, blob, link);
+
+	/* If blob is a snapshot then remove it from the list */
+	TAILQ_FOREACH(snapshot, &blob->bs->snapshots, link) {
+		if (snapshot->id == blob->id) {
+			TAILQ_REMOVE(&blob->bs->snapshots, snapshot, link);
+			free(snapshot);
+			break;
+		}
+	}
+
 	page_num = _spdk_bs_blobid_to_page(blob->id);
 	spdk_bit_array_clear(blob->bs->used_blobids, page_num);
 	blob->state = SPDK_BLOB_STATE_DIRTY;
