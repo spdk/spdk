@@ -1955,10 +1955,6 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 		/* Wait for the pdu specific header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
 			pdu = &tqpair->pdu_in_progress;
-			if (pdu->tcp_req) {
-				break;
-			}
-
 			psh_len = hlen = pdu->hdr.common.hlen;
 			/* Only capsule_cmd and h2c_data has header digest */
 			if (((pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_CAPSULE_CMD) ||
