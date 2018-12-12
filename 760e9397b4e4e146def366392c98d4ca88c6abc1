@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb6f95df_122835f1",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T11:42:20Z",
+      "side": 1,
+      "message": "This should include the keyword \"notify\" or \"notificiations\" somewhere. If #notify gets linked anywhere in our docs, it will appear as \"Architecture and naming\", whereas e.g. #bdev would have appeared as \"Block Device User Guide\"",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 25
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f32b4d0_2fc36c9a",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T11:42:20Z",
+      "side": 1,
+      "message": "should this return some arbitrary uuid that user has generated? Why can\u0027t we pass an uuid object directly?\n\nBesides, the actual API differs from what\u0027s presented here: there\u0027s no any \"uuid\" mentioned in the headers and there\u0027s spdk_notify_info instead of spdk_notify_get_info.",
+      "range": {
+        "startLine": 11,
+        "startChar": 107,
+        "endLine": 11,
+        "endChar": 118
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61675675_b0d84df8",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T11:42:20Z",
+      "side": 1,
+      "message": "A description like that belongs in the documentation inside header files - that\u0027s why we have doxygen.",
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7df30546_a0570961",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T11:42:20Z",
+      "side": 1,
+      "message": "there\u0027s no spdk_notify_free, so I assume the object is freed inside spdk_notify_put? Is the initial refcount 1, or does the user have to always call spdk_notify_get() manually? Why would someone call spdk_notify_get() more than once?",
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ac0a7b6_3087c326",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T11:42:20Z",
+      "side": 1,
+      "message": "notify",
+      "range": {
+        "startLine": 37,
+        "startChar": 6,
+        "endLine": 37,
+        "endChar": 12
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
