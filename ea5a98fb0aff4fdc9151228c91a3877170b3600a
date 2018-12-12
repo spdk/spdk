@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16d2cb49_f4625c25",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-12T15:47:43Z",
+      "side": 1,
+      "message": "can we just try to install the dependencies and if that fails - then print the note below?\n\nI\u0027m thinking let\u0027s not try to be smart here - just install the dependencies and check for failure. There might be cases where the user has some external repositories and can install those packages just fine - why do we care?\n\nIt\u0027s really annoying when you know what you\u0027re doing and want to run some script, but the script knows better and doesn\u0027t allow you to do that, forcing you to manually remove all those error checks by editing the file.",
+      "revId": "ea5a98fb0aff4fdc9151228c91a3877170b3600a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
