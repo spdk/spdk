@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "077075ac_cc4875ea",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-12T20:21:47Z",
+      "side": 1,
+      "message": "You don\u0027t want to time out connections that are in the NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY state, do you? If there isn\u0027t an expected PDU coming then it is ok for the connection to remain idle with no timeout.",
+      "revId": "cbc0cd3371042d9ccefea8ae565f0d911bb0da01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
