@@ -70,6 +70,40 @@ char *spdk_sprintf_alloc(const char *format, ...) __attribute__((format(printf, 
 char *spdk_vsprintf_alloc(const char *format, va_list args);
 
 /**
+ * Append string using vsprintf with automatic buffer re-allocation.
+ *
+ * The return value is the formatted string, in which the original string in
+ * buffer is unchanged and the specified formatted string is appended.
+ *
+ * The returned string should be passed to free() when no longer needed.
+ *
+ * If buffer is NULL, the call is equivalent to spdk_sprintf_alloc().
+ *
+ * \param buffer Buffer which has a formatted string.
+ * \param format Format for the string to print.
+ *
+ * \return the formatted string on success, or NULL on failure.
+ */
+char *spdk_sprintf_realloc(char *buffer, const char *format, ...);
+
+/**
+ * Append string using vsprintf with automatic buffer re-allocation.
+ * The return value is the formatted string, in which the original string in
+ * buffer is unchanged and the specified formatted string is appended.
+ *
+ * The returned string should be passed to free() when no longer needed.
+ *
+ * If buffer is NULL, the call is equivalent to spdk_sprintf_alloc().
+ *
+ * \param buffer Buffer which has a formatted string.
+ * \param format Format for the string to print.
+ * \param args A value that identifies a variable arguments list.
+ *
+ * \return the formatted string on success, or NULL on failure.
+ */
+char *spdk_vsprintf_realloc(char *buffer, const char *format, va_list args);
+
+/**
  * Convert string to lowercase in place.
  *
  * \param s String to convert to lowercase.
