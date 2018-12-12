@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "72d5b5fd_70238fb2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b620fd41_8b567040",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12450988_9d30b3cc",
         "filename": "lib/event/subsystems/nvmf/conf.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-10T22:41:22Z",
       "side": 1,
       "message": "Check if the transport type is RDMA. If it is not, the presence of this field is an error.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89a16a06_b6cf476c",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 522,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12450988_9d30b3cc",
       "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d000cc5c_0814c9ee",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 523,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a49a879_900348c0",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1663cc13_37666e44",
         "filename": "lib/nvmf/nvmf.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-10T22:41:22Z",
       "side": 1,
       "message": "Only write this out if the transport type is RDMA.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0847b982_24d4d36c",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1663cc13_37666e44",
       "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "e454036d_f5e93d25",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done\nMoved to https://review.gerrithub.io/c/spdk/spdk/+/436887",
+      "parentUuid": "d73f6b00_ef49210e",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e259777b_5faa6693",
         "filename": "scripts/rpc.py",
         "patchSetId": 2
@@ -115,6 +205,24 @@
       "writtenOn": "2018-12-10T22:41:22Z",
       "side": 1,
       "message": "Put an RDMA only note into the help.",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acf21b2a_92a3fcb2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1259,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:03:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e259777b_5faa6693",
       "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
