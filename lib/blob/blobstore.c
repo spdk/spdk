@@ -2361,11 +2361,6 @@ _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 	free(clone_entry);
 
 	snapshot_entry->clone_count--;
-	if (snapshot_entry->clone_count == 0) {
-		/* Snapshot have no more clones */
-		TAILQ_REMOVE(&blob->bs->snapshots, snapshot_entry, link);
-		free(snapshot_entry);
-	}
 
 	return 0;
 }
