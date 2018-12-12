@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "873185cd_22ce1082",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 538,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-12T06:12:04Z",
+      "side": 1,
+      "message": "By using spdk_sprintf_cat_realloc(), the patch may be simplified as follows. Will you check that the following satisfies this use case? (I haven\u0027t tested the following yet.)\n\nstatic char *\ndump_sec_buf(char *buf, int length)\n{\n\tint offset \u003d 0, i;\n\tchar *ret \u003d NULL, *tmp \u003d NULL;\n\n\tret \u003d spdk_sprintf_alloc(\"NVMe Security Receive Command Success\\n | Offset | \");\n\tif (!ret)\n\t\treturn NULL;\n\n\tfor (i \u003d 0; i \u003c\u003d 15; i++) {\n\t\ttmp \u003d spdk_sprintf_cat_realloc(ret, \" %x \", i);\n\t\tif (!tmp)\n\t\t\tgoto mem_err;\n\t\tret \u003d tmp;\n\t}\n\n\tfor (i \u003d 0; i \u003c length; i++) {\n\t\tif (i % 16 \u003d\u003d 0) {\n\t\t\ttmp \u003d spdk_sprintf_cat_realloc(ret, \"\\n   0x%04x:  \", offset);\n\t\t\tif (!tmp)\n\t\t\t\tgoto mem_err;\n\t\t\tret \u003d tmp;\n\t\t\toffset +\u003d 16;\n\t\t}\n\t\ttmp \u003d spdk_sprintf_cat_realloc(\" %02x\", buf[i]);\n\t\tif (!tmp)\n\t\t\tgoto mem_err;\n\t\tret \u003d tmp;\n\t}\n\n\ttmp \u003d spdk_sprintf_cat_realloc(ret, \"\\n\");\n\tif (!tmp)\n\t\tgoto mem_err;\n\treturn tmp;\n\nmem_err:\n\tfree(tmp);\n\treturn NULL;\n}",
+      "range": {
+        "startLine": 538,
+        "startChar": 0,
+        "endLine": 538,
+        "endChar": 12
+      },
+      "revId": "4a66caeccd776b320e50a3c567d9ba4e34800a9d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
