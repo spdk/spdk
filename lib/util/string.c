@@ -35,6 +35,20 @@
 
 #include "spdk/string.h"
 
+static int
+get_buffer_size(const char *format, va_list args)
+{
+	va_list args_copy;
+	int rc;
+
+	va_copy(args_copy, args);
+	rc = vsnprintf(NULL, 0, format, args_copy);
+	va_end(args_copy);
+
+	/* Add one for the null byte to end output to string */
+	return rc + 1;
+}
+
 char *
 spdk_vsprintf_alloc(const char *format, va_list args)
 {
@@ -87,6 +101,51 @@ spdk_sprintf_alloc(const char *format, ...)
 
 	va_start(args, format);
 	ret = spdk_vsprintf_alloc(format, args);
+	va_end(args);
+
+	return ret;
+}
+
+char *
+spdk_vsprintf_realloc(char *buffer, const char *format, va_list args)
+{
+	va_list args_copy;
+	char *new_buffer;
+	int orig_size = 0, new_size;
+
+	/* Original buffer size */
+	if (buffer) {
+		orig_size = strlen(buffer);
+	}
+
+	/* Necessary buffer size */
+	new_size = get_buffer_size(format, args) + orig_size;
+	if (new_size < 0) {
+		free(buffer);
+		return NULL;
+	}
+
+	new_buffer = realloc(buffer, new_size);
+	if (new_buffer == NULL) {
+		free(buffer);
+		return NULL;
+	}
+
+	va_copy(args_copy, args);
+	vsnprintf(new_buffer + orig_size, new_size - orig_size, format, args_copy);
+	va_end(args_copy);
+
+	return new_buffer;
+}
+
+char *
+spdk_sprintf_realloc(char *buffer, const char *format, ...)
+{
+	va_list args;
+	char *ret;
+
+	va_start(args, format);
+	ret = spdk_vsprintf_realloc(buffer, format, args);
 	va_end(args);
 
 	return ret;
