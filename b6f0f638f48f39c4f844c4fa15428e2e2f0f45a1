@@ -16,6 +16,24 @@
       "revId": "b6f0f638f48f39c4f844c4fa15428e2e2f0f45a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28e01b39_f64c4d3a",
+        "filename": "lib/nvmf/transport.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-12T00:21:35Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI revised the code. In the general code, actually it will always remove the qpair.",
+      "parentUuid": "2112e8a9_9d4a216c",
+      "revId": "b6f0f638f48f39c4f844c4fa15428e2e2f0f45a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "7c65bd50_27b81306",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-12T00:21:35Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nCan you give some guide on how to implement the retry? In my mind, I think that either it will fail or succeed. Even if you try to try, it will not change anything,",
+      "parentUuid": "18839a89_129981ee",
+      "range": {
+        "startLine": 720,
+        "startChar": 8,
+        "endLine": 720,
+        "endChar": 45
+      },
+      "revId": "2510ba36a33a715e44e53f8c837b29a04adebc89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "162ca1f6_cefeade2",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 9
