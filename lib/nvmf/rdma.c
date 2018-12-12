@@ -408,6 +408,23 @@ spdk_nvmf_rdma_qpair_dec_refcnt(struct spdk_nvmf_rdma_qpair *rqpair)
 	return new_refcnt;
 }
 
+static inline int
+spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
+{
+	switch (state) {
+	case IBV_QPS_RESET:
+	case IBV_QPS_INIT:
+	case IBV_QPS_RTR:
+	case IBV_QPS_RTS:
+	case IBV_QPS_SQD:
+	case IBV_QPS_SQE:
+	case IBV_QPS_ERR:
+		return 0;
+	default:
+		return -1;
+	}
+}
+
 static enum ibv_qp_state
 spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	enum ibv_qp_state old_state, new_state;
@@ -443,6 +460,13 @@ spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	}
 
 	new_state = rqpair->ibv_attr.qp_state;
+
+	if (spdk_nvmf_rdma_check_ibv_state(new_state))
+	{
+		SPDK_ERRLOG("QP#%d: bad state updated: %u\n", rqpair->qpair.qid, new_state);
+		return IBV_QPS_ERR + 1;
+	}
+
 	if (old_state != new_state)
 	{
 		spdk_trace_record(TRACE_RDMA_QP_STATE_CHANGE, 0, 0,
@@ -458,7 +482,8 @@ static const char *str_ibv_qp_state[] = {
 	"IBV_QPS_RTS",
 	"IBV_QPS_SQD",
 	"IBV_QPS_SQE",
-	"IBV_QPS_ERR"
+	"IBV_QPS_ERR",
+	"UNDEFINE IBV_QP_STATE"
 };
 
 static int
@@ -491,20 +516,12 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 		[IBV_QPS_ERR] = IBV_QP_STATE,
 	};
 
-	switch (new_state) {
-	case IBV_QPS_RESET:
-	case IBV_QPS_INIT:
-	case IBV_QPS_RTR:
-	case IBV_QPS_RTS:
-	case IBV_QPS_SQD:
-	case IBV_QPS_SQE:
-	case IBV_QPS_ERR:
-		break;
-	default:
+	if (spdk_nvmf_rdma_check_ibv_state(new_state)) {
 		SPDK_ERRLOG("QP#%d: bad state requested: %u\n",
 			    rqpair->qpair.qid, new_state);
 		return -1;
 	}
+
 	rqpair->ibv_attr.cur_qp_state = rqpair->ibv_attr.qp_state;
 	rqpair->ibv_attr.qp_state = new_state;
 	rqpair->ibv_attr.ah_attr.port_num = rqpair->ibv_attr.port_num;
