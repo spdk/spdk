@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "aa2c94e2_6194befc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2842,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-12T13:52:56Z",
+      "side": 1,
+      "message": "Hi, \n\nThe spec doesn\u0027t differentiate between SRQ and RQ in case qp_num field in error completion. But, there is no way to associate error completion for SRQ with QP, if qp_num is not valid.\n\nI\u0027ve checked in our stack, qp_num is valid.\n\nI\u0027d suggest to just say, SRQ support based on valid qp_num field. If SPDK is compiled without SPDK_CONFIG_RDMA_SRQ, it\u0027s strictly complained with IB spec.    \n\nBR, Sasha",
+      "parentUuid": "ba5871e8_8024577e",
+      "revId": "eae41fa890fd4ed1fc08003a972ca05292d27746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d73f6b00_ef49210e",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 2
