@@ -1042,7 +1042,7 @@ _nvmf_subsystem_disconnect_next_qpair(void *ctx)
 	subsystem = qpair_ctx->subsystem;
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
-		if (qpair->ctrlr->subsys == subsystem) {
+		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
 			break;
 		}
 	}
@@ -1083,7 +1083,7 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 
 	TAILQ_FOREACH(qpair, &group->qpairs, link) {
-		if (qpair->ctrlr->subsys == subsystem) {
+		if ((qpair->ctrlr != NULL) && (qpair->ctrlr->subsys == subsystem)) {
 			break;
 		}
 	}
