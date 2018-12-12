@@ -46,6 +46,30 @@
       "revId": "b5e633070e474d7d6f9910b92930f71c98d4c323",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c611547f_1b9d8cc9",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-12T03:04:34Z",
+      "side": 1,
+      "message": "thanks .I will move it to vm_setup.sh . I have tried VM , ubuntu , fedora.",
+      "parentUuid": "d29404be_389a59b1",
+      "range": {
+        "startLine": 96,
+        "startChar": 1,
+        "endLine": 96,
+        "endChar": 20
+      },
+      "revId": "b5e633070e474d7d6f9910b92930f71c98d4c323",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
