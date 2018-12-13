@@ -129,6 +129,7 @@ spdk_nvmf_tgt_create_poll_group(void *io_device, void *ctx_buf)
 	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		struct spdk_nvmf_subsystem *subsystem;
 
+		TAILQ_INIT(&group->sgroups[sid].queued);
 		subsystem = tgt->subsystems[sid];
 		if (!subsystem) {
 			continue;
@@ -953,8 +954,6 @@ spdk_nvmf_poll_group_add_subsystem(struct spdk_nvmf_poll_group *group,
 {
 	int rc = 0;
 	struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[subsystem->id];
-
-	TAILQ_INIT(&sgroup->queued);
 
 	rc = poll_group_update_subsystem(group, subsystem);
 	if (rc) {
