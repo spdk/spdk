@@ -59,6 +59,15 @@ extern "C" {
  */
 uint16_t spdk_crc16_t10dif(const void *buf, size_t len);
 
+/**
+ * Calculate T10-DIF CRC-16 checksum with initial CRC-16 value.
+ *
+ * \param init_crc Initial CRC-16 value.
+ * \param buf Data buffer to checksum.
+ * \param len Length of buf in bytes.
+ * \return CRC-16 value.
+ */
+uint16_t spdk_crc16_t10dif_seed(uint16_t init_crc, const void *buf, size_t len);
 #ifdef __cplusplus
 }
 #endif
