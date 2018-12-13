@@ -140,8 +140,6 @@ struct spdk_vhost_dev {
 	/* Unique device ID. */
 	unsigned id;
 
-	/* rte_vhost device ID. */
-	int vid;
 	int32_t lcore;
 	struct spdk_cpuset *cpumask;
 	bool registered;
@@ -161,6 +159,11 @@ struct spdk_vhost_dev {
 
 	/* Active connection to the device */
 	struct spdk_vhost_session {
+		struct spdk_vhost_dev *vdev;
+
+		/* rte_vhost connection ID. */
+		int vid;
+
 		struct rte_vhost_memory *mem;
 
 		int task_cnt;

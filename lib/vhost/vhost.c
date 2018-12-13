@@ -108,7 +108,6 @@ static void
 spdk_vhost_log_req_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 			uint16_t req_id)
 {
-	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	struct vring_desc *desc, *desc_table;
 	uint32_t desc_table_size;
 	int rc;
@@ -129,7 +128,7 @@ spdk_vhost_log_req_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_v
 			 * doing so would require tracking those changes in each backed.
 			 * Also backend most likely will touch all/most of those pages so
 			 * for lets assume we touched all pages passed to as writeable buffers. */
-			rte_vhost_log_write(vdev->vid, desc->addr, desc->len);
+			rte_vhost_log_write(vsession->vid, desc->addr, desc->len);
 		}
 		spdk_vhost_vring_desc_get_next(&desc, desc_table, desc_table_size);
 	} while (desc);
@@ -140,7 +139,6 @@ spdk_vhost_log_used_vring_elem(struct spdk_vhost_session *vsession,
 			       struct spdk_vhost_virtqueue *virtqueue,
 			       uint16_t idx)
 {
-	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
@@ -152,14 +150,13 @@ spdk_vhost_log_used_vring_elem(struct spdk_vhost_session *vsession,
 	len = sizeof(virtqueue->vring.used->ring[idx]);
 	vq_idx = virtqueue - vsession->virtqueue;
 
-	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+	rte_vhost_log_used_vring(vsession->vid, vq_idx, offset, len);
 }
 
 static void
 spdk_vhost_log_used_vring_idx(struct spdk_vhost_session *vsession,
 			      struct spdk_vhost_virtqueue *virtqueue)
 {
-	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
@@ -171,7 +168,7 @@ spdk_vhost_log_used_vring_idx(struct spdk_vhost_session *vsession,
 	len = sizeof(virtqueue->vring.used->idx);
 	vq_idx = virtqueue - vsession->virtqueue;
 
-	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
+	rte_vhost_log_used_vring(vsession->vid, vq_idx, offset, len);
 }
 
 /*
@@ -513,14 +510,14 @@ spdk_vhost_dev_find_by_id(unsigned id)
 	return NULL;
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_find_by_vid(int vid)
+static struct spdk_vhost_session *
+spdk_vhost_session_find_by_vid(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 
 	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->vid == vid) {
-			return vdev;
+		if (vdev->session.vid == vid) {
+			return &vdev->session;
 		}
 	}
 
@@ -753,7 +750,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->id = ctrlr_num++;
-	vdev->vid = -1;
+	vdev->session.vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
@@ -775,7 +772,7 @@ out:
 int
 spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->vid != -1) {
+	if (vdev->session.vid != -1) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -EBUSY;
 	}
@@ -1027,13 +1024,14 @@ stop_device(int vid)
 	uint16_t i;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Couldn't find device with vid %d to stop.\n", vid);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
+	vdev = vsession->vdev;
 	if (vdev->lcore == -1) {
 		SPDK_ERRLOG("Controller %s is not loaded.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1047,13 +1045,12 @@ stop_device(int vid)
 		return;
 	}
 
-	vsession = &vdev->session;
 	for (i = 0; i < vsession->max_queues; i++) {
 		q = &vsession->virtqueue[i].vring;
 		if (q->desc == NULL) {
 			continue;
 		}
-		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
+		rte_vhost_set_vhost_vring_last_idx(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
 	spdk_vhost_session_mem_unregister(vsession);
@@ -1073,18 +1070,17 @@ start_device(int vid)
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		goto out;
 	}
 
+	vdev = vsession->vdev;
 	if (vdev->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already loaded.\n", vdev->name);
 		goto out;
 	}
-
-	vsession = &vdev->session;
 
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
@@ -1150,17 +1146,22 @@ out:
 static int
 get_config(int vid, uint8_t *config, uint32_t len)
 {
+	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_dev *vdev;
 	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		goto out;
 	}
 
+	vdev = vsession->vdev;
 	if (vdev->backend->vhost_get_config) {
+		/* the callback doesn't require any session-specific data,
+		 * so we pass only the parent device object.
+		 */
 		rc = vdev->backend->vhost_get_config(vdev, config, len);
 	}
 
@@ -1172,17 +1173,22 @@ out:
 static int
 set_config(int vid, uint8_t *config, uint32_t offset, uint32_t size, uint32_t flags)
 {
+	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_dev *vdev;
 	int rc = -1;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Controller with vid %d doesn't exist.\n", vid);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		goto out;
 	}
 
+	vdev = vsession->vdev;
 	if (vdev->backend->vhost_set_config) {
+		/* the callback doesn't require any session-specific data,
+		 * so we pass only the parent device object.
+		 */
 		rc = vdev->backend->vhost_set_config(vdev, config, offset, size, flags);
 	}
 
@@ -1247,6 +1253,7 @@ static int
 new_connection(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 	char ifname[PATH_MAX];
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
@@ -1264,13 +1271,15 @@ new_connection(int vid)
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	if (vdev->vid != -1) {
-		SPDK_ERRLOG("Device with vid %d is already connected.\n", vid);
+	vsession = &vdev->session;
+	if (vsession->vid != -1) {
+		SPDK_ERRLOG("Session with vid %d already exists.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return -1;
 	}
 
-	vdev->vid = vid;
+	vsession->vdev = vdev;
+	vsession->vid = vid;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }
@@ -1278,18 +1287,18 @@ new_connection(int vid)
 static void
 destroy_connection(int vid)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find_by_vid(vid);
-	if (vdev == NULL) {
-		SPDK_ERRLOG("Couldn't find device with vid %d to destroy connection for.\n", vid);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
 	/* since pollers are not running it safe not to use spdk_event here */
-	vdev->vid = -1;
+	vsession->vid = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
