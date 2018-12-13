@@ -260,7 +260,7 @@ spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int error
 static int
 spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 {
-	ssize_t rc;
+	ssize_t rc, offset;
 	size_t recv_avail = SPDK_JSONRPC_RECV_BUF_SIZE - conn->recv_len;
 
 	rc = recv(conn->sockfd, conn->recv_buf + conn->recv_len, recv_avail, 0);
@@ -279,20 +279,25 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 
 	conn->recv_len += rc;
 
-	rc = spdk_jsonrpc_parse_request(conn, conn->recv_buf, conn->recv_len);
-	if (rc < 0) {
-		SPDK_ERRLOG("jsonrpc parse request failed\n");
-		return -1;
-	}
+	offset = 0;
+	do {
+		rc = spdk_jsonrpc_parse_request(conn, conn->recv_buf + offset, conn->recv_len - offset);
+		if (rc < 0) {
+			SPDK_ERRLOG("jsonrpc parse request failed\n");
+			return -1;
+		}
 
-	if (rc > 0) {
+		offset += rc;
+	} while(rc > 0);
+
+	if (offset > 0) {
 		/*
-		 * Successfully parsed a request - move any data past the end of the
-		 * parsed request down to the beginning.
+		 * Successfully parsed a requests - move any data past the end of the
+		 * parsed requests down to the beginning.
 		 */
 		assert((size_t)rc <= conn->recv_len);
-		memmove(conn->recv_buf, conn->recv_buf + rc, conn->recv_len - rc);
-		conn->recv_len -= rc;
+		memmove(conn->recv_buf, conn->recv_buf + offset, conn->recv_len - offset);
+		conn->recv_len -= offset;
 	}
 
 	return 0;
