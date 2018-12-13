@@ -118,14 +118,16 @@ done:
 }
 
 int
-spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size)
+spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, size_t size)
 {
 	struct spdk_jsonrpc_request *request;
 	ssize_t rc;
+	size_t len;
 	void *end = NULL;
 
-	/* Check to see if we have received a full JSON value. */
-	rc = spdk_json_parse(json, size, NULL, 0, &end, 0);
+	/* Check to see if we have received a full JSON value. It is safe to cast away const
+	 * as we don't decode in place. */
+	rc = spdk_json_parse((void *)json, size, NULL, 0, &end, 0);
 	if (rc == SPDK_JSON_PARSE_INCOMPLETE) {
 		return 0;
 	}
@@ -142,14 +144,25 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	request->id.start = request->id_data;
 	request->id.len = 0;
 	request->id.type = SPDK_JSON_VAL_INVALID;
+
+	len = end - json;
+	request->recv_buffer = malloc(len + 1);
+	if (request->send_buf == NULL) {
+		SPDK_ERRLOG("Failed to allocate buffer to copy request (%zu bytes)\n", len + 1);
+		spdk_jsonrpc_free_request(request);
+		return -1;
+	}
+
+	memcpy(request->recv_buffer, json, len);
+	request->recv_buffer[len] = '\0';
+
 	request->send_offset = 0;
 	request->send_len = 0;
 	request->send_buf_size = SPDK_JSONRPC_SEND_BUF_SIZE_INIT;
 	request->send_buf = malloc(request->send_buf_size);
 	if (request->send_buf == NULL) {
 		SPDK_ERRLOG("Failed to allocate send_buf (%zu bytes)\n", request->send_buf_size);
-		conn->outstanding_requests--;
-		free(request);
+		spdk_jsonrpc_free_request(request);
 		return -1;
 	}
 
@@ -165,7 +178,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 	}
 
 	/* Decode a second time now that there is a full JSON value available. */
-	rc = spdk_json_parse(json, size, conn->values, SPDK_JSONRPC_MAX_VALUES, &end,
+	rc = spdk_json_parse(request->recv_buffer, size, conn->values, SPDK_JSONRPC_MAX_VALUES, &end,
 			     SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
 	if (rc < 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error on second pass\n");
@@ -185,7 +198,7 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, si
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 	}
 
-	return end - json;
+	return len;
 }
 
 struct spdk_jsonrpc_server_conn *
@@ -270,6 +283,7 @@ void
 spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 {
 	request->conn->outstanding_requests--;
+	free(request->recv_buffer);
 	free(request->send_buf);
 	free(request);
 }
