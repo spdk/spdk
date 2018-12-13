@@ -6,6 +6,10 @@
 
 A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
 
+An new parameter `init_crc` representing the initial CRC value was added to
+`spdk_crc16_t10dif`. The parameter can be used to calculate a CRC value spanning
+multiple separate buffers.
+
 ### nvme
 
 admin_timeout_ms was added to NVMe controller initialization options, users

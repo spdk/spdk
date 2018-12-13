@@ -34,13 +34,15 @@
 #include "spdk/crc16.h"
 
 uint16_t
-spdk_crc16_t10dif(const void *buf, size_t len)
+spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
 {
-	uint32_t j, rem = 0;
+	uint32_t j, rem;
 	const uint8_t *data = (const uint8_t *)buf;
 	size_t i;
 
 	uint16_t poly = SPDK_T10DIF_CRC16_POLYNOMIAL;
+
+	rem = init_crc;
 
 	for (i = 0; i < len; i++) {
 		rem = rem ^ (data[i] << 8);

@@ -564,7 +564,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 		if (io_u->ddir == DDIR_WRITE) {
 			if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 				/* CRC buffer should not include PI */
-				crc16 = spdk_crc16_t10dif(io_u->buf + extended_lba_size * i,
+				crc16 = spdk_crc16_t10dif(0, io_u->buf + extended_lba_size * i,
 							  extended_lba_size - 8);
 				to_be16(&pi->guard, crc16);
 			}
@@ -601,7 +601,7 @@ fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 
 		if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 			/* CRC buffer should not include last 8 bytes of PI */
-			crc16 = spdk_crc16_t10dif(io_u->buf + extended_lba_size * i,
+			crc16 = spdk_crc16_t10dif(0, io_u->buf + extended_lba_size * i,
 						  extended_lba_size - 8);
 			to_be16(&guard, crc16);
 			if (pi->guard != guard) {
