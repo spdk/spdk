@@ -33,8 +33,7 @@
 
 #include "spdk/crc32.h"
 
-#if defined(__x86_64__) && defined(__SSE4_2__)
-#include <x86intrin.h>
+#ifdef SPDK_HAVE_SSE4_2
 
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
@@ -70,7 +69,35 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	return crc;
 }
 
-#else /* SSE 4.2 (CRC32 instruction) not available */
+#elif defined(SPDK_HAVE_ARM_CRC)
+
+uint32_t
+spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
+{
+	uint64_t crc_tmp64;
+	size_t count;
+
+	crc_tmp64 = crc;
+
+	count = len / 8;
+	while (count--) {
+		uint64_t block;
+		memcpy(&block, buf, sizeof(block));
+		crc_tmp64 = __crc32cd(crc_tmp64, block);
+		buf += sizeof(block);
+	}
+	crc = (uint32_t)crc_tmp64;
+
+	count = len & 7;
+	while (count--) {
+		crc = __crc32cb(crc, *(const uint8_t *)buf);
+		buf++;
+	}
+
+	return crc;
+}
+
+#else /* Neither SSE 4.2 nor ARM CRC32 instructions available */
 
 static struct spdk_crc32_table g_crc32c_table;
 
