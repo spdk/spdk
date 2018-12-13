@@ -16,6 +16,24 @@
       "revId": "cbc0cd3371042d9ccefea8ae565f0d911bb0da01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "442ef41c_26f7f0f9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-13T01:31:00Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nLet me add one statement. I forgot that if there is no socket event, there will be no change from READY to other states.",
+      "parentUuid": "077075ac_cc4875ea",
+      "revId": "cbc0cd3371042d9ccefea8ae565f0d911bb0da01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
