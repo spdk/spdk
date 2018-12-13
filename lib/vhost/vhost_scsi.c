@@ -134,9 +134,10 @@ static void
 spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
+	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
 
-	assert(task->svdev->vdev.task_cnt > 0);
-	task->svdev->vdev.task_cnt--;
+	assert(vsession->task_cnt > 0);
+	vsession->task_cnt--;
 	task->used = false;
 }
 
@@ -169,6 +170,7 @@ static void
 eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_t event,
 	       uint32_t reason)
 {
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_event *desc_ev;
@@ -177,7 +179,7 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	int rc;
 
 	assert(scsi_dev_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-	vq = &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ];
+	vq = &vsession->virtqueue[VIRTIO_SCSI_EVENTQ];
 
 	if (spdk_vhost_vq_avail_ring_get(vq, &req, 1) != 1) {
 		SPDK_ERRLOG("Controller %s: Failed to send virtio event (no avail ring entries?).\n",
@@ -185,14 +187,14 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 		return;
 	}
 
-	rc = spdk_vhost_vq_get_desc(&svdev->vdev, vq, req, &desc, &desc_table, &desc_table_size);
+	rc = spdk_vhost_vq_get_desc(vsession, vq, req, &desc, &desc_table, &desc_table_size);
 	if (rc != 0 || desc->len < sizeof(*desc_ev)) {
 		SPDK_ERRLOG("Controller %s: Invalid eventq descriptor at index %"PRIu16".\n",
 			    svdev->vdev.name, req);
 		goto out;
 	}
 
-	desc_ev = spdk_vhost_gpa_to_vva(&svdev->vdev, desc->addr, sizeof(*desc_ev));
+	desc_ev = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*desc_ev));
 	if (desc_ev == NULL) {
 		SPDK_ERRLOG("Controller %s: Eventq descriptor at index %"PRIu16" points to unmapped guest memory address %p.\n",
 			    svdev->vdev.name, req, (void *)(uintptr_t)desc->addr);
@@ -215,13 +217,15 @@ eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_
 	req_size = sizeof(*desc_ev);
 
 out:
-	spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, req, req_size);
+	spdk_vhost_vq_used_ring_enqueue(vsession, vq, req, req_size);
 }
 
 static void
 submit_completion(struct spdk_vhost_scsi_task *task)
 {
-	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
+	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
+
+	spdk_vhost_vq_used_ring_enqueue(vsession, task->vq, task->req_idx,
 					task->used_len);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI, "Finished task (%p) req_idx=%d\n", task, task->req_idx);
 
@@ -276,7 +280,9 @@ mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func fun
 static void
 invalid_request(struct spdk_vhost_scsi_task *task)
 {
-	spdk_vhost_vq_used_ring_enqueue(&task->svdev->vdev, task->vq, task->req_idx,
+	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
+
+	spdk_vhost_vq_used_ring_enqueue(vsession, task->vq, task->req_idx,
 					task->used_len);
 	spdk_vhost_scsi_task_put(task);
 
@@ -315,6 +321,7 @@ static void
 process_ctrl_request(struct spdk_vhost_scsi_task *task)
 {
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
+	struct spdk_vhost_session *vsession = &vdev->session;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
@@ -322,14 +329,15 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	int rc;
 
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_mgmt_cpl, spdk_vhost_scsi_task_free_cb);
-	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_size);
+	rc = spdk_vhost_vq_get_desc(vsession, task->vq, task->req_idx, &desc, &desc_table,
+				    &desc_table_size);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("%s: Invalid controlq descriptor at index %d.\n",
 			    vdev->name, task->req_idx);
 		goto out;
 	}
 
-	ctrl_req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*ctrl_req));
+	ctrl_req = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*ctrl_req));
 	if (ctrl_req == NULL) {
 		SPDK_ERRLOG("%s: Invalid task management request at index %d.\n",
 			    vdev->name, task->req_idx);
@@ -354,7 +362,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 	/* Process the TMF request */
 	switch (ctrl_req->type) {
 	case VIRTIO_SCSI_T_TMF:
-		task->tmf_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->tmf_resp));
+		task->tmf_resp = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*task->tmf_resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_ctrl_tmf_resp) || task->tmf_resp == NULL)) {
 			SPDK_ERRLOG("%s: TMF response descriptor at index %d points to invalid guest memory region\n",
 				    vdev->name, task->req_idx);
@@ -383,7 +391,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 		break;
 	case VIRTIO_SCSI_T_AN_QUERY:
 	case VIRTIO_SCSI_T_AN_SUBSCRIBE: {
-		an_resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*an_resp));
+		an_resp = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*an_resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_ctrl_an_resp) || an_resp == NULL)) {
 			SPDK_WARNLOG("%s: Asynchronous response descriptor points to invalid guest memory region\n",
 				     vdev->name);
@@ -400,7 +408,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 
 	used_len = sizeof(struct virtio_scsi_ctrl_tmf_resp);
 out:
-	spdk_vhost_vq_used_ring_enqueue(vdev, task->vq, task->req_idx, used_len);
+	spdk_vhost_vq_used_ring_enqueue(vsession, task->vq, task->req_idx, used_len);
 	spdk_vhost_scsi_task_put(task);
 }
 
@@ -415,6 +423,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
+	struct spdk_vhost_session *vsession = &vdev->session;
 	struct vring_desc *desc, *desc_table;
 	struct iovec *iovs = task->iovs;
 	uint16_t iovcnt = 0;
@@ -423,7 +432,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 	spdk_scsi_task_construct(&task->scsi, spdk_vhost_scsi_task_cpl, spdk_vhost_scsi_task_free_cb);
 
-	rc = spdk_vhost_vq_get_desc(vdev, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
+	rc = spdk_vhost_vq_get_desc(vsession, task->vq, task->req_idx, &desc, &desc_table, &desc_table_len);
 	/* First descriptor must be readable */
 	if (spdk_unlikely(rc != 0  || spdk_vhost_vring_desc_is_wr(desc) ||
 			  desc->len < sizeof(struct virtio_scsi_cmd_req))) {
@@ -432,7 +441,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		goto invalid_task;
 	}
 
-	*req = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(**req));
+	*req = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(**req));
 	if (spdk_unlikely(*req == NULL)) {
 		SPDK_WARNLOG("%s: Request descriptor at index %d points to invalid guest memory region\n",
 			     vdev->name, task->req_idx);
@@ -454,7 +463,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		/*
 		 * FROM_DEV (READ): [RD_req][WR_resp][WR_buf0]...[WR_bufN]
 		 */
-		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->resp));
+		task->resp = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*task->resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL)) {
 			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory region\n",
 				     vdev->name, task->req_idx);
@@ -489,7 +498,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 				goto invalid_task;
 			}
 
-			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
+			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vsession, iovs, &iovcnt, desc))) {
 				goto invalid_task;
 			}
 			len += desc->len;
@@ -512,7 +521,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 
 		/* Process descriptors up to response. */
 		while (!spdk_vhost_vring_desc_is_wr(desc)) {
-			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev, iovs, &iovcnt, desc))) {
+			if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vsession, iovs, &iovcnt, desc))) {
 				goto invalid_task;
 			}
 			len += desc->len;
@@ -524,7 +533,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 			}
 		}
 
-		task->resp = spdk_vhost_gpa_to_vva(vdev, desc->addr, sizeof(*task->resp));
+		task->resp = spdk_vhost_gpa_to_vva(vsession, desc->addr, sizeof(*task->resp));
 		if (spdk_unlikely(desc->len < sizeof(struct virtio_scsi_cmd_resp) || task->resp == NULL)) {
 			SPDK_WARNLOG("%s: Response descriptor at index %d points to invalid guest memory region\n",
 				     vdev->name, task->req_idx);
@@ -577,6 +586,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 static void
 process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -586,7 +596,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
 			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' exceeds virtqueue size (%"PRIu16")\n",
 				    svdev->vdev.name, reqs[i], vq->vring.size);
-			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
@@ -594,11 +604,11 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: invalid entry in avail ring. Buffer '%"PRIu16"' is still in use!\n",
 				    svdev->vdev.name, reqs[i]);
-			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
-		svdev->vdev.task_cnt++;
+		vsession->task_cnt++;
 		memset(&task->scsi, 0, sizeof(task->scsi));
 		task->tmf_resp = NULL;
 		task->used = true;
@@ -609,6 +619,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -624,7 +635,7 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		if (spdk_unlikely(reqs[i] >= vq->vring.size)) {
 			SPDK_ERRLOG("%s: request idx '%"PRIu16"' exceeds virtqueue size (%"PRIu16").\n",
 				    svdev->vdev.name, reqs[i], vq->vring.size);
-			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
@@ -632,11 +643,11 @@ process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 		if (spdk_unlikely(task->used)) {
 			SPDK_ERRLOG("%s: request with idx '%"PRIu16"' is already pending.\n",
 				    svdev->vdev.name, reqs[i]);
-			spdk_vhost_vq_used_ring_enqueue(&svdev->vdev, vq, reqs[i], 0);
+			spdk_vhost_vq_used_ring_enqueue(vsession, vq, reqs[i], 0);
 			continue;
 		}
 
-		svdev->vdev.task_cnt++;
+		vsession->task_cnt++;
 		memset(&task->scsi, 0, sizeof(task->scsi));
 		task->resp = NULL;
 		task->used = true;
@@ -662,12 +673,13 @@ static int
 vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 
 	process_removed_devs(svdev);
-	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_EVENTQ]);
+	spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
 
-	process_controlq(svdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
-	spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	process_controlq(svdev, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
+	spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
 
 	return -1;
 }
@@ -676,13 +688,14 @@ static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	uint32_t q_idx;
 
-	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < svdev->vdev.max_queues; q_idx++) {
-		process_requestq(svdev, &svdev->vdev.virtqueue[q_idx]);
+	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vsession->max_queues; q_idx++) {
+		process_requestq(svdev, &vsession->virtqueue[q_idx]);
 	}
 
-	spdk_vhost_dev_used_signal(&svdev->vdev);
+	spdk_vhost_session_used_signal(vsession);
 
 	return -1;
 }
@@ -780,7 +793,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	assert(lun != NULL);
 	assert(svdev != NULL);
 	if (svdev->vdev.lcore != -1 &&
-	    !spdk_vhost_dev_has_feature(&svdev->vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+	    !spdk_vhost_dev_has_feature(&svdev->vdev.session, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n", svdev->vdev.name);
 		return;
 	}
@@ -860,7 +873,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 
 	spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_tgt_num]);
 
-	if (spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (spdk_vhost_dev_has_feature(&vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
 			       VIRTIO_SCSI_EVT_RESET_RESCAN);
 	} else {
@@ -909,7 +922,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 		return rc;
 	}
 
-	if (!spdk_vhost_dev_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (!spdk_vhost_dev_has_feature(&vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: 'Target %u' is in use and hot-detach is not enabled for this controller.\n",
 			     svdev->vdev.name, scsi_tgt_num);
 		return -ENOTSUP;
@@ -1002,11 +1015,12 @@ spdk_vhost_scsi_controller_construct(void)
 static void
 free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
-	for (i = 0; i < svdev->vdev.max_queues; i++) {
-		vq = &svdev->vdev.virtqueue[i];
+	for (i = 0; i < vsession->max_queues; i++) {
+		vq = &vsession->virtqueue[i];
 		if (vq->tasks == NULL) {
 			continue;
 		}
@@ -1019,14 +1033,15 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 static int
 alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt;
 	uint16_t i;
 	uint32_t j;
 
-	for (i = 0; i < svdev->vdev.max_queues; i++) {
-		vq = &svdev->vdev.virtqueue[i];
+	for (i = 0; i < vsession->max_queues; i++) {
+		vq = &vsession->virtqueue[i];
 		if (vq->vring.desc == NULL) {
 			continue;
 		}
@@ -1067,6 +1082,7 @@ static int
 spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_vhost_session *vsession = &vdev->session;
 	uint32_t i;
 	int rc;
 
@@ -1078,8 +1094,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	/* validate all I/O queues are in a contiguous index range */
-	for (i = VIRTIO_SCSI_REQUESTQ; i < vdev->max_queues; i++) {
-		if (vdev->virtqueue[i].vring.desc == NULL) {
+	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
+		if (vsession->virtqueue[i].vring.desc == NULL) {
 			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
 			rc = -1;
 			goto out;
@@ -1102,8 +1118,8 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		     vdev->name, vdev->lcore);
 
 	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
-	if (vdev->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
-	    vdev->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
+	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
+	    vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
 		svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
 				     MGMT_POLL_PERIOD_US);
 	}
@@ -1116,15 +1132,16 @@ static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
+	struct spdk_vhost_session *vsession = &svdev->vdev.session;
 	uint32_t i;
 
-	if (svdev->vdev.task_cnt > 0) {
+	if (vsession->task_cnt > 0) {
 		return -1;
 	}
 
 
-	for (i = 0; i < svdev->vdev.max_queues; i++) {
-		spdk_vhost_vq_used_signal(&svdev->vdev, &svdev->vdev.virtqueue[i]);
+	for (i = 0; i < vsession->max_queues; i++) {
+		spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {

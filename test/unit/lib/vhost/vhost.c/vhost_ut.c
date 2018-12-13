@@ -151,24 +151,28 @@ alloc_vdev(struct spdk_vhost_dev **vdev_p, const char *name, const char *cpumask
 static void
 start_vdev(struct spdk_vhost_dev *vdev)
 {
+	struct rte_vhost_memory *mem;
+
+	mem = calloc(1, sizeof(*mem) + 2 * sizeof(struct rte_vhost_mem_region));
+	SPDK_CU_ASSERT_FATAL(mem != NULL);
+	mem->nregions = 2;
+	mem->regions[0].guest_phys_addr = 0;
+	mem->regions[0].size = 0x400000; /* 4 MB */
+	mem->regions[0].host_user_addr = 0x1000000;
+	mem->regions[1].guest_phys_addr = 0x400000;
+	mem->regions[1].size = 0x400000; /* 4 MB */
+	mem->regions[1].host_user_addr = 0x2000000;
+
 	vdev->vid = 0;
 	vdev->lcore = 0;
-	vdev->mem = calloc(1, sizeof(*vdev->mem) + 2 * sizeof(struct rte_vhost_mem_region));
-	SPDK_CU_ASSERT_FATAL(vdev->mem != NULL);
-	vdev->mem->nregions = 2;
-	vdev->mem->regions[0].guest_phys_addr = 0;
-	vdev->mem->regions[0].size = 0x400000; /* 4 MB */
-	vdev->mem->regions[0].host_user_addr = 0x1000000;
-	vdev->mem->regions[1].guest_phys_addr = 0x400000;
-	vdev->mem->regions[1].size = 0x400000; /* 4 MB */
-	vdev->mem->regions[1].host_user_addr = 0x2000000;
+	vdev->session.mem = mem;
 }
 
 static void
 stop_vdev(struct spdk_vhost_dev *vdev)
 {
-	free(vdev->mem);
-	vdev->mem = NULL;
+	free(vdev->session.mem);
+	vdev->session.mem = NULL;
 	vdev->vid = -1;
 }
 
@@ -184,6 +188,7 @@ static void
 desc_to_iov_test(void)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 	struct iovec iov[SPDK_VHOST_IOVS_MAX];
 	uint16_t iov_index;
 	struct vring_desc desc;
@@ -193,11 +198,13 @@ desc_to_iov_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
+	vsession = &vdev->session;
+
 	/* Test simple case where iov falls fully within a 2MB page. */
 	desc.addr = 0x110000;
 	desc.len = 0x1000;
 	iov_index = 0;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == 1);
 	CU_ASSERT(iov[0].iov_base == (void *)0x1110000);
@@ -210,7 +217,7 @@ desc_to_iov_test(void)
 
 	/* Same test, but ensure it respects the non-zero starting iov_index. */
 	iov_index = SPDK_VHOST_IOVS_MAX - 1;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == SPDK_VHOST_IOVS_MAX);
 	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_base == (void *)0x1110000);
@@ -219,7 +226,7 @@ desc_to_iov_test(void)
 
 	/* Test for failure if iov_index already equals SPDK_VHOST_IOVS_MAX. */
 	iov_index = SPDK_VHOST_IOVS_MAX;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc != 0);
 	memset(iov, 0, sizeof(iov));
 
@@ -227,7 +234,7 @@ desc_to_iov_test(void)
 	desc.addr = 0x1F0000;
 	desc.len = 0x20000;
 	iov_index = 0;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == 1);
 	CU_ASSERT(iov[0].iov_base == (void *)0x11F0000);
@@ -236,7 +243,7 @@ desc_to_iov_test(void)
 
 	/* Same test, but ensure it respects the non-zero starting iov_index. */
 	iov_index = SPDK_VHOST_IOVS_MAX - 1;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == SPDK_VHOST_IOVS_MAX);
 	CU_ASSERT(iov[SPDK_VHOST_IOVS_MAX - 1].iov_base == (void *)0x11F0000);
@@ -247,7 +254,7 @@ desc_to_iov_test(void)
 	desc.addr = 0x3F0000;
 	desc.len = 0x20000;
 	iov_index = 0;
-	rc = spdk_vhost_vring_desc_to_iov(vdev, iov, &iov_index, &desc);
+	rc = spdk_vhost_vring_desc_to_iov(vsession, iov, &iov_index, &desc);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(iov_index == 2);
 	CU_ASSERT(iov[0].iov_base == (void *)0x13F0000);
