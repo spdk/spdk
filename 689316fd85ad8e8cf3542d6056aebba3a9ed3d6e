@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "def3e67e_f62d9aa1",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-13T05:07:27Z",
+      "side": 1,
+      "message": "This looks like a capital X to me.  Are my eyes deceiving me?  Remove my -1 if they are.",
+      "revId": "689316fd85ad8e8cf3542d6056aebba3a9ed3d6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
