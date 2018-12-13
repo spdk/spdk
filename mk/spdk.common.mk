@@ -81,6 +81,9 @@ endif
 ifeq ($(TARGET_MACHINE),x86_64)
 COMMON_CFLAGS += -march=native
 endif
+ifeq ($(TARGET_MACHINE),aarch64)
+COMMON_CFLAGS += -march=armv8-a+crc
+endif
 
 ifeq ($(CONFIG_WERROR), y)
 COMMON_CFLAGS += -Werror
