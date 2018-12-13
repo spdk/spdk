@@ -33,8 +33,7 @@
 
 #include "spdk/crc32.h"
 
-#if defined(__x86_64__) && defined(__SSE4_2__)
-#include <x86intrin.h>
+#ifdef SPDK_HAVE_SSE4_2
 
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
@@ -64,6 +63,31 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	count = len & 7;
 	while (count--) {
 		crc = _mm_crc32_u8(crc, *(const uint8_t *)buf);
+		buf++;
+	}
+
+	return crc;
+}
+
+#elif defined(SPDK_HAVE_ARM_CRC)
+
+uint32_t
+spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
+{
+	size_t count;
+
+	count = len / 8;
+	while (count--) {
+		uint64_t block;
+
+		memcpy(&block, buf, sizeof(block));
+		crc = __crc32cd(crc, block);
+		buf += sizeof(block);
+	}
+
+	count = len & 7;
+	while (count--) {
+		crc = __crc32cb(crc, *(const uint8_t *)buf);
 		buf++;
 	}
 
