@@ -91,6 +91,30 @@
       "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fcb28c2_2867ffe1",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-13T06:17:50Z",
+      "side": 1,
+      "message": "I agree with Shuhei. It seems like we won\u0027t initialize any subsystems if the config is empty.",
+      "parentUuid": "d525ad88_690c52aa",
+      "range": {
+        "startLine": 506,
+        "startChar": 0,
+        "endLine": 509,
+        "endChar": 2
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
