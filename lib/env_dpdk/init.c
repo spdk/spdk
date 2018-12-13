@@ -36,6 +36,7 @@
 #include "env_internal.h"
 
 #include "spdk/version.h"
+#include "spdk/env_dpdk.h"
 
 #include <rte_config.h>
 #include <rte_eal.h>
@@ -342,7 +343,25 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	return argcount;
 }
 
-int spdk_env_init(const struct spdk_env_opts *opts)
+int
+spdk_env_dpdk_post_init(void)
+{
+	spdk_pci_init();
+
+	if (spdk_mem_map_init() < 0) {
+		fprintf(stderr, "Failed to allocate mem_map\n");
+		return -1;
+	}
+	if (spdk_vtophys_init() < 0) {
+		fprintf(stderr, "Failed to initialize vtophys\n");
+		return -1;
+	}
+
+	return 0;
+}
+
+int
+spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
 	int i, rc;
@@ -396,16 +415,5 @@ int spdk_env_init(const struct spdk_env_opts *opts)
 		spdk_env_unlink_shared_files();
 	}
 
-	spdk_pci_init();
-
-	if (spdk_mem_map_init() < 0) {
-		fprintf(stderr, "Failed to allocate mem_map\n");
-		return -1;
-	}
-	if (spdk_vtophys_init() < 0) {
-		fprintf(stderr, "Failed to initialize vtophys\n");
-		return -1;
-	}
-
-	return 0;
+	return spdk_env_dpdk_post_init();
 }
