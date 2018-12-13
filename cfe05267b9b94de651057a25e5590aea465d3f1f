@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7b668e3_6e5b58a8",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:19:30Z",
+      "side": 1,
+      "message": "mixed tabs/spaces across file",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 2
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3623c1e4_adde9778",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:19:30Z",
+      "side": 1,
+      "message": "Please try to use named variables instead of $1 $2 $3 to avoid confusion.\nAs a user, not as author, I find it hard to figure out what these variables do.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 52
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b59147bd_bb4f9917",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:19:30Z",
+      "side": 1,
+      "message": "vm_setup.sh is not guaranteed to work with FC28",
+      "range": {
+        "startLine": 120,
+        "startChar": 31,
+        "endLine": 120,
+        "endChar": 54
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18542c50_a3d75f6a",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:19:30Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be configurable instead of hardcoded?",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "154b4d2d_6f1902ad",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:19:30Z",
+      "side": 1,
+      "message": "Commented. Can be removed?",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 20
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
