@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e2cb44e_5201bc52",
+        "filename": "test/nvmf/rpc/get_nvme_controllers_nvmf.test.match",
+        "patchSetId": 8
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "I think this can be changed to Nvme0, as you explicitely create a controller with that name and that\u0027s what we expect to find.",
+      "range": {
+        "startLine": 2,
+        "startChar": 10,
+        "endLine": 2,
+        "endChar": 14
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5566b3cf_b3618475",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "This is called more than once and produces additional log output.\nCan you save the output to a variable and use it later?\n\nNitpicking a bit here:\nawk seems like a overkill. cut seems more natural to me personally",
+      "range": {
+        "startLine": 50,
+        "startChar": 52,
+        "endLine": 50,
+        "endChar": 86
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b43610c_1f0daec4",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "You already called get_nvme_controllers on line 53.\nCan you save the output in the variable and use it instead?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 84
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67beb299_8f0d40e4",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "This can be checked as part of calling app/match/match",
+      "range": {
+        "startLine": 60,
+        "startChar": 9,
+        "endLine": 60,
+        "endChar": 30
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5d02734_6498fe6a",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "mixed tabs and spaces, please only use tabs",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 5
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7269e802_72b20baf",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "Do we need more than 1 NVMe to do that?\nInstead you could just delete Nvme0 from previous test steps and try:\nrpc_py get_nvme_controllers Nvme0",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 2
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dce308db_bb6e6614",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:04:11Z",
+      "side": 1,
+      "message": "It\u0027s the same condition as on line 67, do we need to repeat that?",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 36
+      },
+      "revId": "d71e8353cfdb66dfd74e58d6c000cd43c2bbef71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
