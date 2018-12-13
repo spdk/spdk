@@ -143,6 +143,30 @@
     },
     {
       "key": {
+        "uuid": "dd52b322_987797a5",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T13:36:16Z",
+      "side": 1,
+      "message": "If you tested it and youre sure, then you could update readme section in vm_setup.sh to state that FC28 is supported.\nDid you try all dependency installs from vm_setup.sh and all possible test options from autorun-spdk.conf?",
+      "parentUuid": "7d9c178f_8ed93553",
+      "range": {
+        "startLine": 120,
+        "startChar": 31,
+        "endLine": 120,
+        "endChar": 54
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18542c50_a3d75f6a",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -190,6 +214,30 @@
     },
     {
       "key": {
+        "uuid": "30516806_28916771",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T13:36:16Z",
+      "side": 1,
+      "message": "I think it\u0027d be best to run just vm_setup.sh -i.\nThat way all other dependencies are installed and you can use the VM to run any other kinds of tests (vhost, nvmf, iscsi, etc.)",
+      "parentUuid": "603fa299_df7b6992",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "154b4d2d_6f1902ad",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -225,6 +273,30 @@
       "side": 1,
       "message": "this is a demo check in fedora VM , and with trap destory VM, it a demo case failed.\nsuch as can\u0027t find a virtual nvme disk, that means a vm created failed. need to destroy and recreated.",
       "parentUuid": "154b4d2d_6f1902ad",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 20
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0cc6ea0_6c65b798",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T13:36:16Z",
+      "side": 1,
+      "message": "Oh, my bad. I just looked at color of the text in gerrithub and it looked like a comment. Sorry about that.",
+      "parentUuid": "1c1fb4eb_1c985b05",
       "range": {
         "startLine": 126,
         "startChar": 0,
