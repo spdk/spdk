@@ -44,8 +44,6 @@
 #define UT_PORT "4420"
 #define UT_NVMF_ADRFAM_INVALID 0xf
 #define UT_MAX_QUEUE_DEPTH 128
-
-#define UT_MAX_QUEUE_DEPTH 128
 #define UT_MAX_QPAIRS_PER_CTRLR 128
 #define UT_IN_CAPSULE_DATA_SIZE 1024
 #define UT_MAX_IO_SIZE 4096
@@ -87,7 +85,7 @@ DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
 	    0);
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
-	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length));
+	      (struct spdk_nvmf_tgt *tgt, struct iovec *iov, uint32_t iovcnt, uint64_t offset, uint32_t length));
 
 DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
 	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));
