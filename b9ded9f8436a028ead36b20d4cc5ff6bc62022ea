@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a4e0762d_3db788d5",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:07:41Z",
+      "side": 1,
+      "message": "Should be initialized as \"-1\" ?",
+      "revId": "b9ded9f8436a028ead36b20d4cc5ff6bc62022ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7401ce1d_13e1be1c",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:07:41Z",
+      "side": 1,
+      "message": "It looks like, single \"if\" statement is enough. \n\"if (s_ctx-\u003eio_cnt \u003e 0)\"",
+      "revId": "b9ded9f8436a028ead36b20d4cc5ff6bc62022ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba30572d_530e294e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:07:41Z",
+      "side": 1,
+      "message": "Internal parenthesis is not nessary in this case. Also, existing double conditions in the file don\u0027t have internal parenthesis. It will be nice, to keep existing code style.",
+      "revId": "b9ded9f8436a028ead36b20d4cc5ff6bc62022ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "795345ad_e0119297",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:07:41Z",
+      "side": 1,
+      "message": "Other help strings in the code don\u0027t have ending dot \".\"\nIt think, default - \"disabled\" should be added, like in other paramters.",
+      "revId": "b9ded9f8436a028ead36b20d4cc5ff6bc62022ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fb4b601_42712c4d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:07:41Z",
+      "side": 1,
+      "message": "atoi function return int, \ng_ns_io_cnt is int64_t. In gcc (Linux) they are same, but in other platform they can have different size.",
+      "revId": "b9ded9f8436a028ead36b20d4cc5ff6bc62022ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
