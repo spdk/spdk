@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79a251ef_521de235",
+        "filename": "autotest.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-13T15:06:41Z",
+      "side": 1,
+      "message": "I would rather disable SPDK_TEST_BLOBFS completely by setting to 0 in test/common/autotest_common.sh.  See other cases where we do this, for example, if ceph is not available.",
+      "revId": "00619017758badf80ccd869a0cadc571c60160df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
