@@ -20,5 +20,9 @@ timing_enter pci
 $testdir/pci/pci_ut
 timing_exit pci
 
+timing_enter env_post_init
+$testdir/env_post_init/env_post_init
+timing_exit env_post_init
+
 report_test_completion "env"
 timing_exit env

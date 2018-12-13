@@ -152,6 +152,15 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
+ * Initialize the environment library after DPDK env is already initialized.
+ * If DPDK 'e EAL is already called, this must be called instead of spdk_env_init,
+ * prior to using any other functions in this library.
+ *
+ * \return 0 on success, or negative errno on failure.
+ */
+int spdk_env_post_init(void);
+
+/**
  * Allocate a pinned memory buffer with the given size and alignment.
  *
  * \param size Size in bytes.

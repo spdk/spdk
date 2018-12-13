@@ -31,20 +31,10 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ENV_NAME := $(notdir $(CONFIG_ENV))
+CFLAGS += $(ENV_CFLAGS)
+APP = env_post_init
 
-DIRS-y = vtophys
-
-ifeq ($(ENV_NAME),env_dpdk)
-DIRS-y += env_post_init memory pci
-endif
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
