@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d9fbcd1_e1f99d91",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-13T21:27:07Z",
+      "side": 1,
+      "message": "Do you need a protection domain per \"port\" (which is a port in the TCP/IP sense, not in the physical plug on a NIC sense), or is it ok to have a protection domain per RDMA \"device\" (which is just one port on a dual port RDMA NIC)?\n\nIf you really do need a separate PD for each \"port\", you\u0027re going to need",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d6adf93_dc74c7a2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-13T21:27:07Z",
+      "side": 1,
+      "message": "Did you need to move this function?",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbb70eae_42126238",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1774,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-13T21:27:07Z",
+      "side": 1,
+      "message": "There is an existing function for doing this - spdk_nvmf_rdma_trid_from_cm_id.",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "490aa7ab_8b4aadd4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1947,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-13T21:27:07Z",
+      "side": 1,
+      "message": "If you have a different protection domain for each RDMA port, that means each port needs a separate memory map. But right now you have the memory map stored on the device, so there can only be one per device.",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
