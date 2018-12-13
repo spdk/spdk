@@ -22,6 +22,30 @@
       "revId": "0f59a218ec55ec88c7a1d4369d9402cd322dcd2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fa86785_966abc08",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:41:54Z",
+      "side": 1,
+      "message": "It is used in next patch.",
+      "parentUuid": "01771c29_2d4b16da",
+      "range": {
+        "startLine": 96,
+        "startChar": 13,
+        "endLine": 96,
+        "endChar": 25
+      },
+      "revId": "0f59a218ec55ec88c7a1d4369d9402cd322dcd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
