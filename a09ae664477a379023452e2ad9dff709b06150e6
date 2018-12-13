@@ -16,6 +16,24 @@
       "revId": "a09ae664477a379023452e2ad9dff709b06150e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cf30cc7_1a685741",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-13T20:14:24Z",
+      "side": 1,
+      "message": "I agree - I don\u0027t see how this changes the function of the code at all. Ziye - where in the code is sgroup-\u003equeued being accessed where this list is not yet initialized? Inside spdk_nvmf_request_exec? Do you have a stack trace of the problem?",
+      "parentUuid": "eca11ab5_45d39bae",
+      "revId": "a09ae664477a379023452e2ad9dff709b06150e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
