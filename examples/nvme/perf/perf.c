@@ -541,7 +541,7 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 		if (is_write) {
 			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 				/* CRC buffer should not include PI */
-				crc16 = spdk_crc16_t10dif(task->buf + (sector_size + md_size) * i,
+				crc16 = spdk_crc16_t10dif(0, task->buf + (sector_size + md_size) * i,
 							  sector_size + md_size - 8);
 				to_be16(&pi->guard, crc16);
 			}
@@ -585,7 +585,7 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 
 		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 			/* CRC buffer should not include last 8 bytes of PI */
-			crc16 = spdk_crc16_t10dif(task->buf + (sector_size + md_size) * i,
+			crc16 = spdk_crc16_t10dif(0, task->buf + (sector_size + md_size) * i,
 						  sector_size + md_size - 8);
 			to_be16(&guard, crc16);
 			if (pi->guard != guard) {

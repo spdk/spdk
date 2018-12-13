@@ -154,10 +154,10 @@ static uint32_t dp_guard_check_extended_lba_test(struct spdk_nvme_ns *ns, struct
 	ns_data_buffer_reset(ns, req, DATA_PATTERN);
 	pi = (struct spdk_nvme_protection_info *)(req->contig + sector_size + md_size - 8);
 	/* big-endian for guard */
-	to_be16(&pi->guard, spdk_crc16_t10dif(req->contig, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig, sector_size));
 
 	pi = (struct spdk_nvme_protection_info *)(req->contig + (sector_size + md_size) * 2 - 8);
-	to_be16(&pi->guard, spdk_crc16_t10dif(req->contig + sector_size + md_size, sector_size));
+	to_be16(&pi->guard, spdk_crc16_t10dif(0, req->contig + sector_size + md_size, sector_size));
 
 	*io_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 
