@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed661a34_518c9cef",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "_SAFE version not needed",
+      "range": {
+        "startLine": 816,
+        "startChar": 14,
+        "endLine": 816,
+        "endChar": 19
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dac7cd18_ead6913d",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "pls drop redundant ( ) all over this patch.",
+      "range": {
+        "startLine": 817,
+        "startChar": 6,
+        "endLine": 817,
+        "endChar": 7
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dff82eee_b4825998",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 843,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "DEBUG/NOTICE ?",
+      "range": {
+        "startLine": 843,
+        "startChar": 2,
+        "endLine": 843,
+        "endChar": 13
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c4f1316_2e111fc1",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 855,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 855,
+        "startChar": 3,
+        "endLine": 855,
+        "endChar": 14
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19fb2514_e9b64fc3",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "this can be inlined",
+      "range": {
+        "startLine": 899,
+        "startChar": 0,
+        "endLine": 902,
+        "endChar": 2
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efec3105_211d56f9",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T12:12:26Z",
+      "side": 1,
+      "message": "Is there a reason for having \u0027holder\u0027?\nYou can you make TAILQ_FIRST(\u0026dev-\u003ereg_head) equal to the holder.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 40
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
