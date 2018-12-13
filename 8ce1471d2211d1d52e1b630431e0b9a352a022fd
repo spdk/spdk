@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5f70a656_a50293be",
+        "filename": "lib/event/app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T10:41:47Z",
+      "side": 1,
+      "message": "Line 62 was leftover from initial implementation. Will restored original flow.",
+      "parentUuid": "37dbf9cd_1e5f0b78",
+      "range": {
+        "startLine": 653,
+        "startChar": 11,
+        "endLine": 653,
+        "endChar": 33
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2beb2df1_99cd260e",
         "filename": "lib/event/app.c",
         "patchSetId": 33
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "d85c0c01_0de2e914",
+        "filename": "lib/event/app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T10:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2beb2df1_99cd260e",
+      "range": {
+        "startLine": 658,
+        "startChar": 42,
+        "endLine": 658,
+        "endChar": 69
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb666662_e50901c1",
         "filename": "lib/event/json_config.c",
         "patchSetId": 33
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-13T04:49:15Z",
       "side": 1,
       "message": "Get ?",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 7
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44e023e3_ae6256aa",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T10:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eb666662_e50901c1",
       "range": {
         "startLine": 278,
         "startChar": 4,
@@ -106,6 +178,30 @@
       "side": 1,
       "message": "I agree with Shuhei. It seems like we won\u0027t initialize any subsystems if the config is empty.",
       "parentUuid": "d525ad88_690c52aa",
+      "range": {
+        "startLine": 506,
+        "startChar": 0,
+        "endLine": 509,
+        "endChar": 2
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8aa0c500_5eb6572e",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T10:41:47Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fcb28c2_2867ffe1",
       "range": {
         "startLine": 506,
         "startChar": 0,
