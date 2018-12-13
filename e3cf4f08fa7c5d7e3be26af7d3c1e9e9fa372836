@@ -324,6 +324,30 @@
     },
     {
       "key": {
+        "uuid": "2e49be41_8728d256",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-13T14:28:46Z",
+      "side": 1,
+      "message": "I\u0027ve had concrete reason to do it this way - to pass per-device context to bottom adapter. So pointer addres is uuid here\n\nI am not getting why whould we need to pass \u0027real data\u0027 as uuid\nIt would be more understandable, but why do you think this is invalid?\nIt works well on practice and from theoretical point of view, uuid should be 1) unique and 2) immutable (so that you can compare and copy it safely)\nMemory address has those properties because:\n1) It\u0027s unique in context of OCF - we dont pass any uuids other that memory addresses\n2) We do not reallocate target memory so it\u0027s always at that same address",
+      "parentUuid": "e1cd7c3b_9c97755b",
+      "range": {
+        "startLine": 561,
+        "startChar": 1,
+        "endLine": 574,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e4066d4_794ef3f5",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
