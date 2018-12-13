@@ -51,8 +51,7 @@ struct spdk_jsonrpc_request {
 	struct spdk_jsonrpc_server_conn *conn;
 
 	/* Copy of request id value */
-	struct spdk_json_val id;
-	uint8_t id_data[SPDK_JSONRPC_ID_MAX_LEN];
+	const struct spdk_json_val *id;
 
 	/* Total space allocated for send_buf */
 	size_t send_buf_size;
@@ -61,6 +60,10 @@ struct spdk_jsonrpc_request {
 	size_t send_len;
 
 	size_t send_offset;
+
+	uint8_t *recv_buffer;
+	struct spdk_json_val *values;
+	size_t values_cnt;
 
 	uint8_t *send_buf;
 
@@ -71,7 +74,6 @@ struct spdk_jsonrpc_server_conn {
 	struct spdk_jsonrpc_server *server;
 	int sockfd;
 	bool closed;
-	struct spdk_json_val values[SPDK_JSONRPC_MAX_VALUES];
 	size_t recv_len;
 	uint8_t recv_buf[SPDK_JSONRPC_RECV_BUF_SIZE];
 	uint32_t outstanding_requests;
@@ -140,7 +142,8 @@ void spdk_jsonrpc_server_handle_error(struct spdk_jsonrpc_request *request, int 
 void spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request);
 
 /* jsonrpc_server */
-int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, void *json, size_t size);
+int spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json,
+			       size_t size);
 
 /* Must be called only from server poll thread */
 void spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request);
