@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f292639f_19aa3d8a",
+        "filename": "test/unit/lib/nvmf/tcp.c/tcp_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2018-12-13T03:27:44Z",
+      "side": 1,
+      "message": "Seems like this is the same with line 46. Do we need to delete this one?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 30
+      },
+      "revId": "e995a798208abf274983c1749cb0bf0cced961f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
