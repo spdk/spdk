@@ -20,5 +20,11 @@ timing_enter pci
 $testdir/pci/pci_ut
 timing_exit pci
 
+if [ $SPDK_RUN_INSTALLED_DPDK -eq 1 ]; then
+	timing_enter env_dpdk_post_init
+	$testdir/env_dpdk_post_init/env_dpdk_post_init
+	timing_exit env_dpdk_post_init
+fi
+
 report_test_completion "env"
 timing_exit env
