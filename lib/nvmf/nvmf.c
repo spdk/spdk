@@ -740,6 +740,10 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	}
 
 	qpair_ctx->ctrlr = ctrlr;
+	/* set it to NULL, since the qpair freed by the ctrlr will be done by anther thread.
+	  * If we do not do here, there will be contention.
+	  */
+	qpair->ctrlr = NULL;
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx);
 
 }
