@@ -391,10 +391,8 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			 * the connection is closed).
 			 */
 
-			if (conn->send_request) {
-				spdk_jsonrpc_free_request(conn->send_request);
-				conn->send_request = NULL;
-			}
+			spdk_jsonrpc_free_request(conn->send_request);
+			conn->send_request = NULL;
 
 			while ((request = spdk_jsonrpc_server_dequeue_request(conn)) != NULL) {
 				spdk_jsonrpc_free_request(request);
