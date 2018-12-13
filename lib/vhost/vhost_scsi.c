@@ -77,11 +77,16 @@ struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev *scsi_dev[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+} __rte_cache_aligned;
 
+struct spdk_vhost_scsi_session {
+	struct spdk_vhost_session vsession;
+
+	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
-} __rte_cache_aligned;
+};
 
 struct spdk_vhost_scsi_task {
 	struct spdk_scsi_task	scsi;
@@ -117,7 +122,7 @@ static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
-	.session_ctx_size = 0,
+	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
 	.dump_info_json = spdk_vhost_scsi_dump_info_json,
@@ -716,6 +721,21 @@ to_scsi_dev(struct spdk_vhost_dev *ctrlr)
 	return SPDK_CONTAINEROF(ctrlr, struct spdk_vhost_scsi_dev, vdev);
 }
 
+static struct spdk_vhost_scsi_session *
+to_scsi_session(struct spdk_vhost_session *vsession)
+{
+	if (vsession == NULL) {
+		return NULL;
+	}
+
+	if (vsession->vdev->backend != &spdk_vhost_scsi_device_backend) {
+		SPDK_ERRLOG("%s: not a vhost-scsi device.\n", vsession->vdev->name);
+		return NULL;
+	}
+
+	return (struct spdk_vhost_scsi_session *)vsession;
+}
+
 int
 spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 {
@@ -1006,9 +1026,9 @@ spdk_vhost_scsi_controller_construct(void)
 }
 
 static void
-free_task_pool(struct spdk_vhost_scsi_dev *svdev)
+free_task_pool(struct spdk_vhost_scsi_session *svsession)
 {
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
@@ -1024,9 +1044,10 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 }
 
 static int
-alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
+alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 {
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
+	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt;
@@ -1044,7 +1065,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 			/* sanity check */
 			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 				    svdev->vdev.name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
-			free_task_pool(svdev);
+			free_task_pool(svsession);
 			return -1;
 		}
 		vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
@@ -1052,7 +1073,7 @@ alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 		if (vq->tasks == NULL) {
 			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 				    svdev->vdev.name, task_cnt, i);
-			free_task_pool(svdev);
+			free_task_pool(svsession);
 			return -1;
 		}
 
@@ -1076,26 +1097,30 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_session *vsession = vdev->session;
+	struct spdk_vhost_scsi_session *svsession;
 	uint32_t i;
 	int rc;
 
-	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
+	svsession = to_scsi_session(vsession);
+	if (svsession == NULL) {
 		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
 		rc = -1;
 		goto out;
 	}
 
+	svdev = to_scsi_dev(vdev);
+	svsession->svdev = svdev;
+
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
 		if (vsession->virtqueue[i].vring.desc == NULL) {
-			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vdev->name, i);
+			SPDK_ERRLOG("%s: queue %"PRIu32" is empty\n", vsession->vdev->name, i);
 			rc = -1;
 			goto out;
 		}
 	}
 
-	rc = alloc_task_pool(svdev);
+	rc = alloc_task_pool(svsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vdev->name);
 		goto out;
@@ -1110,11 +1135,11 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vdev->lcore);
 
-	svdev->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
+	svsession->requestq_poller = spdk_poller_register(vdev_worker, svdev, 0);
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
 	    vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
-		svdev->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
-				     MGMT_POLL_PERIOD_US);
+		svsession->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svdev,
+					 MGMT_POLL_PERIOD_US);
 	}
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
@@ -1124,8 +1149,9 @@ out:
 static int
 destroy_device_poller_cb(void *arg)
 {
-	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_scsi_session *svsession = arg;
+	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
@@ -1141,15 +1167,16 @@ destroy_device_poller_cb(void *arg)
 		if (svdev->scsi_dev[i] == NULL) {
 			continue;
 		}
+
 		spdk_scsi_dev_free_io_channels(svdev->scsi_dev[i]);
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", svdev->vdev.name);
 
-	free_task_pool(svdev);
+	free_task_pool(svsession);
 
-	spdk_poller_unregister(&svdev->destroy_ctx.poller);
-	spdk_vhost_dev_backend_event_done(svdev->destroy_ctx.event_ctx, 0);
+	spdk_poller_unregister(&svsession->destroy_ctx.poller);
+	spdk_vhost_dev_backend_event_done(svsession->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
@@ -1157,19 +1184,20 @@ destroy_device_poller_cb(void *arg)
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_vhost_session *vsession = vdev->session;
+	struct spdk_vhost_scsi_session *svsession;
 
-	svdev = to_scsi_dev(vdev);
-	if (svdev == NULL) {
+	svsession = to_scsi_session(vsession);
+	if (svsession == NULL) {
 		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
 		goto err;
 	}
 
-	svdev->destroy_ctx.event_ctx = event_ctx;
-	spdk_poller_unregister(&svdev->requestq_poller);
-	spdk_poller_unregister(&svdev->mgmt_poller);
-	svdev->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, svdev,
-				    1000);
+	svsession->destroy_ctx.event_ctx = event_ctx;
+	spdk_poller_unregister(&svsession->requestq_poller);
+	spdk_poller_unregister(&svsession->mgmt_poller);
+	svsession->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, svsession,
+					1000);
 
 	return 0;
 
