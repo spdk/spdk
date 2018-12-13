@@ -405,8 +405,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 
 	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
 		spdk_free(log_page_directory);
-		SPDK_ERRLOG("nvme_ctrlr_cmd_get_log_page failed!\n");
-		return -ENXIO;
+		SPDK_WARNLOG("Intel log pages not supported on Intel drive!\n");
+		return 0;
 	}
 
 	nvme_ctrlr_construct_intel_support_log_page_list(ctrlr, log_page_directory);
