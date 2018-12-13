@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eca11ab5_45d39bae",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-13T15:48:47Z",
+      "side": 1,
+      "message": "That looks like code style change. Before and after the patch, spdk_nvmf_poll_group_add_subsystem is called only if subsystem !\u003d NULL. \nDo I miss something?",
+      "revId": "a09ae664477a379023452e2ad9dff709b06150e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
