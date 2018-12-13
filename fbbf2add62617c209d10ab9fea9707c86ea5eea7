@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "597c5a2a_47684eb3",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-13T23:00:01Z",
+      "side": 1,
+      "message": "Will GitHub actually yield a \"v18.10.x.tar.gz\"?   How is that to be differentiated from other point-releases?   In other words, what if there was a follow-on 18.10.2?",
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
