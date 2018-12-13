@@ -119,6 +119,8 @@ static const struct option g_cmdline_options[] = {
 	{"huge-dir",			no_argument,		NULL, HUGE_DIR_OPT_IDX},
 #define NUM_TRACE_ENTRIES_OPT_IDX	260
 	{"num-trace-entries",		required_argument,	NULL, NUM_TRACE_ENTRIES_OPT_IDX},
+#define MAX_REACTOR_DELAY_OPT_IDX	261
+	{"max-delay",			required_argument,	NULL, MAX_REACTOR_DELAY_OPT_IDX},
 };
 
 /* Global section */
@@ -732,6 +734,7 @@ usage(void (*app_usage)(void))
 	printf("     --silence-noticelog   disable notice level logging to stderr\n");
 	printf(" -u, --no-pci              disable PCI access\n");
 	printf("     --wait-for-rpc        wait for RPCs to initialize subsystems\n");
+	printf("     --max-delay <num>	   maximum reactor delay (in microseconds)\n");
 	printf(" -B, --pci-blacklist <bdf>\n");
 	printf("                           pci addr to blacklist (can be used more than once)\n");
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
@@ -942,6 +945,12 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				usage(app_usage);
 				goto out;
 			}
+			break;
+		case MAX_REACTOR_DELAY_OPT_IDX:
+			if (optarg == NULL) {
+				goto out;
+			}
+			opts->max_delay_us = atoi(optarg);
 			break;
 		case '?':
 			/*
