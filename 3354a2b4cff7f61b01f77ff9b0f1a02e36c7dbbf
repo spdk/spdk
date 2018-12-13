@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "377fe13b_9bf7cc81",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:13:12Z",
+      "side": 1,
+      "message": "No need for a separate function to do that. All package deps are installed on line 386.",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 33
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "073caac1_c122ef0a",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:13:12Z",
+      "side": 1,
+      "message": "FOr future: this file should be available accross most (maybe all) Linux distros so no need to check for /etc/redhat-release before that.",
+      "range": {
+        "startLine": 292,
+        "startChar": 2,
+        "endLine": 292,
+        "endChar": 19
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aedb5763_6f82c5c8",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:13:12Z",
+      "side": 1,
+      "message": "Currently this script only supports Fedora (26, to be precise) and it\u0027s documented in readme at top of the script. So I think there is no need to check $ID.",
+      "range": {
+        "startLine": 293,
+        "startChar": 2,
+        "endLine": 293,
+        "endChar": 29
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8cfbd36_510e69f3",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-13T09:13:12Z",
+      "side": 1,
+      "message": "I appreciate that you check other distros as well, but like mentioned before - vm_setup.sh is currently designed ONLY for FC26.\n\nThere is a separate patch which aims at enabling vm_setup.sh for Ubuntu distro, so I\u0027d suggest you add Debian/Ubuntu dependency in series on top of this patch.",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 3
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
