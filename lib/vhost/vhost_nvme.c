@@ -893,7 +893,7 @@ spdk_vhost_nvme_get_by_name(int vid)
 	struct spdk_vhost_nvme_dev *nvme;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vdev.vid == vid) {
+		if (nvme->vdev.session.vid == vid) {
 			return nvme;
 		}
 	}
@@ -1084,7 +1084,7 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 		return -1;
 	}
 
-	SPDK_NOTICELOG("Start Device %u, Path %s, lcore %d\n", vdev->vid,
+	SPDK_NOTICELOG("Start Device %u, Path %s, lcore %d\n", vdev->session.vid,
 		       vdev->path, vdev->lcore);
 
 	for (i = 0; i < nvme->num_ns; i++) {
@@ -1171,7 +1171,7 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	free_task_pool(nvme);
-	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->vid, vdev->path);
+	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->session.vid, vdev->path);
 
 	nvme->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&nvme->requestq_poller);

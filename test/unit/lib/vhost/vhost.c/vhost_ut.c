@@ -163,8 +163,8 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].size = 0x400000; /* 4 MB */
 	mem->regions[1].host_user_addr = 0x2000000;
 
-	vdev->vid = 0;
 	vdev->lcore = 0;
+	vdev->session.vid = 0;
 	vdev->session.mem = mem;
 }
 
@@ -173,7 +173,7 @@ stop_vdev(struct spdk_vhost_dev *vdev)
 {
 	free(vdev->session.mem);
 	vdev->session.mem = NULL;
-	vdev->vid = -1;
+	vdev->session.vid = -1;
 }
 
 static void
@@ -302,19 +302,20 @@ create_controller_test(void)
 }
 
 static void
-dev_find_by_vid_test(void)
+session_find_by_vid_test(void)
 {
-	struct spdk_vhost_dev *vdev, *tmp;
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *tmp;
 	int rc;
 
 	rc = alloc_vdev(&vdev, "vdev_name_0", "0x1");
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 
-	tmp = spdk_vhost_dev_find_by_vid(vdev->vid);
-	CU_ASSERT(tmp == vdev);
+	tmp = spdk_vhost_session_find_by_vid(vdev->session.vid);
+	CU_ASSERT(tmp == &vdev->session);
 
 	/* Search for a device with incorrect vid */
-	tmp = spdk_vhost_dev_find_by_vid(vdev->vid + 0xFF);
+	tmp = spdk_vhost_session_find_by_vid(vdev->session.vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
 	cleanup_vdev(vdev);
@@ -356,7 +357,7 @@ main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "desc_to_iov", desc_to_iov_test) == NULL ||
 		CU_add_test(suite, "create_controller", create_controller_test) == NULL ||
-		CU_add_test(suite, "dev_find_by_vid", dev_find_by_vid_test) == NULL ||
+		CU_add_test(suite, "session_find_by_vid", session_find_by_vid_test) == NULL ||
 		CU_add_test(suite, "remove_controller", remove_controller_test) == NULL
 	) {
 		CU_cleanup_registry();
