@@ -1,0 +1,504 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "184beb3c_468518fc",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "magic",
+      "range": {
+        "startLine": 130,
+        "startChar": 73,
+        "endLine": 130,
+        "endChar": 75
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "349af61f_ba0cc6cd",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "This change is huge. Can you reverse this condition so this function will have one exit point and be a bit shorter? Something like:\n  \n  \n\tstruct spdk_vpp_session *session \u003d NULL;\n\n\tpthread_mutex_lock(\u0026g_svm.session_get_lock);\n\tif (pool_is_free_index(g_svm.sessions, id) !\u003d 0) {\n\t\tsession \u003d pool_elt_at_index(g_svm.sessions, id);\n\t}\n\tpthread_mutex_unlock(\u0026g_svm.session_get_lock);\n\n\treturn session;",
+      "range": {
+        "startLine": 208,
+        "startChar": 1,
+        "endLine": 208,
+        "endChar": 44
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f072bd32_528de167",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 225,
+        "startChar": 1,
+        "endLine": 236,
+        "endChar": 50
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c3ee8a4_4cffe5a5",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "I think empty lines aren\u0027t needed in this case.",
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49ae8017_c05eb7bc",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "dead?",
+      "range": {
+        "startLine": 253,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 5
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "608385f4_d783b19f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "Do you need to free/destroy the session somehow?",
+      "range": {
+        "startLine": 655,
+        "startChar": 2,
+        "endLine": 655,
+        "endChar": 14
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25b0edeb_4f1becee",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "I think this is alread checked in spdk_vpp_sock_create()",
+      "range": {
+        "startLine": 692,
+        "startChar": 1,
+        "endLine": 694,
+        "endChar": 2
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a69ae23_2ff6664f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 701,
+        "startChar": 0,
+        "endLine": 703,
+        "endChar": 2
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98cc1279_320efeef",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 730,
+        "startChar": 1,
+        "endLine": 731,
+        "endChar": 2
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b46966f_7795a64d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 803,
+        "startChar": 1,
+        "endLine": 804,
+        "endChar": 1
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3639306e_73a6b029",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 895,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "+ \\n\n\nor \n\n  return ! __vpp_session(_sock)-\u003eapp_session.transport.is_ip4;",
+      "range": {
+        "startLine": 894,
+        "startChar": 1,
+        "endLine": 895,
+        "endChar": 1
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "159d957c_fd54e839",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 901,
+        "startChar": 1,
+        "endLine": 902,
+        "endChar": 46
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "587acd95_c0bba09c",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "Why?",
+      "range": {
+        "startLine": 1067,
+        "startChar": 31,
+        "endLine": 1067,
+        "endChar": 46
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f218203_75375de9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1187,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "tab vs spaces\n\nbut btw can we remove this monster?",
+      "range": {
+        "startLine": 1187,
+        "startChar": 43,
+        "endLine": 1187,
+        "endChar": 45
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "567023d9_c324e21c",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "more magic...",
+      "range": {
+        "startLine": 1195,
+        "startChar": 18,
+        "endLine": 1195,
+        "endChar": 27
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa75adb5_adcf11a2",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1200,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "and this monster?",
+      "range": {
+        "startLine": 1200,
+        "startChar": 0,
+        "endLine": 1200,
+        "endChar": 70
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d828de6a_dbb71893",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "and maybe this one too?",
+      "range": {
+        "startLine": 1211,
+        "startChar": 0,
+        "endLine": 1219,
+        "endChar": 8
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25b565ed_023dda1c",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1226,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "memleak: app_name",
+      "range": {
+        "startLine": 1226,
+        "startChar": 2,
+        "endLine": 1226,
+        "endChar": 12
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee8d7daf_d92d7b93",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1231,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "memleak: app_name",
+      "range": {
+        "startLine": 1231,
+        "startChar": 2,
+        "endLine": 1231,
+        "endChar": 12
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ec9d404_72fccb07",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "not yet true?",
+      "range": {
+        "startLine": 1238,
+        "startChar": 1,
+        "endLine": 1238,
+        "endChar": 30
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c46b1c28_1cd938a5",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "Are you destroing this somewhere? I think this can be initialized staticaly during declaration.",
+      "range": {
+        "startLine": 1239,
+        "startChar": 0,
+        "endLine": 1240,
+        "endChar": 54
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76b1d5ab_5e8e6c8f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 1246,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:32:49Z",
+      "side": 1,
+      "message": "and more magic",
+      "range": {
+        "startLine": 1246,
+        "startChar": 28,
+        "endLine": 1246,
+        "endChar": 46
+      },
+      "revId": "df5a92fce5be4d4034f929a3f00f0ec435e5173b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
