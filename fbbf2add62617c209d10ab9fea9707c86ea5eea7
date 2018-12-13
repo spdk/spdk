@@ -16,6 +16,24 @@
       "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a5590ae_073104e7",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-13T23:07:49Z",
+      "side": 1,
+      "message": "Yes.  You can pull that right now.\n\nThere will be a later commit specifically for 18.10.1.  That commit will change some version #defines in version.h, and will also change this to point to 18.10.1.tar.gz (instead of v18.10.x.tar.gz) and change Version to 18.10.1 above.\n\nThat commit will be tagged 18.10.1.  Immediately after that, we will make another commit that bumps version.h to 18.10.2-pre, and will update this spec file to change the Version to 18.10.2.pre, and this URL to point back to v18.10.x.tar.gz.",
+      "parentUuid": "597c5a2a_47684eb3",
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
