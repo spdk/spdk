@@ -857,7 +857,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 			goto error_return;
 		}
 		/* OK initiator's secret */
-		conn->authenticated = 1;
+		conn->authenticated = true;
 
 		/* mutual CHAP? */
 		identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
@@ -925,7 +925,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 						       in_val, data, alloc_len, total);
 		} else {
 			/* not mutual */
-			if (conn->req_mutual) {
+			if (conn->mutual_chap) {
 				SPDK_ERRLOG("required mutual CHAP\n");
 				goto error_return;
 			}
@@ -1172,20 +1172,20 @@ spdk_iscsi_negotiate_chap_param(struct spdk_iscsi_conn *conn, bool disable_chap,
 	int rc = 0;
 
 	if (disable_chap) {
-		conn->req_auth = 0;
+		conn->require_chap = false;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "None", "None");
 		if (rc < 0) {
 			return rc;
 		}
 	} else if (require_chap) {
-		conn->req_auth = 1;
+		conn->require_chap = true;
 		rc = spdk_iscsi_op_login_update_param(conn, "AuthMethod", "CHAP", "CHAP");
 		if (rc < 0) {
 			return rc;
 		}
 	}
 	if (mutual_chap) {
-		conn->req_mutual = 1;
+		conn->mutual_chap = true;
 	}
 
 	return rc;
@@ -1505,7 +1505,7 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 	struct iscsi_bhs_login_rsp *rsph;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
-	conn->authenticated = 0;
+	conn->authenticated = false;
 	conn->auth.chap_phase = ISCSI_CHAP_PHASE_WAIT_A;
 	conn->cid = cid;
 
@@ -1859,7 +1859,7 @@ spdk_iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
 		if (strcasecmp(auth_method, "None") == 0) {
-			conn->authenticated = 1;
+			conn->authenticated = true;
 		} else {
 			rc = spdk_iscsi_auth_params(conn, params, auth_method,
 						    rsp_pdu->data, alloc_len,
@@ -1872,7 +1872,7 @@ spdk_iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 				return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 			}
 			rsp_pdu->data_segment_len = rc;
-			if (conn->authenticated == 0) {
+			if (!conn->authenticated) {
 				/* not complete */
 				rsph->flags &= ~ISCSI_LOGIN_TRANSIT;
 			} else {
@@ -1889,17 +1889,17 @@ spdk_iscsi_op_login_rsp_handle_csg_bit(struct spdk_iscsi_conn *conn,
 	case ISCSI_OPERATIONAL_NEGOTIATION_PHASE:
 		/* LoginOperationalNegotiation */
 		if (conn->state == ISCSI_CONN_STATE_INVALID) {
-			if (conn->req_auth) {
+			if (conn->require_chap) {
 				/* Authentication failure */
 				rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
 				rsph->status_detail = ISCSI_LOGIN_AUTHENT_FAIL;
 				return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 			} else {
 				/* AuthMethod=None */
-				conn->authenticated = 1;
+				conn->authenticated = true;
 			}
 		}
-		if (conn->authenticated == 0) {
+		if (!conn->authenticated) {
 			SPDK_ERRLOG("authentication error\n");
 			/* Authentication failure */
 			rsph->status_class = ISCSI_CLASS_INITIATOR_ERROR;
