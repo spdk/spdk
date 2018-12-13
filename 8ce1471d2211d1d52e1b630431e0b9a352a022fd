@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37dbf9cd_1e5f0b78",
+        "filename": "lib/event/app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-13T04:49:15Z",
+      "side": 1,
+      "message": "you can remove this because this is saved into g_spdk_app.json_rpc_addr.",
+      "range": {
+        "startLine": 653,
+        "startChar": 11,
+        "endLine": 653,
+        "endChar": 33
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2beb2df1_99cd260e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-13T04:49:15Z",
+      "side": 1,
+      "message": "g_init_lcore is same.",
+      "range": {
+        "startLine": 658,
+        "startChar": 42,
+        "endLine": 658,
+        "endChar": 69
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb666662_e50901c1",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-13T04:49:15Z",
+      "side": 1,
+      "message": "Get ?",
+      "range": {
+        "startLine": 278,
+        "startChar": 4,
+        "endLine": 278,
+        "endChar": 7
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d525ad88_690c52aa",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 509,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-13T04:49:15Z",
+      "side": 1,
+      "message": "we should not stop here and call start_subsystem_init after initializing RPC in this case?",
+      "range": {
+        "startLine": 506,
+        "startChar": 0,
+        "endLine": 509,
+        "endChar": 2
+      },
+      "revId": "8ce1471d2211d1d52e1b630431e0b9a352a022fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
