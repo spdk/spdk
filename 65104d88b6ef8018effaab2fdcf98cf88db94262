@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d5fd7f6_dcb2ded2",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T11:50:16Z",
+      "side": 1,
+      "message": "realloc(NULL, M) is fine but spdk_vsprintf_realloc(NULL, \"%s\", ...) is not fine. So I thinks this should be called \"_append\" or something.\n\nBut, I would suggest making this function behave like libc realloc() then change the spdk_sprintf_alloc() and spdk_vsprintf_alloc() just call spdk_vsprintf_realloc(NULL, fmt, args).",
+      "range": {
+        "startLine": 96,
+        "startChar": 14,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "012cd44c_679d8e1f",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T11:50:16Z",
+      "side": 1,
+      "message": "You should use realloc() so memcpy will be handled by libc if required.",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
