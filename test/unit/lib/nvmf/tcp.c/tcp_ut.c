@@ -87,7 +87,7 @@ DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
 	    0);
 
 DEFINE_STUB_V(spdk_nvmf_get_discovery_log_page,
-	      (struct spdk_nvmf_tgt *tgt, void *buffer, uint64_t offset, uint32_t length));
+	      (struct spdk_nvmf_tgt *tgt, struct iovec *iov, uint32_t iovcnt, uint64_t offset, uint32_t length));
 
 DEFINE_STUB_V(spdk_nvmf_subsystem_remove_ctrlr,
 	      (struct spdk_nvmf_subsystem *subsystem, struct spdk_nvmf_ctrlr *ctrlr));
