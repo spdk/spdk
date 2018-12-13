@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "759b588c_7a7eddbf",
+        "filename": "doc/nvme-cli.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-13T21:54:00Z",
+      "side": 1,
+      "message": "It is actually core 0.",
+      "revId": "22de501a5a775e9629ce2f7ebf7517b4cf6de522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
