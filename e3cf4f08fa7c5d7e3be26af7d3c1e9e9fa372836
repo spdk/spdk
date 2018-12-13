@@ -348,6 +348,30 @@
     },
     {
       "key": {
+        "uuid": "3399ac9c_3d7ca503",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T14:59:14Z",
+      "side": 1,
+      "message": "I don\u0027t know what for the uuid is used in OCF but passing address, beside it is not uuid spec complaint for sure, it expose application memory layout which is not acceptable. If you need uuid you can generate one (see spdk/uuid.h) but don\u0027t do that kind of hacks.",
+      "parentUuid": "2e49be41_8728d256",
+      "range": {
+        "startLine": 561,
+        "startChar": 1,
+        "endLine": 574,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e4066d4_794ef3f5",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
