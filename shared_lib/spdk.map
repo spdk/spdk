@@ -10,6 +10,8 @@
 	g_spdk_iscsi_opts;
 	_spdk_trace_record;
 	g_trace_histories;
+	g_spdk_nvme_pid;
+	nvme_qpair_submit_request;
 
 	local: *;
 };
