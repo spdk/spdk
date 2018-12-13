@@ -134,7 +134,6 @@ struct spdk_vhost_dev_backend {
 };
 
 struct spdk_vhost_dev {
-	struct rte_vhost_memory *mem;
 	char *name;
 	char *path;
 
@@ -143,7 +142,6 @@ struct spdk_vhost_dev {
 
 	/* rte_vhost device ID. */
 	int vid;
-	int task_cnt;
 	int32_t lcore;
 	struct spdk_cpuset *cpumask;
 	bool registered;
@@ -161,17 +159,24 @@ struct spdk_vhost_dev {
 	/* Threshold when event coalescing for virtqueue will be turned on. */
 	uint32_t  coalescing_io_rate_threshold;
 
-	/* Next time when stats for event coalescing will be checked. */
-	uint64_t next_stats_check_time;
+	/* Active connection to the device */
+	struct spdk_vhost_session {
+		struct rte_vhost_memory *mem;
 
-	/* Interval used for event coalescing checking. */
-	uint64_t stats_check_interval;
+		int task_cnt;
 
-	uint16_t max_queues;
+		/* Next time when stats for event coalescing will be checked. */
+		uint64_t next_stats_check_time;
 
-	uint64_t negotiated_features;
+		/* Interval used for event coalescing checking. */
+		uint64_t stats_check_interval;
 
-	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+		uint16_t max_queues;
+
+		uint64_t negotiated_features;
+
+		struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+	} session;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
@@ -183,7 +188,7 @@ struct spdk_vhost_dev_destroy_ctx {
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len);
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
 				      uint16_t reqs_len);
@@ -193,7 +198,7 @@ uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t 
  * The descriptor will provide access to the entire descriptor
  * chain. The subsequent descriptors are accesible via
  * \c spdk_vhost_vring_desc_get_next.
- * \param vdev vhost device
+ * \param vdev vhost device FIXME
  * \param vq virtqueue
  * \param req_idx descriptor index
  * \param desc pointer to be set to the descriptor
@@ -205,29 +210,30 @@ uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t 
  * \return 0 on success, -1 if given index is invalid.
  * If -1 is returned, the content of params is undefined.
  */
-int spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+int spdk_vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq,
 			   uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 			   uint32_t *desc_table_size);
 
 /**
  * Send IRQ/call client (if pending) for \c vq.
- * \param vdev vhost device
+ * \param vdev vhost device FIXME
  * \param vq virtqueue
  * \return
  *   0 - if no interrupt was signalled
  *   1 - if interrupt was signalled
  */
-int spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq);
+int spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *vq);
 
 
 /**
  * Send IRQs for all queues that need to be signaled.
- * \param vdev vhost device
+ * \param vdev FIXME
  * \param vq virtqueue
  */
-void spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev);
+void spdk_vhost_session_used_signal(struct spdk_vhost_session *vsession);
 
-void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq,
+void spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
+				     struct spdk_vhost_virtqueue *vq,
 				     uint16_t id, uint32_t len);
 
 /**
@@ -245,13 +251,13 @@ int spdk_vhost_vring_desc_get_next(struct vring_desc **desc,
 				   struct vring_desc *desc_table, uint32_t desc_table_size);
 bool spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc);
 
-int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
+int spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 				 uint16_t *iov_index, const struct vring_desc *desc);
 
 static inline bool __attribute__((always_inline))
-spdk_vhost_dev_has_feature(struct spdk_vhost_dev *vdev, unsigned feature_id)
+spdk_vhost_dev_has_feature(struct spdk_vhost_session *vsession, unsigned feature_id)
 {
-	return vdev->negotiated_features & (1ULL << feature_id);
+	return vsession->negotiated_features & (1ULL << feature_id);
 }
 
 int spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,

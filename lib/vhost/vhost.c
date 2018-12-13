@@ -89,13 +89,13 @@ static TAILQ_HEAD(, spdk_vhost_dev) g_spdk_vhost_devices = TAILQ_HEAD_INITIALIZE
 			g_spdk_vhost_devices);
 static pthread_mutex_t g_spdk_vhost_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t len)
+void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len)
 {
 	void *vva;
 	uint64_t newlen;
 
 	newlen = len;
-	vva = (void *)rte_vhost_va_from_guest_pa(vdev->mem, addr, &newlen);
+	vva = (void *)rte_vhost_va_from_guest_pa(vsession->mem, addr, &newlen);
 	if (newlen != len) {
 		return NULL;
 	}
@@ -105,18 +105,19 @@ void *spdk_vhost_gpa_to_vva(struct spdk_vhost_dev *vdev, uint64_t addr, uint64_t
 }
 
 static void
-spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+spdk_vhost_log_req_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 			uint16_t req_id)
 {
+	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	struct vring_desc *desc, *desc_table;
 	uint32_t desc_table_size;
 	int rc;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vsession, VHOST_F_LOG_ALL))) {
 		return;
 	}
 
-	rc = spdk_vhost_vq_get_desc(vdev, virtqueue, req_id, &desc, &desc_table, &desc_table_size);
+	rc = spdk_vhost_vq_get_desc(vsession, virtqueue, req_id, &desc, &desc_table, &desc_table_size);
 	if (spdk_unlikely(rc != 0)) {
 		SPDK_ERRLOG("Can't log used ring descriptors!\n");
 		return;
@@ -135,36 +136,40 @@ spdk_vhost_log_req_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue
 }
 
 static void
-spdk_vhost_log_used_vring_elem(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+spdk_vhost_log_used_vring_elem(struct spdk_vhost_session *vsession,
+			       struct spdk_vhost_virtqueue *virtqueue,
 			       uint16_t idx)
 {
+	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vsession, VHOST_F_LOG_ALL))) {
 		return;
 	}
 
 	offset = offsetof(struct vring_used, ring[idx]);
 	len = sizeof(virtqueue->vring.used->ring[idx]);
-	vq_idx = virtqueue - vdev->virtqueue;
+	vq_idx = virtqueue - vsession->virtqueue;
 
 	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
 }
 
 static void
-spdk_vhost_log_used_vring_idx(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
+spdk_vhost_log_used_vring_idx(struct spdk_vhost_session *vsession,
+			      struct spdk_vhost_virtqueue *virtqueue)
 {
+	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	uint64_t offset, len;
 	uint16_t vq_idx;
 
-	if (spdk_likely(!spdk_vhost_dev_has_feature(vdev, VHOST_F_LOG_ALL))) {
+	if (spdk_likely(!spdk_vhost_dev_has_feature(vsession, VHOST_F_LOG_ALL))) {
 		return;
 	}
 
 	offset = offsetof(struct vring_used, idx);
 	len = sizeof(virtqueue->vring.used->idx);
-	vq_idx = virtqueue - vdev->virtqueue;
+	vq_idx = virtqueue - vsession->virtqueue;
 
 	rte_vhost_log_used_vring(vdev->vid, vq_idx, offset, len);
 }
@@ -214,7 +219,7 @@ spdk_vhost_vring_desc_is_indirect(struct vring_desc *cur_desc)
 }
 
 int
-spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+spdk_vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_virtqueue *virtqueue,
 		       uint16_t req_idx, struct vring_desc **desc, struct vring_desc **desc_table,
 		       uint32_t *desc_table_size)
 {
@@ -225,9 +230,9 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 	*desc = &virtqueue->vring.desc[req_idx];
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
-		assert(spdk_vhost_dev_has_feature(vdev, VIRTIO_RING_F_INDIRECT_DESC));
+		assert(spdk_vhost_dev_has_feature(vsession, VIRTIO_RING_F_INDIRECT_DESC));
 		*desc_table_size = (*desc)->len / sizeof(**desc);
-		*desc_table = spdk_vhost_gpa_to_vva(vdev, (*desc)->addr,
+		*desc_table = spdk_vhost_gpa_to_vva(vsession, (*desc)->addr,
 						    sizeof(**desc) * *desc_table_size);
 		*desc = *desc_table;
 		if (*desc == NULL) {
@@ -244,7 +249,8 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue 
 }
 
 int
-spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue)
+spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession,
+			  struct spdk_vhost_virtqueue *virtqueue)
 {
 	if (virtqueue->used_req_cnt == 0) {
 		return 0;
@@ -255,7 +261,7 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtque
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
-		      virtqueue - vdev->virtqueue, virtqueue->vring.last_used_idx);
+		      virtqueue - vsession->virtqueue, virtqueue->vring.last_used_idx);
 
 	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
 	return 1;
@@ -263,8 +269,9 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtque
 
 
 static void
-check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
+check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 {
+	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint32_t irq_delay_base = vdev->coalescing_delay_time_base;
 	uint32_t io_threshold = vdev->coalescing_io_rate_threshold;
@@ -272,13 +279,13 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 	uint32_t req_cnt;
 	uint16_t q_idx;
 
-	if (now < vdev->next_stats_check_time) {
+	if (now < vsession->next_stats_check_time) {
 		return;
 	}
 
-	vdev->next_stats_check_time = now + vdev->stats_check_interval;
-	for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
-		virtqueue = &vdev->virtqueue[q_idx];
+	vsession->next_stats_check_time = now + vsession->stats_check_interval;
+	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+		virtqueue = &vsession->virtqueue[q_idx];
 
 		req_cnt = virtqueue->req_cnt + virtqueue->used_req_cnt;
 		if (req_cnt <= io_threshold) {
@@ -294,29 +301,30 @@ check_dev_io_stats(struct spdk_vhost_dev *vdev, uint64_t now)
 }
 
 void
-spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
+spdk_vhost_session_used_signal(struct spdk_vhost_session *vsession)
 {
+	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint64_t now;
 	uint16_t q_idx;
 
 	if (vdev->coalescing_delay_time_base == 0) {
-		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
-			virtqueue = &vdev->virtqueue[q_idx];
+		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+			virtqueue = &vsession->virtqueue[q_idx];
 
 			if (virtqueue->vring.desc == NULL ||
 			    (virtqueue->vring.avail->flags & VRING_AVAIL_F_NO_INTERRUPT)) {
 				continue;
 			}
 
-			spdk_vhost_vq_used_signal(vdev, virtqueue);
+			spdk_vhost_vq_used_signal(vsession, virtqueue);
 		}
 	} else {
 		now = spdk_get_ticks();
-		check_dev_io_stats(vdev, now);
+		check_session_io_stats(vsession, now);
 
-		for (q_idx = 0; q_idx < vdev->max_queues; q_idx++) {
-			virtqueue = &vdev->virtqueue[q_idx];
+		for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
+			virtqueue = &vsession->virtqueue[q_idx];
 
 			/* No need for event right now */
 			if (now < virtqueue->next_event_time ||
@@ -324,7 +332,7 @@ spdk_vhost_dev_used_signal(struct spdk_vhost_dev *vdev)
 				continue;
 			}
 
-			if (!spdk_vhost_vq_used_signal(vdev, virtqueue)) {
+			if (!spdk_vhost_vq_used_signal(vsession, virtqueue)) {
 				continue;
 			}
 
@@ -376,7 +384,8 @@ spdk_vhost_get_coalescing(struct spdk_vhost_dev *vdev, uint32_t *delay_base_us,
  * Enqueue id and len to used ring.
  */
 void
-spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *virtqueue,
+spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
+				struct spdk_vhost_virtqueue *virtqueue,
 				uint16_t id, uint32_t len)
 {
 	struct rte_vhost_vring *vring = &virtqueue->vring;
@@ -385,9 +394,9 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      virtqueue - vdev->virtqueue, vring->last_used_idx, id, len);
+		      virtqueue - vsession->virtqueue, vring->last_used_idx, id, len);
 
-	spdk_vhost_log_req_desc(vdev, virtqueue, id);
+	spdk_vhost_log_req_desc(vsession, virtqueue, id);
 
 	vring->last_used_idx++;
 	used->ring[last_idx].id = id;
@@ -396,9 +405,9 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_dev *vdev, struct spdk_vhost_v
 	/* Ensure the used ring is updated before we log it or increment used->idx. */
 	spdk_smp_wmb();
 
-	spdk_vhost_log_used_vring_elem(vdev, virtqueue, last_idx);
+	spdk_vhost_log_used_vring_elem(vsession, virtqueue, last_idx);
 	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
-	spdk_vhost_log_used_vring_idx(vdev, virtqueue);
+	spdk_vhost_log_used_vring_idx(vsession, virtqueue);
 
 	/* Ensure all our used ring changes are visible to the guest at the time
 	 * of interrupt.
@@ -441,7 +450,7 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 #define _2MB_OFFSET(ptr)	((ptr) & (0x200000 - 1))
 
 int
-spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
+spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
 			     uint16_t *iov_index, const struct vring_desc *desc)
 {
 	uint32_t remaining = desc->len;
@@ -455,7 +464,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
 			return -1;
 		}
-		vva = (uintptr_t)rte_vhost_gpa_to_vva(vdev->mem, payload);
+		vva = (uintptr_t)rte_vhost_gpa_to_vva(vsession->mem, payload);
 		if (vva == 0) {
 			SPDK_ERRLOG("gpa_to_vva(%p) == NULL\n", (void *)payload);
 			return -1;
@@ -474,7 +483,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_dev *vdev, struct iovec *iov,
 			 */
 			len = to_boundary;
 			while (len < remaining) {
-				if (vva + len != (uintptr_t)rte_vhost_gpa_to_vva(vdev->mem, payload + len)) {
+				if (vva + len != (uintptr_t)rte_vhost_gpa_to_vva(vsession->mem, payload + len)) {
 					break;
 				}
 				len += spdk_min(remaining - len, 0x200000);
@@ -524,14 +533,14 @@ spdk_vhost_dev_find_by_vid(int vid)
 #define CEIL_2MB(x)	((((uintptr_t)x) + SIZE_2MB - 1) / SIZE_2MB) << SHIFT_2MB
 
 static void
-spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
+spdk_vhost_session_mem_register(struct spdk_vhost_session *vsession)
 {
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
+	for (i = 0; i < vsession->mem->nregions; i++) {
 		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
+		region = &vsession->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
@@ -547,14 +556,14 @@ spdk_vhost_dev_mem_register(struct spdk_vhost_dev *vdev)
 }
 
 static void
-spdk_vhost_dev_mem_unregister(struct spdk_vhost_dev *vdev)
+spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 {
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
 
-	for (i = 0; i < vdev->mem->nregions; i++) {
+	for (i = 0; i < vsession->mem->nregions; i++) {
 		uint64_t start, end, len;
-		region = &vdev->mem->regions[i];
+		region = &vsession->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
@@ -752,9 +761,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
-	vdev->next_stats_check_time = 0;
-	vdev->stats_check_interval = SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS * spdk_get_ticks_hz() /
-				     1000UL;
 
 	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
 
@@ -1015,6 +1021,7 @@ static void
 stop_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 	struct rte_vhost_vring *q;
 	int rc;
 	uint16_t i;
@@ -1040,16 +1047,17 @@ stop_device(int vid)
 		return;
 	}
 
-	for (i = 0; i < vdev->max_queues; i++) {
-		q = &vdev->virtqueue[i].vring;
+	vsession = &vdev->session;
+	for (i = 0; i < vsession->max_queues; i++) {
+		q = &vsession->virtqueue[i].vring;
 		if (q->desc == NULL) {
 			continue;
 		}
 		rte_vhost_set_vhost_vring_last_idx(vdev->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
-	spdk_vhost_dev_mem_unregister(vdev);
-	free(vdev->mem);
+	spdk_vhost_session_mem_unregister(vsession);
+	free(vsession->mem);
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1059,6 +1067,7 @@ static int
 start_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 	int rc = -1;
 	uint16_t i;
 
@@ -1075,15 +1084,17 @@ start_device(int vid)
 		goto out;
 	}
 
-	vdev->max_queues = 0;
-	memset(vdev->virtqueue, 0, sizeof(vdev->virtqueue));
+	vsession = &vdev->session;
+
+	vsession->max_queues = 0;
+	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vdev->virtqueue[i].vring)) {
+		if (rte_vhost_get_vhost_vring(vid, i, &vsession->virtqueue[i].vring)) {
 			continue;
 		}
 
-		if (vdev->virtqueue[i].vring.desc == NULL ||
-		    vdev->virtqueue[i].vring.size == 0) {
+		if (vsession->virtqueue[i].vring.desc == NULL ||
+		    vsession->virtqueue[i].vring.size == 0) {
 			continue;
 		}
 
@@ -1093,15 +1104,15 @@ start_device(int vid)
 			goto out;
 		}
 
-		vdev->max_queues = i + 1;
+		vsession->max_queues = i + 1;
 	}
 
-	if (rte_vhost_get_negotiated_features(vid, &vdev->negotiated_features) != 0) {
+	if (rte_vhost_get_negotiated_features(vid, &vsession->negotiated_features) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get negotiated driver features\n", vid);
 		goto out;
 	}
 
-	if (rte_vhost_get_mem_table(vid, &vdev->mem) != 0) {
+	if (rte_vhost_get_mem_table(vid, &vsession->mem) != 0) {
 		SPDK_ERRLOG("vhost device %d: Failed to get guest memory table\n", vid);
 		goto out;
 	}
@@ -1115,18 +1126,18 @@ start_device(int vid)
 	 *
 	 * Tested on QEMU 2.10.91 and 2.11.50.
 	 */
-	for (i = 0; i < vdev->max_queues; i++) {
-		if (vdev->virtqueue[i].vring.callfd != -1) {
-			eventfd_write(vdev->virtqueue[i].vring.callfd, (eventfd_t)1);
+	for (i = 0; i < vsession->max_queues; i++) {
+		if (vsession->virtqueue[i].vring.callfd != -1) {
+			eventfd_write(vsession->virtqueue[i].vring.callfd, (eventfd_t)1);
 		}
 	}
 
 	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
-	spdk_vhost_dev_mem_register(vdev);
+	spdk_vhost_session_mem_register(vsession);
 	rc = _spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
 	if (rc != 0) {
-		spdk_vhost_dev_mem_unregister(vdev);
-		free(vdev->mem);
+		spdk_vhost_session_mem_unregister(vsession);
+		free(vsession->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
 	}
