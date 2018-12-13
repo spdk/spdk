@@ -22,6 +22,30 @@
       "revId": "cf24062888f3e08aa5cb74cfa6a3052577d93104",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c02a7021_189fc643",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-13T15:43:27Z",
+      "side": 1,
+      "message": "ehhhh... this is not the version I wanted to send :(",
+      "parentUuid": "4211ff8f_7b2d7a83",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 8
+      },
+      "revId": "cf24062888f3e08aa5cb74cfa6a3052577d93104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
