@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01771c29_2d4b16da",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-12-13T14:28:47Z",
+      "side": 1,
+      "message": "This method is used only once. DO we really need it?",
+      "range": {
+        "startLine": 96,
+        "startChar": 13,
+        "endLine": 96,
+        "endChar": 25
+      },
+      "revId": "0f59a218ec55ec88c7a1d4369d9402cd322dcd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
