@@ -134,9 +134,9 @@ struct spdk_iscsi_conn {
 	bool sess_param_state_negotiated[MAX_SESSION_PARAMS];
 	bool conn_param_state_negotiated[MAX_CONNECTION_PARAMS];
 	struct iscsi_chap_auth auth;
-	int authenticated;
-	int req_auth;
-	int req_mutual;
+	bool authenticated;
+	bool require_chap;
+	bool mutual_chap;
 	uint32_t pending_task_cnt;
 	uint32_t data_out_cnt;
 	uint32_t data_in_cnt;
