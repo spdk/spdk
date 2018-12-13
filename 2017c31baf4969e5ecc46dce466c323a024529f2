@@ -16,6 +16,24 @@
       "revId": "2017c31baf4969e5ecc46dce466c323a024529f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1823c61_db87029d",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-13T01:36:55Z",
+      "side": 1,
+      "message": "Let me update this patch.",
+      "parentUuid": "ae1590eb_07d38833",
+      "revId": "2017c31baf4969e5ecc46dce466c323a024529f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
