@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "80cba7c3_87dfcb12",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-12-13T14:35:59Z",
+      "side": 1,
+      "message": "I think this code gets two responses not multiple",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 82,
+        "endChar": 53
+      },
+      "revId": "e1cbcd398fe79e5127f837ab5eafc9bad34cc6ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
