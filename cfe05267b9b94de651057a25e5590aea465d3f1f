@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c48df02d_8caaac04",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-13T12:50:24Z",
+      "side": 1,
+      "message": "ok ,thanks for you hard working",
+      "parentUuid": "f7b668e3_6e5b58a8",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 95,
+        "endChar": 2
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3623c1e4_adde9778",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-13T09:19:30Z",
       "side": 1,
       "message": "Please try to use named variables instead of $1 $2 $3 to avoid confusion.\nAs a user, not as author, I find it hard to figure out what these variables do.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 52
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e7e844f_113a9772",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-13T12:50:24Z",
+      "side": 1,
+      "message": "ok. I will change this.",
+      "parentUuid": "3623c1e4_adde9778",
       "range": {
         "startLine": 107,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "7d9c178f_8ed93553",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-13T12:50:24Z",
+      "side": 1,
+      "message": "hi karol,\n   I tried a lot to verify fedora. fedora26, some filesytem will hung on fedora26.\n    but Fedora28 can work without error,and more smoothly. So change this default to fedora28.",
+      "parentUuid": "b59147bd_bb4f9917",
+      "range": {
+        "startLine": 120,
+        "startChar": 31,
+        "endLine": 120,
+        "endChar": 54
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18542c50_a3d75f6a",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "603fa299_df7b6992",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-13T12:50:24Z",
+      "side": 1,
+      "message": "this vm is a base machine. most of the time ,we don\u0027t need to create it.\njust to run VM_auto_test, If a VM create , I try to switch iscsi on , and then also need to install libiscsi,what\u0027s you idea?",
+      "parentUuid": "18542c50_a3d75f6a",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "154b4d2d_6f1902ad",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -105,6 +201,30 @@
       "writtenOn": "2018-12-13T09:19:30Z",
       "side": 1,
       "message": "Commented. Can be removed?",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 20
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c1fb4eb_1c985b05",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-13T12:50:24Z",
+      "side": 1,
+      "message": "this is a demo check in fedora VM , and with trap destory VM, it a demo case failed.\nsuch as can\u0027t find a virtual nvme disk, that means a vm created failed. need to destroy and recreated.",
+      "parentUuid": "154b4d2d_6f1902ad",
       "range": {
         "startLine": 126,
         "startChar": 0,
