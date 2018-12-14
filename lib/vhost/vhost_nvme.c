@@ -248,7 +248,7 @@ static int
 spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		   struct spdk_vhost_nvme_task *task, uint32_t len)
 {
-	struct spdk_vhost_session *vsession = &nvme->vdev.session;
+	struct spdk_vhost_session *vsession = nvme->vdev.session;
 	uint64_t prp1, prp2;
 	void *vva;
 	uint32_t i;
@@ -699,7 +699,7 @@ static int
 vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 				  struct spdk_nvme_cmd *cmd, struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_vhost_session *vsession = &nvme->vdev.session;
+	struct spdk_vhost_session *vsession = nvme->vdev.session;
 	uint64_t dbs_dma_addr, eis_dma_addr;
 
 	dbs_dma_addr = cmd->dptr.prp.prp1;
@@ -765,7 +765,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	sq->size = qsize + 1;
 	sq->sq_head = sq->sq_tail = 0;
 	requested_len = sizeof(struct spdk_nvme_cmd) * sq->size;
-	sq->sq_cmd = spdk_vhost_gpa_to_vva(&nvme->vdev.session, dma_addr, requested_len);
+	sq->sq_cmd = spdk_vhost_gpa_to_vva(nvme->vdev.session, dma_addr, requested_len);
 	if (!sq->sq_cmd) {
 		return -1;
 	}
@@ -848,7 +848,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	cq->guest_signaled_cq_head = 0;
 	cq->need_signaled_cnt = 0;
 	requested_len = sizeof(struct spdk_nvme_cpl) * cq->size;
-	cq->cq_cqe = spdk_vhost_gpa_to_vva(&nvme->vdev.session, dma_addr, requested_len);
+	cq->cq_cqe = spdk_vhost_gpa_to_vva(nvme->vdev.session, dma_addr, requested_len);
 	if (!cq->cq_cqe) {
 		return -1;
 	}
@@ -893,7 +893,7 @@ spdk_vhost_nvme_get_by_name(int vid)
 	struct spdk_vhost_nvme_dev *nvme;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vdev.session.vid == vid) {
+		if (nvme->vdev.session != NULL && nvme->vdev.session->vid == vid) {
 			return nvme;
 		}
 	}
@@ -1084,7 +1084,7 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 		return -1;
 	}
 
-	SPDK_NOTICELOG("Start Device %u, Path %s, lcore %d\n", vdev->session.vid,
+	SPDK_NOTICELOG("Start Device %u, Path %s, lcore %d\n", vdev->session->vid,
 		       vdev->path, vdev->lcore);
 
 	for (i = 0; i < nvme->num_ns; i++) {
@@ -1171,7 +1171,7 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	free_task_pool(nvme);
-	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->session.vid, vdev->path);
+	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vdev->session->vid, vdev->path);
 
 	nvme->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&nvme->requestq_poller);

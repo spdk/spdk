@@ -152,6 +152,7 @@ static void
 start_vdev(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_memory *mem;
+	int rc;
 
 	mem = calloc(1, sizeof(*mem) + 2 * sizeof(struct rte_vhost_mem_region));
 	SPDK_CU_ASSERT_FATAL(mem != NULL);
@@ -164,22 +165,29 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].host_user_addr = 0x2000000;
 
 	vdev->lcore = 0;
-	vdev->session.vid = 0;
-	vdev->session.mem = mem;
+	assert(vdev->session == NULL);
+	/* spdk_vhost_dev must be allocated on a cache line boundary. */
+	rc = posix_memalign((void **)&vdev->session, 64, sizeof(*vdev->session));
+	CU_ASSERT(rc == 0);
+	SPDK_CU_ASSERT_FATAL(vdev->session != NULL);
+	vdev->session->vid = 0;
+	vdev->session->mem = mem;
 }
 
 static void
 stop_vdev(struct spdk_vhost_dev *vdev)
 {
-	free(vdev->session.mem);
-	vdev->session.mem = NULL;
-	vdev->session.vid = -1;
+	free(vdev->session->mem);
+	free(vdev->session);
+	vdev->session = NULL;
 }
 
 static void
 cleanup_vdev(struct spdk_vhost_dev *vdev)
 {
-	stop_vdev(vdev);
+	if (vdev->session) {
+		stop_vdev(vdev);
+	}
 	spdk_vhost_dev_unregister(vdev);
 	free(vdev);
 }
@@ -198,7 +206,7 @@ desc_to_iov_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
-	vsession = &vdev->session;
+	vsession = vdev->session;
 
 	/* Test simple case where iov falls fully within a 2MB page. */
 	desc.addr = 0x110000;
@@ -310,12 +318,13 @@ session_find_by_vid_test(void)
 
 	rc = alloc_vdev(&vdev, "vdev_name_0", "0x1");
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
+	start_vdev(vdev);
 
-	tmp = spdk_vhost_session_find_by_vid(vdev->session.vid);
-	CU_ASSERT(tmp == &vdev->session);
+	tmp = spdk_vhost_session_find_by_vid(vdev->session->vid);
+	CU_ASSERT(tmp == vdev->session);
 
 	/* Search for a device with incorrect vid */
-	tmp = spdk_vhost_session_find_by_vid(vdev->session.vid + 0xFF);
+	tmp = spdk_vhost_session_find_by_vid(vdev->session->vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
 	cleanup_vdev(vdev);
