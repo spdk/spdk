@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "bb75265a_ef59eca4",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-14T17:13:38Z",
+      "side": 1,
+      "message": "I tend to agree with Lance here.  Using the v%{version} thing works here, but doesn\u0027t work on master.",
+      "parentUuid": "8251becf_070748f0",
+      "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d714f19_1d19d1ff",
         "filename": "pkg/spdk.spec",
         "patchSetId": 6
