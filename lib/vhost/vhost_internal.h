@@ -133,6 +133,29 @@ struct spdk_vhost_dev_backend {
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
 
+struct spdk_vhost_session {
+	struct spdk_vhost_dev *vdev;
+
+	/* rte_vhost connection ID. */
+	int vid;
+
+	struct rte_vhost_memory *mem;
+
+	int task_cnt;
+
+	/* Next time when stats for event coalescing will be checked. */
+	uint64_t next_stats_check_time;
+
+	/* Interval used for event coalescing checking. */
+	uint64_t stats_check_interval;
+
+	uint16_t max_queues;
+
+	uint64_t negotiated_features;
+
+	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+};
+
 struct spdk_vhost_dev {
 	char *name;
 	char *path;
@@ -158,28 +181,7 @@ struct spdk_vhost_dev {
 	uint32_t  coalescing_io_rate_threshold;
 
 	/* Active connection to the device */
-	struct spdk_vhost_session {
-		struct spdk_vhost_dev *vdev;
-
-		/* rte_vhost connection ID. */
-		int vid;
-
-		struct rte_vhost_memory *mem;
-
-		int task_cnt;
-
-		/* Next time when stats for event coalescing will be checked. */
-		uint64_t next_stats_check_time;
-
-		/* Interval used for event coalescing checking. */
-		uint64_t stats_check_interval;
-
-		uint16_t max_queues;
-
-		uint64_t negotiated_features;
-
-		struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
-	} session;
+	struct spdk_vhost_session *session;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
