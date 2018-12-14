@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "517d60e7_2b3e123a",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T18:39:01Z",
+      "side": 1,
+      "message": "Remove the leading \u0027v\u0027 before the last instance of %{version}; i.e.\n\nSource: https://github.com/spdk/spdk/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz",
+      "revId": "42a5cd4ef91d9b962f12c579e806d515c4f9874f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
