@@ -1,7 +1,7 @@
 set -e
 
 : ${SPDK_VHOST_VERBOSE=false}
-: ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12"}
+: ${QEMU_PREFIX="/usr/local/qemu/spdk-3.0.0"}
 
 BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
