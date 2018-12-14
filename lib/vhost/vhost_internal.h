@@ -116,6 +116,12 @@ struct spdk_vhost_dev_backend {
 	uint64_t disabled_features;
 
 	/**
+	 * Size of additional per-session context data
+	 * allocated whenever a new client connects.
+	 */
+	size_t session_ctx_size;
+
+	/**
 	 * Callbacks for starting and pausing the device.
 	 * The first param is struct spdk_vhost_dev *.
 	 * The second one is event context that has to be
