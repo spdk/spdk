@@ -48,6 +48,7 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_io_size = (SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
 	.io_unit_size = SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE,
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
+	.max_shared_buffer_num = SPDK_NVMF_RDMA_DEFAULT_SHARED_BUFFER_NUM,
 };
 
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
