@@ -268,7 +268,7 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 static void
 check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 {
-	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint32_t irq_delay_base = vdev->coalescing_delay_time_base;
 	uint32_t io_threshold = vdev->coalescing_io_rate_threshold;
@@ -300,7 +300,7 @@ check_session_io_stats(struct spdk_vhost_session *vsession, uint64_t now)
 void
 spdk_vhost_session_used_signal(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_dev *vdev = SPDK_CONTAINEROF(vsession, struct spdk_vhost_dev, session);
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_virtqueue *virtqueue;
 	uint64_t now;
 	uint16_t q_idx;
@@ -516,8 +516,8 @@ spdk_vhost_session_find_by_vid(int vid)
 	struct spdk_vhost_dev *vdev;
 
 	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->session.vid == vid) {
-			return &vdev->session;
+		if (vdev->session && vdev->session->vid == vid) {
+			return vdev->session;
 		}
 	}
 
@@ -750,7 +750,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->id = ctrlr_num++;
-	vdev->session.vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
@@ -772,7 +771,7 @@ out:
 int
 spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->session.vid != -1) {
+	if (vdev->session) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -EBUSY;
 	}
@@ -1270,16 +1269,21 @@ new_connection(int vid)
 		return -1;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
-	vsession = &vdev->session;
-	if (vsession->vid != -1) {
-		SPDK_ERRLOG("Session with vid %d already exists.\n", vid);
+	if (vdev->session != NULL) {
+		SPDK_ERRLOG("Device %s is already connected.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	vsession = calloc(1, sizeof(struct spdk_vhost_session));
+	if (vsession == NULL) {
+		SPDK_ERRLOG("calloc failed\n");
 		return -1;
 	}
 
 	vsession->vdev = vdev;
 	vsession->vid = vid;
+	vdev->session = vsession;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }
@@ -1297,8 +1301,8 @@ destroy_connection(int vid)
 		return;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
-	vsession->vid = -1;
+	vsession->vdev->session = NULL;
+	free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
