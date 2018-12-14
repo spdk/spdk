@@ -16,6 +16,24 @@
       "revId": "45b79232bd3450ec6f7037f70376149c5db6503f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ef0548c_85e28167",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-14T14:59:58Z",
+      "side": 1,
+      "message": "Yeah - I don\u0027t think it needs to be an exhaustive list here.  People can easily see exactly went into 18.10.1 by doing a git diff or log v18.10..v18.10.1.",
+      "parentUuid": "684a70e2_fc65e1cc",
+      "revId": "45b79232bd3450ec6f7037f70376149c5db6503f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
