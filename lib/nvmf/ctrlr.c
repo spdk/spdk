@@ -352,7 +352,7 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "  subnqn: \"%s\"\n", subnqn);
 
 	subsystem = spdk_nvmf_tgt_find_subsystem(tgt, subnqn);
-	if (subsystem == NULL) {
+	if ((subsystem == NULL) || (subsystem->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
 		SPDK_ERRLOG("Could not find subsystem '%s'\n", subnqn);
 		SPDK_NVMF_INVALID_CONNECT_DATA(rsp, subnqn);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;

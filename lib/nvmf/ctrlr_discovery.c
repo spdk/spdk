@@ -71,7 +71,7 @@ nvmf_update_discovery_log(struct spdk_nvmf_tgt *tgt)
 
 	for (sid = 0; sid < tgt->max_subsystems; sid++) {
 		subsystem = tgt->subsystems[sid];
-		if (subsystem == NULL) {
+		if ((subsystem == NULL) || (subsystem->state != SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
 			continue;
 		}
 
