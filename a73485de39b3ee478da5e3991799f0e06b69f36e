@@ -117,6 +117,30 @@
     },
     {
       "key": {
+        "uuid": "eca523fd_27655e0b",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-14T00:36:45Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "19fb2514_e9b64fc3",
+      "range": {
+        "startLine": 899,
+        "startChar": 0,
+        "endLine": 902,
+        "endChar": 2
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efec3105_211d56f9",
         "filename": "lib/scsi/scsi_internal.h",
         "patchSetId": 5
@@ -128,6 +152,30 @@
       "writtenOn": "2018-12-13T12:12:26Z",
       "side": 1,
       "message": "Is there a reason for having \u0027holder\u0027?\nYou can you make TAILQ_FIRST(\u0026dev-\u003ereg_head) equal to the holder.",
+      "range": {
+        "startLine": 77,
+        "startChar": 1,
+        "endLine": 77,
+        "endChar": 40
+      },
+      "revId": "a73485de39b3ee478da5e3991799f0e06b69f36e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e18b1a7_e940982e",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-14T00:36:45Z",
+      "side": 1,
+      "message": "in previous patch, I used a separate data structure, reservation holder must be registrant, although it is only one member, I optimized it using pointer here, it will make the code looks more clear.",
+      "parentUuid": "efec3105_211d56f9",
       "range": {
         "startLine": 77,
         "startChar": 1,
