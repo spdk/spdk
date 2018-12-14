@@ -590,7 +590,8 @@ spdk_nvmf_tgt_find_subsystem(struct spdk_nvmf_tgt *tgt, const char *subnqn)
 			continue;
 		}
 
-		if (strcmp(subnqn, subsystem->subnqn) == 0) {
+		if ((strcmp(subnqn, subsystem->subnqn) == 0) &&
+		    (subsystem->state == SPDK_NVMF_SUBSYSTEM_ACTIVE)) {
 			return subsystem;
 		}
 	}
