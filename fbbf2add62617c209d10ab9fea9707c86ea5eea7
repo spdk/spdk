@@ -93,6 +93,30 @@
       "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "318ccb6a_7686942c",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T00:42:17Z",
+      "side": 1,
+      "message": "Yeah, that may work.  However, it just makes the maintenance/knowledge-base that much more complicated when we branch and also tag.   One would need to know this needs to change \"appropriately\".  Plus, this is deeper into the bowels of the spec file.   If we feel we need to pursue this direction, then I\u0027d propose instantiating a new macro, e.g. \"spdk_build\" and initializing it near the top appropriately where it would either get the branch name or the version.",
+      "parentUuid": "7e98cd37_b22b1464",
+      "range": {
+        "startLine": 88,
+        "startChar": 14,
+        "endLine": 88,
+        "endChar": 29
+      },
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
