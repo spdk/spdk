@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8cd342f7_02bc5c70",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T22:42:14Z",
+      "side": 1,
+      "message": "I like this solution a lot better",
+      "revId": "656f48858729abffd55a6407ac4d95afaeec4e01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
