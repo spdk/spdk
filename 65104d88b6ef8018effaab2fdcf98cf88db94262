@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "b58d9f8a_46c0ccc0",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-14T08:58:50Z",
+      "side": 1,
+      "message": "This is still nice even if there is the following.",
+      "parentUuid": "26c68ebd_a0e4d037",
+      "range": {
+        "startLine": 96,
+        "startChar": 14,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "012cd44c_679d8e1f",
         "filename": "lib/util/string.c",
         "patchSetId": 4
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Nice suggestion too.",
       "parentUuid": "012cd44c_679d8e1f",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10d2c3de_4009d172",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-14T08:58:50Z",
+      "side": 1,
+      "message": "Sorry, we can\u0027t use realloc in this case if my understanding and analysis of scan-build are correct.\n\nrealloc() requires caller to free the memory if realloc failed. But if we use realloc in sprintf_realloc(), realloc is nested and scan-build complaints about sprintf_realloc() lost the pointer to the buffer. scan-build don\u0027t know that the caller of sprintf_realloc() will free.\n\nI wish this make sense to you.",
+      "parentUuid": "ebe92afa_6e98abd4",
       "range": {
         "startLine": 111,
         "startChar": 0,
