@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "a74e8a3f_0bce1b43",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T00:30:17Z",
+      "side": 1,
+      "message": "That is correct; i.e. that\u0027s what will happen.   I just downloaded the v18.10.x.tar.gz and noted that its top level directory is in fact spdk-18.10.x, but the rpmbuild will look for spdk-18.10.1.pre so it will fail if you rely on actually downloading the tarball.\n\nBy the way, as a general rule when formally producing builds, my understanding is that distro\u0027s do not download the tarball from the site on the fly (owing to security issues).  We actually use \"git archive\" to produce the tarball.  Now, I\u0027ll just need to ensure our build scripts name it correctly ;-).",
+      "parentUuid": "8d3e2120_2245e120",
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e98cd37_b22b1464",
         "filename": "pkg/spdk.spec",
         "patchSetId": 5
