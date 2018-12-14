@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c782a95a_23b673fa",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T19:13:58Z",
+      "side": 1,
+      "message": "Can\u0027t you use the in capsule data buffer for this purpose? Even if the user specifies 0 in capsule data, still allocate the in capsule buffer anyway. We used to do that in the RDMA layer until we worked out a better buffer management strategy.",
+      "revId": "0b2d91119552168a29472bb69f328a3e92164ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ee640aa_104d006a",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2239,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T19:13:58Z",
+      "side": 1,
+      "message": "Use enum value",
+      "revId": "0b2d91119552168a29472bb69f328a3e92164ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
