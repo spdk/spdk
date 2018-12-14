@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "734e351f_1adab0c7",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3b19b4ba_7bb3f50b",
+      "range": {
+        "startLine": 24,
+        "startChar": 11,
+        "endLine": 24,
+        "endChar": 64
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "56e26360_59ab76d3",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 32
@@ -71,6 +95,54 @@
     },
     {
       "key": {
+        "uuid": "91d52e56_04827e43",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Actually separate result directory was added in patch set 32, assuming from your files creation dates, you have run earlier version of the script.",
+      "parentUuid": "1df7c0c0_a715a31a",
+      "range": {
+        "startLine": 26,
+        "startChar": 30,
+        "endLine": 26,
+        "endChar": 41
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9bf073a2_55f1da86",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "56e26360_59ab76d3",
+      "range": {
+        "startLine": 26,
+        "startChar": 42,
+        "endLine": 26,
+        "endChar": 99
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e2fbe78_b59e1c4e",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 32
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-10T13:37:01Z",
       "side": 1,
       "message": "change to small \"w\" to match the other fields",
+      "range": {
+        "startLine": 28,
+        "startChar": 64,
+        "endLine": 28,
+        "endChar": 65
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7a1d826_4a7f6de3",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e2fbe78_b59e1c4e",
       "range": {
         "startLine": 28,
         "startChar": 64,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "797d6c92_08a1580c",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a58cd21_a6234b61",
+      "range": {
+        "startLine": 34,
+        "startChar": 96,
+        "endLine": 34,
+        "endChar": 100
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1d2fb01a_4305b93e",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 32
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "3db9a317_2024e5ba",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1d2fb01a_4305b93e",
+      "range": {
+        "startLine": 39,
+        "startChar": 3,
+        "endLine": 39,
+        "endChar": 38
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "af481e30_1e8d95df",
         "filename": "test/nvme/perf/run_perf.sh",
         "patchSetId": 32
@@ -151,6 +295,30 @@
       "writtenOn": "2018-12-10T13:37:01Z",
       "side": 1,
       "message": "typo \"number\"",
+      "range": {
+        "startLine": 57,
+        "startChar": 25,
+        "endLine": 57,
+        "endChar": 33
+      },
+      "revId": "b201923e5912e11ee3bf87e0d0c074c10ffb9f0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62f168e4_fbe6d6ce",
+        "filename": "test/nvme/perf/run_perf.sh",
+        "patchSetId": 32
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-14T14:32:58Z",
+      "side": 1,
+      "message": "Done :)",
+      "parentUuid": "af481e30_1e8d95df",
       "range": {
         "startLine": 57,
         "startChar": 25,
