@@ -34,6 +34,24 @@
       "revId": "a09ae664477a379023452e2ad9dff709b06150e6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a83ec064_a28ba4ac",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-14T01:35:41Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nLet me revise the comments. This patch is used to initialize the queue list early. The reason is that: if we do not do that, it will be initialized second time.",
+      "parentUuid": "2cf30cc7_1a685741",
+      "revId": "a09ae664477a379023452e2ad9dff709b06150e6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
