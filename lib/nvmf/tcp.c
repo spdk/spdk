@@ -546,13 +546,15 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	SPDK_INFOLOG(SPDK_LOG_NVMF_TCP, "*** TCP Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
-		     "  in_capsule_data_size=%d, max_aq_depth=%d\n",
+		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
+		     "  max_shared_buffer_num=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
-		     opts->max_aq_depth);
+		     opts->max_aq_depth,
+		     opts->max_shared_buffer_num);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -567,7 +569,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	ttransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
-				    opts->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    opts->max_shared_buffer_num,
 				    opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
@@ -595,10 +597,10 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.max_queue_depth * 4)) {
+	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.max_shared_buffer_num)) {
 		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 			    spdk_mempool_count(ttransport->data_buf_pool),
-			    transport->opts.max_queue_depth * 4);
+			    transport->opts.max_shared_buffer_num);
 	}
 
 	spdk_mempool_free(ttransport->data_buf_pool);
@@ -2839,16 +2841,18 @@ spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
 #define SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
+#define SPDK_NVMF_TCP_DEFAULT_SHARED_BUFFER_NUM 512
 
 static void
 spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
-	opts->max_queue_depth =      SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH;
-	opts->max_qpairs_per_ctrlr = SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR;
-	opts->in_capsule_data_size = SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE;
-	opts->max_io_size =          SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE;
-	opts->io_unit_size =         SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
-	opts->max_aq_depth =         SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
+	opts->max_queue_depth =		SPDK_NVMF_TCP_DEFAULT_MAX_QUEUE_DEPTH;
+	opts->max_qpairs_per_ctrlr =	SPDK_NVMF_TCP_DEFAULT_MAX_QPAIRS_PER_CTRLR;
+	opts->in_capsule_data_size =	SPDK_NVMF_TCP_DEFAULT_IN_CAPSULE_DATA_SIZE;
+	opts->max_io_size =		SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE;
+	opts->io_unit_size =		SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
+	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
+	opts->max_shared_buffer_num =	SPDK_NVMF_TCP_DEFAULT_SHARED_BUFFER_NUM;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {

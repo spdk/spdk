@@ -1524,18 +1524,20 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE 4096
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE 4096
+#define SPDK_NVMF_RDMA_DEFAULT_SHARED_BUFFER_NUM 512
 #define SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 
 static void
 spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 {
-	opts->max_queue_depth =      SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH;
-	opts->max_qpairs_per_ctrlr = SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR;
-	opts->in_capsule_data_size = SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE;
-	opts->max_io_size =          SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
-	opts->io_unit_size =         spdk_max(SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE,
-					      SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
-	opts->max_aq_depth =         SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH;
+	opts->max_queue_depth =		SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH;
+	opts->max_qpairs_per_ctrlr =	SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR;
+	opts->in_capsule_data_size =	SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE;
+	opts->max_io_size =		SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE;
+	opts->io_unit_size =		spdk_max(SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE,
+					SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
+	opts->max_aq_depth =		SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH;
+	opts->max_shared_buffer_num =	SPDK_NVMF_RDMA_DEFAULT_SHARED_BUFFER_NUM;
 }
 
 static int spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
@@ -1580,13 +1582,15 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** RDMA Transport Init ***\n"
 		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
 		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
-		     "  in_capsule_data_size=%d, max_aq_depth=%d\n",
+		     "  in_capsule_data_size=%d, max_aq_depth=%d\n"
+		     "  max_shared_buffer_num=%d\n",
 		     opts->max_queue_depth,
 		     opts->max_io_size,
 		     opts->max_qpairs_per_ctrlr,
 		     opts->io_unit_size,
 		     opts->in_capsule_data_size,
-		     opts->max_aq_depth);
+		     opts->max_aq_depth,
+		     opts->max_shared_buffer_num);
 
 	/* I/O unit size cannot be larger than max I/O size */
 	if (opts->io_unit_size > opts->max_io_size) {
@@ -1615,9 +1619,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	/* The maximum number of buffers we will need for a given request is equal to just less than double the number of SGL elements */
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
-				    opts->max_queue_depth * (SPDK_NVMF_MAX_SGL_ENTRIES * 2) * 4,
+				    opts->max_shared_buffer_num,
 				    opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
@@ -1767,10 +1770,10 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	if (rtransport->data_buf_pool != NULL) {
 		if (spdk_mempool_count(rtransport->data_buf_pool) !=
-		    (transport->opts.max_queue_depth * (SPDK_NVMF_MAX_SGL_ENTRIES * 2) * 4)) {
+		    transport->opts.max_shared_buffer_num) {
 			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 				    spdk_mempool_count(rtransport->data_buf_pool),
-				    transport->opts.max_queue_depth * (SPDK_NVMF_MAX_SGL_ENTRIES * 2) * 4);
+				    transport->opts.max_shared_buffer_num);
 		}
 	}
 

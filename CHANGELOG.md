@@ -32,6 +32,10 @@ prior to calling `spdk_nvmf_tgt_listen`.
 Related to the previous change, the rpc `set_nvmf_target_options` has been renamed to
 `set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
 
+Add an field `max_shared_buffer_num` in struct spdk_nvmf_transport_opts,
+and also update the related rpc function nvmf_create_transport, to make this
+configurable parameter available to users.
+
 ### nvmf
 
 Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,

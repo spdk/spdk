@@ -520,6 +520,10 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	if (val >= 0) {
 		opts.max_aq_depth = val;
 	}
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxSharedBufferNum");
+	if (val >= 0) {
+		opts.max_shared_buffer_num = val;
+	}
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
 	if (transport) {
