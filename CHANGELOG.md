@@ -1,5 +1,7 @@
 # Changelog
 
+## v18.10.2: (Upcoming Release)
+
 ## v18.10.1:
 
 ### Packaging

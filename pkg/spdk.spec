@@ -2,12 +2,12 @@
 %bcond_with doc
 
 Name: spdk
-Version: 18.10.1
+Version: 18.10.x
 Release: 0%{?dist}
 Epoch: 0
 URL: http://spdk.io
 
-Source: https://github.com/spdk/spdk/archive/v18.10.1.tar.gz#/%{name}-%{version}.tar.gz
+Source: https://github.com/spdk/spdk/archive/v18.10.x.tar.gz#/%{name}-%{version}.tar.gz
 Summary: Set of libraries and utilities for high performance user-mode storage
 
 %define spdk_build_dir %{name}-%{version}
