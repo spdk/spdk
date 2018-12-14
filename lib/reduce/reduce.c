@@ -287,6 +287,7 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
 	if (vol->request_mem == NULL) {
 		spdk_dma_free(vol->reqbufspace);
+		vol->reqbufspace = NULL;
 		return -ENOMEM;
 	}
 
@@ -295,6 +296,8 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
 		spdk_dma_free(vol->reqbufspace);
+		vol->request_mem = NULL;
+		vol->reqbufspace = NULL;
 		return -ENOMEM;
 	}
 
