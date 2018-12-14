@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d9d5f0f_d94d9715",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-14T19:57:38Z",
+      "side": 1,
+      "message": "Let\u0027s add a note here like \"Temporary workaround for issue #542.\"",
+      "revId": "dffe7faeaa7e9eff8ad90384d277db7b909a571d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a3de7be_b0917a68",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-14T19:57:38Z",
+      "side": 1,
+      "message": "Let\u0027s add a note here like \"Temporary workaround for issue #542.\"",
+      "revId": "dffe7faeaa7e9eff8ad90384d277db7b909a571d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
