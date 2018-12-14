@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2cd7d277_e511be80",
+        "filename": "lib/event/app.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-14T10:26:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28f4af96_cb04c906",
+      "range": {
+        "startLine": 124,
+        "startChar": 19,
+        "endLine": 124,
+        "endChar": 20
+      },
+      "revId": "d724f26befc49373e78748b419b918b0133b2204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51041c67_da9e8a49",
         "filename": "lib/event/app.c",
         "patchSetId": 35
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-14T04:46:39Z",
       "side": 1,
       "message": "this should be the following?\n\ng_default_opts.json_config !\u003d NULL ? g_default_opts.json_config : \"none\"",
+      "range": {
+        "startLine": 726,
+        "startChar": 69,
+        "endLine": 726,
+        "endChar": 96
+      },
+      "revId": "d724f26befc49373e78748b419b918b0133b2204",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9379cf24_27bef256",
+        "filename": "lib/event/app.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-14T10:26:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "51041c67_da9e8a49",
       "range": {
         "startLine": 726,
         "startChar": 69,
