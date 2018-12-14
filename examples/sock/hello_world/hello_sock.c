@@ -135,8 +135,10 @@ hello_sock_quit(struct hello_context_t *ctx, int rc)
 {
 	ctx->rc = rc;
 	spdk_poller_unregister(&ctx->poller_out);
-	ctx->time_out = spdk_poller_register(hello_sock_close_timeout_poll, ctx,
-					     CLOSE_TIMEOUT_US);
+	if (!ctx->time_out) {
+		ctx->time_out = spdk_poller_register(hello_sock_close_timeout_poll, ctx,
+						     CLOSE_TIMEOUT_US);
+	}
 	return 0;
 }
 
