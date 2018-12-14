@@ -70,7 +70,6 @@ struct spdk_fio_target {
 struct spdk_fio_thread {
 	struct thread_data		*td; /* fio thread context */
 	struct spdk_thread		*thread; /* spdk thread context */
-	uint64_t			timeout; /* polling timeout */
 
 	TAILQ_HEAD(, spdk_fio_target)	targets;
 
@@ -85,8 +84,8 @@ static int spdk_fio_init(struct thread_data *td);
 static void spdk_fio_cleanup(struct thread_data *td);
 static size_t spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread);
 
-/* Default polling timeout (us) */
-#define SPDK_FIO_POLLING_TIMEOUT 1000000UL
+/* Default polling timeout (ns) */
+#define SPDK_FIO_POLLING_TIMEOUT 1000000000ULL
 
 static void
 spdk_fio_bdev_init_done(void *cb_arg, int rc)
@@ -119,8 +118,6 @@ spdk_fio_init_thread(struct thread_data *td)
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
-	fio_thread->timeout = SPDK_FIO_POLLING_TIMEOUT;
-
 	TAILQ_INIT(&fio_thread->targets);
 
 	return 0;
@@ -152,13 +149,28 @@ spdk_fio_module_finish_done(void *cb_arg)
 }
 
 static void
-spdk_fio_calc_timeout(struct timespec *ts, uint64_t us)
+spdk_fio_calc_timeout(struct spdk_fio_thread *fio_thread, struct timespec *ts)
 {
-	uint64_t timeout = ts->tv_sec * SPDK_SEC_TO_NSEC + ts->tv_nsec;
+	uint64_t timeout, now;
 
-	timeout += us * 1000;
-	ts->tv_sec  = timeout / SPDK_SEC_TO_NSEC;
-	ts->tv_nsec = timeout % SPDK_SEC_TO_NSEC;
+	if (spdk_thread_has_active_pollers(fio_thread->thread)) {
+		return;
+	}
+
+	timeout = spdk_thread_next_poller_expiration(fio_thread->thread);
+	now = spdk_get_ticks();
+
+	if (timeout == 0) {
+		timeout = now + (SPDK_FIO_POLLING_TIMEOUT * spdk_get_ticks_hz()) / SPDK_SEC_TO_NSEC;
+	}
+
+	if (timeout > now) {
+		timeout = ((timeout - now) * SPDK_SEC_TO_NSEC) / spdk_get_ticks_hz() +
+			  ts->tv_sec * SPDK_SEC_TO_NSEC + ts->tv_nsec;
+
+		ts->tv_sec  = timeout / SPDK_SEC_TO_NSEC;
+		ts->tv_nsec = timeout % SPDK_SEC_TO_NSEC;
+	}
 }
 
 static pthread_t g_init_thread_id = 0;
@@ -266,7 +278,7 @@ spdk_init_thread_poll(void *arg)
 		spdk_fio_poll_thread(fio_thread);
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
-		spdk_fio_calc_timeout(&ts, fio_thread->timeout);
+		spdk_fio_calc_timeout(fio_thread, &ts);
 
 		rc = pthread_cond_timedwait(&g_init_cond, &g_init_mtx, &ts);
 		if (rc != ETIMEDOUT) {

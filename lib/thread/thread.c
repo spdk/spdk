@@ -436,6 +436,12 @@ spdk_thread_next_poller_expiration(struct spdk_thread *thread)
 	return 0;
 }
 
+int
+spdk_thread_has_active_pollers(struct spdk_thread *thread)
+{
+	return !TAILQ_EMPTY(&thread->active_pollers);
+}
+
 uint32_t
 spdk_thread_get_count(void)
 {
