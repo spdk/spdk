@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9039ca59_040929c7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T19:19:20Z",
+      "side": 1,
+      "message": "I think you should consider placing qpairs that are awaiting a PDU response (with a timeout) into a separate list. That will be more efficient than looping over all of the qpairs every time here. You can do that in a separate patch though.",
+      "revId": "2e5afdcfe854b92e4162e6530a0d1601f07d2b5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
