@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ea1aaab_09eedd8d",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T21:11:23Z",
+      "side": 1,
+      "message": "Given the discussion you had with Jim and on which I concurred, since we\u0027re no longer going to any kind of version with \u0027.pre\u0027 for new branches, then this line isn\u0027t needed.  That is, the spdk_build_dir will always be %{name}-%{version}.   What\u0027s more, a small tweak to the version of the spec file in master will make this work with it as well.",
+      "revId": "399b8eae4bd732873fe7b10de1a4e5e723fed42b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
