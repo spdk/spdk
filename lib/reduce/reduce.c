@@ -44,8 +44,6 @@
 /* Always round up the size of the PM region to the nearest cacheline. */
 #define REDUCE_PM_SIZE_ALIGNMENT	64
 
-#define SPDK_REDUCE_SIGNATURE "SPDKREDU"
-
 /* Offset into the backing device where the persistent memory file's path is stored. */
 #define REDUCE_BACKING_DEV_PATH_OFFSET	4096
 
@@ -60,6 +58,11 @@ struct spdk_reduce_vol_superblock {
 	uint8_t				reserved[4048];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_reduce_vol_superblock) == 4096, "size incorrect");
+
+#define SPDK_REDUCE_SIGNATURE "SPDKREDU"
+/* null terminator counts one */
+SPDK_STATIC_ASSERT(sizeof(SPDK_REDUCE_SIGNATURE) - 1 ==
+		   sizeof(((struct spdk_reduce_vol_superblock *)0)->signature), "size incorrect");
 
 #define REDUCE_PATH_MAX 4096
 
