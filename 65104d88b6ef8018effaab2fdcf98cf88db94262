@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "26c68ebd_a0e4d037",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-14T03:43:02Z",
+      "side": 1,
+      "message": "Your suggestion is nice! Your next suggestion makes this improvement easier. I add UT code for this case.",
+      "parentUuid": "6d5fd7f6_dcb2ded2",
+      "range": {
+        "startLine": 96,
+        "startChar": 14,
+        "endLine": 96,
+        "endChar": 21
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "012cd44c_679d8e1f",
         "filename": "lib/util/string.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-13T11:50:16Z",
       "side": 1,
       "message": "You should use realloc() so memcpy will be handled by libc if required.",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebe92afa_6e98abd4",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-14T03:43:02Z",
+      "side": 1,
+      "message": "Nice suggestion too.",
+      "parentUuid": "012cd44c_679d8e1f",
       "range": {
         "startLine": 111,
         "startChar": 0,
