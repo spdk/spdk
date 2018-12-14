@@ -36,8 +36,22 @@ echo "BdevIoCacheSize 1" >> $testdir/bdevperf.conf
 echo "[AIO]" >> $testdir/bdevperf.conf
 echo "AIO $testdir/aio.bdev aio0 4096" >> $testdir/bdevperf.conf
 
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 1
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w read -t 1
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w write -t 15 -r /var/tmp/spdk.sock --wait-for-rpc &
+$rpc_py enable_bdev_histogram aio0
+$rpc_py start_subsystem_init
+$rpc_py get_bdev_histogram aio0
+
+sleep 20
+
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w read -t 15 -r /var/tmp/spdk.sock --wait-for-rpc &
+$rpc_py enable_bdev_histogram aio0
+$rpc_py start_subsystem_init
+sleep 1
+$rpc_py get_bdev_histogram aio0
+$rpc_py disable_bdev_histogram aio0
+
+sleep 20
+
 $rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 1
 
 sync
