@@ -1289,7 +1289,7 @@ new_connection(int vid)
 		return -1;
 	}
 
-	vsession = calloc(1, sizeof(struct spdk_vhost_session));
+	vsession = calloc(1, sizeof(struct spdk_vhost_session) + vdev->backend->session_ctx_size);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("calloc failed\n");
 		return -1;

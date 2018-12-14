@@ -117,6 +117,7 @@ static int spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev);
 const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
+	.session_ctx_size = 0,
 	.start_device =  spdk_vhost_scsi_start,
 	.stop_device = spdk_vhost_scsi_stop,
 	.dump_info_json = spdk_vhost_scsi_dump_info_json,

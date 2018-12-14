@@ -1249,6 +1249,7 @@ spdk_vhost_nvme_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 }
 
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend = {
+	.session_ctx_size = 0,
 	.start_device = spdk_vhost_nvme_start_device,
 	.stop_device = spdk_vhost_nvme_stop_device,
 	.dump_info_json = spdk_vhost_nvme_dump_info_json,
