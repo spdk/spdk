@@ -684,6 +684,30 @@
     },
     {
       "key": {
+        "uuid": "0fd6a543_bf914859",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:17:38Z",
+      "side": 1,
+      "message": "Ok, I\u0027ve missed the memory layout argument.\nI will try to find another way to pass per-device context",
+      "parentUuid": "3399ac9c_3d7ca503",
+      "range": {
+        "startLine": 561,
+        "startChar": 1,
+        "endLine": 574,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e4066d4_794ef3f5",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
