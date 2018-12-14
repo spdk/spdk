@@ -34,6 +34,24 @@
       "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d3e2120_2245e120",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-12-14T00:10:41Z",
+      "side": 1,
+      "message": "It works as Jim mentioned, but there might be additional change needed.\nFrom what I understand the spec file when it downloads the tarbal, it gets renamed from 18.10.x to 18.10.1.pre. Although when it unpacks the contents go to BUILD/18.10.x, meanwhile specfile expects BUILD/18.10.1.pre.\nWill see tomorrow what could be done about that.",
+      "parentUuid": "6a5590ae_073104e7",
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
