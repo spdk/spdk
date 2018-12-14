@@ -1450,6 +1450,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		"max_aq_depth", offsetof(struct nvmf_rpc_create_transport_ctx, opts.max_aq_depth),
 		spdk_json_decode_uint32, true
 	},
+	{
+		"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers),
+		spdk_json_decode_uint32, true
+	},
 };
 
 static void
@@ -1581,6 +1585,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	spdk_json_write_named_uint32(w, "max_io_size", opts->max_io_size);
 	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
+	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
 
 	spdk_json_write_object_end(w);
 }
