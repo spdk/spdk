@@ -70,9 +70,15 @@ struct spdk_vhost_blk_dev {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *bdev_desc;
 	struct spdk_io_channel *bdev_io_channel;
+	bool readonly;
+};
+
+struct spdk_vhost_blk_session {
+	/* The parent session must be the very first field in this struct */
+	struct spdk_vhost_session vsession;
+	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_poller *requestq_poller;
 	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
-	bool readonly;
 };
 
 /* forward declaration */
@@ -431,6 +437,21 @@ no_bdev_vdev_worker(void *arg)
 	return -1;
 }
 
+static struct spdk_vhost_blk_session *
+to_blk_session(struct spdk_vhost_session *vsession)
+{
+	if (vsession == NULL) {
+		return NULL;
+	}
+
+	if (vsession->vdev->backend != &vhost_blk_device_backend) {
+		SPDK_ERRLOG("%s: not a vhost-blk device\n", vsession->vdev->name);
+		return NULL;
+	}
+
+	return (struct spdk_vhost_blk_session *)vsession;
+}
+
 static struct spdk_vhost_blk_dev *
 to_blk_dev(struct spdk_vhost_dev *vdev)
 {
@@ -459,12 +480,13 @@ static int
 _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 {
 	struct spdk_vhost_blk_dev *bvdev = arg;
+	struct spdk_vhost_blk_session *bvsession = to_blk_session(bvdev->vdev.session);
 
 	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
 		     bvdev->vdev.name);
-	if (bvdev->requestq_poller) {
-		spdk_poller_unregister(&bvdev->requestq_poller);
-		bvdev->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
+	if (bvsession->requestq_poller) {
+		spdk_poller_unregister(&bvsession->requestq_poller);
+		bvsession->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
 	}
 
 	spdk_bdev_close(bvdev->bdev_desc);
@@ -482,9 +504,9 @@ bdev_remove_cb(void *remove_ctx)
 }
 
 static void
-free_task_pool(struct spdk_vhost_blk_dev *bvdev)
+free_task_pool(struct spdk_vhost_blk_session *bvsession)
 {
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
@@ -500,9 +522,10 @@ free_task_pool(struct spdk_vhost_blk_dev *bvdev)
 }
 
 static int
-alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
+alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 {
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_blk_task *task;
 	uint32_t task_cnt;
@@ -520,7 +543,7 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 			/* sanity check */
 			SPDK_ERRLOG("Controller %s: virtuque %"PRIu16" is too big. (size = %"PRIu32", max = %"PRIu32")\n",
 				    bvdev->vdev.name, i, task_cnt, SPDK_VHOST_MAX_VQ_SIZE);
-			free_task_pool(bvdev);
+			free_task_pool(bvsession);
 			return -1;
 		}
 		vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_blk_task) * task_cnt,
@@ -528,7 +551,7 @@ alloc_task_pool(struct spdk_vhost_blk_dev *bvdev)
 		if (vq->tasks == NULL) {
 			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 				    bvdev->vdev.name, task_cnt, i);
-			free_task_pool(bvdev);
+			free_task_pool(bvsession);
 			return -1;
 		}
 
@@ -553,14 +576,17 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_session *vsession = vdev->session;
+	struct spdk_vhost_blk_session *bvsession;
 	int i, rc = 0;
 
-	bvdev = to_blk_dev(vdev);
-	if (bvdev == NULL) {
+	bvsession = to_blk_session(vsession);
+	if (bvsession == NULL) {
 		SPDK_ERRLOG("Trying to start non-blk controller as a blk one.\n");
 		rc = -1;
 		goto out;
 	}
+
+	bvdev = bvsession->bvdev;
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = 0; i < vsession->max_queues; i++) {
@@ -571,7 +597,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		}
 	}
 
-	rc = alloc_task_pool(bvdev);
+	rc = alloc_task_pool(bvsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", bvdev->vdev.name);
 		goto out;
@@ -580,15 +606,15 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	if (bvdev->bdev) {
 		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
 		if (!bvdev->bdev_io_channel) {
-			free_task_pool(bvdev);
+			free_task_pool(bvsession);
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
 			rc = -1;
 			goto out;
 		}
 	}
 
-	bvdev->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-				 bvdev, 0);
+	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
+				     bvdev, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vdev->lcore);
 out:
@@ -599,8 +625,9 @@ out:
 static int
 destroy_device_poller_cb(void *arg)
 {
+	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	int i;
 
 	if (vsession->task_cnt > 0) {
@@ -612,16 +639,16 @@ destroy_device_poller_cb(void *arg)
 		spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
 	}
 
-	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", bvdev->vdev.name);
+	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", vsession->vdev->name);
 
 	if (bvdev->bdev_io_channel) {
 		spdk_put_io_channel(bvdev->bdev_io_channel);
 		bvdev->bdev_io_channel = NULL;
 	}
 
-	free_task_pool(bvdev);
-	spdk_poller_unregister(&bvdev->destroy_ctx.poller);
-	spdk_vhost_dev_backend_event_done(bvdev->destroy_ctx.event_ctx, 0);
+	free_task_pool(bvsession);
+	spdk_poller_unregister(&bvsession->destroy_ctx.poller);
+	spdk_vhost_dev_backend_event_done(bvsession->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
@@ -629,18 +656,19 @@ destroy_device_poller_cb(void *arg)
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_session *vsession = vdev->session;
+	struct spdk_vhost_blk_session *bvsession;
 
-	bvdev = to_blk_dev(vdev);
-	if (bvdev == NULL) {
+	bvsession = to_blk_session(vsession);
+	if (bvsession == NULL) {
 		SPDK_ERRLOG("Trying to stop non-blk controller as a blk one.\n");
 		goto err;
 	}
 
-	bvdev->destroy_ctx.event_ctx = event_ctx;
-	spdk_poller_unregister(&bvdev->requestq_poller);
-	bvdev->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb,
-				    bvdev, 1000);
+	bvsession->destroy_ctx.event_ctx = event_ctx;
+	spdk_poller_unregister(&bvsession->requestq_poller);
+	bvsession->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb,
+					bvsession, 1000);
 	return 0;
 
 err:
@@ -771,7 +799,7 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	.disabled_features = SPDK_VHOST_DISABLED_FEATURES | (1ULL << VIRTIO_BLK_F_GEOMETRY) |
 	(1ULL << VIRTIO_BLK_F_RO) | (1ULL << VIRTIO_BLK_F_FLUSH) | (1ULL << VIRTIO_BLK_F_CONFIG_WCE) |
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI),
-	.session_ctx_size = 0,
+	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
 	.start_device =  spdk_vhost_blk_start,
 	.stop_device = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
