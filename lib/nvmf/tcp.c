@@ -299,11 +299,6 @@ struct spdk_nvmf_tcp_transport {
 
 	struct spdk_mempool			*data_buf_pool;
 
-	uint16_t				max_queue_depth;
-	uint32_t				max_io_size;
-	uint32_t				io_unit_size;
-	uint32_t				in_capsule_data_size;
-
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 };
 
@@ -535,7 +530,7 @@ static struct spdk_nvmf_transport *
 spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
-	uint32_t			sge_count;
+	uint32_t sge_count;
 
 	ttransport = calloc(1, sizeof(*ttransport));
 	if (!ttransport) {
@@ -548,26 +543,32 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 
 	SPDK_NOTICELOG("*** TCP Transport Init ***\n");
 
-	ttransport->max_queue_depth = opts->max_queue_depth;
-	ttransport->max_io_size = opts->max_io_size;
-	ttransport->in_capsule_data_size = opts->in_capsule_data_size;
-	ttransport->io_unit_size = opts->io_unit_size;
+	SPDK_INFOLOG(SPDK_LOG_NVMF_TCP, "*** TCP Transport Init ***\n"
+		     "  Transport opts:  max_ioq_depth=%d, max_io_size=%d,\n"
+		     "  max_qpairs_per_ctrlr=%d, io_unit_size=%d,\n"
+		     "  in_capsule_data_size=%d, max_aq_depth=%d\n",
+		     opts->max_queue_depth,
+		     opts->max_io_size,
+		     opts->max_qpairs_per_ctrlr,
+		     opts->io_unit_size,
+		     opts->in_capsule_data_size,
+		     opts->max_aq_depth);
 
 	/* I/O unit size cannot be larger than max I/O size */
-	if (ttransport->io_unit_size > ttransport->max_io_size) {
-		ttransport->io_unit_size = ttransport->max_io_size;
+	if (opts->io_unit_size > opts->max_io_size) {
+		opts->io_unit_size = opts->max_io_size;
 	}
 
-	sge_count = ttransport->max_io_size / ttransport->io_unit_size;
+	sge_count = opts->max_io_size / opts->io_unit_size;
 	if (sge_count > SPDK_NVMF_MAX_SGL_ENTRIES) {
-		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", ttransport->io_unit_size);
+		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
 		free(ttransport);
 		return NULL;
 	}
 
 	ttransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
-				    ttransport->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
-				    ttransport->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				    opts->max_queue_depth * 4, /* The 4 is arbitrarily chosen. Needs to be configurable. */
+				    opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
 
@@ -594,10 +595,10 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (ttransport->max_queue_depth * 4)) {
+	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.max_queue_depth * 4)) {
 		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 			    spdk_mempool_count(ttransport->data_buf_pool),
-			    ttransport->max_queue_depth * 4);
+			    transport->opts.max_queue_depth * 4);
 	}
 
 	spdk_mempool_free(ttransport->data_buf_pool);
@@ -972,8 +973,9 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 {
 	int i;
 	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_transport *transport = tqpair->qpair.transport;
 	struct spdk_nvmf_tcp_transport *ttransport;
-	ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	if (!tqpair->qpair.sq_head_max) {
 		tqpair->req = calloc(1, sizeof(*tqpair->req));
@@ -982,8 +984,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 			return -1;
 		}
 
-		if (ttransport->in_capsule_data_size) {
-			tqpair->buf = spdk_dma_zmalloc(ttransport->in_capsule_data_size, 0x1000, NULL);
+		if (transport->opts.in_capsule_data_size) {
+			tqpair->buf = spdk_dma_zmalloc(ttransport->transport.opts.in_capsule_data_size, 0x1000, NULL);
 			if (!tqpair->buf) {
 				SPDK_ERRLOG("Unable to allocate buf on tqpair=%p.\n", tqpair);
 				return -1;
@@ -1024,8 +1026,8 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 			return -1;
 		}
 
-		if (ttransport->in_capsule_data_size) {
-			tqpair->bufs = spdk_dma_zmalloc(size * ttransport->in_capsule_data_size,
+		if (transport->opts.in_capsule_data_size) {
+			tqpair->bufs = spdk_dma_zmalloc(size * transport->opts.in_capsule_data_size,
 							0x1000, NULL);
 			if (!tqpair->bufs) {
 				SPDK_ERRLOG("Unable to allocate bufs on tqpair=%p.\n", tqpair);
@@ -1041,7 +1043,7 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 
 			/* Set up memory to receive commands */
 			if (tqpair->bufs) {
-				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * ttransport->in_capsule_data_size));
+				tcp_req->buf = (void *)((uintptr_t)tqpair->bufs + (i * transport->opts.in_capsule_data_size));
 			}
 
 			/* Set the cmdn and rsp */
@@ -1437,9 +1439,9 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 
 	pdu->tcp_req = tcp_req;
 	pdu->data_len = h2c_data->datal;
-	iov_index = pdu->hdr.h2c_data.datao / ttransport->io_unit_size;
+	iov_index = pdu->hdr.h2c_data.datao / ttransport->transport.opts.io_unit_size;
 	pdu->data = tcp_req->req.iov[iov_index].iov_base + (pdu->hdr.h2c_data.datao %
-			ttransport->io_unit_size);
+			ttransport->transport.opts.io_unit_size);
 	spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	return;
 
@@ -1731,7 +1733,8 @@ spdk_nvmf_tcp_icreq_handle(struct spdk_nvmf_tcp_transport *ttransport,
 	ic_resp->common.hlen = ic_resp->common.plen =  sizeof(*ic_resp);
 	ic_resp->pfv = 0;
 	ic_resp->cpda = tqpair->cpda;
-	tqpair->maxh2cdata = spdk_min(NVMF_TCP_PDU_MAX_H2C_DATA_SIZE, ttransport->io_unit_size);
+	tqpair->maxh2cdata = spdk_min(NVMF_TCP_PDU_MAX_H2C_DATA_SIZE,
+				      ttransport->transport.opts.io_unit_size);
 	ic_resp->maxh2cdata = tqpair->maxh2cdata;
 	ic_resp->dgst.bits.hdgst_enable = tqpair->host_hdgst_enable ? 1 : 0;
 	ic_resp->dgst.bits.ddgst_enable = tqpair->host_ddgst_enable ? 1 : 0;
@@ -2109,7 +2112,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 
 		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
 							~NVMF_DATA_BUFFER_MASK);
-		tcp_req->req.iov[i].iov_len  = spdk_min(length, ttransport->io_unit_size);
+		tcp_req->req.iov[i].iov_len  = spdk_min(length, ttransport->transport.opts.io_unit_size);
 		tcp_req->req.iovcnt++;
 		tcp_req->buffers[i] = buf;
 		length -= tcp_req->req.iov[i].iov_len;
@@ -2146,9 +2149,9 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 
 	if (sgl->generic.type == SPDK_NVME_SGL_TYPE_TRANSPORT_DATA_BLOCK &&
 	    sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_TRANSPORT) {
-		if (sgl->unkeyed.length > ttransport->max_io_size) {
+		if (sgl->unkeyed.length > ttransport->transport.opts.max_io_size) {
 			SPDK_ERRLOG("SGL length 0x%x exceeds max io size 0x%x\n",
-				    sgl->unkeyed.length, ttransport->max_io_size);
+				    sgl->unkeyed.length, ttransport->transport.opts.max_io_size);
 			rsp->status.sc = SPDK_NVME_SC_DATA_SGL_LENGTH_INVALID;
 			return -1;
 		}
@@ -2177,7 +2180,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
 		uint64_t offset = sgl->address;
-		uint32_t max_len = ttransport->in_capsule_data_size;
+		uint32_t max_len = ttransport->transport.opts.in_capsule_data_size;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "In-capsule data: offset 0x%" PRIx64 ", length 0x%x\n",
 			      offset, sgl->unkeyed.length);
