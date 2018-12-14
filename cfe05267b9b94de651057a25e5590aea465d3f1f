@@ -167,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "54e07b9c_b0752c35",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-14T02:44:52Z",
+      "side": 1,
+      "message": "some switches such as : asan,valgrind,ubsan,scanbuild, this strict checking ,autotest will report many bugs. it\u0027s related to  code issues. \n\nunittest and other bdevs are no problem.",
+      "parentUuid": "dd52b322_987797a5",
+      "range": {
+        "startLine": 120,
+        "startChar": 31,
+        "endLine": 120,
+        "endChar": 54
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18542c50_a3d75f6a",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
@@ -226,6 +250,30 @@
       "side": 1,
       "message": "I think it\u0027d be best to run just vm_setup.sh -i.\nThat way all other dependencies are installed and you can use the VM to run any other kinds of tests (vhost, nvmf, iscsi, etc.)",
       "parentUuid": "603fa299_df7b6992",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83e23ea1_6c138b74",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-14T02:44:52Z",
+      "side": 1,
+      "message": "maybe you are right, and this is the first patch for nvmf and iscsi which were required to do.\nif need to support other systems ,there\u0027s a long way to check.other people also can help this.\n\nVhost ,I haven\u0027t tried yet.\nunittest and other bdevs are no problem.\n\nthis script it realized auto setup a VM  which integrated vagrant commands and running autotest .\naimed at excluding the failures which cased by the VM. it\u0027s a framework which is easy to be extended. \nNCPU some test cases need at least 8 cores.\nMEMORY_SIZE it decides by the physical machine, the larger memory the better. experience value at least 16G is smooth.\nVM_OS as you known, now only support fedora26/28, fedora28 is more smoothly.",
+      "parentUuid": "30516806_28916771",
       "range": {
         "startLine": 121,
         "startChar": 73,
