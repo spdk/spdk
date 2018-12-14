@@ -134,7 +134,7 @@ static void
 spdk_vhost_scsi_task_free_cb(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_vhost_scsi_task *task = SPDK_CONTAINEROF(scsi_task, struct spdk_vhost_scsi_task, scsi);
-	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
+	struct spdk_vhost_session *vsession = task->svdev->vdev.session;
 
 	assert(vsession->task_cnt > 0);
 	vsession->task_cnt--;
@@ -170,7 +170,7 @@ static void
 eventq_enqueue(struct spdk_vhost_scsi_dev *svdev, unsigned scsi_dev_num, uint32_t event,
 	       uint32_t reason)
 {
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_event *desc_ev;
@@ -223,7 +223,7 @@ out:
 static void
 submit_completion(struct spdk_vhost_scsi_task *task)
 {
-	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
+	struct spdk_vhost_session *vsession = task->svdev->vdev.session;
 
 	spdk_vhost_vq_used_ring_enqueue(vsession, task->vq, task->req_idx,
 					task->used_len);
@@ -280,7 +280,7 @@ mgmt_task_submit(struct spdk_vhost_scsi_task *task, enum spdk_scsi_task_func fun
 static void
 invalid_request(struct spdk_vhost_scsi_task *task)
 {
-	struct spdk_vhost_session *vsession = &task->svdev->vdev.session;
+	struct spdk_vhost_session *vsession = task->svdev->vdev.session;
 
 	spdk_vhost_vq_used_ring_enqueue(vsession, task->vq, task->req_idx,
 					task->used_len);
@@ -321,7 +321,7 @@ static void
 process_ctrl_request(struct spdk_vhost_scsi_task *task)
 {
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
-	struct spdk_vhost_session *vsession = &vdev->session;
+	struct spdk_vhost_session *vsession = vdev->session;
 	struct vring_desc *desc, *desc_table;
 	struct virtio_scsi_ctrl_tmf_req *ctrl_req;
 	struct virtio_scsi_ctrl_an_resp *an_resp;
@@ -423,7 +423,7 @@ task_data_setup(struct spdk_vhost_scsi_task *task,
 		struct virtio_scsi_cmd_req **req)
 {
 	struct spdk_vhost_dev *vdev = &task->svdev->vdev;
-	struct spdk_vhost_session *vsession = &vdev->session;
+	struct spdk_vhost_session *vsession = vdev->session;
 	struct vring_desc *desc, *desc_table;
 	struct iovec *iovs = task->iovs;
 	uint16_t iovcnt = 0;
@@ -586,7 +586,7 @@ process_request(struct spdk_vhost_scsi_task *task)
 static void
 process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -619,7 +619,7 @@ process_controlq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue 
 static void
 process_requestq(struct spdk_vhost_scsi_dev *svdev, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -673,7 +673,7 @@ static int
 vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 
 	process_removed_devs(svdev);
 	spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
@@ -688,7 +688,7 @@ static int
 vdev_worker(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	uint32_t q_idx;
 
 	for (q_idx = VIRTIO_SCSI_REQUESTQ; q_idx < vsession->max_queues; q_idx++) {
@@ -793,7 +793,7 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 	assert(lun != NULL);
 	assert(svdev != NULL);
 	if (svdev->vdev.lcore != -1 &&
-	    !spdk_vhost_dev_has_feature(&svdev->vdev.session, VIRTIO_SCSI_F_HOTPLUG)) {
+	    !spdk_vhost_dev_has_feature(svdev->vdev.session, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: hotremove is not enabled for this controller.\n", svdev->vdev.name);
 		return;
 	}
@@ -873,7 +873,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 
 	spdk_scsi_dev_allocate_io_channels(svdev->scsi_dev[scsi_tgt_num]);
 
-	if (spdk_vhost_dev_has_feature(&vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (spdk_vhost_dev_has_feature(vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svdev, scsi_tgt_num, VIRTIO_SCSI_T_TRANSPORT_RESET,
 			       VIRTIO_SCSI_EVT_RESET_RESCAN);
 	} else {
@@ -922,7 +922,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 		return rc;
 	}
 
-	if (!spdk_vhost_dev_has_feature(&vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
+	if (!spdk_vhost_dev_has_feature(vdev->session, VIRTIO_SCSI_F_HOTPLUG)) {
 		SPDK_WARNLOG("%s: 'Target %u' is in use and hot-detach is not enabled for this controller.\n",
 			     svdev->vdev.name, scsi_tgt_num);
 		return -ENOTSUP;
@@ -1015,7 +1015,7 @@ spdk_vhost_scsi_controller_construct(void)
 static void
 free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	uint16_t i;
 
@@ -1033,7 +1033,7 @@ free_task_pool(struct spdk_vhost_scsi_dev *svdev)
 static int
 alloc_task_pool(struct spdk_vhost_scsi_dev *svdev)
 {
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	struct spdk_vhost_virtqueue *vq;
 	struct spdk_vhost_scsi_task *task;
 	uint32_t task_cnt;
@@ -1082,7 +1082,7 @@ static int
 spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_session *vsession = &vdev->session;
+	struct spdk_vhost_session *vsession = vdev->session;
 	uint32_t i;
 	int rc;
 
@@ -1132,7 +1132,7 @@ static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_dev *svdev = arg;
-	struct spdk_vhost_session *vsession = &svdev->vdev.session;
+	struct spdk_vhost_session *vsession = svdev->vdev.session;
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
