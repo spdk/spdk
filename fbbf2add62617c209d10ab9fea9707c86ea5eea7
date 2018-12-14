@@ -52,6 +52,29 @@
       "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e98cd37_b22b1464",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 5
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-12-14T00:21:47Z",
+      "side": 1,
+      "message": "@Lance\nDo you think changing this to \u0027spdk-18.10.x\u0027 correct way to deal with what I described in previous comment ?",
+      "range": {
+        "startLine": 88,
+        "startChar": 14,
+        "endLine": 88,
+        "endChar": 29
+      },
+      "revId": "fbbf2add62617c209d10ab9fea9707c86ea5eea7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
