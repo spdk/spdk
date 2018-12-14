@@ -279,7 +279,7 @@ spdk_thread_exit(struct spdk_thread *thread)
 	}
 
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
+		SPDK_DEBUGLOG(SPDK_LOG_THREAD, "thread %s still has channel for io_device %s\n",
 			    thread->name, ch->dev->name);
 	}
 
