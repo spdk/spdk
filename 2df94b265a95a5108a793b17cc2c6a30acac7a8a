@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "864fea41_4fc29049",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T22:47:17Z",
+      "side": 1,
+      "message": "Copyright header",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11084013_52244a58",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T22:47:17Z",
+      "side": 1,
+      "message": "Need the copyright header",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42a4a105_367e45fb",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-14T22:47:17Z",
+      "side": 1,
+      "message": "This should be in doxygen format",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
