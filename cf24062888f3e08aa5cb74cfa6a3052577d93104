@@ -2,6 +2,69 @@
   "comments": [
     {
       "key": {
+        "uuid": "afdb0914_a296a9d6",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-14T09:01:47Z",
+      "side": 1,
+      "message": "You should call:\nspdk_notify_write_json(struct spdk_json_write_ctx *w,*notify) here to write info about notification\n\nIf you want to finish asynchronously you must call spdk_notify_get(notify);",
+      "revId": "cf24062888f3e08aa5cb74cfa6a3052577d93104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee44b963_3084fed7",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-14T09:01:47Z",
+      "side": 1,
+      "message": "pair: notify handler callback and ctx",
+      "range": {
+        "startLine": 160,
+        "startChar": 1,
+        "endLine": 160,
+        "endChar": 38
+      },
+      "revId": "cf24062888f3e08aa5cb74cfa6a3052577d93104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea36e931_3148978b",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-14T09:01:47Z",
+      "side": 1,
+      "message": "After rebase you should specify only pair: notify handler callback and ctx\nThis pair will identify how to unlisten connections",
+      "range": {
+        "startLine": 200,
+        "startChar": 26,
+        "endLine": 200,
+        "endChar": 54
+      },
+      "revId": "cf24062888f3e08aa5cb74cfa6a3052577d93104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4211ff8f_7b2d7a83",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 2
