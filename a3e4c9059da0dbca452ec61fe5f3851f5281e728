@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cf7210d_de2db157",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-14T08:55:53Z",
+      "side": 1,
+      "message": "Can your patch fix the memory leak issue ?\nIf the delay is required, I think you can use a mutex waiting here for the close process to be completed.",
+      "revId": "a3e4c9059da0dbca452ec61fe5f3851f5281e728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
