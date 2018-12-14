@@ -2193,7 +2193,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
 		spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-		spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_disconnect, &rqpair->qpair);
+		spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		/* This event only occurs for shared receive queues, which are not currently supported. */
@@ -2210,7 +2210,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 		if (state == IBV_QPS_ERR) {
 			spdk_nvmf_rdma_qpair_inc_refcnt(rqpair);
-			spdk_thread_send_msg(rqpair->qpair.group->thread, _nvmf_rdma_qpair_disconnect, &rqpair->qpair);
+			spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 		}
 		break;
 	case IBV_EVENT_QP_REQ_ERR:
