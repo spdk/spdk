@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "684a70e2_fc65e1cc",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T01:08:46Z",
+      "side": 1,
+      "message": "I guess this wasn\u0027t meant to be an exhaustive list of everything that put into v18.10.x, and possibly not necessarily worded all identically for those commits that did go in?",
+      "revId": "45b79232bd3450ec6f7037f70376149c5db6503f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
