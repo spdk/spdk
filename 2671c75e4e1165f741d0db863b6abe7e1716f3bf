@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9f05d93d_6006cea8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-12-14T01:29:24Z",
+      "side": 1,
+      "message": "Hi Ben, we actually require PD per device. Should I move pd under different struct?",
+      "parentUuid": "0d9fbcd1_e1f99d91",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d6adf93_dc74c7a2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-13T21:27:07Z",
       "side": 1,
       "message": "Did you need to move this function?",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73fef642_6985bae5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-12-14T01:29:24Z",
+      "side": 1,
+      "message": "As far as I remember this function was defined few lines after its used, so I got some tests failed. So I moved it here. But now I am seeing that it is in a right place. I will remove this in my new upload.",
+      "parentUuid": "7d6adf93_dc74c7a2",
       "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e72198fd_09422e1b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1774,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-12-14T01:29:24Z",
+      "side": 1,
+      "message": "Sure, I will remove it.",
+      "parentUuid": "bbb70eae_42126238",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "490aa7ab_8b4aadd4",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-13T21:27:07Z",
       "side": 1,
       "message": "If you have a different protection domain for each RDMA port, that means each port needs a separate memory map. But right now you have the memory map stored on the device, so there can only be one per device.",
+      "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37616ffc_444df2c6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1947,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2018-12-14T01:29:24Z",
+      "side": 1,
+      "message": "We want pd per RDMA device.",
+      "parentUuid": "490aa7ab_8b4aadd4",
       "revId": "2671c75e4e1165f741d0db863b6abe7e1716f3bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
