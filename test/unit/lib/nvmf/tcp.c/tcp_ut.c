@@ -219,10 +219,11 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT_PTR_NOT_NULL(transport);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	SPDK_CU_ASSERT_FATAL(ttransport != NULL);
-	CU_ASSERT(ttransport->max_queue_depth == UT_MAX_QUEUE_DEPTH);
-	CU_ASSERT(ttransport->max_io_size == UT_MAX_IO_SIZE);
-	CU_ASSERT(ttransport->in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
-	CU_ASSERT(ttransport->io_unit_size == UT_IO_UNIT_SIZE);
+	transport->opts = opts;
+	CU_ASSERT(transport->opts.max_queue_depth == UT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(transport->opts.max_io_size == UT_MAX_IO_SIZE);
+	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
+	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
@@ -238,12 +239,14 @@ test_nvmf_tcp_create(void)
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	/* expect success */
 	transport = spdk_nvmf_tcp_create(&opts);
+	CU_ASSERT_PTR_NOT_NULL(transport);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 	SPDK_CU_ASSERT_FATAL(ttransport != NULL);
-	CU_ASSERT(ttransport->max_queue_depth == UT_MAX_QUEUE_DEPTH);
-	CU_ASSERT(ttransport->max_io_size == UT_MAX_IO_SIZE);
-	CU_ASSERT(ttransport->in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
-	CU_ASSERT(ttransport->io_unit_size == UT_MAX_IO_SIZE);
+	transport->opts = opts;
+	CU_ASSERT(transport->opts.max_queue_depth == UT_MAX_QUEUE_DEPTH);
+	CU_ASSERT(transport->opts.max_io_size == UT_MAX_IO_SIZE);
+	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
+	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
@@ -284,6 +287,7 @@ test_nvmf_tcp_destroy(void)
 	opts.max_aq_depth = UT_MAX_AQ_DEPTH;
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NOT_NULL(transport);
+	transport->opts = opts;
 	/* destroy transport */
 	CU_ASSERT(spdk_nvmf_tcp_destroy(transport) == 0);
 
