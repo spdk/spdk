@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49c383d9_6c99765c",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-14T08:35:03Z",
+      "side": 1,
+      "message": "Calling echo $string | jq here and similarly a couple of times more on lines 50, 60, and 61 will generate a lot of additional lines to build log due to -x flag.\n\nHave you maybe considered using a herestring instead of pipe?\ne.g.\njq -r -S \u0027.[]\u0027 \u003c\u003c\u003c $nvme_controller_result \u003e $rootdir/test/nvmf/rpc/get_nvme_controllers_nvmf.test\nThis way we get rid of echo and not print anything to log.",
+      "range": {
+        "startLine": 55,
+        "startChar": 4,
+        "endLine": 55,
+        "endChar": 49
+      },
+      "revId": "d298d5e88aa241a467c8f13877c48cc7f61b5cee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
