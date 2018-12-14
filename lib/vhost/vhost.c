@@ -516,8 +516,8 @@ spdk_vhost_session_find_by_vid(int vid)
 	struct spdk_vhost_dev *vdev;
 
 	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->session.vid == vid) {
-			return &vdev->session;
+		if (vdev->session && vdev->session->vid == vid) {
+			return vdev->session;
 		}
 	}
 
@@ -750,7 +750,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
 	vdev->id = ctrlr_num++;
-	vdev->session.vid = -1;
 	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
@@ -775,7 +774,7 @@ out:
 int
 spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->session.vid != -1) {
+	if (vdev->session) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -EBUSY;
 	}
@@ -1267,16 +1266,22 @@ new_connection(int vid)
 		return -1;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
-	vsession = &vdev->session;
-	if (vsession->vid != -1) {
-		SPDK_ERRLOG("Session with vid %d already exists.\n", vid);
+	if (vdev->session != NULL) {
+		SPDK_ERRLOG("Device %s is already connected.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return -1;
+	}
+
+	vsession = spdk_dma_zmalloc(sizeof(struct spdk_vhost_session),
+				    SPDK_CACHE_LINE_SIZE, NULL);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
 		return -1;
 	}
 
 	vsession->vdev = vdev;
 	vsession->vid = vid;
+	vdev->session = vsession;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }
@@ -1294,8 +1299,8 @@ destroy_connection(int vid)
 		return;
 	}
 
-	/* since pollers are not running it safe not to use spdk_event here */
-	vsession->vid = -1;
+	vsession->vdev->session = NULL;
+	spdk_dma_free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
