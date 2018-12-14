@@ -1283,7 +1283,8 @@ new_connection(int vid)
 		return -1;
 	}
 
-	vsession = spdk_dma_zmalloc(sizeof(struct spdk_vhost_session),
+	vsession = spdk_dma_zmalloc(sizeof(struct spdk_vhost_session) +
+				    vdev->backend->session_ctx_size,
 				    SPDK_CACHE_LINE_SIZE, NULL);
 	if (vsession == NULL) {
 		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
