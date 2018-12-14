@@ -253,7 +253,7 @@ void
 spdk_free_thread(void)
 {
 	struct spdk_thread *thread;
-	struct spdk_io_channel *ch;
+	struct spdk_io_channel *ch, *ch_tmp;
 
 	thread = _get_thread();
 	if (!thread) {
@@ -263,9 +263,14 @@ spdk_free_thread(void)
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
 
-	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
-		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
-			    thread->name, ch->dev->name);
+	//TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
+	TAILQ_FOREACH_SAFE(ch, &thread->io_channels, tailq, ch_tmp) {
+		if (ch->dev) {
+			SPDK_DEBUG(SPDK_LOG_THREAD, "thread %s still has channel for io_device %s\n",
+			    	thread->name, ch->dev->name);
+			TAILQ_REMOVE(&thread->io_channels, ch, tailq);
+			free(ch);
+		}
 	}
 
 	pthread_mutex_lock(&g_devlist_mutex);
