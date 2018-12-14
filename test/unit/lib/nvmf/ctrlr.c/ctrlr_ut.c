@@ -308,6 +308,7 @@ test_connect(void)
 	TAILQ_INIT(&subsystem.ctrlrs);
 	subsystem.tgt = &tgt;
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_NVME;
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	snprintf(subsystem.subnqn, sizeof(subsystem.subnqn), "%s", subnqn);
 
 	memset(&cmd, 0, sizeof(cmd));
@@ -483,6 +484,7 @@ test_connect(void)
 	/* I/O connect to discovery controller */
 	memset(&rsp, 0, sizeof(rsp));
 	subsystem.subtype = SPDK_NVMF_SUBTYPE_DISCOVERY;
+	subsystem.state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	rc = spdk_nvmf_ctrlr_connect(&req);
 	poll_threads();
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
