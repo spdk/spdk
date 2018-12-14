@@ -232,6 +232,16 @@ int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
 uint64_t spdk_thread_next_poller_expiration(struct spdk_thread *thread);
 
 /**
+ * Returns whether there are any active pollers (pollers for which
+ * period_microseconds equals 0) registered to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return 1 if there is at least one active poller, 0 otherwise.
+ */
+int spdk_thread_has_active_pollers(struct spdk_thread *thread);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);
