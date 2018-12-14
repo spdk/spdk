@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "c29b01ad_9e242488",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T17:54:21Z",
+      "side": 1,
+      "message": "To be clear, that is we explicitly name the tarball before the \u0027#\u0027, but we\u0027re fine with the -%{version} (note no leading \u0027v\u0027) used after the \u0027#\u0027.\n\nIn other words, to repeat, \u0027Source: https://github.com/spdk/spdk/archive/v18.10.x.tar.gz#/%{name}-%{version}.tar.gz\u0027  is fine.",
+      "parentUuid": "bb75265a_ef59eca4",
+      "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d714f19_1d19d1ff",
         "filename": "pkg/spdk.spec",
         "patchSetId": 6
