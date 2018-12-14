@@ -240,6 +240,7 @@ test_discovery_log(void)
 	snprintf(trid.trsvcid, sizeof(trid.trsvcid), "5678");
 	SPDK_CU_ASSERT_FATAL(spdk_nvmf_subsystem_add_listener(subsystem, &trid) == 0);
 
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_ACTIVE;
 	/* Get only genctr (first field in the header) */
 	memset(buffer, 0xCC, sizeof(buffer));
 	disc_log = (struct spdk_nvmf_discovery_log_page *)buffer;
@@ -280,6 +281,7 @@ test_discovery_log(void)
 					 offsetof(struct spdk_nvmf_discovery_log_page, entries[0]),
 					 sizeof(*entry));
 	CU_ASSERT(entry->trtype == 42);
+	subsystem->state = SPDK_NVMF_SUBSYSTEM_INACTIVE;
 	spdk_nvmf_subsystem_destroy(subsystem);
 	free(tgt.subsystems);
 	free(tgt.discovery_log_page);
