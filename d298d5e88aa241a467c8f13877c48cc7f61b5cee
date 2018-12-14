@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "962f8c6b_67e14975",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-14T08:57:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49c383d9_6c99765c",
+      "range": {
+        "startLine": 55,
+        "startChar": 4,
+        "endLine": 55,
+        "endChar": 49
+      },
+      "revId": "d298d5e88aa241a467c8f13877c48cc7f61b5cee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f74ea009_4c7a5d93",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 10
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "4057558a_ed5f7725",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-14T08:57:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f74ea009_4c7a5d93",
+      "range": {
+        "startLine": 60,
+        "startChar": 4,
+        "endLine": 60,
+        "endChar": 65
+      },
+      "revId": "d298d5e88aa241a467c8f13877c48cc7f61b5cee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64be2f43_a0c16625",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 10
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-14T08:39:46Z",
       "side": 1,
       "message": "this should be exit 1.\nOtherwise exit 0 will cause test to end as success",
+      "range": {
+        "startLine": 64,
+        "startChar": 8,
+        "endLine": 64,
+        "endChar": 14
+      },
+      "revId": "d298d5e88aa241a467c8f13877c48cc7f61b5cee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d5bb75c_1643296e",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-14T08:57:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64be2f43_a0c16625",
       "range": {
         "startLine": 64,
         "startChar": 8,
