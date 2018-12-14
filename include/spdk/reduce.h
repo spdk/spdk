@@ -81,15 +81,6 @@ struct spdk_reduce_vol_params {
 	uint64_t		vol_size;
 };
 
-/**
- * Get the required size for the backing device for a compressed volume.
- *
- * \param params Parameters for the compressed volume
- * \return Size of the required backing device (in bytes) needed to create
- *         the compressed volume.  Returns -EINVAL if params is invalid.
- */
-int64_t spdk_reduce_get_backing_device_size(struct spdk_reduce_vol_params *params);
-
 struct spdk_reduce_vol;
 
 typedef void (*spdk_reduce_vol_op_complete)(void *ctx, int reduce_errno);
