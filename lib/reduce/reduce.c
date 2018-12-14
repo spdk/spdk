@@ -317,6 +317,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 	}
 
 	if (vol != NULL) {
+		pmem_unmap(vol->pm_file.pm_buf, vol->pm_file.size);
 		spdk_dma_free(vol->backing_super);
 		spdk_bit_array_free(&vol->allocated_chunk_maps);
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
@@ -675,8 +676,6 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
-
-	pmem_unmap(vol->pm_file.pm_buf, vol->pm_file.size);
 
 	vol->backing_dev->close(vol->backing_dev);
 
