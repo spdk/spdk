@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "718db34e_3f2639c6",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-12-14T20:21:00Z",
+      "side": 1,
+      "message": "Thanks, I\u0027ve changed that.",
+      "parentUuid": "c29b01ad_9e242488",
+      "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d714f19_1d19d1ff",
         "filename": "pkg/spdk.spec",
         "patchSetId": 6
@@ -89,6 +107,24 @@
     },
     {
       "key": {
+        "uuid": "1c98441e_e2862ceb",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-12-14T20:21:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d714f19_1d19d1ff",
+      "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "55a122be_006d1a81",
         "filename": "pkg/spdk.spec",
         "patchSetId": 6
@@ -100,6 +136,24 @@
       "writtenOn": "2018-12-14T17:05:16Z",
       "side": 1,
       "message": "Change to use new macro defined at top:\n\n%autosetup -n %{spdk_build_dir}",
+      "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0ef7b84_0e3c20da",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 6
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2018-12-14T20:21:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55a122be_006d1a81",
       "revId": "ce03d8ac9339ac90505eba623b19e6e1545bbc73",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
