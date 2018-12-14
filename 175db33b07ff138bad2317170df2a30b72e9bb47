@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc718546_69ba0847",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-14T12:02:08Z",
+      "side": 1,
+      "message": "How about this echo? Can we remove it for sake of using herestring (\u003c\u003c\u003c)?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 43
+      },
+      "revId": "175db33b07ff138bad2317170df2a30b72e9bb47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b12628b_492bf82f",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-14T12:02:08Z",
+      "side": 1,
+      "message": "How about this echo? Can we remove it for sake of using herestring (\u003c\u003c\u003c)?",
+      "range": {
+        "startLine": 50,
+        "startChar": 4,
+        "endLine": 50,
+        "endChar": 48
+      },
+      "revId": "175db33b07ff138bad2317170df2a30b72e9bb47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
