@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91f8f03e_2e6454ac",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 7
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2018-12-14T21:14:59Z",
+      "side": 1,
+      "message": "As commented on patch set 4 of https://review.gerrithub.io/#/c/spdk/spdk/+/437196/, this line should now be eliminated.   spdk_build_dir should always be %{name}-%{version}.",
+      "revId": "9c04c114a65d6155ed5aca7e974538d03e77bdc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
