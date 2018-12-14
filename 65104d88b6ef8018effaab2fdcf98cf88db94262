@@ -141,6 +141,30 @@
       "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf063fb7_704a81a4",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-14T12:19:08Z",
+      "side": 1,
+      "message": "I think we are not on the same page here. I know that we don\u0027t be fully complaint with realloc() man page but we don\u0027t have to be as long as we don\u0027t confuse the user doing something diffrent than name sufix suggests :)\n\nI\u0027m talking about something like this (this should not trigger scan-build errors):\n\n\nchar *\nspdk_vsprintf_realloc(char *buffer, const char *format, va_list args)\n{\n\tva_list args_copy;\n\tchar *new_buffer;\n\tsize_t new_size;\n\tint rc;\n\n\t/* Try with a small buffer first. */\n\tnew_size \u003d (buffer ? strlen(buffer) : 0) + 32;\n\tnew_buffer \u003d buffer;\n\n\t/* Limit maximum buffer size to something reasonable so we don\u0027t loop forever. */\n\twhile (new_size \u003c\u003d 1024 * 1024) {\n\t\t/* Save old buffer in case realloc fail.\n\t\t * On success realloc() will free it, on failure\n\t\t * we will free it. */\n\t\tbuffer \u003d new_buffer;\n\t\tnew_buffer \u003d realloc(buffer, new_size);\n\t\tif (new_buffer \u003d\u003d NULL) {\n\t\t\tfree(buffer);\n\t\t\treturn NULL;\n\t\t}\n\t\t\n\t\t// new_buffer[orig_size] \u003d \u0027\\0\u0027; // Not needed, realloc copied whole block.\n\n\t\tva_copy(args_copy, args);\n\t\trc \u003d vsnprintf(new_buffer + orig_size, new_size - orig_size, format,\n\t\t\t       args_copy);\n\n\t\t/* If vnsprintf returned a count within our current buffer size minus\n\t\t * source buffer size, we are done. The count does not include the \\0\n\t\t * terminator, so rc + orig_size \u003d\u003d new_size is not OK.\n\t\t */\n\t\tif (rc \u003e\u003d 0 \u0026\u0026 (size_t)rc + orig_size \u003c new_size) {\n\t\t\treturn new_buffer;\n\t\t}\n\n\t\tnew_size *\u003d 2;\n\t}\n\n\terrno \u003d ENOSPC;\n\tfree(new_buffer);\n\treturn NULL;\n}",
+      "parentUuid": "10d2c3de_4009d172",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
