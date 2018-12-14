@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4e95bd9a_626f28c8",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7539302b_032a7e04",
+      "range": {
+        "startLine": 85,
+        "startChar": 5,
+        "endLine": 85,
+        "endChar": 18
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9a27cd00_5e7d43ed",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "vbdev-\u003eocf_cache \u003d\u003d NULL",
+      "range": {
+        "startLine": 89,
+        "startChar": 5,
+        "endLine": 89,
+        "endChar": 30
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f507acd_11ffab8a",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9a27cd00_5e7d43ed",
       "range": {
         "startLine": 89,
         "startChar": 5,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5f024c46_51060f4a",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Are you sure we need to mix \u0027return codes\u0027 and booleans?",
+      "parentUuid": "ab34bc9d_be97dd35",
+      "range": {
+        "startLine": 93,
+        "startChar": 6,
+        "endLine": 93,
+        "endChar": 44
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5a9aa904_658ffab7",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "Put this before \u0027if\u0027 and compare if rc !\u003d 0",
+      "range": {
+        "startLine": 97,
+        "startChar": 5,
+        "endLine": 97,
+        "endChar": 48
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3d0d426_14500300",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5a9aa904_658ffab7",
       "range": {
         "startLine": 97,
         "startChar": 5,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "ca6aa801_37c27e3f",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0d774ada_26a400b2",
+      "range": {
+        "startLine": 102,
+        "startChar": 8,
+        "endLine": 102,
+        "endChar": 9
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "00b5446e_9e337794",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -128,6 +248,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "Could you assign just dir \u003d OCF_READ; and add separate case for SPDK_BDEV_IO_TYPE_WRITE?",
+      "range": {
+        "startLine": 206,
+        "startChar": 25,
+        "endLine": 206,
+        "endChar": 71
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0958276d_a786b9c1",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "00b5446e_9e337794",
       "range": {
         "startLine": 206,
         "startChar": 25,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "50279519_1bd2a899",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "I think that would make it more complicated since you have to keep thack of a new variable",
+      "parentUuid": "87dac625_8f7e7257",
+      "range": {
+        "startLine": 208,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 27
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "41db88ce_5eb246fc",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -174,6 +342,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "There is not that much code, instead of using goto duplicate those functions in all three cases.",
+      "range": {
+        "startLine": 231,
+        "startChar": 2,
+        "endLine": 231,
+        "endChar": 20
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0150ee4_055952fc",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "41db88ce_5eb246fc",
       "range": {
         "startLine": 231,
         "startChar": 2,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "c94f0014_504eb2f1",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b1cfa83d_2253ebc0",
+      "range": {
+        "startLine": 263,
+        "startChar": 2,
+        "endLine": 263,
+        "endChar": 49
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9c78f163_94f4df24",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -220,6 +436,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "break;",
+      "range": {
+        "startLine": 282,
+        "startChar": 2,
+        "endLine": 282,
+        "endChar": 9
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd428d46_56e82be3",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c78f163_94f4df24",
       "range": {
         "startLine": 282,
         "startChar": 2,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "f8d94af5_b5083bf4",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b04b0247_b9d5e2e8",
+      "range": {
+        "startLine": 307,
+        "startChar": 1,
+        "endLine": 307,
+        "endChar": 33
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5cc22c2b_611446ca",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "a20ca04e_e19524be",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 432,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5cc22c2b_611446ca",
+      "range": {
+        "startLine": 432,
+        "startChar": 6,
+        "endLine": 432,
+        "endChar": 33
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4324eefd_c6c764ed",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -289,6 +577,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "Change to single line comment:  Create exported spdk object",
+      "range": {
+        "startLine": 443,
+        "startChar": 4,
+        "endLine": 443,
+        "endChar": 45
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b6574319_f3fbd422",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4324eefd_c6c764ed",
       "range": {
         "startLine": 443,
         "startChar": 4,
@@ -395,6 +707,30 @@
     },
     {
       "key": {
+        "uuid": "eef29e34_a042b3a8",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "\"introduce int rc\" - Ack\n\"Do not use goto here\" - Why?",
+      "parentUuid": "7e4066d4_794ef3f5",
+      "range": {
+        "startLine": 619,
+        "startChar": 2,
+        "endLine": 619,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f7d96df1_b228736f",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 21
@@ -406,6 +742,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "return rc;",
+      "range": {
+        "startLine": 638,
+        "startChar": 1,
+        "endLine": 638,
+        "endChar": 13
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b56fb09_95f6a31b",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f7d96df1_b228736f",
       "range": {
         "startLine": 638,
         "startChar": 1,
@@ -441,6 +801,30 @@
     },
     {
       "key": {
+        "uuid": "8f1e440d_9ecdeeca",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e6a57455_fac00fc2",
+      "range": {
+        "startLine": 657,
+        "startChar": 2,
+        "endLine": 657,
+        "endChar": 11
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "beeb4c02_f270e818",
         "filename": "lib/bdev/cas/vbdev_cas_dobj.c",
         "patchSetId": 21
@@ -452,6 +836,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "len \u003d base-\u003ebdev-\u003eblocklen * base-\u003ebdev-\u003eblockcnt;",
+      "range": {
+        "startLine": 65,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 29
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68dca1d8_2103b524",
+        "filename": "lib/bdev/cas/vbdev_cas_dobj.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "beeb4c02_f270e818",
       "range": {
         "startLine": 65,
         "startChar": 0,
@@ -487,6 +895,30 @@
     },
     {
       "key": {
+        "uuid": "db78c62b_ba82f79f",
+        "filename": "lib/bdev/cas/vbdev_cas_dobj.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "It\u0027s somewhat arbitrary\nAre you sure we need a define?\nBecause we a not using this value in SPDK part\nAnd if we would, we could get this value from function that has the appropriate name - get_max_io_size",
+      "parentUuid": "faa98313_0cf143fe",
+      "range": {
+        "startLine": 335,
+        "startChar": 8,
+        "endLine": 335,
+        "endChar": 11
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc6c302f_fbedd07e",
         "filename": "lib/cas/ctx.c",
         "patchSetId": 21
@@ -498,6 +930,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "There are similiar funcitons in bdev.c (_copy_buf_to_iovs, _copy_iovs_to_buf)\nMaybe its worth moving them to utils and use them here?\nYou can do this as separate patch preceding this one.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 78
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6489efd7_3fc55a19",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack. I will take a look at those function",
+      "parentUuid": "fc6c302f_fbedd07e",
       "range": {
         "startLine": 100,
         "startChar": 0,
@@ -533,6 +989,30 @@
     },
     {
       "key": {
+        "uuid": "b6af4e19_2d1c87b0",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "41becd05_85a48fe0",
+      "range": {
+        "startLine": 104,
+        "startChar": 1,
+        "endLine": 104,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "affe0da4_8dfc237b",
         "filename": "lib/cas/ctx.c",
         "patchSetId": 21
@@ -544,6 +1024,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "Look at comment in line 100",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 12
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e20c362_1e7e5628",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "affe0da4_8dfc237b",
       "range": {
         "startLine": 132,
         "startChar": 0,
@@ -579,6 +1083,30 @@
     },
     {
       "key": {
+        "uuid": "9aececa9_aca1684b",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f67d0963_04aaf993",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a443c962_a5c6c58a",
         "filename": "lib/cas/ctx.c",
         "patchSetId": 21
@@ -602,6 +1130,30 @@
     },
     {
       "key": {
+        "uuid": "06e5d79d_471300fe",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a443c962_a5c6c58a",
+      "range": {
+        "startLine": 164,
+        "startChar": 0,
+        "endLine": 164,
+        "endChar": 10
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "372d1322_83cd74f6",
         "filename": "lib/cas/ctx.c",
         "patchSetId": 21
@@ -613,6 +1165,30 @@
       "writtenOn": "2018-12-12T16:04:14Z",
       "side": 1,
       "message": "empty line after declarations",
+      "range": {
+        "startLine": 168,
+        "startChar": 1,
+        "endLine": 168,
+        "endChar": 16
+      },
+      "revId": "e3cf4f08fa7c5d7e3be26af7d3c1e9e9fa372836",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "89511b92_96819730",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-14T10:15:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "372d1322_83cd74f6",
       "range": {
         "startLine": 168,
         "startChar": 1,
