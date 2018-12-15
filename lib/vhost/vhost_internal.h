@@ -191,6 +191,25 @@ struct spdk_vhost_dev_destroy_ctx {
 	void *event_ctx;
 };
 
+/**
+ * Synchronized vhost session event used for backend callbacks.
+ *
+ * \param vdev vhost device. If the device has been deleted
+ * in the meantime, this function will be called one last
+ * time with vdev == NULL.
+ * \param vsession vhost session. If all sessions have been
+ * iterated through, this function will be called one last
+ * time with vsession == NULL.
+ * \param arg user-provided parameter.
+ *
+ * \return negative values will break the foreach call, meaning
+ * the function won't be called again. Return codes zero and
+ * positive don't have any effect.
+ */
+typedef int (*spdk_vhost_session_fn)(struct spdk_vhost_dev *vdev,
+				     struct spdk_vhost_session *vsession,
+				     void *arg);
+
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
@@ -272,6 +291,18 @@ int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
 void spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+
+/*
+ * Call function for each active session on the provided
+ * vhost device. The function will be called one-by-one
+ * on each session's thread.
+ *
+ * \param vdev vhost device
+ * \param fn function to call
+ * \param arg additional argument to \c fn
+ */
+void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
+				    spdk_vhost_session_fn fn, void *arg);
 void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
