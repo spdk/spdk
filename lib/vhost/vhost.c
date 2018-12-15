@@ -1349,6 +1349,13 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 }
 
 void
+spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
+			       spdk_vhost_session_fn fn, void *arg)
+{
+	fn(vdev, vdev->session, arg);
+}
+
+void
 spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
 {
 	struct spdk_vhost_dev *vdev;
