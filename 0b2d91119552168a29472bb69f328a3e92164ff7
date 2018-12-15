@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1053f016_5762dd24",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-15T01:06:26Z",
+      "side": 1,
+      "message": "In TCP, we do not do that.If there is no incapsuledata support, we will not allocate that. Also, incapsule data is very small 4KB and 8KB size, it cannot satisfy the requirements.",
+      "parentUuid": "c782a95a_23b673fa",
+      "revId": "0b2d91119552168a29472bb69f328a3e92164ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ee640aa_104d006a",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-14T19:13:58Z",
       "side": 1,
       "message": "Use enum value",
+      "revId": "0b2d91119552168a29472bb69f328a3e92164ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8218ccee_ff477cc7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2239,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-15T01:06:26Z",
+      "side": 1,
+      "message": "will do that.",
+      "parentUuid": "3ee640aa_104d006a",
       "revId": "0b2d91119552168a29472bb69f328a3e92164ff7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
