@@ -230,15 +230,9 @@ struct spdk_scsi_dev *spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, u
 /**
  * Detach and destruct SCSI target from a vhost SCSI device.
  *
- * If vhost SCSI device has an active socket connection, it is
- * required that it has negotiated \c VIRTIO_SCSI_F_HOTPLUG feature
- * flag.Otherwise an -ENOTSUP error code is returned. If the flag has
- * been negotiated, the device will be marked to be deleted. Actual
- * deletion is deferred until after all pending I/O to this device
- * has finished.
- *
- * Once the target has been deleted (whether or not vhost SCSI
- * device is in use) given callback will be called.
+ * The device will be deleted after all pending I/O is finished.
+ * If the driver supports VIRTIO_SCSI_F_HOTPLUG, then a hotremove
+ * notification will be sent.
  *
  * \param vdev vhost SCSI device
  * \param scsi_tgt_num slot id to delete target from
