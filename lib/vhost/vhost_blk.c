@@ -46,7 +46,7 @@
 
 struct spdk_vhost_blk_task {
 	struct spdk_bdev_io *bdev_io;
-	struct spdk_vhost_blk_dev *bvdev;
+	struct spdk_vhost_blk_session *bvsession;
 	struct spdk_vhost_virtqueue *vq;
 
 	volatile uint8_t *status;
@@ -85,14 +85,15 @@ struct spdk_vhost_blk_session {
 static const struct spdk_vhost_dev_backend vhost_blk_device_backend;
 
 static int
-process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
+process_blk_request(struct spdk_vhost_blk_task *task,
+		    struct spdk_vhost_blk_session *bvsession,
 		    struct spdk_vhost_virtqueue *vq);
 
 static void
 blk_task_finish(struct spdk_vhost_blk_task *task)
 {
-	assert(task->bvdev->vdev.session->task_cnt > 0);
-	task->bvdev->vdev.session->task_cnt--;
+	assert(task->bvsession->vsession.task_cnt > 0);
+	task->bvsession->vsession.task_cnt--;
 	task->used = false;
 }
 
@@ -103,7 +104,7 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
 		*task->status = status;
 	}
 
-	spdk_vhost_vq_used_ring_enqueue(task->bvdev->vdev.session, task->vq, task->req_idx,
+	spdk_vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
 					task->used_len);
 	blk_task_finish(task);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Invalid request (status=%" PRIu8")\n", status);
@@ -117,15 +118,17 @@ invalid_blk_request(struct spdk_vhost_blk_task *task, uint8_t status)
  *   FIXME: Make this function return to rd_cnt and wr_cnt
  */
 static int
-blk_iovs_setup(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq, uint16_t req_idx,
-	       struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
+blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq,
+	       uint16_t req_idx, struct iovec *iovs, uint16_t *iovs_cnt, uint32_t *length)
 {
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct vring_desc *desc, *desc_table;
 	uint16_t out_cnt = 0, cnt = 0;
 	uint32_t desc_table_size, len = 0;
 	int rc;
 
-	rc = spdk_vhost_vq_get_desc(vdev->session, vq, req_idx, &desc, &desc_table, &desc_table_size);
+	rc = spdk_vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: Invalid descriptor at index %"PRIu16".\n", vdev->name, req_idx);
 		return -1;
@@ -142,7 +145,7 @@ blk_iovs_setup(struct spdk_vhost_dev *vdev, struct spdk_vhost_virtqueue *vq, uin
 			return -1;
 		}
 
-		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vdev->session, iovs, &cnt, desc))) {
+		if (spdk_unlikely(spdk_vhost_vring_desc_to_iov(vsession, iovs, &cnt, desc))) {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid descriptor %" PRIu16" (req_idx = %"PRIu16").\n",
 				      req_idx, cnt);
 			return -1;
@@ -180,7 +183,7 @@ static void
 blk_request_finish(bool success, struct spdk_vhost_blk_task *task)
 {
 	*task->status = success ? VIRTIO_BLK_S_OK : VIRTIO_BLK_S_IOERR;
-	spdk_vhost_vq_used_ring_enqueue(task->bvdev->vdev.session, task->vq, task->req_idx,
+	spdk_vhost_vq_used_ring_enqueue(&task->bvsession->vsession, task->vq, task->req_idx,
 					task->used_len);
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Finished task (%p) req_idx=%d\n status: %s\n", task,
 		      task->req_idx, success ? "OK" : "FAIL");
@@ -202,7 +205,7 @@ blk_request_resubmit(void *arg)
 	struct spdk_vhost_blk_task *task = (struct spdk_vhost_blk_task *)arg;
 	int rc = 0;
 
-	rc = process_blk_request(task, task->bvdev, task->vq);
+	rc = process_blk_request(task, task->bvsession, task->vq);
 	if (rc == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p resubmitted ======\n", task);
 	} else {
@@ -214,7 +217,7 @@ static inline void
 blk_request_queue_io(struct spdk_vhost_blk_task *task)
 {
 	int rc;
-	struct spdk_vhost_blk_dev *bvdev = task->bvdev;
+	struct spdk_vhost_blk_dev *bvdev = task->bvsession->bvdev;
 	struct spdk_bdev *bdev = bvdev->bdev;
 
 	task->bdev_io_wait.bdev = bdev;
@@ -229,16 +232,18 @@ blk_request_queue_io(struct spdk_vhost_blk_task *task)
 }
 
 static int
-process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev *bvdev,
+process_blk_request(struct spdk_vhost_blk_task *task,
+		    struct spdk_vhost_blk_session *bvsession,
 		    struct spdk_vhost_virtqueue *vq)
 {
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	const struct virtio_blk_outhdr *req;
 	struct iovec *iov;
 	uint32_t type;
 	uint32_t payload_len;
 	int rc;
 
-	if (blk_iovs_setup(&bvdev->vdev, vq, task->req_idx, task->iovs, &task->iovcnt, &payload_len)) {
+	if (blk_iovs_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt, &payload_len)) {
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "Invalid request (req_idx = %"PRIu16").\n", task->req_idx);
 		/* Only READ and WRITE are supported for now. */
 		invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -330,8 +335,9 @@ process_blk_request(struct spdk_vhost_blk_task *task, struct spdk_vhost_blk_dev 
 }
 
 static void
-process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
+process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_blk_task *task;
 	struct spdk_vhost_session *vsession = bvdev->vdev.session;
 	int rc;
@@ -369,7 +375,7 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 		task->status = NULL;
 		task->used_len = 0;
 
-		rc = process_blk_request(task, bvdev, vq);
+		rc = process_blk_request(task, bvsession, vq);
 		if (rc == 0) {
 			SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "====== Task %p req_idx %d submitted ======\n", task,
 				      reqs[i]);
@@ -382,12 +388,13 @@ process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
 static int
 vdev_worker(void *arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_blk_session *bvsession = arg;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+
 	uint16_t q_idx;
 
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		process_vq(bvdev, &vsession->virtqueue[q_idx]);
+		process_vq(bvsession, &vsession->virtqueue[q_idx]);
 	}
 
 	spdk_vhost_session_used_signal(vsession);
@@ -396,9 +403,9 @@ vdev_worker(void *arg)
 }
 
 static void
-no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue *vq)
+no_bdev_process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue *vq)
 {
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	struct iovec iovs[SPDK_VHOST_IOVS_MAX];
 	uint32_t length;
 	uint16_t iovcnt, req_idx;
@@ -408,7 +415,7 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue
 	}
 
 	iovcnt = SPDK_COUNTOF(iovs);
-	if (blk_iovs_setup(&bvdev->vdev, vq, req_idx, iovs, &iovcnt, &length) == 0) {
+	if (blk_iovs_setup(bvsession, vq, req_idx, iovs, &iovcnt, &length) == 0) {
 		*(volatile uint8_t *)iovs[iovcnt - 1].iov_base = VIRTIO_BLK_S_IOERR;
 		SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK_DATA, "Aborting request %" PRIu16"\n", req_idx);
 	}
@@ -419,12 +426,13 @@ no_bdev_process_vq(struct spdk_vhost_blk_dev *bvdev, struct spdk_vhost_virtqueue
 static int
 no_bdev_vdev_worker(void *arg)
 {
-	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_blk_session *bvsession = arg;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
+	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	uint16_t q_idx;
 
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
-		no_bdev_process_vq(bvdev, &vsession->virtqueue[q_idx]);
+		no_bdev_process_vq(bvsession, &vsession->virtqueue[q_idx]);
 	}
 
 	spdk_vhost_session_used_signal(vsession);
@@ -486,7 +494,7 @@ _bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
 		     bvdev->vdev.name);
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
-		bvsession->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvdev, 0);
+		bvsession->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvsession, 0);
 	}
 
 	spdk_bdev_close(bvdev->bdev_desc);
@@ -557,7 +565,7 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 
 		for (j = 0; j < task_cnt; j++) {
 			task = &((struct spdk_vhost_blk_task *)vq->tasks)[j];
-			task->bvdev = bvdev;
+			task->bvsession = bvsession;
 			task->req_idx = j;
 			task->vq = vq;
 		}
@@ -614,7 +622,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
-				     bvdev, 0);
+				     bvsession, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vdev->lcore);
 out:
