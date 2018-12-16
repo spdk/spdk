@@ -165,6 +165,30 @@
       "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b6950d9_2db7fdd3",
+        "filename": "lib/util/string.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-16T23:57:04Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nI think Chunyang has similar idea to you but I tried to follow realloc() as you said. If it\u0027s good for user that vsprintf_realloc() frees the original buffer when it fails, I\u0027m very positive to it :-)\n\nI took your idea, added test code, and updated the doc in the header file.\n\nHi Chunyang,\n\nCan you implement your RPC based on the updated sprintf_realloc() ?",
+      "parentUuid": "bf063fb7_704a81a4",
+      "range": {
+        "startLine": 111,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 31
+      },
+      "revId": "65104d88b6ef8018effaab2fdcf98cf88db94262",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
