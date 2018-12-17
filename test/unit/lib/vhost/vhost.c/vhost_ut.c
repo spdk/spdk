@@ -139,6 +139,7 @@ static void
 start_vdev(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_memory *mem;
+	struct spdk_vhost_session *vsession = NULL;
 	int rc;
 
 	mem = calloc(1, sizeof(*mem) + 2 * sizeof(struct rte_vhost_mem_region));
@@ -151,28 +152,31 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].size = 0x400000; /* 4 MB */
 	mem->regions[1].host_user_addr = 0x2000000;
 
-	assert(vdev->session == NULL);
+	assert(TAILQ_EMPTY(&vdev->vsessions));
 	/* spdk_vhost_dev must be allocated on a cache line boundary. */
-	rc = posix_memalign((void **)&vdev->session, 64, sizeof(*vdev->session));
+	rc = posix_memalign((void **)&vsession, 64, sizeof(*vsession));
 	CU_ASSERT(rc == 0);
-	SPDK_CU_ASSERT_FATAL(vdev->session != NULL);
-	vdev->session->lcore = 0;
-	vdev->session->vid = 0;
-	vdev->session->mem = mem;
+	SPDK_CU_ASSERT_FATAL(vsession != NULL);
+	vsession->lcore = 0;
+	vsession->vid = 0;
+	vsession->mem = mem;
+	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
 }
 
 static void
 stop_vdev(struct spdk_vhost_dev *vdev)
 {
-	free(vdev->session->mem);
-	free(vdev->session);
-	vdev->session = NULL;
+	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
+
+	TAILQ_REMOVE(&vdev->vsessions, vsession, tailq);
+	free(vsession->mem);
+	free(vsession);
 }
 
 static void
 cleanup_vdev(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->session) {
+	if (!TAILQ_EMPTY(&vdev->vsessions)) {
 		stop_vdev(vdev);
 	}
 	spdk_vhost_dev_unregister(vdev);
@@ -193,7 +197,7 @@ desc_to_iov_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
-	vsession = vdev->session;
+	vsession = TAILQ_FIRST(&vdev->vsessions);
 
 	/* Test simple case where iov falls fully within a 2MB page. */
 	desc.addr = 0x110000;
@@ -300,6 +304,7 @@ static void
 session_find_by_vid_test(void)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 	struct spdk_vhost_session *tmp;
 	int rc;
 
@@ -307,11 +312,13 @@ session_find_by_vid_test(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0 && vdev);
 	start_vdev(vdev);
 
-	tmp = spdk_vhost_session_find_by_vid(vdev->session->vid);
-	CU_ASSERT(tmp == vdev->session);
+	vsession = TAILQ_FIRST(&vdev->vsessions);
+
+	tmp = spdk_vhost_session_find_by_vid(vsession->vid);
+	CU_ASSERT(tmp == vsession);
 
 	/* Search for a device with incorrect vid */
-	tmp = spdk_vhost_session_find_by_vid(vdev->session->vid + 0xFF);
+	tmp = spdk_vhost_session_find_by_vid(vsession->vid + 0xFF);
 	CU_ASSERT(tmp == NULL);
 
 	cleanup_vdev(vdev);
@@ -328,6 +335,7 @@ remove_controller_test(void)
 
 	/* Remove device when controller is in use */
 	start_vdev(vdev);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&vdev->vsessions));
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
 
