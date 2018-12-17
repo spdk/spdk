@@ -485,21 +485,32 @@ spdk_vhost_blk_get_dev(struct spdk_vhost_dev *vdev)
 }
 
 static int
-_bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
+_spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhost_session *vsession,
+				   void *ctx)
 {
-	struct spdk_vhost_blk_dev *bvdev = arg;
-	struct spdk_vhost_blk_session *bvsession = to_blk_session(bvdev->vdev.session);
+	struct spdk_vhost_blk_session *bvsession;
 
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     bvdev->vdev.name);
+	if (vdev == NULL) {
+		/* Nothing to do */
+		return 0;
+	}
+
+	if (vsession == NULL) {
+		/* All sessions have been notified, time to close the bdev */
+		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
+
+		spdk_bdev_close(bvdev->bdev_desc);
+		bvdev->bdev_desc = NULL;
+		bvdev->bdev = NULL;
+		return 0;
+	}
+
+	bvsession = (struct spdk_vhost_blk_session *)vsession;
 	if (bvsession->requestq_poller) {
 		spdk_poller_unregister(&bvsession->requestq_poller);
 		bvsession->requestq_poller = spdk_poller_register(no_bdev_vdev_worker, bvsession, 0);
 	}
 
-	spdk_bdev_close(bvdev->bdev_desc);
-	bvdev->bdev_desc = NULL;
-	bvdev->bdev = NULL;
 	return 0;
 }
 
@@ -508,7 +519,9 @@ bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
 
-	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev);
+	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+		     bvdev->vdev.name);
+	spdk_vhost_dev_foreach_session(&bvdev->vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
 }
 
 static void
