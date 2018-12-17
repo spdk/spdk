@@ -22,6 +22,30 @@
       "revId": "3648fe65e22b8904aead9515f7e06cdf0c94d82b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b2c9c9f_d0dd7b38",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-17T11:02:40Z",
+      "side": 1,
+      "message": "What was wrong with initial version check? If some is not available on Ubuntu \u003e \"16.01\" you should bump version instead this.\n\nFrom other site, If one of them is not is not available what good is from installing any of them?",
+      "parentUuid": "55f19a5f_808e2201",
+      "range": {
+        "startLine": 90,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 7
+      },
+      "revId": "3648fe65e22b8904aead9515f7e06cdf0c94d82b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
