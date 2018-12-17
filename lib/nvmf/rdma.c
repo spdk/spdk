@@ -2590,7 +2590,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
-					spdk_nvmf_rdma_qpair_destroy(rqpair);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
 				continue;
@@ -2600,7 +2600,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
-					spdk_nvmf_rdma_qpair_destroy(rqpair);
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
 				continue;
