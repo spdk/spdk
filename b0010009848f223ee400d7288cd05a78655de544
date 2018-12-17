@@ -172,6 +172,74 @@
     },
     {
       "key": {
+        "uuid": "5806f08c_ee8348e5",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:51:04Z",
+      "side": 1,
+      "message": "just check chunk-\u003estate directly instead of adding this function",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bafbaf73_85ea211e",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:51:04Z",
+      "side": 1,
+      "message": "let\u0027s just have callers check band-\u003estate directly - it makes the code simpler to read\n\nI think it would actually be less characters as well",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cc73ead_67ba5ea1",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:51:04Z",
+      "side": 1,
+      "message": "just call pthread_spin_lock inline instead of adding this function\n\nsame for ftl_band_unlock below",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f225437_6fdecb83",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:51:04Z",
+      "side": 1,
+      "message": "just check band-\u003enum_chunks directly",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5fd7b11_8d9cdbf2",
         "filename": "lib/ftl/ftl_band.h",
         "patchSetId": 24
@@ -183,6 +251,23 @@
       "writtenOn": "2018-12-17T21:32:39Z",
       "side": 1,
       "message": "is CIRCLEQ a requirement here?\n\nif CIRCLEQ has a definite advantage in this use case over TAILQ, then I guess this is OK - but we don\u0027t use CIRCLEQ anywhere else in SPDK currently, so there will be less learning curve for new readers if we can use TAILQ instead",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca988483_f6782c4b",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:51:04Z",
+      "side": 1,
+      "message": "just check chunk-\u003estate directly instead of adding this function",
       "revId": "b0010009848f223ee400d7288cd05a78655de544",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
