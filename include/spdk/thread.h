@@ -178,27 +178,13 @@ void spdk_thread_lib_fini(void);
 /**
  * Initializes the calling thread for I/O channel allocation.
  *
- * \param msg_fn A function that may be called from any thread and is passed a function
- * pointer (spdk_msg_fn) that must be called on the same thread that spdk_allocate_thread
- * was called from.
- * DEPRECATED. Only used in tests. Pass NULL for this parameter.
- * \param start_poller_fn Function to be called to start a poller for the thread.
- * DEPRECATED. Only used in tests. Pass NULL for this parameter.
- * \param stop_poller_fn Function to be called to stop a poller for the thread.
- * DEPRECATED. Only used in tests. Pass NULL for this parameter.
- * \param thread_ctx Context that will be passed to msg_fn, start_poller_fn, and stop_poller_fn.
- * DEPRECATED. Only used in tests. Pass NULL for this parameter.
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
  * spdk_allocate_thread() call. May be NULL to specify no name.
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
-		spdk_start_poller start_poller_fn,
-		spdk_stop_poller stop_poller_fn,
-		void *thread_ctx,
-		const char *name);
+struct spdk_thread *spdk_allocate_thread(const char *name);
 
 /**
  * Release any resources related to the calling thread for I/O channel allocation.
