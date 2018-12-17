@@ -120,8 +120,8 @@ poll_thread(uintptr_t thread_id)
 	struct ut_thread *thread = &g_ut_threads[thread_id];
 	uintptr_t original_thread_id;
 
-	CU_ASSERT(thread_id != (uintptr_t)INVALID_THREAD);
-	CU_ASSERT(thread_id < g_ut_num_threads);
+	assert(thread_id != (uintptr_t)INVALID_THREAD);
+	assert(thread_id < g_ut_num_threads);
 
 	original_thread_id = g_thread_id;
 	set_thread(INVALID_THREAD);
