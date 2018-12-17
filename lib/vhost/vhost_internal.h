@@ -164,7 +164,7 @@ struct spdk_vhost_dev {
 	uint32_t coalescing_iops_threshold;
 
 	/* Active connections to the device */
-	TAILQ_HEAD(, spdk_vhost_session) vsessions;
+	TAILQ_HEAD(spdk_vhost_dev_sessions, spdk_vhost_session) vsessions;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
