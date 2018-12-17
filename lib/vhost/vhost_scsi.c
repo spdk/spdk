@@ -76,6 +76,7 @@ struct spdk_scsi_dev_vhost_state {
 
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
+	struct spdk_cpuset *orig_cpumask;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 } __rte_cache_aligned;
 
@@ -791,24 +792,37 @@ to_scsi_session(struct spdk_vhost_session *vsession)
 }
 
 int
-spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
+spdk_vhost_scsi_dev_construct(const char *name, const char *mask_str)
 {
 	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
 					    SPDK_CACHE_LINE_SIZE, NULL);
+	struct spdk_cpuset *cpumask;
 	int rc;
 
 	if (svdev == NULL) {
 		return -ENOMEM;
 	}
 
+	cpumask = spdk_cpuset_alloc();
+	if (cpumask == NULL) {
+		spdk_dma_free(svdev);
+		return -ENOMEM;
+	}
+
 	spdk_vhost_lock();
-	rc = spdk_vhost_dev_register(&svdev->vdev, name, cpumask,
+	rc = spdk_vhost_dev_register(&svdev->vdev, name, mask_str,
 				     &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
+		spdk_cpuset_free(cpumask);
 		spdk_dma_free(svdev);
+		goto out_unlock;
 	}
 
+	spdk_cpuset_copy(cpumask, svdev->vdev.cpumask);
+	svdev->orig_cpumask = cpumask;
+
+out_unlock:
 	spdk_vhost_unlock();
 	return rc;
 }
@@ -843,6 +857,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
+	spdk_cpuset_free(svdev->orig_cpumask);
 	spdk_dma_free(svdev);
 	return 0;
 }
@@ -1227,6 +1242,15 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev,
 		}
 	}
 
+	/* if it's the first started session, then make sure all subsequent
+	 * ones will be polled on the same core - the underlying SCSI API
+	 * doesn't support multi-threaded I/O yet.
+	 */
+	if (TAILQ_FIRST(&vdev->vsessions) == TAILQ_LAST(&vdev->vsessions, spdk_vhost_dev_sessions)) {
+		spdk_cpuset_zero(vdev->cpumask);
+		spdk_cpuset_set_cpu(vdev->cpumask, vsession->lcore, true);
+	}
+
 	rc = alloc_task_pool(svsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("%s: failed to alloc task pool.\n", vdev->name);
@@ -1256,10 +1280,30 @@ out:
 }
 
 static int
+spdk_vhost_scsi_stop_cpl(struct spdk_vhost_dev *vdev,
+			 struct spdk_vhost_session *vsession, void *ctx)
+{
+	struct spdk_vhost_scsi_session *svsession = ctx;
+
+	if (vdev == NULL || vsession == NULL || vsession != &svsession->vsession) {
+		return 0;
+	}
+
+	/* if it's the last session, then rollback the cpumask to the original one */
+	if (TAILQ_FIRST(&vdev->vsessions) == TAILQ_LAST(&vdev->vsessions, spdk_vhost_dev_sessions)) {
+		spdk_cpuset_copy(vdev->cpumask, svsession->svdev->orig_cpumask);
+	}
+	spdk_vhost_dev_backend_event_done(svsession->destroy_ctx.event_ctx, 0);
+
+	return 0;
+}
+
+static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
@@ -1285,8 +1329,9 @@ destroy_device_poller_cb(void *arg)
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->destroy_ctx.poller);
-	spdk_vhost_dev_backend_event_done(svsession->destroy_ctx.event_ctx, 0);
-
+	/* stop the session from a foreach callback as we need to modify e.g. the
+	 * device cpumask in a thread-safe manner afterwards. */
+	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_stop_cpl, svsession);
 	return -1;
 }
 
@@ -1387,7 +1432,7 @@ spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "ctrlr", vdev->name);
-	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(vdev->cpumask));
+	spdk_json_write_named_string(w, "cpumask", spdk_cpuset_fmt(svdev->orig_cpumask));
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
