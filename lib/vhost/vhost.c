@@ -54,6 +54,12 @@ struct spdk_vhost_session_fn_ctx {
 	/** ID of the vdev to send event to. */
 	unsigned vdev_id;
 
+	/** Session pointer obtained before enqueuing the event */
+	struct spdk_vhost_session *vsession;
+
+	/** ID of the session to send event to. */
+	unsigned vsession_id;
+
 	/** User callback function to be executed on given lcore. */
 	spdk_vhost_session_fn cb_fn;
 
@@ -525,13 +531,30 @@ spdk_vhost_dev_find_by_id(unsigned id)
 }
 
 static struct spdk_vhost_session *
+spdk_vhost_session_find_by_id(struct spdk_vhost_dev *vdev, unsigned id)
+{
+	struct spdk_vhost_session *vsession;
+
+	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+		if (vsession->id == id) {
+			return vsession;
+		}
+	}
+
+	return NULL;
+}
+
+static struct spdk_vhost_session *
 spdk_vhost_session_find_by_vid(int vid)
 {
 	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 
 	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->session && vdev->session->vid == vid) {
-			return vdev->session;
+		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+			if (vsession->vid == vid) {
+				return vsession;
+			}
 		}
 	}
 
@@ -767,7 +790,7 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
 	vdev->backend = backend;
-
+	TAILQ_INIT(&vdev->vsessions);
 	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
@@ -784,7 +807,7 @@ out:
 int
 spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 {
-	if (vdev->session) {
+	if (!TAILQ_EMPTY(&vdev->vsessions)) {
 		SPDK_ERRLOG("Controller %s has still valid connection.\n", vdev->name);
 		return -EBUSY;
 	}
@@ -808,7 +831,14 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 static struct spdk_vhost_session *
 spdk_vhost_session_next(struct spdk_vhost_dev *vdev, unsigned prev_id)
 {
-	/* so far there's only one session per device */
+	struct spdk_vhost_session *vsession;
+
+	TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+		if (vsession->id > prev_id) {
+			return vsession;
+		}
+	}
+
 	return NULL;
 }
 
@@ -864,7 +894,7 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 
-	ctx->cb_fn(ctx->vdev, ctx->vdev->session, ctx);
+	ctx->cb_fn(ctx->vdev, ctx->vsession, ctx);
 }
 
 static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
@@ -899,8 +929,17 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 
 	/* the assert is just for static analyzers, vdev cannot be NULL here */
 	assert(vdev != NULL);
-	vsession = vdev->session;
-	if (vsession != NULL && vsession->lcore >= 0 &&
+
+	vsession = spdk_vhost_session_find_by_id(vdev, ctx->vsession_id);
+	if (vsession != ctx->vsession) {
+		/* ctx->vsession is probably a dangling pointer at this point.
+		 * It must have been removed in the meantime, so we just skip
+		 * it in our foreach chain */
+		vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
+		goto out_unlock_continue;
+	}
+
+	if (vsession->lcore >= 0 &&
 	    (uint32_t)vsession->lcore != spdk_env_get_current_core()) {
 		/* if session has been relocated to other core, it is no longer thread-safe
 		 * to access its contents here. Even though we're running under the global
@@ -919,8 +958,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		goto out_unlock_return;
 	}
 
-	/* FIXME use a real session ID */
-	vsession = spdk_vhost_session_next(vdev, -1);
+	vsession = spdk_vhost_session_next(vdev, ctx->vsession_id);
 out_unlock_continue:
 	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, arg2);
 out_unlock_return:
@@ -944,6 +982,7 @@ _spdk_vhost_event_send(struct spdk_vhost_session *vsession, spdk_vhost_session_f
 	}
 
 	ev_ctx.vdev = vsession->vdev;
+	ev_ctx.vsession = vsession;
 	ev_ctx.cb_fn = cb_fn;
 	ev = spdk_event_allocate(vsession->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
@@ -981,6 +1020,8 @@ spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession
 
 	ev_ctx->vdev = vdev;
 	ev_ctx->vdev_id = vdev->id;
+	ev_ctx->vsession = vsession;
+	ev_ctx->vsession_id = vsession->id;
 	ev_ctx->cb_fn = cb_fn;
 
 	ev = spdk_event_allocate(vsession->lcore,
@@ -1223,11 +1264,23 @@ spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 static int
 new_connection(int vid)
 {
+	static unsigned session_num;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
 	char ifname[PATH_MAX];
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
+
+	/* We expect devices inside g_spdk_vhost_devices to be sorted in ascending
+	 * order in regard of vdev->id. For now we always set vdev->id = ctrlr_num++
+	 * and append each vdev to the very end of g_spdk_vhost_devices list.
+	 * This is required for foreach vhost events to work.
+	 */
+	if (session_num == UINT_MAX) {
+		assert(false);
+		return -EINVAL;
+	}
+
 	if (rte_vhost_get_ifname(vid, ifname, PATH_MAX) < 0) {
 		SPDK_ERRLOG("Couldn't get a valid ifname for device with vid %d\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1237,12 +1290,6 @@ new_connection(int vid)
 	vdev = spdk_vhost_dev_find(ifname);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return -1;
-	}
-
-	if (vdev->session != NULL) {
-		SPDK_ERRLOG("Device %s is already connected.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return -1;
 	}
@@ -1257,12 +1304,13 @@ new_connection(int vid)
 	}
 
 	vsession->vdev = vdev;
+	vsession->id = session_num++;
 	vsession->vid = vid;
 	vsession->lcore = -1;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
-	vdev->session = vsession;
+	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }
@@ -1280,7 +1328,7 @@ destroy_connection(int vid)
 		return;
 	}
 
-	vsession->vdev->session = NULL;
+	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
 	spdk_dma_free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
@@ -1317,8 +1365,7 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		if (rc < 0) {
 			return;
 		}
-		/* FIXME use a real session ID */
-		vsession = spdk_vhost_session_next(vdev, -1);
+		vsession = spdk_vhost_session_next(vdev, vsession->id);
 		if (vsession == NULL) {
 			fn(vdev, NULL, arg);
 			return;
@@ -1332,7 +1379,9 @@ void
 spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 			       spdk_vhost_session_fn fn, void *arg)
 {
-	spdk_vhost_external_event_foreach_continue(vdev, vdev->session, fn, arg);
+	struct spdk_vhost_session *vsession = TAILQ_FIRST(&vdev->vsessions);
+
+	spdk_vhost_external_event_foreach_continue(vdev, vsession, fn, arg);
 }
 
 void
