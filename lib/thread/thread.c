@@ -103,10 +103,6 @@ struct spdk_poller {
 };
 
 struct spdk_thread {
-	spdk_thread_pass_msg		msg_fn;
-	spdk_start_poller		start_poller_fn;
-	spdk_stop_poller		stop_poller_fn;
-	void				*thread_ctx;
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
@@ -184,10 +180,7 @@ spdk_thread_lib_fini(void)
 }
 
 struct spdk_thread *
-spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
-		     spdk_start_poller start_poller_fn,
-		     spdk_stop_poller stop_poller_fn,
-		     void *thread_ctx, const char *name)
+spdk_allocate_thread(const char *name)
 {
 	struct spdk_thread *thread;
 
@@ -197,22 +190,12 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	if ((start_poller_fn != NULL && stop_poller_fn == NULL) ||
-	    (start_poller_fn == NULL && stop_poller_fn != NULL)) {
-		SPDK_ERRLOG("start_poller_fn and stop_poller_fn must either both be NULL or both be non-NULL\n");
-		return NULL;
-	}
-
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		return NULL;
 	}
 
-	thread->msg_fn = msg_fn;
-	thread->start_poller_fn = start_poller_fn;
-	thread->stop_poller_fn = stop_poller_fn;
-	thread->thread_ctx = thread_ctx;
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INIT(&thread->active_pollers);
 	TAILQ_INIT(&thread->timer_pollers);
@@ -473,11 +456,6 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		return;
 	}
 
-	if (thread->msg_fn) {
-		thread->msg_fn(fn, ctx, thread->thread_ctx);
-		return;
-	}
-
 	msg = spdk_mempool_get(g_spdk_msg_mempool);
 	if (!msg) {
 		assert(false);
@@ -508,10 +486,6 @@ spdk_poller_register(spdk_poller_fn fn,
 	if (!thread) {
 		assert(false);
 		return NULL;
-	}
-
-	if (thread->start_poller_fn) {
-		return thread->start_poller_fn(thread->thread_ctx, fn, arg, period_microseconds);
 	}
 
 	poller = calloc(1, sizeof(*poller));
@@ -559,11 +533,6 @@ spdk_poller_unregister(struct spdk_poller **ppoller)
 	thread = spdk_get_thread();
 	if (!thread) {
 		assert(false);
-		return;
-	}
-
-	if (thread->stop_poller_fn) {
-		thread->stop_poller_fn(poller, thread->thread_ctx);
 		return;
 	}
 

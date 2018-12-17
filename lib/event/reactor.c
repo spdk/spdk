@@ -291,7 +291,7 @@ _spdk_reactor_run(void *arg)
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, thread_name);
+	thread = spdk_allocate_thread(thread_name);
 	if (!thread) {
 		return -1;
 	}
