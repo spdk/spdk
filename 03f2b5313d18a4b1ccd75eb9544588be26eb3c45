@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "45a48631_596326ea",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-17T10:10:44Z",
+      "side": 1,
+      "message": "I can understand adding a check in discovery, do you need a check here ?",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
