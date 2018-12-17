@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa253e91_1773105b",
+        "filename": "scripts/perf/nvmf/spdk_tgt_template.conf",
+        "patchSetId": 16
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-17T12:15:11Z",
+      "side": 1,
+      "message": "Hi Jim, sorry for long time to reply but I was busy working on vhost perf related stuff.\n\nSure thing! For now these scripts work well with INI, but I\u0027ll try to move away from them later and use JSON-RPC instead.",
+      "parentUuid": "2946566c_d0bfad7b",
+      "revId": "04fb2f58de125500b3d9317913335f7e35d637ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be4b1c8d_ab375f5e",
         "filename": "scripts/perf/nvmf/spdk_tgt_template.conf",
         "patchSetId": 16
