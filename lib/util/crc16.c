@@ -53,3 +53,25 @@ spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
 	}
 	return (uint16_t)rem;
 }
+
+uint16_t
+spdk_crc16_t10dif_copy(uint16_t init_crc, uint8_t *dst, uint8_t *src,
+		       size_t len)
+{
+	uint32_t j, rem;
+	size_t i;
+
+	uint16_t poly = SPDK_T10DIF_CRC16_POLYNOMIAL;
+
+	rem = init_crc;
+
+	for (i = 0; i < len; i++) {
+		rem = rem ^ (src[i] << 8);
+		dst[i] = src[i];
+		for (j = 0; j < 8; j++) {
+			rem = rem << 1;
+			rem = (rem & 0x10000) ? rem ^ poly : rem;
+		}
+	}
+	return (uint16_t)rem;
+}
