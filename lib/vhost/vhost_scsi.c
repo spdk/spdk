@@ -113,8 +113,10 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_dev *dev,
+				 struct spdk_vhost_session *vsession, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *,
+				struct spdk_vhost_session *vsession, void *);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -1202,10 +1204,10 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
  * and then allocated to a specific data core.
  */
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev,
+		      struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_vhost_state *state;
 	uint32_t i;
@@ -1245,7 +1247,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		spdk_scsi_dev_allocate_io_channels(state->dev);
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vdev->lcore);
+		     vdev->name, vsession->lcore);
 
 	svsession->requestq_poller = spdk_poller_register(vdev_worker, svsession, 0);
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
@@ -1294,9 +1296,9 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev,
+		     struct spdk_vhost_session *vsession, void *event_ctx)
 {
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_scsi_session *svsession;
 
 	svsession = to_scsi_session(vsession);
