@@ -1,0 +1,191 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1363cebd_6fd15df5",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "we normally avoid using aligned() in this way - instead we add an explicit \"reserved\" member to pad the length",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21b83a0d_e141eafd",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "why pass the dev here?",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a36163c1_ebe549dc",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "Should this be an assert instead?  And have callers avoid calling this function if the state isn\u0027t CLOSED or FREE.\n\nThis seems to encourage just calling this function just in case it needs to be freed.",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9fd47650_83d8e564",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "should this be an assert instead?",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4bff47a_b832e3e3",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "since ftl_band_validate_md() is a nop on release builds, I think this should instead be:\n\nassert(ftl_band_validate_md() \u003d\u003d true)\n\nChange ftl_band_validate_md to return bool, and put the ftl_band_has_chunks check there instead.  Then this is very clear that in a release build, there is no validation taking place.",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c3e6e37_e82f02fe",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "assert instead?\n\nseems bad if someone calls _ftl_band_set_closed() on a band that\u0027s already closed",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b63161cb_7622ce04",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "I think just using sizeof() directly is better, rather than adding a function that returns the sizeof.\n\nIt makes reading the code easier.  Makes it clear that this is simply a sizeof() operation and user doesn\u0027t have to check the function to see what it does.",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d47751b4_504adec4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "This can\u0027t fail.  Should it just return void?",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b89d100_f797d9d8",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "assert() instead?\n\nor even something like this:\n\nif (ftl_lba_invalid(lab)) {\n  assert(false);\n  return;\n}\n\nLet\u0027s go through other patches in this series and add asserts in cases where this shouldn\u0027t happen.",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "75ef882c_87b4965c",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "uint32_t instead?",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5fd7b11_8d9cdbf2",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:32:39Z",
+      "side": 1,
+      "message": "is CIRCLEQ a requirement here?\n\nif CIRCLEQ has a definite advantage in this use case over TAILQ, then I guess this is OK - but we don\u0027t use CIRCLEQ anywhere else in SPDK currently, so there will be less learning curve for new readers if we can use TAILQ instead",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
