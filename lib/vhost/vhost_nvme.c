@@ -146,6 +146,9 @@ struct spdk_vhost_nvme_dev {
 	struct spdk_vhost_nvme_sq sq_queue[MAX_IO_QUEUES + 1];
 	struct spdk_vhost_nvme_cq cq_queue[MAX_IO_QUEUES + 1];
 
+	/* The one and only session associated with this device */
+	struct spdk_vhost_session *vsession;
+
 	TAILQ_ENTRY(spdk_vhost_nvme_dev) tailq;
 	STAILQ_HEAD(, spdk_vhost_nvme_task) free_tasks;
 	struct spdk_poller *requestq_poller;
@@ -248,7 +251,7 @@ static int
 spdk_nvme_map_prps(struct spdk_vhost_nvme_dev *nvme, struct spdk_nvme_cmd *cmd,
 		   struct spdk_vhost_nvme_task *task, uint32_t len)
 {
-	struct spdk_vhost_session *vsession = nvme->vdev.session;
+	struct spdk_vhost_session *vsession = nvme->vsession;
 	uint64_t prp1, prp2;
 	void *vva;
 	uint32_t i;
@@ -699,7 +702,7 @@ static int
 vhost_nvme_doorbell_buffer_config(struct spdk_vhost_nvme_dev *nvme,
 				  struct spdk_nvme_cmd *cmd, struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_vhost_session *vsession = nvme->vdev.session;
+	struct spdk_vhost_session *vsession = nvme->vsession;
 	uint64_t dbs_dma_addr, eis_dma_addr;
 
 	dbs_dma_addr = cmd->dptr.prp.prp1;
@@ -765,7 +768,7 @@ vhost_nvme_create_io_sq(struct spdk_vhost_nvme_dev *nvme,
 	sq->size = qsize + 1;
 	sq->sq_head = sq->sq_tail = 0;
 	requested_len = sizeof(struct spdk_nvme_cmd) * sq->size;
-	sq->sq_cmd = spdk_vhost_gpa_to_vva(nvme->vdev.session, dma_addr, requested_len);
+	sq->sq_cmd = spdk_vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
 	if (!sq->sq_cmd) {
 		return -1;
 	}
@@ -848,7 +851,7 @@ vhost_nvme_create_io_cq(struct spdk_vhost_nvme_dev *nvme,
 	cq->guest_signaled_cq_head = 0;
 	cq->need_signaled_cnt = 0;
 	requested_len = sizeof(struct spdk_nvme_cpl) * cq->size;
-	cq->cq_cqe = spdk_vhost_gpa_to_vva(nvme->vdev.session, dma_addr, requested_len);
+	cq->cq_cqe = spdk_vhost_gpa_to_vva(nvme->vsession, dma_addr, requested_len);
 	if (!cq->cq_cqe) {
 		return -1;
 	}
@@ -893,7 +896,7 @@ spdk_vhost_nvme_get_by_name(int vid)
 	struct spdk_vhost_nvme_dev *nvme;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vdev.session != NULL && nvme->vdev.session->vid == vid) {
+		if (nvme->vsession != NULL && nvme->vsession->vid == vid) {
 			return nvme;
 		}
 	}
@@ -1103,6 +1106,12 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 {
+	if (vsession->vdev->active_session_num > 0) {
+		/* We're trying to start a second session */
+		SPDK_ERRLOG("Vhost-NVMe devices can support only one simultaneous connection.\n");
+		return -1;
+	}
+
 	return spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_start_cb,
 					     3, "start session");
 }

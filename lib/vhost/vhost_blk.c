@@ -410,7 +410,7 @@ process_vq(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtqueue
 {
 	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_blk_task *task;
-	struct spdk_vhost_session *vsession = bvdev->vdev.session;
+	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	int rc;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;

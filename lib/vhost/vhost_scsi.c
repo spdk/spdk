@@ -661,7 +661,7 @@ static void
 process_controlq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -1266,6 +1266,12 @@ out:
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
+	if (vsession->vdev->active_session_num > 0) {
+		/* We're trying to start a second session */
+		SPDK_ERRLOG("Vhost-SCSI devices can support only one simultaneous connection.\n");
+		return -1;
+	}
+
 	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
 					     3, "start session");
 }
