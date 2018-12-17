@@ -644,7 +644,7 @@ static void
 process_controlq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;
@@ -985,7 +985,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
-	if (vdev->session != NULL && vsession == NULL) {
+	if (!TAILQ_EMPTY(&vdev->vsessions) && vsession == NULL) {
 		/* Nothing else to do */
 		return 0;
 	}
