@@ -16,6 +16,24 @@
       "revId": "2521695ec53c28bca3a084813226182a25b0a737",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6502856c_03319627",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-17T01:59:54Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nYou can see: The following spdk_thread_send_msg(ctrlr-\u003ethread, _spdk_nvmf_ctrlr_free_from_qpair, qpair_ctx) will be using the thread communication message, which means the _spdk_nvmf_ctrlr_free_qpair function will be executed later.\n\n So when this function returns, it may still be other requests coming already, and it will check the qpair-\u003ectrlr. And set it NULL here, can avoid the small contention window.",
+      "parentUuid": "d7a03dcf_f87c7b7b",
+      "revId": "2521695ec53c28bca3a084813226182a25b0a737",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
