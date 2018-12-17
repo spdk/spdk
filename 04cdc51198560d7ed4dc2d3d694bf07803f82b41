@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0d16cdc9_40457db8",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T10:38:12Z",
+      "side": 1,
+      "message": "I changed the approach. Now, I create temporary histogram to merge data from all channels. It is destroyed after rpc call.",
+      "parentUuid": "d79177d5_cdf3bf86",
+      "revId": "04cdc51198560d7ed4dc2d3d694bf07803f82b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4635f360_e9150237",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
