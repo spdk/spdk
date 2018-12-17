@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6150005f_f1b4cba6",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ebfc8fef_ceddd6b3",
+      "range": {
+        "startLine": 37,
+        "startChar": 3,
+        "endLine": 37,
+        "endChar": 117
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6590388f_13a20dd1",
         "filename": "doc/notify.md",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2018-11-28T11:23:25Z",
       "side": 1,
       "message": "-\u003e JSON RPC or JSON\nall over this file.",
+      "range": {
+        "startLine": 58,
+        "startChar": 86,
+        "endLine": 58,
+        "endChar": 89
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4431bcce_486879d9",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6590388f_13a20dd1",
       "range": {
         "startLine": 58,
         "startChar": 86,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "dd73bb4d_0b59328e",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "817bf72e_eacc84aa",
+      "range": {
+        "startLine": 59,
+        "startChar": 13,
+        "endLine": 59,
+        "endChar": 35
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2c874ca4_5b1f8d32",
         "filename": "doc/notify.md",
         "patchSetId": 2
@@ -82,6 +154,30 @@
       "writtenOn": "2018-11-28T11:23:25Z",
       "side": 1,
       "message": "We should seriously think if we need this function. Above function should be sufficient to do the work.",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 62
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e67928b_68a0600f",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2c874ca4_5b1f8d32",
       "range": {
         "startLine": 61,
         "startChar": 0,
@@ -168,6 +264,30 @@
       "writtenOn": "2018-11-28T11:23:25Z",
       "side": 1,
       "message": "The same as above\n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { ... } }\n\nBut we this format (returning one object) will close further expansion. It should be an array\n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { ... } }\n\nor object containing array \n\n  -\u003e {\"jsonrpc\": \"2.0\", \"id\": 1, \"result\": { events\u003d[ {event1}, {event2}, ..., {eventN} ] } }\n\nFor now we will always return one element in array but we can expand this in the feature.",
+      "range": {
+        "startLine": 89,
+        "startChar": 0,
+        "endLine": 90,
+        "endChar": 76
+      },
+      "revId": "a217b253649f5cf037ab2cd4a0f451a2459371aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "685a2f59_df48690a",
+        "filename": "doc/notify.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f11b2de6_5218ef14",
       "range": {
         "startLine": 89,
         "startChar": 0,

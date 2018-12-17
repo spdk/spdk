@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6668ccea_7de3e540",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cb6f95df_122835f1",
+      "range": {
+        "startLine": 1,
+        "startChar": 2,
+        "endLine": 1,
+        "endChar": 25
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8f32b4d0_2fc36c9a",
         "filename": "doc/notify.md",
         "patchSetId": 7
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "2ebf4641_50cf254e",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Ack. This is going to be corrected in next revision.",
+      "parentUuid": "8f32b4d0_2fc36c9a",
+      "range": {
+        "startLine": 11,
+        "startChar": 107,
+        "endLine": 11,
+        "endChar": 118
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61675675_b0d84df8",
         "filename": "doc/notify.md",
         "patchSetId": 7
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "ff70ec15_6e38d831",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "61675675_b0d84df8",
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7df30546_a0570961",
         "filename": "doc/notify.md",
         "patchSetId": 7
@@ -79,6 +145,24 @@
       "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8a84f7c_0adb1a1e",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "The object is freed inside spdk_notify_put when refcnt \u003d\u003d 0. You can call spdk_notify_get for asynchronous operations in the listener callback. There might be multiple listeners.",
+      "parentUuid": "7df30546_a0570961",
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -102,6 +186,30 @@
       "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac02fe5b_f6999cce",
+        "filename": "doc/notify.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-17T14:58:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1ac0a7b6_3087c326",
+      "range": {
+        "startLine": 37,
+        "startChar": 6,
+        "endLine": 37,
+        "endChar": 12
+      },
+      "revId": "760e9397b4e4e146def366392c98d4ca88c6abc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
