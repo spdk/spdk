@@ -484,3 +484,146 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt,
 
 	return 0;
 }
+
+static void
+_bit_flip(uint8_t *buf, uint32_t flip_bit)
+{
+	uint8_t byte;
+
+	byte = *buf;
+	byte ^= 1 << flip_bit;
+	*buf = byte;
+}
+
+static int
+_dif_inject_error(struct iovec *iovs, int iovcnt,
+		  uint32_t block_size, uint32_t num_blocks,
+		  uint32_t inject_offset_blocks,
+		  uint32_t inject_offset_bytes,
+		  uint32_t inject_offset_bits)
+{
+	uint32_t iov_offset, offset_in_block, buf_len;
+	int iovpos;
+	void *buf;
+
+	iov_offset = block_size * inject_offset_blocks;
+
+	for (iovpos = 0; iovpos < iovcnt; iovpos++) {
+		if (iov_offset < iovs[iovpos].iov_len) {
+			break;
+		}
+		iov_offset -= iovs[iovpos].iov_len;
+	}
+
+	offset_in_block = 0;
+
+	while (offset_in_block < block_size && iovpos < iovcnt) {
+		buf = iovs[iovpos].iov_base + iov_offset;
+		buf_len = iovs[iovpos].iov_len - iov_offset;
+
+		if (inject_offset_bytes >= offset_in_block &&
+		    inject_offset_bytes < offset_in_block + buf_len) {
+			buf += inject_offset_bytes - offset_in_block;
+			_bit_flip(buf, inject_offset_bits);
+			return 0;
+		}
+
+		iov_offset += buf_len;
+		if (iov_offset == iovs[iovpos].iov_len) {
+			iovpos++;
+			iov_offset = 0;
+		}
+		offset_in_block += buf_len;
+	}
+
+	return -1;
+}
+
+static int
+dif_inject_error(struct iovec *iovs, int iovcnt,
+		 uint32_t block_size, uint32_t num_blocks,
+		 uint32_t start_inject_bytes, uint32_t inject_range_bytes)
+{
+	uint32_t inject_offset_blocks, inject_offset_bytes, inject_offset_bits;
+	uint32_t offset_blocks;
+
+	srand(time(0));
+
+	inject_offset_blocks = rand() % num_blocks;
+	inject_offset_bytes = start_inject_bytes + (rand() % inject_range_bytes);
+	inject_offset_bits = rand() % sizeof(uint8_t);
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		if (offset_blocks == inject_offset_blocks) {
+			return _dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+						 inject_offset_blocks,
+						 inject_offset_bytes,
+						 inject_offset_bits);
+		}
+	}
+
+	return -1;
+}
+
+#define _member_size(type, member)	sizeof(((type *)0)->member)
+
+int
+spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
+		      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		      bool dif_start, uint32_t inject_flags)
+{
+	uint32_t guard_interval;
+	int rc;
+
+	if (md_size == 0) {
+		return -EINVAL;
+	}
+
+	if (!_are_iovs_valid(iovs, iovcnt, block_size, num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	guard_interval = _get_guard_interval(block_size, md_size, dif_start);
+
+	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval + offsetof(struct spdk_dif, ref_tag),
+				      _member_size(struct spdk_dif, ref_tag));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
+			return rc;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval + offsetof(struct spdk_dif, app_tag),
+				      _member_size(struct spdk_dif, app_tag));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
+			return rc;
+		}
+	}
+	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval,
+				      _member_size(struct spdk_dif, guard));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Guard.\n");
+			return rc;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_DATA_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      0,
+				      guard_interval);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to data block.\n");
+			return rc;
+		}
+	}
+
+	return 0;
+}
