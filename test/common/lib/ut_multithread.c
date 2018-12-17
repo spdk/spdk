@@ -85,12 +85,12 @@ allocate_threads(int num_threads)
 	g_ut_num_threads = num_threads;
 
 	g_ut_threads = calloc(num_threads, sizeof(*g_ut_threads));
-	SPDK_CU_ASSERT_FATAL(g_ut_threads != NULL);
+	assert(g_ut_threads != NULL);
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
 		thread = spdk_allocate_thread(NULL, NULL, NULL, NULL, NULL);
-		SPDK_CU_ASSERT_FATAL(thread != NULL);
+		assert(thread != NULL);
 		g_ut_threads[i].thread = thread;
 	}
 
