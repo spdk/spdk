@@ -87,6 +87,40 @@
     },
     {
       "key": {
+        "uuid": "06fa0dff_ef1d9e1b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:45:53Z",
+      "side": 1,
+      "message": "Some of these small inline functions I think we can remove.  It\u0027s easier to understand when reading the code if we just see \"lba \u003d\u003d FTL_LBA_INVALID\" in the code instead of needing the extra function call.\n\nIt also doesn\u0027t save us much typing:\nstrlen(\"lba \u003d\u003d FTL_LBA_INVALID\") \u003d\u003d 22\nstrlen(\"ftl_lba_invalid(lba)\") \u003d\u003d 20",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22c65797_1b54b890",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-17T21:45:53Z",
+      "side": 1,
+      "message": "are there cases where the io parameter is not a struct ftl_io *?  Meaning is the cast required?\n\nI\u0027d really prefer that we just do things like io-\u003eflags \u0026 FTL_IO_SOME_FLAG directly - instead of adding the macros.  I don\u0027t think the macro saves much typing, and it adds an extra level of indirection when reading the code.",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7be9433_05fe578d",
         "filename": "lib/ftl/ftl_trace.h",
         "patchSetId": 18
