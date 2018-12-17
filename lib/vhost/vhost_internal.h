@@ -70,7 +70,7 @@
 /*
  * Rate at which stats are checked for interrupt coalescing.
  */
-#define SPDK_VHOST_DEV_STATS_CHECK_INTERVAL_MS 10
+#define SPDK_VHOST_STATS_CHECK_INTERVAL_MS 10
 /*
  * Default threshold at which interrupts start to be coalesced.
  */
@@ -147,6 +147,16 @@ struct spdk_vhost_session {
 
 	uint64_t negotiated_features;
 
+	/* Local copy of device coalescing settings. */
+	uint32_t coalescing_delay_time_base;
+	uint32_t coalescing_io_rate_threshold;
+
+	/* Next time when stats for event coalescing will be checked. */
+	uint64_t next_stats_check_time;
+
+	/* Interval used for event coalescing checking. */
+	uint64_t stats_check_interval;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
@@ -173,12 +183,6 @@ struct spdk_vhost_dev {
 
 	/* Threshold when event coalescing for virtqueue will be turned on. */
 	uint32_t  coalescing_io_rate_threshold;
-
-	/* Next time when stats for event coalescing will be checked. */
-	uint64_t next_stats_check_time;
-
-	/* Interval used for event coalescing checking. */
-	uint64_t stats_check_interval;
 
 	/* Active connection to the device */
 	struct spdk_vhost_session *session;
