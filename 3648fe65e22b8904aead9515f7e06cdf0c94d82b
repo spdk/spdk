@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55f19a5f_808e2201",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-17T10:11:48Z",
+      "side": 1,
+      "message": "I was thinking you could do just\n\napt-get install -y python3-configshell-fb python3-pexpect || echo \\\n\t\"Note: Some SPDK CLI dependencies could not be installed.\"\n\nThe above has the exact same effect, but there\u0027s no need to disable -e.",
+      "range": {
+        "startLine": 90,
+        "startChar": 1,
+        "endLine": 95,
+        "endChar": 7
+      },
+      "revId": "3648fe65e22b8904aead9515f7e06cdf0c94d82b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
