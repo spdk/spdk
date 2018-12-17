@@ -153,6 +153,10 @@ struct spdk_vhost_session {
 
 	uint64_t negotiated_features;
 
+	/* Local copy of device settings */
+	uint32_t coalescing_delay_time_base;
+	uint32_t  coalescing_io_rate_threshold;
+
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 };
 
