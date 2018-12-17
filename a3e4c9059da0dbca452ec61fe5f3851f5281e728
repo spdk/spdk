@@ -16,6 +16,24 @@
       "revId": "a3e4c9059da0dbca452ec61fe5f3851f5281e728",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "84ecb63a_5204f39d",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-17T05:18:21Z",
+      "side": 1,
+      "message": "I  check it again ,this solution .with asan can pass . and I think we also need another patch to check spdk_poller_register , \nin  spdk_poller_register:\n\nif suddenly terminate a socket:\n\nthread-\u003estart_poller_fn \u003dNULL;\nperiod_microseconds  can\u0027t get to 0;\nin nvme_tcp also has this issue.\nif (thread-\u003estart_poller_fn) {\n\t\treturn thread-\u003estart_poller_fn(thread-\u003ethread_ctx, fn, arg, period_microseconds);\n\t}\n\n**************************************************\n\tpoller \u003d calloc(1, sizeof(*poller));\n****************************************************\n\nand \nif (period_microseconds) {\n\t\tquotient \u003d period_microseconds / SPDK_SEC_TO_USEC;\n\t\tremainder \u003d period_microseconds % SPDK_SEC_TO_USEC;\n\t\tticks \u003d spdk_get_ticks_hz();\n\n\t\tpoller-\u003eperiod_ticks \u003d ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC;\n\t}",
+      "parentUuid": "3cf7210d_de2db157",
+      "revId": "a3e4c9059da0dbca452ec61fe5f3851f5281e728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
