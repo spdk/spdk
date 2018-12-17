@@ -666,7 +666,7 @@ static void
 process_controlq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_virtqueue *vq)
 {
 	struct spdk_vhost_scsi_dev *svdev = svsession->svdev;
-	struct spdk_vhost_session *vsession = svdev->vdev.session;
+	struct spdk_vhost_session *vsession = &svsession->vsession;
 	struct spdk_vhost_scsi_task *task;
 	uint16_t reqs[32];
 	uint16_t reqs_cnt, i;

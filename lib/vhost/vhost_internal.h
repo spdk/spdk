@@ -117,6 +117,9 @@ struct spdk_vhost_session {
 	/* rte_vhost connection ID. */
 	int vid;
 
+	/* Unique session ID. */
+	unsigned id;
+
 	int32_t lcore;
 
 	struct rte_vhost_memory *mem;
@@ -138,6 +141,8 @@ struct spdk_vhost_session {
 	uint64_t stats_check_interval;
 
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
+
+	TAILQ_ENTRY(spdk_vhost_session) tailq;
 };
 
 struct spdk_vhost_dev {
@@ -158,8 +163,14 @@ struct spdk_vhost_dev {
 	uint32_t coalescing_delay_us;
 	uint32_t coalescing_iops_threshold;
 
-	/* Active connection to the device */
-	struct spdk_vhost_session *session;
+	/* Active connections to the device */
+	TAILQ_HEAD(, spdk_vhost_session) vsessions;
+
+	/* Increment-only session counter */
+	uint64_t vsessions_num;
+
+	/* Started sessions counter */
+	unsigned vsessions_started_cnt;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
