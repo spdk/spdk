@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "883dc9a6_c3e13b5e",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-17T10:24:18Z",
+      "side": 1,
+      "message": "We could get rid of nvme_num which is used only in one place and just do\nif [ -n $bdfs ]; then [...]\n\nBTW, in multiple other places in other scripts (like test/nvmf/host/fio/fio.sh or test/iscsi_tgt/filesystem, or many vhost scripts) we don\u0027t check for existing NVMe drive in configuration. We assume that is exists, so I\u0027m not sure if we even need \"if\" conditional on line 49... Especially that it\u0027s a silent skip of a test - test case will be skipped if you dont have  a NVMe drive and user will not even know about it until he carefully checks the build log.",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 28
+      },
+      "revId": "894d52697b523f2232e5e0fd5c8ef55d23f0930e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5374817b_4489c0f9",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-17T10:24:18Z",
+      "side": 1,
+      "message": "This could be simplified to oneline\n\ntest $bdev_traddr !\u003d $nvme0_traddr\n\nwhich should return \"1\" on fail",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 6
+      },
+      "revId": "894d52697b523f2232e5e0fd5c8ef55d23f0930e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
