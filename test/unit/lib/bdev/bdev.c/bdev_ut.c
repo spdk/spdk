@@ -33,14 +33,12 @@
 
 #include "spdk_cunit.h"
 
-#include "common/lib/test_env.c"
+#include "common/lib/ut_multithread.c"
 #include "unit/lib/json_mock.c"
 
 #include "spdk/config.h"
 /* HACK: disable VTune integration so the unit test doesn't need VTune headers and libs to build */
 #undef SPDK_CONFIG_VTUNE
-
-#include "spdk_internal/thread.h"
 
 #include "bdev/bdev.c"
 
@@ -60,12 +58,6 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *sh
 		uint8_t arg1_is_ptr, const char *arg1_name));
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
-
-static void
-_bdev_send_msg(spdk_msg_fn fn, void *ctx, void *thread_ctx)
-{
-	fn(ctx);
-}
 
 void
 spdk_scsi_nvme_translate(const struct spdk_bdev_io *bdev_io,
@@ -351,6 +343,7 @@ static void
 free_bdev(struct spdk_bdev *bdev)
 {
 	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
 	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
 }
@@ -359,6 +352,7 @@ static void
 free_vbdev(struct spdk_bdev *bdev)
 {
 	spdk_bdev_unregister(bdev, NULL, NULL);
+	poll_threads();
 	memset(bdev, 0xFF, sizeof(*bdev));
 	free(bdev);
 }
@@ -375,6 +369,8 @@ get_device_stat_cb(struct spdk_bdev *bdev, struct spdk_bdev_io_stat *stat, void 
 
 	free(stat);
 	free_bdev(bdev);
+
+	*(bool *)cb_arg = true;
 }
 
 static void
@@ -382,6 +378,7 @@ get_device_stat_test(void)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_io_stat *stat;
+	bool done;
 
 	bdev = allocate_bdev("bdev0");
 	stat = calloc(1, sizeof(struct spdk_bdev_io_stat));
@@ -389,7 +386,12 @@ get_device_stat_test(void)
 		free_bdev(bdev);
 		return;
 	}
-	spdk_bdev_get_device_stat(bdev, stat, get_device_stat_cb, NULL);
+
+	done = false;
+	spdk_bdev_get_device_stat(bdev, stat, get_device_stat_cb, &done);
+	while (!done) { poll_threads(); }
+
+
 }
 
 static void
@@ -577,6 +579,8 @@ num_blocks_test(void)
 
 	spdk_bdev_close(desc);
 	spdk_bdev_unregister(&bdev, NULL, NULL);
+
+	poll_threads();
 }
 
 static void
@@ -620,6 +624,8 @@ alias_add_del_test(void)
 
 	bdev[2] = allocate_bdev("bdev2");
 	SPDK_CU_ASSERT_FATAL(bdev[2] != 0);
+
+	poll_threads();
 
 	/*
 	 * Trying adding an alias identical to name.
@@ -684,6 +690,8 @@ alias_add_del_test(void)
 	spdk_bdev_unregister(bdev[1], NULL, NULL);
 	spdk_bdev_unregister(bdev[2], NULL, NULL);
 
+	poll_threads();
+
 	free(bdev[0]);
 	free(bdev[1]);
 	free(bdev[2]);
@@ -743,11 +751,13 @@ bdev_io_wait_test(void)
 	rc = spdk_bdev_set_opts(&bdev_opts);
 	CU_ASSERT(rc == 0);
 	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
 
 	bdev = allocate_bdev("bdev0");
 
 	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
 	CU_ASSERT(rc == 0);
+	poll_threads();
 	SPDK_CU_ASSERT_FATAL(desc != NULL);
 	io_ch = spdk_bdev_get_io_channel(desc);
 	CU_ASSERT(io_ch != NULL);
@@ -799,6 +809,7 @@ bdev_io_wait_test(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
 }
 
 static void
@@ -1048,6 +1059,7 @@ bdev_io_split(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
 }
 
 static void
@@ -1182,6 +1194,7 @@ bdev_io_split_with_io_wait(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
 }
 
 static void
@@ -1397,6 +1410,7 @@ bdev_io_alignment(void)
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
 	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
 
 	free(buf);
 }
@@ -1404,7 +1418,6 @@ bdev_io_alignment(void)
 int
 main(int argc, char **argv)
 {
-	struct spdk_thread	*thread;
 	CU_pSuite		suite = NULL;
 	unsigned int		num_failures;
 
@@ -1435,12 +1448,15 @@ main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	thread = spdk_allocate_thread(_bdev_send_msg, NULL, NULL, NULL, "thread0");
-	spdk_set_thread(thread);
+	allocate_threads(1);
+	set_thread(0);
+
 	CU_basic_set_mode(CU_BRM_VERBOSE);
 	CU_basic_run_tests();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
-	spdk_free_thread();
+
+	free_threads();
+
 	return num_failures;
 }
