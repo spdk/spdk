@@ -89,6 +89,30 @@
     },
     {
       "key": {
+        "uuid": "49b83f74_1fd5c9f8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-18T23:11:40Z",
+      "side": 1,
+      "message": "Hi Ben, \nI think that we can call here. Since spdk_nvmf_qpair_connect can be a generic entry. If it finds the threads are not correct, it will send it to the correct thread.",
+      "parentUuid": "7fa8240a_ca87d1aa",
+      "range": {
+        "startLine": 2196,
+        "startChar": 2,
+        "endLine": 2196,
+        "endChar": 28
+      },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaa5d1d6_076ef9bf",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
