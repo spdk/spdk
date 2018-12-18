@@ -1,0 +1,256 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57e56f98_67b51b6f",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1079,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove this line?",
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d773be1_1c435b19",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1090,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove?",
+      "range": {
+        "startLine": 1090,
+        "startChar": 0,
+        "endLine": 1090,
+        "endChar": 2
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92722b64_a0b79565",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove?",
+      "range": {
+        "startLine": 1101,
+        "startChar": 0,
+        "endLine": 1101,
+        "endChar": 2
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53c42dc9_f5ccfe4d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove?",
+      "range": {
+        "startLine": 1113,
+        "startChar": 1,
+        "endLine": 1113,
+        "endChar": 2
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e0c346c_734c0e3e",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove this line?",
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "048933df_efdfa222",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 361,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "histogram_enabled may be kind name?\nI thought this was pointer first.",
+      "range": {
+        "startLine": 361,
+        "startChar": 7,
+        "endLine": 361,
+        "endChar": 16
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bda9164_acd4a180",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "0 is clear here? it looks that no error is expected.",
+      "range": {
+        "startLine": 4121,
+        "startChar": 25,
+        "endLine": 4121,
+        "endChar": 31
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37247727_d24fc309",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "please change the line after void.",
+      "range": {
+        "startLine": 4138,
+        "startChar": 4,
+        "endLine": 4138,
+        "endChar": 5
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cd460aa_529fe090",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4190,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "Please add a line after }.",
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0718aa0a_ef04865b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4191,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "please change the line after void.",
+      "range": {
+        "startLine": 4191,
+        "startChar": 4,
+        "endLine": 4191,
+        "endChar": 5
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3ddea69_043f3b52",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4222,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "can remove this line.",
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "177e7003_2a39f583",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 4249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:32:07Z",
+      "side": 1,
+      "message": "please change the line after void.",
+      "range": {
+        "startLine": 4249,
+        "startChar": 0,
+        "endLine": 4249,
+        "endChar": 5
+      },
+      "revId": "f63b4f289758eec06693b97efe2c06fb8c43c1e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
