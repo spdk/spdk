@@ -34,6 +34,24 @@
       "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7014c5dc_c44fc433",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T21:06:15Z",
+      "side": 1,
+      "message": "I am with Changpeng on this one. We call spdk_nvmf_tgt_find _subsystem all over the place. Like when we try to delete a subsystem, when we add and remove namespaces, when we add and remove hosts. I think we should be able to do all of those things without a paused subsystem. This would require a subsystem to be active to do any of those.",
+      "parentUuid": "8ee7f10b_78c82b13",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
