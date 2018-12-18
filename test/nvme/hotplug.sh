@@ -6,6 +6,8 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 
+: ${QEMU_BIN_PATH="/usr/local/qemu/spdk-2.12/bin"}
+
 if [ -z "${DEPENDENCY_DIR}" ]; then
 	echo DEPENDENCY_DIR not defined!
 	exit 1
@@ -79,9 +81,15 @@ function devices_delete() {
 	timing_exit devices_delete
 }
 
+function on_error_exit() {
+	kill -9 $qemupid
+	rm -f "$qemu_pidfile"
+	print_backtrace
+	exit 1
+}
+
 password=$1
-base_img=${DEPENDENCY_DIR}/fedora24.img
-test_img=${DEPENDENCY_DIR}/fedora24_test.img
+base_img=${DEPENDENCY_DIR}/fedora29.qcow2
 qemu_pidfile=${DEPENDENCY_DIR}/qemupid
 
 if [ ! -e "$base_img" ]; then
@@ -89,16 +97,15 @@ if [ ! -e "$base_img" ]; then
 	exit 0
 fi
 
+trap 'on_error_exit "${FUNCNAME}" "${LINENO}"' SIGINT SIGTERM ERR EXIT
 timing_enter hotplug
-
 timing_enter start_qemu
 
-qemu-img create -b "$base_img" -f qcow2 "$test_img"
-
-qemu-system-x86_64 \
+$QEMU_BIN_PATH/qemu-system-x86_64 \
 	-daemonize -display none -m 8192 \
+	-snapshot \
 	-pidfile "$qemu_pidfile" \
-	-hda "$test_img" \
+	-hda "$base_img" \
 	-net user,hostfwd=tcp::10022-:22 \
 	-net nic \
 	-cpu host \
@@ -108,6 +115,8 @@ qemu-system-x86_64 \
 	-mon chardev=mon0,mode=readline
 
 timing_exit start_qemu
+
+qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
 
 timing_enter wait_for_vm
 ssh_vm 'echo ready'
@@ -122,7 +131,7 @@ insert_devices
 
 timing_enter hotplug_test
 
-ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 25 -n 4 -r 8" &
+ssh_vm "examples/nvme/hotplug/hotplug -i 0 -t 25 -n 4 -r 8 & > /dev/null"
 example_pid=$!
 
 sleep 4
@@ -133,16 +142,16 @@ sleep 4
 remove_devices
 devices_delete
 
+trap - SIGINT SIGTERM EXIT
+
+qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
+
 timing_enter wait_for_example
 wait $example_pid
 timing_exit wait_for_example
 
-trap - SIGINT SIGTERM EXIT
-
-qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
 kill -9 $qemupid
-rm "$qemu_pidfile"
-rm "$test_img"
+rm -f "$qemu_pidfile"
 
 report_test_completion "nvme_hotplug"
 timing_exit hotplug_test
