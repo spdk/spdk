@@ -59,6 +59,24 @@
     },
     {
       "key": {
+        "uuid": "7a0da539_75e5c4d6",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T19:45:28Z",
+      "side": 1,
+      "message": "Hi Ben, Oh, Thank you. I was wrong.\nWill you move the lock to line 648 if you are OK?",
+      "parentUuid": "f2cb0b3d_909a128f",
+      "revId": "a83c148d3be61c27ffac1f5555985a87118b976e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7bded5a9_440c7dc9",
         "filename": "lib/thread/thread.c",
         "patchSetId": 4
