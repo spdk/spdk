@@ -41,6 +41,11 @@
 #define SPDK_DIF_APPTAG_CHECK	(1U << 27)
 #define SPDK_DIF_GUARD_CHECK	(1U << 28)
 
+#define SPDK_DIF_REFTAG_ERROR	0x1
+#define SPDK_DIF_APPTAG_ERROR	0x2
+#define SPDK_DIF_GUARD_ERROR	0x4
+#define SPDK_DIF_DATA_ERROR	0x8
+
 enum spdk_dif_type {
 	SPDK_DIF_TYPE1 = 1,
 	SPDK_DIF_TYPE2,
@@ -100,4 +105,22 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt,
 		    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 		    bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		    uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
+/**
+ * Inject bit flip error to extended LBA payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the payload.
+ * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
+ * If false, DIF is set in the first 8 bytes of metadata.
+ * \param inject_flags Flag to specify the action of error injection.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
+			  uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			  bool dif_loc, uint32_t inject_flags);
 #endif /* SPDK_DIF_H */
