@@ -19,6 +19,91 @@
     },
     {
       "key": {
+        "uuid": "25512fa3_2d85d0b6",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:27:17Z",
+      "side": 1,
+      "message": "I think you do not need to pass DEFFILEMODE - this parameter is only needed when O_CREAT flag is specified (it specifies the mode to create the file)",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44f63f7d_563c80dc",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:27:17Z",
+      "side": 1,
+      "message": "this can all be one line",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54d4f3cb_ee1872fe",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:27:17Z",
+      "side": 1,
+      "message": "should we wait to create the aggregate file until we are ready to write to it?",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12729d4a_cc1c2d36",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:27:17Z",
+      "side": 1,
+      "message": "sigact and rc alignment are not consistent",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18dc1e8f_24fce4f5",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:27:17Z",
+      "side": 1,
+      "message": "rc and I should be aligned with other variables",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "596aecee_ab41bf94",
         "filename": "include/spdk/trace.h",
         "patchSetId": 22
