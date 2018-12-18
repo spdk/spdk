@@ -235,6 +235,35 @@ To delete an aio bdev use the delete_aio_bdev command.
 
 `rpc.py delete_aio_bdev aio0`
 
+# OCF Virtual bdev {#bdev_config_cas}
+
+OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/) - a
+high performance block storage caching meta-library.
+To enable the module, configure SPDK with `--with-ocf=/path/to/ocf/library`.
+OCF bdev can be used to enable caching for any underlying bdev.
+
+Below is an example command for creating OCF bdev:
+
+`rpc.py construct_ocf_bdev Cache1 wt Malloc0 Nvme0n1`
+
+This command will create new OCF bdev `Cache1` having bdev `Malloc0` as caching-device
+and `Nvme0n1` as core-device and initial cache mode `Write-Through`.
+`Malloc0` will be used as cache for `Nvme0n1`, so  data written to `Cache1` will be present
+on `Nvme0n1` eventually.
+By default, OCF will be configured with cache line size equal 4KiB
+and non-volatile metadata will be disabled.
+
+To remove `Cache1`:
+
+`rpc.py delete_ocf_bdev Cache1`
+
+During removal OCF-cache will be stopped and all cached data will be written to the core device.
+
+Note that OCF has a per-device RAM requirement
+of about 56000 + _cache device size_ * 58 / _cache line size_ (in bytes).
+To get more information on OCF
+please visit [OCF documentation](https://open-cas.github.io/doxygen/ocf/).
+
 # Malloc bdev {#bdev_config_malloc}
 
 Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
