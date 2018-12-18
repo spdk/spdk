@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1d2b27d_4d120039",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4082,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2018-12-18T06:11:54Z",
+      "side": 1,
+      "message": "would like to recommend these lines to be:\nif (bdev-\u003einternal.qos \u003d\u003d NULL) {\n\t/* Creating */\n\tbdev-\u003einternal.qos \u003d calloc(1, sizeof(*bdev-\u003einternal.qos));\n\tif (!bdev-\u003einternal.qos) {\n\t\tpthread_mutex_unlock(\u0026bdev-\u003einternal.mutex);\n\t\tSPDK_ERRLOG(\"Unable to allocate memory for QoS tracking\\n\");\n\t\tfree(ctx);\n\t\tcb_fn(cb_arg, -ENOMEM);\n\t\treturn;\n\t}\n}\n\nif (bdev-\u003einternal.qos-\u003ethread \u003d\u003d NULL) {\n\t/* Enabling */\n\t_spdk_bdev_set_qos_rate_limits(bdev, limits);\n\n\tspdk_for_each_channel(__bdev_to_io_dev(bdev),\n\t\t\t      _spdk_bdev_enable_qos_msg, ctx,\n\t\t\t      _spdk_bdev_enable_qos_done);",
+      "range": {
+        "startLine": 4060,
+        "startChar": 0,
+        "endLine": 4082,
+        "endChar": 39
+      },
+      "revId": "84718bfb0e6c2737b52a1c6550b93857d702bd78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
