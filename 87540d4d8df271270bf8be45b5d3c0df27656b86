@@ -121,6 +121,24 @@
     },
     {
       "key": {
+        "uuid": "a173d09e_6bd94bd1",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:42Z",
+      "side": 1,
+      "message": "The idea behind the macros was that we can have different type of specialized ios derived from the generic ftl_io. \nCurrently we only have one such structure - ftl_md_io, but we might need the have more in the future. So even if we have a pointer to the ftl_md_io we can just use one of these macros without casting or having to explicitly dereference the parent io structure (io-\u003eio.something).",
+      "parentUuid": "22c65797_1b54b890",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b7be9433_05fe578d",
         "filename": "lib/ftl/ftl_trace.h",
         "patchSetId": 18
@@ -172,6 +190,24 @@
     },
     {
       "key": {
+        "uuid": "21528761_160408ec",
+        "filename": "lib/ftl/ftl_utils.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:42Z",
+      "side": 1,
+      "message": "Yes, we need to get rid of this macro, I don\u0027t think it\u0027s used anywhere.",
+      "parentUuid": "485356be_19d4ed8e",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7d4d3e1b_98459c51",
         "filename": "lib/ftl/ftl_utils.h",
         "patchSetId": 18
@@ -200,6 +236,24 @@
       "writtenOn": "2018-12-17T20:02:33Z",
       "side": 1,
       "message": "Do we need a separate header file for just enabled() and ftl_range_intersect()?  Seems like a lot of overhead for a couple of small macros.",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f2b977f8_8f7ef4e7",
+        "filename": "lib/ftl/ftl_utils.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:42Z",
+      "side": 1,
+      "message": "Yeah, now that this file is almost empty that seems like a good idea. I\u0027ll remove it.",
+      "parentUuid": "6f7321ca_3064f752",
       "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
