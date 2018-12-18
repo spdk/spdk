@@ -2,6 +2,11 @@
 
 ## v19.01: (Upcoming Release)
 
+### iscsi
+
+A new configuration parameter `PersistReservationFile` was added to specify
+the file path which can be used to store the registrants and keys of reservation.
+
 ### util
 
 A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
