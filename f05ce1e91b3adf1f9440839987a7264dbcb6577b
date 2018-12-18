@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf3efd5f_9c89bed4",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T18:06:07Z",
+      "side": 1,
+      "message": "This is a nice change, but it is unrelated to the rest of this patch.  Let\u0027s move this change into a separate commit.",
+      "revId": "f05ce1e91b3adf1f9440839987a7264dbcb6577b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "210d1270_d7b8885f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T18:06:07Z",
+      "side": 1,
+      "message": "The other distributions here do not ask for this kind of input.  So I would prefer we not add it here.  Then this script can be run the same on all distributions (for example, sometimes this script may be called from another script).\n\nNote that the echo is not entirely accurate.  It asks if user wants to install these three packages, but if user says \"y\", it installs many more packages than just those three.",
+      "revId": "f05ce1e91b3adf1f9440839987a7264dbcb6577b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1188a6ca_0971e15b",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T18:06:07Z",
+      "side": 1,
+      "message": "unrelated change - not associated with arch linux",
+      "revId": "f05ce1e91b3adf1f9440839987a7264dbcb6577b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
