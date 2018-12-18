@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5de9e938_9a0e071e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:52:38Z",
+      "side": 1,
+      "message": "can remove this line",
+      "revId": "4dc0e6f23ed66537aa7ea4b96b2d24648b9e6980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b27d03b4_af9e2694",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 476,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:52:38Z",
+      "side": 1,
+      "message": "enable_bdev_histogram may be consistent to other bdev RPCs.",
+      "range": {
+        "startLine": 476,
+        "startChar": 4,
+        "endLine": 476,
+        "endChar": 25
+      },
+      "revId": "4dc0e6f23ed66537aa7ea4b96b2d24648b9e6980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8e1e9f69_d454a242",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:52:38Z",
+      "side": 1,
+      "message": "disable_bdev_historgram may be consistent to other bdev RPCs.",
+      "range": {
+        "startLine": 486,
+        "startChar": 4,
+        "endLine": 486,
+        "endChar": 26
+      },
+      "revId": "4dc0e6f23ed66537aa7ea4b96b2d24648b9e6980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50cf7e06_d9e81a17",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:52:38Z",
+      "side": 1,
+      "message": "get_bdev_histogram may be consistent to other bdev RPCs.",
+      "range": {
+        "startLine": 496,
+        "startChar": 4,
+        "endLine": 496,
+        "endChar": 22
+      },
+      "revId": "4dc0e6f23ed66537aa7ea4b96b2d24648b9e6980",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
