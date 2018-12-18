@@ -251,3 +251,11 @@ function on_error_exit() {
 	print_backtrace
 	exit 1
 }
+
+function receive_notifications {
+	$rpc_py get_notifications -n 100 > $rootdir/notifications.log &
+}
+
+function verify_notifications {
+	cat $rootdir/notifications.log | jq -r ".[] .name" | grep -qi $1
+}
