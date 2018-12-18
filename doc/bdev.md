@@ -235,6 +235,26 @@ To delete an aio bdev use the delete_aio_bdev command.
 
 `rpc.py delete_aio_bdev aio0`
 
+# CAS Virtual bdev {#bdev_config_cas}
+
+CAS virtual bdev is a part of SPDK CAS mudule which is based on Open CAS Framework - a high performance block storage caching meta-library.
+To enable the module, user needs to provide `--with-cas=/path/to/ocf/library` for configure script.
+
+CAS bdev can be configured to enable caching for any underlying bdev (assuming that CAS RAM requirement for the core device is met).
+Below is an example command for creating CAS bdev:
+
+`rpc.py construct_cas_bdev Cache1 wt Malloc0 Nvme0n1`
+
+This command will create new CAS bdev `Cache1` having bdevs `Malloc0` as Caching-device and `Nvme0n1` as Core-device and initial cache mode `Write-Through`.
+By default cache line size is 4KiB and non-volatile metadata is disabled.
+Data written to `Cache1` will be present on `Nvme0n1` eventually.
+
+To remove `Cache1`:
+
+`rpc.py delete_cas_bdev Cache1`
+
+During removal OCF-cache will be stopped and all warm data will be written to core device.
+
 # Malloc bdev {#bdev_config_malloc}
 
 Malloc bdevs are ramdisks. Because of its nature they are volatile. They are created from hugepage memory given to SPDK
