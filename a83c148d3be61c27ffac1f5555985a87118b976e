@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd39c3ef_70d84945",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T08:01:33Z",
+      "side": 1,
+      "message": "Please remove this too.",
+      "range": {
+        "startLine": 640,
+        "startChar": 1,
+        "endLine": 640,
+        "endChar": 38
+      },
+      "revId": "a83c148d3be61c27ffac1f5555985a87118b976e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "886185ab_df85ad95",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T08:01:33Z",
+      "side": 1,
+      "message": "pthread_mutex_lock() should have been added here but you will be able to pthread_mutex_lock/unlock in this function.",
+      "revId": "a83c148d3be61c27ffac1f5555985a87118b976e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7bded5a9_440c7dc9",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T08:01:33Z",
+      "side": 1,
+      "message": "Please remove this too.",
+      "range": {
+        "startLine": 650,
+        "startChar": 1,
+        "endLine": 650,
+        "endChar": 40
+      },
+      "revId": "a83c148d3be61c27ffac1f5555985a87118b976e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
