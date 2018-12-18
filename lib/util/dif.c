@@ -468,6 +468,286 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt,
 }
 
 static void
+dif_generate_copy(struct iovec *iovs, struct iovec *bounce_iov,
+		  uint32_t block_size, uint32_t data_block_size, uint32_t guard_interval,
+		  uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag,
+		  int *iovpos, uint32_t *iov_offset, uint32_t bounce_iov_offset)
+{
+	uint16_t guard = 0;
+	void *src, *dst;
+
+	src = iovs[*iovpos].iov_base + *iov_offset;
+	dst = bounce_iov->iov_base + bounce_iov_offset;
+
+	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif_copy(guard, dst, src, data_block_size);
+		guard = spdk_crc16_t10dif(guard, dst + data_block_size,
+					  guard_interval - data_block_size);
+	} else {
+		memcpy(dst, src, data_block_size);
+	}
+
+	_dif_generate(dst + guard_interval, dif_flags, guard, ref_tag, app_tag);
+
+	*iov_offset += data_block_size;
+	if (*iov_offset == iovs[*iovpos].iov_len) {
+		(*iovpos)++;
+		*iov_offset = 0;
+	}
+}
+
+static void
+dif_generate_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+			uint32_t block_size, uint32_t data_block_size, uint32_t guard_interval,
+			uint32_t dif_flags, uint32_t ref_tag, uint16_t app_tag,
+			int *iovpos, uint32_t *iov_offset, uint32_t bounce_iov_offset)
+{
+	uint32_t offset_in_block = 0, src_len;
+	uint16_t guard = 0;
+	void *src, *dst;
+
+	dst = bounce_iov->iov_base + bounce_iov_offset;
+
+	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(guard, dst + data_block_size,
+					  guard_interval - data_block_size);
+	}
+
+	while (offset_in_block < data_block_size && *iovpos < iovcnt) {
+		/* Compute CRC over split logical block data and copy
+		 * data to bounce buffer.
+		 */
+		src = iovs[*iovpos].iov_base + *iov_offset;
+		src_len = spdk_min(iovs[*iovpos].iov_len - *iov_offset,
+				   data_block_size - offset_in_block);
+
+		if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(guard, dst + offset_in_block,
+						       src, src_len);
+		} else {
+			memcpy(dst + offset_in_block, src, src_len);
+		}
+
+		*iov_offset += src_len;
+		if (*iov_offset == iovs[*iovpos].iov_len) {
+			(*iovpos)++;
+			*iov_offset = 0;
+		}
+		offset_in_block += src_len;
+	}
+
+	assert(offset_in_block == data_block_size);
+
+	_dif_generate(dst + guard_interval, dif_flags, guard, ref_tag, app_tag);
+}
+
+int
+spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+		       uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		       bool dif_start, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		       uint32_t init_ref_tag, uint16_t app_tag)
+{
+	uint32_t offset_blocks = 0, iov_offset = 0, bounce_iov_offset = 0;
+	uint32_t data_block_size, guard_interval, ref_tag;
+	int iovpos = 0;
+	bool contig;
+
+	if (md_size == 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = block_size - md_size;
+
+	if (!_are_iovs_valid(iovs, iovcnt, data_block_size, num_blocks) ||
+	    !_are_iovs_valid(bounce_iov, 1, block_size, num_blocks)) {
+		SPDK_ERRLOG("Size of iovec arrays are not valid.\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_type_is_valid(dif_type, dif_flags)) {
+		SPDK_ERRLOG("DIF type is invalid\n");
+		return -EINVAL;
+	}
+
+	ref_tag = init_ref_tag;
+	guard_interval = _get_dif_guard_interval(block_size, md_size, dif_start);
+	contig = _are_iovs_block_multiple(iovs, iovcnt, block_size);
+
+	while (offset_blocks < num_blocks && iovpos < iovcnt &&
+	       bounce_iov_offset < bounce_iov->iov_len) {
+		if (contig) {
+			dif_generate_copy(iovs, bounce_iov,
+					  block_size, data_block_size, guard_interval,
+					  dif_flags, ref_tag, app_tag,
+					  &iovpos, &iov_offset, bounce_iov_offset);
+		} else {
+			dif_generate_copy_split(iovs, iovcnt, bounce_iov,
+						block_size, data_block_size, guard_interval,
+						dif_flags, ref_tag, app_tag,
+						&iovpos, &iov_offset, bounce_iov_offset);
+		}
+
+		/* Reference tag check is not enabled for type 3, and just incrementing
+		 * ref_tag per block is OK.
+		 */
+		ref_tag++;
+
+		offset_blocks++;
+		bounce_iov_offset += block_size;
+	}
+
+	return 0;
+}
+
+static int
+dif_verify_copy(struct iovec *iovs, struct iovec *bounce_iov,
+		uint32_t block_size, uint32_t data_block_size, uint32_t guard_interval,
+		enum spdk_dif_type dif_type, uint32_t dif_flags,
+		uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		int *iovpos, uint32_t *iov_offset, uint32_t bounce_iov_offset)
+{
+	uint16_t guard = 0;
+	void *src, *dst;
+	int rc;
+
+	dst = iovs[*iovpos].iov_base + *iov_offset;
+	src = bounce_iov->iov_base + bounce_iov_offset;
+
+	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif_copy(guard, dst, src, data_block_size);
+		guard = spdk_crc16_t10dif(guard, src + data_block_size,
+					  guard_interval - data_block_size);
+	} else {
+		memcpy(dst, src, data_block_size);
+	}
+
+	rc = _dif_verify(src + guard_interval, dif_type, dif_flags,
+			 guard, ref_tag, apptag_mask, app_tag);
+	if (rc != 0) {
+		return rc;
+	}
+
+	*iov_offset += data_block_size;
+	if (*iov_offset == iovs[*iovpos].iov_len) {
+		(*iovpos)++;
+		*iov_offset = 0;
+	}
+
+	return 0;
+}
+
+static int
+dif_verify_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+		      uint32_t block_size, uint32_t data_block_size, uint32_t guard_interval,
+		      enum spdk_dif_type dif_type, uint32_t dif_flags,
+		      uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		      int *iovpos, uint32_t *iov_offset, uint32_t bounce_iov_offset)
+{
+	uint32_t offset_in_block = 0, dst_len;
+	uint16_t guard = 0;
+	void *src, *dst;
+
+	src = bounce_iov->iov_base + bounce_iov_offset;
+
+	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(guard, src + data_block_size,
+					  guard_interval - data_block_size);
+	}
+
+	while (offset_in_block < data_block_size && *iovpos < iovcnt) {
+		/* Compute CRC over logical block data in bounce buffer and
+		 * copy data to original split buffers.
+		 */
+		dst = iovs[*iovpos].iov_base + *iov_offset;
+		dst_len = spdk_min(iovs[*iovpos].iov_len - *iov_offset,
+				   data_block_size - offset_in_block);
+
+		if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(guard, dst,
+						       src + offset_in_block, dst_len);
+		} else {
+			memcpy(dst, src + offset_in_block, dst_len);
+		}
+
+		*iov_offset += dst_len;
+		if (*iov_offset == iovs[*iovpos].iov_len) {
+			(*iovpos)++;
+			*iov_offset = 0;
+		}
+		offset_in_block += dst_len;
+	}
+
+	assert(offset_in_block == data_block_size);
+
+	return _dif_verify(src + guard_interval, dif_type, dif_flags,
+			   guard, ref_tag, apptag_mask, app_tag);
+}
+
+int
+spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+		     uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		     bool dif_start, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		     uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t offset_blocks = 0, iov_offset = 0, bounce_iov_offset = 0;
+	uint32_t data_block_size, guard_interval, ref_tag;
+	int iovpos = 0, rc;
+	bool contig;
+
+	if (md_size == 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = block_size - md_size;
+
+	if (!_are_iovs_valid(iovs, iovcnt, data_block_size, num_blocks) ||
+	    !_are_iovs_valid(bounce_iov, 1, block_size, num_blocks)) {
+		SPDK_ERRLOG("Size of iovec arrays are not valid\n");
+		return -EINVAL;
+	}
+
+	if (!_dif_type_is_valid(dif_type, dif_flags)) {
+		SPDK_ERRLOG("DIF type is invalid.\n");
+		return -EINVAL;
+	}
+
+	ref_tag = init_ref_tag;
+	guard_interval = _get_dif_guard_interval(block_size, md_size, dif_start);
+	contig = _are_iovs_block_multiple(iovs, iovcnt, block_size);
+
+	while (offset_blocks < num_blocks && iovpos < iovcnt &&
+	       bounce_iov_offset < bounce_iov->iov_len) {
+		if (contig) {
+			rc = dif_verify_copy(iovs, bounce_iov,
+					     block_size, data_block_size, guard_interval,
+					     dif_type, dif_flags,
+					     ref_tag, apptag_mask, app_tag,
+					     &iovpos, &iov_offset, bounce_iov_offset);
+		} else {
+			rc = dif_verify_copy_split(iovs, iovcnt, bounce_iov,
+						   block_size, data_block_size, guard_interval,
+						   dif_type, dif_flags,
+						   ref_tag, apptag_mask, app_tag,
+						   &iovpos, &iov_offset, bounce_iov_offset);
+		}
+
+		if (rc != 0) {
+			return rc;
+		}
+
+		/* Reference tag check is not enabled for type 3, and just incrementing
+		 * ref_tag per block is OK.
+		 */
+		ref_tag++;
+
+		offset_blocks++;
+		bounce_iov_offset += block_size;
+	}
+
+	return 0;
+}
+
+static void
 _bit_flip(uint8_t *buf, uint32_t flip_bit)
 {
 	uint8_t byte;
