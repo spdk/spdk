@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1268c822_a510a7b5",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-18T04:33:58Z",
+      "side": 1,
+      "message": "Don\u0027t need poll the thread here for SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE state, there are some in the following lines too.",
+      "revId": "8e9cb3fc49d40fbea43ae6f420f5e10649d9623d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
