@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "889b6c48_cf4f95ca",
+        "filename": "app/trace_porter/Makefile",
+        "patchSetId": 22
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:14:21Z",
+      "side": 1,
+      "message": "you should be able to remove everything after this point, and instead just do:\n\ninclude $(SPDK_ROOT_DIR)/mk/spdk.app.mk\n\nsee app/nvmf_tgt/Makefile as an example",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "596aecee_ab41bf94",
+        "filename": "include/spdk/trace.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:14:21Z",
+      "side": 1,
+      "message": "let\u0027s just remove \"linear\"",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bcb0f3d_0c6f040c",
+        "filename": "lib/event/app.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:14:21Z",
+      "side": 1,
+      "message": "must be power of 2\n\n\"should\" indicates that it works best if it is power of 2, but would still work OK if it is not",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fad8f6c_92f407c2",
+        "filename": "lib/event/app.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:14:21Z",
+      "side": 1,
+      "message": "must be power of 2",
+      "revId": "d8fa6ee2b694ac62f8ac1d9468c17051f51e0544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
