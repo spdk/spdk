@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01cb3ba4_c3011f0e",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:19:46Z",
+      "side": 1,
+      "message": "If there is more than one NVMe? what then?",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 42
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92b8250c_1f7b1a1a",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:19:46Z",
+      "side": 1,
+      "message": "Still I see this overcomplicated. I don\u0027t know why you are using such a big hammer here like \u0027match\u0027 app an you need additional check to for traddr?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
