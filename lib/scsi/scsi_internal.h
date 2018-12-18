@@ -65,6 +65,7 @@ struct spdk_scsi_dev {
 	bool			removed;
 
 	char			name[SPDK_SCSI_DEV_MAX_NAME + 1];
+	char			*pr_file;
 
 	struct spdk_scsi_lun	*lun[SPDK_SCSI_DEV_MAX_LUN];
 

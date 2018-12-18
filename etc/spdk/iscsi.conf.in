@@ -193,6 +193,10 @@
   # Enable header and data digest
   # UseDigest Header Data
   UseDigest Auto
+  # Activate reservation with persist through
+  # power loss feature, all the required data
+  # is stored to the following file.
+  PersistReservationFile /path/to/node1_pr
   # Use the first malloc target
   LUN0 Malloc0
   # Using the first AIO target

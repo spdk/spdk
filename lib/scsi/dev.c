@@ -93,6 +93,11 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 	dev->crkey = 0;
 	dev->holder = NULL;
 
+	if (dev->pr_file) {
+		free(dev->pr_file);
+		dev->pr_file = NULL;
+	}
+
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
 		if (dev->lun[i] == NULL) {
 			continue;
@@ -192,7 +197,7 @@ _spdk_scsi_dev *
 spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 			int *lun_id_list, int num_luns, uint8_t protocol_id,
 			void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-			void *hotremove_ctx)
+			void *hotremove_ctx, const char *pr_file)
 {
 	struct spdk_scsi_dev *dev;
 	size_t name_len;
@@ -242,7 +247,13 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 	dev->num_ports = 0;
 	dev->protocol_id = protocol_id;
 	TAILQ_INIT(&dev->reg_head);
+	dev->pr_file = NULL;
 	pthread_mutex_init(&dev->reservation_lock, NULL);
+
+	if (pr_file) {
+		dev->pr_file = strdup(pr_file);
+		/* TODO: load the configuration if any */
+	}
 
 	for (i = 0; i < num_luns; i++) {
 		rc = spdk_scsi_dev_add_lun(dev, bdev_name_list[i], lun_id_list[i],

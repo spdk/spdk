@@ -324,6 +324,7 @@ void spdk_scsi_dev_free_io_channels(struct spdk_scsi_dev *dev);
  * \param hotremove_cb Callback to lun hotremoval. Will be called once hotremove
  * is first triggered.
  * \param hotremove_ctx Additional argument to hotremove_cb.
+ * \param pr_file File path used to store the persistence reservation data.
  *
  * \return the constructed spdk_scsi_dev object.
  */
@@ -333,7 +334,7 @@ struct spdk_scsi_dev *spdk_scsi_dev_construct(const char *name,
 		int num_luns,
 		uint8_t protocol_id,
 		void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-		void *hotremove_ctx);
+		void *hotremove_ctx, const char *pr_file);
 
 /**
  * Delete a logical unit of the given SCSI device.

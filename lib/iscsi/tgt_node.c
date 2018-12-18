@@ -864,7 +864,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 			      const char *bdev_name_list[], int *lun_id_list, int num_luns,
 			      int queue_depth,
 			      bool disable_chap, bool require_chap, bool mutual_chap, int chap_group,
-			      bool header_digest, bool data_digest)
+			      bool header_digest, bool data_digest, const char *pr_file)
 {
 	char				fullname[MAX_TMPBUF];
 	struct spdk_iscsi_tgt_node	*target;
@@ -935,7 +935,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	}
 
 	target->dev = spdk_scsi_dev_construct(fullname, bdev_name_list, lun_id_list, num_luns,
-					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
+					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL, pr_file);
 	if (!target->dev) {
 		SPDK_ERRLOG("Could not construct SCSI device\n");
 		spdk_iscsi_tgt_node_destruct(target);
@@ -984,7 +984,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 	int num_target_maps;
 	const char *alias, *pg_tag, *ig_tag;
 	const char *ag_tag;
-	const char *val, *name;
+	const char *val, *name, *pr_file;
 	int target_num, chap_group, pg_tag_i, ig_tag_i;
 	bool header_digest, data_digest;
 	bool disable_chap, require_chap, mutual_chap;
@@ -1153,6 +1153,8 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 		queue_depth = (int) strtol(val, NULL, 10);
 	}
 
+	pr_file = spdk_conf_section_get_val(sp, "PersistReservationFile");
+
 	num_luns = 0;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
@@ -1176,7 +1178,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 					       pg_tag_list, ig_tag_list, num_target_maps,
 					       bdev_name_list, lun_id_list, num_luns, queue_depth,
 					       disable_chap, require_chap, mutual_chap, chap_group,
-					       header_digest, data_digest);
+					       header_digest, data_digest, pr_file);
 
 	if (target == NULL) {
 		SPDK_ERRLOG("tgt_node%d: add_iscsi_target_node error\n", target_num);

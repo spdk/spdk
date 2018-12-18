@@ -419,6 +419,7 @@ free_rpc_luns(struct rpc_luns *p)
 struct rpc_target_node {
 	char *name;
 	char *alias_name;
+	char *pr_file;
 
 	struct rpc_pg_ig_maps pg_ig_maps;
 	struct rpc_luns luns;
@@ -502,7 +503,8 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 					       req.mutual_chap,
 					       req.chap_group,
 					       req.header_digest,
-					       req.data_digest);
+					       req.data_digest,
+					       NULL);
 
 	if (target == NULL) {
 		goto invalid;
