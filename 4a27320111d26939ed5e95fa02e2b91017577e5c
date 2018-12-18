@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5de62e07_16ee1dc3",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:56:37Z",
+      "side": 1,
+      "message": "nsid declaration should be first\nthen newline and then ctrlr-\u003eanm_outstanding assignment",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b75d14a_e38224a1",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:56:37Z",
+      "side": 1,
+      "message": "just using g_anm directly might be simpler",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e72af56c_fc9a3c43",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:56:37Z",
+      "side": 1,
+      "message": "should this be an assert?  or even just add an assert(false) before the return -EINVAL",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4ca4729_424ab737",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:56:37Z",
+      "side": 1,
+      "message": "just using g_anm directly might be simpler",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
