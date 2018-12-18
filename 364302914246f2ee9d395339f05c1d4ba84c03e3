@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "928b76f3_7ad6d3af",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-18T14:40:55Z",
+      "side": 1,
+      "message": "Leave this alone, but down below where it checks for FreeBSD always set SPDK_TEST_BLOBFS to 0.",
+      "revId": "364302914246f2ee9d395339f05c1d4ba84c03e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
