@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6194681_8869bc53",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4210,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:47:39Z",
+      "side": 1,
+      "message": "This line is only diff vs spdk_bdev_histogram_disable().\n\nCan you add \u0027bool enable\u0027 parameter so \u0027spdk_bdev_histogram_disable\u0027 can be removed?",
+      "range": {
+        "startLine": 4210,
+        "startChar": 0,
+        "endLine": 4210,
+        "endChar": 41
+      },
+      "revId": "6f6936123a2be0736a1d6c5b03122eb05a094844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01d47566_bc7ab89c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4243,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:47:39Z",
+      "side": 1,
+      "message": "Is this an error?",
+      "range": {
+        "startLine": 4243,
+        "startChar": 12,
+        "endLine": 4243,
+        "endChar": 22
+      },
+      "revId": "6f6936123a2be0736a1d6c5b03122eb05a094844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9471b3e_9b548ff0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4271,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:47:39Z",
+      "side": 1,
+      "message": "I think you are racing vs spdk_bdev_histogram_disable(). Don\u0027t think this check is needed. Just try getting the data and if histograms are not enabled you won\u0027t get any data.\n\nBTW: I think \u0027histogram_enabled\u0027 might be removed.",
+      "range": {
+        "startLine": 4267,
+        "startChar": 0,
+        "endLine": 4271,
+        "endChar": 2
+      },
+      "revId": "6f6936123a2be0736a1d6c5b03122eb05a094844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
