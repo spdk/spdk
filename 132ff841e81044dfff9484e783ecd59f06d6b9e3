@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d72885f3_1f03bbc6",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1015615
+      },
+      "writtenOn": "2018-12-18T11:35:11Z",
+      "side": 1,
+      "message": "Looks good for me. I prefer moving (payload_len \u003d\u003d 0) check before the \"switch\" operator and remove the same check for the GET_ID case. But its up to you.",
+      "revId": "132ff841e81044dfff9484e783ecd59f06d6b9e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
