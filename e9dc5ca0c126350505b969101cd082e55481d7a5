@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edd379b6_84cd1d7a",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1113,
+      "author": {
+        "id": 1015615
+      },
+      "writtenOn": "2018-12-18T12:35:53Z",
+      "side": 1,
+      "message": "ASAN spotted a leak here:\n\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\u003d\n\u003d\u003d599134\u003d\u003dERROR: LeakSanitizer: detected memory leaks\n\nDirect leak of 64 byte(s) in 1 object(s) allocated from:\n    #0 0x7fc7f0566602 in malloc (/usr/lib/x86_64-linux-gnu/libasan.so.2+0x98602)\n    #1 0x526538 in rte_vhost_get_mem_table /spdk.upstream/lib/vhost/rte_vhost/vhost.c:351\n    #2 0x4ec73f in start_device /spdk.upstream/lib/vhost/vhost.c:1106\n    #3 0x525418 in vhost_user_msg_handler /spdk.upstream/lib/vhost/rte_vhost/vhost_user.c:1430\n    #4 0x51293d in vhost_user_read_cb /spdk.upstream/lib/vhost/rte_vhost/socket.c:293\n    #5 0x5285ed in fdset_event_dispatch /spdk.upstream/lib/vhost/rte_vhost/fd_man.c:273\n    #6 0x7fc7ef89a6b9 in start_thread (/lib/x86_64-linux-gnu/libpthread.so.0+0x76b9)\n\nSUMMARY: AddressSanitizer: 64 byte(s) leaked in 1 allocation(s).\n\nLooks like the free(vdev-\u003emem) is missing here in case of error. What do you think?",
+      "revId": "e9dc5ca0c126350505b969101cd082e55481d7a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
