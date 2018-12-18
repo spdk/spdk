@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "684bffa4_b4f112cb",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-18T23:13:08Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nThis could not solve the issues. We still need to track the case that the qpair is not receving two disconnect requests? Due to our async methods, we need to have some check",
+      "parentUuid": "25c9d85b_353bdfd7",
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "710ad5ae_30149aec",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
