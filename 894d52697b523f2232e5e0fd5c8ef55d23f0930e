@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "804d741a_eaeb25a2",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-18T02:23:18Z",
+      "side": 1,
+      "message": "Thanks, and i will add the warning info.",
+      "parentUuid": "b1fdc576_6d086837",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 28
+      },
+      "revId": "894d52697b523f2232e5e0fd5c8ef55d23f0930e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5374817b_4489c0f9",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 12
@@ -85,6 +109,30 @@
       "message": "I don\u0027t know what is going on here. You will forget this too in a week or so. Please rewrite it so no reverse engineering is needed to discover what this part of code is doing.\n\nSimply comparing the output from line 54 with expected one should be enough.",
       "range": {
         "startLine": 53,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 6
+      },
+      "revId": "894d52697b523f2232e5e0fd5c8ef55d23f0930e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ad3bbec_5fd2453c",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-18T02:23:18Z",
+      "side": 1,
+      "message": "OK, We except these values are equal, so it will be changed to \"test $bdev_traddr \u003d\u003d $nvme0_traddr\".",
+      "parentUuid": "5374817b_4489c0f9",
+      "range": {
+        "startLine": 61,
         "startChar": 0,
         "endLine": 64,
         "endChar": 6
