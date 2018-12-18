@@ -114,6 +114,30 @@
       "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d56b70f2_670f6c42",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-18T11:54:20Z",
+      "side": 1,
+      "message": "According you suggestion , this patch will be updated after anther patch was submitted. it worked out the installing commands on different systems.that I will only add this python3-pandas package .",
+      "parentUuid": "e8cfbd36_510e69f3",
+      "range": {
+        "startLine": 296,
+        "startChar": 0,
+        "endLine": 300,
+        "endChar": 3
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
