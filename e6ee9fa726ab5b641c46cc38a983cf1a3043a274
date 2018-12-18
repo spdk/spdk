@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1253cda2_0bfe19f0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1448,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:32:07Z",
+      "side": 1,
+      "message": "Should these asserts be fatal?",
+      "range": {
+        "startLine": 1442,
+        "startChar": 0,
+        "endLine": 1448,
+        "endChar": 24
+      },
+      "revId": "e6ee9fa726ab5b641c46cc38a983cf1a3043a274",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
