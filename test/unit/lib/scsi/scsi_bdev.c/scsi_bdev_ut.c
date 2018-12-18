@@ -102,6 +102,7 @@ DEFINE_STUB(spdk_scsi_pr_out, int, (struct spdk_scsi_task *task,
 				    uint8_t *cdb, uint8_t *data, uint16_t data_len), 0);
 DEFINE_STUB(spdk_scsi_pr_in, int, (struct spdk_scsi_task *task, uint8_t *cdb,
 				   uint8_t *data, uint16_t data_len), 0);
+DEFINE_STUB(spdk_scsi_pr_check, int, (struct spdk_scsi_task *task), 0);
 
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
@@ -360,7 +361,7 @@ mode_sense_6_test(void)
 	struct spdk_bdev bdev;
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[12];
 	unsigned char *data;
 	int rc;
@@ -410,7 +411,7 @@ mode_sense_10_test(void)
 	struct spdk_bdev bdev;
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[12];
 	unsigned char *data;
 	int rc;
@@ -500,7 +501,7 @@ inquiry_standard_test(void)
 	struct spdk_bdev bdev = { .blocklen = 512 };
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
-	struct spdk_scsi_dev dev;
+	struct spdk_scsi_dev dev = {0};
 	char cdb[6];
 	char *data;
 	struct spdk_scsi_cdb_inquiry_data *inq_data;

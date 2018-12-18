@@ -2107,6 +2107,15 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 {
 	int rc;
 
+	rc = spdk_scsi_pr_check(task);
+	if (rc < 0) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
 	if ((rc = spdk_bdev_scsi_process_block(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 		if ((rc = spdk_bdev_scsi_process_primary(task)) == SPDK_SCSI_TASK_UNKNOWN) {
 			SPDK_DEBUGLOG(SPDK_LOG_SCSI, "unsupported SCSI OP=0x%x\n", task->cdb[0]);
