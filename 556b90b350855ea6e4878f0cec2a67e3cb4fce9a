@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9a716a6_32ab4ea2",
+        "filename": "test/common/lib/ut_multithread.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T08:16:20Z",
+      "side": 1,
+      "message": "For usage in tests, this simple error handling may be good practice.",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 88,
+        "endChar": 30
+      },
+      "revId": "556b90b350855ea6e4878f0cec2a67e3cb4fce9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
