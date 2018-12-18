@@ -83,6 +83,12 @@ spdk_u32_is_pow2(uint32_t x)
 	return (x & (x - 1)) == 0;
 }
 
+static inline uint64_t
+spdk_divide_round_up(uint64_t num, uint64_t divisor)
+{
+	return (num + divisor - 1) / divisor;
+}
+
 #ifdef __cplusplus
 }
 #endif

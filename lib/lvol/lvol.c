@@ -48,12 +48,6 @@ SPDK_LOG_REGISTER_COMPONENT("lvol", SPDK_LOG_LVOL)
 static TAILQ_HEAD(, spdk_lvol_store) g_lvol_stores = TAILQ_HEAD_INITIALIZER(g_lvol_stores);
 static pthread_mutex_t g_lvol_stores_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-static inline uint64_t
-divide_round_up(uint64_t num, uint64_t divisor)
-{
-	return (num + divisor - 1) / divisor;
-}
-
 static int
 _spdk_add_lvs_to_list(struct spdk_lvol_store *lvs)
 {
@@ -1075,7 +1069,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 		return -ENOMEM;
 	}
 	lvol->lvol_store = lvs;
-	num_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(bs));
+	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->thin_provision = thin_provision;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
@@ -1256,7 +1250,7 @@ spdk_lvol_resize(struct spdk_lvol *lvol, uint64_t sz,
 	struct spdk_blob *blob = lvol->blob;
 	struct spdk_lvol_store *lvs = lvol->lvol_store;
 	struct spdk_lvol_req *req;
-	uint64_t new_clusters = divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
+	uint64_t new_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(lvs->blobstore));
 
 	req = calloc(1, sizeof(*req));
 	if (!req) {

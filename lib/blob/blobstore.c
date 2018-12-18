@@ -40,6 +40,7 @@
 #include "spdk/thread.h"
 #include "spdk/bit_array.h"
 #include "spdk/likely.h"
+#include "spdk/util.h"
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
@@ -66,12 +67,6 @@ _spdk_blob_verify_md_op(struct spdk_blob *blob)
 	assert(blob != NULL);
 	assert(spdk_get_thread() == blob->bs->md_thread);
 	assert(blob->state != SPDK_BLOB_STATE_LOADING);
-}
-
-static inline size_t
-divide_round_up(size_t num, size_t divisor)
-{
-	return (num + divisor - 1) / divisor;
 }
 
 static void
@@ -2978,7 +2973,7 @@ _spdk_bs_load_replay_md_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 		_spdk_bs_load_replay_cur_md_page(seq, cb_arg);
 	} else {
 		/* Claim all of the clusters used by the metadata */
-		num_md_clusters = divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
+		num_md_clusters = spdk_divide_round_up(ctx->super->md_len, ctx->bs->pages_per_cluster);
 		for (i = 0; i < num_md_clusters; i++) {
 			_spdk_bs_claim_cluster(ctx->bs, i);
 		}
@@ -3111,7 +3106,7 @@ _spdk_bs_load_super_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	}
 	ctx->bs->md_start = ctx->super->md_start;
 	ctx->bs->md_len = ctx->super->md_len;
-	ctx->bs->total_data_clusters = ctx->bs->total_clusters - divide_round_up(
+	ctx->bs->total_data_clusters = ctx->bs->total_clusters - spdk_divide_round_up(
 					       ctx->bs->md_start + ctx->bs->md_len, ctx->bs->pages_per_cluster);
 	ctx->bs->super_blob = ctx->super->super_blob;
 	memcpy(&ctx->bs->bstype, &ctx->super->bstype, sizeof(ctx->super->bstype));
@@ -3607,8 +3602,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	 * up to the nearest page, plus a header.
 	 */
 	ctx->super->used_page_mask_start = num_md_pages;
-	ctx->super->used_page_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
-					 divide_round_up(bs->md_len, 8),
+	ctx->super->used_page_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+					 spdk_divide_round_up(bs->md_len, 8),
 					 SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_page_mask_len;
 
@@ -3616,8 +3611,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	 * up to the nearest page, plus a header.
 	 */
 	ctx->super->used_cluster_mask_start = num_md_pages;
-	ctx->super->used_cluster_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
-					    divide_round_up(bs->total_clusters, 8),
+	ctx->super->used_cluster_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+					    spdk_divide_round_up(bs->total_clusters, 8),
 					    SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_cluster_mask_len;
 
@@ -3625,8 +3620,8 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	 * up to the nearest page, plus a header.
 	 */
 	ctx->super->used_blobid_mask_start = num_md_pages;
-	ctx->super->used_blobid_mask_len = divide_round_up(sizeof(struct spdk_bs_md_mask) +
-					   divide_round_up(bs->md_len, 8),
+	ctx->super->used_blobid_mask_len = spdk_divide_round_up(sizeof(struct spdk_bs_md_mask) +
+					   spdk_divide_round_up(bs->md_len, 8),
 					   SPDK_BS_PAGE_SIZE);
 	num_md_pages += ctx->super->used_blobid_mask_len;
 
@@ -3641,7 +3636,7 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	ctx->super->crc = _spdk_blob_md_page_calc_crc(ctx->super);
 
-	num_md_clusters = divide_round_up(num_md_pages, bs->pages_per_cluster);
+	num_md_clusters = spdk_divide_round_up(num_md_pages, bs->pages_per_cluster);
 	if (num_md_clusters > bs->total_clusters) {
 		SPDK_ERRLOG("Blobstore metadata cannot use more clusters than is available, "
 			    "please decrease number of pages reserved for metadata "
