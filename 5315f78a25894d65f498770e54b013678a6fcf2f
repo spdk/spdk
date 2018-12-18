@@ -16,6 +16,24 @@
       "revId": "5315f78a25894d65f498770e54b013678a6fcf2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3321b6e_86ab2508",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T23:06:08Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nI intended to follow NVMe specification.\n\nNVMe specification says in End-to-end Data Protection Capabilities,\n\nBit 4 if set to 1 indicates that the namespace supports protection information transferred as the last eight bytes of metadata.\n\nHence in this case true means that DIF is in the last eight bytes of metadata.\n\ndif_start might be bad name.\nIn nvme-cli, the corresponding parameter is pl (Protection Information Location).\nHence I changed the name from dif_start to dif_loc.\n\nAdditionally I walk through all setting of dif_loc again.\n\nI hope this make sense to you.",
+      "parentUuid": "c88a2ef5_525f09e9",
+      "revId": "5315f78a25894d65f498770e54b013678a6fcf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
