@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae0afcbf_9875a78a",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 787,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T23:02:33Z",
+      "side": 1,
+      "message": "this is probably ok, but it would be better if key_size and val_size were marked const\n\nor just keep these as key[32] and val[1024], and pass sizeof(key) and sizeof(val) to parse_next_key",
+      "revId": "7ff5d09602ad150667971e14764ffa712fe79690",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
