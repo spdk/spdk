@@ -134,7 +134,7 @@ if [ $SPDK_TEST_NVME -eq 1 ]; then
 	# enabled, it catches SEGV earlier than our handler which
 	# breaks the hotplug logic
 	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test suite test/nvme/hotplug.sh intel
+		run_test suite test/nvme/hotplug.sh root
 	fi
 fi
 

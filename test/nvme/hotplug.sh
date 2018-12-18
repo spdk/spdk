@@ -40,10 +40,10 @@ function wait_for_devices_ready() {
 
 function devices_initialization() {
 	timing_enter devices_initialization
-	dd if=/dev/zero of=/root/test0 bs=1M count=1024
-	dd if=/dev/zero of=/root/test1 bs=1M count=1024
-	dd if=/dev/zero of=/root/test2 bs=1M count=1024
-	dd if=/dev/zero of=/root/test3 bs=1M count=1024
+	dd if=/dev/zero of=/root/test0 bs=1M count=128
+	dd if=/dev/zero of=/root/test1 bs=1M count=128
+	dd if=/dev/zero of=/root/test2 bs=1M count=128
+	dd if=/dev/zero of=/root/test3 bs=1M count=128
 	monitor_cmd "drive_add 0 file=/root/test0,format=raw,id=drive0,if=none"
 	monitor_cmd "drive_add 1 file=/root/test1,format=raw,id=drive1,if=none"
 	monitor_cmd "drive_add 2 file=/root/test2,format=raw,id=drive2,if=none"
@@ -76,9 +76,20 @@ function devices_delete() {
 	timing_exit devices_delete
 }
 
+function on_error_exit() {
+	set +e
+	kill -9 $qemupid
+	rm -f "$qemu_pidfile"
+	rm -f "$test_img"
+	print_backtrace
+	exit 1
+}
+
+trap 'on_error_exit;' ERR
+
 password=$1
-base_img=${DEPENDENCY_DIR}/fedora24.img
-test_img=${DEPENDENCY_DIR}/fedora24_test.img
+base_img=${DEPENDENCY_DIR}/vhost_vm_image.qcow2
+test_img=${DEPENDENCY_DIR}/vhost_vm_image_qcov.qcow2
 qemu_pidfile=${DEPENDENCY_DIR}/qemupid
 
 if [ ! -e "$base_img" ]; then
@@ -103,6 +114,8 @@ qemu-system-x86_64 \
 	--enable-kvm \
 	-chardev socket,id=mon0,host=localhost,port=4444,server,nowait \
 	-mon chardev=mon0,mode=readline
+
+qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
 
 timing_exit start_qemu
 
@@ -134,9 +147,6 @@ timing_enter wait_for_example
 wait $example_pid
 timing_exit wait_for_example
 
-trap - SIGINT SIGTERM EXIT
-
-qemupid=`cat "$qemu_pidfile" | awk '{printf $0}'`
 kill -9 $qemupid
 rm "$qemu_pidfile"
 rm "$test_img"
