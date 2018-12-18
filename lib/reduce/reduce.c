@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/bit_array.h"
+#include "spdk/util.h"
 #include "spdk_internal/log.h"
 
 #include "libpmem.h"
@@ -138,12 +139,6 @@ _reduce_persist(struct spdk_reduce_vol *vol, const void *addr, size_t len)
 	}
 }
 
-static inline uint64_t
-divide_round_up(uint64_t num, uint64_t divisor)
-{
-	return (num + divisor - 1) / divisor;
-}
-
 static uint64_t
 _get_pm_logical_map_size(uint64_t vol_size, uint64_t chunk_size)
 {
@@ -153,7 +148,8 @@ _get_pm_logical_map_size(uint64_t vol_size, uint64_t chunk_size)
 	logical_map_size = chunks_in_logical_map * sizeof(uint64_t);
 
 	/* Round up to next cacheline. */
-	return divide_round_up(logical_map_size, REDUCE_PM_SIZE_ALIGNMENT) * REDUCE_PM_SIZE_ALIGNMENT;
+	return spdk_divide_round_up(logical_map_size, REDUCE_PM_SIZE_ALIGNMENT) *
+	       REDUCE_PM_SIZE_ALIGNMENT;
 }
 
 static uint64_t
@@ -176,7 +172,8 @@ _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backi
 	io_units_per_chunk = chunk_size / backing_io_unit_size;
 	total_chunks_size = num_chunks * io_units_per_chunk * sizeof(uint64_t);
 
-	return divide_round_up(total_chunks_size, REDUCE_PM_SIZE_ALIGNMENT) * REDUCE_PM_SIZE_ALIGNMENT;
+	return spdk_divide_round_up(total_chunks_size, REDUCE_PM_SIZE_ALIGNMENT) *
+	       REDUCE_PM_SIZE_ALIGNMENT;
 }
 
 static uint64_t *
