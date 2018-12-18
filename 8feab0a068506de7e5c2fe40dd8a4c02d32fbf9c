@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c266989_58c62bdc",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:14:07Z",
+      "side": 1,
+      "message": "I guess my question then is should the caller not call this function if the lba is invalid?\n\nI think it makes the code more robust if we specify that this function should not be called with an invalid LBA.  If we\u0027re writing non-user data, why do we need to call this function?",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90efe3f8_e3f366c6",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:14:07Z",
+      "side": 1,
+      "message": "you can use spdk_divide_round_up now",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f4aac20_fc4ae2f5",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:14:07Z",
+      "side": 1,
+      "message": "ah - ok\n\nlet\u0027s rename this to ftl_rwb_batch_get_data then\n\nwe typically like to have a verb in function names",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9a878a9_f53673d5",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:14:07Z",
+      "side": 1,
+      "message": "ftl_rwb_batch_get_md",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
