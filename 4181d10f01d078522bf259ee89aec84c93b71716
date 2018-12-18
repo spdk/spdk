@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "25c9d85b_353bdfd7",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 773,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-18T14:56:05Z",
+      "side": 1,
+      "message": "Instead, let\u0027s update this handling here such that if qpair-\u003egroup is NULL, it immediately calls the callback. Otherwise, it sends a message.",
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "710ad5ae_30149aec",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6
@@ -42,6 +59,47 @@
         "endLine": 2196,
         "endChar": 28
       },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fa8240a_ca87d1aa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-18T14:56:05Z",
+      "side": 1,
+      "message": "This is running on the wrong thread, so we can\u0027t call spdk_nvmf_qpair_disconnect here. We need to send a message to the thread that owns the qpair. The tricky part is in handling qpairs that haven\u0027t yet been assigned to a thread (via add to poll group) in a thread safe way.",
+      "parentUuid": "710ad5ae_30149aec",
+      "range": {
+        "startLine": 2196,
+        "startChar": 2,
+        "endLine": 2196,
+        "endChar": 28
+      },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaa5d1d6_076ef9bf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2197,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-18T14:56:05Z",
+      "side": 1,
+      "message": "I think this may take some more work to really solve correctly. I\u0027ll think it through and try to suggest something.",
       "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
