@@ -252,6 +252,7 @@ if __name__ == "__main__":
                                                  adrfam=args.adrfam,
                                                  trsvcid=args.trsvcid,
                                                  subnqn=args.subnqn,
+                                                 hostnqn=args.hostnqn,
                                                  hostaddr=args.hostaddr,
                                                  hostsvcid=args.hostsvcid))
 
@@ -268,6 +269,7 @@ if __name__ == "__main__":
     p.add_argument('-s', '--trsvcid',
                    help='NVMe-oF target trsvcid: e.g., a port number')
     p.add_argument('-n', '--subnqn', help='NVMe-oF target subnqn')
+    p.add_argument('-q', '--hostnqn', help='NVMe-oF host subnqn')
     p.add_argument('-i', '--hostaddr',
                    help='NVMe-oF host address: e.g., an ip address or BDF')
     p.add_argument('-c', '--hostsvcid',
