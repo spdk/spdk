@@ -1,0 +1,463 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91bc2ee6_04df7b93",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1190,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "bool instead of int?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d188f8ed_6eab67f8",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "I\u0027d be in favor of using threshold_valid (I\u0027m assuming that\u0027s what thld_vld stands for).\n\nOr I could be completely wrong what it stands for, in which case we should probably still change the name.  :-)",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f57b6955_23bbf617",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "I know this is really pedantic - but usable \u003d\u003d 0 would be clearer, even though !usable still works.\n\nIt makes it more clear that ftl_band_num_usable_lbks returns an integer and not a bool.",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e11b7b79_c1da1bb0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "int \u003d\u003e bool",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8a56749_a67c8628",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "invld \u003d\u003e invalid?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8f1f80e_37e1701e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "return void?  I only see one caller and it doesn\u0027t check the return value",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff68a897_0771f1f6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "should go through all of the FTL patches and make sure these size members clearly state whether it\u0027s number of bytes or number of logical blocks",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0407fde_3609876c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "just compare status \u003d\u003d -EAGAIN inline at the only caller",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5a405ca_69ec6dbd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "function name uses max_ios, but the member name is max_qdepth - can we pick one or the other?\n\nbut since this function is static, could we just check max_qdepth member directly?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5cc4f2e_abd1edfe",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "newline after variable declaration",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5bfdefa6_3a77d17a",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e1c31ac_796319b7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "we typically avoid unused variable declarations like this - something like this is probably better:\n\nif (ftl_band_alloc_md(band)) {\n  assert(false);\n}",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4f8e1ee_3b8c587f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "let\u0027s do something like:\n\nif (status !\u003d 0) {\n  SPDK_ERRLOG(\"some message\");\n  assert(false);\n  return;  /* I think we just want to return in this case. */\n}\n\nThen at least in release builds we get a useful error message.",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4046802_7bd3947c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c91531ec_b7380118",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "newline after variable declaration",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57ae9a74_f0de1350",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "34e86830_9bb2136f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "move declaration out of for loop",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59a675c4_2a44e615",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77614bbf_6d4fb843",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a6bc8f0_f5ed9b14",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b08eda0_b68ef063",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "move int rc declaration to beginning of function",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07bbaa27_db1bd7d5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "let\u0027s remove rc, and move the size_t i declaration up here.",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8768027d_3f612b9f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "if (fn(breloc, io[i])) {\n  SPDK_ERRLOG(\"some message\\n\");\n  assert(false);\n  return; /* do we return here or not? */\n}",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27213069_caaeabb5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "move declaration out of for loop",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0e31a46_fbfce7ec",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "move size_t declaration out of for loop",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46bca885_7eb55bfd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "ftl_reloc_is_halted?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fec314da_eed37225",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:39:12Z",
+      "side": 1,
+      "message": "maybe make halt a bool instead of int?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
