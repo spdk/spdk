@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1cb7a909_16828402",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-18T08:13:30Z",
+      "side": 1,
+      "message": "vm_setup.sh :)",
+      "range": {
+        "startLine": 7,
+        "startChar": 42,
+        "endLine": 7,
+        "endChar": 46
+      },
+      "revId": "3354a2b4cff7f61b01f77ff9b0f1a02e36c7dbbf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "377fe13b_9bf7cc81",
         "filename": "test/common/config/vm_setup.sh",
         "patchSetId": 11
