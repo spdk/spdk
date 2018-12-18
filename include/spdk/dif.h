@@ -154,6 +154,52 @@ int spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_io
 			 uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
 
 /**
+ * Generate DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \param iovcnt Number of elements in iovs.
+ * \param md_buf A contiguous buffer for metadata.
+ * \param md_buf_len Size of the metadata buffer.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the LBA payload.
+ * \param dif_start DIF is set in the first eight bytes of metadata if true,
+ * or in the last eight bytes of metadata otherwise.
+ * \param dif_type Type of DIF.
+ * \param dif_flags Flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param apptag_mask Application Tag Mask.
+ * \param app_tag Application Tag.
+ */
+int spdk_dix_generate(struct iovec *iovs, int iovcnt, void *md_buf, uint32_t md_buf_len,
+		      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		      bool dif_start, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		      uint32_t init_ref_tag, uint16_t app_tag);
+
+/**
+ * Verify DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \param iovcnt Number of elements in iovs.
+ * \param md_buf A contiguous buffer for metadata.
+ * \param md_buf_len Size of the metadata buffer.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the LBA payload.
+ * \param dif_start DIF is set in the first eight bytes of metadata if true,
+ * or in the last eight bytes of metadata otherwise.
+ * \param dif_type Type of DIF.
+ * \param dif_flags Flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param apptag_mask Application Tag Mask.
+ * \param app_tag Application Tag.
+ */
+int spdk_dix_verify(struct iovec *iovs, int iovcnt, void *md_buf, uint32_t md_buf_len,
+		    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		    bool dif_start, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		    uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
+/**
  * Inject bit flip error to extended LBA payload.
  *
  * \param iovs iovec array describing the extended LBA payload.
