@@ -16,6 +16,24 @@
       "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ee7f10b_78c82b13",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-18T06:51:11Z",
+      "side": 1,
+      "message": "Yes, we still need here. You can this function is used to return the subsystem with during constructing the admin qpair.\n\nThis is used in constructing the admin qpair, we need to make sure that requested subsystem of the qpair is in active state. If the subsystem is not active (may be inactiving or pause), we should not let the qpair connects, then we can prevent the further issue.",
+      "parentUuid": "45a48631_596326ea",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
