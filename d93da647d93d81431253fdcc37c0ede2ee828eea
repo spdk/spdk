@@ -46,6 +46,30 @@
       "revId": "d93da647d93d81431253fdcc37c0ede2ee828eea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f36a84c_bce21815",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-18T08:37:15Z",
+      "side": 1,
+      "message": "This should be picked up automatically by check_format, especially since there is no coding guidelines anywhere.\n\nMaybe we could format the code with vim?\n$ vim \"+norm gg\u003dG\" \"+wq\" test/nvmf/rpc/rpc.sh \n\nThe above also needs some extra options whether to use tabs or spaces, use tabwidth\u003d8, etc.\nKarol, can you take a look at this later on?",
+      "parentUuid": "2299e4a3_2fdf8c41",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 4
+      },
+      "revId": "d93da647d93d81431253fdcc37c0ede2ee828eea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
