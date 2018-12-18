@@ -79,6 +79,7 @@ struct spdk_scsi_dev {
 	enum spdk_scsi_pr_type_code type;
 	uint32_t pr_generation;
 	uint64_t crkey;
+	bool ptpl_activated;
 	pthread_mutex_t reservation_lock;
 };
 
