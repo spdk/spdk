@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83780604_c1812bf9",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T21:25:25Z",
+      "side": 1,
+      "message": "post-init",
+      "revId": "dae424177f318e8f0ae93afb2b0a3d13bd390434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67bba5aa_62649236",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T21:25:25Z",
+      "side": 1,
+      "message": "used do \u003d\u003e used to do",
+      "revId": "dae424177f318e8f0ae93afb2b0a3d13bd390434",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
