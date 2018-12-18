@@ -85,6 +85,21 @@ _iov_iter_get_buf(struct _iov_iter *i, void **_buf, uint32_t *_buf_len)
 	}
 }
 
+static void
+_iov_iter_fast_forward(struct _iov_iter *i, uint32_t offset)
+{
+	i->iov_offset = offset;
+	while (i->iovcnt != 0) {
+		if (i->iov_offset < i->iov->iov_len) {
+			break;
+		}
+
+		i->iov_offset -= i->iov->iov_len;
+		i->iov++;
+		i->iovcnt--;
+	}
+}
+
 static bool
 _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 {
@@ -558,4 +573,137 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt,
 		return dif_verify_split(iovs, iovcnt, block_size, guard_interval, num_blocks,
 					dif_type, dif_flags, init_ref_tag, apptag_mask, app_tag);
 	}
+}
+
+static void
+_bit_flip(uint8_t *buf, uint32_t flip_bit)
+{
+	uint8_t byte;
+
+	byte = *buf;
+	byte ^= 1 << flip_bit;
+	*buf = byte;
+}
+
+static int
+_dif_inject_error(struct iovec *iovs, int iovcnt,
+		  uint32_t block_size, uint32_t num_blocks,
+		  uint32_t inject_offset_blocks,
+		  uint32_t inject_offset_bytes,
+		  uint32_t inject_offset_bits)
+{
+	struct _iov_iter iter;
+	uint32_t offset_in_block, buf_len;
+	void *buf;
+
+	_iov_iter_init(&iter, iovs, iovcnt);
+
+	_iov_iter_fast_forward(&iter, block_size * inject_offset_blocks);
+
+	offset_in_block = 0;
+
+	while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+		_iov_iter_get_buf(&iter, &buf, &buf_len);
+
+		if (inject_offset_bytes >= offset_in_block &&
+		    inject_offset_bytes < offset_in_block + buf_len) {
+			buf += inject_offset_bytes - offset_in_block;
+			_bit_flip(buf, inject_offset_bits);
+			return 0;
+		}
+
+		_iov_iter_advance(&iter, buf_len);
+		offset_in_block += buf_len;
+	}
+
+	return -1;
+}
+
+static int
+dif_inject_error(struct iovec *iovs, int iovcnt,
+		 uint32_t block_size, uint32_t num_blocks,
+		 uint32_t start_inject_bytes, uint32_t inject_range_bytes)
+{
+	uint32_t inject_offset_blocks, inject_offset_bytes, inject_offset_bits;
+	uint32_t offset_blocks;
+
+	srand(time(0));
+
+	inject_offset_blocks = rand() % num_blocks;
+	inject_offset_bytes = start_inject_bytes + (rand() % inject_range_bytes);
+	inject_offset_bits = rand() % sizeof(uint8_t);
+
+	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
+		if (offset_blocks == inject_offset_blocks) {
+			return _dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+						 inject_offset_blocks,
+						 inject_offset_bytes,
+						 inject_offset_bits);
+		}
+	}
+
+	return -1;
+}
+
+#define _member_size(type, member)	sizeof(((type *)0)->member)
+
+int
+spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
+		      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+		      bool dif_loc, uint32_t inject_flags)
+{
+	uint32_t guard_interval;
+	int rc;
+
+	if (md_size == 0) {
+		return -EINVAL;
+	}
+
+	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	guard_interval = _get_dif_guard_interval(block_size, md_size, dif_loc);
+
+	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval + offsetof(struct spdk_dif, ref_tag),
+				      _member_size(struct spdk_dif, ref_tag));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
+			return rc;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval + offsetof(struct spdk_dif, app_tag),
+				      _member_size(struct spdk_dif, app_tag));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
+			return rc;
+		}
+	}
+	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      guard_interval,
+				      _member_size(struct spdk_dif, guard));
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Guard.\n");
+			return rc;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_DATA_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, block_size, num_blocks,
+				      0,
+				      guard_interval);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to data block.\n");
+			return rc;
+		}
+	}
+
+	return 0;
 }
