@@ -158,7 +158,7 @@ DEFINE_STUB(spdk_scsi_dev_construct, struct spdk_scsi_dev *,
 	    (const char *name, const char **bdev_name_list,
 	     int *lun_id_list, int num_luns, uint8_t protocol_id,
 	     void (*hotremove_cb)(const struct spdk_scsi_lun *, void *),
-	     void *hotremove_ctx),
+	     void *hotremove_ctx, const char *pr_file),
 	    NULL);
 
 DEFINE_STUB_V(spdk_scsi_dev_destruct, (struct spdk_scsi_dev *dev));
