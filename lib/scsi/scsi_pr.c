@@ -634,3 +634,83 @@ invalid:
 				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
 	return -EINVAL;
 }
+
+static int
+spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
+			  uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg;
+	struct spdk_scsi_pr_in_read_keys_data *keys;
+	uint16_t count = 0;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ KEYS\n");
+
+	if (data_len < sizeof(keys->header)) {
+		return -ENOMEM;
+	}
+
+	pthread_mutex_lock(&dev->reservation_lock);
+	keys = (struct spdk_scsi_pr_in_read_keys_data *)data;
+
+	to_be32(&keys->header.pr_generation, dev->pr_generation);
+	TAILQ_FOREACH(reg, &dev->reg_head, link) {
+		if ((count * 8 + sizeof(keys->header)) > data_len) {
+			break;
+		}
+		to_be64(&keys->rkeys[count], reg->rkey);
+		count++;
+	}
+	to_be32(&keys->header.addiontal_len, count * 8);
+
+	pthread_mutex_unlock(&dev->reservation_lock);
+	return (sizeof(keys->header) + count * 8);
+}
+
+int
+spdk_scsi_pr_in(struct spdk_scsi_task *task,
+		uint8_t *cdb, uint8_t *data,
+		uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun;
+	struct spdk_scsi_dev *dev;
+	enum spdk_scsi_pr_in_action_code action;
+	int rc = 0;
+
+	lun = task->lun;
+	if (!lun) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NOT_READY,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+	dev = lun->dev;
+	if (!dev) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NOT_READY,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	action = cdb[1] & 0x1f;
+
+	switch (action) {
+	case SPDK_SCSI_PR_IN_READ_KEYS:
+		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		break;
+	default:
+		goto invalid;
+	}
+
+	return rc;
+
+invalid:
+	spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+				  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+				  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+				  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	return -EINVAL;
+}
