@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67721f67_e9807178",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:50:47Z",
+      "side": 1,
+      "message": "This need to be removed.",
+      "range": {
+        "startLine": 720,
+        "startChar": 0,
+        "endLine": 720,
+        "endChar": 39
+      },
+      "revId": "cfb0b8bc82020ce327f11527a47ed9b0bc020477",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
