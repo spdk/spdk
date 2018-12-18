@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3b4a854_21d738ab",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:03:58Z",
+      "side": 1,
+      "message": "This sentence doesn\u0027t make sense. I think you should something like \"The input buffer is passed to free() in any case and must not be used anymore.\" or something like that. The sentence from commit message also looks good to be pasted here.",
+      "range": {
+        "startLine": 78,
+        "startChar": 73,
+        "endLine": 80,
+        "endChar": 77
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f899aea_a9d42b5d",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:03:58Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 97,
+        "startChar": 73,
+        "endLine": 99,
+        "endChar": 76
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "936b350f_6942e733",
+        "filename": "lib/util/string.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T11:03:58Z",
+      "side": 1,
+      "message": "I think you need va_end(args_copy). See `man va_copy`. It needs to be added in spdk_vsprintf_alloc() as well.",
+      "range": {
+        "startLine": 118,
+        "startChar": 2,
+        "endLine": 118,
+        "endChar": 27
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
