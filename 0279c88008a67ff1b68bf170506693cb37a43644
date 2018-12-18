@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b357eb94_615f6468",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:01:24Z",
+      "side": 1,
+      "message": "But it would be safer from a typing perspective to do things like:\n\nstruct ftl_md_io *md_io;\n\nmd_io-\u003eio.flags \u0026\u003d ~(SOME_FLAG | SOME_FLAG2);\n\ninstead of\n\nftl_io_clear_flags(md_io, SOME_FLAG | SOME_FLAG2);\n\nThis would be less prone to errors - things like requiring that the base ftl_io structure is the first member in the derived struct.  It also looks like maybe removing the macros makes the code smaller too (from a number of characters perspective), and would be one less layer of indirection for code readers.",
+      "revId": "0279c88008a67ff1b68bf170506693cb37a43644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2279d671_52cbd119",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-18T20:01:24Z",
+      "side": 1,
+      "message": "Can we just remove FTL_TRACE_ENABLED?\n\nFor other modules (nvmf, bdev, iscsi), the tracing is automatically enabled - it\u0027s not a compile time option.",
+      "revId": "0279c88008a67ff1b68bf170506693cb37a43644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
