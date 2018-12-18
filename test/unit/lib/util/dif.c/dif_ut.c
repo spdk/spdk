@@ -545,6 +545,158 @@ dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test(void)
 	}
 }
 
+static void
+_dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
+			     uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			     uint32_t inject_flags, bool dif_loc)
+{
+	uint32_t dif_flags;
+	int rc;
+
+	dif_flags = SPDK_DIF_GUARD_CHECK | SPDK_DIF_APPTAG_CHECK | SPDK_DIF_REFTAG_CHECK;
+
+	rc = ut_data_pattern_generate(iovs, iovcnt, block_size, md_size, num_blocks);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(iovs, iovcnt, block_size, md_size, num_blocks,
+			       dif_loc, SPDK_DIF_TYPE1, dif_flags, 88, 0x88);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_inject_error(iovs, iovcnt, block_size, md_size, num_blocks,
+				   dif_loc, inject_flags);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(iovs, iovcnt, block_size, md_size, num_blocks,
+			     dif_loc, SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88);
+	CU_ASSERT(rc != 0);
+
+	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
+	CU_ASSERT((rc == 0 && !(inject_flags & SPDK_DIF_DATA_ERROR)) ||
+		  (rc != 0 && (inject_flags & SPDK_DIF_DATA_ERROR)));
+}
+
+static void
+dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
+			    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			    uint32_t inject_flags)
+{
+	/* The case that DIF is contained in the first 8 bytes of metadata. */
+	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
+				     inject_flags, false);
+
+	/* The case that DIF is contained in the last 8 bytes of metadata. */
+	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
+				     inject_flags, true);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test(void)
+{
+	struct iovec iovs[4];
+	int i, num_blocks;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], (4096 + 128) * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 4, 4096 + 128, 128, num_blocks, SPDK_DIF_DATA_ERROR);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096);
+	_iov_alloc_buf(&iovs[1], 128);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 2048);
+	_iov_alloc_buf(&iovs[1], 2048 + 128);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096 + 1);
+	_iov_alloc_buf(&iovs[1], 127);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096 + 3);
+	_iov_alloc_buf(&iovs[1], 125);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
+static void
+dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test(void)
+{
+	struct iovec iovs[2];
+
+	_iov_alloc_buf(&iovs[0], 4096 + 6);
+	_iov_alloc_buf(&iovs[1], 122);
+
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_GUARD_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_APPTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_REFTAG_ERROR);
+	dif_inject_error_and_verify(iovs, 2, 4096 + 128, 128, 1, SPDK_DIF_DATA_ERROR);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -584,7 +736,19 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test",
 			    dif_sec_512_md_8_prchk_7_multi_iovs_complex_splits_test) == NULL ||
 		CU_add_test(suite, "dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test",
-			    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test) == NULL
+			    dif_sec_4096_md_128_prchk_7_multi_iovs_complex_splits_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_and_md_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_data_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_guard_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8__multi_iovs_split_apptag_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test) == NULL ||
+		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test",
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
