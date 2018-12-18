@@ -9,6 +9,8 @@ function test_subsystems() {
 
 	rpc_py="$spdk_rpc_py"
 	clear_config_py="$spdk_clear_config_py"
+	receive_notifications
+
 	load_nvme
 	create_bdev_subsystem_config
 	test_json_config
@@ -16,6 +18,8 @@ function test_subsystems() {
 	clear_bdev_subsystem_config
 	test_global_params "spdk_tgt"
 	kill_targets
+
+	verify_notifications Nvme0n1
 }
 
 timing_enter json_config
