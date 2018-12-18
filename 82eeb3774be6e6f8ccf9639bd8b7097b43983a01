@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ec166721_021b95ca",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T20:47:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4cedc6d_a0770c20",
+      "revId": "82eeb3774be6e6f8ccf9639bd8b7097b43983a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "adc776e8_bfa308d4",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-18T18:17:35Z",
       "side": 1,
       "message": "I like breaking this out for code reuse - but could you break that out into a separate patch?  So the first patch creates parse_next_key and modifies the trid code to use it.  This patch then just adds the hostid parsing.",
+      "revId": "82eeb3774be6e6f8ccf9639bd8b7097b43983a01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "340e5781_3b99a76a",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 726,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T20:47:10Z",
+      "side": 1,
+      "message": "Will do.",
+      "parentUuid": "adc776e8_bfa308d4",
       "revId": "82eeb3774be6e6f8ccf9639bd8b7097b43983a01",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
