@@ -286,6 +286,30 @@
     },
     {
       "key": {
+        "uuid": "0f450c4c_1deb01d1",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-18T08:03:52Z",
+      "side": 1,
+      "message": "I remember I was able to run and pass Nmvf and iSCSI tests. Unit tests, event and i think blockdev as well.\nVhost too, but only using libvirt provider and you also have to use some additional scripts created here: https://review.gerrithub.io/#/c/spdk/spdk/+/422948/",
+      "parentUuid": "83e23ea1_6c138b74",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "154b4d2d_6f1902ad",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
