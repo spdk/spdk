@@ -3895,8 +3895,10 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 				     _spdk_bdev_io_submit, bdev_io);
 	}
 
-	spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
-	spdk_poller_unregister(&qos->poller);
+	if (qos->thread != NULL) {
+		spdk_put_io_channel(spdk_io_channel_from_ctx(qos->ch));
+		spdk_poller_unregister(&qos->poller);
+	}
 
 	free(qos);
 
@@ -3915,7 +3917,11 @@ _spdk_bdev_disable_qos_msg_done(struct spdk_io_channel_iter *i, int status)
 	thread = bdev->internal.qos->thread;
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
-	spdk_thread_send_msg(thread, _spdk_bdev_disable_qos_done, ctx);
+	if (thread != NULL) {
+		spdk_thread_send_msg(thread, _spdk_bdev_disable_qos_done, ctx);
+	} else {
+		_spdk_bdev_disable_qos_done(ctx);
+	}
 }
 
 static void
@@ -4052,7 +4058,6 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 
 	if (disable_rate_limit == false) {
 		if (bdev->internal.qos == NULL) {
-			/* Enabling */
 			bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
 			if (!bdev->internal.qos) {
 				pthread_mutex_unlock(&bdev->internal.mutex);
@@ -4061,7 +4066,10 @@ spdk_bdev_set_qos_rate_limits(struct spdk_bdev *bdev, uint64_t *limits,
 				cb_fn(cb_arg, -ENOMEM);
 				return;
 			}
+		}
 
+		if (bdev->internal.qos->thread == NULL) {
+			/* Enabling */
 			_spdk_bdev_set_qos_rate_limits(bdev, limits);
 
 			spdk_for_each_channel(__bdev_to_io_dev(bdev),
