@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efb1b0b6_5098af13",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T06:51:58Z",
+      "side": 1,
+      "message": "means",
+      "range": {
+        "startLine": 761,
+        "startChar": 49,
+        "endLine": 761,
+        "endChar": 54
+      },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "710ad5ae_30149aec",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T06:51:58Z",
+      "side": 1,
+      "message": "If we come here, rqpair-\u003eqpair.group is always NULL?\nOtherwise if rqpair-\u003eqpair.group is not NULL, qpair-\u003egroup-\u003ethread is always equal to spdk_get_thread()?",
+      "range": {
+        "startLine": 2196,
+        "startChar": 2,
+        "endLine": 2196,
+        "endChar": 28
+      },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7fe2e71d_b9b182ed",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2213,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T06:51:58Z",
+      "side": 1,
+      "message": "If we come here, rqpair-\u003eqpair.group is always NULL?\nOtherwise if rqpair-\u003eqpair.group is not NULL, qpair-\u003egroup-\u003ethread is always equal to spdk_get_thread()?",
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
