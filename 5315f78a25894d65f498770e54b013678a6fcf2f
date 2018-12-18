@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c88a2ef5_525f09e9",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-18T14:41:23Z",
+      "side": 1,
+      "message": "If dif_start set to 1, the PI is in the first 8 bytes of metadata, but the code here is doing opposite action.",
+      "revId": "5315f78a25894d65f498770e54b013678a6fcf2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
