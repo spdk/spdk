@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "3a0cf540_6b14e85c",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:30:05Z",
+      "side": 1,
+      "message": "Correct, we should solely rely on md-\u003eref_cnt to check if we can free the metadata buffers and  assert that the band is not in open state when freeing the metadata.",
+      "parentUuid": "a36163c1_ebe549dc",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9fd47650_83d8e564",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 24
@@ -64,6 +82,24 @@
       "writtenOn": "2018-12-17T21:32:39Z",
       "side": 1,
       "message": "should this be an assert instead?",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "482c5f0c_291548ff",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:30:05Z",
+      "side": 1,
+      "message": "Yeah, this should be checked before calling this function and it should be asserted here that md-\u003eref_cnt \u003d\u003d 0.",
+      "parentUuid": "9fd47650_83d8e564",
       "revId": "b0010009848f223ee400d7288cd05a78655de544",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +140,24 @@
     },
     {
       "key": {
+        "uuid": "294803ac_b2b98e27",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:30:05Z",
+      "side": 1,
+      "message": "It can happen - currently when a write fails we\u0027re closing the band immediately and defragging it. So if two writes fail, both will try to set the band as closed, so we need this kind of check here.",
+      "parentUuid": "9c3e6e37_e82f02fe",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b63161cb_7622ce04",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 24
@@ -138,6 +192,24 @@
     },
     {
       "key": {
+        "uuid": "466175b3_acad4721",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 393,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:30:05Z",
+      "side": 1,
+      "message": "It\u0027s passed to ftl_band_read_md, so it needs to follow the ftl_md_pack_fn signature which requires result to be returned. If we\u0027re unpacking the whole metadata we\u0027re checking its header (version, crc32, UUID, etc.) which can fail. There\u0027s nothing to check when reading the LBA map, so we just return success here.",
+      "parentUuid": "d47751b4_504adec4",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b89d100_f797d9d8",
         "filename": "lib/ftl/ftl_band.c",
         "patchSetId": 24
@@ -149,6 +221,24 @@
       "writtenOn": "2018-12-17T21:32:39Z",
       "side": 1,
       "message": "assert() instead?\n\nor even something like this:\n\nif (ftl_lba_invalid(lab)) {\n  assert(false);\n  return;\n}\n\nLet\u0027s go through other patches in this series and add asserts in cases where this shouldn\u0027t happen.",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c172b775_45787b59",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 499,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:30:05Z",
+      "side": 1,
+      "message": "But this is a valid case, which does happen. The LBA is set to invalid if we\u0027re writing non-user data. It happens during flush() calls and during shutdown (which is basically a flush on the whole open band). We try to have asserts checking cases that should never happen.",
+      "parentUuid": "4b89d100_f797d9d8",
       "revId": "b0010009848f223ee400d7288cd05a78655de544",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
