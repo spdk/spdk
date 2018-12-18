@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "768083a1_fb86f2ac",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-18T03:24:37Z",
+      "side": 1,
+      "message": "yes，thanks",
+      "parentUuid": "dd2517dd_5a9b031f",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1187deb6_162b84c6",
         "filename": "lib/vhost/rte_vhost/rte_vhost.h",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-17T09:06:52Z",
       "side": 1,
       "message": "uint16_t should be enough, referenced from vhost-user or virtio spec, same suggestion for other inflight_desc_size field.",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "244ed175_45d10694",
+        "filename": "lib/vhost/rte_vhost/rte_vhost.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-18T03:24:37Z",
+      "side": 1,
+      "message": "yes，thanks",
+      "parentUuid": "1187deb6_162b84c6",
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0c722da7_6ec6323b",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 767,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-18T03:24:37Z",
+      "side": 1,
+      "message": "Sorry, this commits can be deleted",
+      "parentUuid": "6a7475db_93fb35ce",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e23dce62_5ab55557",
         "filename": "lib/vhost/rte_vhost/vhost_user.c",
         "patchSetId": 7
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "94061afd_66935855",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 779,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-18T03:24:37Z",
+      "side": 1,
+      "message": "Yes， thanks",
+      "parentUuid": "e23dce62_5ab55557",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "169afd19_ed7554a8",
         "filename": "lib/vhost/rte_vhost/vhost_user.h",
         "patchSetId": 7
@@ -81,6 +153,24 @@
       "writtenOn": "2018-12-17T09:06:52Z",
       "side": 1,
       "message": "Rename to VHOST_USER_SET_INFLIGHT_ADDR maybe better.",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "56f9822c_2e5a2149",
+        "filename": "lib/vhost/rte_vhost/vhost_user.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-18T03:24:37Z",
+      "side": 1,
+      "message": "This is determined by the patch on the QEMU side. We need to look at the final name on the QEMU side",
+      "parentUuid": "169afd19_ed7554a8",
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
