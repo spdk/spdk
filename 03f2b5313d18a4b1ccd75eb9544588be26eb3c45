@@ -52,6 +52,24 @@
       "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20759385_4f42f95f",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-18T23:09:14Z",
+      "side": 1,
+      "message": "Hi Seth,\nExcept active, there is other states like pausing, can you make sure that in all the state, it can work well? At least, this code actually can present this. It means that if the subsystem is not active, we will not create the related connection.",
+      "parentUuid": "7014c5dc_c44fc433",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
