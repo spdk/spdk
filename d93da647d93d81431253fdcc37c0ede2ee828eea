@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2299e4a3_2fdf8c41",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 13
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-18T07:58:04Z",
+      "side": 1,
+      "message": "Chen, sorry... I have to:P\nMixed tabs and spaces across file. Please use tabs to keep the file consistent:)\n\nOverall the rest is OK!",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 4
+      },
+      "revId": "d93da647d93d81431253fdcc37c0ede2ee828eea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
