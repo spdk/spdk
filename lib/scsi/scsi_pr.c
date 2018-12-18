@@ -342,6 +342,59 @@ check_condition:
 	return -EINVAL;
 }
 
+static int
+spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_registrant *reg, *tmp;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR OUT CLEAR: rkey 0x%"PRIx64"\n", rkey);
+
+	pthread_mutex_lock(&dev->reservation_lock);
+	reg = spdk_scsi_pr_get_registrant(dev, task->initiator_port, task->target_port);
+	if (!reg) {
+		SPDK_ERRLOG("CLEAR: no registration\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NOT_READY,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		pthread_mutex_unlock(&dev->reservation_lock);
+		return -EINVAL;
+	}
+
+	if (rkey != reg->rkey) {
+		SPDK_ERRLOG("CLEAR: reservation key 0x%"PRIx64" doesn't match "
+			    "registrant's key 0x%"PRIx64"\n", rkey, reg->rkey);
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_RESERVATION_CONFLICT,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		pthread_mutex_unlock(&dev->reservation_lock);
+		return -EINVAL;
+	}
+
+	TAILQ_FOREACH(tmp, &dev->reg_head, link) {
+		TAILQ_REMOVE(&dev->reg_head, tmp, link);
+		if (tmp != reg) {
+			/* TODO: Unit Attention for other initiator ports */
+		}
+		free(tmp);
+	}
+
+	if (dev->holder) {
+		dev->crkey = 0;
+		dev->type = 0;
+		dev->holder = NULL;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "CLEAR: release reservation\n");
+	}
+
+	dev->pr_generation++;
+	pthread_mutex_unlock(&dev->reservation_lock);
+
+	return 0;
+}
+
 int
 spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		 uint8_t *cdb, uint8_t *data,
@@ -400,6 +453,9 @@ spdk_scsi_pr_out(struct spdk_scsi_task *task,
 		break;
 	case SPDK_SCSI_PR_OUT_RELEASE:
 		rc = spdk_scsi_pr_out_release(task, type, rkey);
+		break;
+	case SPDK_SCSI_PR_OUT_CLEAR:
+		rc = spdk_scsi_pr_out_clear(task, rkey);
 		break;
 	default:
 		SPDK_ERRLOG("Invalid service action code %u\n", action);
