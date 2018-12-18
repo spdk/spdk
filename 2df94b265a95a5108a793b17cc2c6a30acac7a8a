@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "178065db_a8df324f",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T14:07:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "864fea41_4fc29049",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11084013_52244a58",
         "filename": "lib/event/json_config.h",
         "patchSetId": 36
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a11861b7_78a40d47",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T14:07:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "11084013_52244a58",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7a3f36c6_363158f0",
         "filename": "lib/event/json_config.h",
         "patchSetId": 36
@@ -47,6 +83,30 @@
       "writtenOn": "2018-12-17T10:01:21Z",
       "side": 1,
       "message": "since we\u0027re here - should it include the SPDK_ prefix like the rest of SPDK?\ne.g. SPDK_EVENT_JSON_CONFIG",
+      "range": {
+        "startLine": 2,
+        "startChar": 8,
+        "endLine": 2,
+        "endChar": 32
+      },
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c376afb_d9831968",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T14:07:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a3f36c6_363158f0",
       "range": {
         "startLine": 2,
         "startChar": 8,
