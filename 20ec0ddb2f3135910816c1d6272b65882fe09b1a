@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "06a7778e_1701b370",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 1036,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T23:32:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e72dffc6_05ecdf17",
+      "revId": "20ec0ddb2f3135910816c1d6272b65882fe09b1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "577240e1_4d187dfd",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-18T18:22:32Z",
       "side": 1,
       "message": "I like using spdk_nvme_connect() here instead.  Could we do that in a separate patch before this one?  Then this patch only focuses on adding the hostaddr/svcid.",
+      "revId": "20ec0ddb2f3135910816c1d6272b65882fe09b1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "740472d5_27ffbbd8",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1217,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T23:32:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "577240e1_4d187dfd",
       "revId": "20ec0ddb2f3135910816c1d6272b65882fe09b1a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
