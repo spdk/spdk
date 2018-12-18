@@ -456,6 +456,7 @@ function rbd_setup() {
 		export PG_NUM=128
 		export RBD_POOL=rbd
 		export RBD_NAME=foo
+		$NS_CMD $rootdir/scripts/ceph/stop.sh || true
 		$NS_CMD $rootdir/scripts/ceph/start.sh $1
 
 		$NS_CMD ceph osd pool create $RBD_POOL $PG_NUM || true
