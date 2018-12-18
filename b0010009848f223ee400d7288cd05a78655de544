@@ -347,6 +347,24 @@
     },
     {
       "key": {
+        "uuid": "23157329_d4470028",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T09:42:59Z",
+      "side": 1,
+      "message": "Write pointer uses the chunk list as a circular one (i.e. we can just do CIRCLEQ_LOOP_NEXT() instead of TAILQ_NEXT() \u003d\u003d NULL ? TAILQ_HEAD() : TAILQ_NEXT()). So it\u0027s not a big advantage, but just seems like a better fit here.",
+      "parentUuid": "b5fd7b11_8d9cdbf2",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ca988483_f6782c4b",
         "filename": "lib/ftl/ftl_band.h",
         "patchSetId": 24
