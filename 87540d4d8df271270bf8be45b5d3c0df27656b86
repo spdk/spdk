@@ -159,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "f0bfc315_1803bda9",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-18T16:20:50Z",
+      "side": 1,
+      "message": "I will add such check in initialization commit.",
+      "parentUuid": "d372ac1a_754e56c9",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06fa0dff_ef1d9e1b",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 18
@@ -170,6 +188,24 @@
       "writtenOn": "2018-12-17T21:45:53Z",
       "side": 1,
       "message": "Some of these small inline functions I think we can remove.  It\u0027s easier to understand when reading the code if we just see \"lba \u003d\u003d FTL_LBA_INVALID\" in the code instead of needing the extra function call.\n\nIt also doesn\u0027t save us much typing:\nstrlen(\"lba \u003d\u003d FTL_LBA_INVALID\") \u003d\u003d 22\nstrlen(\"ftl_lba_invalid(lba)\") \u003d\u003d 20",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a68d8409_42873141",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-18T16:20:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06fa0dff_ef1d9e1b",
       "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
