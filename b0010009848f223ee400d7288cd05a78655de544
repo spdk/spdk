@@ -325,6 +325,24 @@
     },
     {
       "key": {
+        "uuid": "05cf7095_18403c81",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:58Z",
+      "side": 1,
+      "message": "The ftl_rwb_batch structure is private to this module (it\u0027s used to maintain a lot of internal state like grouping the entries, keeping track of the number of acquired / ready entries etc.), so these getters are necessary.",
+      "parentUuid": "7c25f22c_407b043b",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92bfc48f_5191ccc5",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 24
@@ -342,6 +360,24 @@
     },
     {
       "key": {
+        "uuid": "155ce1a4_ed2fe95c",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:58Z",
+      "side": 1,
+      "message": "Same here.",
+      "parentUuid": "92bfc48f_5191ccc5",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db9ce4f3_5de45f09",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 24
@@ -353,6 +389,24 @@
       "writtenOn": "2018-12-17T22:03:31Z",
       "side": 1,
       "message": "let\u0027s drop this function",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec713075_0d150e74",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:58Z",
+      "side": 1,
+      "message": "And here.",
+      "parentUuid": "db9ce4f3_5de45f09",
       "revId": "b0010009848f223ee400d7288cd05a78655de544",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -387,6 +441,24 @@
       "writtenOn": "2018-12-17T22:03:31Z",
       "side": 1,
       "message": "this change doesn\u0027t seem related to this patch",
+      "revId": "b0010009848f223ee400d7288cd05a78655de544",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00b2552a_543d2dbb",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 24
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T08:27:58Z",
+      "side": 1,
+      "message": "That\u0027s correct, it\u0027s not related to this patch at all. Nevertheless, the change is pretty useful, because it speeds up the search significantly (especially if the code is on some kind of network fs). I\u0027ll move it to the patch with ftl tests.",
+      "parentUuid": "fc98eea1_c6761f4a",
       "revId": "b0010009848f223ee400d7288cd05a78655de544",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
