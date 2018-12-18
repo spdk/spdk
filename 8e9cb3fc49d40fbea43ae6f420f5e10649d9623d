@@ -16,6 +16,24 @@
       "revId": "8e9cb3fc49d40fbea43ae6f420f5e10649d9623d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95ad2973_5707352c",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-18T17:27:17Z",
+      "side": 1,
+      "message": "spdk_nvmf_ctrlr_connect does, in some cases, send a message to a different thread. So in those cases we have to call poll_threads() to process the messages or ASAN reports a memory leak. In this particular case, it does not send an event today. But in order to make the unit tests implementation agnostic I chose to poll after each spdk_nvmf_ctrlr_connect call.",
+      "parentUuid": "1268c822_a510a7b5",
+      "revId": "8e9cb3fc49d40fbea43ae6f420f5e10649d9623d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
