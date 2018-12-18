@@ -107,6 +107,53 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt,
 		    uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
 
 /**
+ * Copy data and generate DIF for extended LBA payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \param iovcnt iovcnt Number of elements in the iovec array.
+ * \param bounce_iov A contiguous buffer forming extended LBA
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the LBA payload.
+ * \param dif_loc DIF location. If true, DIF is set in the first eight bytes of metadata.
+ * If false, DIF is set in the last eight bytes of metadata.
+ * \param dif_type Type of DIF.
+ * \param dif_flags Flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param app_tag Application Tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+			   uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			   bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+			   uint32_t init_ref_tag, uint16_t app_tag);
+
+/**
+ * Verify DIF and copy data for extended LBA payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param bounce_buf A contiguous buffer forming extended LBA payload.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the LBA payload.
+ * \param dif_loc DIF location. If true, DIF is set in the first eight bytes of metadata.
+ * If false, DIF is set in the last eight bytes of metadata.
+ * \param dif_type Type of DIF.
+ * \param dif_flags Flag to specify the DIF action.
+ * \param init_ref_tag Initial Reference Tag.
+ * \param apptag_mask Application Tag Mask.
+ * \param app_tag Application Tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+			 uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			 bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+			 uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
+/**
  * Inject bit flip error to extended LBA payload.
  *
  * \param iovs iovec array describing the extended LBA payload.
