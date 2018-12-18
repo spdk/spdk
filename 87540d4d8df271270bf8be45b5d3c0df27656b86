@@ -225,6 +225,24 @@
     },
     {
       "key": {
+        "uuid": "397c51ce_4ec8b1a1",
+        "filename": "lib/ftl/ftl_utils.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-18T12:57:09Z",
+      "side": 1,
+      "message": "I\u0027ve added spdk_divide_round_up, please see https://review.gerrithub.io/c/spdk/spdk/+/437649",
+      "parentUuid": "7d4d3e1b_98459c51",
+      "revId": "87540d4d8df271270bf8be45b5d3c0df27656b86",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f7321ca_3064f752",
         "filename": "lib/ftl/ftl_utils.h",
         "patchSetId": 18
