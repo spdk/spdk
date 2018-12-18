@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f9a20ca_b1fe4ad0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-18T07:42:30Z",
+      "side": 1,
+      "message": "is this necessary?\nif necessary, spdk_delay_us(10) should be used instead here? (see test/common/lib/test_env.c).",
+      "range": {
+        "startLine": 1471,
+        "startChar": 1,
+        "endLine": 1471,
+        "endChar": 25
+      },
+      "revId": "cd92018c2ac0553cc45324362407ae10a24a58b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
