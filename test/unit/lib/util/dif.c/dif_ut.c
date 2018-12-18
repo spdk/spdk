@@ -701,6 +701,185 @@ dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test(void)
 	_iov_free_buf(&iovs[1]);
 }
 
+static void
+dif_copy_sec_512_md_0_error(void)
+{
+	struct iovec iov = {};
+	int rc;
+
+	rc = spdk_dif_generate_copy(&iov, 1, NULL, 512, 0, 1, false, SPDK_DIF_TYPE1, 0, 0, 0);
+	CU_ASSERT(rc != 0);
+
+	rc = spdk_dif_verify_copy(&iov, 1, NULL, 512, 0, 1, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	CU_ASSERT(rc != 0);
+}
+
+static void
+dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
+			uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			bool dif_start, enum spdk_dif_type dif_type, uint32_t dif_flags,
+			uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	int rc;
+
+	rc = ut_data_pattern_generate(iovs, iovcnt, block_size - md_size, 0, num_blocks);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov,
+				    block_size, md_size, num_blocks,
+				    dif_start, dif_type, dif_flags,
+				    init_ref_tag, app_tag);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify_copy(iovs, iovcnt, bounce_iov,
+				  block_size, md_size, num_blocks,
+				  dif_start, dif_type, dif_flags,
+				  init_ref_tag, apptag_mask, app_tag);
+	CU_ASSERT(rc == 0);
+
+
+	rc = ut_data_pattern_verify(iovs, iovcnt, block_size - md_size, 0, num_blocks);
+	CU_ASSERT(rc == 0);
+}
+
+static void
+dif_copy_sec_512_md_8_prchk_0_single_iov(void)
+{
+	struct iovec iov, bounce_iov;
+
+	_iov_alloc_buf(&iov, 512 * 4);
+	_iov_alloc_buf(&bounce_iov, (512 + 8) * 4);
+
+	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 512 + 8, 8, 4,
+				false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	dif_copy_gen_and_verify(&iov, 1, &bounce_iov, 512 + 8, 8, 4,
+				true, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+
+	_iov_free_buf(&iov);
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs(void)
+{
+	struct iovec iovs[4], bounce_iov;
+	int i, num_blocks;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 512 * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	_iov_alloc_buf(&bounce_iov, (512 + 8) * num_blocks);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
+				false, SPDK_DIF_TYPE1, 0, 22, 0xFFFF, 0x22);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_GUARD_CHECK, 22, 0xFFFF, 0x22);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_APPTAG_CHECK, 22, 0xFFFF, 0x22);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 512 + 8, 8, num_blocks,
+				false, SPDK_DIF_TYPE1, SPDK_DIF_REFTAG_CHECK, 22, 0xFFFF, 0x22);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_4096_md_128_prchk_7_multi_iovs(void)
+{
+	struct iovec iovs[4], bounce_iov;
+	uint32_t dif_flags;
+	int i, num_blocks;
+
+	dif_flags = SPDK_DIF_GUARD_CHECK | SPDK_DIF_APPTAG_CHECK | SPDK_DIF_REFTAG_CHECK;
+
+	num_blocks = 0;
+
+	for (i = 0; i < 4; i++) {
+		_iov_alloc_buf(&iovs[i], 4096 * (i + 1));
+		num_blocks += i + 1;
+	}
+
+	_iov_alloc_buf(&bounce_iov, (4096 + 128) * num_blocks);
+
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+	dif_copy_gen_and_verify(iovs, 4, &bounce_iov, 4096 + 128, 128, num_blocks,
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+
+	for (i = 0; i < 4; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data(void)
+{
+	struct iovec iovs[2], bounce_iov;
+	uint32_t dif_flags;
+
+	dif_flags = SPDK_DIF_GUARD_CHECK | SPDK_DIF_APPTAG_CHECK | SPDK_DIF_REFTAG_CHECK;
+
+	_iov_alloc_buf(&iovs[0], 256);
+	_iov_alloc_buf(&iovs[1], 256);
+
+	_iov_alloc_buf(&bounce_iov, 512 + 8);
+
+	dif_copy_gen_and_verify(iovs, 2, &bounce_iov, 512 + 8, 8, 1,
+				false, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+
+	_iov_free_buf(&iovs[0]);
+	_iov_free_buf(&iovs[1]);
+	_iov_free_buf(&bounce_iov);
+}
+
+static void
+dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits(void)
+{
+	struct iovec iovs[6], bounce_iov;
+	uint32_t dif_flags;
+	int i;
+
+	dif_flags = SPDK_DIF_GUARD_CHECK | SPDK_DIF_APPTAG_CHECK | SPDK_DIF_REFTAG_CHECK;
+
+	/* data[0][255:0] */
+	_iov_alloc_buf(&iovs[0], 256);
+
+	/* data[0][511:256], data[1][255:0] */
+	_iov_alloc_buf(&iovs[1], 256 + 256);
+
+	/* data[1][382:256] */
+	_iov_alloc_buf(&iovs[2], 128);
+
+	/* data[1][383] */
+	_iov_alloc_buf(&iovs[3], 1);
+
+	/* data[1][510:384] */
+	_iov_alloc_buf(&iovs[4], 126);
+
+	/* data[1][511], data[2][511:0], data[3][511:0] */
+	_iov_alloc_buf(&iovs[5], 1 + 512 * 2);
+
+	_iov_alloc_buf(&bounce_iov, (512 + 8) * 4);
+
+	dif_copy_gen_and_verify(iovs, 6, &bounce_iov, 512 + 8, 8, 4,
+				true, SPDK_DIF_TYPE1, dif_flags, 22, 0xFFFF, 0x22);
+
+	for (i = 0; i < 6; i++) {
+		_iov_free_buf(&iovs[i]);
+	}
+	_iov_free_buf(&bounce_iov);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -752,7 +931,18 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8__multi_iovs_split_apptag_test",
 			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_apptag_test) == NULL ||
 		CU_add_test(suite, "dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test",
-			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test) == NULL
+			    dif_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_reftag_test) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_512_md_0_error", dif_copy_sec_512_md_0_error) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_single_iov",
+			    dif_copy_sec_512_md_8_prchk_0_single_iov) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs",
+			    dif_copy_sec_512_md_8_prchk_0_1_2_4_multi_iovs) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_4096_md_128_prchk_7_multi_iovs",
+			    dif_copy_sec_4096_md_128_prchk_7_multi_iovs) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data",
+			    dif_copy_sec_512_md_8_prchk_7_multi_iovs_split_data) == NULL ||
+		CU_add_test(suite, "dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits",
+			    dif_copy_sec_512_md_8_prchk_7_multi_iovs_complex_splits) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
