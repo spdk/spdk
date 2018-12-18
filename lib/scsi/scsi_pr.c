@@ -34,6 +34,11 @@
 #include "scsi_internal.h"
 
 #include "spdk/endian.h"
+#include "spdk/json.h"
+
+static int
+spdk_scsi_dev_update_aptpl(struct spdk_scsi_dev *dev,
+			   struct spdk_scsi_task *task, bool aptpl);
 
 /* Get registrant by I_T nexus */
 static struct spdk_scsi_pr_registrant *
@@ -96,7 +101,7 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 		      "sa_key 0x%"PRIx64", reservation type %u\n", rkey, sa_rkey, dev->type);
 
 	/* TODO: don't support now */
-	if (spec_i_pt || all_tg_pt || aptpl) {
+	if (spec_i_pt || all_tg_pt || (!dev->ptpl_activated && aptpl)) {
 		SPDK_ERRLOG("REGISTER: unsupported spec_i_pt/all_tg_pt/aptpl field\n");
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
@@ -152,7 +157,7 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REGISTER: new registrant registered "
 			      "with key 0x%"PRIx64"\n", sa_rkey);
 
-		return 0;
+		return spdk_scsi_dev_update_aptpl(dev, task, aptpl);
 	}
 
 	/* a registred I_T nexus */
@@ -202,7 +207,7 @@ spdk_scsi_pr_out_register(struct spdk_scsi_task *task,
 	dev->pr_generation++;
 	pthread_mutex_unlock(&dev->reservation_lock);
 
-	return 0;
+	return spdk_scsi_dev_update_aptpl(dev, task, aptpl);
 }
 
 static int
@@ -267,6 +272,9 @@ spdk_scsi_pr_out_reserve(struct spdk_scsi_task *task,
 
 	pthread_mutex_unlock(&dev->reservation_lock);
 
+	if (dev->ptpl_activated) {
+		return spdk_scsi_dev_update_aptpl(dev, task, true);
+	}
 	return 0;
 
 conflict:
@@ -329,6 +337,9 @@ spdk_scsi_pr_out_release(struct spdk_scsi_task *task,
 	dev->holder = NULL;
 	pthread_mutex_unlock(&dev->reservation_lock);
 
+	if (dev->ptpl_activated) {
+		return spdk_scsi_dev_update_aptpl(dev, task, true);
+	}
 	return 0;
 
 check_condition:
@@ -390,6 +401,9 @@ spdk_scsi_pr_out_clear(struct spdk_scsi_task *task, uint64_t rkey)
 	dev->pr_generation++;
 	pthread_mutex_unlock(&dev->reservation_lock);
 
+	if (dev->ptpl_activated) {
+		return spdk_scsi_dev_update_aptpl(dev, task, false);
+	}
 	return 0;
 }
 
@@ -511,6 +525,10 @@ spdk_scsi_pr_out_preempt(struct spdk_scsi_task *task,
 exit:
 	dev->pr_generation++;
 	pthread_mutex_unlock(&dev->reservation_lock);
+
+	if (dev->ptpl_activated) {
+		return spdk_scsi_dev_update_aptpl(dev, task, true);
+	}
 	return 0;
 
 conflict:
@@ -664,6 +682,8 @@ static int
 spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 				    uint8_t *data, uint16_t data_len)
 {
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
 	struct spdk_scsi_pr_in_report_capabilities_data *param;
 
 	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN REPORT CAPABILITIES\n");
@@ -675,6 +695,10 @@ spdk_scsi_pr_in_report_capabilities(struct spdk_scsi_task *task,
 	param = (struct spdk_scsi_pr_in_report_capabilities_data *)data;
 	memset(param, 0, sizeof(*param));
 	/* TODO: can support more capabilities bits */
+	param->ptpl_c = (dev->pr_file == NULL ? false : true);
+	if (param->ptpl_c) {
+		param->ptpl_a = dev->ptpl_activated;
+	}
 	to_be16(&param->length, 8);
 	param->tmv = true;
 	param->wr_ex = true;
@@ -973,4 +997,112 @@ spdk_scsi_pr_check(struct spdk_scsi_task *task)
 	}
 
 	return 0;
+}
+
+static void
+spdk_scsi_dev_deactive_ptpl(struct spdk_scsi_dev *dev)
+{
+	free(dev->pr_file);
+	dev->pr_file = NULL;
+	if (dev->ptpl_activated) {
+		dev->ptpl_activated = false;
+	}
+}
+
+static int
+spdk_scsi_dev_json_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	struct spdk_scsi_dev *dev = cb_ctx;
+	size_t rc;
+	FILE *fd;
+
+	fd = fopen(dev->pr_file, "w");
+	if (!fd) {
+		SPDK_ERRLOG("Can't open file %s for write\n", dev->pr_file);
+		spdk_scsi_dev_deactive_ptpl(dev);
+		return -1;
+	}
+	rc = fwrite(data, 1, size, fd);
+	fclose(fd);
+
+	return rc == size ? 0 : -1;
+}
+
+static int
+spdk_scsi_dev_save_reservation(struct spdk_scsi_dev *dev, bool aptpl)
+{
+	struct spdk_scsi_pr_registrant *reg;
+	struct spdk_scsi_iscsi_transport_id *trans_id;
+	struct spdk_json_write_ctx *w;
+	int rc;
+
+	w = spdk_json_write_begin(spdk_scsi_dev_json_write_cb, dev, 0);
+	if (w == NULL) {
+		return -ENOMEM;
+	}
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "name", dev->name);
+	spdk_json_write_named_bool(w, "aptpl", aptpl);
+
+	if (aptpl) {
+		pthread_mutex_lock(&dev->reservation_lock);
+		spdk_json_write_named_uint32(w, "type", dev->type);
+		spdk_json_write_named_uint32(w, "generation", dev->pr_generation);
+		spdk_json_write_named_uint64(w, "crkey", dev->crkey);
+
+		spdk_json_write_named_array_begin(w, "registrants");
+		TAILQ_FOREACH(reg, &dev->reg_head, link) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_bool(w, "holder",
+						   spdk_scsi_pr_registrant_is_holder(dev, reg));
+			spdk_json_write_named_uint64(w, "rkey", reg->rkey);
+			trans_id = (struct spdk_scsi_iscsi_transport_id *)reg->transport_id;
+			spdk_json_write_named_string(w, "transport_id_name", trans_id->name);
+			spdk_json_write_named_string(w, "initiator_port_name",
+						     reg->initiator_port_name);
+			spdk_json_write_named_uint32(w, "relative_target_port_id",
+						     reg->relative_target_port_id);
+			spdk_json_write_named_string(w, "target_port_name",
+						     reg->target_port_name);
+			spdk_json_write_object_end(w);
+		}
+		spdk_json_write_array_end(w);
+		pthread_mutex_unlock(&dev->reservation_lock);
+	}
+	spdk_json_write_object_end(w);
+	rc = spdk_json_write_end(w);
+
+	return rc;
+}
+
+static int
+spdk_scsi_dev_update_aptpl(struct spdk_scsi_dev *dev,
+			   struct spdk_scsi_task *task, bool aptpl)
+{
+	int rc;
+
+	if (dev->pr_file == NULL && !aptpl) {
+		return 0;
+	}
+
+	if (dev->pr_file == NULL && aptpl) {
+		SPDK_ERRLOG("Users don't provide a persist file\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_ILLEGAL_REQUEST,
+					  SPDK_SCSI_ASC_INVALID_FIELD_IN_CDB,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return -EINVAL;
+	}
+
+	dev->ptpl_activated = aptpl;
+	rc = spdk_scsi_dev_save_reservation(dev, aptpl);
+	if (rc < 0) {
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NOT_READY,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+	}
+
+	return rc;
 }
