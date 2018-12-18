@@ -73,6 +73,24 @@
       "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ddc538a_fe54f32c",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-18T14:04:54Z",
+      "side": 1,
+      "message": "This is not intend to be a public header so I only added this as a comment instead in doxygen.",
+      "parentUuid": "42a4a105_367e45fb",
+      "revId": "2df94b265a95a5108a793b17cc2c6a30acac7a8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
