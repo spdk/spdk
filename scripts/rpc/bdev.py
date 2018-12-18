@@ -215,7 +215,7 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     return client.call('set_bdev_nvme_hotplug', params)
 
 
-def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None, hostaddr=None, hostsvcid=None):
+def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None):
     """Construct NVMe namespace block devices.
 
     Args:
@@ -225,6 +225,7 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
         adrfam: address family ("IPv4", "IPv6", "IB", or "FC") (optional for PCIe)
         trsvcid: transport service ID (port number for IP-based addresses; optional for PCIe)
         subnqn: subsystem NQN to connect to (optional)
+        hostnqn: NQN to connect from (optional)
         hostaddr: host transport address (IP address for IP-based transports, NULL for PCIe or FC; optional)
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
 
@@ -234,6 +235,9 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
     params = {'name': name,
               'trtype': trtype,
               'traddr': traddr}
+
+    if hostnqn:
+        params['hostnqn'] = hostnqn
 
     if hostaddr:
         params['hostaddr'] = hostaddr
