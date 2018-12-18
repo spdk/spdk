@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "741ac106_d79870e4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1623,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-18T21:28:42Z",
+      "side": 1,
+      "message": "I think that if we are going to modify the number that the user passes in, we should give it a name that reflects that.\nBefore, we were assuming the user might need about four queue depths worth of buffers. Maybe we should use some metric like that to pass through the users desires.",
+      "revId": "b0b6dcb300785178c3dca6380423ee03da24e86f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
