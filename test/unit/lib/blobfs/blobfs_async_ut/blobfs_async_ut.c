@@ -285,7 +285,7 @@ static void
 fs_rename(void)
 {
 	struct spdk_filesystem *fs;
-	struct spdk_file *file, *file2;
+	struct spdk_file *file, *file2, *file_iter;
 	struct spdk_bs_dev *dev;
 
 	dev = init_dev();
@@ -351,6 +351,11 @@ fs_rename(void)
 	poll_threads();
 	CU_ASSERT(g_fserrno == -ENOENT);
 	CU_ASSERT(!TAILQ_EMPTY(&fs->files));
+	TAILQ_FOREACH(file_iter, &fs->files, tailq) {
+		if (file_iter == NULL) {
+			SPDK_CU_ASSERT_FATAL(false);
+		}
+	}
 
 	g_fserrno = 1;
 	spdk_fs_delete_file_async(fs, "file2", delete_cb, NULL);
