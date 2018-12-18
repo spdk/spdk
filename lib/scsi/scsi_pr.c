@@ -636,6 +636,50 @@ invalid:
 }
 
 static int
+spdk_scsi_pr_in_read_reservations(struct spdk_scsi_task *task,
+				  uint8_t *data, uint16_t data_len)
+{
+	struct spdk_scsi_lun *lun = task->lun;
+	struct spdk_scsi_dev *dev = lun->dev;
+	struct spdk_scsi_pr_in_read_reservations_data *param;
+	bool all_regs = false;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR IN READ RESERVATIONS\n");
+
+	if (data_len < sizeof(param->header)) {
+		return -ENOMEM;
+	}
+	pthread_mutex_lock(&dev->reservation_lock);
+	param = (struct spdk_scsi_pr_in_read_reservations_data *)(data);
+
+	to_be32(&param->header.pr_generation, dev->pr_generation);
+	if (dev->holder) {
+		if (sizeof(*param) > data_len) {
+			pthread_mutex_unlock(&dev->reservation_lock);
+			return -ENOMEM;
+		}
+		all_regs = spdk_scsi_pr_is_all_registrants_type(dev);
+		if (all_regs) {
+			to_be64(&param->rkey, 0);
+		} else {
+			to_be64(&param->rkey, dev->crkey);
+		}
+		to_be32(&param->header.addiontal_len, 16);
+		param->scope = SPDK_SCSI_PR_LU_SCOPE;
+		param->type = dev->type;
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS with valid reservation\n");
+		pthread_mutex_unlock(&dev->reservation_lock);
+		return sizeof(*param);
+	}
+
+	/* no reservation */
+	to_be32(&param->header.addiontal_len, 0);
+	pthread_mutex_unlock(&dev->reservation_lock);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "READ RESERVATIONS no reservation\n");
+	return sizeof(param->header);
+}
+
+static int
 spdk_scsi_pr_in_read_keys(struct spdk_scsi_task *task, uint8_t *data,
 			  uint16_t data_len)
 {
@@ -700,6 +744,9 @@ spdk_scsi_pr_in(struct spdk_scsi_task *task,
 	switch (action) {
 	case SPDK_SCSI_PR_IN_READ_KEYS:
 		rc = spdk_scsi_pr_in_read_keys(task, data, data_len);
+		break;
+	case SPDK_SCSI_PR_IN_READ_RESERVATION:
+		rc = spdk_scsi_pr_in_read_reservations(task, data, data_len);
 		break;
 	default:
 		goto invalid;
