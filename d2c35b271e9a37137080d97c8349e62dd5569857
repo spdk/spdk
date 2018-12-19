@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "635765b6_d6a59948",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:51:13Z",
+      "side": 1,
+      "message": "I am not sure that is true. I couldn\u0027t find anything online. rdmamojo doesn\u0027t explicitly state that that\u0027s not the case, but it doesn\u0027t list it as a requirement for connecting qpairs.\nhttps://www.rdmamojo.com/2014/01/18/connecting-queue-pairs/\n\nI assumed that it wouldn\u0027t matter just like tcp/ip one side has one port, the other side has another port and they just communicate. You just have to establish the ports up front.\n\nOf course I\u0027ve never tried using a port other than 4420 on either side.",
+      "parentUuid": "61ba812f_f2f5d5ec",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c16b70d2_d7bceda0",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "b4370a55_aa1c212e",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:51:13Z",
+      "side": 1,
+      "message": "I think it could. It\u0027s actually not much of a stretch at all once you look at the patches I have later on.",
+      "parentUuid": "c16b70d2_d7bceda0",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a09970fa_bd53e328",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2018-12-19T21:51:03Z",
       "side": 1,
       "message": "You don\u0027t need to add the hostnqn in this patch - right now it\u0027s global for the initiator. But having per-connection hostnqn would be neat.",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "837ec9b2_8e9a6436",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:51:13Z",
+      "side": 1,
+      "message": "I think I\u0027ll add it to the top of this series when I am done fixing things.",
+      "parentUuid": "a09970fa_bd53e328",
       "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
