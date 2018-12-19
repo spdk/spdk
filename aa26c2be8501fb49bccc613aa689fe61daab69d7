@@ -22,6 +22,30 @@
       "revId": "aa26c2be8501fb49bccc613aa689fe61daab69d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f5d26f0_14560c4b",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 157,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-19T15:52:32Z",
+      "side": 1,
+      "message": "I can do that, *OR* I can place it in this patch just like I did. I don\u0027t see any gain of changing it now.",
+      "parentUuid": "ea65f845_58823c65",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 157,
+        "endChar": 2
+      },
+      "revId": "aa26c2be8501fb49bccc613aa689fe61daab69d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
