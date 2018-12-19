@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e410e81a_f29b09d8",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "move size_t i declaration",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c16c4102_04f4afe5",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "size_t declaration",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9db19ffd_151fece0",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "bool?",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1c42352_3e129e54",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "size_t declaration",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b21369e_7540a5cd",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "size_t declaration",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28f3ed37_4ff04c58",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T20:04:55Z",
+      "side": 1,
+      "message": "size_t declaration",
+      "revId": "b697da126e6669bbc03be2a3559dee5a1649c1de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
