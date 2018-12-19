@@ -201,5 +201,6 @@ int spdk_scsi_pr_out(struct spdk_scsi_task *task, uint8_t *cdb,
 int spdk_scsi_pr_in(struct spdk_scsi_task *task, uint8_t *cdb,
 		    uint8_t *data, uint16_t data_len);
 int spdk_scsi_pr_check(struct spdk_scsi_task *task);
+int spdk_scsi_dev_load_reservation(struct spdk_scsi_dev *dev);
 
 #endif /* SPDK_SCSI_INTERNAL_H */
