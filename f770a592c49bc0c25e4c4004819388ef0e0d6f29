@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "cebe6ec6_fbd2e0b1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:53:53Z",
+      "side": 1,
+      "message": "If it turns out I have to change the port, I will also add the \u0027local\u0027 in front of ip address. Otherwise, can I just add it in the next change? The one where I change the hostnqn stuff? (avoid rebasing and using build pool time)",
+      "parentUuid": "3e49d1e8_2bdcfa2e",
+      "revId": "f770a592c49bc0c25e4c4004819388ef0e0d6f29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "417293fc_58ead7ed",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 11
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-19T21:49:07Z",
       "side": 1,
       "message": "You can\u0027t choose the port, can you? It has to match trsvcid.",
+      "revId": "f770a592c49bc0c25e4c4004819388ef0e0d6f29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71ca49c8_74c97086",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:53:53Z",
+      "side": 1,
+      "message": "Please see my comment on the last patch.",
+      "parentUuid": "417293fc_58ead7ed",
       "revId": "f770a592c49bc0c25e4c4004819388ef0e0d6f29",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
