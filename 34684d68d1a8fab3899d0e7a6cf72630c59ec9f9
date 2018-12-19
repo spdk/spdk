@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "902f4361_1222a826",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 25
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-19T09:20:52Z",
+      "side": 1,
+      "message": "If true, DIF is set in the last 8 bytes of metadata.",
+      "revId": "34684d68d1a8fab3899d0e7a6cf72630c59ec9f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
