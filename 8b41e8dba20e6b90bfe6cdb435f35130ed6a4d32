@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "370b0d74_90b2a5af",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-19T08:12:42Z",
+      "side": 1,
+      "message": "This function differ vs libc realloc() in a way that the input buffer is always freed also in case of success (realloc will free it). So for me this look as not true. But let others vote here.",
+      "parentUuid": "4d6c54cd_465cc0f1",
+      "range": {
+        "startLine": 78,
+        "startChar": 73,
+        "endLine": 80,
+        "endChar": 77
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f899aea_a9d42b5d",
         "filename": "include/spdk/string.h",
         "patchSetId": 9
