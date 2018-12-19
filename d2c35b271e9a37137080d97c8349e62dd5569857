@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61ba812f_f2f5d5ec",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:51:03Z",
+      "side": 1,
+      "message": "You can\u0027t choose the port here - it just has to match the transport service id.",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c16b70d2_d7bceda0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:51:03Z",
+      "side": 1,
+      "message": "Should the hostnqn end up in this structure? I think that would make sense.",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a09970fa_bd53e328",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:51:03Z",
+      "side": 1,
+      "message": "You don\u0027t need to add the hostnqn in this patch - right now it\u0027s global for the initiator. But having per-connection hostnqn would be neat.",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
