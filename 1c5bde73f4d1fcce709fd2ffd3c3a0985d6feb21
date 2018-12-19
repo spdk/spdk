@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f319287_92c4c7fe",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-19T06:56:50Z",
+      "side": 1,
+      "message": "\"check ibv state after rdma update it\" maybe better.",
+      "range": {
+        "startLine": 7,
+        "startChar": 6,
+        "endLine": 7,
+        "endChar": 58
+      },
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6be93a63_e38ba701",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-19T06:56:50Z",
+      "side": 1,
+      "message": "This should be done in another patch, I guess.",
+      "range": {
+        "startLine": 12,
+        "startChar": 33,
+        "endLine": 13,
+        "endChar": 37
+      },
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "710308db_b226b16d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-19T06:56:50Z",
+      "side": 1,
+      "message": "Put if and opening brace in the same line.",
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db4cf0d7_83fd81ac",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-19T06:56:50Z",
+      "side": 1,
+      "message": "I think %d is better.",
+      "range": {
+        "startLine": 467,
+        "startChar": 41,
+        "endLine": 467,
+        "endChar": 43
+      },
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7286ed4_a228c079",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-19T06:56:50Z",
+      "side": 1,
+      "message": "Is it really necessary? I think we use assert only if we encounter unrecoverable failure or impossible case.",
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
