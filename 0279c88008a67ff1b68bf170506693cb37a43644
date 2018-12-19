@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "86d08e15_cd04e57d",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T10:13:50Z",
+      "side": 1,
+      "message": "I would argue that the it is easier to read the second version, as you see the intent (clear flags SOME_FLAG and SOME_FLAG2 from the md_io) and you don\u0027t have to worry about the underlying structures (that md_io has a member called \u0027io\u0027 that is not a pointer and is the one holding the flags that we want to clear). But if this is not a pattern that we want to use in SPDK, I\u0027ll get rid of these.",
+      "parentUuid": "b357eb94_615f6468",
+      "revId": "0279c88008a67ff1b68bf170506693cb37a43644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2279d671_52cbd119",
         "filename": "lib/ftl/ftl_trace.h",
         "patchSetId": 21
