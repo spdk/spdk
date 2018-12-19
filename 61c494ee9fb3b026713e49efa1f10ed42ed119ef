@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86b3da96_20dcb7f8",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-19T10:37:19Z",
+      "side": 1,
+      "message": "This should be data_block_size.\nIf not, data verification cannot find bit error when the bit error occurs in the non dif metadata.",
+      "range": {
+        "startLine": 1374,
+        "startChar": 0,
+        "endLine": 1374,
+        "endChar": 10
+      },
+      "revId": "61c494ee9fb3b026713e49efa1f10ed42ed119ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
