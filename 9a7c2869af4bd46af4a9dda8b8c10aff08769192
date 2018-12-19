@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3867fc21_54857a53",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:26:37Z",
+      "side": 1,
+      "message": "In the comment here, please explain what \"Shared Buffers\" are - someone not familiar with the code would have no idea what this configuration option does.",
+      "revId": "9a7c2869af4bd46af4a9dda8b8c10aff08769192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0804fda_366486ba",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 5
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:26:37Z",
+      "side": 1,
+      "message": "This isn\u0027t the \"max\" number of shared buffers, which implies that it can be negotiated lower, but rather the exact number of shared buffers. Let\u0027s call this \"NumSharedBuffers\" throughout the code.",
+      "revId": "9a7c2869af4bd46af4a9dda8b8c10aff08769192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03d1cab9_bc4a3cff",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:26:37Z",
+      "side": 1,
+      "message": "The description can be something like \"The number of pooled data buffers available to the transport\"",
+      "revId": "9a7c2869af4bd46af4a9dda8b8c10aff08769192",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
