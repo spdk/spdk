@@ -666,3 +666,70 @@ done_invalid:
 	rc = SPDK_JSON_PARSE_INVALID;
 	goto done_rc;
 }
+
+void *
+spdk_json_read_file_to_buf(FILE *f, size_t *psize)
+{
+	void *buf, *newbuf;
+	size_t cur_size, buf_size, rc;
+
+	buf = NULL;
+	cur_size = 0;
+	buf_size = 128 * 1024;
+
+	while (buf_size <= 1024 * 1024 * 1024) {
+		newbuf = realloc(buf, buf_size);
+		if (newbuf == NULL) {
+			free(buf);
+			return NULL;
+		}
+		buf = newbuf;
+
+		rc = fread(buf + cur_size, 1, buf_size - cur_size, f);
+		cur_size += rc;
+
+		if (feof(f)) {
+			*psize = cur_size;
+			return buf;
+		}
+
+		if (ferror(f)) {
+			free(buf);
+			return NULL;
+		}
+
+		buf_size *= 2;
+	}
+
+	free(buf);
+	return NULL;
+}
+
+int
+spdk_json_parse_buf(struct spdk_json_val **values, void *buf, size_t size, uint32_t parse_flags)
+{
+	void *end;
+	int rc;
+	size_t num_values;
+
+	rc = spdk_json_parse(buf, size, NULL, 0, NULL, parse_flags);
+	if (rc <= 0) {
+		return rc;
+	}
+
+	num_values = (size_t)rc;
+	*values = calloc(num_values, sizeof(struct spdk_json_val));
+	if (*values == NULL) {
+		rc = -ENOMEM;
+		return rc;
+	}
+
+	rc = spdk_json_parse(buf, size, *values, num_values, &end,
+			     parse_flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
+	if (rc <= 0) {
+		free(*values);
+		return rc;
+	}
+
+	return rc;
+}
