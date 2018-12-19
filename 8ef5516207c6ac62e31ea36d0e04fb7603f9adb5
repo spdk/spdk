@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54773542_da0786b1",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T18:24:14Z",
+      "side": 1,
+      "message": "Was this accidental?",
+      "revId": "8ef5516207c6ac62e31ea36d0e04fb7603f9adb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "227901a1_17af5b9b",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T18:24:14Z",
+      "side": 1,
+      "message": "tab, not space",
+      "revId": "8ef5516207c6ac62e31ea36d0e04fb7603f9adb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2613326_d2c8f2e0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3529,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T18:24:14Z",
+      "side": 1,
+      "message": "accidental whitespace.",
+      "revId": "8ef5516207c6ac62e31ea36d0e04fb7603f9adb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
