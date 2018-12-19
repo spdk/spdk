@@ -134,6 +134,9 @@ DEFINE_STUB_V(_spdk_scsi_lun_free_io_channel, (struct spdk_scsi_lun *lun));
 DEFINE_STUB(spdk_scsi_lun_has_pending_tasks, bool,
 	    (const struct spdk_scsi_lun *lun), false);
 
+DEFINE_STUB(spdk_scsi_dev_load_reservation, int,
+	    (struct spdk_scsi_dev *dev), 0);
+
 static void
 dev_destruct_null_dev(void)
 {

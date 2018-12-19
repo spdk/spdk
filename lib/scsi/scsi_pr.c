@@ -34,6 +34,7 @@
 #include "scsi_internal.h"
 
 #include "spdk/endian.h"
+#include "spdk/util.h"
 #include "spdk/json.h"
 
 static int
@@ -50,6 +51,23 @@ spdk_scsi_pr_get_registrant(struct spdk_scsi_dev *dev,
 	TAILQ_FOREACH(reg, &dev->reg_head, link) {
 		if ((initiator_port == reg->initiator_port) &&
 		    (target_port == reg->target_port)) {
+			return reg;
+		}
+	}
+
+	/* Iterate the second time with port name for
+	 * those registrants with valid port name but not
+	 * associated port pointers.
+	 */
+	TAILQ_FOREACH(reg, &dev->reg_head, link) {
+		if (!strncasecmp(reg->initiator_port_name, initiator_port->name,
+				 strlen(reg->initiator_port_name)) &&
+		    !strncasecmp(reg->target_port_name, target_port->name,
+				 strlen(reg->target_port_name))) {
+			assert(reg->initiator_port == NULL);
+			assert(reg->target_port == NULL);
+			reg->initiator_port = initiator_port;
+			reg->target_port = target_port;
 			return reg;
 		}
 	}
@@ -1199,4 +1217,246 @@ spdk_scsi_dev_update_aptpl(struct spdk_scsi_dev *dev, bool aptpl)
 
 	dev->ptpl_activated = aptpl;
 	return spdk_scsi_dev_save_reservation(dev, aptpl);
+}
+
+#define MAX_PR_REGISTRANTS 1024
+
+struct scsi_dev_pr_reg {
+	bool holder;
+	uint64_t rkey;
+	uint32_t relative_target_port_id;
+	char *transport_id_name;
+	char *initiator_port_name;
+	char *target_port_name;
+};
+
+struct scsi_dev_pr_regs {
+	size_t num_regs;
+	struct scsi_dev_pr_reg reg[MAX_PR_REGISTRANTS];
+};
+
+static const struct spdk_json_object_decoder dev_pr_reg_decoders[] = {
+	{"holder", offsetof(struct scsi_dev_pr_reg, holder), spdk_json_decode_bool},
+	{"rkey", offsetof(struct scsi_dev_pr_reg, rkey), spdk_json_decode_uint64},
+	{
+		"relative_target_port_id", offsetof(struct scsi_dev_pr_reg, relative_target_port_id),
+		spdk_json_decode_uint32
+	},
+	{"initiator_port_name", offsetof(struct scsi_dev_pr_reg, initiator_port_name), spdk_json_decode_string},
+	{"transport_id_name", offsetof(struct scsi_dev_pr_reg, transport_id_name), spdk_json_decode_string},
+	{"target_port_name", offsetof(struct scsi_dev_pr_reg, target_port_name), spdk_json_decode_string},
+};
+
+static int
+decode_pr_reg(const struct spdk_json_val *val, void *out)
+{
+	struct scsi_dev_pr_reg *reg = out;
+
+	return spdk_json_decode_object(val, dev_pr_reg_decoders,
+				       SPDK_COUNTOF(dev_pr_reg_decoders), reg);
+}
+
+static int
+decode_pr_regs(const struct spdk_json_val *val, void *out)
+{
+	struct scsi_dev_pr_regs *regs = out;
+
+	return spdk_json_decode_array(val, decode_pr_reg, regs->reg,
+				      MAX_PR_REGISTRANTS,
+				      &regs->num_regs, sizeof(struct scsi_dev_pr_reg));
+}
+
+struct scsi_dev_pr_node {
+	char *name;
+	uint32_t type;
+	uint32_t generation;
+	uint64_t crkey;
+	struct scsi_dev_pr_regs regs;
+};
+
+static const struct spdk_json_object_decoder dev_pr_node_decoders[] = {
+	{"name", offsetof(struct scsi_dev_pr_node, name), spdk_json_decode_string},
+	{"type", offsetof(struct scsi_dev_pr_node, type), spdk_json_decode_uint32},
+	{"generation", offsetof(struct scsi_dev_pr_node, generation), spdk_json_decode_uint32},
+	{"crkey", offsetof(struct scsi_dev_pr_node, crkey), spdk_json_decode_uint64},
+	{"registrants", offsetof(struct scsi_dev_pr_node, regs), decode_pr_regs},
+};
+
+static void
+spdk_scsi_dev_restore_transport_id(struct spdk_scsi_pr_registrant *reg,
+				   const char *transport_id_name)
+{
+	struct spdk_scsi_iscsi_transport_id *data;
+	uint32_t len;
+	char *name;
+
+	memset(reg->transport_id, 0, sizeof(reg->transport_id));
+	reg->transport_id_len = 0;
+
+	data = (struct spdk_scsi_iscsi_transport_id *)reg->transport_id;
+
+	data->protocol_id = (uint8_t)SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI;
+	data->format = 0x1;
+
+	name = data->name;
+	len = snprintf(name, SPDK_SCSI_MAX_TRANSPORT_ID_LENGTH, "%s", transport_id_name);
+	do {
+		name[len++] = '\0';
+	} while (len & 3);
+
+	to_be16(&data->additional_len, len);
+	reg->transport_id_len = len + sizeof(*data);
+}
+
+static int
+spdk_scsi_dev_restore_registrant(struct spdk_scsi_dev *dev,
+				 enum spdk_scsi_pr_type_code type,
+				 bool holder, uint64_t rkey,
+				 const char *transport_id_name,
+				 const char *initiator_port_name,
+				 uint16_t relative_target_port_id,
+				 const char *target_port_name)
+{
+	struct spdk_scsi_pr_registrant *reg;
+
+	reg = calloc(1, sizeof(*reg));
+	if (!reg) {
+		return -ENOMEM;
+	}
+
+	reg->rkey = rkey;
+	reg->relative_target_port_id = relative_target_port_id;
+	spdk_scsi_dev_restore_transport_id(reg, transport_id_name);
+	snprintf(reg->initiator_port_name, sizeof(reg->initiator_port_name), "%s",
+		 initiator_port_name);
+	snprintf(reg->target_port_name, sizeof(reg->target_port_name), "%s",
+		 target_port_name);
+
+	switch (type) {
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE:
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS:
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE_REGS_ONLY:
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS_REGS_ONLY:
+		if (dev->holder && holder) {
+			SPDK_ERRLOG("Holder is already exist\n");
+			free(reg);
+			return -EINVAL;
+		}
+		dev->holder = reg;
+		break;
+	case SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS:
+	case SPDK_SCSI_PR_EXCLUSIVE_ACCESS_ALL_REGS:
+		if (!dev->holder && holder) {
+			dev->holder = reg;
+		}
+		break;
+	default:
+		break;
+	}
+
+	TAILQ_INSERT_TAIL(&dev->reg_head, reg, link);
+	return 0;
+}
+
+int
+spdk_scsi_dev_load_reservation(struct spdk_scsi_dev *dev)
+{
+	size_t size;
+	FILE *fd;
+	void *buf;
+	ssize_t rc;
+	struct spdk_json_val *values;
+	struct scsi_dev_pr_node pr_node = {};
+	uint32_t i;
+	struct spdk_scsi_pr_registrant *reg;
+
+	fd = fopen(dev->pr_file, "r");
+	/* It's not an error if the file does not exist */
+	if (!fd) {
+		SPDK_NOTICELOG("File %s does not exist\n", dev->pr_file);
+		return 0;
+	}
+
+	/* Load all persist file contents into a local buffer */
+	buf = spdk_json_read_file_to_buf(fd, &size);
+	fclose(fd);
+	if (!buf) {
+		SPDK_ERRLOG("Load persit file %s failed\n", dev->pr_file);
+		spdk_scsi_dev_deactive_ptpl(dev);
+		return -ENOMEM;
+	}
+
+	rc = spdk_json_parse_buf(&values, buf, size, 0);
+	if (rc <= 0) {
+		SPDK_ERRLOG("spdk_json_parse_buf failed, rc %d\n", (int)rc);
+		free(buf);
+		spdk_scsi_dev_deactive_ptpl(dev);
+		return -ENOENT;
+	}
+
+	/* Decode json */
+	if (spdk_json_decode_object(values, dev_pr_node_decoders,
+				    SPDK_COUNTOF(dev_pr_node_decoders),
+				    &pr_node)) {
+		SPDK_ERRLOG("Invalid objects in the persist file %s, "
+			    "disable ptpl feature\n", dev->pr_file);
+		rc = -ENOENT;
+		goto error;
+	}
+
+	if (pr_node.regs.num_regs <= 0) {
+		SPDK_ERRLOG("Invalid objects in the persist file %s, "
+			    "disable ptpl feature\n", dev->pr_file);
+		rc = -EINVAL;
+		goto error;
+	}
+
+	/* Construct reservation and registrants */
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR LOAD: Name: %s\n", pr_node.name);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR LOAD: Type %u\n", pr_node.type);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR LOAD: Generation %u\n", pr_node.generation);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR LOAD: Crkey 0x%"PRIx64"\n", pr_node.crkey);
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI, "PR LOAD: Number of Registrants 0x%u\n",
+		      (uint32_t)pr_node.regs.num_regs);
+
+	for (i = 0; i < (uint32_t)pr_node.regs.num_regs; i++) {
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REG LOAD: Holder %u\n", pr_node.regs.reg[i].holder);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REG LOAD: Rkey 0x%"PRIx64"\n", pr_node.regs.reg[i].rkey);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "Transport ID Name: %s\n", pr_node.regs.reg[i].transport_id_name);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "Initiator Port Name: %s\n", pr_node.regs.reg[i].initiator_port_name);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REG LOAD: Relative Target Port ID %u\n",
+			      pr_node.regs.reg[i].relative_target_port_id);
+		SPDK_DEBUGLOG(SPDK_LOG_SCSI, "REG LOAD: Target Port Name: %s\n",
+			      pr_node.regs.reg[i].target_port_name);
+
+		rc = spdk_scsi_dev_restore_registrant(dev, pr_node.type, pr_node.regs.reg[i].holder,
+						      pr_node.regs.reg[i].rkey,
+						      pr_node.regs.reg[i].transport_id_name,
+						      pr_node.regs.reg[i].initiator_port_name,
+						      pr_node.regs.reg[i].relative_target_port_id,
+						      pr_node.regs.reg[i].target_port_name);
+		if (rc != 0) {
+			/* cleanup */
+			TAILQ_FOREACH(reg, &dev->reg_head, link) {
+				TAILQ_REMOVE(&dev->reg_head, reg, link);
+				free(reg);
+			}
+			goto error;
+		}
+	}
+
+	dev->type = pr_node.type;
+	dev->crkey = pr_node.crkey;
+	dev->pr_generation = pr_node.generation;
+	dev->ptpl_activated = true;
+
+	free(buf);
+	free(values);
+	return 0;
+
+error:
+	free(buf);
+	free(values);
+	spdk_scsi_dev_deactive_ptpl(dev);
+	return rc;
 }

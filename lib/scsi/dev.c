@@ -252,7 +252,8 @@ spdk_scsi_dev_construct(const char *name, const char *bdev_name_list[],
 
 	if (pr_file) {
 		dev->pr_file = strdup(pr_file);
-		/* TODO: load the configuration if any */
+		/* load the configuration if any */
+		spdk_scsi_dev_load_reservation(dev);
 	}
 
 	for (i = 0; i < num_luns; i++) {
