@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4d6c54cd_465cc0f1",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-19T07:48:07Z",
+      "side": 1,
+      "message": "Hi Pawel,\n\nWhat I wanted to say is\n\"The returned string should be passed to free() when no longer needed, except that spdk_sprintf_realloc() will free buffer when it fails.\"\n\nDoes this make sense to you?",
+      "parentUuid": "c3b4a854_21d738ab",
+      "range": {
+        "startLine": 78,
+        "startChar": 73,
+        "endLine": 80,
+        "endChar": 77
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f899aea_a9d42b5d",
         "filename": "include/spdk/string.h",
         "patchSetId": 9
@@ -59,6 +83,30 @@
       "writtenOn": "2018-12-18T11:03:58Z",
       "side": 1,
       "message": "I think you need va_end(args_copy). See `man va_copy`. It needs to be added in spdk_vsprintf_alloc() as well.",
+      "range": {
+        "startLine": 118,
+        "startChar": 2,
+        "endLine": 118,
+        "endChar": 27
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4914f89_1541f387",
+        "filename": "lib/util/string.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-19T07:48:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "936b350f_6942e733",
       "range": {
         "startLine": 118,
         "startChar": 2,
