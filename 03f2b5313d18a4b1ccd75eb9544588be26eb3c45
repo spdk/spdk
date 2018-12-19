@@ -88,6 +88,24 @@
       "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fae2b22_f850f3af",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:29:29Z",
+      "side": 1,
+      "message": "Just because today there aren\u0027t any operations occurring that don\u0027t already check for an active subsystem doesn\u0027t mean that there won\u0027t be. This function is the only way for a user to find a subsystem, so it should return a subsystem regardless of its state.\n\nInstead, in the code for constructing the admin qpair, look up the subsystem and then check there that it is in the appropriate state.",
+      "parentUuid": "bda282b0_43356b1a",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
