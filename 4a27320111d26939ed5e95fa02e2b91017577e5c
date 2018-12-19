@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c246899a_ef82d1bb",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T09:41:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5de62e07_16ee1dc3",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3b75d14a_e38224a1",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 33
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-18T20:56:37Z",
       "side": 1,
       "message": "just using g_anm directly might be simpler",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb73907f_7eea15e3",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T09:41:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3b75d14a_e38224a1",
       "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "e4b0fc3c_8ad10354",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T09:41:39Z",
+      "side": 1,
+      "message": "I don\u0027t think this can be an assert, as this function is directly called from spdk_ftl_module_init(), which takes the thread pointer from the user. So if the user passed a thread \u003d\u003d NULL, the assertion would fail, which definitely is not something we would want to happen.",
+      "parentUuid": "e72af56c_fc9a3c43",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4ca4729_424ab737",
         "filename": "lib/ftl/ftl_anm.c",
         "patchSetId": 33
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-18T20:56:37Z",
       "side": 1,
       "message": "just using g_anm directly might be simpler",
+      "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eef513cb_451705fb",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T09:41:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4ca4729_424ab737",
       "revId": "4a27320111d26939ed5e95fa02e2b91017577e5c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
