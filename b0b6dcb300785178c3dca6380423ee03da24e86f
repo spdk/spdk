@@ -16,6 +16,24 @@
       "revId": "b0b6dcb300785178c3dca6380423ee03da24e86f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6bf56736_693df228",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1623,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-19T08:51:54Z",
+      "side": 1,
+      "message": "Hi Seth,\nHere, you can see my patch history, actually we can remove the *(SPDK_NVMF_SGL_ENTRIES). Since we can make another patch to make the strategy much better. As I stated, the min Buffer needed may be   2* SPDK_NVMF_SGL_ENTRIES.\n\nFor shared buffer, there should be not related with number of qpairs. In our code, we have a mechanism (in both RDMA and TCP transport), thus with limited buffer, they can still run for scaling issues. Previously, the number is selected with 4, it is randomly chosed, And in reality, it is not practical, we know the qpairs will always exceed this number. So there will be always contention for the buffers. \n\nCurrently, in our auto test cases. The buffer pre-configured is enough, so we will not cover such cases. \n\nFor the performance concern, actually we can have some descriptions for this.",
+      "parentUuid": "741ac106_d79870e4",
+      "revId": "b0b6dcb300785178c3dca6380423ee03da24e86f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
