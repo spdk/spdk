@@ -141,6 +141,30 @@
       "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac58ce7a_4dd8fdf3",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-19T10:00:15Z",
+      "side": 1,
+      "message": "Yes, we can. You only need to replace the \u0027$(S)\u0027 with \u0027$\"nvme0_traddr\"\u0027 and just use plain text diff. But, yeah, whay making this simple when it can be complicated.",
+      "parentUuid": "9860c3cf_e32f9734",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
