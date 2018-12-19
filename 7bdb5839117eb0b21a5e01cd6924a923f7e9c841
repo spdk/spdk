@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b310bfac_510f0185",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-19T12:52:52Z",
+      "side": 1,
+      "message": "As before, sorting these fields will be good.",
+      "range": {
+        "startLine": 162,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 10
+      },
+      "revId": "7bdb5839117eb0b21a5e01cd6924a923f7e9c841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
