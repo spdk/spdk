@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "748ea169_8a8c85fe",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-19T14:10:38Z",
+      "side": 1,
+      "message": "No need to mix normal quotes (first line of help) and docstring quotes (rest of help).\nYou can achieve multiline help in 2 ways:\n\na) Use docstring all the way to avoid manual \"\\n\" line breaks. Downside is that text in docstring has to be all the way to the left side, no indentation.\n\n```\nparser.add_argument(\u0027-method\u0027, dest\u003d\u0027method\u0027, default\u003dNone,\n                    help\u003d\"\"\"test\naaa\nbbb\"\"\")\n```\n\n\nb) Using single quotes:\n\n```\nparser.add_argument(\u0027-method\u0027, dest\u003d\u0027method\u0027, default\u003dNone,\n                    help\u003d\"aaa:\\n\"\n                         \"bbb\\n\n                         \"ccc.\")\n\n```",
+      "range": {
+        "startLine": 57,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 100
+      },
+      "revId": "2f02fee7f97a406492f39090784b856ca68881f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
