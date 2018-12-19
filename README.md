@@ -1,6 +1,6 @@
 # Storage Performance Development Kit
 
-[![Build Status](https://travis-ci.org/spdk/spdk.svg?branch=master)](https://travis-ci.org/spdk/spdk)
+[![Build Status](https://api.travis-ci.com/mayadata-io/spdk.svg?token=wxhzDwuf7ZDLcgyf7JHZ&branch=master)
 
 The Storage Performance Development Kit ([SPDK](http://www.spdk.io)) provides a set of tools
 and libraries for writing high performance, scalable, user-mode storage
