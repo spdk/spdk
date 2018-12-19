@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a6a39441_d793751a",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-19T09:02:55Z",
+      "side": 1,
+      "message": "I only get the first NVMe SSD with the \"cut -d \u0027 \u0027 -f 1\".\nI think if there is more than one NVMe, it\u0027s OK, too.",
+      "parentUuid": "01cb3ba4_c3011f0e",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 42
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92b8250c_1f7b1a1a",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 14
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-18T11:19:46Z",
       "side": 1,
       "message": "Still I see this overcomplicated. I don\u0027t know why you are using such a big hammer here like \u0027match\u0027 app an you need additional check to for traddr?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e06d0eb2_acac0101",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-19T09:02:55Z",
+      "side": 1,
+      "message": "As the Darek say in the patch set 5, Its output is much more helpful in case something breaks.\nThe match app used to check the controller\u0027s name. And the \"test $bdev_traddr \u003d\u003d $nvme0_traddr\" command used to check the controller\u0027s traddr.",
+      "parentUuid": "92b8250c_1f7b1a1a",
       "range": {
         "startLine": 52,
         "startChar": 0,
