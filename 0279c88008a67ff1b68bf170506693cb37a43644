@@ -51,6 +51,24 @@
       "revId": "0279c88008a67ff1b68bf170506693cb37a43644",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59feb6f8_06b471cb",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T15:07:07Z",
+      "side": 1,
+      "message": "This flag is temporarily needed up to commit with trace implementation. I will remove this flag in trace commit.",
+      "parentUuid": "2279d671_52cbd119",
+      "revId": "0279c88008a67ff1b68bf170506693cb37a43644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
