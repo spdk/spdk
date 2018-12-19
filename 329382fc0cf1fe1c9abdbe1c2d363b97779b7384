@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d25445f_2cb617c4",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-19T10:48:15Z",
+      "side": 1,
+      "message": "I should change this to data_block_size\nOtherwise I should update the data verification in unit test to support metadata more than 8 bytes\n\nI’ll do it tomorrow \n\nThank you for your review",
+      "range": {
+        "startLine": 702,
+        "startChar": 10,
+        "endLine": 702,
+        "endChar": 24
+      },
+      "revId": "329382fc0cf1fe1c9abdbe1c2d363b97779b7384",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
