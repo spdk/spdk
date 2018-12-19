@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd5be9f2_3b4eb69c",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:22:41Z",
+      "side": 1,
+      "message": "Can you define \"user\"?  The user in this case would be the bdev module?  If the bdev module called this function with thread \u003d\u003d NULL, I think we would want the assertion to fail - that would be a very bad condition.\n\nIf the user doesn\u0027t want to initialize anm because they don\u0027t have a valid thread, they just shouldn\u0027t call this function.\n\nThere are lots of cases in SPDK where we expect the user to pass valid objects, and if they don\u0027t, \"bad\" things will happen.  SPDK is not glibc.",
+      "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
