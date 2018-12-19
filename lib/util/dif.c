@@ -210,17 +210,60 @@ dif_generate(struct iovec *iovs, int iovcnt,
 }
 
 static void
+_dif_generate_split(struct _iov_iter *iter,
+		    uint32_t block_size, uint32_t guard_interval,
+		    enum spdk_dif_type dif_type, uint32_t dif_flags,
+		    uint32_t ref_tag, uint16_t app_tag)
+{
+	uint32_t offset_in_block, offset_in_dif, buf_len;
+	void *buf;
+	uint16_t guard;
+	struct spdk_dif dif = {};
+
+	guard = 0;
+	offset_in_block = 0;
+
+	while (offset_in_block < block_size && _iov_iter_cont(iter)) {
+		_iov_iter_get_buf(iter, &buf, &buf_len);
+
+		if (offset_in_block < guard_interval) {
+			buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
+
+			if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+				/* Compute CRC over split logical block data. */
+				guard = spdk_crc16_t10dif(guard, buf, buf_len);
+			}
+
+			if (offset_in_block + buf_len == guard_interval) {
+				/* If a whole logical block data is parsed, generate DIF
+				 * and save it to the temporary DIF area.
+				 */
+				_dif_generate(&dif, dif_flags, guard, ref_tag, app_tag);
+			}
+		} else if (offset_in_block < guard_interval + sizeof(struct spdk_dif)) {
+			/* Copy generated DIF to the split DIF field. */
+			offset_in_dif = offset_in_block - guard_interval;
+			buf_len = spdk_min(buf_len, sizeof(struct spdk_dif) - offset_in_dif);
+
+			memcpy(buf, ((uint8_t *)&dif) + offset_in_dif, buf_len);
+		} else {
+			/* Skip metadata field after DIF field. */
+			buf_len = spdk_min(buf_len, block_size - offset_in_block);
+		}
+
+		_iov_iter_advance(iter, buf_len);
+		offset_in_block += buf_len;
+	}
+}
+
+static void
 dif_generate_split(struct iovec *iovs, int iovcnt,
 		   uint32_t block_size, uint32_t guard_interval, uint32_t num_blocks,
 		   enum spdk_dif_type dif_type, uint32_t dif_flags,
 		   uint32_t init_ref_tag, uint16_t app_tag)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, offset_in_block, offset_in_dif;
-	uint32_t buf_len, ref_tag;
-	void *buf;
-	uint16_t guard;
-	struct spdk_dif dif = {};
+	uint32_t offset_blocks, ref_tag;
 
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
@@ -236,40 +279,9 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 			ref_tag = init_ref_tag;
 		}
 
-		guard = 0;
-		offset_in_block = 0;
+		_dif_generate_split(&iter, block_size, guard_interval,
+				    dif_type, dif_flags, ref_tag, app_tag);
 
-		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
-			_iov_iter_get_buf(&iter, &buf, &buf_len);
-
-			if (offset_in_block < guard_interval) {
-				buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
-
-				if (dif_flags & SPDK_DIF_GUARD_CHECK) {
-					/* Compute CRC over split logical block data. */
-					guard = spdk_crc16_t10dif(guard, buf, buf_len);
-				}
-
-				if (offset_in_block + buf_len == guard_interval) {
-					/* If a whole logical block data is parsed, generate DIF
-					 * and save it to the temporary DIF area.
-					 */
-					_dif_generate(&dif, dif_flags, guard, ref_tag, app_tag);
-				}
-			} else if (offset_in_block < guard_interval + sizeof(struct spdk_dif)) {
-				/* Copy generated DIF to the split DIF field. */
-				offset_in_dif = offset_in_block - guard_interval;
-				buf_len = spdk_min(buf_len, sizeof(struct spdk_dif) - offset_in_dif);
-
-				memcpy(buf, ((uint8_t *)&dif) + offset_in_dif, buf_len);
-			} else {
-				/* Skip metadata field after DIF field. */
-				buf_len = spdk_min(buf_len, block_size - offset_in_block);
-			}
-
-			_iov_iter_advance(&iter, buf_len);
-			offset_in_block += buf_len;
-		}
 		offset_blocks++;
 	}
 }
@@ -437,18 +449,57 @@ dif_verify(struct iovec *iovs, int iovcnt,
 }
 
 static int
+_dif_verify_split(struct _iov_iter *iter,
+		  uint32_t block_size, uint32_t guard_interval,
+		  enum spdk_dif_type dif_type, uint32_t dif_flags,
+		  uint32_t ref_tag, uint16_t apptag_mask, uint16_t app_tag)
+{
+	uint32_t offset_in_block, offset_in_dif, buf_len;
+	void *buf;
+	uint16_t guard;
+	struct spdk_dif dif = {};
+
+	guard = 0;
+	offset_in_block = 0;
+
+	while (offset_in_block < block_size && _iov_iter_cont(iter)) {
+		_iov_iter_get_buf(iter, &buf, &buf_len);
+
+		if (offset_in_block < guard_interval) {
+			buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
+
+			if (dif_flags & SPDK_DIF_GUARD_CHECK) {
+				/* Compute CRC over split logical block data. */
+				guard = spdk_crc16_t10dif(guard, buf, buf_len);
+			}
+		} else if (offset_in_block < guard_interval + sizeof(struct spdk_dif)) {
+			/* Copy the split DIF field to the temporary DIF buffer. */
+			offset_in_dif = offset_in_block - guard_interval;
+			buf_len = spdk_min(buf_len, sizeof(struct spdk_dif) - offset_in_dif);
+
+			memcpy((uint8_t *)&dif + offset_in_dif, buf, buf_len);
+		} else {
+			/* Skip metadata field after DIF field. */
+			buf_len = spdk_min(buf_len, block_size - offset_in_block);
+		}
+
+		_iov_iter_advance(iter, buf_len);
+		offset_in_block += buf_len;
+	}
+
+	return _dif_verify(&dif, dif_type, dif_flags, guard, ref_tag, apptag_mask, app_tag);
+}
+
+static int
 dif_verify_split(struct iovec *iovs, int iovcnt,
 		 uint32_t block_size, uint32_t guard_interval, uint32_t num_blocks,
 		 enum spdk_dif_type dif_type, uint32_t dif_flags,
 		 uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, offset_in_block, offset_in_dif;
-	uint32_t buf_len, ref_tag = 0;
+	uint32_t offset_blocks;
+	uint32_t ref_tag;
 	int rc;
-	void *buf;
-	uint16_t guard;
-	struct spdk_dif dif = {};
 
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
@@ -464,37 +515,10 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 			ref_tag = init_ref_tag;
 		}
 
-		guard = 0;
-		offset_in_block = 0;
-
-		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
-			_iov_iter_get_buf(&iter, &buf, &buf_len);
-
-			if (offset_in_block < guard_interval) {
-				buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
-
-				if (dif_flags & SPDK_DIF_GUARD_CHECK) {
-					/* Compute CRC over split logical block data. */
-					guard = spdk_crc16_t10dif(guard, buf, buf_len);
-				}
-			} else if (offset_in_block < guard_interval + sizeof(struct spdk_dif)) {
-				/* Copy the split DIF field to the temporary DIF buffer. */
-				offset_in_dif = offset_in_block - guard_interval;
-				buf_len = spdk_min(buf_len, sizeof(struct spdk_dif) - offset_in_dif);
-
-				memcpy((uint8_t *)&dif + offset_in_dif, buf, buf_len);
-			} else {
-				/* Skip metadata field after DIF field. */
-				buf_len = spdk_min(buf_len, block_size - offset_in_block);
-			}
-
-			_iov_iter_advance(&iter, buf_len);
-			offset_in_block += buf_len;
-		}
-
-		rc = _dif_verify(&dif, dif_type, dif_flags, guard, ref_tag, apptag_mask, app_tag);
+		rc = _dif_verify_split(&iter, block_size, guard_interval, dif_type, dif_flags,
+				       ref_tag, apptag_mask, app_tag);
 		if (rc != 0) {
-			return 0;
+			return rc;
 		}
 
 		offset_blocks++;
