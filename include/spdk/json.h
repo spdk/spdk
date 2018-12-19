@@ -330,6 +330,27 @@ struct spdk_json_val *spdk_json_array_first(struct spdk_json_val *array_begin);
  */
 struct spdk_json_val *spdk_json_next(struct spdk_json_val *pos);
 
+/**
+ * Read a opened file stream into a buffer.
+ *
+ * \param f file stream pointer.
+ * \param psize number of bytes read to a buffer.
+ * \return Pointer to the buffer.
+ */
+void *spdk_json_read_file_to_buf(FILE *f, size_t *psize);
+
+/**
+ * Check a buffer contains a valid json string and parse it.
+ *
+ * \param values pointer to the parsed json object.
+ * \param buf buffer contains a json string.
+ * \param size buffer size.
+ * \param parse_flags can be 0 or SPDK_JSON_PARSE_FLAG_ALLOW_COMMENTS.
+ * \return <= for fail, otherwise for success.
+ */
+int spdk_json_parse_buf(struct spdk_json_val **values, void *buf,
+			size_t size, uint32_t parse_flags);
+
 #ifdef __cplusplus
 }
 #endif
