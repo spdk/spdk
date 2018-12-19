@@ -85,6 +85,12 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+### raid
+
+Added new strip_size_kb rpc param on create to replace the more ambiguous
+strip_size. One must be specified but either will work. The strip_size
+rpc param can be removed completely in a future release.
+
 ### logical volumes
 
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
