@@ -70,6 +70,24 @@
       "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bda282b0_43356b1a",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T00:15:50Z",
+      "side": 1,
+      "message": "AH, you are right. I looked back through all of the calls in nvmf_rpc.py and they all depend on the subsystem being active anyways, including spdk_rpc_delete_nvmf_subsystem which I was most worried about.\nI am good with making this.",
+      "parentUuid": "20759385_4f42f95f",
+      "revId": "03f2b5313d18a4b1ccd75eb9544588be26eb3c45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
