@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f129186c_eee3d607",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T17:50:59Z",
+      "side": 1,
+      "message": "Doesn\u0027t this sum include the free requests in it? I think you want:\nfor (i \u003d RDMA_REQUEST_STATE_FREE+1; i \u003cRDMA_REQUEST_NUM_STATES;i++)",
+      "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c262ac0_d4b0a888",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T17:50:59Z",
+      "side": 1,
+      "message": "Do we want to create some relationship between max_queue_depth and SRQ depth?\nI know in our host that we do a lot of memory allocations based off of this number and won\u0027t ever send more than that. Is the shared_receive_queue supposed to loosen those restrictions, or do we have some reasonable requirement to ensure that the sum of all of our qpairs max depths adds up to less than the shared receive queue size?\nIs this where RNR_RETRY comes in?",
+      "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
