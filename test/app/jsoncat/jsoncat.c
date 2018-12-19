@@ -75,80 +75,24 @@ json_write_cb(void *cb_ctx, const void *data, size_t size)
 	return rc == size ? 0 : -1;
 }
 
-static void *
-read_file(FILE *f, size_t *psize)
-{
-	void *buf, *newbuf;
-	size_t cur_size, buf_size, rc;
-
-	buf = NULL;
-	cur_size = 0;
-	buf_size = 128 * 1024;
-
-	while (buf_size <= 1024 * 1024 * 1024) {
-		newbuf = realloc(buf, buf_size);
-		if (newbuf == NULL) {
-			free(buf);
-			return NULL;
-		}
-		buf = newbuf;
-
-		rc = fread(buf + cur_size, 1, buf_size - cur_size, f);
-		cur_size += rc;
-
-		if (feof(f)) {
-			*psize = cur_size;
-			return buf;
-		}
-
-		if (ferror(f)) {
-			free(buf);
-			return NULL;
-		}
-
-		buf_size *= 2;
-	}
-
-	free(buf);
-	return NULL;
-}
-
 static int
 process_file(const char *filename, FILE *f, uint32_t parse_flags, uint32_t write_flags)
 {
 	size_t size;
-	void *buf, *end;
-	ssize_t rc;
+	void *buf;
+	int rc = 0;
 	struct spdk_json_val *values;
-	size_t num_values;
 	struct spdk_json_write_ctx *w;
 
-	buf = read_file(f, &size);
+	buf = spdk_json_read_file_to_buf(f, &size);
 	if (buf == NULL) {
 		fprintf(stderr, "%s: file read error\n", filename);
 		return 1;
 	}
 
-	rc = spdk_json_parse(buf, size, NULL, 0, NULL, parse_flags);
+	rc = spdk_json_parse_buf(&values, buf, size, parse_flags);
 	if (rc <= 0) {
 		print_json_error(stderr, rc, filename);
-		free(buf);
-		return 1;
-	}
-
-	num_values = (size_t)rc;
-	values = calloc(num_values, sizeof(*values));
-	if (values == NULL) {
-		perror("values calloc");
-		free(buf);
-		return 1;
-	}
-
-	rc = spdk_json_parse(buf, size, values, num_values, &end,
-			     parse_flags | SPDK_JSON_PARSE_FLAG_DECODE_IN_PLACE);
-	if (rc <= 0) {
-		print_json_error(stderr, rc, filename);
-		free(values);
 		free(buf);
 		return 1;
 	}
@@ -164,13 +108,6 @@ process_file(const char *filename, FILE *f, uint32_t parse_flags, uint32_t write
 	spdk_json_write_val(w, values);
 	spdk_json_write_end(w);
 	printf("\n");
-
-	if (end != buf + size) {
-		fprintf(stderr, "%s: garbage at end of file\n", filename);
-		free(values);
-		free(buf);
-		return 1;
-	}
 
 	free(values);
 	free(buf);
