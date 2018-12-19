@@ -153,6 +153,12 @@ Added support for separate bandwidth rate limits for read and write to QoS in bd
 
 Bdev I/O statistics now track unmap opertations.
 
+### raid
+
+Added new strip_size_kb rpc param on create to replace the more ambiguous
+strip_size. One must be specified but either will work. The strip_size
+rpc param can be removed completely in a future release.
+
 ### logical volumes
 
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
