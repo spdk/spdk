@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "9d81c90c_991eb48c",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-19T09:35:01Z",
+      "side": 1,
+      "message": "We only need one NVMe for the test.\nIf there are more - that\u0027s OK, but we only need one.",
+      "parentUuid": "a6a39441_d793751a",
+      "range": {
+        "startLine": 49,
+        "startChar": 1,
+        "endLine": 49,
+        "endChar": 42
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92b8250c_1f7b1a1a",
         "filename": "test/nvmf/rpc/rpc.sh",
         "patchSetId": 14
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "As the Darek say in the patch set 5, Its output is much more helpful in case something breaks.\nThe match app used to check the controller\u0027s name. And the \"test $bdev_traddr \u003d\u003d $nvme0_traddr\" command used to check the controller\u0027s traddr.",
       "parentUuid": "92b8250c_1f7b1a1a",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9860c3cf_e32f9734",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-19T09:35:01Z",
+      "side": 1,
+      "message": "Too bad that we cannot do test \"test $bdev_traddr \u003d\u003d $nvme0_traddr\"  in match app too. At least I don\u0027t see an option to pass an argument to match.",
+      "parentUuid": "e06d0eb2_acac0101",
       "range": {
         "startLine": 52,
         "startChar": 0,
