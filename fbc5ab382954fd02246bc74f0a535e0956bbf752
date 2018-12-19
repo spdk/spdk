@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "559f8621_c501f768",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T22:03:07Z",
+      "side": 1,
+      "message": "Do we need this report_test_completion here? I don\u0027t think it was there before.",
+      "revId": "fbc5ab382954fd02246bc74f0a535e0956bbf752",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
