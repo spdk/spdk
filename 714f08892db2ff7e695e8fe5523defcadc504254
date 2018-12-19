@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "757369ae_671cc51f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1190,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "91bc2ee6_04df7b93",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d188f8ed_6eab67f8",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "I\u0027d be in favor of using threshold_valid (I\u0027m assuming that\u0027s what thld_vld stands for).\n\nOr I could be completely wrong what it stands for, in which case we should probably still change the name.  :-)",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12ab673a_403789b5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d188f8ed_6eab67f8",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "2338bc4f_96e68621",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f57b6955_23bbf617",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e11b7b79_c1da1bb0",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 28
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "int \u003d\u003e bool",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61feb3d2_e0247e33",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1230,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e11b7b79_c1da1bb0",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "a469a9e9_f1270447",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8f1f80e_37e1701e",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ff68a897_0771f1f6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -115,6 +205,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "should go through all of the FTL patches and make sure these size members clearly state whether it\u0027s number of bytes or number of logical blocks",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c0c8056_67c850f3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "xfer_size always refers to number of logical blocks and I think we are consistent about this in whole FTL code. I will update this comment about this information.",
+      "parentUuid": "ff68a897_0771f1f6",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -138,6 +246,24 @@
     },
     {
       "key": {
+        "uuid": "52bf685e_c456084d",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0407fde_3609876c",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e5a405ca_69ec6dbd",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -149,6 +275,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "function name uses max_ios, but the member name is max_qdepth - can we pick one or the other?\n\nbut since this function is static, could we just check max_qdepth member directly?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b12dff47_c651b98c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "I will remove this function.",
+      "parentUuid": "e5a405ca_69ec6dbd",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -172,6 +316,24 @@
     },
     {
       "key": {
+        "uuid": "fd7d206a_c317ad61",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5cc4f2e_abd1edfe",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5bfdefa6_3a77d17a",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -183,6 +345,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58b9be23_9e4f24c8",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5bfdefa6_3a77d17a",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -206,6 +386,24 @@
     },
     {
       "key": {
+        "uuid": "b4674e49_1ebd87e5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e1c31ac_796319b7",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4f8e1ee_3b8c587f",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -217,6 +415,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "let\u0027s do something like:\n\nif (status !\u003d 0) {\n  SPDK_ERRLOG(\"some message\");\n  assert(false);\n  return;  /* I think we just want to return in this case. */\n}\n\nThen at least in release builds we get a useful error message.",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d235e160_a3139ec3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4f8e1ee_3b8c587f",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -240,6 +456,24 @@
     },
     {
       "key": {
+        "uuid": "907de174_1c8db72a",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b4046802_7bd3947c",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c91531ec_b7380118",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -251,6 +485,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "newline after variable declaration",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f4ee2c8_e05117e4",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c91531ec_b7380118",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -274,6 +526,24 @@
     },
     {
       "key": {
+        "uuid": "3d69b500_a9108395",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57ae9a74_f0de1350",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34e86830_9bb2136f",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -285,6 +555,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "move declaration out of for loop",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "06c1f15f_77df807d",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34e86830_9bb2136f",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -308,6 +596,24 @@
     },
     {
       "key": {
+        "uuid": "0305625a_33cb6418",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "59a675c4_2a44e615",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77614bbf_6d4fb843",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -319,6 +625,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "same here",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "210879e8_67bac7e3",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 374,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77614bbf_6d4fb843",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -342,6 +666,24 @@
     },
     {
       "key": {
+        "uuid": "2df4bd63_4cca85fd",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 400,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9a6bc8f0_f5ed9b14",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1b08eda0_b68ef063",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -353,6 +695,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "move int rc declaration to beginning of function",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "18535530_217cb451",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1b08eda0_b68ef063",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -376,6 +736,24 @@
     },
     {
       "key": {
+        "uuid": "89ff7eb0_6bb57027",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 485,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07bbaa27_db1bd7d5",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8768027d_3f612b9f",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -387,6 +765,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "if (fn(breloc, io[i])) {\n  SPDK_ERRLOG(\"some message\\n\");\n  assert(false);\n  return; /* do we return here or not? */\n}",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7405eae5_f28e55e5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8768027d_3f612b9f",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -410,6 +806,24 @@
     },
     {
       "key": {
+        "uuid": "deb739c2_7a97824e",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "27213069_caaeabb5",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d0e31a46_fbfce7ec",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -421,6 +835,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "move size_t declaration out of for loop",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8061377_8849ef5c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0e31a46_fbfce7ec",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -444,6 +876,24 @@
     },
     {
       "key": {
+        "uuid": "14b17808_5147750d",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46bca885_7eb55bfd",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fec314da_eed37225",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 28
@@ -455,6 +905,24 @@
       "writtenOn": "2018-12-18T20:39:12Z",
       "side": 1,
       "message": "maybe make halt a bool instead of int?",
+      "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d161be6_db8495e0",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-19T09:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fec314da_eed37225",
       "revId": "714f08892db2ff7e695e8fe5523defcadc504254",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
