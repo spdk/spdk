@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e49d1e8_2bdcfa2e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1038,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:49:07Z",
+      "side": 1,
+      "message": "I think it\u0027s worth putting in \"source\" or \"local\" in front of ip address here.",
+      "revId": "f770a592c49bc0c25e4c4004819388ef0e0d6f29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "417293fc_58ead7ed",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:49:07Z",
+      "side": 1,
+      "message": "You can\u0027t choose the port, can you? It has to match trsvcid.",
+      "revId": "f770a592c49bc0c25e4c4004819388ef0e0d6f29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
