@@ -1597,6 +1597,13 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		opts->io_unit_size = opts->max_io_size;
 	}
 
+	if (opts->num_shared_buffers < (SPDK_NVMF_MAX_SGL_ENTRIES * 2)) {
+		SPDK_ERRLOG("The number of shared data buffers (%d) is less than the minimum number required to guarantee that forward progress can be made (%d)\n",
+			    opts->num_shared_buffers, SPDK_NVMF_MAX_SGL_ENTRIES);
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
+
 	sge_count = opts->max_io_size / opts->io_unit_size;
 	if (sge_count > NVMF_DEFAULT_TX_SGE) {
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
@@ -1620,7 +1627,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	}
 
 	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
-				    opts->num_shared_buffers * (SPDK_NVMF_MAX_SGL_ENTRIES * 2),
+				    opts->num_shared_buffers,
 				    opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				    SPDK_ENV_SOCKET_ID_ANY);
@@ -1770,10 +1777,10 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 
 	if (rtransport->data_buf_pool != NULL) {
 		if (spdk_mempool_count(rtransport->data_buf_pool) !=
-		    transport->opts.num_shared_buffers * (SPDK_NVMF_MAX_SGL_ENTRIES * 2)) {
+		    transport->opts.num_shared_buffers) {
 			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
 				    spdk_mempool_count(rtransport->data_buf_pool),
-				    transport->opts.num_shared_buffers * (SPDK_NVMF_MAX_SGL_ENTRIES * 2));
+				    transport->opts.num_shared_buffers);
 		}
 	}
 
