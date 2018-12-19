@@ -104,6 +104,9 @@ struct raid_bdev {
 	/* strip size of raid bdev in blocks */
 	uint32_t                    strip_size;
 
+	/* strip size of raid bdev in KB */
+	uint32_t                    strip_size_kb;
+
 	/* strip size bit shift for optimized calculation */
 	uint32_t                    strip_size_shift;
 
