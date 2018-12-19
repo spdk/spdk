@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2861fe1_e58d2a1c",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1039,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T00:28:44Z",
+      "side": 1,
+      "message": "wait - can\u0027t this only be an IP address?  hostaddr doesn\u0027t apply for PCI",
+      "revId": "40d773a19152313a345f2bb9be248e335406ee17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eefb2743_c18a7ba5",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T00:28:44Z",
+      "side": 1,
+      "message": "only IP address",
+      "revId": "40d773a19152313a345f2bb9be248e335406ee17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
