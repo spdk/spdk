@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6b89046f_9dd324c0",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "json_config_file?  this is a string of the filename, not the json config itself",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd0a8330_6cc07304",
+        "filename": "lib/event/app.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "I\u0027d rather have this callback function local to this file, and then have the callback function call spdk_app_json_config_load (removing the _cb).  Then it can just take the spdk_app_opts * and spdk_event * directly.  It makes the json_config.c API cleaner I think.\n\nProbably we don\u0027t even need to pass the full spdk_app_opts * structure - can we just pass the filename?  I didn\u0027t check the whole json_config.c file to see if there were any other options you needed to read.",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cefe2922_323a7c56",
+        "filename": "lib/event/app.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 778,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "let\u0027s say \"Can\u0027t read legacy configuration file\" just to be clear",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa76aa03_9b5665e7",
+        "filename": "lib/event/app.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 988,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "together",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec5e142_925ecd14",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "config",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f24a018a_e2f6c281",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "recurrency",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56b72848_34cdcd5c",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "recurrency",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ec8d7c7_49b3a8ec",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "beginning",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37a41b2d_d8aae8ad",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "I\u0027m not following this - why don\u0027t we pass the new values/values_cnt here?\n\nseems like if we go down this path, ctx-\u003evalues below at line 500 just gets a zeroed buffer",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39638f5d_33d1d95a",
+        "filename": "lib/event/json_config.h",
+        "patchSetId": 38
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T19:13:51Z",
+      "side": 1,
+      "message": "_done_event",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
