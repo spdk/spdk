@@ -1,0 +1,30 @@
+language: c
+
+compiler:
+  - gcc
+
+dist: bionic
+sudo: false
+
+addons:
+  apt:
+    packages:
+      - astyle
+      - libcunit1-dev
+      - libaio-dev
+      - libssl-dev
+      - libnuma-dev
+      - uuid-dev
+      - lcov
+
+before_script:
+  - git submodule update --init
+  # temporarily disable shellcheck which gives errors in upstream
+  - sudo rm `which shellcheck`
+  - export MAKEFLAGS="-j$(nproc)"
+
+script:
+  - ./scripts/check_format.sh
+  - ./configure --enable-werror --without-isal --enable-debug --enable-coverage --enable-asan
+  - make
+  - ./test/unit/unittest.sh
