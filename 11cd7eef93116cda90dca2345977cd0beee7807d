@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "d480ac98_4c62ec57",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T16:39:49Z",
+      "side": 1,
+      "message": "I think this part is right. \nI assume the issue you were running into before is that we were calling nvmf_tgt_destroy_poll_group and then while still processing completions on the freed qpairs, we started getting errors which led to more calls to spdk_nvmf_qpair_disconnect.",
+      "revId": "11cd7eef93116cda90dca2345977cd0beee7807d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4265c9f6_eb0b9a55",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 7
