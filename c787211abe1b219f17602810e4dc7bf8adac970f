@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cec3e8c0_97683ac5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T16:55:36Z",
+      "side": 1,
+      "message": "I missed this earlier.  This is a variable sized array on the stack.  It\u0027s technically allowed in C, but I\u0027d prefer to not have it in SPDK.\n\nYou can just pick some value here (16?) and then dequeue in stages into this sized array.",
+      "revId": "c787211abe1b219f17602810e4dc7bf8adac970f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
