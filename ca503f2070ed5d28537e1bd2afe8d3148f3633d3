@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dbc8cde_78710f97",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T16:18:24Z",
+      "side": 1,
+      "message": "should remove this extra newline that you added",
+      "revId": "ca503f2070ed5d28537e1bd2afe8d3148f3633d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b89e2398_95d67b8d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T16:18:24Z",
+      "side": 1,
+      "message": "you missed my comment on previous review about removing BDF reference on hostaddr",
+      "revId": "ca503f2070ed5d28537e1bd2afe8d3148f3633d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
