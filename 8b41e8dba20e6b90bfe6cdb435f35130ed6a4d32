@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "c7c33765_95fd41a2",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-19T08:25:14Z",
+      "side": 1,
+      "message": "What we should say is that there is the following difference. Is it OK to say nothing about this?\n\nI updated the comment, just removed the marked part.\n\nlibc_realloc() requires the caller to have the following sequence.\n  tmp \u003d realloc(buffer, new_size);\n  if (tmp \u003d\u003d NULL) {\n    free bufer;\n    return;\n  } else\n    buffer \u003d tmp;\n\nBut spdk_sprintf_realloc() requires the caller to have the following sequence.\n  buffer \u003d spdk_sprintf_realloc(buffer, new_size);\n  if (buffer \u003d\u003d NULL)\n    return;",
+      "parentUuid": "370b0d74_90b2a5af",
+      "range": {
+        "startLine": 78,
+        "startChar": 73,
+        "endLine": 80,
+        "endChar": 77
+      },
+      "revId": "8b41e8dba20e6b90bfe6cdb435f35130ed6a4d32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9f899aea_a9d42b5d",
         "filename": "include/spdk/string.h",
         "patchSetId": 9
