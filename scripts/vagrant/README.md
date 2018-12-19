@@ -228,3 +228,6 @@ To build spdk on FreeBSD use `gmake MAKE=gmake`.  E.g.:
     $ ./configure --enable-debug
     $ gmake MAKE=gmake
 ```
+## Vagrant VM automated test
+
+There is an automated test script for creating Vagrant VM located in `spdk/test/vagrant`. It can run simple "Hello_world" example or run autotests on new VM, please run `./test/vagrant/vagrant.sh --help` for more details. It is recommended to run this test before committing changes done in source scripts.
