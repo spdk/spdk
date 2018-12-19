@@ -16,6 +16,24 @@
       "revId": "fbc5ab382954fd02246bc74f0a535e0956bbf752",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d80aea8c_b4f56440",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T22:11:05Z",
+      "side": 1,
+      "message": "It\u0027s not necessary, but it isn\u0027t hurting anything here. It\u0027s just going to add one more test name to our list. spdk_vhost.sh contains most of the reporting calls for vhost. It also might make it more clear to someone just analyzing the scripts that the top level vhost tests were run.",
+      "parentUuid": "559f8621_c501f768",
+      "revId": "fbc5ab382954fd02246bc74f0a535e0956bbf752",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
