@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f15e324_419f16e1",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-19T13:00:31Z",
+      "side": 1,
+      "message": "2 spaces",
+      "range": {
+        "startLine": 158,
+        "startChar": 9,
+        "endLine": 158,
+        "endChar": 11
+      },
+      "revId": "97873be243e68a29cc0276db1872df3a6d934f80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
