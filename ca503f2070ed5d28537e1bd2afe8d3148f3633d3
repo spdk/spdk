@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e8a521c2_d1860c78",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T17:13:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3dbc8cde_78710f97",
+      "revId": "ca503f2070ed5d28537e1bd2afe8d3148f3633d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b89e2398_95d67b8d",
         "filename": "scripts/rpc.py",
         "patchSetId": 10
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-19T16:18:24Z",
       "side": 1,
       "message": "you missed my comment on previous review about removing BDF reference on hostaddr",
+      "revId": "ca503f2070ed5d28537e1bd2afe8d3148f3633d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9d468c8_7d7e882d",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T17:13:52Z",
+      "side": 1,
+      "message": "My bad.",
+      "parentUuid": "b89e2398_95d67b8d",
       "revId": "ca503f2070ed5d28537e1bd2afe8d3148f3633d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
