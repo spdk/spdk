@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d868e6c_bb27b22a",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T21:17:14Z",
+      "side": 1,
+      "message": "I think it would be better to just expose this in ftl_trace.h.  Then this structure can be embedded directly in other structures, rather than requiring an extra pointer chase.",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaf75166_dff5457e",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T21:17:14Z",
+      "side": 1,
+      "message": "function signature doesn\u0027t match header file",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bbe3146_5a1f9e51",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T21:17:14Z",
+      "side": 1,
+      "message": "could we remove this typedef?\n\nwe typically don\u0027t do typedefs like this for basic types unless it\u0027s something we want to make opaque in a public API (i.e. spdk_blob_id)\n\nI\u0027m ok removing it later since it was introduced in an earlier patch - please don\u0027t update earlier patches in this series for this change",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e8c2052_511a2ad7",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T21:17:14Z",
+      "side": 1,
+      "message": "now that tracing is enabled by default, can we remove this ftl_trace macro abstraction?",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
