@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4265c9f6_eb0b9a55",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2018-12-19T16:25:07Z",
+      "side": 1,
+      "message": "By changing this call from _nvmf_rdma_qpair_disconnect to spdk_nvmf_qpair_disconnect, you are causing the rqpair to never get deleted.\nOn line 2195 you increase the rqpair refcount by 1. then you never call spdk_nvmf_rdma_qpair_dec_refcnt which means the refcnt is at least 1. \nWhen the send and receive queues are drained, we call spdk_nvmf_rdma_qpair_destroy which checks rqpair-\u003erefcount. If it\u0027s greater than zero, we bail out of the function.\nAlso, I am pretty certain that you need to send a message here because we only disconnect qpairs from the same thread they were allocated (we do that round robin), and the acceptor poller is always called from the same thread.",
+      "revId": "11cd7eef93116cda90dca2345977cd0beee7807d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
