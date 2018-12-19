@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99b60da2_a2fa210f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1599,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-19T21:23:04Z",
+      "side": 1,
+      "message": "This should compare to (SPDK_NVMF_MAX_SGL_ENTRIES * 2)\n\nThe error should say \"The number of shared data buffers (%d) is less than the minimum number required to guarantee that forward progress can be made (%d)\\n\"",
+      "revId": "5bcfac67cb39616fbeaeee164d1c9c493245902c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
