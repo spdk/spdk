@@ -311,7 +311,7 @@ int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name
 {
 	struct rpc_construct_raid_bdev *req = rpc_req;
 	if (strcmp(name, "strip_size") == 0) {
-		CU_ASSERT(req->strip_size * 1024 / g_block_len == val);
+		CU_ASSERT(req->strip_size == val);
 	} else if (strcmp(name, "blocklen_shift") == 0) {
 		CU_ASSERT(spdk_u32log2(g_block_len) == val);
 	} else if (strcmp(name, "raid_level") == 0) {

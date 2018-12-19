@@ -162,7 +162,7 @@ struct rpc_construct_raid_bdev {
 	/* Raid bdev name */
 	char                                 *name;
 
-	/* RAID strip size */
+	/* RAID strip size in KB */
 	uint32_t                             strip_size;
 
 	/* RAID raid level */

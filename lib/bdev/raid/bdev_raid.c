@@ -675,7 +675,7 @@ raid_bdev_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	/* Dump the raid bdev configuration related information */
 	spdk_json_write_name(w, "raid");
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size);
+	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size_kb);
 	spdk_json_write_named_uint32(w, "state", raid_bdev->state);
 	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
 	spdk_json_write_named_uint32(w, "destruct_called", raid_bdev->destruct_called);
@@ -718,7 +718,7 @@ raid_bdev_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", bdev->name);
-	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size);
+	spdk_json_write_named_uint32(w, "strip_size", raid_bdev->strip_size_kb);
 	spdk_json_write_named_uint32(w, "raid_level", raid_bdev->raid_level);
 
 	spdk_json_write_named_array_begin(w, "base_bdevs");
@@ -1122,7 +1122,7 @@ raid_bdev_get_running_config(FILE *fp)
 			"  StripSize %" PRIu32 "\n"
 			"  NumDevices %hu\n"
 			"  RaidLevel %hhu\n",
-			index, raid_bdev->bdev.name, raid_bdev->strip_size,
+			index, raid_bdev->bdev.name, raid_bdev->strip_size_kb,
 			raid_bdev->num_base_bdevs, raid_bdev->raid_level);
 		fprintf(fp,
 			"  Devices ");
@@ -1255,7 +1255,10 @@ raid_bdev_create(struct raid_bdev_config *raid_cfg)
 		return -ENOMEM;
 	}
 
-	raid_bdev->strip_size = raid_cfg->strip_size;
+	/* Strip size is read in from the user in KB but later converted to blocks
+	 * for internal use.  Save the KB value off for display purposes.
+	 */
+	raid_bdev->strip_size = raid_bdev->strip_size_kb = raid_cfg->strip_size;
 	raid_bdev->state = RAID_BDEV_STATE_CONFIGURING;
 	raid_bdev->config = raid_cfg;
 
@@ -1365,7 +1368,11 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
 		}
 	}
 
-	raid_bdev->strip_size = (raid_bdev->strip_size * 1024) / blocklen;
+	/* Initially strip_size is read in from user in KB and we store it
+	 * separately for display purposes.  Convert to blocks here for
+	 * internal use.
+	 */
+	raid_bdev->strip_size = (raid_bdev->strip_size_kb * 1024) / blocklen;
 	raid_bdev->strip_size_shift = spdk_u32log2(raid_bdev->strip_size);
 	raid_bdev->blocklen_shift = spdk_u32log2(blocklen);
 
