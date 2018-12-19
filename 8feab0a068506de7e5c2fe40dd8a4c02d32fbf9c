@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ad7b39f2_23cc6e36",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T10:14:15Z",
+      "side": 1,
+      "message": "It might make sense to have the check outside of this function. It was implemented this way, because at point of calling this function there\u0027s no clear indication of whether we\u0027re writing user data or not (with the exception of the lba \u003d\u003d LBA_INVALID of course). Anyway, I\u0027ll move the check outside.",
+      "parentUuid": "6c266989_58c62bdc",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90efe3f8_e3f366c6",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 28
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-18T20:14:07Z",
       "side": 1,
       "message": "you can use spdk_divide_round_up now",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "384c3965_88ebb7e2",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T10:14:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "90efe3f8_e3f366c6",
       "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "697df111_ad401c1d",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T10:14:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f4aac20_fc4ae2f5",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9a878a9_f53673d5",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 28
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-18T20:14:07Z",
       "side": 1,
       "message": "ftl_rwb_batch_get_md",
+      "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f9f95c4_71dc3cd9",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 440,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-19T10:14:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9a878a9_f53673d5",
       "revId": "8feab0a068506de7e5c2fe40dd8a4c02d32fbf9c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
