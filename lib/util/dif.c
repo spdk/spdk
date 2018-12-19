@@ -37,6 +37,54 @@
 #include "spdk/log.h"
 #include "spdk/util.h"
 
+/* Context to iterate a iovec array. */
+struct _iov_iter {
+	/* Current iovec in the iteration */
+	struct iovec *iov;
+
+	/* Remaining count of iovecs in the iteration. */
+	int iovcnt;
+
+	/* Current offset in the iovec */
+	uint32_t iov_offset;
+};
+
+static inline void
+_iov_iter_init(struct _iov_iter *i, struct iovec *iovs, int iovcnt)
+{
+	i->iov = iovs;
+	i->iovcnt = iovcnt;
+	i->iov_offset = 0;
+}
+
+static inline bool
+_iov_iter_cont(struct _iov_iter *i)
+{
+	return i->iovcnt != 0;
+}
+
+static inline void
+_iov_iter_advance(struct _iov_iter *i, uint32_t step)
+{
+	i->iov_offset += step;
+	if (i->iov_offset == i->iov->iov_len) {
+		i->iov++;
+		i->iovcnt--;
+		i->iov_offset = 0;
+	}
+}
+
+static inline void
+_iov_iter_get_buf(struct _iov_iter *i, void **_buf, uint32_t *_buf_len)
+{
+	if (_buf != NULL) {
+		*_buf = i->iov->iov_base + i->iov_offset;
+	}
+	if (_buf_len != NULL) {
+		*_buf_len = i->iov->iov_len - i->iov_offset;
+	}
+}
+
 static bool
 _are_iovs_bytes_multiple(struct iovec *iovs, int iovcnt, uint32_t bytes)
 {
@@ -128,16 +176,15 @@ dif_generate(struct iovec *iovs, int iovcnt,
 	     enum spdk_dif_type dif_type, uint32_t dif_flags,
 	     uint32_t init_ref_tag, uint16_t app_tag)
 {
-	uint32_t offset_blocks, iov_offset, ref_tag;
-	int iovpos;
+	struct _iov_iter iter;
+	uint32_t offset_blocks, ref_tag;
 	void *buf;
 	uint16_t guard = 0;
 
 	offset_blocks = 0;
-	iov_offset = 0;
-	iovpos = 0;
+	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && iovpos < iovcnt) {
+	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
 		/* For type 1 and 2, the reference tag is incremented for each
 		 * subsequent logical block. For type 3, the reference tag
 		 * remains the same as the initial reference tag.
@@ -148,7 +195,7 @@ dif_generate(struct iovec *iovs, int iovcnt,
 			ref_tag = init_ref_tag;
 		}
 
-		buf = iovs[iovpos].iov_base + iov_offset;
+		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (dif_flags & SPDK_DIF_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, guard_interval);
@@ -157,11 +204,7 @@ dif_generate(struct iovec *iovs, int iovcnt,
 		_dif_generate(buf + guard_interval, dif_flags, guard, ref_tag,
 			      app_tag);
 
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, block_size);
 		offset_blocks++;
 	}
 }
@@ -172,18 +215,17 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 		   enum spdk_dif_type dif_type, uint32_t dif_flags,
 		   uint32_t init_ref_tag, uint16_t app_tag)
 {
+	struct _iov_iter iter;
 	uint32_t offset_blocks, offset_in_block, offset_in_dif;
-	uint32_t iov_offset, buf_len, ref_tag;
-	int iovpos;
+	uint32_t buf_len, ref_tag;
 	void *buf;
 	uint16_t guard;
 	struct spdk_dif dif = {};
 
 	offset_blocks = 0;
-	iov_offset = 0;
-	iovpos = 0;
+	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && iovpos < iovcnt) {
+	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
 		/* For type 1 and 2, the reference tag is incremented for each
 		 * subsequent logical block. For type 3, the reference tag
 		 * remains the same as the initial reference tag.
@@ -197,9 +239,8 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 		guard = 0;
 		offset_in_block = 0;
 
-		while (offset_in_block < block_size && iovpos < iovcnt) {
-			buf = iovs[iovpos].iov_base + iov_offset;
-			buf_len = iovs[iovpos].iov_len - iov_offset;
+		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+			_iov_iter_get_buf(&iter, &buf, &buf_len);
 
 			if (offset_in_block < guard_interval) {
 				buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
@@ -226,11 +267,7 @@ dif_generate_split(struct iovec *iovs, int iovcnt,
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 			}
 
-			iov_offset += buf_len;
-			if (iov_offset == iovs[iovpos].iov_len) {
-				iovpos++;
-				iov_offset = 0;
-			}
+			_iov_iter_advance(&iter, buf_len);
 			offset_in_block += buf_len;
 		}
 		offset_blocks++;
@@ -360,16 +397,16 @@ dif_verify(struct iovec *iovs, int iovcnt,
 	   enum spdk_dif_type dif_type, uint32_t dif_flags, uint32_t init_ref_tag,
 	   uint16_t apptag_mask, uint16_t app_tag)
 {
-	uint32_t offset_blocks, iov_offset, ref_tag;
-	int iovpos, rc;
+	struct _iov_iter iter;
+	uint32_t offset_blocks, ref_tag;
+	int rc;
 	void *buf;
 	uint16_t guard = 0;
 
 	offset_blocks = 0;
-	iov_offset = 0;
-	iovpos = 0;
+	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && iovpos < iovcnt) {
+	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
 		/* For type 1 and 2, the reference tag is incremented for each
 		 * subsequent logical block. For type 3, the reference tag
 		 * remains the same as the initial reference tag.
@@ -380,7 +417,7 @@ dif_verify(struct iovec *iovs, int iovcnt,
 			ref_tag = init_ref_tag;
 		}
 
-		buf = iovs[iovpos].iov_base + iov_offset;
+		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (dif_flags & SPDK_DIF_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, guard_interval);
@@ -392,11 +429,7 @@ dif_verify(struct iovec *iovs, int iovcnt,
 			return rc;
 		}
 
-		iov_offset += block_size;
-		if (iov_offset == iovs[iovpos].iov_len) {
-			iovpos++;
-			iov_offset = 0;
-		}
+		_iov_iter_advance(&iter, block_size);
 		offset_blocks++;
 	}
 
@@ -409,18 +442,18 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 		 enum spdk_dif_type dif_type, uint32_t dif_flags,
 		 uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
+	struct _iov_iter iter;
 	uint32_t offset_blocks, offset_in_block, offset_in_dif;
-	uint32_t iov_offset, buf_len, ref_tag = 0;
-	int iovpos, rc;
+	uint32_t buf_len, ref_tag = 0;
+	int rc;
 	void *buf;
 	uint16_t guard;
 	struct spdk_dif dif = {};
 
 	offset_blocks = 0;
-	iov_offset = 0;
-	iovpos = 0;
+	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && iovpos < iovcnt) {
+	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
 		/* For type 1 and 2, the reference tag is incremented for each
 		 * subsequent logical block. For type 3, the reference tag
 		 * remains the same as the initial reference tag.
@@ -434,9 +467,8 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 		guard = 0;
 		offset_in_block = 0;
 
-		while (offset_in_block < block_size && iovpos < iovcnt) {
-			buf = iovs[iovpos].iov_base + iov_offset;
-			buf_len = iovs[iovpos].iov_len - iov_offset;
+		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+			_iov_iter_get_buf(&iter, &buf, &buf_len);
 
 			if (offset_in_block < guard_interval) {
 				buf_len = spdk_min(buf_len, guard_interval - offset_in_block);
@@ -456,11 +488,7 @@ dif_verify_split(struct iovec *iovs, int iovcnt,
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 			}
 
-			iov_offset += buf_len;
-			if (iov_offset == iovs[iovpos].iov_len) {
-				iovpos++;
-				iov_offset = 0;
-			}
+			_iov_iter_advance(&iter, buf_len);
 			offset_in_block += buf_len;
 		}
 
