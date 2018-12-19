@@ -2,6 +2,12 @@
 
 ## v19.04: (Upcoming Release)
 
+### raid
+
+Added new strip_size_kb rpc param on create to replace the more ambiguous
+strip_size. One must be specified but either will work. The strip_size
+rpc param is deprecated.
+
 ## v19.01:
 
 ### ocf bdev
