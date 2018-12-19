@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "850d7781_c6ad0f44",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1217,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-19T00:25:23Z",
+      "side": 1,
+      "message": "need to populate opts.hostnqn - this gets done in the probe_cb, but since you\u0027re now using connect, you need to do it here instead",
+      "revId": "8fd71cf3907873a2cdbf13e6f25144bec2d9b560",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
