@@ -214,4 +214,23 @@ int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 int spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
 			  uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
 			  bool dif_loc, uint32_t inject_flags);
+
+/**
+ * Inject bit flip error to separate metadata payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param num_blocks Number of blocks of the payload.
+ * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
+ * If false, DIF is set in the first 8 bytes of metadata.
+ * \param inject_flags Flag to specify the action of error injection.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+			  uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
+			  bool dif_loc, uint32_t inject_flags);
 #endif /* SPDK_DIF_H */
