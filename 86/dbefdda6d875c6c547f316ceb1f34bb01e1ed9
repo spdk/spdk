@@ -1,0 +1,9 @@
+Code-Review+2: Darek Stojaczyk <dariusz.stojaczyk@intel.com>
+Code-Review+1: Maciej Szwed <maciej.szwed@intel.com>
+Verified+1: SPDK CI Jenkins <sys_sgci@intel.com>
+Chandler-Test-Pool+1: SPDK Automated Test System <sys_sgsw@intel.com>
+Submitted-by: Darek Stojaczyk <dariusz.stojaczyk@intel.com>
+Submitted-at: Thu, 20 Dec 2018 09:11:26 +0000
+Reviewed-on: https://review.gerrithub.io/437916
+Project: spdk/spdk
+Branch: refs/heads/v18.10.x
