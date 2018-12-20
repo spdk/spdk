@@ -538,6 +538,7 @@ _vbdev_lvol_unregister_cb(void *ctx, int lvolerrno)
 	struct spdk_bdev *bdev = ctx;
 
 	spdk_bdev_destruct_done(bdev, lvolerrno);
+
 	free(bdev);
 }
 

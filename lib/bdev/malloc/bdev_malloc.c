@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -129,6 +130,7 @@ bdev_malloc_destruct(void *ctx)
 	struct malloc_disk *malloc_disk = ctx;
 
 	TAILQ_REMOVE(&g_malloc_disks, malloc_disk, link);
+	spdk_notify_send("delete_malloc_bdev_notify", malloc_disk->disk.name);
 	malloc_disk_free(malloc_disk);
 	return 0;
 }
@@ -438,7 +440,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	}
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
-
+	spdk_notify_send("construct_malloc_bdev", mdisk->disk.name);
 	return &mdisk->disk;
 }
 
@@ -482,6 +484,9 @@ static int bdev_malloc_initialize(void)
 			}
 		}
 	}
+
+	spdk_notify_type_register("construct_malloc_bdev");
+	spdk_notify_type_register("delete_malloc_bdev");
 
 end:
 	return rc;

@@ -36,6 +36,7 @@
 #include "spdk/env.h"
 #include "spdk/conf.h"
 #include "spdk/endian.h"
+#include "spdk/notify.h"
 #include "spdk/io_channel.h"
 #include "spdk/bdev_module.h"
 
@@ -1043,6 +1044,9 @@ vbdev_crypto_destruct(void *ctx)
 	/* Close the underlying bdev. */
 	spdk_bdev_close(crypto_bdev->base_desc);
 
+	/* Send remove notification */
+	spdk_notify_send("delete_crypto_bdev", crypto_bdev->crypto_bdev.name);
+
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(crypto_bdev, _device_unregister_cb);
 
@@ -1224,6 +1228,7 @@ vbdev_crypto_insert_name(const char *bdev_name, const char *vbdev_name,
 	}
 
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
+	spdk_notify_send("construct_crypto_bdev", name);
 
 	return 0;
 
@@ -1332,6 +1337,9 @@ vbdev_crypto_init(void)
 			return rc;
 		}
 	}
+
+	spdk_notify_type_register("construct_crypto_bdev");
+	spdk_notify_type_register("delete_crypto_bdev");
 
 	return rc;
 }

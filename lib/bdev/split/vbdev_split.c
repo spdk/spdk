@@ -42,6 +42,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
@@ -303,6 +304,7 @@ static void
 vbdev_split_del_config(struct spdk_vbdev_split_config *cfg)
 {
 	TAILQ_REMOVE(&g_split_config, cfg, tailq);
+	spdk_notify_send("destruct_split_vbdev", cfg->base_bdev);
 	free(cfg->base_bdev);
 	free(cfg);
 }
@@ -385,6 +387,7 @@ vbdev_split_add_config(const char *base_bdev_name, unsigned split_count, uint64_
 	cfg->split_count = split_count;
 	cfg->split_size_mb = split_size;
 	TAILQ_INSERT_TAIL(&g_split_config, cfg, tailq);
+	spdk_notify_send("construct_split_vbdev", cfg->base_bdev);
 	if (config) {
 		*config = cfg;
 	}
@@ -450,6 +453,9 @@ vbdev_split_init(void)
 			goto err;
 		}
 	}
+
+	spdk_notify_type_register("construct_split_vbdev");
+	spdk_notify_type_register("destruct_split_vbdev");
 
 	return 0;
 err:

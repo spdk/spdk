@@ -45,6 +45,7 @@
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/util.h"
 
 #include "spdk/bdev_module.h"
@@ -90,6 +91,7 @@ bdev_rbd_free(struct bdev_rbd *rbd)
 		return;
 	}
 
+	spdk_notify_send("delete_rbd_bdev", rbd->disk.name);
 	free(rbd->disk.name);
 	free(rbd->rbd_name);
 	free(rbd->user_id);
@@ -766,6 +768,8 @@ spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_nam
 		return NULL;
 	}
 
+	spdk_notify_send("construct_rbd_bdev", rbd->disk.name);
+
 	return &rbd->disk;
 }
 
@@ -846,6 +850,9 @@ bdev_rbd_library_init(void)
 			goto end;
 		}
 	}
+
+	spdk_notify_type_register("construct_rbd_bdev");
+	spdk_notify_type_register("delete_rbd_bdev");
 
 end:
 	return rc;
