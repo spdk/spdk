@@ -756,6 +756,16 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 		return 0;
 	}
 
+	/* If the qpair is already in this state, which means that it is already
+	 * in disconnect process, so we should not destroy it again.
+	 */
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+		if (cb_fn) {
+			cb_fn(ctx);
+		}
+		return 0;
+	}
+
 	/* The queue pair must be disconnected from the thread that owns it */
 	assert(qpair->group->thread == spdk_get_thread());
 
