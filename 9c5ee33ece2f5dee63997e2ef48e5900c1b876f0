@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a94b545_06627aba",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-12-20T13:38:42Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be: set +e\nat the beginning",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 35
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d56cc87_83de341c",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2018-12-20T13:38:42Z",
+      "side": 1,
+      "message": "You need to download spdk sources?",
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
