@@ -47,7 +47,7 @@ static char *g_persistent_pm_buf;
 static size_t g_persistent_pm_buf_len;
 static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
-static const char *g_path;
+static char g_path[REDUCE_PATH_MAX];
 
 #define TEST_MD_PATH "/tmp"
 
@@ -113,7 +113,7 @@ pmem_map_file(const char *path, size_t len, int flags, mode_t mode,
 	      size_t *mapped_lenp, int *is_pmemp)
 {
 	CU_ASSERT(g_volatile_pm_buf == NULL);
-	g_path = path;
+	snprintf(g_path, sizeof(g_path), "%s", path);
 	*is_pmemp = 1;
 
 	if (g_persistent_pm_buf == NULL) {
@@ -351,7 +351,7 @@ _init_backing_dev(uint32_t backing_blocklen)
 	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
-	g_path = NULL;
+	memset(g_path, 0, sizeof(g_path));
 	g_reduce_errno = -1;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
@@ -413,7 +413,7 @@ _load(uint32_t backing_blocklen)
 	CU_ASSERT(g_reduce_errno == 0);
 
 	g_vol = NULL;
-	g_path = NULL;
+	memset(g_path, 0, sizeof(g_path));
 	g_reduce_errno = -1;
 	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
