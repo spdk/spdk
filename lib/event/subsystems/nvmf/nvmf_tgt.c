@@ -214,7 +214,7 @@ nvmf_tgt_get_qpair_core(struct spdk_nvmf_qpair *qpair)
 	return core;
 }
 
-static void
+static int
 new_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_event *event;
@@ -224,7 +224,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 
 	if (g_tgt_state != NVMF_TGT_RUNNING) {
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
+		return -1;
 	}
 
 	for (attempts = 0; attempts < g_num_poll_groups; attempts++) {
@@ -240,11 +240,13 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	if (attempts == g_num_poll_groups) {
 		SPDK_ERRLOG("No poll groups exist.\n");
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
-		return;
+		return -1;
 	}
 
 	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
 	spdk_event_call(event);
+
+	return 0;
 }
 
 static int

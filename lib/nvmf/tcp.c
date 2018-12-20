@@ -1173,7 +1173,9 @@ _spdk_nvmf_tcp_handle_connect(struct spdk_nvmf_transport *transport,
 		return;
 	}
 
-	cb_fn(&tqpair->qpair);
+	if (cb_fn(&tqpair->qpair) == 0) {
+		spdk_nvmf_qpair_set_state(&tqpair->qpair, SPDK_NVMF_QPAIR_ACTIVATING);
+	}
 }
 
 static void
