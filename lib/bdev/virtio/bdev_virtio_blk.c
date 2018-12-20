@@ -39,6 +39,7 @@
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
 
@@ -274,6 +275,7 @@ virtio_blk_dev_unregister_cb(void *io_device)
 	virtio_dev_stop(vdev);
 	virtio_dev_destruct(vdev);
 	spdk_bdev_destruct_done(&bvdev->bdev, 0);
+	spdk_notify_send("remove_virtio_blk_bdev", bvdev->bdev.name);
 	free(bvdev);
 }
 
@@ -514,6 +516,8 @@ virtio_blk_dev_init(struct virtio_blk_dev *bvdev, uint16_t max_queues)
 		return rc;
 	}
 
+	spdk_notify_send("construct_virtio_blk_dev", bdev->name);
+
 	return 0;
 }
 
@@ -728,6 +732,9 @@ bdev_virtio_initialize(void)
 		rc = virtio_pci_dev_enumerate(virtio_pci_blk_dev_enumerate_cb, NULL,
 					      PCI_DEVICE_ID_VIRTIO_BLK_MODERN);
 	}
+
+	spdk_notify_type_register("construct_virtio_blk_dev");
+	spdk_notify_type_register("remove_virtio_blk_bdev");
 
 	return rc;
 }

@@ -45,6 +45,7 @@
 #include "spdk/nvme_ocssd.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
 
@@ -223,6 +224,9 @@ bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	spdk_notify_send("delete_nvme_controller", nvme_bdev_ctrlr->name);
+
 	spdk_io_device_unregister(nvme_bdev_ctrlr->ctrlr, bdev_nvme_unregister_cb);
 	spdk_poller_unregister(&nvme_bdev_ctrlr->adminq_timer_poller);
 	free(nvme_bdev_ctrlr->name);
@@ -974,6 +978,8 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_INSERT_TAIL(&g_nvme_bdev_ctrlrs, nvme_bdev_ctrlr, tailq);
 
+	spdk_notify_send("construct_nvme_bdev", nvme_bdev_ctrlr->name);
+
 	if (g_opts.timeout_us > 0) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
 				timeout_cb, NULL);
@@ -1483,6 +1489,9 @@ bdev_nvme_library_init(void)
 	if (rc) {
 		SPDK_ERRLOG("Failed to setup hotplug (%d): %s", rc, spdk_strerror(rc));
 		rc = -1;
+	} else {
+		spdk_notify_type_register("construct_nvme_bdev");
+		spdk_notify_type_register("delete_nvme_controller");
 	}
 end:
 	spdk_nvme_retry_count = g_opts.retry_count;

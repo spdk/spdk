@@ -42,6 +42,7 @@
 #include "spdk/util.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/iscsi_spec.h"
 
 #include "spdk_internal/log.h"
@@ -133,6 +134,9 @@ _iscsi_free_lun(void *arg)
 	struct bdev_iscsi_lun *lun = arg;
 
 	assert(lun != NULL);
+
+	spdk_notify_send("delete_iscsi_bdev", lun->bdev.name);
+
 	iscsi_destroy_context(lun->context);
 	pthread_mutex_destroy(&lun->mutex);
 	free(lun->bdev.name);
@@ -617,6 +621,8 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	lun->no_master_ch_poller = spdk_poller_register(bdev_iscsi_no_master_ch_poll, lun,
 				   BDEV_ISCSI_NO_MASTER_CH_POLL_US);
 
+	spdk_notify_send("construct_iscsi_bdev", lun->bdev.name);
+
 	*bdev = &lun->bdev;
 	return 0;
 }
@@ -857,6 +863,9 @@ bdev_iscsi_initialize(void)
 
 	if (i == 0) {
 		spdk_bdev_module_init_done(&g_iscsi_bdev_module);
+
+		spdk_notify_type_register("construct_iscsi_bdev");
+		spdk_notify_type_register("delete_iscsi_bdev");
 	}
 
 	return rc;

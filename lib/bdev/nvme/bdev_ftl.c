@@ -143,6 +143,7 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		}
 
 		TAILQ_INSERT_HEAD(&g_nvme_bdev_ctrlrs, ftl_ctrlr, tailq);
+		spdk_notify_send("construct_ftl_bdev", ctrlr->name);
 	}
 out:
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
@@ -161,6 +162,7 @@ bdev_ftl_remove_ctrlr(struct nvme_bdev_ctrlr *ctrlr)
 		}
 
 		TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
+		spdk_notify_send("delete_ftl_bdev", ctrlr->name);
 		free(ctrlr->name);
 		free(ctrlr);
 	}
@@ -827,6 +829,9 @@ bdev_ftl_initialize(void)
 	if (rc) {
 		bdev_ftl_initialize_cb(NULL, rc);
 
+	} else {
+		spdk_notify_type_register("construct_ftl_bdev");
+		spdk_notify_type_register("delete_ftl_bdev");
 	}
 error:
 	pthread_mutexattr_destroy(&attr);

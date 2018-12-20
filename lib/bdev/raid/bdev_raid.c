@@ -37,6 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk_internal/log.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
 #include "spdk/string.h"
@@ -1047,6 +1048,8 @@ raid_bdev_config_cleanup(struct raid_bdev_config *raid_cfg)
 	TAILQ_REMOVE(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_spdk_raid_config.total_raid_bdev--;
 
+	spdk_notify_send("destroy_raid_bdev", raid_cfg->name);
+
 	if (raid_cfg->base_bdev) {
 		for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
 			free(raid_cfg->base_bdev[i].name);
@@ -1164,6 +1167,8 @@ raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 
 	TAILQ_INSERT_TAIL(&g_spdk_raid_config.raid_bdev_config_head, raid_cfg, link);
 	g_spdk_raid_config.total_raid_bdev++;
+
+	spdk_notify_send("construct_raid_bdev", raid_cfg->name);
 
 	*_raid_cfg = raid_cfg;
 	return 0;
@@ -1505,6 +1510,9 @@ raid_bdev_init(void)
 		raid_bdev_free();
 		return ret;
 	}
+
+	spdk_notify_type_register("construct_raid_bdev");
+	spdk_notify_type_register("destroy_raid_bdev");
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_init completed successfully\n");
 
