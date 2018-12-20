@@ -47,7 +47,7 @@ static char *g_persistent_pm_buf;
 static size_t g_persistent_pm_buf_len;
 static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
-static const char *g_path;
+static char g_path[REDUCE_PATH_MAX];
 
 #define TEST_MD_PATH "/tmp"
 
@@ -113,7 +113,7 @@ pmem_map_file(const char *path, size_t len, int flags, mode_t mode,
 	      size_t *mapped_lenp, int *is_pmemp)
 {
 	CU_ASSERT(g_volatile_pm_buf == NULL);
-	g_path = path;
+	snprintf(g_path, sizeof(g_path), "%s", path);
 	*is_pmemp = 1;
 
 	if (g_persistent_pm_buf == NULL) {
@@ -351,12 +351,12 @@ _init_backing_dev(uint32_t backing_blocklen)
 	backing_dev_init(&backing_dev, &params, backing_blocklen);
 
 	g_vol = NULL;
-	g_path = NULL;
+	memset(g_path, 0, sizeof(g_path));
 	g_reduce_errno = -1;
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
-	SPDK_CU_ASSERT_FATAL(g_path != NULL);
+	CU_ASSERT(strncmp(TEST_MD_PATH, g_path, strlen(TEST_MD_PATH)) == 0);
 	/* Confirm that libreduce persisted the params to the backing device. */
 	CU_ASSERT(memcmp(g_backing_dev_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
 	persistent_params = (struct spdk_reduce_vol_params *)(g_backing_dev_buf + 8);
@@ -405,7 +405,7 @@ _load(uint32_t backing_blocklen)
 	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
-	SPDK_CU_ASSERT_FATAL(g_path != NULL);
+	CU_ASSERT(strncmp(TEST_MD_PATH, g_path, strlen(TEST_MD_PATH)) == 0);
 	memcpy(pmem_file_path, g_path, sizeof(pmem_file_path));
 
 	g_reduce_errno = -1;
@@ -413,12 +413,11 @@ _load(uint32_t backing_blocklen)
 	CU_ASSERT(g_reduce_errno == 0);
 
 	g_vol = NULL;
-	g_path = NULL;
+	memset(g_path, 0, sizeof(g_path));
 	g_reduce_errno = -1;
 	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
-	SPDK_CU_ASSERT_FATAL(g_path != NULL);
 	CU_ASSERT(strncmp(g_path, pmem_file_path, sizeof(pmem_file_path)) == 0);
 	CU_ASSERT(g_vol->params.vol_size == params.vol_size);
 	CU_ASSERT(g_vol->params.chunk_size == params.chunk_size);
