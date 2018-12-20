@@ -756,33 +756,41 @@ check_io(struct ns_worker_ctx *ns_ctx)
 	}
 }
 
-static void
-submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
+static struct perf_task *
+allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
 {
 	struct perf_task *task;
 	uint32_t max_io_size_bytes;
 
+	task = calloc(1, sizeof(*task));
+	if (task == NULL) {
+		fprintf(stderr, "Out of memory allocating tasks\n");
+		exit(1);
+	}
+
+	/* maximum extended lba format size from all active namespace,
+	 * it's same with g_io_size_bytes for namespace without metadata.
+	 */
+	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
+	task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+	if (task->buf == NULL) {
+		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
+		exit(1);
+	}
+	memset(task->buf, queue_depth % 8 + 1, max_io_size_bytes);
+
+	task->ns_ctx = ns_ctx;
+
+	return task;
+}
+
+static void
+submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
+{
+	struct perf_task *task;
+
 	while (queue_depth-- > 0) {
-		task = calloc(1, sizeof(*task));
-		if (task == NULL) {
-			fprintf(stderr, "Out of memory allocating tasks\n");
-			exit(1);
-		}
-
-		/* maximum extended lba format size from all active
-		 * namespace, it's same with g_io_size_bytes for
-		 * namespace without metadata
-		 */
-		max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-		task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
-		if (task->buf == NULL) {
-			fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
-			exit(1);
-		}
-		memset(task->buf, queue_depth % 8 + 1, max_io_size_bytes);
-
-		task->ns_ctx = ns_ctx;
-
+		task = allocate_task(ns_ctx, queue_depth);
 		submit_single_io(task);
 	}
 }
