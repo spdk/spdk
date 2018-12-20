@@ -16,6 +16,24 @@
       "revId": "c787211abe1b219f17602810e4dc7bf8adac970f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04f1796f_602807c5",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2018-12-20T09:35:29Z",
+      "side": 1,
+      "message": "Dequeue in stages may result in unwanted behaviour when we are trying to do relocate write (similar pattern is in ftl_reloc_process_queue()). In case when the write buffer is full we get EAGAIN error we put this IO again to write_queue. Dequeue in statges may result in unnecessary processing such request. I will remove this variable sized array and allocate this buffer on heap.",
+      "parentUuid": "cec3e8c0_97683ac5",
+      "revId": "c787211abe1b219f17602810e4dc7bf8adac970f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
