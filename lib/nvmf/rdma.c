@@ -2000,6 +2000,8 @@ _nvmf_rdma_qpair_disconnect(void *ctx)
 
 	spdk_nvmf_rdma_qpair_dec_refcnt(rqpair);
 
+	SPDK_ERRLOG("Calling spdk_nvmf_qpair_disconnect from _nvmf_rdma_qpair_disconnect on QP# %d\n",
+		    rqpair->qpair.qid);
 	spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 }
 
@@ -2350,6 +2352,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 			ibv_destroy_cq(poller->cq);
 		}
 		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
+			SPDK_ERRLOG("Destroying qp# %d in poll group destroy path\n", qpair->qpair.qid);
 			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
 
@@ -2399,6 +2402,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rqpair->mgmt_channel = spdk_get_io_channel(rtransport);
 	if (!rqpair->mgmt_channel) {
 		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		SPDK_ERRLOG("Destroying qp# %d in poll group add path\n", rqpair->qpair.qid);
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
@@ -2410,6 +2414,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	if (rc) {
 		/* Try to reject, but we probably can't */
 		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+		SPDK_ERRLOG("Destroying qp# %d in poll group add path\n", rqpair->qpair.qid);
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
@@ -2475,6 +2480,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	struct ibv_send_wr *bad_send_wr;
 	int rc;
 
+	SPDK_ERRLOG("Attempting to close qpair %d (before disconnecting check)\n", qpair->qid);
 	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
 		return;
 	}
@@ -2577,6 +2583,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
+					SPDK_ERRLOG("Destroying qpair after draining recv queue QP #%d\n", rqpair->qpair.qid);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
@@ -2587,6 +2594,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
+					SPDK_ERRLOG("Destroying qpair after draining send queue QP #%d\n", rqpair->qpair.qid);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
@@ -2598,6 +2606,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
+				SPDK_ERRLOG("Calling spdk_nvmf_qpair_disconnect. failed I/O on QP# %d\n", rqpair->qpair.qid);
 				spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
 			}
 			continue;

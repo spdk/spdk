@@ -223,6 +223,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 	uint32_t attempts;
 
 	if (g_tgt_state != NVMF_TGT_RUNNING) {
+		SPDK_ERRLOG("Disconnecting qpair in new_qpair func\n");
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 		return;
 	}
@@ -239,6 +240,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 
 	if (attempts == g_num_poll_groups) {
 		SPDK_ERRLOG("No poll groups exist.\n");
+		SPDK_ERRLOG("Disconnecting qpair in new_qpair func\n");
 		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
 		return;
 	}

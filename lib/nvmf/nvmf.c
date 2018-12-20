@@ -203,6 +203,7 @@ _nvmf_tgt_disconnect_next_qpair(void *ctx)
 	qpair = TAILQ_FIRST(&group->qpairs);
 
 	if (qpair) {
+		SPDK_ERRLOG("Disconnecting qpair in _nvmf_tgt_disconnect_next_qpair func QP#%d\n", qpair->qid);
 		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_tgt_disconnect_next_qpair, ctx);
 	}
 
@@ -749,6 +750,7 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
 	qpair->group = NULL;
 
+	SPDK_ERRLOG("Calling pair_fini on qp# %d (destroy path)\n", qpair->qid);
 	spdk_nvmf_transport_qpair_fini(qpair);
 
 	if (!ctrlr || !ctrlr->thread) {
@@ -771,6 +773,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
+		SPDK_ERRLOG("Calling pair_fini on qp# %d (disconnect path)\n", qpair->qid);
 		spdk_nvmf_transport_qpair_fini(qpair);
 		if (cb_fn) {
 			cb_fn(ctx);
@@ -1048,6 +1051,8 @@ _nvmf_subsystem_disconnect_next_qpair(void *ctx)
 	}
 
 	if (qpair) {
+		SPDK_ERRLOG("Disconnecting qpair in _nvmf_subsystem_disconnect_next_qpair func QP#%d\n",
+			    qpair->qid);
 		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, qpair_ctx);
 	}
 
@@ -1089,6 +1094,8 @@ spdk_nvmf_poll_group_remove_subsystem(struct spdk_nvmf_poll_group *group,
 	}
 
 	if (qpair) {
+		SPDK_ERRLOG("Disconnecting qpair in spdk_nvmf_poll_group_remove_subsystem func QP#%d\n",
+			    qpair->qid);
 		rc = spdk_nvmf_qpair_disconnect(qpair, _nvmf_subsystem_disconnect_next_qpair, ctx);
 	} else {
 		/* call the callback immediately. It will handle any channel iteration */
