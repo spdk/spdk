@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -92,6 +93,66 @@ static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_mallo
 
 int malloc_disk_count = 0;
 
+static void bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+
+static void
+construct_malloc_bdev_notify_write_info(struct spdk_json_write_ctx *w,  struct spdk_notify *notify)
+{
+	char *bdev_name = spdk_notify_ctx(notify);
+	struct spdk_bdev *bdev = spdk_bdev_get_by_name(bdev_name);
+
+	assert(bdev != NULL);
+	bdev_malloc_write_json_config(bdev, w);
+}
+
+static void
+delete_malloc_bdev_notify_write_info(struct spdk_json_write_ctx *w,
+				     struct spdk_notify *notify)
+{
+	char *bdev_name = spdk_notify_ctx(notify);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "delete_malloc_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev_name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+}
+
+static struct spdk_notify_type construct_malloc_bdev_notify = {
+	.name = "construct_malloc_bdev",
+	.write_info_cb = construct_malloc_bdev_notify_write_info,
+};
+
+static struct spdk_notify_type delete_malloc_bdev_notify = {
+	.name = "delete_malloc_bdev",
+	.write_info_cb = delete_malloc_bdev_notify_write_info,
+};
+
+static void
+bdev_malloc_notify_send(struct malloc_disk *malloc_disk, bool deleted)
+{
+	static struct spdk_notify_type *type;
+	struct spdk_notify *notify;
+	size_t ctx_size = strlen(malloc_disk->disk.name) + 1;
+	char *ctx;
+
+	type = deleted == false ? &construct_malloc_bdev_notify : &delete_malloc_bdev_notify;
+	notify = spdk_notify_alloc(type, ctx_size);
+	if (notify == NULL) {
+		return;
+	}
+
+	ctx = spdk_notify_ctx(notify);
+	snprintf(ctx, ctx_size, "%s", malloc_disk->disk.name);
+
+	spdk_notify_send(notify);
+}
+
+
 static int bdev_malloc_initialize(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
@@ -129,6 +190,8 @@ bdev_malloc_destruct(void *ctx)
 	struct malloc_disk *malloc_disk = ctx;
 
 	TAILQ_REMOVE(&g_malloc_disks, malloc_disk, link);
+
+	bdev_malloc_notify_send(malloc_disk, true);
 	malloc_disk_free(malloc_disk);
 	return 0;
 }
@@ -438,7 +501,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	}
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
-
+	bdev_malloc_notify_send(mdisk, false);
 	return &mdisk->disk;
 }
 
@@ -522,3 +585,5 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_malloc", SPDK_LOG_BDEV_MALLOC)
+SPDK_NOTIFY_TYPE_REGISTER(construct_malloc_bdev_notify);
+SPDK_NOTIFY_TYPE_REGISTER(delete_malloc_bdev_notify);
