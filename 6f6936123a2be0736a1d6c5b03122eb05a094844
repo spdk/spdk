@@ -68,6 +68,30 @@
       "revId": "6f6936123a2be0736a1d6c5b03122eb05a094844",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1891bde8_bc18ee00",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 4271,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2018-12-20T09:37:19Z",
+      "side": 1,
+      "message": "histogram_enabled is also required for creating new channels",
+      "parentUuid": "e9471b3e_9b548ff0",
+      "range": {
+        "startLine": 4267,
+        "startChar": 0,
+        "endLine": 4271,
+        "endChar": 2
+      },
+      "revId": "6f6936123a2be0736a1d6c5b03122eb05a094844",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
