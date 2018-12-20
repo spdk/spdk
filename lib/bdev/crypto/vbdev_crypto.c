@@ -370,10 +370,13 @@ error_qp:
 	free(device);
 error_create_device:
 	rte_mempool_free(g_crypto_op_mp);
+	g_crypto_op_mp = NULL;
 error_create_op:
 	spdk_mempool_free(g_mbuf_mp);
+	g_mbuf_mp = NULL;
 error_create_mbuf:
 	spdk_mempool_free(g_session_mp);
+	g_session_mp = NULL;
 	return rc;
 }
 
