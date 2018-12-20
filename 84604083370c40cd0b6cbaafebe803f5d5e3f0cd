@@ -34,6 +34,24 @@
       "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a43517ef_c71cc4e9",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T15:39:18Z",
+      "side": 1,
+      "message": "No.  That\u0027s not acceptable for driver frameworks like SPDK and DPDK.  Yes, these are libraries that can get integrated into applications different than the bdev FTL module.  But SPDK and DPDK libraries are all designed for this kind of use case, and they don\u0027t check user inputs like this.\n\nI could give lots and lots of examples, look at all of the SPDK NVMe driver functions - none of them check the ctrlr, ns, or qpair objects for example.  If a user passes a NULL for one of these, the application will simply crash.  Yes - maybe we should be adding asserts here, but the point is that they don\u0027t check if the pointer is NULL and give the caller an error code if it is.  Their error code will be a segfault.\n\nSame for DPDK.  Look at rte_mempool for example.  Most (if not all) of the functions do not check if the mp pointer is NULL.",
+      "parentUuid": "b871d51b_f49185af",
+      "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
