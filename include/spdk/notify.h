@@ -212,7 +212,7 @@ int spdk_notify_unlisten(spdk_notify_handler cb, void *ctx);
 static void __attribute__((constructor)) notify_type_register##_type(void) \
 { \
 	struct spdk_notify_type *_ptype = &(_type); \
-	rc = spdk_notify_type_register(_ptype); \
+	spdk_notify_type_register(_ptype); \
 }
 
 #ifdef __cplusplus
