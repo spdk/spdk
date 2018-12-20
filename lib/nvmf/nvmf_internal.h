@@ -328,4 +328,14 @@ spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 	return qpair->qid == 0;
 }
 
+static inline void
+spdk_nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
+			  enum spdk_nvmf_qpair_state state)
+{
+	assert(qpair != NULL);
+	assert(qpair->group->thread == spdk_get_thread());
+
+	qpair->state = state;
+}
+
 #endif /* __NVMF_INTERNAL_H__ */
