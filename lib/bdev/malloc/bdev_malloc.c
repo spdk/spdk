@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -522,3 +523,43 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_malloc", SPDK_LOG_BDEV_MALLOC)
+
+#if 0
+static void
+construct_malloc_bdev_type_info_cb(struct spdk_json_write_ctx *w,
+				   struct spdk_notify_type *type, void *ctx)
+{
+
+}
+
+static void
+construct_bdev_info_cb(struct spdk_json_write_ctx *w,
+		       struct spdk_notify *notify, void *ctx)
+{
+
+}
+
+static void
+delete_bdev_type_info_cb(struct spdk_json_write_ctx *w,
+			 struct spdk_notify_type *type, void *ctx)
+{
+
+}
+
+static void
+delete_bdev_info_cb(struct spdk_json_write_ctx *w,
+		    struct spdk_notify *notify, void *ctx)
+{
+
+}
+
+#endif
+
+static struct spdk_notify_type construct_malloc_bdev = {
+	.name = "construct_malloc_bdev",
+
+
+};
+
+
+SPDK_NOTIFY_TYPE_REGISTER(construct_malloc_bdev);
