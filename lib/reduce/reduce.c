@@ -704,6 +704,94 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 	cb_fn(cb_arg, 0);
 }
 
+struct reduce_destroy_ctx {
+	spdk_reduce_vol_op_complete		cb_fn;
+	void					*cb_arg;
+	struct spdk_reduce_vol			*vol;
+	struct spdk_reduce_vol_superblock	*super;
+	struct iovec				iov;
+	struct spdk_reduce_vol_cb_args		backing_cb_args;
+	int					reduce_errno;
+	char					pm_path[REDUCE_PATH_MAX];
+};
+
+static void
+destroy_unload_cpl(void *cb_arg, int reduce_errno)
+{
+	struct reduce_destroy_ctx *destroy_ctx = cb_arg;
+
+	if (destroy_ctx->reduce_errno == 0) {
+		if (unlink(destroy_ctx->pm_path)) {
+			SPDK_ERRLOG("%s could not be unlinked: %s\n",
+				    destroy_ctx->pm_path, strerror(errno));
+		}
+	}
+
+	/* Even if the unload somehow failed, we still pass the destroy_ctx
+	 * reduce_errno since that indicates whether or not the volume was
+	 * actually destroyed.
+	 */
+	destroy_ctx->cb_fn(destroy_ctx->cb_arg, destroy_ctx->reduce_errno);
+	spdk_dma_free(destroy_ctx->super);
+	free(destroy_ctx);
+}
+
+static void
+_destroy_zero_super_cpl(void *cb_arg, int reduce_errno)
+{
+	struct reduce_destroy_ctx *destroy_ctx = cb_arg;
+	struct spdk_reduce_vol *vol = destroy_ctx->vol;
+
+	destroy_ctx->reduce_errno = reduce_errno;
+	spdk_reduce_vol_unload(vol, destroy_unload_cpl, destroy_ctx);
+}
+
+static void
+destroy_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
+{
+	struct reduce_destroy_ctx *destroy_ctx = cb_arg;
+
+	if (reduce_errno != 0) {
+		destroy_ctx->cb_fn(destroy_ctx->cb_arg, reduce_errno);
+		spdk_dma_free(destroy_ctx->super);
+		free(destroy_ctx);
+		return;
+	}
+
+	destroy_ctx->vol = vol;
+	memcpy(destroy_ctx->pm_path, vol->pm_file.path, sizeof(destroy_ctx->pm_path));
+	destroy_ctx->iov.iov_base = destroy_ctx->super;
+	destroy_ctx->iov.iov_len = sizeof(*destroy_ctx->super);
+	destroy_ctx->backing_cb_args.cb_fn = _destroy_zero_super_cpl;
+	destroy_ctx->backing_cb_args.cb_arg = destroy_ctx;
+	vol->backing_dev->writev(vol->backing_dev, &destroy_ctx->iov, 1, 0,
+				 sizeof(*destroy_ctx->super) / vol->backing_dev->blocklen,
+				 &destroy_ctx->backing_cb_args);
+}
+
+void
+spdk_reduce_vol_destroy(struct spdk_reduce_backing_dev *backing_dev,
+			spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
+{
+	struct reduce_destroy_ctx *destroy_ctx;
+
+	destroy_ctx = calloc(1, sizeof(*destroy_ctx));
+	if (destroy_ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	destroy_ctx->super = spdk_dma_zmalloc(sizeof(*destroy_ctx->super), 64, NULL);
+	if (destroy_ctx->super == NULL) {
+		free(destroy_ctx);
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+	destroy_ctx->cb_fn = cb_fn;
+	destroy_ctx->cb_arg = cb_arg;
+	spdk_reduce_vol_load(backing_dev, destroy_load_cb, destroy_ctx);
+}
+
 static bool
 _request_spans_chunk_boundary(struct spdk_reduce_vol *vol, uint64_t offset, uint64_t length)
 {

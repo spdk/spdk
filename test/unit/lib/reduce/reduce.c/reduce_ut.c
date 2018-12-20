@@ -152,6 +152,19 @@ persistent_pm_buf_destroy(void)
 	g_persistent_pm_buf_len = 0;
 }
 
+int __wrap_unlink(const char *path);
+
+int
+__wrap_unlink(const char *path)
+{
+	if (strcmp(g_path, path) != 0) {
+		return ENOENT;
+	}
+
+	persistent_pm_buf_destroy();
+	return 0;
+}
+
 static void
 init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno)
 {
@@ -677,6 +690,56 @@ read_write(void)
 	_read_write(4096);
 }
 
+static void
+destroy_cb(void *ctx, int reduce_errno)
+{
+	g_reduce_errno = reduce_errno;
+}
+
+static void
+destroy(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 512;
+	params.logical_block_size = 512;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params, 512);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_destroy(&backing_dev, destroy_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	g_reduce_errno = 0;
+	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
+	CU_ASSERT(g_reduce_errno != 0);
+
+	backing_dev_destroy(&backing_dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -701,7 +764,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "init_backing_dev", init_backing_dev) == NULL ||
 		CU_add_test(suite, "load", load) == NULL ||
 		CU_add_test(suite, "write_maps", write_maps) == NULL ||
-		CU_add_test(suite, "read_write", read_write) == NULL
+		CU_add_test(suite, "read_write", read_write) == NULL ||
+		CU_add_test(suite, "destroy", destroy) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
