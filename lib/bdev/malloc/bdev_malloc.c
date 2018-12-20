@@ -43,9 +43,21 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
+
+static struct spdk_notify_type notify_construct_malloc_bdev = {
+	.name = "notify_construct_malloc_bdev",
+};
+
+
+static struct spdk_notify_type notify_delete_malloc_bdev = {
+	.name = "notify_delete_malloc_bdev",
+};
+
+
 
 struct malloc_disk {
 	struct spdk_bdev		disk;
@@ -379,6 +391,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 				     uint64_t num_blocks, uint32_t block_size)
 {
 	struct malloc_disk	*mdisk;
+	struct spdk_notify *notify;
 	int			rc;
 
 	if (num_blocks == 0) {
@@ -439,16 +452,24 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
 
+	notify = spdk_notify_alloc(&notify_construct_malloc_bdev, &mdisk);
+	spdk_notify_send(notify);
+
 	return &mdisk->disk;
 }
 
 void
 delete_malloc_disk(struct spdk_bdev *bdev, spdk_delete_malloc_complete cb_fn, void *cb_arg)
 {
+	struct spdk_notify *notify;
+
 	if (!bdev || bdev->module != &malloc_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
+
+	notify = spdk_notify_alloc(&notify_delete_malloc_bdev, &bdev);
+	spdk_notify_send(notify);
 
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
 }
@@ -522,3 +543,5 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_malloc", SPDK_LOG_BDEV_MALLOC)
+SPDK_NOTIFY_TYPE_REGISTER(notify_construct_malloc_bdev);
+SPDK_NOTIFY_TYPE_REGISTER(notify_delete_malloc_bdev);
