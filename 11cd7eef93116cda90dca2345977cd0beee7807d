@@ -33,6 +33,24 @@
       "revId": "11cd7eef93116cda90dca2345977cd0beee7807d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9e6117c_224bba06",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-20T02:45:47Z",
+      "side": 1,
+      "message": "So I think that : we should also remove: \nspdk_nvmf_rdma_qpair_inc_refcnt(rqpair) state, right?",
+      "parentUuid": "4265c9f6_eb0b9a55",
+      "revId": "11cd7eef93116cda90dca2345977cd0beee7807d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
