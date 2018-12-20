@@ -80,6 +80,9 @@ endif
 
 ifeq ($(CONFIG_CRYPTO),y)
 DPDK_LIB_LIST += rte_cryptodev rte_reorder rte_bus_vdev rte_pmd_aesni_mb rte_pmd_qat rte_mbuf
+# crypto doesn't need this lib but because of DPDK API and PMD deps, we have to include it here
+# or the qat PMD won't build because we always build the compressdev API
+DPDK_LIB_LIST += rte_compressdev
 endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
