@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63814eb1_e035de90",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1601,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-20T08:37:20Z",
+      "side": 1,
+      "message": "Will you change the line around here?",
+      "range": {
+        "startLine": 1601,
+        "startChar": 85,
+        "endLine": 1601,
+        "endChar": 86
+      },
+      "revId": "c1b44885031e65d9278ece623202593e11e41110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fa8a45a_85517146",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-20T08:37:20Z",
+      "side": 1,
+      "message": "SPDK_NVMF_MAX_SGL_ENTRIES * 2",
+      "range": {
+        "startLine": 1602,
+        "startChar": 33,
+        "endLine": 1602,
+        "endChar": 58
+      },
+      "revId": "c1b44885031e65d9278ece623202593e11e41110",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
