@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8d13fd3b_927695d6",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-20T16:09:24Z",
+      "side": 1,
+      "message": "Let\u0027s not do that here. This deserves a separate research and a separate patch.",
+      "parentUuid": "2762f3af_ccac402c",
+      "range": {
+        "startLine": 166,
+        "startChar": 2,
+        "endLine": 166,
+        "endChar": 15
+      },
+      "revId": "259034c9c8dedeb9e1cc81f586ba29ff36527eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eb97fe3d_96efe423",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 1
@@ -59,6 +83,30 @@
       "writtenOn": "2018-12-19T12:50:39Z",
       "side": 1,
       "message": "\u0027v\u0027?",
+      "range": {
+        "startLine": 251,
+        "startChar": 28,
+        "endLine": 251,
+        "endChar": 29
+      },
+      "revId": "259034c9c8dedeb9e1cc81f586ba29ff36527eba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3343b728_93d9520e",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-20T16:09:24Z",
+      "side": 1,
+      "message": "It stands for \u0027vhost\u0027. \u0027vhost session\u0027\nThere are also device-specific structures like vhost-scsi session and with this scheme I could simply name their variables \u0027svsession\u0027. It\u0027s surely better than ssession or scsi_session.\n\nWe already do the same for \u0027vdev\u0027, \u0027svdev\u0027, etc.",
+      "parentUuid": "2d1eecc6_6861cd6c",
       "range": {
         "startLine": 251,
         "startChar": 28,
