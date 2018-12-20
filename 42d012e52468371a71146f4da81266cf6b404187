@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7cbbc1fd_67e71aa4",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-20T04:46:17Z",
+      "side": 1,
+      "message": "This isn\u0027t the right action to take. If the user is connecting to a subsystem that isn\u0027t currently prepared to accept connections, it might be the right choice to reject the connection, but we need to return a different error code for that case than \"Invalid Connect Data\" - it needs to be a busy error of some sort.",
+      "revId": "42d012e52468371a71146f4da81266cf6b404187",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9eff6117_c4074211",
+        "filename": "lib/nvmf/ctrlr_discovery.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-20T04:46:17Z",
+      "side": 1,
+      "message": "I think if a subsystem is \"activating\", you can skip it. But if a subsystem happens to be paused/pausing/resuming, you still want it to show up in the discovery log. For instance, what if one initiator is doing a discovery while another service is adding a namespace to the subsystem? You don\u0027t want the subsystem to disappear entirely.",
+      "revId": "42d012e52468371a71146f4da81266cf6b404187",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
