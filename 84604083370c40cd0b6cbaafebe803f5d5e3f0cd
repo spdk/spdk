@@ -16,6 +16,24 @@
       "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b871d51b_f49185af",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-20T10:11:39Z",
+      "side": 1,
+      "message": "The user I had in mind was someone willing to use the ftl library directly, without bdev framework. In such case, it is responsibility of the user to provide a valid thread to use for ANM polling, so assertion failure if that thread is incorrect is unacceptable. Also, the initialization flow requires this function to be called - before using the ftl library, the user is required to call spdk_ftl_module_init(), which in turn calls ftl_anm_init().\n\nI agree that asserts are useful means to find bugs in code, but they cannot fail due to user input - whether the code is glibc or anything else.",
+      "parentUuid": "dd5be9f2_3b4eb69c",
+      "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
