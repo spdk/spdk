@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34c10462_3024c24b",
+        "filename": "include/spdk/env_dpdk.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T20:04:31Z",
+      "side": 1,
+      "message": "NetApp copyright can be removed",
+      "revId": "7756c74875c635420b1f9876fb98176dbdf87279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74de7a63_ab4b24a9",
+        "filename": "include/spdk/env_dpdk.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T20:04:31Z",
+      "side": 1,
+      "message": "spdk/queue.h probably does not need to be included here\n\nprobably not stdinc.h either",
+      "revId": "7756c74875c635420b1f9876fb98176dbdf87279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45dfe155_dc77f9ab",
+        "filename": "test/env/env.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T20:04:31Z",
+      "side": 1,
+      "message": "I think we can always run this test - we shouldn\u0027t need to restrict it to only when SPDK_RUN_INSTALLED_DIR \u003d 1?",
+      "revId": "7756c74875c635420b1f9876fb98176dbdf87279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "702fe9c1_3c7a019c",
+        "filename": "test/env/env_dpdk_post_init/env_dpdk_post_init.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T20:04:31Z",
+      "side": 1,
+      "message": "Please add g_ prefix to all global variables.",
+      "revId": "7756c74875c635420b1f9876fb98176dbdf87279",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
