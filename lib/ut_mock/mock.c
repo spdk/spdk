@@ -41,5 +41,3 @@ DEFINE_WRAPPER(pthread_mutex_init, int,
 
 DEFINE_WRAPPER(pthread_mutexattr_init, int,
 	       (pthread_mutexattr_t *attr), (attr))
-
-DEFINE_WRAPPER(pthread_self, pthread_t, (void), ())

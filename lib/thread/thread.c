@@ -103,7 +103,6 @@ struct spdk_poller {
 };
 
 struct spdk_thread {
-	pthread_t			thread_id;
 	spdk_thread_pass_msg		msg_fn;
 	spdk_start_poller		start_poller_fn;
 	spdk_stop_poller		stop_poller_fn;
@@ -210,7 +209,6 @@ spdk_allocate_thread(spdk_thread_pass_msg msg_fn,
 		return NULL;
 	}
 
-	thread->thread_id = pthread_self();
 	thread->msg_fn = msg_fn;
 	thread->start_poller_fn = start_poller_fn;
 	thread->stop_poller_fn = stop_poller_fn;
