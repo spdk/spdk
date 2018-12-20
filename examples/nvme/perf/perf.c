@@ -623,6 +623,61 @@ static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static __thread unsigned int seed = 0;
 
+static int
+submit_single_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		      struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	int rc;
+
+#if HAVE_LIBAIO
+	if (entry->type == ENTRY_TYPE_AIO_FILE) {
+		rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
+				g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+	} else
+#endif
+	{
+		task_extended_lba_setup_pi(entry, task, task->lba,
+					   entry->io_size_blocks, false);
+		task->is_read = true;
+
+		rc = spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						   task->buf, NULL,
+						   task->lba,
+						   entry->io_size_blocks, io_complete,
+						   task, entry->io_flags,
+						   task->appmask, task->apptag);
+	}
+
+	return rc;
+}
+
+static int
+submit_single_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		       struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	int rc;
+
+#if HAVE_LIBAIO
+	if (entry->type == ENTRY_TYPE_AIO_FILE) {
+		rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
+				g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+	} else
+#endif
+	{
+		task_extended_lba_setup_pi(entry, task, task->lba,
+					   entry->io_size_blocks, true);
+
+		rc = spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						    task->buf, NULL,
+						    task->lba,
+						    entry->io_size_blocks, io_complete,
+						    task, entry->io_flags,
+						    task->appmask, task->apptag);
+	}
+
+	return rc;
+}
+
 static void
 submit_single_io(struct perf_task *task)
 {
@@ -646,42 +701,9 @@ submit_single_io(struct perf_task *task)
 
 	if ((g_rw_percentage == 100) ||
 	    (g_rw_percentage != 0 && ((rand_r(&seed) % 100) < g_rw_percentage))) {
-#if HAVE_LIBAIO
-		if (entry->type == ENTRY_TYPE_AIO_FILE) {
-			rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
-					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
-		} else
-#endif
-		{
-			task_extended_lba_setup_pi(entry, task, task->lba,
-						   entry->io_size_blocks, false);
-			task->is_read = true;
-
-			rc = spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-							   task->buf, NULL,
-							   task->lba,
-							   entry->io_size_blocks, io_complete,
-							   task, entry->io_flags,
-							   task->appmask, task->apptag);
-		}
+		rc = submit_single_read_io(task, ns_ctx, entry, offset_in_ios);
 	} else {
-#if HAVE_LIBAIO
-		if (entry->type == ENTRY_TYPE_AIO_FILE) {
-			rc = aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
-					g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
-		} else
-#endif
-		{
-			task_extended_lba_setup_pi(entry, task, task->lba,
-						   entry->io_size_blocks, true);
-
-			rc = spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-							    task->buf, NULL,
-							    task->lba,
-							    entry->io_size_blocks, io_complete,
-							    task, entry->io_flags,
-							    task->appmask, task->apptag);
-		}
+		rc = submit_single_write_io(task, ns_ctx, entry, offset_in_ios);
 	}
 
 	if (rc != 0) {
