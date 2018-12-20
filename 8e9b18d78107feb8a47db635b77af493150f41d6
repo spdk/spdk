@@ -165,6 +165,30 @@
       "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42e0cbe1_3c4971ca",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 14
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2018-12-20T07:19:39Z",
+      "side": 1,
+      "message": "I have change the value of traddr  in the .match file then we can use match app to test bdev_name and bdev_traddr.\nAnd we can delete the \"test $bdev_traddr \u003d\u003d $nvme0_traddr\"",
+      "parentUuid": "ac58ce7a_4dd8fdf3",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 37
+      },
+      "revId": "8e9b18d78107feb8a47db635b77af493150f41d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
