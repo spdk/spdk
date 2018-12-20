@@ -229,6 +229,13 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		return;
 	}
 
+	if (!spdk_nvme_ns_supports_extended_lba(ns) && spdk_nvme_ns_get_md_size(ns) != 0) {
+		printf("Controller %-20.20s (%-20.20s): Skipping ns %u formatted with separate metadata\n",
+		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns));
+		g_warn = true;
+		return;
+	}
+
 	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
 	/* NVMe driver may add additional entries based on
