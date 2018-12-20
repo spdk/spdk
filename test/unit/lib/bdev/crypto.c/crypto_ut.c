@@ -698,84 +698,92 @@ test_initdrivers(void)
 	static struct spdk_mempool *orig_mbuf_mp;
 	static struct spdk_mempool *orig_session_mp;
 
+
+	/* These tests will alloc and free our g_mbuf_mp
+	 * so save that off here and restore it after each test is over.
+	 */
+	orig_mbuf_mp = g_mbuf_mp;
+	orig_session_mp = g_session_mp;
+
+	g_session_mp = NULL;
+	g_mbuf_mp = NULL;
+
 	/* No drivers available, not an error though */
 	MOCK_SET(rte_eal_get_configuration, g_test_config);
 	MOCK_SET(rte_cryptodev_count, 0);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 
 	/* Test failure of DPDK dev init. */
 	MOCK_SET(rte_cryptodev_count, 2);
 	MOCK_SET(rte_vdev_init, -1);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	MOCK_SET(rte_vdev_init, 0);
 
 	/* Can't create session pool. */
 	MOCK_SET(spdk_mempool_create, NULL);
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	CU_ASSERT(rc == -ENOMEM);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	MOCK_CLEAR(spdk_mempool_create);
 
-	/* Can't create op pool. These tests will alloc and free our g_mbuf_mp
-	 * so save that off here and restore it after each test is over.
-	 */
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
+	/* Can't create op pool. */
 	MOCK_SET(rte_crypto_op_pool_create, NULL);
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	CU_ASSERT(rc == -ENOMEM);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	MOCK_SET(rte_crypto_op_pool_create, (struct rte_mempool *)1);
 
 	/* Check resources are sufficient failure. */
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Test crypto dev configure failure. */
 	MOCK_SET(rte_cryptodev_device_count_by_driver, 2);
 	MOCK_SET(rte_cryptodev_info_get, 1);
 	MOCK_SET(rte_cryptodev_configure, -1);
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	MOCK_SET(rte_cryptodev_configure, 0);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Test failure of qp setup. */
 	MOCK_SET(rte_cryptodev_queue_pair_setup, -1);
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	MOCK_SET(rte_cryptodev_queue_pair_setup, 0);
 
 	/* Test failure of dev start. */
 	MOCK_SET(rte_cryptodev_start, -1);
-	orig_mbuf_mp = g_mbuf_mp;
-	orig_session_mp = g_session_mp;
 	rc = vbdev_crypto_init_crypto_drivers();
-	g_mbuf_mp = orig_mbuf_mp;
-	g_session_mp = orig_session_mp;
 	CU_ASSERT(rc == -EINVAL);
+	CU_ASSERT(g_mbuf_mp == NULL);
+	CU_ASSERT(g_session_mp == NULL);
 	MOCK_SET(rte_cryptodev_start, 0);
 
 	/* Test happy path. */
 	rc = vbdev_crypto_init_crypto_drivers();
+	/* We don't have spdk_mempool_create mocked right now, so make sure to free the mempools. */
+	SPDK_CU_ASSERT_FATAL(g_mbuf_mp != g_session_mp);
+	CU_ASSERT(g_mbuf_mp != NULL);
+	CU_ASSERT(g_mbuf_mp != NULL);
+	spdk_mempool_free(g_mbuf_mp);
+	spdk_mempool_free(g_session_mp);
 	CU_ASSERT(rc == 0);
+
+	/* restore our initial values. */
+	g_mbuf_mp = orig_mbuf_mp;
+	g_session_mp = orig_session_mp;
 }
 
 static void
