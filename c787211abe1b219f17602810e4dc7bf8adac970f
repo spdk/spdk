@@ -34,6 +34,24 @@
       "revId": "c787211abe1b219f17602810e4dc7bf8adac970f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5849037_8a360569",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T15:28:29Z",
+      "side": 1,
+      "message": "Sorry - I did not mean that you should only do one batch and then return from the function.  I meant something more like this:\n\nstruct ftl_io *io[16];\nsize_t qdepth_remaining;\n\nqdepth_remaining \u003d reloc-\u003emax_qdepth;\nwhile (qdepth_remaining \u003e 0) {\n  num_ios \u003d spdk_ring_dequeue(..., (void **)io, SPDK_COUNTOF(io));\n  for (I \u003d 0; I \u003c num_ios; ++i) {\n    ftl_io_free(io[i]);\n  }\n  if (num_ios \u003c SPDK_COUNTOF(io)) {\n    break;\n  }\n  qdepth_remaining -\u003d num_ios;\n}\n\nOr maybe this can be even simpler, and just keep dequeuing up to 16 at a time until there are no more entries in the ring.",
+      "parentUuid": "04f1796f_602807c5",
+      "revId": "c787211abe1b219f17602810e4dc7bf8adac970f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
