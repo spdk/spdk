@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "977c4998_e01559e5",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-20T12:24:50Z",
+      "side": 1,
+      "message": "I disagree, the only purpose of this structure is to maintain state internal to the ftl_trace module - no other code should touch it directly. I think hiding structures that don\u0027t need to be exposed helps creating boundaries between the modules and makes the code more readable.",
+      "parentUuid": "8d868e6c_bb27b22a",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaf75166_dff5457e",
         "filename": "lib/ftl/ftl_trace.c",
         "patchSetId": 41
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-19T21:17:14Z",
       "side": 1,
       "message": "function signature doesn\u0027t match header file",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb9cbc7d_9c40e25d",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-20T12:24:50Z",
+      "side": 1,
+      "message": "Are you sure you\u0027re looking at the latest patch set? I don\u0027t see any differences.",
+      "parentUuid": "eaf75166_dff5457e",
       "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "ab03e405_5a8d23ef",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-20T12:24:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2bbe3146_5a1f9e51",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e8c2052_511a2ad7",
         "filename": "lib/ftl/ftl_trace.h",
         "patchSetId": 41
@@ -64,6 +118,24 @@
       "writtenOn": "2018-12-19T21:17:14Z",
       "side": 1,
       "message": "now that tracing is enabled by default, can we remove this ftl_trace macro abstraction?",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21877434_de0a2018",
+        "filename": "lib/ftl/ftl_trace.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2018-12-20T12:24:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6e8c2052_511a2ad7",
       "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
