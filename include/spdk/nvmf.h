@@ -134,8 +134,10 @@ void spdk_nvmf_tgt_listen(struct spdk_nvmf_tgt *tgt,
  * Function to be called for each newly discovered qpair.
  *
  * \param qpair The newly discovered qpair.
+ * return 0. Qpair can be initialized but not be added to the polling group yet.
+ * return -1. Qpair cannot be initialized.
  */
-typedef void (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
+typedef int (*new_qpair_fn)(struct spdk_nvmf_qpair *qpair);
 
 /**
  * Poll the target for incoming connections.

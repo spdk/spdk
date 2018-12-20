@@ -56,6 +56,10 @@ Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
 the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
 protocol via TCP/IP from the host.
 
+Change the return value of function pointer new_qpair_fn. If return value is
+-1, it means that we could not initialize the qpair. Otherwise, it can be
+initialized but not be added into the polling group yet.
+
 ### bdev
 
 On shutdown, bdev unregister now proceeds in top-down fashion, with
