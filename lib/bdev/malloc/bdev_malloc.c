@@ -43,6 +43,7 @@
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -92,6 +93,80 @@ static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_mallo
 
 int malloc_disk_count = 0;
 
+static void
+_bdev_malloc_write_json_config(struct spdk_json_write_ctx *w, const char *name, uint64_t blockcnt,
+			       uint64_t blocklen, const struct spdk_uuid *uuid);
+
+struct bdev_malloc_notify_ctx {
+
+	uint64_t blockcnt;
+	uint64_t blocklen;
+	struct spdk_uuid uuid;
+	char bdev_name[0];
+};
+
+static void
+construct_malloc_bdev_notify_write_info(struct spdk_json_write_ctx *w,  struct spdk_notify *notify)
+{
+	struct bdev_malloc_notify_ctx *ctx = spdk_notify_ctx(notify);
+
+	_bdev_malloc_write_json_config(w, ctx->bdev_name, ctx->blockcnt, ctx->blocklen, &ctx->uuid);
+}
+
+static void
+delete_malloc_bdev_notify_write_info(struct spdk_json_write_ctx *w,
+				     struct spdk_notify *notify)
+{
+	struct bdev_malloc_notify_ctx *ctx = spdk_notify_ctx(notify);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "delete_malloc_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", ctx->bdev_name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+
+}
+
+static struct spdk_notify_type construct_malloc_bdev_notify = {
+	.name = "construct_malloc_bdev",
+	.write_info_cb = construct_malloc_bdev_notify_write_info,
+};
+
+static struct spdk_notify_type delete_malloc_bdev_notify = {
+	.name = "delete_malloc_bdev",
+	.write_info_cb = delete_malloc_bdev_notify_write_info,
+};
+
+static void
+bdev_malloc_notify_send(struct malloc_disk *malloc_disk, bool deleted)
+{
+	static struct spdk_notify_type *type;
+	struct spdk_notify *notify;
+	struct bdev_malloc_notify_ctx *ctx;
+	size_t name_size = strlen(malloc_disk->disk.name) + 1;
+	size_t ctx_size = sizeof(*ctx) + name_size + 1;
+
+	type = deleted == false ? &construct_malloc_bdev_notify : &delete_malloc_bdev_notify;
+	notify = spdk_notify_alloc(type, ctx_size);
+	if (notify == NULL) {
+		return;
+	}
+
+	ctx = spdk_notify_ctx(notify);
+	if (deleted == false) {
+		ctx->blockcnt = spdk_bdev_get_num_blocks(&malloc_disk->disk);
+		ctx->blocklen = spdk_bdev_get_block_size(&malloc_disk->disk);
+		spdk_uuid_copy(&ctx->uuid, spdk_bdev_get_uuid(&malloc_disk->disk));
+	}
+	snprintf(ctx->bdev_name, name_size, "%s", malloc_disk->disk.name);
+
+	spdk_notify_send(notify);
+}
+
+
 static int bdev_malloc_initialize(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
 
@@ -129,6 +204,8 @@ bdev_malloc_destruct(void *ctx)
 	struct malloc_disk *malloc_disk = ctx;
 
 	TAILQ_REMOVE(&g_malloc_disks, malloc_disk, link);
+
+	bdev_malloc_notify_send(malloc_disk, true);
 	malloc_disk_free(malloc_disk);
 	return 0;
 }
@@ -347,7 +424,8 @@ bdev_malloc_get_io_channel(void *ctx)
 }
 
 static void
-bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+_bdev_malloc_write_json_config(struct spdk_json_write_ctx *w, const char *name, uint64_t blockcnt,
+			       uint64_t blocklen, const struct spdk_uuid *uuid)
 {
 	char uuid_str[SPDK_UUID_STRING_LEN];
 
@@ -356,15 +434,22 @@ bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx
 	spdk_json_write_named_string(w, "method", "construct_malloc_bdev");
 
 	spdk_json_write_named_object_begin(w, "params");
-	spdk_json_write_named_string(w, "name", bdev->name);
-	spdk_json_write_named_uint64(w, "num_blocks", bdev->blockcnt);
-	spdk_json_write_named_uint32(w, "block_size", bdev->blocklen);
-	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), &bdev->uuid);
+	spdk_json_write_named_string(w, "name", name);
+	spdk_json_write_named_uint64(w, "num_blocks", blockcnt);
+	spdk_json_write_named_uint32(w, "block_size", blocklen);
+	spdk_uuid_fmt_lower(uuid_str, sizeof(uuid_str), uuid);
 	spdk_json_write_named_string(w, "uuid", uuid_str);
 
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
+}
+
+static void
+bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	_bdev_malloc_write_json_config(w, spdk_bdev_get_name(bdev), spdk_bdev_get_num_blocks(bdev),
+				       spdk_bdev_get_block_size(bdev), spdk_bdev_get_uuid(bdev));
 }
 
 static const struct spdk_bdev_fn_table malloc_fn_table = {
@@ -438,7 +523,7 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	}
 
 	TAILQ_INSERT_TAIL(&g_malloc_disks, mdisk, link);
-
+	bdev_malloc_notify_send(mdisk, false);
 	return &mdisk->disk;
 }
 
@@ -522,3 +607,5 @@ bdev_malloc_get_spdk_running_config(FILE *fp)
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_malloc", SPDK_LOG_BDEV_MALLOC)
+SPDK_NOTIFY_TYPE_REGISTER(construct_malloc_bdev_notify);
+SPDK_NOTIFY_TYPE_REGISTER(delete_malloc_bdev_notify);
