@@ -1238,29 +1238,90 @@ add_trid(const char *trid_str)
 	return 0;
 }
 
-static int
-parse_metadata(const char *metacfg_str)
+static size_t
+parse_next_key(const char **str, char *key, char *val, size_t key_buf_size,
+	       size_t val_buf_size)
 {
 	const char *sep;
+	const char *separator = ", \t\n";
+	size_t key_len, val_len;
 
-	if (strstr(metacfg_str, "PRACT=1") != NULL) {
-		g_metacfg_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
-	}
+	*str += strspn(*str, separator);
 
-	sep = strchr(metacfg_str, ',');
+	sep = strchr(*str, '=');
 	if (!sep) {
+		fprintf(stderr, "Key without '=' separator\n");
 		return 0;
 	}
 
-	if (strstr(sep, "PRCHK=") != NULL) {
-		if (strstr(sep, "GUARD") != NULL) {
-			g_metacfg_prchk_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	key_len = sep - *str;
+	if (key_len >= key_buf_size) {
+		fprintf(stderr, "Key length %zu is greater than maximum allowed %zu\n",
+			key_len, key_buf_size - 1);
+		return 0;
+	}
+
+	memcpy(key, *str, key_len);
+	key[key_len] = '\0';
+
+	*str += key_len + 1;	/* Skip key */
+	val_len = strcspn(*str, separator);
+	if (val_len == 0) {
+		fprintf(stderr, "Key without value\n");
+		return 0;
+	}
+
+	if (val_len >= val_buf_size) {
+		fprintf(stderr, "Value length %zu is greater than maximum allowed %zu\n",
+			val_len, val_buf_size - 1);
+		return 0;
+	}
+
+	memcpy(val, *str, val_len);
+	val[val_len] = '\0';
+
+	*str += val_len;
+
+	return val_len;
+}
+
+static int
+parse_metadata(const char *metacfg_str)
+{
+	const char *str;
+	size_t val_len;
+	char key[32];
+	char val[1024];
+
+	if (metacfg_str == NULL) {
+		return -EINVAL;
+	}
+
+	str = metacfg_str;
+
+	while (*str != '\0') {
+		val_len = parse_next_key(&str, key, val, sizeof(key), sizeof(val));
+		if (val_len == 0) {
+			fprintf(stderr, "Failed to parse metadata\n");
+			return -EINVAL;
 		}
-		if (strstr(sep, "REFTAG") != NULL) {
-			g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
-		}
-		if (strstr(sep, "APPTAG") != NULL) {
-			g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
+
+		if (strcmp(key, "PRACT") == 0) {
+			if (*val == '1') {
+				g_metacfg_prchk_flags = SPDK_NVME_IO_FLAGS_PRACT;
+			}
+		} else if (strcmp(key, "PRCHK") == 0) {
+			if (strstr(val, "GUARD") != NULL) {
+				g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+			}
+			if (strstr(val, "REFTAG") != NULL) {
+				g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+			}
+			if (strstr(val, "APPTAG") != NULL) {
+				g_metacfg_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
+			}
+		} else {
+			fprintf(stderr, "Unknown key '%s'\n", key);
 		}
 	}
 
