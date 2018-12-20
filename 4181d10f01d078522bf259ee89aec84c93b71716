@@ -149,6 +149,30 @@
     },
     {
       "key": {
+        "uuid": "beb7605b_48ab5b85",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-20T04:36:18Z",
+      "side": 1,
+      "message": "But this could be racing with another operation, such as the user adding the qpair to a poll group. The refcnt may have protected that specific case, but now you\u0027ve removed that too.",
+      "parentUuid": "49b83f74_1fd5c9f8",
+      "range": {
+        "startLine": 2196,
+        "startChar": 2,
+        "endLine": 2196,
+        "endChar": 28
+      },
+      "revId": "4181d10f01d078522bf259ee89aec84c93b71716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaa5d1d6_076ef9bf",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 6

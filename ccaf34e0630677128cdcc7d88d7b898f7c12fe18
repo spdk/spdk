@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddfdc6b5_d9dee11e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2194,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-20T04:36:18Z",
+      "side": 1,
+      "message": "I\u0027m also concerned with the case where a connection is created and then disconnected immediately. When a connection is created we get an event on the RDMA CM EVENT channel which results in calling a callback into user code. The user is supposed to pass a message to the appropriate thread and then add the qpair to a poll group. There is technically a small window on that poll group thread where the rdma qp is created, but the qpair isn\u0027t fully created and placed into the poll group (qpair.group is still NULL). During that window, we could receive this event on this thread and disconnect the qpair, which would crash.\n\nI think the key to solving this might be to leverage the refcnt more. On the connect path, we could increment the refcnt before calling the user callback, and then decrement it when the qpair.group member is set on the poll group thread.\n\nThen, when we get here, we can look at refcnt. If it is 1, then we should simply send a message to ourselves to wait and try again (we do this in the RDMA CM EVENT disconnect path, but not here). If refcnt is 0, we can look at qpair.group. If it is NULL, we can do the disconnect on this thread (but that should never happen, and maybe we should assert). If it is not null, we need to send a message to the group like the code used to do.",
+      "revId": "ccaf34e0630677128cdcc7d88d7b898f7c12fe18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
