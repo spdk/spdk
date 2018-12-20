@@ -44,6 +44,7 @@
 #include "spdk/conf.h"
 #include "spdk/endian.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/thread.h"
 #include "spdk/util.h"
 
@@ -121,6 +122,8 @@ static void
 _device_unregister_cb(void *io_device)
 {
 	struct vbdev_passthru *pt_node  = io_device;
+
+	spdk_notify_send("delete_passthru_bdev", pt_node->pt_bdev.name);
 
 	/* Done with this pt_node. */
 	free(pt_node->pt_bdev.name);
@@ -429,7 +432,7 @@ vbdev_passthru_insert_name(const char *bdev_name, const char *vbdev_name)
 	}
 
 	TAILQ_INSERT_TAIL(&g_bdev_names, name, link);
-
+	spdk_notify_type_register("construct_passthru_bdev");
 	return 0;
 }
 
@@ -473,6 +476,9 @@ vbdev_passthru_init(void)
 	TAILQ_FOREACH(name, &g_bdev_names, link) {
 		SPDK_NOTICELOG("conf parse matched: %s\n", name->bdev_name);
 	}
+
+	spdk_notify_type_register("construct_passthru_bdev");
+	spdk_notify_type_register("delete_passthru_bdev");
 	return 0;
 }
 

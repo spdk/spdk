@@ -39,6 +39,7 @@
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/likely.h"
 
 #include "spdk/bdev_module.h"
@@ -79,6 +80,8 @@ bdev_null_destruct(void *ctx)
 	struct null_bdev *bdev = ctx;
 
 	TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
+
+	spdk_notify_send("delete_null_bdev", bdev->bdev.name);
 	free(bdev->bdev.name);
 	free(bdev);
 
@@ -222,7 +225,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 	}
 
 	TAILQ_INSERT_TAIL(&g_null_bdev_head, bdev, tailq);
-
+	spdk_notify_send("construct_null_bdev", bdev->bdev.name);
 	return &bdev->bdev;
 }
 
@@ -358,6 +361,9 @@ bdev_null_initialize(void)
 
 		i++;
 	}
+
+	spdk_notify_type_register("construct_null_bdev");
+	spdk_notify_type_register("delete_null_bdev");
 
 end:
 	return rc;

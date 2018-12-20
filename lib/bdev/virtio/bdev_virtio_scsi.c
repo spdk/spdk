@@ -40,6 +40,7 @@
 #include "spdk/thread.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/util.h"
 #include "spdk/json.h"
 
@@ -301,6 +302,8 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_INSERT_TAIL(&g_virtio_scsi_devs, svdev, tailq);
 	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
+	spdk_notify_send("construct_virtio_scsi_dev", vdev->name);
 	return 0;
 }
 
@@ -1775,6 +1778,8 @@ bdev_virtio_initial_scan_complete(void *ctx, int result,
 	}
 
 	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+	spdk_notify_type_register("construct_virtio_scsi_dev");
+	spdk_notify_type_register("remove_virtio_scsi_bdev");
 	spdk_bdev_module_init_done(&virtio_scsi_if);
 }
 
@@ -1840,6 +1845,8 @@ _virtio_scsi_dev_unregister_cb(void *io_device)
 	pthread_mutex_lock(&g_virtio_scsi_mutex);
 	TAILQ_REMOVE(&g_virtio_scsi_devs, svdev, tailq);
 	pthread_mutex_unlock(&g_virtio_scsi_mutex);
+
+	spdk_notify_send("remove_virtio_scsi_bdev", vdev->name);
 
 	remove_cb = svdev->remove_cb;
 	remove_ctx = svdev->remove_ctx;

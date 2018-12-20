@@ -46,10 +46,12 @@
 #include "spdk/json.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 
 #include "spdk_internal/log.h"
 
 #include <libaio.h>
+
 
 struct bdev_aio_io_channel {
 	uint64_t				io_inflight;
@@ -244,6 +246,7 @@ bdev_aio_destruct(void *ctx)
 		SPDK_ERRLOG("bdev_aio_close() failed\n");
 	}
 	spdk_io_device_unregister(fdisk, NULL);
+	spdk_notify_send("delete_malloc_bdev_notify", fdisk->disk.name);
 	aio_free_disk(fdisk);
 	return rc;
 }
@@ -672,6 +675,7 @@ create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 	}
 
 	TAILQ_INSERT_TAIL(&g_aio_disk_head, fdisk, link);
+	spdk_notify_send("construct_aio_bdev", fdisk->disk.name);
 	return &fdisk->disk;
 
 error_return:
@@ -772,6 +776,9 @@ bdev_aio_initialize(void)
 
 		i++;
 	}
+
+	spdk_notify_type_register("construct_aio_bdev");
+	spdk_notify_type_register("delete_aio_bdev");
 
 	return 0;
 }

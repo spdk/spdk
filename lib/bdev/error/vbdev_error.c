@@ -40,6 +40,7 @@
 #include "spdk/conf.h"
 #include "spdk/util.h"
 #include "spdk/endian.h"
+#include "spdk/notify.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/string.h"
 
@@ -394,6 +395,7 @@ vbdev_error_config_add(const char *base_bdev_name)
 	}
 
 	TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
+	spdk_notify_send("construct_error_bdev", cfg->base_bdev);
 
 	return 0;
 }
@@ -409,6 +411,9 @@ vbdev_error_config_remove(const char *base_bdev_name)
 	}
 
 	TAILQ_REMOVE(&g_error_config, cfg, tailq);
+
+	spdk_notify_send("delete_error_bdev", cfg->base_bdev);
+
 	free(cfg->base_bdev);
 	free(cfg);
 	return 0;
@@ -456,6 +461,9 @@ vbdev_error_init(void)
 
 		TAILQ_INSERT_TAIL(&g_error_config, cfg, tailq);
 	}
+
+	spdk_notify_type_register("construct_error_bdev");
+	spdk_notify_type_register("delete_error_bdev");
 
 	return 0;
 

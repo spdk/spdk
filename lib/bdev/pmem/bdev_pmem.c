@@ -33,6 +33,7 @@
 
 #include "spdk/conf.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
 #include "spdk/rpc.h"
@@ -85,6 +86,7 @@ bdev_pmem_destruct(void *ctx)
 	struct pmem_disk *pdisk = ctx;
 
 	TAILQ_REMOVE(&g_pmem_disks, pdisk, tailq);
+	spdk_notify_send("construct_pmem_bdev", pdisk->disk.name);
 	free(pdisk->disk.name);
 	pmemblk_close(pdisk->pool);
 	free(pdisk);
@@ -384,7 +386,7 @@ spdk_create_pmem_disk(const char *pmem_file, const char *name, struct spdk_bdev 
 	}
 
 	TAILQ_INSERT_TAIL(&g_pmem_disks, pdisk, tailq);
-
+	spdk_notify_send("construct_pmem_bdev", pdisk->disk.name);
 	*bdev = &pdisk->disk;
 
 	return 0;
@@ -454,6 +456,8 @@ bdev_pmem_initialize(void)
 
 	bdev_pmem_read_conf();
 
+	spdk_notify_type_register("construct_pmem_bdev");
+	spdk_notify_type_register("delete_pmem_bdev");
 	return 0;
 
 }
