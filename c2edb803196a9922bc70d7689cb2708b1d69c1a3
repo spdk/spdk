@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "594afff1_5b1f8750",
+        "filename": "lib/event/app.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T16:54:55Z",
+      "side": 1,
+      "message": "Ack on the opts structure.  Makes sense.\n\nI\u0027m still not following why we can\u0027t simplify the json_config.c API.  I\u0027m just thinking of adding this to this file:\n\nstatic void\n_spdk_app_json_config_load(void *_app_opts, void *_event_done)\n{\n  struct spdk_app_opts *app_opts \u003d _app_opts;\n  struct spdk_event *event_done \u003d _event_done;\n\n  spdk_app_json_config_load(app_opts, event_done);\n}\n\nThen just pass this function to spdk_event_allocate().\n\nI just think it\u0027s awkward having an spdk_event_cb function as part of the json_config.h API.  This makes that API cleaner, and could be used in non-spdk_event_cb contexts in the future (not that we\u0027re planning on any right now).",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
