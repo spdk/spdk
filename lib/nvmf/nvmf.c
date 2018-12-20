@@ -76,16 +76,6 @@ struct nvmf_qpair_disconnect_many_ctx {
 	void *cpl_ctx;
 };
 
-static void
-spdk_nvmf_qpair_set_state(struct spdk_nvmf_qpair *qpair,
-			  enum spdk_nvmf_qpair_state state)
-{
-	assert(qpair != NULL);
-	assert(qpair->group->thread == spdk_get_thread());
-
-	qpair->state = state;
-}
-
 static int
 spdk_nvmf_poll_group_poll(void *ctx)
 {
@@ -652,7 +642,6 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 
 	TAILQ_INIT(&qpair->outstanding);
 	qpair->group = group;
-	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVATING);
 
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		if (tgroup->transport == qpair->transport) {
@@ -749,6 +738,7 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 
 	/* If we get a qpair in the uninitialized state, we can just destroy it immediately */
 	if (qpair->state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
+		qpair->state = SPDK_NVMF_QPAIR_DEACTIVATING;
 		spdk_nvmf_transport_qpair_fini(qpair);
 		if (cb_fn) {
 			cb_fn(ctx);
@@ -759,7 +749,8 @@ spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_
 	/* If the qpair is already in this state, which means that it is already
 	 * in disconnect process, so we should not destroy it again.
 	 */
-	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+	if ((qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) ||
+	    (qpair->state == SPDK_NVMF_QPAIR_ACTIVATING)) {
 		if (cb_fn) {
 			cb_fn(ctx);
 		}

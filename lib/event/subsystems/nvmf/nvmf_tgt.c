@@ -39,6 +39,7 @@
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/util.h"
+#include "../lib/nvmf/nvmf_internal.h"
 
 enum nvmf_tgt_state {
 	NVMF_TGT_INIT_NONE = 0,
@@ -243,6 +244,7 @@ new_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
+	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ACTIVATING);
 	event = spdk_event_allocate(core, nvmf_tgt_poll_group_add, qpair, pg);
 	spdk_event_call(event);
 }
