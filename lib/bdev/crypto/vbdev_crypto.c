@@ -372,6 +372,8 @@ error_create_device:
 	rte_mempool_free(g_crypto_op_mp);
 	g_crypto_op_mp = NULL;
 error_create_op:
+	/* TODO: Remove this bogus assert when clang static analyzer stops flagging it. */
+	assert(g_mbuf_mp != g_session_mp);
 	spdk_mempool_free(g_mbuf_mp);
 	g_mbuf_mp = NULL;
 error_create_mbuf:
