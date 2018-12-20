@@ -742,6 +742,7 @@ test_initdrivers(void)
 	MOCK_SET(rte_crypto_op_pool_create, (struct rte_mempool *)1);
 
 	/* Check resources are sufficient failure. */
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -EINVAL);
 
@@ -749,6 +750,7 @@ test_initdrivers(void)
 	MOCK_SET(rte_cryptodev_device_count_by_driver, 2);
 	MOCK_SET(rte_cryptodev_info_get, 1);
 	MOCK_SET(rte_cryptodev_configure, -1);
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	MOCK_SET(rte_cryptodev_configure, 0);
 	CU_ASSERT(g_mbuf_mp == NULL);
@@ -757,6 +759,7 @@ test_initdrivers(void)
 
 	/* Test failure of qp setup. */
 	MOCK_SET(rte_cryptodev_queue_pair_setup, -1);
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(g_mbuf_mp == NULL);
@@ -765,6 +768,7 @@ test_initdrivers(void)
 
 	/* Test failure of dev start. */
 	MOCK_SET(rte_cryptodev_start, -1);
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(g_mbuf_mp == NULL);
@@ -772,6 +776,7 @@ test_initdrivers(void)
 	MOCK_SET(rte_cryptodev_start, 0);
 
 	/* Test happy path. */
+	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	/* We don't have spdk_mempool_create mocked right now, so make sure to free the mempools. */
 	SPDK_CU_ASSERT_FATAL(g_mbuf_mp != g_session_mp);
