@@ -35,5 +35,6 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 TEST_FILE = reduce_ut.c
+LDFLAGS += -Wl,--wrap,unlink
 
 include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
