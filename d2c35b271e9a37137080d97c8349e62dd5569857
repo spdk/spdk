@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "fa18be82_898abbd2",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2018-12-20T17:02:00Z",
+      "side": 1,
+      "message": "Ok I did some reading and we can leave this in. It is technically possible to select the port explicitly, if the user really wants to do that. However, I was unable to find any legitimate use cases for doing this (on any type of connection, not just RDMA), and the consensus is definitely that you should just let the TCP implementation select a port from the ephemeral port range. SPDK is a low level library though, so if someone wants to shoot themself in the foot, they can have at it.",
+      "parentUuid": "635765b6_d6a59948",
+      "revId": "d2c35b271e9a37137080d97c8349e62dd5569857",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c16b70d2_d7bceda0",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 9
