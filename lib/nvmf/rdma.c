@@ -1032,7 +1032,9 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	TAILQ_INIT(&rqpair->incoming_queue);
 	event->id->context = &rqpair->qpair;
 
-	cb_fn(&rqpair->qpair);
+	if (cb_fn(&rqpair->qpair) == 0) {
+		spdk_nvmf_qpair_set_state(&rqpair->qpair, SPDK_NVMF_QPAIR_ACTIVATING);
+	}
 
 	return 0;
 }
