@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "a5f655cc_cc0671a1",
+        "filename": "lib/event/app.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-20T09:06:05Z",
+      "side": 1,
+      "message": "\u003e I\u0027d rather have this callback function local to this file, and then have the callback function call spdk_app_json_config_load (removing the _cb). Then it can just take the spdk_app_opts * and spdk_event * directly. It makes the json_config.c API cleaner I think.\n\nI need to call this function on reactore core to register RPC client/server pollers and optain thread handler. Moving this function to this file won\u0027t change this beside adding extra code that will have to do the same thing. Other option is to move whole json_config.c file to app.c file but I want to avoid further expanding this file.\n\n\u003e Probably we don\u0027t even need to pass the full spdk_app_opts * structure - can we just pass the filename? I didn\u0027t check the whole json_config.c file to see if there were any other options you needed to read.\n\nI need json config file path an RPC socket address but can pass only one parameter. Passing pointer to options is better than using globals.",
+      "parentUuid": "cd0a8330_6cc07304",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cefe2922_323a7c56",
         "filename": "lib/event/app.c",
         "patchSetId": 38
@@ -149,6 +167,70 @@
       "writtenOn": "2018-12-19T19:13:51Z",
       "side": 1,
       "message": "I\u0027m not following this - why don\u0027t we pass the new values/values_cnt here?\n\nseems like if we go down this path, ctx-\u003evalues below at line 500 just gets a zeroed buffer",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c2ec19f3_849316a0",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-20T09:06:05Z",
+      "side": 1,
+      "message": "copy-paste error + to small test files. Fill fix it. and add more tests.",
+      "parentUuid": "37a41b2d_d8aae8ad",
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd234f50_d940634e",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 521,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-20T09:06:05Z",
+      "side": 1,
+      "message": "rc \u003d -EINVAL\n  goto fail",
+      "range": {
+        "startLine": 520,
+        "startChar": 2,
+        "endLine": 521,
+        "endChar": 9
+      },
+      "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ca13710_24014252",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-20T09:06:05Z",
+      "side": 1,
+      "message": "opts-\u003erpc_addr \u003d\u003d NULL ? DEFAULT PATH : opts-\u003erpc_addr",
+      "range": {
+        "startLine": 546,
+        "startChar": 8,
+        "endLine": 546,
+        "endChar": 22
+      },
       "revId": "03ed6af15ec471dbc505b69ecbf469d9c7129731",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
