@@ -16,6 +16,24 @@
       "revId": "ccaf34e0630677128cdcc7d88d7b898f7c12fe18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0db1227e_a0f4e8b6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2194,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-20T05:25:56Z",
+      "side": 1,
+      "message": "\"we could receive this event on this thread and disconnect the qpair, which would crash.\"\n\nFor this, we still call spdk_nvmf_qpair_disconnect, if we put the operation as send message in spdk_nvmf_qpair_disconnt, I do not think that there will be window.\n\nSo generally, I do not think that use refcnt will be a good idea, we can avoid this issue. If the thread sending messaging could be well used.",
+      "parentUuid": "ddfdc6b5_d9dee11e",
+      "revId": "ccaf34e0630677128cdcc7d88d7b898f7c12fe18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
