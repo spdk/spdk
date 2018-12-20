@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1c8e3219_6f1a132f",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-20T18:36:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7f408e1f_00b627bf",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 141
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a94b545_06627aba",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7bb98892_e4e8b2a0",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-20T18:36:04Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a94b545_06627aba",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 35
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf8bea89_4fcc86b5",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-20T18:18:10Z",
       "side": 1,
       "message": "yum for debian-based os?",
+      "range": {
+        "startLine": 79,
+        "startChar": 9,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9e987c3_597c3119",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-20T18:36:04Z",
+      "side": 1,
+      "message": "A copy-paste error but I\u0027m dropping idea of intallation of vagrant and virtualbox because I discovered that installation differs on different os versions and I won\u0027t be able to cover each case.",
+      "parentUuid": "bf8bea89_4fcc86b5",
       "range": {
         "startLine": 79,
         "startChar": 9,
@@ -123,6 +195,24 @@
       "side": 1,
       "message": "Why download spdk sources if we\u0027re already operating on script from spdk repo?\nUpdate.sh does different things and downloading spdk is not one of them I think",
       "parentUuid": "2d56cc87_83de341c",
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57e99d57_7f30c1e3",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2018-12-20T18:36:04Z",
+      "side": 1,
+      "message": "update.sh makes some configuration of the vm and download packages for building spdk.",
+      "parentUuid": "1bdc0261_eb034639",
       "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
