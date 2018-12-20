@@ -174,6 +174,23 @@
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "482b32e2_a97e3064",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-20T02:57:23Z",
+      "side": 1,
+      "message": "What if spdk crashed before we update inflight[id]? Since we updated used-\u003eidx, so the driver may think this request is finished, and reuse desc. When desc is reused by driver, the spdk started and found that inflight[id] is not zero, so he resubmit request that already finished, but desc is unpredictable at this time.\n\nThanks.",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
