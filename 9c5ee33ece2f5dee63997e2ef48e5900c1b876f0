@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "7f408e1f_00b627bf",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-20T18:18:10Z",
+      "side": 1,
+      "message": "Nitpick: break line",
+      "range": {
+        "startLine": 19,
+        "startChar": 1,
+        "endLine": 19,
+        "endChar": 141
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a94b545_06627aba",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 6
@@ -25,6 +48,52 @@
     },
     {
       "key": {
+        "uuid": "bf8bea89_4fcc86b5",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-20T18:18:10Z",
+      "side": 1,
+      "message": "yum for debian-based os?",
+      "range": {
+        "startLine": 79,
+        "startChar": 9,
+        "endLine": 79,
+        "endChar": 13
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c83479f0_565c0fb6",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-20T18:18:10Z",
+      "side": 1,
+      "message": "yum for debian-based os?",
+      "range": {
+        "startLine": 84,
+        "startChar": 8,
+        "endLine": 84,
+        "endChar": 13
+      },
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2d56cc87_83de341c",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 6
@@ -36,6 +105,24 @@
       "writtenOn": "2018-12-20T13:38:42Z",
       "side": 1,
       "message": "You need to download spdk sources?",
+      "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1bdc0261_eb034639",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-20T18:18:10Z",
+      "side": 1,
+      "message": "Why download spdk sources if we\u0027re already operating on script from spdk repo?\nUpdate.sh does different things and downloading spdk is not one of them I think",
+      "parentUuid": "2d56cc87_83de341c",
       "revId": "9c5ee33ece2f5dee63997e2ef48e5900c1b876f0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
