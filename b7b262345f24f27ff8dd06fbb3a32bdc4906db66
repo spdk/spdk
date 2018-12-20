@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "5bac80a3_144d9944",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T16:21:41Z",
+      "side": 1,
+      "message": "Hi Konrad,\n\nYes - I understand the concept of encapsulation.  But in this case the only field is a single uint64_t, and hiding it adds an extra pointer chase every time we need to do something with this uint64_t.\n\nAnd even this level of encapsulation is only within files in the same module.  If this was a structure that was exposed through the public ftl API, then keeping this hidden would make more sense.  Since it\u0027s private to this module, I see no problem in putting this in ftl_trace.h.  If this structures needs to be expanded in the future, we could make it hidden then, modify the ftl files that are using it, and it would have no effect on external users of the FTL public API.\n\n-Jim",
+      "parentUuid": "977c4998_e01559e5",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaf75166_dff5457e",
         "filename": "lib/ftl/ftl_trace.c",
         "patchSetId": 41
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "Are you sure you\u0027re looking at the latest patch set? I don\u0027t see any differences.",
       "parentUuid": "eaf75166_dff5457e",
+      "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6cf1ceab_50afe2de",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 218,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T16:21:41Z",
+      "side": 1,
+      "message": "I think I was comparing against a local copy that was from a different version from the patch set.  My bad.",
+      "parentUuid": "cb9cbc7d_9c40e25d",
       "revId": "b7b262345f24f27ff8dd06fbb3a32bdc4906db66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

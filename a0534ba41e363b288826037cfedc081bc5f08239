@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2fa3c30_bbb415a0",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2018-12-20T16:21:41Z",
+      "side": 1,
+      "message": "Hi Konrad,\n\nYes - I understand the concept of encapsulation.  But in this case the only field is a single uint64_t, and hiding it adds an extra pointer chase every time we need to do something with this uint64_t.\n\nAnd even this level of encapsulation is only within files in the same module.  If this was a structure that was exposed through the public ftl API, then keeping this hidden would make more sense.  Since it\u0027s private to this module, I see no problem in putting this in ftl_trace.h.  If this structures needs to be expanded in the future, we could make it hidden then, modify the ftl files that are using it, and it would have no effect on external users of the FTL public API.\n\n-Jim",
+      "revId": "a0534ba41e363b288826037cfedc081bc5f08239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
