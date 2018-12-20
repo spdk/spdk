@@ -60,17 +60,15 @@ struct ut_thread *g_ut_threads;
 
 #define INVALID_THREAD 0x1000
 
-static uintptr_t g_thread_id = INVALID_THREAD;
+static uint64_t g_thread_id = INVALID_THREAD;
 
 static void
 set_thread(uintptr_t thread_id)
 {
 	g_thread_id = thread_id;
 	if (thread_id == INVALID_THREAD) {
-		MOCK_CLEAR(pthread_self);
 		spdk_set_thread(NULL);
 	} else {
-		MOCK_SET(pthread_self, (pthread_t)thread_id);
 		spdk_set_thread(g_ut_threads[thread_id].thread);
 	}
 
