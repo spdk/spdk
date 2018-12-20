@@ -191,6 +191,24 @@
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c44e3dbf_78386b94",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2018-12-20T08:33:42Z",
+      "side": 1,
+      "message": "Yes, we\u0027ve considered this issue. This extreme case still inevitably involves some IOs being resubmitted or IO hung. In fact, they should be executed by atomic. Currently， We don\u0027t have a good way to solve this problem in the case of guaranteed performance. When we have a good solution, we will deal with it later.",
+      "parentUuid": "482b32e2_a97e3064",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
