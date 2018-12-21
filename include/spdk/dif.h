@@ -48,8 +48,8 @@
 
 enum spdk_dif_type {
 	SPDK_DIF_TYPE1 = 1,
-	SPDK_DIF_TYPE2,
-	SPDK_DIF_TYPE3,
+	SPDK_DIF_TYPE2 = 1 << 1,
+	SPDK_DIF_TYPE3 = 1 << 2,
 };
 
 struct spdk_dif {
