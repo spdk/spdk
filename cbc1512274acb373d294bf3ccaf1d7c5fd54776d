@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8b89117c_47dddffa",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-21T02:19:22Z",
+      "side": 1,
+      "message": "How about 4096 + 128 type?\n\nI suppose that dif_generate_copy and dif_verify_copy are used when application doesn\u0027t know metadata.\n\nCurrently, FIO plugin is:\n\n  block_size \u003d spdk_nvme_ns_get_extended_sector_size(ns);\n\n  lba \u003d io_u-\u003eoffset / block_size;\n  lba_count \u003d io_u-\u003exfer_buflen / block_size;\n\n  /* TODO: considering situations that fio will randomize and verify io_u */\n  if (fio_qpair-\u003edo_nvme_pi) {\n    fio_extended_lba_setup_pi(fio_qpair, io_u);\n  }\n\n  switch (io_u-\u003eddir) {\n  case DDIR_READ:\n    if (!spdk_enable_sgl) {\n      rc \u003d spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair-\u003eqpair, io_u-\u003ebuf, NULL, lba, lba_count, ...);\n    }\n \n \nBut I think this should be changed to\n\n  block_size \u003d spdk_nvme_ns_get_extended_sector_size(ns);\n  md_size \u003d spdk_nvme_ns_get_md_size(ns);\n\n  lba \u003d io_u-\u003eoffset / (block_size - md_size);\n  lba_count \u003d io_u-\u003exfer_buflen / (block_size - md_size);\n\n  spdk_dif_generate_copy(io_u-\u003ebuf, io_u-\u003ebounce_buf, block_size, md_size, lba_count, dif_loc, ..., lba, ...);\n\nThe reason is that FIO assumes no metadata.",
+      "parentUuid": "880200bb_45e461ae",
+      "revId": "cbc1512274acb373d294bf3ccaf1d7c5fd54776d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc012bb4_e0fdd5af",
         "filename": "include/spdk/dif.h",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-21T01:43:23Z",
       "side": 1,
       "message": "should be bounce_iov here, :)",
+      "revId": "cbc1512274acb373d294bf3ccaf1d7c5fd54776d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9c2fca3_b8650966",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-21T02:19:22Z",
+      "side": 1,
+      "message": "Oh, Thank you!",
+      "parentUuid": "dc012bb4_e0fdd5af",
       "revId": "cbc1512274acb373d294bf3ccaf1d7c5fd54776d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
