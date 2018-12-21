@@ -192,9 +192,20 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 }
 
 static void
-_dif_generate(void *_dif, uint16_t guard, uint32_t ref_tag, struct spdk_dif_ctx *ctx)
+_dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks, struct spdk_dif_ctx *ctx)
 {
 	struct spdk_dif *dif = _dif;
+	uint32_t ref_tag;
+
+	/* For type 1 and 2, the reference tag is incremented for each
+	 * subsequent logical block. For type 3, the reference tag
+	 * remains the same as the initial reference tag.
+	 */
+	if (ctx->dif_type != SPDK_DIF_TYPE3) {
+		ref_tag = ctx->init_ref_tag + offset_blocks;
+	} else {
+		ref_tag = ctx->init_ref_tag;
+	}
 
 	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
 		to_be16(&dif->guard, guard);
@@ -214,7 +225,7 @@ dif_generate(struct iovec *iovs, int iovcnt, uint32_t block_size, uint32_t num_b
 	     struct spdk_dif_ctx *ctx)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, ref_tag;
+	uint32_t offset_blocks;
 	void *buf;
 	uint16_t guard = 0;
 
@@ -222,23 +233,13 @@ dif_generate(struct iovec *iovs, int iovcnt, uint32_t block_size, uint32_t num_b
 	_iov_iter_init(&iter, iovs, iovcnt);
 
 	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
-		/* For type 1 and 2, the reference tag is incremented for each
-		 * subsequent logical block. For type 3, the reference tag
-		 * remains the same as the initial reference tag.
-		 */
-		if (ctx->dif_type != SPDK_DIF_TYPE3) {
-			ref_tag = ctx->init_ref_tag + offset_blocks;
-		} else {
-			ref_tag = ctx->init_ref_tag;
-		}
-
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, ctx->guard_interval);
 		}
 
-		_dif_generate(buf + ctx->guard_interval, guard, ref_tag, ctx);
+		_dif_generate(buf + ctx->guard_interval, guard, offset_blocks, ctx);
 
 		_iov_iter_advance(&iter, block_size);
 		offset_blocks++;
@@ -249,20 +250,10 @@ static void
 _dif_generate_split(struct _iov_iter *iter, uint32_t offset_blocks, uint32_t block_size,
 		    struct spdk_dif_ctx *ctx)
 {
-	uint32_t ref_tag, offset_in_block, offset_in_dif, buf_len;
+	uint32_t offset_in_block, offset_in_dif, buf_len;
 	void *buf;
 	uint16_t guard;
 	struct spdk_dif dif = {};
-
-	/* For type 1 and 2, the reference tag is incremented for each
-	 * subsequent logical block. For type 3, the reference tag
-	 * remains the same as the initial reference tag.
-	 */
-	if (ctx->dif_type != SPDK_DIF_TYPE3) {
-		ref_tag = ctx->init_ref_tag + offset_blocks;
-	} else {
-		ref_tag = ctx->init_ref_tag;
-	}
 
 	guard = 0;
 	offset_in_block = 0;
@@ -282,7 +273,7 @@ _dif_generate_split(struct _iov_iter *iter, uint32_t offset_blocks, uint32_t blo
 				/* If a whole logical block data is parsed, generate DIF
 				 * and save it to the temporary DIF area.
 				 */
-				_dif_generate(&dif, guard, ref_tag, ctx);
+				_dif_generate(&dif, guard, offset_blocks, ctx);
 			}
 		} else if (offset_in_block < ctx->guard_interval + sizeof(struct spdk_dif)) {
 			/* Copy generated DIF to the split DIF field. */
@@ -335,12 +326,22 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt, uint32_t block_size, uint32_t 
 }
 
 static int
-_dif_verify(void *_dif, uint16_t guard, uint32_t ref_tag, struct spdk_dif_ctx *ctx)
+_dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks, struct spdk_dif_ctx *ctx)
 {
 	struct spdk_dif *dif = _dif;
 	uint16_t _guard;
 	uint16_t _app_tag;
-	uint32_t _ref_tag;
+	uint32_t ref_tag, _ref_tag;
+
+	/* For type 1 and 2, the reference tag is incremented for each
+	 * subsequent logical block. For type 3, the reference tag
+	 * remains the same as the initial reference tag.
+	 */
+	if (ctx->dif_type != SPDK_DIF_TYPE3) {
+		ref_tag = ctx->init_ref_tag + offset_blocks;
+	} else {
+		ref_tag = ctx->init_ref_tag;
+	}
 
 	switch (ctx->dif_type) {
 	case SPDK_DIF_TYPE1:
@@ -420,7 +421,7 @@ dif_verify(struct iovec *iovs, int iovcnt, uint32_t block_size, uint32_t num_blo
 	   struct spdk_dif_ctx *ctx)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, ref_tag;
+	uint32_t offset_blocks;
 	int rc;
 	void *buf;
 	uint16_t guard = 0;
@@ -429,23 +430,13 @@ dif_verify(struct iovec *iovs, int iovcnt, uint32_t block_size, uint32_t num_blo
 	_iov_iter_init(&iter, iovs, iovcnt);
 
 	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
-		/* For type 1 and 2, the reference tag is incremented for each
-		 * subsequent logical block. For type 3, the reference tag
-		 * remains the same as the initial reference tag.
-		 */
-		if (ctx->dif_type != SPDK_DIF_TYPE3) {
-			ref_tag = ctx->init_ref_tag + offset_blocks;
-		} else {
-			ref_tag = ctx->init_ref_tag;
-		}
-
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, ctx->guard_interval);
 		}
 
-		rc = _dif_verify(buf + ctx->guard_interval, guard, ref_tag, ctx);
+		rc = _dif_verify(buf + ctx->guard_interval, guard, offset_blocks, ctx);
 		if (rc != 0) {
 			return rc;
 		}
@@ -461,20 +452,10 @@ static int
 _dif_verify_split(struct _iov_iter *iter, uint32_t offset_blocks, uint32_t block_size,
 		  struct spdk_dif_ctx *ctx)
 {
-	uint32_t ref_tag, offset_in_block, offset_in_dif, buf_len;
+	uint32_t offset_in_block, offset_in_dif, buf_len;
 	void *buf;
 	uint16_t guard;
 	struct spdk_dif dif = {};
-
-	/* For type 1 and 2, the reference tag is incremented for each
-	 * subsequent logical block. For type 3, the reference tag
-	 * remains the same as the initial reference tag.
-	 */
-	if (ctx->dif_type != SPDK_DIF_TYPE3) {
-		ref_tag = ctx->init_ref_tag + offset_blocks;
-	} else {
-		ref_tag = ctx->init_ref_tag;
-	}
 
 	guard = 0;
 	offset_in_block = 0;
@@ -504,7 +485,7 @@ _dif_verify_split(struct _iov_iter *iter, uint32_t offset_blocks, uint32_t block
 		offset_in_block += buf_len;
 	}
 
-	return _dif_verify(&dif, guard, ref_tag, ctx);
+	return _dif_verify(&dif, guard, offset_blocks, ctx);
 }
 
 static int

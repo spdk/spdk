@@ -149,18 +149,20 @@ _dif_generate_and_verify(struct iovec *iov,
 
 	ctx.dif_flags = dif_flags;
 	ctx.app_tag = app_tag;
+	ctx.init_ref_tag = ref_tag;
 
 	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
 		guard = spdk_crc16_t10dif(0, iov->iov_base, guard_interval);
 	}
 
-	_dif_generate(iov->iov_base + guard_interval, guard, ref_tag, &ctx);
+	_dif_generate(iov->iov_base + guard_interval, guard, 0, &ctx);
 
 	ctx.dif_type = dif_type;
 	ctx.apptag_mask = apptag_mask;
 	ctx.app_tag = e_app_tag;
+	ctx.init_ref_tag = e_ref_tag;
 
-	rc = _dif_verify(iov->iov_base + guard_interval, guard, e_ref_tag, &ctx);
+	rc = _dif_verify(iov->iov_base + guard_interval, guard, 0, &ctx);
 	CU_ASSERT((expect_pass && rc == 0) || (!expect_pass && rc != 0));
 
 	rc = ut_data_pattern_verify(iov, 1, block_size, md_size, 1);
