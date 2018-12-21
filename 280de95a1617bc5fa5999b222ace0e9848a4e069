@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea9aeaa7_6a4a6018",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-21T08:49:20Z",
+      "side": 1,
+      "message": "It just makes me uncomfortable, :-)\n\n  if (rc \u003d\u003d 0 \u0026\u0026 inj_blk) {\n       inj_blk-\u003eerr_offset \u003d inject_offset_blocks;\n  }",
+      "range": {
+        "startLine": 616,
+        "startChar": 3,
+        "endLine": 620,
+        "endChar": 4
+      },
+      "revId": "280de95a1617bc5fa5999b222ace0e9848a4e069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
