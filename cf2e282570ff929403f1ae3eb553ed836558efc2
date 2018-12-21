@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfaf5914_8a2f8ce4",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 413,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:58:44Z",
+      "side": 1,
+      "message": "Can hold this mutex shorter.",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 413,
+        "endChar": 44
+      },
+      "revId": "cf2e282570ff929403f1ae3eb553ed836558efc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a140304_1324d26a",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:58:44Z",
+      "side": 1,
+      "message": "pls make common exit point.",
+      "range": {
+        "startLine": 429,
+        "startChar": 2,
+        "endLine": 439,
+        "endChar": 11
+      },
+      "revId": "cf2e282570ff929403f1ae3eb553ed836558efc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
