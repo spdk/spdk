@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2df00ec_65434cea",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1223,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-21T02:00:31Z",
+      "side": 1,
+      "message": "I think for DIF, block size should not include the length of metadata size, just equals to data_block_size here.",
+      "revId": "14dc7b140dcb687c244e98cfded2bdc270bbfee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0c021535_ed6cfe43",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-21T02:00:31Z",
+      "side": 1,
+      "message": "dif offset is 0 or (md_size - 8), you can add another similar function _get_dix_guard_interval.",
+      "revId": "14dc7b140dcb687c244e98cfded2bdc270bbfee5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
