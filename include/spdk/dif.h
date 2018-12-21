@@ -83,6 +83,21 @@ struct spdk_dif_ctx {
 	uint16_t		apptag_mask;
 };
 
+/** DIF error information */
+struct spdk_dif_error {
+	/** Error type */
+	uint8_t		err_type;
+
+	/** Expected value */
+	uint32_t	expected;
+
+	/** Actual value */
+	uint32_t	actual;
+
+	/** Offset the error occurred at, block based */
+	uint32_t	err_offset;
+};
+
 /**
  * Initialize DIF context.
  *
@@ -127,12 +142,13 @@ int spdk_dif_generate(struct iovec *iovs, int iovcnt,
  * \param block_size Block size in a block.
  * \param num_blocks Number of blocks of the payload.
  * \param cxt DIF context.
+ * \param err_blk Error information of the block DIF error detected.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_verify(struct iovec *iovs, int iovcnt,
 		    uint32_t block_size, uint32_t md_size,
-		    struct spdk_dif_ctx *ctx);
+		    struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk);
 
 /**
  * Inject bit flip error to extended LBA payload.
@@ -143,10 +159,12 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt,
  * \param num_blocks Number of blocks of the payload.
  * \param ctx DIF context.
  * \param inject_flags Flag to specify the action of error injection.
+ * \param inj_blk Error information of the block bit-flip error is injected in
  *
  * \return 0 on success and negated errno otherwise including no metadata.
  */
 int spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
 			  uint32_t block_size, uint32_t num_blocks,
-			  struct spdk_dif_ctx *ctx, uint32_t inject_flags);
+			  struct spdk_dif_ctx *ctx, uint32_t inject_flags,
+			  struct spdk_dif_error *inj_err);
 #endif /* SPDK_DIF_H */
