@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d84b7cf8_9f3704e2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-21T00:18:57Z",
+      "side": 1,
+      "message": "ordering or arguments, spdk_vhost_session_set_coalescing(session, vdev, ctx)\n\nmay be better because this function is for session.",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 53
+      },
+      "revId": "a170125262977f53dff56027a37a8ec650888eea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
