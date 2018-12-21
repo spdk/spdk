@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f39b7b98_86c25368",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-21T09:49:11Z",
+      "side": 1,
+      "message": "Where is spdk_bdev_histogram_disable()?",
+      "range": {
+        "startLine": 1096,
+        "startChar": 43,
+        "endLine": 1096,
+        "endChar": 70
+      },
+      "revId": "8ab30ec192cfe410fff202407368af3c021ce724",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
