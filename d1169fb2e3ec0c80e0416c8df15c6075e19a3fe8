@@ -52,6 +52,24 @@
       "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23f6e00b_6fdc5e72",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-21T10:37:54Z",
+      "side": 1,
+      "message": "I think it is caller\u0027s responsible to avoid multiple-call, just like we cannot unregister same bdev multiple-times.",
+      "parentUuid": "9c6c18e6_b97db2b3",
+      "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
