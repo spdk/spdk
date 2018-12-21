@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "880200bb_45e461ae",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-21T01:43:23Z",
+      "side": 1,
+      "message": "For this part, do we really need the metadata size? fixed 8 bytes of the metadata is enough to cover all the cases.",
+      "revId": "cbc1512274acb373d294bf3ccaf1d7c5fd54776d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc012bb4_e0fdd5af",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 18
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-21T01:43:23Z",
+      "side": 1,
+      "message": "should be bounce_iov here, :)",
+      "revId": "cbc1512274acb373d294bf3ccaf1d7c5fd54776d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
