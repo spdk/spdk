@@ -584,6 +584,28 @@ spdk_nvmf_rdma_cur_queue_depth(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static void
+nvmf_rdma_dump_request(struct spdk_nvmf_rdma_request *req)
+{
+	SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", req->data_from_pool);
+	SPDK_ERRLOG("\t\tRequest opcode: %d\n", req->req.cmd->nvmf_cmd.opcode);
+	SPDK_ERRLOG("\t\tRequest recv wr_id%lu\n", req->recv->wr.wr_id);
+}
+
+static void
+nvmf_rdma_dump_qpair_contents(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	int i;
+	struct spdk_nvmf_rdma_request *req;
+	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", rqpair->qpair.qid);
+	for (i = 1; i < RDMA_REQUEST_NUM_STATES; i++) {
+		SPDK_ERRLOG("\tdumping requests in state %d\n", rqpair->qpair.qid);
+		TAILQ_FOREACH(req, &rqpair->state_queue[i], state_link) {
+			nvmf_rdma_dump_request(req);
+		}
+	}
+}
+
+static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	int qd;
@@ -596,6 +618,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	qd = spdk_nvmf_rdma_cur_queue_depth(rqpair);
 	if (qd != 0) {
+		nvmf_rdma_dump_qpair_contents(rqpair);
 		SPDK_WARNLOG("Destroying qpair when queue depth is %d\n", qd);
 	}
 
