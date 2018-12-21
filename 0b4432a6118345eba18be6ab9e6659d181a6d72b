@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ccab5b52_15f1e3ad",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-21T00:11:39Z",
+      "side": 1,
+      "message": "Oh, please add pthread_mutex_unlock(\u0026g_spdk_vhost_mutex) here.",
+      "revId": "0b4432a6118345eba18be6ab9e6659d181a6d72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
