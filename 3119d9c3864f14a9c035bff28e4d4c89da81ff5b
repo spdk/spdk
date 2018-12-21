@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b8d1f56c_eb3997f3",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:29:48Z",
+      "side": 1,
+      "message": "lets say I can\u0027t see how this is usefull in generic library code. Can you point me some app are using it (beside jsoncat test app)?\n\nIf you really need it pls move it to some more proper \"util\" place than here.",
+      "range": {
+        "startLine": 671,
+        "startChar": 0,
+        "endLine": 671,
+        "endChar": 26
+      },
+      "revId": "3119d9c3864f14a9c035bff28e4d4c89da81ff5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e810c79_a760936d",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:29:48Z",
+      "side": 1,
+      "message": "See this how to avoid reallocations.\n\nhttps://review.gerrithub.io/#/c/spdk/spdk/+/430356/40/lib/event/json_config.c@430",
+      "range": {
+        "startLine": 680,
+        "startChar": 0,
+        "endLine": 686,
+        "endChar": 15
+      },
+      "revId": "3119d9c3864f14a9c035bff28e4d4c89da81ff5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48dac6c0_7fe64594",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:29:48Z",
+      "side": 1,
+      "message": "I can\u0027t see why his function is placed in library. If you want to preserver this bahaviout pls modify spdk_json_parse() function and add allocation/reallocation of values there.",
+      "range": {
+        "startLine": 728,
+        "startChar": 22,
+        "endLine": 728,
+        "endChar": 58
+      },
+      "revId": "3119d9c3864f14a9c035bff28e4d4c89da81ff5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

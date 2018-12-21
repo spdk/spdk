@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "192abba2_fe04e667",
+        "filename": "test/app/jsoncat/jsoncat.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:29:48Z",
+      "side": 0,
+      "message": "Are we using this app anywhere in tests? I searched but can\u0027t fine place where we are using it. Maybe it is a time to remove it instead changing?",
+      "revId": "58f1624497c69696c370a4099851b458f5bb3650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
