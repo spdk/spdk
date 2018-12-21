@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "115ad6cc_1b591fc1",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:19Z",
+      "side": 1,
+      "message": "make this function return proper error code and use it in the \u0027failed\u0027 label.",
+      "range": {
+        "startLine": 159,
+        "startChar": 7,
+        "endLine": 159,
+        "endChar": 33
+      },
+      "revId": "154d85fde75a286cdb3d5a05cc9bd21432efbe60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1057743a_3ae9ef29",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:19Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 215,
+        "startChar": 6,
+        "endLine": 215,
+        "endChar": 32
+      },
+      "revId": "154d85fde75a286cdb3d5a05cc9bd21432efbe60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d4dcd97_870d69b2",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:19Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 293,
+        "startChar": 7,
+        "endLine": 293,
+        "endChar": 33
+      },
+      "revId": "154d85fde75a286cdb3d5a05cc9bd21432efbe60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2977aa5e_5f5158d0",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:19Z",
+      "side": 1,
+      "message": "^ and all over this file.",
+      "range": {
+        "startLine": 366,
+        "startChar": 7,
+        "endLine": 366,
+        "endChar": 33
+      },
+      "revId": "154d85fde75a286cdb3d5a05cc9bd21432efbe60",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
