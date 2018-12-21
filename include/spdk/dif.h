@@ -59,28 +59,65 @@ struct spdk_dif {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_dif) == 8, "Incorrect size");
 
+/** DIF context information */
+struct spdk_dif_ctx {
+	/** Metadata size */
+	uint32_t		md_size;
+
+	/** Interval for guard computation */
+	uint32_t		guard_interval;
+
+	/** DIF type */
+	enum spdk_dif_type	dif_type;
+
+	/* Flags to specify the DIF action */
+	uint32_t		dif_flags;
+
+	/* Initial reference tag */
+	uint32_t		init_ref_tag;
+
+	/** Application tag */
+	uint16_t		app_tag;
+
+	/* Application tag mask */
+	uint16_t		apptag_mask;
+};
+
+/**
+ * Initialize DIF context.
+ *
+ * \param ctx DIF context.
+ * \param block_size Block size in a block.
+ * \param md_size Metadata size in a block.
+ * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
+ * If false, DIF is in the first 8 bytes of metadata.
+ * \param dif_type Type of DIF.
+ * \param dif_flags Flag to specify the DIF action.
+ * \param init_ref_tag Initial reference tag. For type 1, this is the
+ * starting block address.
+ * \param apptag_mask Application tag mask.
+ * \param app_tag Application tag.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
+		      bool dif_loc, enum spdk_dif_type, uint32_t dif_flags,
+		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+
 /**
  * Generate DIF for extended LBA payload.
  *
  * \param iovs iovec array describing the extended LBA payload.
  * \param iovcnt Number of elements in the iovec array.
  * \param block_size Block size in a block.
- * \param md_size Metadata size in a block.
  * \param num_blocks Number of blocks of the payload.
- * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
- * If false, DIF is in the first 8 bytes of metadata.
- * \param dif_type Type of DIF.
- * \param dif_flags Flag to specify the DIF action.
- * \param init_ref_tag Initial Reference Tag. For type 1, this is the
- * starting block address.
- * \param app_tag Application Tag.
+ * \param ctx DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_generate(struct iovec *iovs, int iovcnt,
-		      uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-		      bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-		      uint32_t init_ref_tag, uint16_t app_tag);
+		      uint32_t block_size, uint32_t num_blocks,
+		      struct spdk_dif_ctx *ctx);
 
 /**
  * Verify DIF for extended LBA payload.
@@ -88,23 +125,14 @@ int spdk_dif_generate(struct iovec *iovs, int iovcnt,
  * \param iovs iovec array describing the extended LBA payload.
  * \param iovcnt Number of elements in the iovec array.
  * \param block_size Block size in a block.
- * \param md_size Metadata size in a block.
  * \param num_blocks Number of blocks of the payload.
- * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
- * If false, DIF is set in the first 8 bytes of metadata.
- * \param dif_type Type of DIF.
- * \param dif_flags Flag to specify the DIF action.
- * \param init_ref_tag Initial Reference Tag. For type 1, this is the
- * starting block address.
- * \param apptag_mask Application Tag Mask.
- * \param app_tag Application Tag.
+ * \param cxt DIF context.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_verify(struct iovec *iovs, int iovcnt,
-		    uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-		    bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-		    uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+		    uint32_t block_size, uint32_t md_size,
+		    struct spdk_dif_ctx *ctx);
 
 /**
  * Inject bit flip error to extended LBA payload.
@@ -112,15 +140,13 @@ int spdk_dif_verify(struct iovec *iovs, int iovcnt,
  * \param iovs iovec array describing the extended LBA payload.
  * \param iovcnt Number of elements in the iovec array.
  * \param block_size Block size in a block.
- * \param md_size Metadata size in a block.
  * \param num_blocks Number of blocks of the payload.
- * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
- * If false, DIF is set in the first 8 bytes of metadata.
+ * \param ctx DIF context.
  * \param inject_flags Flag to specify the action of error injection.
  *
  * \return 0 on success and negated errno otherwise including no metadata.
  */
 int spdk_dif_inject_error(struct iovec *iovs, int iovcnt,
-			  uint32_t block_size, uint32_t md_size, uint32_t num_blocks,
-			  bool dif_loc, uint32_t inject_flags);
+			  uint32_t block_size, uint32_t num_blocks,
+			  struct spdk_dif_ctx *ctx, uint32_t inject_flags);
 #endif /* SPDK_DIF_H */
