@@ -16,6 +16,24 @@
       "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41818f74_a0aca74b",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-21T10:21:58Z",
+      "side": 1,
+      "message": "No problem here, since here the parameter is NULL.",
+      "parentUuid": "3a497d4c_485f6375",
+      "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
