@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a497d4c_485f6375",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 762,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-21T10:14:37Z",
+      "side": 1,
+      "message": "I think we should not do that. The declaration of function says that:\n\n\u003e \\param cb_fn The function to call upon completion of the disconnect.\n\nIf we call cb_fn() when qpair-\u003estate \u003d\u003d SPDK_NVMF_QPAIR_DEACTIVATING, the caller will think the disconnection is completed, but it is not in reality.",
+      "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
