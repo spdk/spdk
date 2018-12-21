@@ -317,6 +317,8 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_wr		drain_send_wr;
 	struct spdk_nvmf_rdma_wr		drain_recv_wr;
 
+	int					num_buffers_reaped;
+
 	/* Reference counter for how many unprocessed messages
 	 * from other threads are currently outstanding. The
 	 * qpair cannot be destroyed until this is 0. This is
@@ -1993,9 +1995,10 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	/* The second highest priority is I/O waiting on memory buffers. */
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->ch->pending_data_buf_queue, link,
 			   req_tmp) {
-		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
+		if (rqpair->num_buffers_reaped > 1 || spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
 			break;
 		}
+		rqpair->num_buffers_reaped++;
 	}
 
 	/* The lowest priority is processing newly received commands */
@@ -2694,13 +2697,17 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller;
-	int				count, rc;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+	int count,			rc;
 
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
 
 	count = 0;
 	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+			rqpair->num_buffers_reaped = 0;
+		}
 		rc = spdk_nvmf_rdma_poller_poll(rtransport, rpoller);
 		if (rc < 0) {
 			return rc;
