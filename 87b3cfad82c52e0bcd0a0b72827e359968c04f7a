@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27a57260_eb084266",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1302,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:04Z",
+      "side": 1,
+      "message": "what if transport_id_name is longer than the buffer.",
+      "range": {
+        "startLine": 1302,
+        "startChar": 1,
+        "endLine": 1302,
+        "endChar": 15
+      },
+      "revId": "87b3cfad82c52e0bcd0a0b72827e359968c04f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d0aba46_df0085ba",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:04Z",
+      "side": 1,
+      "message": "reg is calloc\u0027ed.",
+      "range": {
+        "startLine": 1303,
+        "startChar": 0,
+        "endLine": 1305,
+        "endChar": 19
+      },
+      "revId": "87b3cfad82c52e0bcd0a0b72827e359968c04f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83522468_09b97c28",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1403,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-21T10:59:04Z",
+      "side": 1,
+      "message": "I don\u0027t think this is NOENT",
+      "range": {
+        "startLine": 1403,
+        "startChar": 8,
+        "endLine": 1403,
+        "endChar": 14
+      },
+      "revId": "87b3cfad82c52e0bcd0a0b72827e359968c04f7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
