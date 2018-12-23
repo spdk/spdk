@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d4f92769_6dda0dde",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-23T11:10:44Z",
+      "side": 1,
+      "message": "I would suggest:\n\n    for (i \u003d 0; i \u003c SPDK_COUNTOF(rqpair-\u003estate_queue); i++) {\n        if (i \u003d\u003d RDMA_REQUEST_STATE_FREE) {\n            coutinue;\n        }\n        SPDK_ERRLOG(\"\\tdumping requests in state %d\\n\", i);\n        TAILQ_FOREACH(req, \u0026rqpair-\u003estate_queue[i], state_link) {\n            nvmf_rdma_dump_request(req);\n        }\n    }",
+      "range": {
+        "startLine": 600,
+        "startChar": 1,
+        "endLine": 605,
+        "endChar": 2
+      },
+      "revId": "e4973b719a56678d1ea3be40b868088fd17549fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
