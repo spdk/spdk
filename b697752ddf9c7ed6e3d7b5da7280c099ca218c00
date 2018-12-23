@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eebfd37c_17c448c9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-23T13:24:30Z",
+      "side": 1,
+      "message": "It looks like, you\u0027re right. Let me double check",
+      "parentUuid": "f129186c_eee3d607",
+      "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c262ac0_d4b0a888",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-19T17:50:59Z",
       "side": 1,
       "message": "Do we want to create some relationship between max_queue_depth and SRQ depth?\nI know in our host that we do a lot of memory allocations based off of this number and won\u0027t ever send more than that. Is the shared_receive_queue supposed to loosen those restrictions, or do we have some reasonable requirement to ensure that the sum of all of our qpairs max depths adds up to less than the shared receive queue size?\nIs this where RNR_RETRY comes in?",
+      "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2bad4ae6_fc32b0fa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1023,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2018-12-23T13:24:30Z",
+      "side": 1,
+      "message": "In the patch, SRQ depth is a configuration paramter with default value 4096. 4096 is a default value in Linux kernel implementation for NVME-OF RDMA too. So, I think, this is a good value to start with. We can think about some heuristics for SRQ depth estimation. But they should based on local port bandwidth rather than on sum of max_queue_depth.\nIn any case, I\u0027d suggest to start from simplest approach (configuration paramter) like Linux kernel does and move to advanced method later.\n\ncrqsize is protocol\u0027s paramter. There is no direct connection to SRQ. It describes receive queue size in controller. Advantage of SRQ comes when a quite big number of QPs are opened. \"Controller\" reports its capability and initiator adopts queues based on that. But target doesn\u0027t  need allocate such big amount of buffers, becouse port has limited bandwidth.",
+      "parentUuid": "0c262ac0_d4b0a888",
       "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
