@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "988a76c5_d8af463d",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-23T10:00:17Z",
+      "side": 1,
+      "message": "This line should be removed or changed to something else if g_path is an array, instead of pointer.",
+      "revId": "424a6fa23385d328dc2dcbe604aa4c67f6402b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce252b18_b7c9a358",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-23T10:00:17Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "424a6fa23385d328dc2dcbe604aa4c67f6402b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ae4327e_ff7b8bc6",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-23T10:00:17Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "424a6fa23385d328dc2dcbe604aa4c67f6402b99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
