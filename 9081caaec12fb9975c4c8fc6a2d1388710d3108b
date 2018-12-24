@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1fb48fd5_1657a227",
+        "filename": "lib/jsonrpc/jsonrpc_server_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-24T10:58:22Z",
+      "side": 1,
+      "message": "This line should be updated.",
+      "revId": "9081caaec12fb9975c4c8fc6a2d1388710d3108b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
