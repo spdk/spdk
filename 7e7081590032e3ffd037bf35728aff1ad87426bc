@@ -472,6 +472,30 @@
     },
     {
       "key": {
+        "uuid": "a49b5cef_e354c9bd",
+        "filename": "lib/cas/ocfenv/ocf_env_list.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:29:14Z",
+      "side": 1,
+      "message": "I think we can just use existing macros from queue.h for lists/queues management. Here you can just write wrappers or #define\u0027s like \n\n  #define list_add(head, elem) TAILQ_INSERT_HEAD(head, elem, entries)\n\nThe same for all functions and macros from this file. This way you avoid reinventing this wheal.\n\nBTW:\n\n  static inline void list_add(struct list_head *it, struct list_head *l1)\n\nShould use \u0027*head\u0027 insted \u0027*it\u0027",
+      "parentUuid": "4f06d584_ad346736",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 18
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70de63ef_7feea5f8",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -507,6 +531,30 @@
       "side": 1,
       "message": "Yes, but that might change.",
       "parentUuid": "70de63ef_7feea5f8",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d27d05a_3758a6bc",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:29:14Z",
+      "side": 1,
+      "message": "So I think you could use switch ocf_get_cache_mode() and in",
+      "parentUuid": "9e8f3f6e_167237cc",
       "range": {
         "startLine": 39,
         "startChar": 0,
@@ -566,6 +614,30 @@
     },
     {
       "key": {
+        "uuid": "4685c5da_51b86ab6",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:29:14Z",
+      "side": 1,
+      "message": "you can just \u0027return -1;\u0027 at the end of function.",
+      "parentUuid": "7ee1b451_b7fc132e",
+      "range": {
+        "startLine": 49,
+        "startChar": 5,
+        "endLine": 49,
+        "endChar": 16
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "460f5bf4_c187da32",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -613,6 +685,30 @@
     },
     {
       "key": {
+        "uuid": "fcb70540_00accb98",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:29:14Z",
+      "side": 1,
+      "message": "I would preffere \u0027strcmp() \u003d\u003d 0\u0027 as \u0027!strcmp()\u0027 is less explicit and easy to overlook in code review.",
+      "parentUuid": "6ec71246_c4652f2c",
+      "range": {
+        "startLine": 52,
+        "startChar": 6,
+        "endLine": 52,
+        "endChar": 45
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf44c4fc_dc4cb939",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -648,6 +744,30 @@
       "side": 1,
       "message": "Is it worth it? It would force me to do checks before call which is redundant.",
       "parentUuid": "bf44c4fc_dc4cb939",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 61,
+        "endChar": 31
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4308964_2fb20114",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:29:14Z",
+      "side": 1,
+      "message": "Now I\u0027m asking my self why this function and ocf_get_cache_mode are not operating on enum ocf_cache_mode directly. Using int\u0027s i is less readable here.",
+      "parentUuid": "fe3d7b9b_7b40d4a0",
       "range": {
         "startLine": 61,
         "startChar": 23,
