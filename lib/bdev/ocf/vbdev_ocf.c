@@ -420,6 +420,26 @@ vbdev_ocf_dump_info_json(void *opaque, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_ocf_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct vbdev_ocf *vbdev = bdev->ctxt;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_ocf_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", vbdev->name);
+	spdk_json_write_named_string(w, "mode",
+				     ocf_get_cache_modename(vbdev->cfg.cache.cache_mode));
+	spdk_json_write_named_string(w, "cache_bdev_name", vbdev->cache.name);
+	spdk_json_write_named_string(w, "core_bdev_name", vbdev->core.name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 /* Cache vbdev function table
  * Used by bdev layer */
 static struct spdk_bdev_fn_table cache_dev_fn_table = {
@@ -428,6 +448,7 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 	.submit_request	= vbdev_ocf_submit_request,
 	.get_io_channel	= vbdev_ocf_get_io_channel,
 	.dump_info_json = vbdev_ocf_dump_info_json,
+	.write_config_json = vbdev_ocf_write_json_config,
 };
 
 /* Start OCF cache, attach caching device */
