@@ -787,15 +787,6 @@ submit_io(struct ns_worker_ctx *ns_ctx, int queue_depth)
 	}
 }
 
-static void
-drain_io(struct ns_worker_ctx *ns_ctx)
-{
-	ns_ctx->is_draining = true;
-	while (ns_ctx->current_queue_depth > 0) {
-		check_io(ns_ctx);
-	}
-}
-
 static int
 init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
@@ -854,6 +845,7 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	uint32_t unfinished_ns_ctx;
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
@@ -893,12 +885,27 @@ work_fn(void *arg)
 		}
 	}
 
-	ns_ctx = worker->ns_ctx;
-	while (ns_ctx != NULL) {
-		drain_io(ns_ctx);
-		cleanup_ns_worker_ctx(ns_ctx);
-		ns_ctx = ns_ctx->next;
-	}
+	/* drain the io of each ns_ctx in round robin to make the fairness */
+	do {
+		unfinished_ns_ctx = 0;
+		ns_ctx = worker->ns_ctx;
+		while (ns_ctx != NULL) {
+			/* first time will enter into this if case */
+			if (!ns_ctx->is_draining) {
+				ns_ctx->is_draining = true;
+			}
+
+			if (ns_ctx->current_queue_depth > 0) {
+				check_io(ns_ctx);
+				if (ns_ctx->current_queue_depth == 0) {
+					cleanup_ns_worker_ctx(ns_ctx);
+				} else {
+					unfinished_ns_ctx++;
+				}
+			}
+			ns_ctx = ns_ctx->next;
+		}
+	} while (unfinished_ns_ctx > 0);
 
 	return 0;
 }
