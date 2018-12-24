@@ -1,0 +1,303 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "086480b6_e1175250",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "when you have many items under \u0027if() {}\u0027 it is better to negate it and do\n\n  if (!vbdev) {\n    return;\n  }",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 13
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dde688f_d85e26ed",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "No need to cast",
+      "range": {
+        "startLine": 74,
+        "startChar": 7,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95ab47a2_ef5f967e",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "It might be better if you move\n\n  ocf_io_configure(io, offset, len, dir, 0, 0);\n  return ocf_submit_io(io);\n\nTo its own READ and WRITE case instead this.",
+      "range": {
+        "startLine": 314,
+        "startChar": 6,
+        "endLine": 314,
+        "endChar": 29
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91197e5f_8202d98f",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "hat is \u0027qctx\u0027 ?",
+      "range": {
+        "startLine": 336,
+        "startChar": 8,
+        "endLine": 336,
+        "endChar": 22
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce20984a_9ddaf38f",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "This is still broken.",
+      "range": {
+        "startLine": 713,
+        "startChar": 0,
+        "endLine": 725,
+        "endChar": 44
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec7dff28_cfa13d2d",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 760,
+        "startChar": 1,
+        "endLine": 761,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbb391ef_2abc6350",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 891,
+        "startChar": 1,
+        "endLine": 892,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5264607_b5ae2e5c",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 899,
+        "startChar": 1,
+        "endLine": 900,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8c1d544_7511788d",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "This should fit into one line.",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 24
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70de63ef_7feea5f8",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "Is this \u0027ocf_cache_mode_*\u0027 enum/define contiguous?",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13b29bd6_8438b5eb",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "Not needed.",
+      "range": {
+        "startLine": 49,
+        "startChar": 5,
+        "endLine": 49,
+        "endChar": 16
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "460f5bf4_c187da32",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "pls swap order of \u0027\u003d\u003d\u0027 parametes.",
+      "range": {
+        "startLine": 52,
+        "startChar": 6,
+        "endLine": 52,
+        "endChar": 45
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf44c4fc_dc4cb939",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:10:56Z",
+      "side": 1,
+      "message": "Can you make it unsigned?",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 61,
+        "endChar": 31
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
