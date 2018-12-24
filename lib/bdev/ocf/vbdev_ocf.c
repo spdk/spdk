@@ -799,6 +799,28 @@ vbdev_ocf_init(void)
 	return status;
 }
 
+/* Dump current configuration for all OCF bdevs */
+static void
+vbdev_ocf_get_spdk_running_config(FILE *fp)
+{
+	struct vbdev_ocf *vbdev;
+
+	fprintf(fp, "\n[OCF]\n");
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (vbdev->state.doing_finish) {
+			continue;
+		}
+
+		fprintf(fp, "  OCF %s %s %s %s\n",
+			vbdev->name,
+			ocf_get_cache_modename(vbdev->cfg.cache.cache_mode),
+			vbdev->cache.name,
+			vbdev->core.name);
+	}
+
+	fprintf(fp, "\n");
+}
+
 /* Called after application shutdown started
  * Release memory of allocated structures here */
 static void
@@ -961,8 +983,8 @@ static struct spdk_bdev_module ocf_if = {
 	.module_init = vbdev_ocf_init,
 	.fini_start = NULL,
 	.module_fini = vbdev_ocf_module_fini,
-	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
+	.config_text = vbdev_ocf_get_spdk_running_config,
 	.examine_config = vbdev_ocf_examine,
 };
 SPDK_BDEV_MODULE_REGISTER(&ocf_if);
