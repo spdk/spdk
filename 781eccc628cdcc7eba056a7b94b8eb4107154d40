@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "203ed38f_9737c945",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-24T10:19:02Z",
+      "side": 1,
+      "message": "According to the name of function, it seems that the function should only read data from limit, so decorate limit with const maybe better. Just for your consideration.",
+      "revId": "781eccc628cdcc7eba056a7b94b8eb4107154d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "803fb694_fd29e61a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-24T10:19:02Z",
+      "side": 1,
+      "message": "How about:\n\n  if (limit-\u003emax_per_timeslice \u003e0 \u0026\u0026\n      limit-\u003eremaining_this_timeslice \u003c\u003d 0) {\n    return true;\n  } else {\n    return false;\n  }\n\nNew form is consistent with old codes located in line 1287.",
+      "range": {
+        "startLine": 1264,
+        "startChar": 1,
+        "endLine": 1268,
+        "endChar": 2
+      },
+      "revId": "781eccc628cdcc7eba056a7b94b8eb4107154d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bdd6e56_08b19d02",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1331,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-24T10:19:02Z",
+      "side": 1,
+      "message": "After bdev_io submitted, can we ensure that the bdev_io is still valid (i.e. not destroyed)?",
+      "revId": "781eccc628cdcc7eba056a7b94b8eb4107154d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
