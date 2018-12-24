@@ -141,6 +141,12 @@ struct spdk_bdev_qos_limit {
 
 	/** Maximum allowed IOs or bytes to be issued in one timeslice (e.g., 1ms). */
 	uint32_t max_per_timeslice;
+
+	/** Function to check whether to queue the IO. */
+	bool (*queue_io)(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io);
+
+	/** Function to update for the submitted IO. */
+	void (*update_io)(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io);
 };
 
 struct spdk_bdev_qos {
@@ -1248,24 +1254,55 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_qos_rw_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (limit->limit == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
+		return false;
+	}
+
+	if (limit->max_per_timeslice > 0 && limit->remaining_this_timeslice <= 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 static void
-_spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte)
+_spdk_bdev_qos_iops_update_io(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (limit->limit == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
+		return;
+	}
+
+	limit->remaining_this_timeslice--;
+}
+
+static void
+_spdk_bdev_qos_bps_update_io(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (limit->limit == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
+		return;
+	}
+
+	limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
+}
+
+static void
+_spdk_bdev_qos_init_ops(struct spdk_bdev_qos *qos)
 {
 	int i;
 
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		if (qos->rate_limits[i].limit == SPDK_BDEV_QOS_LIMIT_NOT_DEFINED) {
-			continue;
-		}
-
 		switch (i) {
 		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
-			qos->rate_limits[i].remaining_this_timeslice--;
+			qos->rate_limits[i].queue_io = _spdk_bdev_qos_rw_queue_io;
+			qos->rate_limits[i].update_io = _spdk_bdev_qos_iops_update_io;
 			break;
 		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
-			qos->rate_limits[i].remaining_this_timeslice -= io_size_in_byte;
+			qos->rate_limits[i].queue_io = _spdk_bdev_qos_rw_queue_io;
+			qos->rate_limits[i].update_io = _spdk_bdev_qos_bps_update_io;
 			break;
-		case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
 		default:
 			break;
 		}
@@ -1275,30 +1312,27 @@ _spdk_bdev_qos_update_per_io(struct spdk_bdev_qos *qos, uint64_t io_size_in_byte
 static int
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
-	struct spdk_bdev_io		*bdev_io = NULL;
+	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i, submitted_ios = 0;
-	bool				to_limit_io;
-	uint64_t			io_size_in_byte;
 
-	while (!TAILQ_EMPTY(&qos->queued)) {
-		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-			if (qos->rate_limits[i].max_per_timeslice > 0 &&
-			    (qos->rate_limits[i].remaining_this_timeslice <= 0)) {
-				return submitted_ios;
+	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
+		if (_spdk_bdev_qos_io_to_limit(bdev_io) == true) {
+			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+				if (qos->rate_limits[i].queue_io(&qos->rate_limits[i],
+								 bdev_io) == true) {
+					return submitted_ios;
+				}
+			}
+			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
+				qos->rate_limits[i].update_io(&qos->rate_limits[i], bdev_io);
 			}
 		}
 
-		bdev_io = TAILQ_FIRST(&qos->queued);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
-		to_limit_io = _spdk_bdev_qos_io_to_limit(bdev_io);
-		if (to_limit_io == true) {
-			io_size_in_byte = _spdk_bdev_get_io_size_in_byte(bdev_io);
-			_spdk_bdev_qos_update_per_io(qos, io_size_in_byte);
-		}
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
 		submitted_ios++;
 	}
@@ -1797,6 +1831,7 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 					qos->rate_limits[i].limit = SPDK_BDEV_QOS_LIMIT_NOT_DEFINED;
 				}
 			}
+			_spdk_bdev_qos_init_ops(qos);
 			spdk_bdev_qos_update_max_quota_per_timeslice(qos);
 			qos->timeslice_size =
 				SPDK_BDEV_QOS_TIMESLICE_IN_USEC * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
@@ -1993,6 +2028,8 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 		new_qos->rate_limits[i].min_per_timeslice = 0;
 		new_qos->rate_limits[i].max_per_timeslice = 0;
 	}
+
+	_spdk_bdev_qos_init_ops(new_qos);
 
 	bdev->internal.qos = new_qos;
 
