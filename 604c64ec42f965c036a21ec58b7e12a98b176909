@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ce50444f_bfc3789e",
+        "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:37:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fb8a7c84_19d1c589",
+      "range": {
+        "startLine": 88,
+        "startChar": 1,
+        "endLine": 91,
+        "endChar": 2
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c4d0041e_a9e16970",
         "filename": "lib/bdev/cas/vbdev_cache_rpc.c",
         "patchSetId": 8
@@ -203,6 +227,30 @@
     },
     {
       "key": {
+        "uuid": "95b203ed_4caca281",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:37:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "049e6c74_7d5ba8bd",
+      "range": {
+        "startLine": 169,
+        "startChar": 1,
+        "endLine": 169,
+        "endChar": 13
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a63d93b9_b4490f6c",
         "filename": "scripts/rpc.py",
         "patchSetId": 8
@@ -214,6 +262,30 @@
       "writtenOn": "2018-12-12T21:25:58Z",
       "side": 1,
       "message": "print? or print_dict?",
+      "range": {
+        "startLine": 186,
+        "startChar": 8,
+        "endLine": 186,
+        "endChar": 13
+      },
+      "revId": "604c64ec42f965c036a21ec58b7e12a98b176909",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69d32cc0_39da226c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 186,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:37:32Z",
+      "side": 1,
+      "message": "Ack, it\u0027s print_dict",
+      "parentUuid": "a63d93b9_b4490f6c",
       "range": {
         "startLine": 186,
         "startChar": 8,
