@@ -894,6 +894,28 @@ vbdev_cas_init(void)
 	return status;
 }
 
+/* Dump current configuration for all CAS bdevs */
+static void
+vbdev_cas_get_spdk_running_config(FILE *fp)
+{
+	struct vbdev_cas *vbdev;
+
+	fprintf(fp, "\n[CAS]\n");
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (vbdev->state.doing_finish) {
+			continue;
+		}
+
+		fprintf(fp, "  CAS %s %s %s %s\n",
+			vbdev->name,
+			ocf_get_cache_modename(vbdev->cfg.cache.cache_mode),
+			vbdev->cache.name,
+			vbdev->core.name);
+	}
+
+	fprintf(fp, "\n");
+}
+
 /* Called at application shutdown */
 static void
 vbdev_cas_fini_start(void)
@@ -1056,7 +1078,7 @@ static struct spdk_bdev_module cache_if = {
 	.module_init = vbdev_cas_init,
 	.fini_start = vbdev_cas_fini_start,
 	.module_fini = vbdev_cas_module_fini,
-	.config_text = NULL,
+	.config_text = vbdev_cas_get_spdk_running_config,
 	.get_ctx_size = NULL,
 	.examine_config = vbdev_cas_examine,
 };
