@@ -448,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "0f0ab0bd_fa2fd70a",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "I think 0 is more correct here",
+      "parentUuid": "60ca5953_08a77073",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 14
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22ee8625_3a165865",
         "filename": "lib/cas/ocfenv/ocf_env.c",
         "patchSetId": 27
@@ -459,6 +483,30 @@
       "writtenOn": "2018-12-24T12:42:04Z",
       "side": 1,
       "message": "pls add assert(false) here.",
+      "range": {
+        "startLine": 112,
+        "startChar": 3,
+        "endLine": 112,
+        "endChar": 47
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ae42a8f_fb0bccbe",
+        "filename": "lib/cas/ocfenv/ocf_env.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "22ee8625_3a165865",
       "range": {
         "startLine": 112,
         "startChar": 3,
@@ -542,6 +590,30 @@
     },
     {
       "key": {
+        "uuid": "4046785b_f96837ef",
+        "filename": "lib/cas/ocfenv/ocf_env_list.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "I don\u0027t think it\u0027s safe since OCF relies on this exact structure \"list_head\"",
+      "parentUuid": "a49b5cef_e354c9bd",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 18
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70de63ef_7feea5f8",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -601,6 +673,30 @@
       "side": 1,
       "message": "So I think you could use switch ocf_get_cache_mode() and in",
       "parentUuid": "9e8f3f6e_167237cc",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "531784d4_3f618ba6",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "Not sure if I get it, but\nthere are two places where this is used so it\u0027s better to leave as an array IMO",
+      "parentUuid": "4d27d05a_3758a6bc",
       "range": {
         "startLine": 39,
         "startChar": 0,
@@ -684,6 +780,30 @@
     },
     {
       "key": {
+        "uuid": "f480bab6_3ef8ea51",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4685c5da_51b86ab6",
+      "range": {
+        "startLine": 49,
+        "startChar": 5,
+        "endLine": 49,
+        "endChar": 16
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "460f5bf4_c187da32",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -755,6 +875,30 @@
     },
     {
       "key": {
+        "uuid": "2afa5d8b_fcacd52a",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "fcb70540_00accb98",
+      "range": {
+        "startLine": 52,
+        "startChar": 6,
+        "endLine": 52,
+        "endChar": 45
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf44c4fc_dc4cb939",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -814,6 +958,30 @@
       "side": 1,
       "message": "Now I\u0027m asking my self why this function and ocf_get_cache_mode are not operating on enum ocf_cache_mode directly. Using int\u0027s i is less readable here.",
       "parentUuid": "fe3d7b9b_7b40d4a0",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 61,
+        "endChar": 31
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3786a902_da6e6374",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T13:23:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c4308964_2fb20114",
       "range": {
         "startLine": 61,
         "startChar": 23,
