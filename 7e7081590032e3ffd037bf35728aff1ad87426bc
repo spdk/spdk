@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c759d79c_e858ebdb",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Ok",
+      "parentUuid": "086480b6_e1175250",
+      "range": {
+        "startLine": 70,
+        "startChar": 1,
+        "endLine": 70,
+        "endChar": 13
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5dde688f_d85e26ed",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 27
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "No need to cast",
+      "range": {
+        "startLine": 74,
+        "startChar": 7,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "940f50ae_040b4590",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "There is: const void * -\u003e void *",
+      "parentUuid": "5dde688f_d85e26ed",
       "range": {
         "startLine": 74,
         "startChar": 7,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "036956ae_c31d628b",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 314,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "I like this more because I don\u0027t have to repeat myself",
+      "parentUuid": "95ab47a2_ef5f967e",
+      "range": {
+        "startLine": 314,
+        "startChar": 6,
+        "endLine": 314,
+        "endChar": 29
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91197e5f_8202d98f",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 27
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "hat is \u0027qctx\u0027 ?",
+      "range": {
+        "startLine": 336,
+        "startChar": 8,
+        "endLine": 336,
+        "endChar": 22
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9714649_5834d428",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "It\u0027s CAS queue context. There is description for it in vbdev_cas.h",
+      "parentUuid": "91197e5f_8202d98f",
       "range": {
         "startLine": 336,
         "startChar": 8,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "a6e87502_bcfff294",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 725,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Yeah",
+      "parentUuid": "ce20984a_9ddaf38f",
+      "range": {
+        "startLine": 713,
+        "startChar": 0,
+        "endLine": 725,
+        "endChar": 44
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec7dff28_cfa13d2d",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 27
@@ -128,6 +248,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "+ \\n",
+      "range": {
+        "startLine": 760,
+        "startChar": 1,
+        "endLine": 761,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "423cdef2_f25ddb58",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 761,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "It\u0027s grouped together on purpos",
+      "parentUuid": "ec7dff28_cfa13d2d",
       "range": {
         "startLine": 760,
         "startChar": 1,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "1f95e06d_d65cbc79",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 892,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bbb391ef_2abc6350",
+      "range": {
+        "startLine": 891,
+        "startChar": 1,
+        "endLine": 892,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5264607_b5ae2e5c",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 27
@@ -174,6 +342,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 899,
+        "startChar": 1,
+        "endLine": 900,
+        "endChar": 1
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68bac86e_0d19665f",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 900,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b5264607_b5ae2e5c",
       "range": {
         "startLine": 899,
         "startChar": 1,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "80d285bb_24bf2a34",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "No, there is 125 characters",
+      "parentUuid": "a8c1d544_7511788d",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 138,
+        "endChar": 24
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7688083f_f6840361",
         "filename": "lib/cas/ocfenv/ocf_env_list.h",
         "patchSetId": 27
@@ -220,6 +436,30 @@
       "writtenOn": "2018-12-24T09:13:48Z",
       "side": 1,
       "message": "Can you put some light why this file is needed in SPDK?",
+      "range": {
+        "startLine": 43,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 18
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f06d584_ad346736",
+        "filename": "lib/cas/ocfenv/ocf_env_list.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "It is used within OCF\nAll files in this directory needed here in order for OCF to compile\nWe don\u0027t usually write READMEs for directory, do you think we need some comments? Where?",
+      "parentUuid": "7688083f_f6840361",
       "range": {
         "startLine": 43,
         "startChar": 0,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "9e8f3f6e_167237cc",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Yes, but that might change.",
+      "parentUuid": "70de63ef_7feea5f8",
+      "range": {
+        "startLine": 39,
+        "startChar": 0,
+        "endLine": 43,
+        "endChar": 27
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "13b29bd6_8438b5eb",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -266,6 +530,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "Not needed.",
+      "range": {
+        "startLine": 49,
+        "startChar": 5,
+        "endLine": 49,
+        "endChar": 16
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7ee1b451_b7fc132e",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "It is - I return negative if cache_mode does not match any of cache_modes[]\nIt\u0027s used in init_vbdev",
+      "parentUuid": "13b29bd6_8438b5eb",
       "range": {
         "startLine": 49,
         "startChar": 5,
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "6ec71246_c4652f2c",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "I will negate it, ok?",
+      "parentUuid": "460f5bf4_c187da32",
+      "range": {
+        "startLine": 52,
+        "startChar": 6,
+        "endLine": 52,
+        "endChar": 45
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf44c4fc_dc4cb939",
         "filename": "lib/cas/utils.c",
         "patchSetId": 27
@@ -312,6 +624,30 @@
       "writtenOn": "2018-12-24T09:10:56Z",
       "side": 1,
       "message": "Can you make it unsigned?",
+      "range": {
+        "startLine": 61,
+        "startChar": 23,
+        "endLine": 61,
+        "endChar": 31
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe3d7b9b_7b40d4a0",
+        "filename": "lib/cas/utils.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-24T11:15:09Z",
+      "side": 1,
+      "message": "Is it worth it? It would force me to do checks before call which is redundant.",
+      "parentUuid": "bf44c4fc_dc4cb939",
       "range": {
         "startLine": 61,
         "startChar": 23,
