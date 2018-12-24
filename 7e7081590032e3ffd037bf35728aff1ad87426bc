@@ -425,6 +425,52 @@
     },
     {
       "key": {
+        "uuid": "60ca5953_08a77073",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:42:04Z",
+      "side": 1,
+      "message": "offset -\u003d len;?\n\nIt would be easier read if you rewrite it in a way that only memset is under \u0027if(offset \u003c iov[i].iov_len)\u0027",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 14
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22ee8625_3a165865",
+        "filename": "lib/cas/ocfenv/ocf_env.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T12:42:04Z",
+      "side": 1,
+      "message": "pls add assert(false) here.",
+      "range": {
+        "startLine": 112,
+        "startChar": 3,
+        "endLine": 112,
+        "endChar": 47
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7688083f_f6840361",
         "filename": "lib/cas/ocfenv/ocf_env_list.h",
         "patchSetId": 27
