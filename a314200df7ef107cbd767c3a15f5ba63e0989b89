@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fca80c08_4ede5091",
+        "filename": "test/nvmf/rpc/rpc.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-24T09:19:31Z",
+      "side": 1,
+      "message": "Now you can remove use of \u0027match\u0027 entirely.",
+      "range": {
+        "startLine": 54,
+        "startChar": 0,
+        "endLine": 61,
+        "endChar": 60
+      },
+      "revId": "a314200df7ef107cbd767c3a15f5ba63e0989b89",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
