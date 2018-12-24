@@ -487,6 +487,26 @@ vbdev_cas_dump_config_info(void *opaque, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
+static void
+vbdev_cas_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
+{
+	struct vbdev_cas *vbdev = bdev->ctxt;
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_cas_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", vbdev->name);
+	spdk_json_write_named_string(w, "mode",
+				     ocf_get_cache_modename(vbdev->cfg.cache.cache_mode));
+	spdk_json_write_named_string(w, "cache_bdev_name", vbdev->cache.name);
+	spdk_json_write_named_string(w, "core_bdev_name", vbdev->core.name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
 /* OCF module cleanup */
 static void
 opencas_cleanup(void)
@@ -535,6 +555,7 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 	.submit_request	= vbdev_cas_submit_request,
 	.get_io_channel	= vbdev_cas_get_io_channel,
 	.dump_info_json = vbdev_cas_dump_config_info,
+	.write_config_json = vbdev_cas_write_json_config,
 };
 
 /* Start OCF cache, attach caching device */
