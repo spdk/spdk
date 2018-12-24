@@ -168,7 +168,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 
 	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
 					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
-					 imm_mobj_size, 0,
+					 imm_mobj_size, 256,
 					 spdk_env_get_socket_id(spdk_env_get_current_core()),
 					 spdk_mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
