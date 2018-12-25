@@ -1090,7 +1090,8 @@ spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 static int
 dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
-	   uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+	   uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+	   struct spdk_dif_error *err_blk)
 {
 	struct _iov_iter data_iter, md_iter;
 	uint32_t offset_blocks;
@@ -1114,7 +1115,7 @@ dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			guard = spdk_crc16_t10dif(guard, md_buf, ctx->u.dif_offset);
 		}
 
-		rc = _dif_verify(md_buf + ctx->u.dif_offset, guard, offset_blocks, ctx, NULL);
+		rc = _dif_verify(md_buf + ctx->u.dif_offset, guard, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -1129,7 +1130,8 @@ dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 static int
 _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
-		  uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+		  uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
+		  struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_block, data_buf_len;
 	uint16_t guard;
@@ -1158,12 +1160,13 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 
 	_iov_iter_advance(md_iter, ctx->md_size);
 
-	return _dif_verify(md_buf + ctx->u.dif_offset, guard, offset_blocks, ctx, NULL);
+	return _dif_verify(md_buf + ctx->u.dif_offset, guard, offset_blocks, ctx, err_blk);
 }
 
 static int
 dix_verify_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
-		 uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+		 uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		 struct spdk_dif_error *err_blk)
 {
 	struct _iov_iter data_iter, md_iter;
 	uint32_t offset_blocks;
@@ -1175,7 +1178,7 @@ dix_verify_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	while (offset_blocks < num_blocks &&
 	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
-		rc = _dix_verify_split(&data_iter, &md_iter, offset_blocks, ctx);
+		rc = _dix_verify_split(&data_iter, &md_iter, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -1187,7 +1190,8 @@ dix_verify_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 int
 spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
-		uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+		uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		struct spdk_dif_error *err_blk)
 {
 	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
 	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
@@ -1196,8 +1200,80 @@ spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	}
 
 	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
-		return dix_verify(iovs, iovcnt, md_iov, num_blocks, ctx);
+		return dix_verify(iovs, iovcnt, md_iov, num_blocks, ctx, err_blk);
 	} else {
-		return dix_verify_split(iovs, iovcnt, md_iov, num_blocks, ctx);
+		return dix_verify_split(iovs, iovcnt, md_iov, num_blocks, ctx, err_blk);
 	}
+}
+
+int
+spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		      uint32_t inject_flags, struct spdk_dif_error *inj_blk)
+{
+	int rc;
+
+	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
+	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (inject_flags & SPDK_DIF_REFTAG_ERROR) {
+		rc = dif_inject_error(md_iov, 1, ctx->md_size, num_blocks,
+				      ctx->u.dif_offset + offsetof(struct spdk_dif, ref_tag),
+				      _member_size(struct spdk_dif, ref_tag),
+				      ctx, inj_blk);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Reference Tag.\n");
+			return rc;
+		}
+		if (inj_blk) {
+			inj_blk->err_type |= SPDK_DIF_REFTAG_ERROR;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_APPTAG_ERROR) {
+		rc = dif_inject_error(md_iov, 1, ctx->md_size, num_blocks,
+				      ctx->u.dif_offset + offsetof(struct spdk_dif, app_tag),
+				      _member_size(struct spdk_dif, app_tag),
+				      ctx, inj_blk);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Application Tag.\n");
+			return rc;
+		}
+		if (inj_blk) {
+			inj_blk->err_type |= SPDK_DIF_APPTAG_ERROR;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_GUARD_ERROR) {
+		rc = dif_inject_error(md_iov, 1, ctx->md_size, num_blocks,
+				      ctx->u.dif_offset,
+				      _member_size(struct spdk_dif, guard),
+				      ctx, inj_blk);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Guard.\n");
+			return rc;
+		}
+		if (inj_blk) {
+			inj_blk->err_type |= SPDK_DIF_GUARD_ERROR;
+		}
+	}
+
+	if (inject_flags & SPDK_DIF_DATA_ERROR) {
+		rc = dif_inject_error(iovs, iovcnt, ctx->block_size, num_blocks,
+				      0,
+				      ctx->block_size,
+				      ctx, inj_blk);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to inject error to Guard.\n");
+			return rc;
+		}
+		if (inj_blk) {
+			inj_blk->err_type |= SPDK_DIF_GUARD_ERROR;
+		}
+	}
+
+	return 0;
 }
