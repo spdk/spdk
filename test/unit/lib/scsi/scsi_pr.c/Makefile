@@ -31,34 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.mock.unittest.mk
 
-C_SRCS = $(TEST_FILE)
+TEST_FILE = scsi_pr_ut.c
 
-CFLAGS += -I$(SPDK_ROOT_DIR)/lib
-CFLAGS += -I$(SPDK_ROOT_DIR)/test
-
-SPDK_LIB_LIST += thread json util log sock
-
-LIBS += -lcunit $(SPDK_STATIC_LIB_LINKER_ARGS)
-
-APP = $(TEST_FILE:.c=)
-
-ifneq ($(UNIT_TEST_LINK_ENV),1)
-ENV_LINKER_ARGS =
-endif
-
-install: all
-
-all: $(APP)
-	@:
-
-$(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
-	$(LINK_C)
-
-clean:
-	$(CLEAN_C) $(APP)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
