@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92a39847_7e74a625",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-25T11:27:14Z",
+      "side": 1,
+      "message": "Should be SPDK_DIF_DATA_ERROR? Besides, I don\u0027t see any procedures about SPDK_DIF_DATA_ERROR verification, is it a TODO?",
+      "range": {
+        "startLine": 696,
+        "startChar": 24,
+        "endLine": 696,
+        "endChar": 44
+      },
+      "revId": "be4dd1905ebf4c0db0e77deb87575ac28e50dd0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
