@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "98521d8c_b9ab6826",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 888,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-25T05:14:12Z",
+      "side": 1,
+      "message": "Your idea is clever to me, but you can simplify a little more?\n\ndo {\n  unfinished_ns_ctx \u003d 0;\n  while (ns_ctx !\u003d NULL) {\n    if (ns_ctx-\u003ecurrent_queue_depth \u003e 0) {\n      check_io(ns_ctx);\n      if (ns_ctx-\u003ecurrent_queue_depth \u003e 0)\n        unfinished_ns_ctx++;\n      ns_ctx \u003d ns_ctx-\u003enext;\n    }\n  }\n} while (unfinished_ns_ctx \u003e 0);",
+      "revId": "ec9917f79671886b5d7a9b148d6ec5563dcc25e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef47c2c0_1c8a03f9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 893,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-25T05:14:12Z",
+      "side": 1,
+      "message": "unfinished_ns_ctx is used only here. Hence local variable may be better.",
+      "range": {
+        "startLine": 893,
+        "startChar": 11,
+        "endLine": 893,
+        "endChar": 28
+      },
+      "revId": "ec9917f79671886b5d7a9b148d6ec5563dcc25e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
