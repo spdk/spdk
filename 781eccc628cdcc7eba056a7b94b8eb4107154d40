@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c0a7fa22_655abb18",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-25T05:56:45Z",
+      "side": 1,
+      "message": "Thanks for this suggestion.",
+      "parentUuid": "203ed38f_9737c945",
+      "revId": "781eccc628cdcc7eba056a7b94b8eb4107154d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "803fb694_fd29e61a",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2018-12-24T10:19:02Z",
       "side": 1,
       "message": "How about:\n\n  if (limit-\u003emax_per_timeslice \u003e0 \u0026\u0026\n      limit-\u003eremaining_this_timeslice \u003c\u003d 0) {\n    return true;\n  } else {\n    return false;\n  }\n\nNew form is consistent with old codes located in line 1287.",
+      "range": {
+        "startLine": 1264,
+        "startChar": 1,
+        "endLine": 1268,
+        "endChar": 2
+      },
+      "revId": "781eccc628cdcc7eba056a7b94b8eb4107154d40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b06fe847_81c19b8c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1268,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-25T05:56:45Z",
+      "side": 1,
+      "message": "Yes, this is the previous old codes. Let me change it back if this is more consistent.",
+      "parentUuid": "803fb694_fd29e61a",
       "range": {
         "startLine": 1264,
         "startChar": 1,
