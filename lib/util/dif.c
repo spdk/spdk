@@ -687,7 +687,8 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 static int
 dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+		uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		struct spdk_dif_error *err_blk)
 {
 	struct _iov_iter src_iter, dst_iter;
 	uint32_t offset_blocks, data_block_size;
@@ -716,7 +717,7 @@ dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 			memcpy(dst, src, data_block_size);
 		}
 
-		rc = _dif_verify(src + ctx->guard_interval, guard, offset_blocks, ctx, NULL);
+		rc = _dif_verify(src + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -731,7 +732,8 @@ dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 static int
 _dif_verify_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
-		       uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+		       uint32_t offset_blocks, const struct spdk_dif_ctx *ctx,
+		       struct spdk_dif_error *err_blk)
 {
 	uint32_t offset_in_block, dst_len, data_block_size;
 	uint16_t guard;
@@ -769,12 +771,13 @@ _dif_verify_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 
 	_iov_iter_advance(src_iter, ctx->block_size);
 
-	return _dif_verify(src + ctx->guard_interval, guard, offset_blocks, ctx, NULL);
+	return _dif_verify(src + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
 }
 
 static int
 dif_verify_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		      struct spdk_dif_error *err_blk)
 {
 	struct _iov_iter src_iter, dst_iter;
 	uint32_t offset_blocks;
@@ -786,7 +789,7 @@ dif_verify_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 	while (offset_blocks < num_blocks &&
 	       _iov_iter_cont(&src_iter) && _iov_iter_cont(&dst_iter)) {
-		rc = _dif_verify_copy_split(&src_iter, &dst_iter, offset_blocks, ctx);
+		rc = _dif_verify_copy_split(&src_iter, &dst_iter, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
 		}
@@ -798,7 +801,8 @@ dif_verify_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 int
 spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
-		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+		     uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		     struct spdk_dif_error *err_blk)
 {
 	uint32_t data_block_size;
 
@@ -811,9 +815,9 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 	}
 
 	if (_are_iovs_bytes_multiple(iovs, iovcnt, data_block_size)) {
-		return dif_verify_copy(iovs, iovcnt, bounce_iov, num_blocks, ctx);
+		return dif_verify_copy(iovs, iovcnt, bounce_iov, num_blocks, ctx, err_blk);
 	} else {
-		return dif_verify_copy_split(iovs, iovcnt, bounce_iov, num_blocks, ctx);
+		return dif_verify_copy_split(iovs, iovcnt, bounce_iov, num_blocks, ctx, err_blk);
 	}
 }
 
