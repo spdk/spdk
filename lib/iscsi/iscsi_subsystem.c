@@ -257,13 +257,15 @@ spdk_iscsi_initialize_all_pools(void)
 	return 0;
 }
 
-static void
+static bool
 spdk_iscsi_check_pool(struct spdk_mempool *pool, size_t count)
 {
 	if (spdk_mempool_count(pool) != count) {
 		SPDK_ERRLOG("spdk_mempool_count(%s) == %zu, should be %zu\n",
 			    spdk_mempool_get_name(pool), spdk_mempool_count(pool), count);
+		return false;
 	}
+	return true;
 }
 
 static void
@@ -271,11 +273,21 @@ spdk_iscsi_check_pools(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 
-	spdk_iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi));
-	spdk_iscsi_check_pool(iscsi->task_pool, DEFAULT_TASK_POOL_SIZE);
+	if (!spdk_iscsi_check_pool(iscsi->pdu_pool, PDU_POOL_SIZE(iscsi))) {
+		assert(false);
+	}
+	if (!spdk_iscsi_check_pool(iscsi->session_pool, SESSION_POOL_SIZE(iscsi))) {
+		assert(false);
+	}
+	if (!spdk_iscsi_check_pool(iscsi->pdu_immediate_data_pool, IMMEDIATE_DATA_POOL_SIZE(iscsi))) {
+		assert(false);
+	}
+	if (!spdk_iscsi_check_pool(iscsi->pdu_data_out_pool, DATA_OUT_POOL_SIZE(iscsi))) {
+		assert(false);
+	}
+	if (!spdk_iscsi_check_pool(iscsi->task_pool, DEFAULT_TASK_POOL_SIZE)) {
+		assert(false);
+	}
 }
 
 static void
