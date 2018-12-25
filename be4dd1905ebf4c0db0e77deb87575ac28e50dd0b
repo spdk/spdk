@@ -22,6 +22,30 @@
       "revId": "be4dd1905ebf4c0db0e77deb87575ac28e50dd0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "592f6912_8bc60634",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-25T22:32:13Z",
+      "side": 1,
+      "message": "Hi Wu,\n\nGood feedback. What we know is only that there is a difference between the computed CRC and the value stored in the CRC field of the DIF. We don\u0027t have any way to know which is wrong.\n\nSo, expectation is to detect guard error in this case.\nSPDK_DIF_DATA_ERROR verification is SPDK_DIF_GUARD_ERROR verification.\n\nIt will be great if we can separate data error from guard error, but I can\u0027t add that to TODO list.\n\nHow about adding the following comment?\n\n\"Error injection to data block is expected to be detected as guard error.\"",
+      "parentUuid": "92a39847_7e74a625",
+      "range": {
+        "startLine": 696,
+        "startChar": 24,
+        "endLine": 696,
+        "endChar": 44
+      },
+      "revId": "be4dd1905ebf4c0db0e77deb87575ac28e50dd0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
