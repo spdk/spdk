@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "374bc527_66152673",
+        "filename": "lib/json/json_parse.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-26T02:35:11Z",
+      "side": 1,
+      "message": "I think your patch set https://review.gerrithub.io/#/c/spdk/spdk/+/430356/ also can be used by me, I need a json config file for SCSI subsystem.",
+      "parentUuid": "9e810c79_a760936d",
+      "range": {
+        "startLine": 680,
+        "startChar": 0,
+        "endLine": 686,
+        "endChar": 15
+      },
+      "revId": "3119d9c3864f14a9c035bff28e4d4c89da81ff5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48dac6c0_7fe64594",
         "filename": "lib/json/json_parse.c",
         "patchSetId": 2
