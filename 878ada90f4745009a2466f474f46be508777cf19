@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc464f76_7597c20b",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:46:04Z",
+      "side": 1,
+      "message": "Please use tabs for your patch or change tabs to a space to keep consistency.",
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e2820d0_0e5aecb0",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:46:04Z",
+      "side": 1,
+      "message": "strcmp should be used?",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcd26d6d_ec69ec29",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:46:04Z",
+      "side": 1,
+      "message": "this case is probable?",
+      "range": {
+        "startLine": 232,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 2
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb8b7a5b_f3b7c7b1",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:46:04Z",
+      "side": 1,
+      "message": "this is not needed.",
+      "range": {
+        "startLine": 262,
+        "startChar": 2,
+        "endLine": 262,
+        "endChar": 8
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
