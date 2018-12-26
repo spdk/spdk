@@ -42,6 +42,23 @@
     },
     {
       "key": {
+        "uuid": "e0a166e5_55303112",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:06:58Z",
+      "side": 1,
+      "message": "this line can be removed.",
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a8fe6bf5_8cd97cbd",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
@@ -58,6 +75,52 @@
         "startChar": 3,
         "endLine": 118,
         "endChar": 23
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5cb9638_0dcea190",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:06:58Z",
+      "side": 1,
+      "message": "I have a question. this pointer copy is OK?",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 45
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a2d7ad2e_0ca76107",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:06:58Z",
+      "side": 1,
+      "message": "same as above.",
+      "range": {
+        "startLine": 142,
+        "startChar": 2,
+        "endLine": 142,
+        "endChar": 39
       },
       "revId": "878ada90f4745009a2466f474f46be508777cf19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
