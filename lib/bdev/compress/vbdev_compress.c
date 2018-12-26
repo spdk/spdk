@@ -57,7 +57,9 @@
 #define MAX_MBUFS_PER_OP 64
 
 /* TODO: need to get this from RPC on create or reduce metadata on load */
-#define TEST_MD_PATH "/tmp"
+#define DEV_MD_PATH "/tmp"
+#define DEV_CHUNK_SZ (16 * 1024)
+#define DEV_LBA_SZ 512
 
 /* To add support for new device types, follow the examples of the following...
  * Note that the string names are defined by the DPDK PMD in question so be
@@ -133,7 +135,6 @@ struct comp_bdev_io {
 static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
-static void _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg);
 struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev);
 
 /* Shared mempools between all devices on this system */
@@ -329,6 +330,7 @@ error_create_mbuf:
 static void
 _compression_operation_complete(struct spdk_bdev_io *bdev_io)
 {
+#if 0
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
@@ -377,7 +379,7 @@ _compression_operation_complete(struct spdk_bdev_io *bdev_io)
 	if (rc) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
-
+#endif
 }
 
 /* Poller for the DPDK compression driver. */
@@ -437,42 +439,34 @@ _comp_complete_io(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 	spdk_bdev_free_io(bdev_io);
 }
 
-
-/* Completion callback for writes that were issued from this bdev. */
 static void
-_complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
 {
-	struct spdk_bdev_io *orig_io = cb_arg;
-	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
-	struct comp_bdev_io *orig_ctx = (struct comp_bdev_io *)orig_io->driver_ctx;
+	struct spdk_bdev_io *bdev_io = arg;
 
-	spdk_dma_free(orig_ctx->dest_iov.iov_base);
-	spdk_bdev_io_complete(orig_io, status);
-	spdk_bdev_free_io(bdev_io);
+	if (reduce_errno == 0) {
+		SPDK_NOTICELOG("write for %p success\n", bdev_io);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+	} else {
+		SPDK_ERRLOG("ERROR %u on bdev_io from reduce API\n"), reduce_errno;
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
 }
 
 
-/* Completion callback for reads that were issued from this bdev. */
 static void
-_complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+spdk_bdev_readv_blocks_cb(void *arg, int reduce_errno)
 {
-	struct spdk_bdev_io *orig_io = cb_arg;
-	struct comp_bdev_io *orig_ctx = (struct comp_bdev_io *)orig_io->driver_ctx;
+	struct spdk_bdev_io *bdev_io = arg;
 
-	if (success) {
-
-		/* Save off this bdev_io so it can be freed after decryption. */
-		orig_ctx->read_io = bdev_io;
-
-		if (_compress_operation(orig_io, RTE_COMP_DECOMPRESS)) {
-			SPDK_ERRLOG("ERROR decompressing\n");
-			spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-			spdk_bdev_free_io(bdev_io);
-		}
+	/* TODO: need to decide which error codes are bdev_io success vs failure;
+	 * example examine calls reading metadata */
+	if (reduce_errno == 0) {
+		SPDK_NOTICELOG("read for %p success\n", bdev_io);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
-		SPDK_ERRLOG("ERROR on read prior to decompressing\n");
-		spdk_bdev_io_complete(orig_io, SPDK_BDEV_IO_STATUS_FAILED);
-		spdk_bdev_free_io(bdev_io);
+		SPDK_ERRLOG("ERROR %u on read from reduce API\n", reduce_errno);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
 
@@ -485,17 +479,11 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
-	struct comp_io_channel *comp_ch = spdk_io_channel_get_ctx(ch);
-	int rc;
+	/* struct comp_io_channel *comp_ch = spdk_io_channel_get_ctx(ch); */
 
-	rc = spdk_bdev_readv_blocks(comp_bdev->base_desc, comp_ch->base_ch, bdev_io->u.bdev.iovs,
-				    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-				    bdev_io->u.bdev.num_blocks, _complete_internal_read,
-				    bdev_io);
-	if (rc) {
-		SPDK_ERRLOG("ERROR on bdev_io submission!\n");
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
+	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+			      spdk_bdev_readv_blocks_cb, bdev_io);
 }
 
 /* Called when someone above submits IO to this vbdev. */
@@ -519,30 +507,9 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		rc = _compress_operation(bdev_io, RTE_COMP_COMPRESS);
-		break;
-
-	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		rc = spdk_bdev_write_zeroes_blocks(comp_bdev->base_desc, comp_ch->base_ch,
-						   bdev_io->u.bdev.offset_blocks,
-						   bdev_io->u.bdev.num_blocks,
-						   _comp_complete_io, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_UNMAP:
-		rc = spdk_bdev_unmap_blocks(comp_bdev->base_desc, comp_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
-					    _comp_complete_io, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		rc = spdk_bdev_flush_blocks(comp_bdev->base_desc, comp_ch->base_ch,
-					    bdev_io->u.bdev.offset_blocks,
-					    bdev_io->u.bdev.num_blocks,
-					    _comp_complete_io, bdev_io);
-		break;
-	case SPDK_BDEV_IO_TYPE_RESET:
-		rc = spdk_bdev_reset(comp_bdev->base_desc, comp_ch->base_ch,
-				     _comp_complete_io, bdev_io);
+		spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+				      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+				      spdk_bdev_writev_blocks_cb, bdev_io);
 		break;
 	default:
 		SPDK_ERRLOG("Unknown I/O type %d\n", bdev_io->type);
@@ -569,12 +536,12 @@ vbdev_compress_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_READ:
+		return spdk_bdev_io_type_supported(comp_bdev->base_bdev, io_type);
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 	case SPDK_BDEV_IO_TYPE_RESET:
-	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
-		return spdk_bdev_io_type_supported(comp_bdev->base_bdev, io_type);
 	default:
 		return false;
 	}
@@ -710,10 +677,12 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 	struct vbdev_compress *meta_ctx = cb_arg;
 
 	if (ziperrno == 0) {
+		SPDK_NOTICELOG("OK for vol %s, error %u\n",
+			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
 		meta_ctx->vol = vol;
 		vbdev_compress_claim(meta_ctx);
 	} else {
-		SPDK_ERRLOG("for vol %s, error %u\n",
+		SPDK_ERRLOG("ERR for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
 		spdk_bdev_close(meta_ctx->base_desc);
 		free(meta_ctx->drv_name);
@@ -830,7 +799,7 @@ vbdev_compress_base_bdev_hotremove_cb(void *ctx)
  * params.vol_size
  * params.chunk_size
  * compression PMD, algorithm, window size, comp level, etc.
- * TEST_MD_PATH
+ * DEV_MD_PATH
  */
 
 /* Common function for init and load to allocate and populat the minimal
@@ -866,8 +835,8 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	meta_ctx->backing_dev.blockcnt = bdev->blockcnt;
 
 	/* TODO, configurable chunk size & logical block size */
-	meta_ctx->params.chunk_size = 16 * 1024;
-	meta_ctx->params.logical_block_size = 4096;
+	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
+	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
 	meta_ctx->params.backing_io_unit_size = meta_ctx->backing_dev.blocklen;
 
 	return meta_ctx;
@@ -889,7 +858,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *co
 	 * in load.
 	 */
 	spdk_reduce_vol_init(&meta_ctx->params, &meta_ctx->backing_dev,
-			     TEST_MD_PATH,
+			     DEV_MD_PATH,
 			     vbdev_reduce_init_cb,
 			     meta_ctx);
 }
@@ -1054,8 +1023,12 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	comp_bdev->comp_bdev.product_name = "compress";
 	comp_bdev->comp_bdev.write_cache = comp_bdev->base_bdev->write_cache;
+
 	comp_bdev->comp_bdev.required_alignment = comp_bdev->base_bdev->required_alignment;
-	comp_bdev->comp_bdev.optimal_io_boundary = comp_bdev->base_bdev->optimal_io_boundary;
+
+	comp_bdev->comp_bdev.optimal_io_boundary = DEV_CHUNK_SZ / DEV_LBA_SZ;
+	comp_bdev->comp_bdev.split_on_optimal_io_boundary = true;
+
 	comp_bdev->comp_bdev.blocklen = comp_bdev->base_bdev->blocklen;
 	comp_bdev->comp_bdev.blockcnt = comp_bdev->base_bdev->blockcnt;
 
@@ -1154,6 +1127,7 @@ vbdev_reduce_load(struct spdk_bdev *bdev)
 static void
 vbdev_compress_examine(struct spdk_bdev *bdev)
 {
+	SPDK_NOTICELOG("Examine %p %s\n", bdev, bdev->name);
 	vbdev_reduce_load(bdev);
 	spdk_bdev_module_examine_done(&compress_if);
 }
