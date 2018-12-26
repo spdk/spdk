@@ -373,11 +373,11 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	driver->cb_arg = enum_ctx;
 
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-	if (rte_bus_probe() != 0) {
+	if (rte_bus_scan() != 0 || rte_bus_probe() != 0) {
 #elif RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 4)
-	if (rte_pci_probe() != 0) {
+	if (rte_pci_scan() != 0 || rte_pci_probe() != 0) {
 #else
-	if (rte_eal_pci_probe() != 0) {
+	if (rte_eal_pci_scan() != 0 || rte_eal_pci_probe() != 0) {
 #endif
 		driver->cb_arg = NULL;
 		driver->cb_fn = NULL;
