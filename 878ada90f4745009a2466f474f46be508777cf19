@@ -88,6 +88,29 @@
     },
     {
       "key": {
+        "uuid": "bdf76202_4796c9f4",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:03:13Z",
+      "side": 1,
+      "message": "changing to else_if reduces nesting level and looks clearer.",
+      "range": {
+        "startLine": 185,
+        "startChar": 2,
+        "endLine": 187,
+        "endChar": 6
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcd26d6d_ec69ec29",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
