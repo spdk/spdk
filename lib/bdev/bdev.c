@@ -82,10 +82,10 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
-static const char *qos_conf_type[] = {"Limit_IOPS",
+static const char *qos_conf_type[] = {"Limit_IOPS", "Limit_Read_IOPS", "Limit_Write_IOPS",
 				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS"
 				     };
-static const char *qos_rpc_type[] = {"rw_ios_per_sec",
+static const char *qos_rpc_type[] = {"rw_ios_per_sec", "r_ios_per_sec", "w_ios_per_sec",
 				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
 				    };
 
@@ -1221,6 +1221,8 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 
 	switch (limit) {
 	case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
 		return true;
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 	case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
@@ -1323,6 +1325,26 @@ _spdk_bdev_qos_rw_iops_update_quota(struct spdk_bdev_qos_limit *limit, struct sp
 }
 
 static void
+_spdk_bdev_qos_r_iops_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (_spdk_bdev_is_read_io(io) == false) {
+		return;
+	}
+
+	return _spdk_bdev_qos_rw_iops_update_quota(limit, io);
+}
+
+static void
+_spdk_bdev_qos_w_iops_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (_spdk_bdev_is_read_io(io) == true) {
+		return;
+	}
+
+	return _spdk_bdev_qos_rw_iops_update_quota(limit, io);
+}
+
+static void
 _spdk_bdev_qos_rw_bps_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
 	limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
@@ -1364,6 +1386,14 @@ _spdk_bdev_qos_init_ops(struct spdk_bdev_qos *qos)
 		case SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT:
 			qos->rate_limits[i].queue_io = _spdk_bdev_qos_rw_queue_io;
 			qos->rate_limits[i].update_quota = _spdk_bdev_qos_rw_iops_update_quota;
+			break;
+		case SPDK_BDEV_QOS_R_IOPS_RATE_LIMIT:
+			qos->rate_limits[i].queue_io = _spdk_bdev_qos_r_queue_io;
+			qos->rate_limits[i].update_quota = _spdk_bdev_qos_r_iops_update_quota;
+			break;
+		case SPDK_BDEV_QOS_W_IOPS_RATE_LIMIT:
+			qos->rate_limits[i].queue_io = _spdk_bdev_qos_w_queue_io;
+			qos->rate_limits[i].update_quota = _spdk_bdev_qos_w_iops_update_quota;
 			break;
 		case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 			qos->rate_limits[i].queue_io = _spdk_bdev_qos_rw_queue_io;
