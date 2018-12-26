@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3d37415b_1d07e7f1",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:12:51Z",
+      "side": 1,
+      "message": "Oh, I understood your intention. conflict means returned scsi status! Please ignore this comment.",
+      "parentUuid": "3ebc8b1c_ed792d1d",
+      "range": {
+        "startLine": 274,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 8
+      },
+      "revId": "e54c01ca84d7ef7ef5daf108bb399a83c9511656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "95d0bff1_a2e7cb1c",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
