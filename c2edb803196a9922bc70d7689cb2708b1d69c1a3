@@ -16,6 +16,23 @@
       "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "093a04c6_9e83e54c",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-26T02:44:59Z",
+      "side": 1,
+      "message": "I don\u0027t understand why json rpc is required for when loading a subsystem\u0027s configuration ?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
