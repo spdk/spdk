@@ -551,7 +551,11 @@ static void
 spdk_rpc_set_bdev_qos_limit(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
-	struct rpc_set_bdev_qos_limit req = {NULL, {UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX}};
+	struct rpc_set_bdev_qos_limit req = {NULL,
+		{
+			UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX, UINT64_MAX
+		}
+	};
 	struct spdk_bdev *bdev;
 	int i;
 
