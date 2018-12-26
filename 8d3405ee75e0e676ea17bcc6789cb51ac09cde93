@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfb156e7_013c389c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T06:50:38Z",
+      "side": 1,
+      "message": "Can you make the while loop to the following or something like that?\n\nwhile (length) {\n  if (tcp_req-\u003edata_from_pool \u003d\u003d DATA_BUF_FROM_POOL) {\n    length -\u003d nvme_tcp_get_data_buf_pool(transport, tcp_req, i);\n  } else {\n    length -\u003d nvme_tcp_get_qpair_group_buf(tgroup, tcp_req, i);\n  i++;\n}",
+      "revId": "8d3405ee75e0e676ea17bcc6789cb51ac09cde93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc796791_9f9275de",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2202,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T06:50:38Z",
+      "side": 1,
+      "message": "if tcp_req-\u003edata_from_pool is set to DATA_BUF_FROM_QPAIR_GROUP,\nlength is always less than ttransport-\u003etransport.opts.io_unit_size ?",
+      "range": {
+        "startLine": 2202,
+        "startChar": 8,
+        "endLine": 2202,
+        "endChar": 14
+      },
+      "revId": "8d3405ee75e0e676ea17bcc6789cb51ac09cde93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f0806ad_16f846f7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2209,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T06:50:38Z",
+      "side": 1,
+      "message": "Sorry, this comment is not clear to me.",
+      "range": {
+        "startLine": 2209,
+        "startChar": 3,
+        "endLine": 2209,
+        "endChar": 74
+      },
+      "revId": "8d3405ee75e0e676ea17bcc6789cb51ac09cde93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "549809a2_a7847960",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2642,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T06:50:38Z",
+      "side": 1,
+      "message": "Can you make the for loop like the following or something like that?\n\n  for (i \u003d 0; i \u003c tcp_req-\u003ereq.iovcnt; i++) {\n    if (tcp_req-\u003edata_from_pool \u003d\u003d DATA_BUF_FROM_POOL) {\n      nvmf_tcp_put_data_buf_pool(ttransport, tcp_req, i);\n    } else {\n      nvmf_tcp_put_qpair_group_buf(tgroup, tcp_req, i);\n    }\n  }",
+      "revId": "8d3405ee75e0e676ea17bcc6789cb51ac09cde93",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
