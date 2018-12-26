@@ -42,6 +42,52 @@
     },
     {
       "key": {
+        "uuid": "a8fe6bf5_8cd97cbd",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:54:18Z",
+      "side": 1,
+      "message": "you can move this unlock before the above set_status?",
+      "range": {
+        "startLine": 118,
+        "startChar": 3,
+        "endLine": 118,
+        "endChar": 23
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a216b498_6128f515",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T01:54:18Z",
+      "side": 1,
+      "message": "you can move this unlock before the above set_status?",
+      "range": {
+        "startLine": 165,
+        "startChar": 2,
+        "endLine": 165,
+        "endChar": 22
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcd26d6d_ec69ec29",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
