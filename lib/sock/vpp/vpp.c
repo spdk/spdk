@@ -653,6 +653,8 @@ spdk_vpp_net_framework_fini(void)
 	if (g_vpp_initialized) {
 		vppcom_app_destroy();
 	}
+
+	spdk_net_framework_fini_next();
 }
 
 static struct spdk_net_framework g_vpp_net_framework = {
