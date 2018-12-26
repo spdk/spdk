@@ -310,6 +310,30 @@
     },
     {
       "key": {
+        "uuid": "e7fa3325_f6353db9",
+        "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
+        "patchSetId": 19
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2018-12-26T02:29:07Z",
+      "side": 1,
+      "message": "hi Karol, as discussed with qun, this requirement is to run excluding vhost. and I also tried \nyour scripts to created a VM about ubuntu18. you are right ,as you said, vhost only using libvirt provider. vbox may need to solve KVM issue.",
+      "parentUuid": "0f450c4c_1deb01d1",
+      "range": {
+        "startLine": 121,
+        "startChar": 73,
+        "endLine": 121,
+        "endChar": 120
+      },
+      "revId": "cfe05267b9b94de651057a25e5590aea465d3f1f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "154b4d2d_6f1902ad",
         "filename": "scripts/vagrant/vagrant_autosetup_autotest.sh",
         "patchSetId": 19
