@@ -173,14 +173,14 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
-	rc = getsockname_vpp(sock->fd, &sa, &salen);
+	rc = getsockname_vpp(sock->fd, (struct sockaddr *)&sa, &salen);
 	if (rc != 0) {
 		errno = -rc;
 		SPDK_ERRLOG("getsockname_vpp() failed (errno=%d)\n", errno);
 		return -1;
 	}
 
-	rc = get_addr_str(&sa, saddr, slen);
+	rc = get_addr_str((struct sockaddr *)&sa, saddr, slen);
 	if (rc != 0) {
 		/* Errno already set by get_addr_str() */
 		SPDK_ERRLOG("get_addr_str() failed (errno=%d)\n", errno);
@@ -197,14 +197,14 @@ spdk_vpp_sock_getaddr(struct spdk_sock *_sock, char *saddr, int slen, uint16_t *
 
 	memset(&sa, 0, sizeof(sa));
 	salen = sizeof(sa);
-	rc = getpeername_vpp(sock->fd, &sa, &salen);
+	rc = getpeername_vpp(sock->fd, (struct sockaddr *)&sa, &salen);
 	if (rc != 0) {
 		errno = -rc;
 		SPDK_ERRLOG("getpeername_vpp() failed (errno=%d)\n", errno);
 		return -1;
 	}
 
-	rc = get_addr_str(&sa, caddr, clen);
+	rc = get_addr_str((struct sockaddr *)&sa, caddr, clen);
 	if (rc != 0) {
 		/* Errno already set by get_addr_str() */
 		SPDK_ERRLOG("get_addr_str() failed (errno=%d)\n", errno);
