@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ebc8b1c_ed792d1d",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:11:08Z",
+      "side": 1,
+      "message": "all error cases are due to conflicts? \n\nchanging the label to just invalid or err and adding comment in the conflict case may avoid misunderstanding.",
+      "range": {
+        "startLine": 274,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 8
+      },
+      "revId": "e54c01ca84d7ef7ef5daf108bb399a83c9511656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "95d0bff1_a2e7cb1c",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-26T02:11:08Z",
+      "side": 1,
+      "message": "you can move this assertion before the above set_status?",
+      "range": {
+        "startLine": 279,
+        "startChar": 1,
+        "endLine": 279,
+        "endChar": 21
+      },
+      "revId": "e54c01ca84d7ef7ef5daf108bb399a83c9511656",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
