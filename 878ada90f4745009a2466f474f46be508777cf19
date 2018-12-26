@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "34872fd6_f853c8b3",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-26T02:51:33Z",
+      "side": 1,
+      "message": "In https://review.gerrithub.io/#/c/spdk/spdk/+/438009/3/lib/scsi/scsi_pr.c, strcmp also used in this function.",
+      "parentUuid": "2e2820d0_0e5aecb0",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0a166e5_55303112",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
@@ -93,6 +117,30 @@
       "writtenOn": "2018-12-26T02:06:58Z",
       "side": 1,
       "message": "I have a question. this pointer copy is OK?",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 45
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05c8f5c3_de2e5431",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-26T02:51:33Z",
+      "side": 1,
+      "message": "it works, using initiator/target port name makes more sense, in my later patches, I will compare pointer for the registrant, and then names after if it isn\u0027t found.",
+      "parentUuid": "a5cb9638_0dcea190",
       "range": {
         "startLine": 137,
         "startChar": 2,
