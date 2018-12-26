@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f1de0668_20ad2ae0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2018-12-26T19:28:24Z",
+      "side": 1,
+      "message": "With SRQ requests are shared and free requests belong to poll group rather than QP. state_cntr[FREE] is not used and is always zero.\nSo, the code works as is but I agree that adding +1 will be clearer and improve readability. Will be fixed in the next patchset.",
+      "parentUuid": "eebfd37c_17c448c9",
+      "revId": "b697752ddf9c7ed6e3d7b5da7280c099ca218c00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c262ac0_d4b0a888",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
