@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4d288fc2_bcd7b2ba",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-27T01:25:50Z",
+      "side": 1,
+      "message": "Maximum 3 messages are enough for the tests?",
+      "revId": "7cc9fef0b2793bbb9a96d8cadda6685449663514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
