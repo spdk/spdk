@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db229bb9_929ee724",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "_SAFE version is needed here.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 2
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25f8cfeb_f3ad54e0",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2063,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 2062,
+        "startChar": 2,
+        "endLine": 2063,
+        "endChar": 3
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41d01ddc_70c9df56",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2068,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 2067,
+        "startChar": 2,
+        "endLine": 2068,
+        "endChar": 2
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "641ad525_5abfc480",
+        "filename": "lib/scsi/scsi_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "Can this fit into one line?",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 41
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be36bd28_b1db4c5f",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "pls remove redundant \u0027(\u0027 \u0027)\u0027",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 41
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9042d657_fc5697eb",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "This check is redundant since dev-\u003eholder is checked to both !\u003d NULL and \u003d\u003d reg.",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 8
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e55841e9_29137c0c",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "This part can be reused if order of condition in this \u0027if()\u0027 is changed.",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 133,
+        "endChar": 22
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61037c00_5bbb2807",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:37:10Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 155,
+        "startChar": 1,
+        "endLine": 156,
+        "endChar": 1
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
