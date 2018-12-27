@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f1794c1_5651d473",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "before",
+      "range": {
+        "startLine": 9,
+        "startChar": 54,
+        "endLine": 9,
+        "endChar": 59
+      },
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dffe0f0b_1ca2152a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "For me, this sentence is redundant.",
+      "range": {
+        "startLine": 12,
+        "startChar": 23,
+        "endLine": 13,
+        "endChar": 6
+      },
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5873616_54696533",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "One commit only do one thing, so this change should be put on another patch, since check state and remove TAILQ is unrelated.",
+      "range": {
+        "startLine": 13,
+        "startChar": 42,
+        "endLine": 13,
+        "endChar": 55
+      },
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ba9fba7_426d5aee",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "to destroy",
+      "range": {
+        "startLine": 14,
+        "startChar": 5,
+        "endLine": 14,
+        "endChar": 14
+      },
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70a75566_17a61b77",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2443,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "No need TAILQ_REMOVE here, since spdk_nvmf_rdma_qpair_destroy() will do this.",
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "929b2576_456d0f7c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2455,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-27T11:16:19Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "5e14627d7663e2c1c59b99529607350704f1f36a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
