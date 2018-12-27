@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77526ea7_65324611",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:11:04Z",
+      "side": 1,
+      "message": "Overall looks fine to me.\n\nHow about factoring out register, unregister, and replace operations into functions?\n\nThe following is an example.\n\nstatic int\nspdk_scsi_pr_register_registrant(struct spdk_scsi_dev *dev,\n\t\t\t         struct spdk_scsi_port *initiator_port,\n\t\t\t         struct spdk_scsi_port *target_port,\n\t\t\t         uint64_t sa_rkey)\n{\n\tstruct spdk_scsi_pr_registrant *reg;\n\n\treg \u003d calloc(1, sizeof(*reg));\n\tif (!reg) {\n\t\treturn -ENOMEM;\n\t}\n\n\t/* New I_T nexus */\n\treg-\u003einitiator_port \u003d initiator_port;\n\tsnprintf(reg-\u003einitiator_port_name, sizeof(reg-\u003einitiator_port_name), \"%s\",\n\t\t initiator_port-\u003ename);\n\treg-\u003etransport_id_len \u003d initiator_port-\u003etransport_id_len;\n\tmemcpy(reg-\u003etransport_id, initiator_port-\u003etransport_id, reg-\u003etransport_id_len);\n\treg-\u003etarget_port \u003d target_port;\n\tsnprintf(reg-\u003etarget_port_name, sizeof(reg-\u003etarget_port_name), \"%s\",\n\t\t target_port-\u003ename);\n\treg-\u003erelative_target_port_id \u003d target_port-\u003eindex;\n\treg-\u003erkey \u003d sa_rkey;\n\tTAILQ_INSERT_TAIL(\u0026dev-\u003ereg_head, reg, link);\n\n\tSPDK_DEBUGLOG(SPDK_LOG_SCSI, \"REGISTER: new registrant registered \"\n\t\t      \"with key 0x%\"PRIx64\"\\n\", sa_rkey);\n\n\treturn 0;\n}\n\nstatic void\nspdk_scsi_pr_unregister_registrant(struct spdk_scsi_dev *dev,\n\t\t\t\t   struct spdk_scsi_pr_registrant *reg)\n{\n\tTAILQ_REMOVE(\u0026dev-\u003ereg_head, reg, link);\n\tif (spdk_scsi_pr_is_all_registrants_type(reg)) {\n\t\tif (TAILQ_EMPTY(\u0026dev-\u003ereg_head)) {\n\t\t\tSPDK_DEBUGLOG(SPDK_LOG_SCSI, \"REGISTER: release reservation \"\n\t\t\t\t      \"with type %u\\n\", dev-\u003etype);\n\t\t\tdev-\u003ecrkey \u003d 0;\n\t\t\tdev-\u003etype \u003d 0;\n\t\t\tdev-\u003eholder \u003d NULL;\n\t\t} else {\n\t\t\tdev-\u003eholder \u003d TAILQ_FIRST(\u0026dev-\u003ereg_head);\n\t\t}\n\t} else if (spdk_scsi_pr_registrant_is_holder(dev, reg)) {\n\n\t\tSPDK_DEBUGLOG(SPDK_LOG_SCSI, \"REGISTER: release reservation \"\n\t\t\t      \"with type %u\\n\", dev-\u003etype);\n\t\tdev-\u003ecrkey \u003d 0;\n\t\tdev-\u003etype \u003d 0;\n\t\tdev-\u003eholder \u003d NULL;\n\t}\n\tfree(reg);\n}\n\nstatic void\nspdk_scsi_pr_replace_registrant(struct spdk_scsi_pr_registrant *reg, uint64_t sa_rkey)\n{\n\tSPDK_DEBUGLOG(SPDK_LOG_SCSI, \"REGISTER: replace with new \"\n\t\t      \"reservation key 0x%\"PRIx64\"\\n\", sa_rkey);\n\treg-\u003erkey \u003d sa_rkey;\n}\n\n\nspdk_scsi_pr_out_register()\n{\n\n\tif (!reg) {\n\t\trc \u003d spdk_scsi_pr_create_registrant(dev, task-\u003einitiator_port,\n\t\t\t\t\t\t    task-\u003etarget_port, sa_rkey);\n\t\tif (rc \u003d\u003d 0) {\n\t\t\tdev-\u003epr_generation++;\n\t\t}\n\t\tpthread_mutex_unlock(\u0026dev-\u003ereservation_lock);\n\n\t\treturn rc;\n\t}\n\n\tif (!sa_rkey) {\n\t\tspdk_scsi_pr_unregister_registrant(dev, reg);\n\t} else {\n\t\tspdk_scsi_pr_replace_registrant(reg, sa_rkey);\n\t}\n\n\tdev-\u003epr_generation++;\n\tpthread_mutex_unlock(\u0026dev-\u003ereservation_lock);\n\n\treturn 0;\n}",
+      "range": {
+        "startLine": 85,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 25
+      },
+      "revId": "e070be9d103044e537aea87d0e64c860fae693ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a6ae810_a46eba5d",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:11:04Z",
+      "side": 1,
+      "message": "putting this into the line 176 may be better because all_regs is used only in a place.",
+      "range": {
+        "startLine": 170,
+        "startChar": 12,
+        "endLine": 170,
+        "endChar": 48
+      },
+      "revId": "e070be9d103044e537aea87d0e64c860fae693ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50163939_dfc61a40",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:11:04Z",
+      "side": 1,
+      "message": "Just a confirmation. When we come here, TAILQ_EMPTY(\u0026dev-\u003ereg_head) is always true?",
+      "revId": "e070be9d103044e537aea87d0e64c860fae693ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

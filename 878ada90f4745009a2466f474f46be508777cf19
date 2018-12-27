@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "af6b757a_08be4c4c",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:11:04Z",
+      "side": 1,
+      "message": "I saw the above patch. Thank you.",
+      "parentUuid": "34872fd6_f853c8b3",
+      "range": {
+        "startLine": 47,
+        "startChar": 6,
+        "endLine": 47,
+        "endChar": 7
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0a166e5_55303112",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 7
@@ -141,6 +165,30 @@
       "side": 1,
       "message": "it works, using initiator/target port name makes more sense, in my later patches, I will compare pointer for the registrant, and then names after if it isn\u0027t found.",
       "parentUuid": "a5cb9638_0dcea190",
+      "range": {
+        "startLine": 137,
+        "startChar": 2,
+        "endLine": 137,
+        "endChar": 45
+      },
+      "revId": "878ada90f4745009a2466f474f46be508777cf19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "792f7929_048b2f24",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:11:04Z",
+      "side": 1,
+      "message": "Thank you, I understood.",
+      "parentUuid": "05c8f5c3_de2e5431",
       "range": {
         "startLine": 137,
         "startChar": 2,
