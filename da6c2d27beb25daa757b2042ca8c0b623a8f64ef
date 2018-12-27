@@ -46,6 +46,30 @@
       "revId": "da6c2d27beb25daa757b2042ca8c0b623a8f64ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c314132_f747de42",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-27T02:35:35Z",
+      "side": 1,
+      "message": "The reservation maybe holded by other I_T nexus(registrant), so the I_T nexus(registrant) which received the command is not the holder.",
+      "parentUuid": "81fc263c_db8d3e98",
+      "range": {
+        "startLine": 255,
+        "startChar": 16,
+        "endLine": 255,
+        "endChar": 58
+      },
+      "revId": "da6c2d27beb25daa757b2042ca8c0b623a8f64ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
