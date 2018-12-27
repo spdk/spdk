@@ -33,6 +33,24 @@
       "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "657120b1_5292c3fe",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T16:43:14Z",
+      "side": 1,
+      "message": "Only RPC is capable of configuring subsystems. How do you propose to load configuration in other way?",
+      "parentUuid": "093a04c6_9e83e54c",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
