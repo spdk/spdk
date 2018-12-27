@@ -67,8 +67,13 @@ struct spdk_dif_ctx {
 	/** Metadata size */
 	uint32_t		md_size;
 
-	/** Interval for guard computation */
-	uint32_t		guard_interval;
+	union {
+		/** Interval for guard computation for DIF */
+		uint32_t		guard_interval;
+
+		/** DIF offset in metadata for DIX */
+		uint32_t		dif_offset;
+	} u;
 
 	/** DIF type */
 	enum spdk_dif_type	dif_type;
@@ -115,12 +120,14 @@ struct spdk_dif_error {
  * starting block address.
  * \param apptag_mask Application tag mask.
  * \param app_tag Application tag.
+ * \param elba If true, payload is extended LBA. If false, payload is separate metadata.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		      bool dif_loc, enum spdk_dif_type, uint32_t dif_flags,
-		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		      bool elba);
 
 /**
  * Generate DIF for extended LBA payload.
@@ -195,4 +202,32 @@ int spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_io
 int spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 			  const struct spdk_dif_ctx *ctx, uint32_t inject_flags,
 			  struct spdk_dif_error *inj_blk);
+
+/**
+ * Generate DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \params iovcnt Number of elements in iovs.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the separate metadata payload.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx);
+
+/**
+ * Verify DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \params iovcnt Number of elements in iovs.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the separate metadata payload.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		    uint32_t num_blocks, const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
