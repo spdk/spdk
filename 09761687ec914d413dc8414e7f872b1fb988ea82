@@ -22,6 +22,30 @@
       "revId": "09761687ec914d413dc8414e7f872b1fb988ea82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab4d03b9_e48c7de5",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-27T02:46:21Z",
+      "side": 1,
+      "message": "Of course, Unit Attention is helpful, I think this feature can be added into SPDK backlog.",
+      "parentUuid": "082b49ad_5b001c6c",
+      "range": {
+        "startLine": 324,
+        "startChar": 10,
+        "endLine": 324,
+        "endChar": 24
+      },
+      "revId": "09761687ec914d413dc8414e7f872b1fb988ea82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
