@@ -320,12 +320,13 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt,
 {
 	uint32_t guard_interval;
 
-	if (md_size == 0) {
+	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
 
-	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
-		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+	if (md_size < sizeof(struct spdk_dif)) {
+		SPDK_ERRLOG("Metadata size is smaller than DIF size.\n");
 		return -EINVAL;
 	}
 
@@ -570,12 +571,13 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt,
 {
 	uint32_t guard_interval;
 
-	if (md_size == 0) {
+	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
 		return -EINVAL;
 	}
 
-	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
-		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+	if (md_size < sizeof(struct spdk_dif)) {
+		SPDK_ERRLOG("Metadata size is smaller than DIF size\n");
 		return -EINVAL;
 	}
 
