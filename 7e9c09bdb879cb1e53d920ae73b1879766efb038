@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65477979_c3bf92aa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2311,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:40:11Z",
+      "side": 1,
+      "message": "I\u0027m not sure if this is needed. Like in line 2315 this should just rightshift.",
+      "range": {
+        "startLine": 2311,
+        "startChar": 26,
+        "endLine": 2311,
+        "endChar": 43
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93133ec9_3e7bc794",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2317,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:40:11Z",
+      "side": 1,
+      "message": "I think this should be moved into \u0027else { }\u0027 block.\n\nIf block_size is pow2 this should be implemented using left shift like\n\n  uint8_t shift_cnt \u003d spdk_u32log2(block_size);\n  ...\n  return (offset_bytes - (*offset_blocks \u003c\u003c shift_cnt)) | (num_bytes - (*num_blocks \u003c\u003c shift_cnt));\n\nOtherwise if \u0027%\u0027 is used the compiler most likely will do the division to get the remainder anyway.",
+      "range": {
+        "startLine": 2317,
+        "startChar": 1,
+        "endLine": 2317,
+        "endChar": 63
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
