@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "88a84761_7ae59fd4",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-27T21:56:21Z",
+      "side": 1,
+      "message": "it\u0027s a linux thing - socket path can be only 108 characters long. That\u0027s not obvious though. It probably deserves either a comment or a define.",
+      "parentUuid": "191bbdc4_953f6136",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "faad30eb_180d99a1",
         "filename": "lib/event/json_config.c",
         "patchSetId": 40
