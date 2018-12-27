@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "082b49ad_5b001c6c",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T02:41:58Z",
+      "side": 1,
+      "message": "Developing Unit Attention into SPDK SCSI is helpful?\nDynamic LUN addition/removal also needs Unit Attention.\n\nI can\u0027t promise I\u0027ll do but I would like to hear your thought.",
+      "range": {
+        "startLine": 324,
+        "startChar": 10,
+        "endLine": 324,
+        "endChar": 24
+      },
+      "revId": "09761687ec914d413dc8414e7f872b1fb988ea82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
