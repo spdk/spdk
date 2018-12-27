@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2e9d7b_da7d193f",
+        "filename": "include/spdk_internal/mock.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T18:05:34Z",
+      "side": 1,
+      "message": "\"CLEARED\" sounds weird to me compared what this macro do.",
+      "range": {
+        "startLine": 66,
+        "startChar": 8,
+        "endLine": 66,
+        "endChar": 28
+      },
+      "revId": "a1c8b6bc0717013147e4868f8d9f663afd50b730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
