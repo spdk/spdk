@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cbcbaf7_6863127a",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 3233,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-27T01:14:43Z",
+      "side": 1,
+      "message": "~ah, this line should in a separate patch.",
+      "revId": "6b6c7fca03c9f1dab9f2441592956bcf0bed6adc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
