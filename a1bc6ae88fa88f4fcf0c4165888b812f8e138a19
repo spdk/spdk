@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4af3efd_58966865",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:08:53Z",
+      "side": 1,
+      "message": "Is the initiator port name case irrelevant?",
+      "range": {
+        "startLine": 64,
+        "startChar": 7,
+        "endLine": 64,
+        "endChar": 18
+      },
+      "revId": "a1bc6ae88fa88f4fcf0c4165888b812f8e138a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d36058dc_06d13730",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:08:53Z",
+      "side": 1,
+      "message": "This might make the initiator_port-\u003ename a prefix. I think that length of both strings should be checked.",
+      "range": {
+        "startLine": 65,
+        "startChar": 5,
+        "endLine": 65,
+        "endChar": 37
+      },
+      "revId": "a1bc6ae88fa88f4fcf0c4165888b812f8e138a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d48d2fb9_671e51f5",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1312,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:08:53Z",
+      "side": 1,
+      "message": "Why this is not a RPC call? Someone might want to store it in configuration file so it will be restored during target restart and configuration phase.",
+      "range": {
+        "startLine": 1312,
+        "startChar": 0,
+        "endLine": 1312,
+        "endChar": 30
+      },
+      "revId": "a1bc6ae88fa88f4fcf0c4165888b812f8e138a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0834153_e14a2d33",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1367,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-27T17:08:53Z",
+      "side": 1,
+      "message": "x?",
+      "range": {
+        "startLine": 1367,
+        "startChar": 65,
+        "endLine": 1367,
+        "endChar": 66
+      },
+      "revId": "a1bc6ae88fa88f4fcf0c4165888b812f8e138a19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
