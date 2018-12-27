@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23ce93f7_69cc02d9",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 2354,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2018-12-27T06:34:52Z",
+      "side": 1,
+      "message": "See NVMe 1.3 End-to-end Data Protection Type Settings (DPS) section, the original definition is correct.",
+      "revId": "96ee4eae057893a9a78945eaa84d0577ed1a5e11",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
