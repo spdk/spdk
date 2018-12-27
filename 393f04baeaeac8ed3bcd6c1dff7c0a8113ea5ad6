@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c75ecf44_a3303f8d",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T23:16:06Z",
+      "side": 1,
+      "message": "OK, I\u0027ll do.",
+      "parentUuid": "5ec0b319_45031ee3",
+      "revId": "393f04baeaeac8ed3bcd6c1dff7c0a8113ea5ad6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "330d06c0_35b838ab",
         "filename": "lib/util/dif.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2018-12-27T13:04:27Z",
       "side": 1,
       "message": "Should we check block_size before we use it?",
+      "revId": "393f04baeaeac8ed3bcd6c1dff7c0a8113ea5ad6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b4398ec_65edb43a",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-27T23:16:06Z",
+      "side": 1,
+      "message": "OK, I\u0027ll add checking if block_size is not smaller than metadata_size. But this is for DIF.\n\nFor DIX, block size will be checked if not zero in the later patch.",
+      "parentUuid": "330d06c0_35b838ab",
       "revId": "393f04baeaeac8ed3bcd6c1dff7c0a8113ea5ad6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
