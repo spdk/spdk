@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5ffe6d4e_25ff9865",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-27T20:12:51Z",
+      "side": 1,
+      "message": "does killprocess take 2 parms or just 1?",
+      "revId": "410916420c619de35a0827a94124572950095c73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
