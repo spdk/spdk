@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "191bbdc4_953f6136",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-27T20:05:31Z",
+      "side": 1,
+      "message": "what is the 108 + 1 all about?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faad30eb_180d99a1",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-27T20:05:31Z",
+      "side": 1,
+      "message": "Why did you chose EPERM and not just something generic like EINVAL?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "093a04c6_9e83e54c",
         "filename": "lib/event/json_config.c",
         "patchSetId": 40
@@ -51,6 +85,40 @@
       "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4787ae7_0311a581",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-27T20:05:31Z",
+      "side": 1,
+      "message": "What does 1024 represent? Maybe a #define here and elsewhere that you have magic numbers?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c09301dd_cd93f966",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-27T20:05:31Z",
+      "side": 1,
+      "message": "you\u0027ve got a decent number of FIXMEs in here, are they addressed later in the patch series?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
