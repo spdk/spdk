@@ -22,6 +22,30 @@
       "revId": "25ae8d7e543ab9aded04f22cd33e029361fa648c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "055fddaa_85200557",
+        "filename": "lib/bdev/cache/vbdev_cache.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 346,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2018-12-27T13:49:30Z",
+      "side": 1,
+      "message": "We do that in simmilar function \u0027write_config_json\u0027\nHere though it is fine",
+      "parentUuid": "2b619b99_34c445c2",
+      "range": {
+        "startLine": 330,
+        "startChar": 0,
+        "endLine": 346,
+        "endChar": 43
+      },
+      "revId": "25ae8d7e543ab9aded04f22cd33e029361fa648c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
