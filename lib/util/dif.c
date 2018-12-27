@@ -133,6 +133,7 @@ _dif_type_is_valid(enum spdk_dif_type dif_type, uint32_t dif_flags)
 	switch (dif_type) {
 	case SPDK_DIF_TYPE1:
 	case SPDK_DIF_TYPE2:
+	case SPDK_DIF_DISABLE:
 		break;
 	case SPDK_DIF_TYPE3:
 		if (dif_flags & SPDK_DIF_REFTAG_CHECK) {
@@ -146,6 +147,16 @@ _dif_type_is_valid(enum spdk_dif_type dif_type, uint32_t dif_flags)
 	}
 
 	return true;
+}
+
+static bool
+_dif_is_disabled(enum spdk_dif_type dif_type)
+{
+	if (dif_type == SPDK_DIF_DISABLE) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 static uint32_t
@@ -323,6 +334,10 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt,
 		return -EINVAL;
 	}
 
+	if (_dif_is_disabled(dif_type)) {
+		return 0;
+	}
+
 	guard_interval = _get_dif_guard_interval(block_size, md_size, dif_loc);
 
 	if (_are_iovs_bytes_multiple(iovs, iovcnt, block_size)) {
@@ -362,6 +377,9 @@ _dif_verify(void *_dif, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		if (dif->app_tag == 0xFFFF && dif->ref_tag == 0xFFFFFFFF) {
 			return 0;
 		}
+		break;
+	default:
+		break;
 	}
 
 	if (dif_flags & SPDK_DIF_GUARD_CHECK) {
@@ -411,6 +429,8 @@ _dif_verify(void *_dif, enum spdk_dif_type dif_type, uint32_t dif_flags,
 			/* For Type 3, computed Reference Tag remains unchanged.
 			 * Hence ignore the Reference Tag field.
 			 */
+			break;
+		default:
 			break;
 		}
 	}
@@ -562,6 +582,10 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt,
 	if (!_dif_type_is_valid(dif_type, dif_flags)) {
 		SPDK_ERRLOG("DIF type is invalid.\n");
 		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(dif_type)) {
+		return 0;
 	}
 
 	guard_interval = _get_dif_guard_interval(block_size, md_size, dif_loc);

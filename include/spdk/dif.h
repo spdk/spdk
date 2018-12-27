@@ -47,9 +47,10 @@
 #define SPDK_DIF_DATA_ERROR	0x8
 
 enum spdk_dif_type {
+	SPDK_DIF_DISABLE = 0,
 	SPDK_DIF_TYPE1 = 1,
-	SPDK_DIF_TYPE2,
-	SPDK_DIF_TYPE3,
+	SPDK_DIF_TYPE2 = 2,
+	SPDK_DIF_TYPE3 = 3,
 };
 
 struct spdk_dif {

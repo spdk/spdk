@@ -291,6 +291,18 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 }
 
 static void
+dif_disable_sec_512_md_8_single_iov_test(void)
+{
+	struct iovec iov;
+
+	_iov_alloc_buf(&iov, (512 + 8) * 4);
+
+	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_DISABLE, 0, 0, 0, 0);
+
+	_iov_free_buf(&iov);
+}
+
+static void
 dif_sec_512_md_8_prchk_0_single_iov_test(void)
 {
 	struct iovec iov;
@@ -717,6 +729,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dif_generate_and_verify_test", dif_generate_and_verify_test) == NULL ||
 		CU_add_test(suite, "dif_disable_check_test", dif_disable_check_test) == NULL ||
 		CU_add_test(suite, "dif_sec_512_md_0_error_test", dif_sec_512_md_0_error_test) == NULL ||
+		CU_add_test(suite, "dif_disable_sec_512_md_8_single_iov_test",
+			    dif_disable_sec_512_md_8_single_iov_test) == NULL ||
 		CU_add_test(suite, "dif_sec_512_md_8_prchk_0_single_iov_test",
 			    dif_sec_512_md_8_prchk_0_single_iov_test) == NULL ||
 		CU_add_test(suite, "dif_sec_512_md_8_prchk_0_1_2_4_multi_iovs_test",
