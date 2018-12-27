@@ -216,6 +216,16 @@ dif_disable_check_test(void)
 
 	_iov_alloc_buf(&iov, 4096 + 128);
 
+	/* The case that DIF check is disabled when DIF is not enabled. DIF check is
+	 * disabled and pass is expected.
+	 */
+	_dif_generate_and_verify(&iov,
+				 4096 + 128, 128, 4096,
+				 SPDK_DIF_DISABLE, dif_flags,
+				 22, 22,
+				 0x22, 0xFFFF, 0x22,
+				 true);
+
 	/* The case that DIF check is disabled when the Application Tag is 0xFFFF for
 	 * Type 1. DIF check is disabled and pass is expected.
 	 */
