@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "190ec815_dc5093bc",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "Is this always created right away?",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f987c94_fa10cd74",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "Why?",
+      "range": {
+        "startLine": 123,
+        "startChar": 7,
+        "endLine": 123,
+        "endChar": 34
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4fc7bc7_a50e30c2",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "spdk_strerror(-ENODEV)",
+      "range": {
+        "startLine": 156,
+        "startChar": 7,
+        "endLine": 156,
+        "endChar": 32
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "001f46ca_9e559742",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "But why?",
+      "range": {
+        "startLine": 163,
+        "startChar": 7,
+        "endLine": 163,
+        "endChar": 34
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de3f301e_394e6618",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "Valid values need to be included in help message.",
+      "range": {
+        "startLine": 156,
+        "startChar": 32,
+        "endLine": 156,
+        "endChar": 47
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "251bfe4e_22528eb6",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:51:55Z",
+      "side": 1,
+      "message": "Valid values are needed in doc string",
+      "range": {
+        "startLine": 50,
+        "startChar": 14,
+        "endLine": 50,
+        "endChar": 28
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
