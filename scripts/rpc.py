@@ -166,6 +166,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of CAS bdev')
     p.set_defaults(func=delete_cas_bdev)
 
+    def get_cas_stats(args):
+        print_dict(rpc.bdev.get_cas_stats(args.client,
+                                          name=args.name))
+    p = subparsers.add_parser('get_cas_stats',
+                              help='Get statistics of chosen CAS block device')
+    p.add_argument('name', help='Name of CAS bdev')
+    p.set_defaults(func=get_cas_stats)
+
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
