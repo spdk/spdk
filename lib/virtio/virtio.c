@@ -535,7 +535,7 @@ virtqueue_req_add_iovs(struct virtqueue *vq, struct iovec *iovs, uint16_t iovcnt
 		if (!vq->vdev->is_hw) {
 			desc->addr  = (uintptr_t)iovs[i].iov_base;
 		} else {
-			desc->addr = spdk_vtophys(iovs[i].iov_base);
+			desc->addr = spdk_vtophys(iovs[i].iov_base, NULL);
 		}
 
 		desc->len = iovs[i].iov_len;

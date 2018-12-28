@@ -624,13 +624,12 @@ spdk_vtophys_init(void)
 }
 
 uint64_t
-spdk_vtophys(void *buf)
+spdk_vtophys(void *buf, uint64_t *size)
 {
 	uint64_t vaddr, paddr_2mb;
 
 	vaddr = (uint64_t)buf;
-
-	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, NULL);
+	paddr_2mb = spdk_mem_map_translate(g_vtophys_map, vaddr, size);
 
 	/*
 	 * SPDK_VTOPHYS_ERROR has all bits set, so if the lookup returned SPDK_VTOPHYS_ERROR,
@@ -642,7 +641,7 @@ spdk_vtophys(void *buf)
 	if (paddr_2mb == SPDK_VTOPHYS_ERROR) {
 		return SPDK_VTOPHYS_ERROR;
 	} else {
-		return paddr_2mb + ((uint64_t)buf & MASK_2MB);
+		return paddr_2mb + (vaddr & MASK_2MB);
 	}
 }
 

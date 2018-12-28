@@ -432,7 +432,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	}
 
 	for (i = 0; i < num_descriptors; i++) {
-		phys_addr = spdk_vtophys(&ioat->hw_ring[i]);
+		phys_addr = spdk_vtophys(&ioat->hw_ring[i], NULL);
 		if (phys_addr == SPDK_VTOPHYS_ERROR) {
 			SPDK_ERRLOG("Failed to translate descriptor %u to physical address\n", i);
 			return -1;
@@ -611,12 +611,12 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 	while (remaining) {
 		if (_2MB_PAGE(vsrc) != vsrc_page) {
 			vsrc_page = _2MB_PAGE(vsrc);
-			psrc_page = spdk_vtophys((void *)vsrc_page);
+			psrc_page = spdk_vtophys((void *)vsrc_page, NULL);
 		}
 
 		if (_2MB_PAGE(vdst) != vdst_page) {
 			vdst_page = _2MB_PAGE(vdst);
-			pdst_page = spdk_vtophys((void *)vdst_page);
+			pdst_page = spdk_vtophys((void *)vdst_page, NULL);
 		}
 		op_size = remaining;
 		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vsrc)));
@@ -688,7 +688,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		remaining -= op_size;
 
 		last_desc = ioat_prep_fill(ioat,
-					   spdk_vtophys((void *)vdst),
+					   spdk_vtophys((void *)vdst, NULL),
 					   fill_pattern,
 					   op_size);
 

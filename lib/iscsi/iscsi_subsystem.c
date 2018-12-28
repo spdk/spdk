@@ -140,7 +140,7 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	 * right before the 512B aligned buffer area.
 	 */
 	phys_addr = (uint64_t *)m->buf - 1;
-	*phys_addr = spdk_vtophys(m) + off;
+	*phys_addr = spdk_vtophys(m, NULL) + off;
 }
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))

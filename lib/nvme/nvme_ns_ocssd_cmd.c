@@ -59,7 +59,7 @@ spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
 	cmd->nsid = ns->id;
 
 	if (chunk_info != NULL) {
-		cmd->mptr = spdk_vtophys(chunk_info);
+		cmd->mptr = spdk_vtophys(chunk_info, NULL);
 	}
 
 	/*
@@ -70,7 +70,7 @@ spdk_nvme_ocssd_ns_cmd_vector_reset(struct spdk_nvme_ns *ns,
 	if (num_lbas == 1) {
 		*(uint64_t *)&cmd->cdw10 = *lba_list;
 	} else {
-		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lba_list);
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lba_list, NULL);
 	}
 
 	cmd->cdw12 = num_lbas - 1;
@@ -120,7 +120,7 @@ _nvme_ocssd_ns_cmd_vector_rw_with_md(struct spdk_nvme_ns *ns,
 	if (num_lbas == 1) {
 		*(uint64_t *)&cmd->cdw10 = *lba_list;
 	} else {
-		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lba_list);
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(lba_list, NULL);
 	}
 
 	cmd->cdw12 = num_lbas - 1;
@@ -221,8 +221,8 @@ spdk_nvme_ocssd_ns_cmd_vector_copy(struct spdk_nvme_ns *ns,
 		*(uint64_t *)&cmd->cdw10 = *src_lba_list;
 		*(uint64_t *)&cmd->cdw14 = *dst_lba_list;
 	} else {
-		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(src_lba_list);
-		*(uint64_t *)&cmd->cdw14 = spdk_vtophys(dst_lba_list);
+		*(uint64_t *)&cmd->cdw10 = spdk_vtophys(src_lba_list, NULL);
+		*(uint64_t *)&cmd->cdw14 = spdk_vtophys(dst_lba_list, NULL);
 	}
 
 	cmd->cdw12 = num_lbas - 1;

@@ -565,7 +565,7 @@ spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
 		len = end - start;
 
-		if (spdk_vtophys((void *) start) == SPDK_VTOPHYS_ERROR) {
+		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
 			continue; /* region has not been registered */
 		}
 

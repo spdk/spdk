@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/env.h"
+#include "spdk/util.h"
 
 #include "CUnit/Basic.h"
 
@@ -52,7 +53,7 @@ vtophys_malloc_test(void)
 			continue;
 		}
 
-		paddr = spdk_vtophys(p);
+		paddr = spdk_vtophys(p, NULL);
 		CU_ASSERT(paddr == SPDK_VTOPHYS_ERROR);
 
 		free(p);
@@ -60,29 +61,87 @@ vtophys_malloc_test(void)
 	}
 
 	/* Test addresses that are not in the valid x86-64 usermode range */
-	paddr = spdk_vtophys((void *)0x0000800000000000ULL);
+	paddr = spdk_vtophys((void *)0x0000800000000000ULL, NULL);
 	CU_ASSERT(paddr == SPDK_VTOPHYS_ERROR)
 }
 
 static void
 vtophys_spdk_malloc_test(void)
 {
-	void *p = NULL;
+	void *buf = NULL, *p = NULL;
+	size_t buf_align = 512;
 	int i;
 	unsigned int size = 1;
-	uint64_t paddr;
+	uint64_t paddr, tmpsize;
 
 	/* Test vtophys on memory allocated through SPDK */
 	for (i = 0; i < 31; i++) {
-		p = spdk_dma_zmalloc(size, 512, NULL);
-		if (p == NULL) {
+		buf = spdk_dma_zmalloc(size, buf_align, NULL);
+		if (buf == NULL) {
 			continue;
 		}
 
-		paddr = spdk_vtophys(p);
+		/* test vtophys translation with no length parameter */
+		paddr = spdk_vtophys(buf, NULL);
 		CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
 
-		spdk_dma_free(p);
+		/* translate the entire buffer; it's not necessarily contiguous */
+		p = buf;
+		tmpsize = size;
+		while (p < buf + size) {
+			paddr = spdk_vtophys(p, &tmpsize);
+			CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
+			CU_ASSERT(tmpsize >= spdk_min(size, buf_align));
+			p += tmpsize;
+			tmpsize = buf + size - p;
+		}
+		CU_ASSERT(tmpsize == 0);
+
+		/* translate a valid vaddr, but with length 0 */
+		p = buf;
+		tmpsize = 0;
+		paddr = spdk_vtophys(p, &tmpsize);
+		CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
+		CU_ASSERT(tmpsize == 0);
+
+		/* translate the first half of the buffer */
+		p = buf;
+		tmpsize = size / 2;
+		while (p < buf + size / 2) {
+			paddr = spdk_vtophys(p, &tmpsize);
+			CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
+			CU_ASSERT(tmpsize >= spdk_min(size / 2, buf_align));
+			p += tmpsize;
+			tmpsize = buf + size / 2 - p;
+		}
+		CU_ASSERT(tmpsize == 0);
+
+		/* translate the second half of the buffer */
+		p = buf + size / 2;
+		tmpsize = size / 2;
+		while (p < buf + size) {
+			paddr = spdk_vtophys(p, &tmpsize);
+			CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
+			CU_ASSERT(tmpsize >= spdk_min(size / 2, buf_align));
+			p += tmpsize;
+			tmpsize = buf + size - p;
+		}
+		CU_ASSERT(tmpsize == 0);
+
+		/* translate a region that's not entirely registered */
+		p = buf;
+		tmpsize = UINT64_MAX;
+		while (p < buf + size) {
+			paddr = spdk_vtophys(p, &tmpsize);
+			CU_ASSERT(paddr != SPDK_VTOPHYS_ERROR);
+			CU_ASSERT(tmpsize >= buf_align);
+			p += tmpsize;
+			/* verify our region is really contiguous */
+			CU_ASSERT(paddr + tmpsize - 1 == spdk_vtophys(p - 1, &tmpsize));
+			tmpsize = UINT64_MAX;
+		}
+
+		spdk_dma_free(buf);
 		size = size << 1;
 	}
 }

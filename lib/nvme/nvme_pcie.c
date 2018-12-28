@@ -1052,7 +1052,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 
 	for (i = 0; i < num_trackers; i++) {
 		tr = &pqpair->tr[i];
-		nvme_qpair_construct_tracker(tr, i, spdk_vtophys(tr));
+		nvme_qpair_construct_tracker(tr, i, spdk_vtophys(tr, NULL));
 		TAILQ_INSERT_HEAD(&pqpair->free_tr, tr, tq_list);
 	}
 
@@ -1712,7 +1712,7 @@ nvme_pcie_prp_list_append(struct nvme_tracker *tr, uint32_t *prp_index, void *vi
 			return -EINVAL;
 		}
 
-		phys_addr = spdk_vtophys(virt_addr);
+		phys_addr = spdk_vtophys(virt_addr, NULL);
 		if (spdk_unlikely(phys_addr == SPDK_VTOPHYS_ERROR)) {
 			SPDK_ERRLOG("vtophys(%p) failed\n", virt_addr);
 			return -EINVAL;
@@ -1821,7 +1821,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				return -1;
 			}
 
-			phys_addr = spdk_vtophys(virt_addr);
+			phys_addr = spdk_vtophys(virt_addr, NULL);
 			if (phys_addr == SPDK_VTOPHYS_ERROR) {
 				nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 				return -1;
@@ -1970,7 +1970,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	if (req->payload_size && req->payload.md) {
 		md_payload = req->payload.md + req->md_offset;
-		tr->req->cmd.mptr = spdk_vtophys(md_payload);
+		tr->req->cmd.mptr = spdk_vtophys(md_payload, NULL);
 		if (tr->req->cmd.mptr == SPDK_VTOPHYS_ERROR) {
 			nvme_pcie_fail_request_bad_vtophys(qpair, tr);
 			rc = -EINVAL;

@@ -574,11 +574,14 @@ size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
  * Get the physical address of a buffer.
  *
  * \param buf A pointer to a buffer.
+ * \param size Contains the size of the memory region pointed to by vaddr.
+ * If vaddr is successfully translated, then this is updated with the size of
+ * the memory region for which the translation is valid.
  *
  * \return the physical address of this buffer on success, or SPDK_VTOPHYS_ERROR
  * on failure.
  */
-uint64_t spdk_vtophys(void *buf);
+uint64_t spdk_vtophys(void *buf, uint64_t *size);
 
 struct spdk_pci_addr {
 	uint32_t			domain;
