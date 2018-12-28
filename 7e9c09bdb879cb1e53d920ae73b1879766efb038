@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b5afff23_e1512460",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-28T09:11:29Z",
+      "side": 1,
+      "message": "Hi, if num_bytes is 513 and bdev-\u003eblocklen is 512, this API should return error. Hence I think just rightshift is OK too.\n\nI may be wrong but this is bdev layer and current bdev layer and bdev modules may not work as expected if num_bytes is not power of bdev-\u003eblocklen and I don\u0027t know such a use case yet (of course could be).",
+      "range": {
+        "startLine": 2300,
+        "startChar": 30,
+        "endLine": 2300,
+        "endChar": 97
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65477979_c3bf92aa",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
