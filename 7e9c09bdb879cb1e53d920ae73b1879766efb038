@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "33f2374b_6ddcab54",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2311,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2018-12-28T04:32:42Z",
+      "side": 1,
+      "message": "I think the original line 2315 `*num_blocks \u003d num_bytes / block_size;`\t\ncan\u0027t calculate the num_blocks right if num_bytes isn\u0027t divided exactly by the block size.\n\nFor example, if blocklen is 512 bytes and shift_cnt is 9,\nfor num_bytes from 1 to 512, num_blocks should be 1,\nfor num_bytes from 513 to 1024, num_blocks should be 2.\n\n# Use directly shift `num_bytes \u003e\u003e block_shift` or `num_bytes / block_size` in div format:\n1\u003e\u003e9\u003d0, 2\u003e\u003e9\u003d0, ..., 511\u003e\u003e9\u003d0, 512\u003e\u003e9\u003d1, 513\u003e\u003e9\u003d1, ...\n\nSo the result of num_bytes in (1, 2, .., 511, 513) is wrong.\n\n# Use `(num_bytes + block_size - 1) \u003e\u003e block_shift`:\n(1+511)\u003e\u003e9\u003d1, (2+511)\u003e\u003e9\u003d1, ..., (511+511)\u003e\u003e9\u003d1, (512+511)\u003e\u003e9\u003d1, (513+511)\u003e\u003e9\u003d2, ...\n\nSo we could get the right num_blocks from any input num_bytes in this way.\n\nTraditionally num_bytes of a request to block device should be divided exactly by the block size. But as a new comer I don\u0027t know if there\u0027s any special case in SPDK\u0027s application.",
+      "parentUuid": "65477979_c3bf92aa",
+      "range": {
+        "startLine": 2311,
+        "startChar": 26,
+        "endLine": 2311,
+        "endChar": 43
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "93133ec9_3e7bc794",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
@@ -45,6 +69,30 @@
       "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6056d27d_044e8fa0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2317,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2018-12-28T04:32:42Z",
+      "side": 1,
+      "message": "I agree with your excellent solution.",
+      "parentUuid": "93133ec9_3e7bc794",
+      "range": {
+        "startLine": 2317,
+        "startChar": 1,
+        "endLine": 2317,
+        "endChar": 63
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
