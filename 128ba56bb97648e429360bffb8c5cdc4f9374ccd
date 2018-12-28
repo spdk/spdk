@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7d75dfd_7f059322",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T16:06:52Z",
+      "side": 1,
+      "message": "This should be renamed to \"vbdev_cas_dump_config_info\". \"vbdev_cas_dump_config_json\" must dump exact RPC used to create this bdev.",
+      "range": {
+        "startLine": 466,
+        "startChar": 0,
+        "endLine": 466,
+        "endChar": 26
+      },
+      "revId": "128ba56bb97648e429360bffb8c5cdc4f9374ccd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
