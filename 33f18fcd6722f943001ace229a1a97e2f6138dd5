@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bc3f24a_b1db5fdf",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-28T11:42:32Z",
+      "side": 1,
+      "message": "Since we are expecting the super block was erased in backing_dev, so\n\n  CU_ASSERT(g_reduce_errno \u003d\u003d -EILSEQ)\n\ncould be better?",
+      "revId": "33f18fcd6722f943001ace229a1a97e2f6138dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
