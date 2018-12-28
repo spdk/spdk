@@ -209,6 +209,24 @@
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3dd8bf77_2619a800",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T16:31:04Z",
+      "side": 1,
+      "message": "Maybe silly question, but how this case is different from physical device reset. I mean that if target is crashed connection is dropped. So initiator (QEMU) can inspect rings and abort IO before reconnecting or SCSI reset might be raised by QEMU in case of reconnect.\n\nWhy we are trying to implement this here in vhost target side instead of QEMU? What else I\u0027m missing here?",
+      "parentUuid": "c44e3dbf_78386b94",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
