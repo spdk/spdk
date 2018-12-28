@@ -162,7 +162,7 @@ _dif_generate_and_verify(struct iovec *iov,
 	ctx.apptag_mask = apptag_mask;
 	ctx.app_tag = e_app_tag;
 
-	rc = _dif_verify(iov->iov_base + guard_interval, guard, 0, &ctx);
+	rc = _dif_verify(iov->iov_base + guard_interval, guard, 0, &ctx, NULL);
 	CU_ASSERT((expect_pass && rc == 0) || (!expect_pass && rc != 0));
 
 	rc = ut_data_pattern_verify(iov, 1, block_size, md_size, 1);
@@ -293,7 +293,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx);
+	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx, NULL);
 	CU_ASSERT(rc == 0);
 
 	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
@@ -573,7 +573,8 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 			     uint32_t inject_flags, bool dif_loc)
 {
 	struct spdk_dif_ctx ctx = {};
-	uint32_t dif_flags;
+	struct spdk_dif_error err_blk = {};
+	uint32_t inject_offset = 0, dif_flags;
 	int rc;
 
 	dif_flags = SPDK_DIF_GUARD_CHECK | SPDK_DIF_APPTAG_CHECK | SPDK_DIF_REFTAG_CHECK;
@@ -588,15 +589,21 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_inject_error(iovs, iovcnt, num_blocks, &ctx, inject_flags);
+	rc = spdk_dif_inject_error(iovs, iovcnt, num_blocks, &ctx, inject_flags, &inject_offset);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx);
+	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx, &err_blk);
 	CU_ASSERT(rc != 0);
+	if (inject_flags == SPDK_DIF_DATA_ERROR) {
+		CU_ASSERT(SPDK_DIF_GUARD_ERROR == err_blk.err_type);
+	} else {
+		CU_ASSERT(inject_flags == err_blk.err_type);
+	}
+	CU_ASSERT(inject_offset == err_blk.err_offset);
 
 	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
-	CU_ASSERT((rc == 0 && !(inject_flags & SPDK_DIF_DATA_ERROR)) ||
-		  (rc != 0 && (inject_flags & SPDK_DIF_DATA_ERROR)));
+	CU_ASSERT((rc == 0 && (inject_flags != SPDK_DIF_DATA_ERROR)) ||
+		  (rc != 0 && (inject_flags == SPDK_DIF_DATA_ERROR)));
 }
 
 static void
