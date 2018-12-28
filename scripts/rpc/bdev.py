@@ -71,6 +71,20 @@ def delete_ocf_bdev(client, name):
     return client.call('delete_ocf_bdev', params)
 
 
+def get_ocf_stats(client, name):
+    """Get statistics of chosen OCF block device
+
+    Args:
+        name: name of OCF bdev
+
+    Returns:
+        Statistics as json object
+    """
+    params = {'name': name}
+
+    return client.call('get_ocf_stats', params)
+
+
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 
