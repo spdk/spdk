@@ -3,3 +3,4 @@
 - @subpage directory_structure
 - @subpage event
 - @subpage logical_volumes
+- @subpage vpp_integration
