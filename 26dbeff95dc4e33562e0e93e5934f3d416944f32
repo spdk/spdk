@@ -22,6 +22,30 @@
       "revId": "26dbeff95dc4e33562e0e93e5934f3d416944f32",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65b7ffc2_0b7b43e4",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-28T07:07:27Z",
+      "side": 1,
+      "message": "Good catch, let me revise it.",
+      "parentUuid": "0815eb36_c8879fd1",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 58
+      },
+      "revId": "26dbeff95dc4e33562e0e93e5934f3d416944f32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
