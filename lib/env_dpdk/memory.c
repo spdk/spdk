@@ -591,15 +591,9 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	uint64_t idx_256tb;
 	uint64_t idx_1gb;
 	uint64_t vfn_2mb;
-	uint64_t total_size = 0;
 	uint64_t cur_size;
 	uint64_t prev_translation;
 	uint64_t orig_translation;
-
-	if (size != NULL) {
-		total_size = *size;
-		*size = 0;
-	}
 
 	if (spdk_unlikely(vaddr & ~MASK_256TB)) {
 		DEBUG_PRINT("invalid usermode virtual address %p\n", (void *)vaddr);
@@ -616,19 +610,18 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	}
 
 	cur_size = VALUE_2MB - _2MB_OFFSET(vaddr);
-	if (size != NULL) {
-		*size = cur_size;
-	}
-
 	map_2mb = &map_1gb->map[idx_1gb];
 	if (size == NULL || map->ops.are_contiguous == NULL ||
 	    map_2mb->translation_2mb == map->default_translation) {
+		if (size != NULL) {
+			*size = cur_size;
+		}
 		return map_2mb->translation_2mb;
 	}
 
 	orig_translation = map_2mb->translation_2mb;
 	prev_translation = orig_translation;
-	while (cur_size < total_size) {
+	while (cur_size < *size) {
 		vfn_2mb++;
 		idx_256tb = MAP_256TB_IDX(vfn_2mb);
 		idx_1gb = MAP_1GB_IDX(vfn_2mb);
