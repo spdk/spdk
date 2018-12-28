@@ -543,9 +543,19 @@ bytes_to_blocks_test(void)
 
 	/* Offset not a block multiple */
 	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 3, &offset_blocks, 512, &num_blocks) != 0);
+	CU_ASSERT(offset_blocks == 0);
+	CU_ASSERT(num_blocks == 1);
 
 	/* Length not a block multiple */
 	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 512, &offset_blocks, 3, &num_blocks) != 0);
+	CU_ASSERT(offset_blocks == 1);
+	CU_ASSERT(num_blocks == 1);
+
+	/* In case blocklen not the power of two */
+	bdev.blocklen = 100;
+	CU_ASSERT(spdk_bdev_bytes_to_blocks(&bdev, 100, &offset_blocks, 200, &num_blocks) == 0);
+	CU_ASSERT(offset_blocks == 1);
+	CU_ASSERT(num_blocks == 2);
 }
 
 static void

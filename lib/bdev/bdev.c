@@ -2305,8 +2305,14 @@ spdk_bdev_bytes_to_blocks(struct spdk_bdev *bdev, uint64_t offset_bytes, uint64_
 {
 	uint32_t block_size = bdev->blocklen;
 
-	*offset_blocks = offset_bytes / block_size;
-	*num_blocks = num_bytes / block_size;
+	/* Avoid expensive div operations if possible. These spdk_u32 functions are very cheap. */
+	if (spdk_likely(spdk_u32_is_pow2(block_size))) {
+		*offset_blocks = offset_bytes >> spdk_u32log2(block_size);
+		*num_blocks = (num_bytes + block_size - 1) >> spdk_u32log2(block_size);
+	} else {
+		*offset_blocks = offset_bytes / block_size;
+		*num_blocks = num_bytes / block_size;
+	}
 
 	return (offset_bytes % block_size) | (num_bytes % block_size);
 }
