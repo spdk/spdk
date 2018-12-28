@@ -16,6 +16,24 @@
       "revId": "6d4631138e1582f01d61848650e100ba8800c6fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eda3a94_7deb7821",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-28T09:15:57Z",
+      "side": 1,
+      "message": "Oh, I missed that. thank you!\nBut this change will rerun almost full of patch series.\nThis will be removed later anyway.\n\nI want to wait for reviews before changing this for now.",
+      "parentUuid": "1c178a3b_b93cafb4",
+      "revId": "6d4631138e1582f01d61848650e100ba8800c6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
