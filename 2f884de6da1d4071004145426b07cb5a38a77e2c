@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85618d76_7703b8a7",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2018-12-28T07:57:25Z",
+      "side": 1,
+      "message": "Can we use one. There is also  a strip_size listed before your definition of strip_size_kb. Can we make it as one variable.",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 43
+      },
+      "revId": "2f884de6da1d4071004145426b07cb5a38a77e2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
