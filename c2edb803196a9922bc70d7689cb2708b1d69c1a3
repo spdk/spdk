@@ -71,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "9b96e753_17625c6f",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T09:46:38Z",
+      "side": 1,
+      "message": "This is not an EINVAL condition (as this is not an issue with configuration file). If we get here it is a BUG (this why assert(false) if two lines above).",
+      "parentUuid": "faad30eb_180d99a1",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "093a04c6_9e83e54c",
         "filename": "lib/event/json_config.c",
         "patchSetId": 40
@@ -123,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "926f2f2b_8f97f48c",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T09:46:38Z",
+      "side": 1,
+      "message": "I don\u0027t understand this deffine-fascination ;)\n\nSome numbers just don\u0027t deserve its own deffine. This is one of them. I will add comment here and there.",
+      "parentUuid": "e4787ae7_0311a581",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c09301dd_cd93f966",
         "filename": "lib/event/json_config.c",
         "patchSetId": 40
@@ -134,6 +170,24 @@
       "writtenOn": "2018-12-27T20:05:31Z",
       "side": 1,
       "message": "you\u0027ve got a decent number of FIXMEs in here, are they addressed later in the patch series?",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e3cb56f_2ed0aaa4",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T09:46:38Z",
+      "side": 1,
+      "message": "No, not in this series. I will be reworking RPC in January to handle RPC notifications and address some github issues so maybe then I will fix these FIXME\u0027s.",
+      "parentUuid": "c09301dd_cd93f966",
       "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
