@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b1c6335_2f839312",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-28T16:25:59Z",
+      "side": 1,
+      "message": "\"build on idea of\" --\u003e \"built around the concept of\"",
+      "revId": "995a0029611f9e13707c9ce08a73b6818d90e99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40b454a8_aafad667",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-28T16:25:59Z",
+      "side": 1,
+      "message": "remove the \"A\" and just state \"Detailed...\"",
+      "revId": "995a0029611f9e13707c9ce08a73b6818d90e99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8364ed4_ae20dd4c",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-28T16:25:59Z",
+      "side": 1,
+      "message": "\"from distribution\" --\u003e \"from a distribution\"",
+      "revId": "995a0029611f9e13707c9ce08a73b6818d90e99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dce9db3b_298c3c67",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-28T16:25:59Z",
+      "side": 1,
+      "message": "purpose --\u003e purposes",
+      "revId": "995a0029611f9e13707c9ce08a73b6818d90e99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
