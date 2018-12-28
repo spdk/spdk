@@ -5,7 +5,6 @@ set -e
 rootdir=$(readlink -f $(dirname $0))/..
 source "$rootdir/scripts/common.sh"
 
-bdfs=($(iter_pci_class_code 01 08 02))
 function create_classic_config()
 {
 	echo "[Nvme]"
@@ -38,6 +37,17 @@ function create_json_config()
 	echo ']'
 	echo '}'
 }
+
+bdfs=()
+# Check used drivers. If it's not vfio-pci or uio-pci-generic
+# then most likely PCI_WHITELIST option was used for setup.sh
+# and we do not want to use that disk.
+for bdf in $(iter_pci_class_code 01 08 02); do
+	driver=`grep DRIVER /sys/bus/pci/devices/$bdf/uevent | awk -F"=" '{print $2}'`
+	if [ "$driver" != "nvme" ]; then
+		bdfs+=("$bdf")
+	fi
+done
 
 if [ "$1" = "--json" ]; then
 	create_json_config
