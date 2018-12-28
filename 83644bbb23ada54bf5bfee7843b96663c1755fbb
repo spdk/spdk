@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63340873_89c1db76",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T13:10:13Z",
+      "side": 1,
+      "message": "nitpick: logically",
+      "range": {
+        "startLine": 71,
+        "startChar": 39,
+        "endLine": 71,
+        "endChar": 47
+      },
+      "revId": "83644bbb23ada54bf5bfee7843b96663c1755fbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "714f634a_84ba07de",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T13:10:13Z",
+      "side": 1,
+      "message": "nitpick: quote",
+      "range": {
+        "startLine": 335,
+        "startChar": 60,
+        "endLine": 335,
+        "endChar": 61
+      },
+      "revId": "83644bbb23ada54bf5bfee7843b96663c1755fbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
