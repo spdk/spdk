@@ -395,8 +395,25 @@ vbdev_ocf_get_io_channel(void *opaque)
 }
 
 static int
-vbdev_ocf_dump_config_info(void *opaque, struct spdk_json_write_ctx *w)
+vbdev_ocf_dump_info_json(void *opaque, struct spdk_json_write_ctx *w)
 {
+	struct vbdev_ocf *vbdev = opaque;
+
+	spdk_json_write_named_object_begin(w, "cache_device");
+	spdk_json_write_named_string(w, "name", vbdev->cache.name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_object_begin(w, "core_device");
+	spdk_json_write_named_string(w, "name", vbdev->core.name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_string(w, "mode",
+				     ocf_get_cache_modename(ocf_cache_get_mode(vbdev->ocf_cache)));
+	spdk_json_write_named_uint32(w, "cache_line_size",
+				     ocf_cache_get_line_size(vbdev->ocf_cache));
+	spdk_json_write_named_bool(w, "metadata_volatile",
+				   vbdev->cfg.cache.metadata_volatile);
+
 	return 0;
 }
 
@@ -427,8 +444,8 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 	.io_type_supported = vbdev_ocf_io_type_supported,
 	.submit_request	= vbdev_ocf_submit_request,
 	.get_io_channel	= vbdev_ocf_get_io_channel,
-	.dump_info_json = vbdev_ocf_dump_config_info,
 	.write_config_json = vbdev_ocf_write_json_config,
+	.dump_info_json = vbdev_ocf_dump_info_json,
 };
 
 /* Start OCF cache, attach caching device */
