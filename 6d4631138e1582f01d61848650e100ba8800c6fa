@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c178a3b_b93cafb4",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-28T09:07:26Z",
+      "side": 1,
+      "message": "And change this line?",
+      "revId": "6d4631138e1582f01d61848650e100ba8800c6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
