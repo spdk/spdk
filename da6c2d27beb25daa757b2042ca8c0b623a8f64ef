@@ -70,6 +70,30 @@
       "revId": "da6c2d27beb25daa757b2042ca8c0b623a8f64ef",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7305b4eb_d766cb5d",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-28T06:55:37Z",
+      "side": 1,
+      "message": "Thanks, I understood.",
+      "parentUuid": "3c314132_f747de42",
+      "range": {
+        "startLine": 255,
+        "startChar": 16,
+        "endLine": 255,
+        "endChar": 58
+      },
+      "revId": "da6c2d27beb25daa757b2042ca8c0b623a8f64ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
