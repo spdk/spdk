@@ -37,7 +37,7 @@ OPENCASDIR=$(SPDK_ROOT_DIR)/lib/cas
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS) -I$(OPENCASDIR) -I$(OPENCASDIR)/ocfenv
-C_SRCS = ctx.c data.c utils.c
+C_SRCS = ctx.c data.c utils.c stats.c
 
 LIBNAME := cas
 
