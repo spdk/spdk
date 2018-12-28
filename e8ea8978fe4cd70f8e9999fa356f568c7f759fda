@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16d5bc07_5adf725f",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "Could we stick to one approach with brackets in script? [] or [[]]",
+      "range": {
+        "startLine": 12,
+        "startChar": 3,
+        "endLine": 12,
+        "endChar": 29
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a780b388_42595cd8",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "This warning only applies to current script running json_config tests, right? Because overall, all other vhost init scripts are standalone.\nYou could rephrase the warning to smth like:\nWarning: Virtio initiator json_config test requires running vhost app. Setting SPDK_TEST_VHOST\u003d1 for duration of current script.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 2
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "595985ad_44a81457",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "enough",
+      "range": {
+        "startLine": 124,
+        "startChar": 33,
+        "endLine": 124,
+        "endChar": 40
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1159e2f_4f740590",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 223,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "It already got +1 from CI.\nCan remove this comment?",
+      "range": {
+        "startLine": 223,
+        "startChar": 1,
+        "endLine": 223,
+        "endChar": 16
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09f99a71_86b90e00",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "Love the name",
+      "range": {
+        "startLine": 291,
+        "startChar": 43,
+        "endLine": 291,
+        "endChar": 73
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8eb2d21_9a4c7477",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T12:30:39Z",
+      "side": 1,
+      "message": "\"if\" will be printed to logs with -x, so if we don\u0027t have anything to clear after NVMf then maybe put a comment placeholder instead?",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 316,
+        "endChar": 4
+      },
+      "revId": "e8ea8978fe4cd70f8e9999fa356f568c7f759fda",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
