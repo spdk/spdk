@@ -163,7 +163,7 @@ spdk_dma_free(void *buf)
 
 DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
-spdk_vtophys(void *buf)
+spdk_vtophys(void *buf, uint64_t *size)
 {
 	HANDLE_RETURN_MOCK(spdk_vtophys);
 

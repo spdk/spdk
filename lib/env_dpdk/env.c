@@ -59,7 +59,7 @@ virt_to_phys(void *vaddr)
 	}
 #endif
 
-	return spdk_vtophys(vaddr);
+	return spdk_vtophys(vaddr, NULL);
 }
 
 void *
