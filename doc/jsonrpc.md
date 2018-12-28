@@ -870,6 +870,210 @@ Example response:
 }
 ~~~
 
+## get_ocf_stats {#rpc_get_ocf_stats}
+
+Get statistics of chosen OCF block device.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Response
+
+Statistics as json object.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_ocf_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+  "usage": {
+    "clean": {
+      "count": 76033,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "free": {
+      "count": 767,
+      "units": "4KiB blocks",
+      "percentage": "0.9"
+    },
+    "occupancy": {
+      "count": 76033,
+      "units": "4KiB blocks",
+      "percentage": "99.0"
+    },
+    "dirty": {
+      "count": 0,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    }
+  },
+  "requests": {
+    "rd_total": {
+      "count": 2,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_full_misses": {
+      "count": 76280,
+      "units": "Requests",
+      "percentage": "35.6"
+    },
+    "rd_full_misses": {
+      "count": 1,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "rd_partial_misses": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_total": {
+      "count": 212416,
+      "units": "Requests",
+      "percentage": "99.2"
+    },
+    "wr_pt": {
+      "count": 1535,
+      "units": "Requests",
+      "percentage": "0.7"
+    },
+    "wr_partial_misses": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "serviced": {
+      "count": 212418,
+      "units": "Requests",
+      "percentage": "99.2"
+    },
+    "rd_pt": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "total": {
+      "count": 213953,
+      "units": "Requests",
+      "percentage": "100.0"
+    },
+    "rd_hits": {
+      "count": 1,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_hits": {
+      "count": 136136,
+      "units": "Requests",
+      "percentage": "63.6"
+    }
+  },
+  "errors": {
+    "total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_rd": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_wr": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_rd": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_wr": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    }
+  },
+  "blocks": {
+    "volume_rd": {
+      "count": 9,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "volume_wr": {
+      "count": 213951,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    },
+    "cache_obj_total": {
+      "count": 212425,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "core_obj_total": {
+      "count": 213959,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "cache_obj_rd": {
+      "count": 1,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "core_obj_wr": {
+      "count": 213951,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    },
+    "volume_total": {
+      "count": 213960,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "core_obj_rd": {
+      "count": 8,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "cache_obj_wr": {
+      "count": 212424,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    }
+  ]
+}
+~~~
+
 ## construct_malloc_bdev {#rpc_construct_malloc_bdev}
 
 Construct @ref bdev_config_malloc
