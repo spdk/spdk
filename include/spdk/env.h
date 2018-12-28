@@ -1084,7 +1084,8 @@ int spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uin
  * \param map Memory map.
  * \param vaddr Virtual address.
  * \param size Contains the size of the memory region pointed to by vaddr.
- * Updated with the size of the memory region for which the translation is valid.
+ * If vaddr is successfully translated, then this is updated with the size of
+ * the memory region for which the translation is valid.
  *
  * \return the translation of vaddr stored in the map, or default_translation
  * as specified in spdk_mem_map_alloc() if vaddr is not present in the map.
