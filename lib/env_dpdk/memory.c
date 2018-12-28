@@ -614,7 +614,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 	if (size == NULL || map->ops.are_contiguous == NULL ||
 	    map_2mb->translation_2mb == map->default_translation) {
 		if (size != NULL) {
-			*size = cur_size;
+			*size = spdk_min(*size, cur_size);
 		}
 		return map_2mb->translation_2mb;
 	}
@@ -640,7 +640,7 @@ spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t 
 		prev_translation = map_2mb->translation_2mb;
 	}
 
-	*size = cur_size;
+	*size = spdk_min(*size, cur_size);
 	return orig_translation;
 }
 

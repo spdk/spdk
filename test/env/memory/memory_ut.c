@@ -296,6 +296,24 @@ test_mem_map_translation(void)
 	 */
 	CU_ASSERT(addr == 0);
 
+	/* Translate only a subset of a 2MB page */
+	mapping_length = 543;
+	addr = spdk_mem_map_translate(map, 0, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == 543);
+
+	/* Translate another subset of a 2MB page */
+	mapping_length = 543;
+	addr = spdk_mem_map_translate(map, VALUE_4KB, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == 543);
+
+	/* Try to translate an unaligned region that is only partially registered */
+	mapping_length = 543;
+	addr = spdk_mem_map_translate(map, 3 * VALUE_2MB - 196, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == 196);
+
 	/* Clear translation for the first page */
 	rc = spdk_mem_map_clear_translation(map, 0, VALUE_2MB);
 	CU_ASSERT(rc == 0);
@@ -344,6 +362,12 @@ test_mem_map_translation(void)
 	addr = spdk_mem_map_translate(map, 0, &mapping_length);
 	CU_ASSERT(addr == 0);
 	CU_ASSERT(mapping_length == VALUE_2MB)
+
+	/* Translate only a subset of a 2MB page */
+	mapping_length = 543;
+	addr = spdk_mem_map_translate(map, 0, &mapping_length);
+	CU_ASSERT(addr == 0);
+	CU_ASSERT(mapping_length == 543);
 
 	/* Clear the translation */
 	rc = spdk_mem_map_clear_translation(map, 0, VALUE_2MB * 3);
