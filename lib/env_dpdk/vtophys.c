@@ -400,7 +400,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * we need to unmap the range from the IOMMU
 				 */
 				if (g_vfio.enabled) {
-					uint64_t buffer_len;
+					uint64_t buffer_len = VALUE_2MB;
 					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
 					if (buffer_len != VALUE_2MB) {
 						return -EINVAL;
