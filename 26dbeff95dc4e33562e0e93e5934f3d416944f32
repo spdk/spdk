@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0815eb36_c8879fd1",
+        "filename": "doc/build_with_vpp.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-28T06:22:59Z",
+      "side": 1,
+      "message": "As we have a subpage now, this maybe need to udpate like\n\n\"VPP application has to be started before SPDK application like SPDK iSCSI target\"",
+      "range": {
+        "startLine": 128,
+        "startChar": 0,
+        "endLine": 128,
+        "endChar": 58
+      },
+      "revId": "26dbeff95dc4e33562e0e93e5934f3d416944f32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
