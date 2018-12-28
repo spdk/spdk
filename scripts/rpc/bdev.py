@@ -73,6 +73,20 @@ def delete_cas_bdev(client, name):
     return client.call('delete_cas_bdev', params)
 
 
+def get_cas_stats(client, name):
+    """Get statistics of chosen CAS block device
+
+    Args:
+        name: name of CAS bdev
+
+    Returns:
+        Statistics as json object
+    """
+    params = {'name': name}
+
+    return client.call('get_cas_stats', params)
+
+
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 
