@@ -167,6 +167,14 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=delete_ocf_bdev)
 
+    def get_ocf_stats(args):
+        print_dict(rpc.bdev.get_ocf_stats(args.client,
+                                          name=args.name))
+    p = subparsers.add_parser('get_ocf_stats',
+                              help='Get statistics of chosen OCF block device')
+    p.add_argument('name', help='Name of OCF bdev')
+    p.set_defaults(func=get_ocf_stats)
+
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
