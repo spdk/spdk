@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "d6de9eaf_2f8f0960",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-28T10:14:51Z",
+      "side": 1,
+      "message": "Hi Pawel, a comment. I’m working on dif and fix feature to support 512+8, 512+16, 4096+128 throughout the spdk including bdev and bdev modules.\n\nI’m not certain that this api is used in such cases but want to support non power of 2 for such cases",
+      "parentUuid": "b4e78228_abe68e39",
+      "range": {
+        "startLine": 2300,
+        "startChar": 30,
+        "endLine": 2300,
+        "endChar": 97
+      },
+      "revId": "7e9c09bdb879cb1e53d920ae73b1879766efb038",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "65477979_c3bf92aa",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
