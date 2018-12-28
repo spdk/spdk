@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c842161e_a0a12f38",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-28T08:57:33Z",
+      "side": 1,
+      "message": "Could you explain what\u0027s the relationship between shared_resource and ch-\u003ehistogram?\n\nWhen creating ch-\u003ehistogram, the code doesn\u0027t check shared_resource, so why we need check shared_resource before free ch-\u003ehistogram?",
+      "revId": "c405b5e82da6729d5dd9766ce5a6c0dbc54377ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
