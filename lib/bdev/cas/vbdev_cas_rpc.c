@@ -32,6 +32,8 @@
  */
 
 #include "vbdev_cas.h"
+#include "stats.h"
+
 #include "spdk/log.h"
 #include "spdk/rpc.h"
 #include "spdk/string.h"
@@ -172,3 +174,63 @@ end:
 	free_rpc_delete_cas_bdev(&req);
 }
 SPDK_RPC_REGISTER("delete_cas_bdev", spdk_rpc_delete_cas_bdev, SPDK_RPC_RUNTIME)
+
+/* Structure to hold the parameters for this RPC method. */
+struct rpc_get_cas_stats {
+	char *name;             /* master vbdev name */
+};
+
+static void
+free_rpc_get_cas_stats(struct rpc_get_cas_stats *r)
+{
+	free(r->name);
+}
+
+/* Structure to decode the input parameters for this RPC method. */
+static const struct spdk_json_object_decoder rpc_get_cas_stats_decoders[] = {
+	{"name", offsetof(struct rpc_get_cas_stats, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_get_cas_stats(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_get_cas_stats req = {NULL};
+	struct spdk_json_write_ctx *w;
+	struct vbdev_cas *vbdev;
+	struct cas_stats stats;
+	int status;
+
+	if (spdk_json_decode_object(params, rpc_get_cas_stats_decoders,
+				    SPDK_COUNTOF(rpc_get_cas_stats_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	vbdev = vbdev_cas_get_by_name(req.name);
+	if (vbdev == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Incorrect CAS bdev name");
+		goto end;
+	}
+
+	status = cas_stats_get(vbdev->cache.id, vbdev->core.id, &stats);
+	if (status) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not get stats: %s",
+						     spdk_strerror(-status));
+		goto end;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w) {
+		cas_stats_write_json(w, &stats);
+		spdk_jsonrpc_end_result(request, w);
+	}
+
+end:
+	free_rpc_get_cas_stats(&req);
+}
+SPDK_RPC_REGISTER("get_cas_stats", spdk_rpc_get_cas_stats, SPDK_RPC_RUNTIME)
