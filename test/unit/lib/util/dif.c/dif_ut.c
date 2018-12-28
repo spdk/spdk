@@ -162,7 +162,7 @@ _dif_generate_and_verify(struct iovec *iov,
 	ctx.apptag_mask = apptag_mask;
 	ctx.app_tag = e_app_tag;
 
-	rc = _dif_verify(iov->iov_base + guard_interval, guard, 0, &ctx);
+	rc = _dif_verify(iov->iov_base + guard_interval, guard, 0, &ctx, NULL);
 	CU_ASSERT((expect_pass && rc == 0) || (!expect_pass && rc != 0));
 
 	rc = ut_data_pattern_verify(iov, 1, block_size, md_size, 1);
@@ -303,7 +303,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx);
+	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx, NULL);
 	CU_ASSERT(rc == 0);
 
 	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
@@ -571,6 +571,7 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 			     uint32_t inject_flags, bool dif_loc)
 {
 	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error inj_blk = {}, err_blk = {};
 	uint32_t dif_flags;
 	int rc;
 
@@ -586,11 +587,13 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_inject_error(iovs, iovcnt, num_blocks, &ctx, inject_flags);
+	rc = spdk_dif_inject_error(iovs, iovcnt, num_blocks, &ctx, inject_flags, &inj_blk);
 	CU_ASSERT(rc == 0);
 
-	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx);
+	rc = spdk_dif_verify(iovs, iovcnt, num_blocks, &ctx, &err_blk);
 	CU_ASSERT(rc != 0);
+	CU_ASSERT(inj_blk.err_type == err_blk.err_type);
+	CU_ASSERT(inj_blk.err_offset == err_blk.err_offset);
 
 	rc = ut_data_pattern_verify(iovs, iovcnt, block_size, md_size, num_blocks);
 	CU_ASSERT((rc == 0 && !(inject_flags & SPDK_DIF_DATA_ERROR)) ||
