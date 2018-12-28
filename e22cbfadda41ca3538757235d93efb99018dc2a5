@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa79c447_7ee40b09",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2316,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2018-12-28T14:05:09Z",
+      "side": 1,
+      "message": "This is more natural logic.\n\nI first thought that return (offset_bytes \u0026 ((1ULL \u003c\u003c shift_cnt) - 1)) | (num_bytes \u0026 ((1ULL \u003c\u003c shift_cnt) - 1));",
+      "range": {
+        "startLine": 2314,
+        "startChar": 9,
+        "endLine": 2316,
+        "endChar": 9
+      },
+      "revId": "e22cbfadda41ca3538757235d93efb99018dc2a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
