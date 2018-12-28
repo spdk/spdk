@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e549a5e_60fc0390",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:59:02Z",
+      "side": 1,
+      "message": "spdk_strerror(-ENODEV)",
+      "range": {
+        "startLine": 210,
+        "startChar": 7,
+        "endLine": 210,
+        "endChar": 32
+      },
+      "revId": "01a1492ba7f6fe56c84e9f132782f3d3677ca303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c307c91_43e22fe5",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:59:02Z",
+      "side": 1,
+      "message": "why?",
+      "range": {
+        "startLine": 217,
+        "startChar": 7,
+        "endLine": 217,
+        "endChar": 28
+      },
+      "revId": "01a1492ba7f6fe56c84e9f132782f3d3677ca303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbaff178_5766144f",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:59:02Z",
+      "side": 1,
+      "message": "this is not an error.",
+      "range": {
+        "startLine": 223,
+        "startChar": 2,
+        "endLine": 224,
+        "endChar": 45
+      },
+      "revId": "01a1492ba7f6fe56c84e9f132782f3d3677ca303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8064bd3a_5d6228d4",
+        "filename": "lib/cas/stats.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:59:02Z",
+      "side": 1,
+      "message": "- \\n",
+      "revId": "01a1492ba7f6fe56c84e9f132782f3d3677ca303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51b5c923_a985fabf",
+        "filename": "lib/cas/stats.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2018-12-28T15:59:02Z",
+      "side": 1,
+      "message": "can the unit be something diffrent than 4KiB ?",
+      "range": {
+        "startLine": 85,
+        "startChar": 40,
+        "endLine": 85,
+        "endChar": 53
+      },
+      "revId": "01a1492ba7f6fe56c84e9f132782f3d3677ca303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
