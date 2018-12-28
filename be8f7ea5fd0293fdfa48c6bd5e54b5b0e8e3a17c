@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "876b5ea9_58679d58",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T13:31:00Z",
+      "side": 1,
+      "message": "Isn\u0027t that done in update.sh?\nUpdate.sh calls pkgdep.sh which does ipsec install if I recall correctly.",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 87
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f130449d_2c22aef4",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T13:31:00Z",
+      "side": 1,
+      "message": "I think this should be copied to /home/vagrant because that\u0027s the user we use for interacting with the VM",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 84,
+        "endChar": 73
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "43693442_afba2b2a",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2018-12-28T13:31:00Z",
+      "side": 1,
+      "message": "For autorun there\u0027s no need to sudo.\nssh \"mkdir /home/vagrant/output\" (default outpit dir for autorun.sh)\nssh \"spdk/autorun.sh\"\n\nShould work. Sudo is called inside autorun.sh for autotest.sh",
+      "range": {
+        "startLine": 85,
+        "startChar": 16,
+        "endLine": 85,
+        "endChar": 51
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
