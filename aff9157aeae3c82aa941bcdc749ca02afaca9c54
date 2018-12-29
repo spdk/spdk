@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fe9c901_1286c5c7",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-29T01:22:00Z",
+      "side": 1,
+      "message": "specify a listen",
+      "range": {
+        "startLine": 136,
+        "startChar": 27,
+        "endLine": 136,
+        "endChar": 43
+      },
+      "revId": "aff9157aeae3c82aa941bcdc749ca02afaca9c54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "72398050_d707d1bd",
+        "filename": "doc/vpp_integration.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-29T01:22:00Z",
+      "side": 1,
+      "message": "provided",
+      "range": {
+        "startLine": 140,
+        "startChar": 27,
+        "endLine": 140,
+        "endChar": 36
+      },
+      "revId": "aff9157aeae3c82aa941bcdc749ca02afaca9c54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
