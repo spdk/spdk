@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3aa4dfef_dca22628",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-29T03:43:09Z",
+      "side": 1,
+      "message": "looks like this is better to move to the upper line.",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 28,
+        "endChar": 17
+      },
+      "revId": "59e6cd9a0eb2ede5c8b98a7ab63b7854e436ef99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42eb3709_41540f9a",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2018-12-29T03:43:09Z",
+      "side": 1,
+      "message": "maybe move this to the upper line for a better alignment",
+      "range": {
+        "startLine": 118,
+        "startChar": 0,
+        "endLine": 118,
+        "endChar": 10
+      },
+      "revId": "59e6cd9a0eb2ede5c8b98a7ab63b7854e436ef99",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
