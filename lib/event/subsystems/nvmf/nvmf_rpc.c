@@ -246,6 +246,8 @@ dump_nvmf_subsystem(struct spdk_json_write_ctx *w, struct spdk_nvmf_subsystem *s
 
 		spdk_json_write_named_string(w, "serial_number", spdk_nvmf_subsystem_get_sn(subsystem));
 
+		spdk_json_write_named_string(w, "model_number", spdk_nvmf_subsystem_get_mn(subsystem));
+
 		max_namespaces = spdk_nvmf_subsystem_get_max_namespaces(subsystem);
 		if (max_namespaces != 0) {
 			spdk_json_write_named_uint32(w, "max_namespaces", max_namespaces);
@@ -319,6 +321,7 @@ SPDK_RPC_REGISTER("get_nvmf_subsystems", spdk_rpc_get_nvmf_subsystems, SPDK_RPC_
 struct rpc_subsystem_create {
 	char *nqn;
 	char *serial_number;
+	char *model_number;
 	uint32_t max_namespaces;
 	bool allow_any_host;
 };
@@ -326,6 +329,7 @@ struct rpc_subsystem_create {
 static const struct spdk_json_object_decoder rpc_subsystem_create_decoders[] = {
 	{"nqn", offsetof(struct rpc_subsystem_create, nqn), spdk_json_decode_string},
 	{"serial_number", offsetof(struct rpc_subsystem_create, serial_number), spdk_json_decode_string, true},
+	{"model_number", offsetof(struct rpc_subsystem_create, model_number), spdk_json_decode_string, true},
 	{"max_namespaces", offsetof(struct rpc_subsystem_create, max_namespaces), spdk_json_decode_uint32, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem_create, allow_any_host), spdk_json_decode_bool, true},
 };
@@ -378,10 +382,18 @@ spdk_rpc_nvmf_subsystem_create(struct spdk_jsonrpc_request *request,
 		}
 	}
 
+	if (req->model_number) {
+		if (spdk_nvmf_subsystem_set_mn(subsystem, req->model_number)) {
+			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
+			goto invalid;
+		}
+	}
+
 	spdk_nvmf_subsystem_set_allow_any_host(subsystem, req->allow_any_host);
 
 	free(req->nqn);
 	free(req->serial_number);
+	free(req->model_number);
 	free(req);
 
 	spdk_nvmf_subsystem_start(subsystem,
@@ -395,6 +407,7 @@ invalid:
 	if (req) {
 		free(req->nqn);
 		free(req->serial_number);
+		free(req->model_number);
 	}
 	free(req);
 }

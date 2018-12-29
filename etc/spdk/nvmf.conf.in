@@ -226,6 +226,7 @@
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
+  MN SPDK_Controller1
   MaxNamespaces 20
   Namespace Nvme0n1 1
   Namespace Nvme1n1 2
@@ -239,6 +240,7 @@
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000002
+  MN SPDK_Controller2
   Namespace Malloc0
   Namespace Malloc1
   Namespace AIO0

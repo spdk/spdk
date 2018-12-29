@@ -47,6 +47,8 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/utf.h"
 
+#define MODEL_NUMBER_DEFAULT "SPDK bdev Controller"
+
 /*
  * States for parsing valid domains in NQNs according to RFC 1034
  */
@@ -291,6 +293,9 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 
 	memset(subsystem->sn, '0', sizeof(subsystem->sn) - 1);
 	subsystem->sn[sizeof(subsystem->sn) - 1] = '\0';
+
+	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s",
+		 MODEL_NUMBER_DEFAULT);
 
 	tgt->subsystems[sid] = subsystem;
 	tgt->discovery_genctr++;
@@ -1199,6 +1204,39 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 	}
 
 	snprintf(subsystem->sn, sizeof(subsystem->sn), "%s", sn);
+
+	return 0;
+}
+
+const char *
+spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->mn;
+}
+
+int
+spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+{
+	size_t len, max_len;
+
+	if (mn == NULL) {
+		mn = MODEL_NUMBER_DEFAULT;
+	}
+	max_len = sizeof(subsystem->mn) - 1;
+	len = strlen(mn);
+	if (len > max_len) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Invalid mn \"%s\": length %zu > max %zu\n",
+			      mn, len, max_len);
+		return -1;
+	}
+
+	if (!spdk_nvmf_valid_ascii_string(mn, len)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII mn\n");
+		SPDK_LOGDUMP(SPDK_LOG_NVMF, "mn", mn, len);
+		return -1;
+	}
+
+	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s", mn);
 
 	return 0;
 }
