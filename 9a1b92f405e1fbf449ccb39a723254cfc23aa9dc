@@ -51,6 +51,24 @@
       "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cc08297_2f055993",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-29T02:48:41Z",
+      "side": 1,
+      "message": "\u003e Fix typo: The CRC should be calculated from (src + 0) to (src + data_block_size - 1), and from (dst + data_block_size) to (dst + guard_interval - data_block_size - 1).\n\nSorry, please ignore quoted comment. I think you understand my question.",
+      "parentUuid": "e9b5197c_b94ea0cd",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
