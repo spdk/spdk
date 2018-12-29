@@ -95,7 +95,7 @@ int
 nvme_transport_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
-	*(uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
+	*(volatile uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
 	return 0;
 }
 
@@ -103,7 +103,7 @@ int
 nvme_transport_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
-	*(uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
+	*(volatile uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset) = value;
 	return 0;
 }
 
@@ -111,7 +111,7 @@ int
 nvme_transport_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 4);
-	*value = *(uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset);
+	*value = *(volatile uint32_t *)((uintptr_t)&g_ut_nvme_regs + offset);
 	return 0;
 }
 
@@ -119,7 +119,7 @@ int
 nvme_transport_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value)
 {
 	SPDK_CU_ASSERT_FATAL(offset <= sizeof(struct spdk_nvme_registers) - 8);
-	*value = *(uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset);
+	*value = *(volatile uint64_t *)((uintptr_t)&g_ut_nvme_regs + offset);
 	return 0;
 }
 
