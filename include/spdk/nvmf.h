@@ -673,6 +673,26 @@ const char *spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsyst
 int spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn);
 
 /**
+ * Get the model number of the specified subsystem.
+ *
+ * \param subsystem Subsystem to query.
+ *
+ * \return model number of the specified subsystem.
+ */
+const char *spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem);
+
+
+/**
+ * Set the model number for the specified subsystem.
+ *
+ * \param subsystem Subsystem to set for.
+ * \param mn model number to set.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn);
+
+/**
  * Get the NQN of the specified subsystem.
  *
  * \param subsystem Subsystem to query.

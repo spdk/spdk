@@ -52,8 +52,6 @@
 #define KAS_TIME_UNIT_IN_MS 100
 #define KAS_DEFAULT_VALUE (MIN_KEEP_ALIVE_TIMEOUT_IN_MS / KAS_TIME_UNIT_IN_MS)
 
-#define MODEL_NUMBER "SPDK bdev Controller"
-
 /*
  * Report the SPDK version as the firmware revision.
  * SPDK_VERSION_STRING won't fit into FR (only 8 bytes), so try to fit the most important parts.
@@ -1498,7 +1496,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 	 * NVM subsystem fields (reserved for discovery subsystems)
 	 */
 	if (subsystem->subtype == SPDK_NVMF_SUBTYPE_NVME) {
-		spdk_strcpy_pad(cdata->mn, MODEL_NUMBER, sizeof(cdata->mn), ' ');
+		spdk_strcpy_pad(cdata->mn, spdk_nvmf_subsystem_get_mn(subsystem), sizeof(cdata->mn), ' ');
 		spdk_strcpy_pad(cdata->sn, spdk_nvmf_subsystem_get_sn(subsystem), sizeof(cdata->sn), ' ');
 		cdata->kas = KAS_DEFAULT_VALUE;
 
