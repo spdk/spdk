@@ -3562,6 +3562,7 @@ Example response:
       ],
       "allow_any_host": false,
       "serial_number": "abcdef",
+      "model_number": "ghijklmnop",
       "namespaces": [
         {"nsid": 1, "name": "Malloc2"},
         {"nsid": 2, "name": "Nvme0n1"}
@@ -3581,6 +3582,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 nqn                     | Required | string      | Subsystem NQN
 serial_number           | Optional | string      | Serial number of virtual controller
+model_number            | Optional | string      | Model number of virtual controller
 max_namespaces          | Optional | number      | Maximum number of namespaces that can be attached to the subsystem. Default: 0 (Unlimited)
 allow_any_host          | Optional | boolean     | Allow any host (`true`) or enforce allowed host whitelist (`false`). Default: `false`.
 
@@ -3597,6 +3599,7 @@ Example request:
     "nqn": "nqn.2016-06.io.spdk:cnode1",
     "allow_any_host": false,
     "serial_number": "abcdef",
+    "model_number": "ghijklmnop"
   }
 }
 ~~~

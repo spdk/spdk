@@ -46,7 +46,7 @@ bdevs+="$($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 modprobe -v nvme-rdma
 
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -d SPDK_Controller1
 for bdev in $bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 done
@@ -62,6 +62,11 @@ nvme list
 for ctrl in /dev/nvme?; do
 	nvme id-ctrl $ctrl
 	nvme smart-log $ctrl
+	nvme_model = $(nvme id-ctrl $ctrl | grep -w mn | sed 's/^.*: //')
+	if [ "$nvme_model" != "SPDK_Controller1" ]; then
+		echo "Wrong model number for controller" $nvme_model
+		exit 1
+	fi
 done
 
 for ns in /dev/nvme?n*; do
