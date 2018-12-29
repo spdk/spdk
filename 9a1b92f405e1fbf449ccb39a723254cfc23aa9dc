@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "188cafbc_1b235384",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-29T02:39:19Z",
+      "side": 1,
+      "message": "Could you explain the difference between \"extended LBA payload\" and \"LBA payload\" for me? I\u0027m not familiar with DIF/DIX.",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "200fb620_5fb387ef",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-29T02:39:19Z",
+      "side": 1,
+      "message": "The CRC should be calculated from (dst + 0) to (dst + guard_interval - 1), so this calculation should be done after following while, am I right?",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
