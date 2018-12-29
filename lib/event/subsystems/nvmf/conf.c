@@ -213,6 +213,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int lcore;
 	bool allow_any_host;
 	const char *sn;
+	const char *mn;
 	struct spdk_nvmf_subsystem *subsystem;
 	int num_ns;
 
@@ -269,6 +270,19 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
 		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", nqn, sn);
+		spdk_nvmf_subsystem_destroy(subsystem);
+		subsystem = NULL;
+		goto done;
+	}
+
+	mn = spdk_conf_section_get_val(sp, "MN");
+	if (mn == NULL) {
+		SPDK_ERRLOG("Subsystem %s: missing model number\n", nqn);
+		return -1;
+	}
+
+	if (spdk_nvmf_subsystem_set_mn(subsystem, mn)) {
+		SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", nqn, mn);
 		spdk_nvmf_subsystem_destroy(subsystem);
 		subsystem = NULL;
 		goto done;

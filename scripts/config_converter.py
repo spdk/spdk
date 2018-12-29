@@ -316,6 +316,7 @@ def get_nvmf_subsystem_json(config, section):
         ["Host", "hosts", list, []],
         ["AllowAnyHost", "allow_any_host", bool, True],
         ["SN", "serial_number", str, ""],
+        ["MN", "model_number", str, ""],
         ["MaxNamespaces", "max_namespaces", str, ""],
     ]
     listen_address = []
@@ -350,7 +351,7 @@ def get_nvmf_subsystem_json(config, section):
                     "nsid": int(nsid),
                     "bdev_name": items[0],
                 })
-    parameters = to_json_params(params[0:4])
+    parameters = to_json_params(params[0:5])
     parameters['listen_addresses'] = listen_address
     parameters['namespaces'] = namespaces
     nvmf_subsystem = {
@@ -358,8 +359,8 @@ def get_nvmf_subsystem_json(config, section):
         "method": "construct_nvmf_subsystem"
     }
 
-    if params[4][3]:
-        nvmf_subsystem['params']['max_namespaces'] = int(params[4][3])
+    if params[5][3]:
+        nvmf_subsystem['params']['max_namespaces'] = int(params[5][3])
 
     return [nvmf_subsystem]
 

@@ -377,6 +377,7 @@ struct rpc_subsystem {
 	bool allow_any_host;
 	char *pci_address;
 	char *serial_number;
+	char *model_number;
 	struct rpc_namespaces namespaces;
 	uint32_t num_ns;
 };
@@ -388,6 +389,7 @@ free_rpc_subsystem(struct rpc_subsystem *req)
 		free(req->mode);
 		free(req->nqn);
 		free(req->serial_number);
+		free(req->model_number);
 		free_rpc_namespaces(&req->namespaces);
 		free_rpc_listen_addresses(&req->listen_addresses);
 		free_rpc_hosts(&req->hosts);
@@ -419,6 +421,7 @@ static const struct spdk_json_object_decoder rpc_subsystem_decoders[] = {
 	{"hosts", offsetof(struct rpc_subsystem, hosts), decode_rpc_hosts, true},
 	{"allow_any_host", offsetof(struct rpc_subsystem, allow_any_host), spdk_json_decode_bool, true},
 	{"serial_number", offsetof(struct rpc_subsystem, serial_number), spdk_json_decode_string, true},
+	{"model_number", offsetof(struct rpc_subsystem, model_number), spdk_json_decode_string, true},
 	{"namespaces", offsetof(struct rpc_subsystem, namespaces), decode_rpc_namespaces, true},
 	{"max_namespaces", offsetof(struct rpc_subsystem, num_ns), spdk_json_decode_uint32, true},
 };
@@ -535,6 +538,11 @@ spdk_rpc_construct_nvmf_subsystem(struct spdk_jsonrpc_request *request,
 
 	if (spdk_nvmf_subsystem_set_sn(subsystem, req->serial_number)) {
 		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", req->nqn, req->serial_number);
+		goto invalid;
+	}
+
+	if (spdk_nvmf_subsystem_set_mn(subsystem, req->model_number)) {
+		SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", req->nqn, req->model_number);
 		goto invalid;
 	}
 

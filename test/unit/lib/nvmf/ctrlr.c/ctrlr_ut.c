@@ -73,6 +73,11 @@ DEFINE_STUB(spdk_nvmf_subsystem_get_sn,
 	    (const struct spdk_nvmf_subsystem *subsystem),
 	    NULL);
 
+DEFINE_STUB(spdk_nvmf_subsystem_get_mn,
+	    const char *,
+	    (const struct spdk_nvmf_subsystem *subsystem),
+	    NULL);
+
 DEFINE_STUB(spdk_nvmf_subsystem_get_ns,
 	    struct spdk_nvmf_ns *,
 	    (struct spdk_nvmf_subsystem *subsystem, uint32_t nsid),
