@@ -213,6 +213,9 @@ Added optional mechanism to modify the RDMA transport's behavior when creating p
 By default, the RDMA transport will use the ibverbs library to create protection domains and register memory.
 Using `spdk_nvme_rdma_init_hooks` will subvert that and use an existing registration.
 
+Add model number as parameter to construct_nvmf_subsystem (-d option),
+rather than using hardcoded define.
+
 ### bdev
 
 Added `enable_bdev_histogram` and `get_bdev_histogram` RPC commands to allow gathering latency data for specified bdev.

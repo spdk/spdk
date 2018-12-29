@@ -213,6 +213,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int lcore;
 	bool allow_any_host;
 	const char *sn;
+	const char *mn;
 	struct spdk_nvmf_subsystem *subsystem;
 	int num_ns;
 
@@ -272,6 +273,22 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 		spdk_nvmf_subsystem_destroy(subsystem);
 		subsystem = NULL;
 		goto done;
+	}
+
+	mn = spdk_conf_section_get_val(sp, "MN");
+	if (mn == NULL) {
+		SPDK_NOTICELOG(
+			"Subsystem %s: missing model number, will use default\n",
+			nqn);
+	}
+
+	if (mn != NULL) {
+		if (spdk_nvmf_subsystem_set_mn(subsystem, mn)) {
+			SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", nqn, mn);
+			spdk_nvmf_subsystem_destroy(subsystem);
+			subsystem = NULL;
+			goto done;
+		}
 	}
 
 	for (i = 0; ; i++) {
