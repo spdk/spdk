@@ -3624,24 +3624,25 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Opening descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
 
-	pthread_mutex_lock(&bdev->internal.mutex);
-
-	if (write && bdev->internal.claim_module) {
-		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
-			    bdev->name, bdev->internal.claim_module->name);
-		free(desc);
-		pthread_mutex_unlock(&bdev->internal.mutex);
-		return -EPERM;
-	}
-
-	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
-
 	desc->bdev = bdev;
 	desc->thread = thread;
 	desc->remove_cb = remove_cb;
 	desc->remove_ctx = remove_ctx;
 	desc->write = write;
 	*_desc = desc;
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+
+	if (write && bdev->internal.claim_module) {
+		SPDK_ERRLOG("Could not open %s - %s module already claimed it\n",
+			    bdev->name, bdev->internal.claim_module->name);
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		free(desc);
+		*_desc = NULL;
+		return -EPERM;
+	}
+
+	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
 
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
