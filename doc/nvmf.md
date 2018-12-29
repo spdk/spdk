@@ -5,13 +5,11 @@
 
 # NVMe-oF Target Getting Started Guide {#nvmf_getting_started}
 
-The NVMe over Fabrics target is a user space application that presents block devices over the
-network using RDMA. It requires an RDMA-capable NIC with its corresponding OFED software package
-installed to run. The target should work on all flavors of RDMA, but it is currently tested against
-Mellanox NICs (RoCEv2) and Chelsio NICs (iWARP).
+The SPDK NVMe over Fabrics target is a user space application that presents block devices over a fabrics
+such as Ethernet, Infiniband or Fibre Channel. SPDK currently supports RDMA and TCP transports.
 
-The NVMe over Fabrics specification defines subsystems that can be exported over the network. SPDK
-has chosen to call the software that exports these subsystems a "target", which is the term used
+The NVMe over Fabrics specification defines subsystems that can be exported over different transports.
+SPDK has chosen to call the software that exports these subsystems a "target", which is the term used
 for iSCSI. The specification refers to the "client" that connects to the target as a "host". Many
 people will also refer to the host as an "initiator", which is the equivalent thing in iSCSI
 parlance. SPDK will try to stick to the terms "target" and "host" to match the specification.
@@ -23,11 +21,15 @@ If you want to kill the application using signal, make sure use the SIGTERM, the
 will release all the share memory resource before exit, the SIGKILL will make the share memory
 resource have no chance to be released by application, you may need to release the resource manually.
 
-## Prerequisites {#nvmf_prereqs}
+## RDMA transport support {#nvmf_rdma_transport}
 
-This guide starts by assuming that you can already build the standard SPDK distribution on your
-platform. By default, the NVMe over Fabrics target is not built. To build nvmf_tgt there are some
-additional dependencies.
+It requires an RDMA-capable NIC with its corresponding OFED (OpenFabrics Enterprise Distribution)
+software package installed to run. Maybe OS distributions provide packages, but OFED is also
+available [here](https://downloads.openfabrics.org/OFED/).
+
+### Prerequisites {#nvmf_prereqs}
+
+To build nvmf_tgt with the RDMA transport, there are some additional dependencies.
 
 Fedora:
 ~~~{.sh}
@@ -48,10 +50,10 @@ make
 
 Once built, the binary will be in `app/nvmf_tgt`.
 
-## Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
+### Prerequisites for InfiniBand/RDMA Verbs {#nvmf_prereqs_verbs}
 
-Before starting our NVMe-oF target we must load the InfiniBand and RDMA modules that allow
-userspace processes to use InfiniBand/RDMA verbs directly.
+Before starting our NVMe-oF target with the RDMA transport we must load the InfiniBand and RDMA modules
+that allow userspace processes to use InfiniBand/RDMA verbs directly.
 
 ~~~{.sh}
 modprobe ib_cm
@@ -65,7 +67,7 @@ modprobe rdma_cm
 modprobe rdma_ucm
 ~~~
 
-## Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
+### Prerequisites for RDMA NICs {#nvmf_prereqs_rdma_nics}
 
 Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP addresses.
 
@@ -75,7 +77,7 @@ Before starting our NVMe-oF target we must detect RDMA NICs and assign them IP a
 ls /sys/class/infiniband/*/device/net
 ~~~
 
-### Mellanox ConnectX-3 RDMA NICs
+#### Mellanox ConnectX-3 RDMA NICs
 
 ~~~{.sh}
 modprobe mlx4_core
@@ -83,19 +85,35 @@ modprobe mlx4_ib
 modprobe mlx4_en
 ~~~
 
-### Mellanox ConnectX-4 RDMA NICs
+#### Mellanox ConnectX-4 RDMA NICs
 
 ~~~{.sh}
 modprobe mlx5_core
 modprobe mlx5_ib
 ~~~
 
-### Assigning IP addresses to RDMA NICs
+#### Assigning IP addresses to RDMA NICs
 
 ~~~{.sh}
 ifconfig eth1 192.168.100.8 netmask 255.255.255.0 up
 ifconfig eth2 192.168.100.9 netmask 255.255.255.0 up
 ~~~
+
+### RDMA Limitations {#nvmf_rdma_limitations}
+
+As RDMA NICs put a limitation on the number of memory regions registered, the SPDK NVMe-oF
+target application may eventually start failing to allocate more DMA-able memory. This is
+an imperfection of the DPDK dynamic memory management and is most likely to occur with too
+many 2MB hugepages reserved at runtime. One type of memory bottleneck is the number of NIC memory
+regions, e.g., some NICs report as many as 2048 for the maximum number of memory regions. This
+gives us a 4GB memory limit with 2MB hugepages for the total memory regions. It can be overcome by
+using 1GB hugepages or by pre-reserving memory at application startup with `--mem-size` or `-s`
+option. All pre-reserved memory will be registered as a single region, but won't be returned to the
+system until the SPDK application is terminated.
+
+## TCP transport support {#nvmf_tcp_transport}
+
+The transport is built into the nvmf_tgt by default, and it does not need any special libraries.
 
 ## Configuring the SPDK NVMe over Fabrics Target {#nvmf_config}
 
@@ -111,16 +129,20 @@ of the new script `scripts/config_converter.py`.
 
 Start the nvmf_tgt application with elevated privileges. Once the target is started,
 the nvmf_create_transport rpc can be used to initialize a given transport. Below is an
-example where the target is started and the RDMA transport is configured with an I/O
-unit size of 8192 bytes, 4 max qpairs per controller, and an in capsule data size of 0 bytes.
+example where the target is started and configured with two different transports.
+The RDMA transport is configured with an I/O unit size of 8192 bytes, 4 max qpairs per controller,
+and an in capsule data size of 0 bytes. The TCP transport is configured with an I/O unit size of
+16384 bytes, 8 max qpairs per controller, and an in capsule data size of 8192 bytes.
 
 ~~~{.sh}
 app/nvmf_tgt/nvmf_tgt
 scripts/rpc.py nvmf_create_transport -t RDMA -u 8192 -p 4 -c 0
+scripts/rpc.py nvmf_create_transport -t TCP -u 16348 -p 8 -c 8192
 ~~~
 
 Below is an example of creating a malloc bdev and assigning it to a subsystem. Adjust the bdevs,
-NQN, serial number, and IP address to your own circumstances.
+NQN, serial number, and IP address with RDMA transport to your own circumstances. If you replace
+"rdma" with "TCP", then the subsystem will add a listener with TCP transport.
 
 ~~~{.sh}
 scripts/rpc.py construct_malloc_bdev -b Malloc0 512 512
@@ -192,13 +214,18 @@ app/nvmf_tgt/nvmf_tgt -m 0xF000000
 ## Configuring the Linux NVMe over Fabrics Host {#nvmf_host}
 
 Both the Linux kernel and SPDK implement an NVMe over Fabrics host.
-The Linux kernel NVMe-oF RDMA host support is provided by the `nvme-rdma` driver.
+The Linux kernel NVMe-oF RDMA host support is provided by the `nvme-rdma` driver
+(to support RDMA transport) and `nvme-tcp` (to support TCP transport). And the
+following shows two different commands for loading the driver.
 
 ~~~{.sh}
 modprobe nvme-rdma
+modprobe nvme-tcp
 ~~~
 
 The nvme-cli tool may be used to interface with the Linux kernel NVMe over Fabrics host.
+See below for examples of the discover, connect and disconnect commands. In all three instances, the
+transport can be changed to TCP by interchanging 'rdma' for 'tcp'.
 
 Discovery:
 ~~~{.sh}
@@ -219,15 +246,3 @@ nvme disconnect -n "nqn.2016-06.io.spdk:cnode1"
 
 SPDK has a tracing framework for capturing low-level event information at runtime.
 @ref nvmf_tgt_tracepoints enable analysis of both performance and application crashes.
-
-## RDMA Limitations {#nvmf_rdma_limitations}
-
-As RDMA NICs put a limitation on the number of memory regions registered, the SPDK NVMe-oF
-target application may eventually start failing to allocate more DMA-able memory. This is
-an imperfection of the DPDK dynamic memory management and is most likely to occur with too
-many 2MB hugepages reserved at runtime. Some of our NICs report as many as 2048 for the
-maximum number of memory regions, meaning that exactly that many pages can be allocated.
-With 2MB hugepages, this gives us a 4GB memory limit. It can be overcome by using 1GB
-hugepages or by pre-reserving memory at application startup with `--mem-size` or `-s`
-option. All pre-reserved memory will be registered as a single region, but won't be
-returned to the system until the SPDK application is terminated.
