@@ -143,6 +143,7 @@ def get_nvmf_subsystems(client):
 def construct_nvmf_subsystem(client,
                              nqn,
                              serial_number,
+                             model_number,
                              listen_addresses=None,
                              hosts=None,
                              allow_any_host=False,
@@ -153,6 +154,7 @@ def construct_nvmf_subsystem(client,
     Args:
         nqn: Subsystem NQN.
         serial_number: Serial number of virtual controller.
+        model_number: Model number of virtual controller.
         listen_addresses: Array of listen_address objects (optional).
         hosts: Array of strings containing allowed host NQNs (optional). Default: No hosts allowed.
         allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
@@ -165,6 +167,7 @@ def construct_nvmf_subsystem(client,
     params = {
         'nqn': nqn,
         'serial_number': serial_number,
+        'modell_number': model_number,
     }
 
     if max_namespaces:
@@ -188,6 +191,7 @@ def construct_nvmf_subsystem(client,
 def nvmf_subsystem_create(client,
                           nqn,
                           serial_number,
+                          model_number,
                           allow_any_host=False,
                           max_namespaces=0):
     """Construct an NVMe over Fabrics target subsystem.
@@ -195,6 +199,7 @@ def nvmf_subsystem_create(client,
     Args:
         nqn: Subsystem NQN.
         serial_number: Serial number of virtual controller.
+        model_number: Serial number of virtual controller.
         allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
         max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
 
@@ -207,6 +212,9 @@ def nvmf_subsystem_create(client,
 
     if serial_number:
         params['serial_number'] = serial_number
+
+    if model_number:
+        params['model_number'] = model_number
 
     if allow_any_host:
         params['allow_any_host'] = True

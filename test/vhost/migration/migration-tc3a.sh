@@ -109,7 +109,7 @@ function host1_start_nvmf()
 	$rpc_nvmf nvmf_create_transport -t RDMA -u 8192 -p 4
 	$SPDK_BUILD_DIR/scripts/gen_nvme.sh --json | $rpc_nvmf load_subsystem_config
 
-	$rpc_nvmf nvmf_subsystem_create nqn.2018-02.io.spdk:cnode1 -a -s SPDK01
+	$rpc_nvmf nvmf_subsystem_create nqn.2018-02.io.spdk:cnode1 -a -s SPDK01 -d SPDK_Ctrl01
 	$rpc_nvmf nvmf_subsystem_add_ns nqn.2018-02.io.spdk:cnode1 Nvme0n1
 	$rpc_nvmf nvmf_subsystem_add_listener nqn.2018-02.io.spdk:cnode1 -t rdma -a $RDMA_TARGET_IP -s 4420
 }

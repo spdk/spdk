@@ -212,6 +212,7 @@
             ],
             "allow_any_host": false,
             "serial_number": "SPDK00000000000001",
+            "model_number": "SPDK_Controller1",
             "nqn": "nqn.2016-06.io.spdk:cnode1"
           },
           "method": "construct_nvmf_subsystem"
@@ -249,6 +250,7 @@
             ],
             "allow_any_host": false,
             "serial_number": "SPDK00000000000002",
+            "model_number": "SPDK_Controller2",
             "nqn": "nqn.2016-06.io.spdk:cnode2"
           },
           "method": "construct_nvmf_subsystem"

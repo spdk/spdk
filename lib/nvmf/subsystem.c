@@ -1191,6 +1191,36 @@ spdk_nvmf_subsystem_set_sn(struct spdk_nvmf_subsystem *subsystem, const char *sn
 }
 
 const char *
+spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->mn;
+}
+
+int
+spdk_nvmf_subsystem_set_mn(struct spdk_nvmf_subsystem *subsystem, const char *mn)
+{
+	size_t len, max_len;
+
+	max_len = sizeof(subsystem->mn) - 1;
+	len = strlen(mn);
+	if (len > max_len) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Invalid mn \"%s\": length %zu > max %zu\n",
+			      mn, len, max_len);
+		return -1;
+	}
+
+	if (!spdk_nvmf_valid_ascii_string(mn, len)) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Non-ASCII mn\n");
+		SPDK_LOGDUMP(SPDK_LOG_NVMF, "mn", mn, len);
+		return -1;
+	}
+
+	snprintf(subsystem->mn, sizeof(subsystem->mn), "%s", mn);
+
+	return 0;
+}
+
+const char *
 spdk_nvmf_subsystem_get_nqn(struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->subnqn;

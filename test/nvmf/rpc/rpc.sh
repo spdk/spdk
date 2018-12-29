@@ -45,7 +45,7 @@ MALLOC_BLOCK_SIZE=512
 bdevs="$bdevs $($rpc_py construct_malloc_bdev $MALLOC_BDEV_SIZE $MALLOC_BLOCK_SIZE)"
 
 # Disallow host NQN and make sure connect fails
-$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -d SPDK_Controller1
 for bdev in $bdevs; do
 	$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 done
@@ -82,7 +82,7 @@ do
 	j=0
 	for bdev in $bdevs; do
 		let j=j+1
-		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
+		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001 -d SPDK_Controller1
 		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev -n 5
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j
@@ -119,7 +119,7 @@ do
 	j=0
 	for bdev in $bdevs; do
 		let j=j+1
-		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001
+		$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$j -s SPDK00000000000001 -d SPDK_Controller1
 		$rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode$j -t RDMA -a $NVMF_FIRST_TARGET_IP -s $NVMF_PORT
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$j $bdev
 		$rpc_py nvmf_subsystem_allow_any_host nqn.2016-06.io.spdk:cnode$j

@@ -49,7 +49,7 @@ function test_perf()
 	TYPE=$1
 	NVMF_TARGET_IP=$2
 	$rpc_py nvmf_create_transport -t $TYPE -p 4
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -d SPDK_Controller1
 	for bdev in $bdevs; do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 	done
@@ -75,7 +75,7 @@ function test_perf()
 			ls_nested_guid=$($rpc_py construct_lvol_store $lb_guid lvs_n_0)
 			get_lvs_free_mb $ls_nested_guid
 			lb_nested_guid=$($rpc_py construct_lvol_bdev -u $ls_nested_guid lbd_nest_0 $free_mb)
-			$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001
+			$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK00000000000001 -d SPDK_Controller1
 			for bdev in $lb_nested_guid; do
 				$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 			done

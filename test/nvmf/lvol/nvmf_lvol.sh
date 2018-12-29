@@ -83,7 +83,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 		ns_bdevs+="$lb_name "
 	done
 
-	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i
+	$rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode$i -a -s SPDK$i -d SPDK_Ctrl$i
 	for bdev in $ns_bdevs; do
 		$rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode$i $bdev
 	done

@@ -72,6 +72,9 @@ Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
 the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
 protocol via TCP/IP from the host.
 
+Add module number as parameter to construct_nvmf_subsystem (-d option),
+rather than using hardcoded define.
+
 ### bdev
 
 On shutdown, bdev unregister now proceeds in top-down fashion, with
