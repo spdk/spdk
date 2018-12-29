@@ -289,6 +289,7 @@ struct spdk_nvmf_subsystem {
 	struct spdk_nvmf_tgt			*tgt;
 
 	char sn[SPDK_NVME_CTRLR_SN_LEN + 1];
+	char mn[SPDK_NVME_CTRLR_MN_LEN + 1];
 
 	/* Array of pointers to namespaces of size max_nsid indexed by nsid - 1 */
 	struct spdk_nvmf_ns			**ns;
