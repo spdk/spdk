@@ -82,6 +82,11 @@ is specified, use that specified nbd device. If it's not specified, pick availab
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
 device info. nvme_manage tool can be used to invoke this.
 
+### nvmf
+
+Add model number as parameter to construct_nvmf_subsystem (-d option),
+rather than using hardcoded define.
+
 ## v19.01:
 
 ### ocf bdev
