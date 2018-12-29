@@ -43,6 +43,7 @@
 
 #define SPDK_NVMF_MAX_NAMESPACES (1 << 14)
 
+
 struct spdk_nvmf_tgt_conf *g_spdk_nvmf_tgt_conf = NULL;
 uint32_t g_spdk_nvmf_tgt_max_subsystems = 0;
 
@@ -213,6 +214,7 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 	int lcore;
 	bool allow_any_host;
 	const char *sn;
+	const char *mn;
 	struct spdk_nvmf_subsystem *subsystem;
 	int num_ns;
 
@@ -269,6 +271,20 @@ spdk_nvmf_parse_subsystem(struct spdk_conf_section *sp)
 
 	if (spdk_nvmf_subsystem_set_sn(subsystem, sn)) {
 		SPDK_ERRLOG("Subsystem %s: invalid serial number '%s'\n", nqn, sn);
+		spdk_nvmf_subsystem_destroy(subsystem);
+		subsystem = NULL;
+		goto done;
+	}
+
+	mn = spdk_conf_section_get_val(sp, "MN");
+	if (mn == NULL) {
+		SPDK_NOTICELOG(
+			"Subsystem %s: missing model number, will use default\n",
+			nqn);
+	}
+
+	if (spdk_nvmf_subsystem_set_mn(subsystem, mn)) {
+		SPDK_ERRLOG("Subsystem %s: invalid model number '%s'\n", nqn, mn);
 		spdk_nvmf_subsystem_destroy(subsystem);
 		subsystem = NULL;
 		goto done;
