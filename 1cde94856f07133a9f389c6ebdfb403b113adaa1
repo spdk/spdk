@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a745279_96cf4b8d",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-29T21:27:26Z",
+      "side": 1,
+      "message": "Transports here doesn\u0027t need to be capitalized",
+      "revId": "1cde94856f07133a9f389c6ebdfb403b113adaa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc7817ba_24eaddcc",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-29T21:27:26Z",
+      "side": 1,
+      "message": "Should probably spell out OFED in () or add a weblink",
+      "revId": "1cde94856f07133a9f389c6ebdfb403b113adaa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2abd2232_f200b125",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-29T21:27:26Z",
+      "side": 1,
+      "message": "The whole sentence about \"The target should work\" and what its been tested on really shouldn\u0027t go in the documentation, including the comment about testing on Intel NICs later.  That should have been in the release notes.",
+      "revId": "1cde94856f07133a9f389c6ebdfb403b113adaa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0cedf132_6327ca46",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2018-12-29T21:27:26Z",
+      "side": 1,
+      "message": "I know you didn\u0027t write this but while you\u0027re in here editing can you change \"Some of our NICs report\" to \"Some NICS have been know to report\"so it doesn\u0027t sound like SPDK doc authors are always Intel people :)",
+      "revId": "1cde94856f07133a9f389c6ebdfb403b113adaa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
