@@ -220,6 +220,12 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 	return subsystem->sn;
 }
 
+const char *
+spdk_nvmf_subsystem_get_mn(const struct spdk_nvmf_subsystem *subsystem)
+{
+	return subsystem->mn;
+}
+
 void
 spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 {
