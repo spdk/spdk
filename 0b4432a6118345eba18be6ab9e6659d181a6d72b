@@ -52,6 +52,24 @@
       "revId": "0b4432a6118345eba18be6ab9e6659d181a6d72b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3173a3a4_595da200",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1278,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-31T15:22:14Z",
+      "side": 1,
+      "message": "It\u0027s done now. I must have messed up my rebase before.\n\nThanks Shuhei, it\u0027s a good catch",
+      "parentUuid": "dd3fb8d2_21cac2ea",
+      "revId": "0b4432a6118345eba18be6ab9e6659d181a6d72b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
