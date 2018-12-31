@@ -22,6 +22,30 @@
       "revId": "a170125262977f53dff56027a37a8ec650888eea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d4f4d98_afdf135b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 343,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-31T15:28:38Z",
+      "side": 1,
+      "message": "Hmm, maybe.\n\nUltimately I\u0027d like to get rid of the vdev parameter entirely, but that requires some other changes which I don\u0027t want to push on right now. The patch series is already huge, so for now I\u0027d leave that as is.",
+      "parentUuid": "d84b7cf8_9f3704e2",
+      "range": {
+        "startLine": 342,
+        "startChar": 0,
+        "endLine": 343,
+        "endChar": 53
+      },
+      "revId": "a170125262977f53dff56027a37a8ec650888eea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
