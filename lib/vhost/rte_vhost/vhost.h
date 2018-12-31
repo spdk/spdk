@@ -34,6 +34,7 @@
 #ifndef _VHOST_NET_CDEV_H_
 #define _VHOST_NET_CDEV_H_
 #include <stdint.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/queue.h>
@@ -41,11 +42,14 @@
 #include <linux/vhost.h>
 #include <linux/virtio_net.h>
 #include <sys/socket.h>
+#include <sys/un.h>
 #include <linux/if.h>
+#include <pthread.h>
 
 #include <rte_log.h>
 #include <rte_ether.h>
 
+#include "fd_man.h"
 #include "rte_vhost.h"
 #include "vhost_user.h"
 
@@ -217,6 +221,66 @@ struct virtio_net {
 	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
 
+/* The vhost_user, vhost_user_socket, vhost_user_connection, and reconnect
+ * declarations are temporary measures for moving AF_UNIX code into
+ * trans_af_unix.c.  They will be cleaned up as socket.c is untangled from
+ * trans_af_unix.c.
+ */
+TAILQ_HEAD(vhost_user_connection_list, vhost_user_connection);
+
+/*
+ * Every time rte_vhost_driver_register() is invoked, an associated
+ * vhost_user_socket struct will be created.
+ */
+struct vhost_user_socket {
+	struct vhost_user_connection_list conn_list;
+	pthread_mutex_t conn_mutex;
+	char *path;
+	int socket_fd;
+	struct sockaddr_un un;
+	bool is_server;
+	bool reconnect;
+	bool dequeue_zero_copy;
+
+	/*
+	 * The "supported_features" indicates the feature bits the
+	 * vhost driver supports. The "features" indicates the feature
+	 * bits after the rte_vhost_driver_features_disable/enable().
+	 * It is also the final feature bits used for vhost-user
+	 * features negotiation.
+	 */
+	uint64_t supported_features;
+	uint64_t features;
+
+	struct vhost_device_ops const *notify_ops;
+};
+
+struct vhost_user_connection {
+	struct vhost_user_socket *vsocket;
+	int connfd;
+	int vid;
+
+	TAILQ_ENTRY(vhost_user_connection) next;
+};
+
+#define MAX_VHOST_SOCKET 1024
+struct vhost_user {
+	struct vhost_user_socket *vsockets[MAX_VHOST_SOCKET];
+	struct fdset fdset;
+	int vsocket_cnt;
+	pthread_mutex_t mutex;
+};
+
+extern struct vhost_user vhost_user;
+
+int create_unix_socket(struct vhost_user_socket *vsocket);
+int vhost_user_start_server(struct vhost_user_socket *vsocket);
+int vhost_user_start_client(struct vhost_user_socket *vsocket);
+
+extern pthread_t reconn_tid;
+
+int vhost_user_reconnect_init(void);
+bool vhost_user_remove_reconnect(struct vhost_user_socket *vsocket);
 
 #define VHOST_LOG_PAGE	4096
 
