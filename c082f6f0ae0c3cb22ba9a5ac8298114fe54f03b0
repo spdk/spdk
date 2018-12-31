@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6d4795f_8ad4931d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 18
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2018-12-31T11:44:10Z",
+      "side": 1,
+      "message": "Do you think the log messages are not described accurately? This patch just add a new param for spdk_dif_verify_copy to record (not inject) error info.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 32
+      },
+      "revId": "c082f6f0ae0c3cb22ba9a5ac8298114fe54f03b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
