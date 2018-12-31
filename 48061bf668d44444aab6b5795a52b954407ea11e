@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d970aa78_1e56ca59",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-31T09:55:37Z",
+      "side": 1,
+      "message": "could we use iter_pci_class_code here?\nWhy is this wrapped in a function anyway? I\u0027d suggest to call all this code directly. It can be refactored and encapsulated later, but for now let\u0027s keep it simple.",
+      "range": {
+        "startLine": 15,
+        "startChar": 12,
+        "endLine": 15,
+        "endChar": 22
+      },
+      "revId": "48061bf668d44444aab6b5795a52b954407ea11e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47552d0b_6d559dbd",
+        "filename": "scripts/gen_nvme.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2018-12-31T09:55:37Z",
+      "side": 1,
+      "message": "if you inline this function, then you could append to `bdfs` directly",
+      "range": {
+        "startLine": 18,
+        "startChar": 3,
+        "endLine": 18,
+        "endChar": 11
+      },
+      "revId": "48061bf668d44444aab6b5795a52b954407ea11e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
