@@ -207,6 +207,7 @@ vhost_new_device(uint64_t features)
 	vhost_devices[i] = dev;
 	dev->vid = i;
 	dev->features = features;
+	dev->trans_ops = &af_unix_trans_ops;
 
 	return i;
 }

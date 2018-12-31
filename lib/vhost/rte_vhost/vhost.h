@@ -168,6 +168,16 @@ struct guest_page {
 };
 
 /**
+ * A structure containing function pointers for transport-specific operations.
+ */
+struct vhost_transport_ops {
+	/** empty for now */
+};
+
+/** The traditional AF_UNIX vhost-user protocol transport. */
+extern const struct vhost_transport_ops af_unix_trans_ops;
+
+/**
  * Device structure contains all configuration information relating
  * to the device.
  */
@@ -195,6 +205,7 @@ struct virtio_net {
 	uint16_t		mtu;
 
 	struct vhost_device_ops const *notify_ops;
+	struct vhost_transport_ops const *trans_ops;
 
 	uint32_t		nr_guest_pages;
 	uint32_t		max_guest_pages;
