@@ -946,6 +946,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
 	pqpair->sq_tail = pqpair->cq_head = 0;
+	pqpair->sq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -1254,6 +1255,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 			} else {
 				nvme_complete_request(req, cpl);
+				pqpair->sq_head = cpl->sqhd;
 			}
 		}
 
