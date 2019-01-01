@@ -946,6 +946,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
 	pqpair->sq_tail = pqpair->cq_head = 0;
+	pqpair->sq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -1254,6 +1255,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 			} else {
 				nvme_complete_request(req, cpl);
+				pqpair->sq_head = cpl->sqhd;
 			}
 		}
 
@@ -2107,6 +2109,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (tr->active) {
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
+			SPDK_ERRLOG("cpl may point to a previous completed sb entry, current sq_head=%u, cpl->sqhd=%u\n", pqpair->sq_head, cpl->sqhd);
 			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
 			nvme_qpair_print_completion(qpair, cpl);
 			assert(0);
