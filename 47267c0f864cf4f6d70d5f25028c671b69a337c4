@@ -16,6 +16,24 @@
       "revId": "47267c0f864cf4f6d70d5f25028c671b69a337c4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f0bf4a2_780911cd",
+        "filename": "lib/util/string.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-02T14:10:49Z",
+      "side": 1,
+      "message": "look into the while loop. If first realloc pass and second fail buffer will be freed anyway by first realloc() call.",
+      "parentUuid": "da8fb183_75fa87b2",
+      "revId": "47267c0f864cf4f6d70d5f25028c671b69a337c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
