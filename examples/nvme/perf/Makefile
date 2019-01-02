@@ -55,3 +55,6 @@ install: $(APP)
 	$(INSTALL_EXAMPLE)
 
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
+
+uninstall:
+	$(UNINSTALL_EXAMPLE)
