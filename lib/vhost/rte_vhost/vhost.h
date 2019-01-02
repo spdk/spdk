@@ -48,7 +48,6 @@
 #include <rte_log.h>
 #include <rte_ether.h>
 
-#include "fd_man.h"
 #include "rte_vhost.h"
 #include "vhost_user.h"
 
@@ -260,11 +259,6 @@ struct virtio_net {
 	int                     mem_table_fds[VHOST_MEMORY_MAX_NREGIONS];
 } __rte_cache_aligned;
 
-/* The vhost_user and reconnect declarations are temporary measures for
- * moving AF_UNIX code into trans_af_unix.c. They will be cleaned up as
- * socket.c is untangled from trans_af_unix.c.
- */
-
 /*
  * Every time rte_vhost_driver_register() is invoked, an associated
  * vhost_user_socket struct will be created.
@@ -293,16 +287,6 @@ struct vhost_user_socket {
 	struct vhost_device_ops const *notify_ops;
 	struct vhost_transport_ops const *trans_ops;
 };
-
-#define MAX_VHOST_SOCKET 1024
-struct vhost_user {
-	struct vhost_user_socket *vsockets[MAX_VHOST_SOCKET];
-	struct fdset fdset;
-	int vsocket_cnt;
-	pthread_mutex_t mutex;
-};
-
-extern struct vhost_user vhost_user;
 
 #define VHOST_LOG_PAGE	4096
 

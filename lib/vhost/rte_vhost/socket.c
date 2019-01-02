@@ -40,17 +40,17 @@
 
 #include <rte_log.h>
 
-#include "fd_man.h"
 #include "vhost.h"
 #include "vhost_user.h"
 
+#define MAX_VHOST_SOCKET 1024
+struct vhost_user {
+	struct vhost_user_socket *vsockets[MAX_VHOST_SOCKET];
+	int vsocket_cnt;
+	pthread_mutex_t mutex;
+};
 
 struct vhost_user vhost_user = {
-	.fdset = {
-		.fd = { [0 ... MAX_FDS - 1] = {-1, NULL, NULL, NULL, 0} },
-		.fd_mutex = PTHREAD_MUTEX_INITIALIZER,
-		.num = 0
-	},
 	.vsocket_cnt = 0,
 	.mutex = PTHREAD_MUTEX_INITIALIZER,
 };
@@ -281,7 +281,6 @@ int
 rte_vhost_driver_start(const char *path)
 {
 	struct vhost_user_socket *vsocket;
-	static pthread_t fdset_tid;
 
 	pthread_mutex_lock(&vhost_user.mutex);
 	vsocket = find_vhost_user_socket(path);
@@ -289,14 +288,6 @@ rte_vhost_driver_start(const char *path)
 
 	if (!vsocket)
 		return -1;
-
-	if (fdset_tid == 0) {
-		int ret = pthread_create(&fdset_tid, NULL, fdset_event_dispatch,
-				     &vhost_user.fdset);
-		if (ret < 0)
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"failed to create fdset handling thread");
-	}
 
 	return vsocket->trans_ops->socket_start(vsocket);
 }
