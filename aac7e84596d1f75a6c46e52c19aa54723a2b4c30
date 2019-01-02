@@ -140,6 +140,30 @@
     },
     {
       "key": {
+        "uuid": "bf3f17b8_5a41a711",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-02T01:18:41Z",
+      "side": 1,
+      "message": "No, what if \"reg\" is null and the type is \"SPDK_SCSI_PR_WRITE_EXCLUSIVE_ALL_REGS\", I would like to return false for this condition.",
+      "parentUuid": "9042d657_fc5697eb",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 8
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e55841e9_29137c0c",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 9
