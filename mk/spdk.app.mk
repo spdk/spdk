@@ -49,3 +49,9 @@ clean :
 	$(CLEAN_C) $(CLEAN_FILES)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+
+# To avoid overwriting warning
+empty_uninstall_rule:
+	@:
+
+uninstall: empty_uninstall_rule

@@ -34,3 +34,6 @@
 include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
 install: all
+
+uninstall:
+	@:
