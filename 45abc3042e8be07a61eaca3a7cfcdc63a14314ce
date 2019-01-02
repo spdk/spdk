@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a57dd77_11d0793c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4224,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-02T08:31:05Z",
+      "side": 1,
+      "message": "Shouldn\u0027t ctx-\u003ehistogram be freed here as well ?",
+      "range": {
+        "startLine": 4223,
+        "startChar": 0,
+        "endLine": 4224,
+        "endChar": 11
+      },
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
