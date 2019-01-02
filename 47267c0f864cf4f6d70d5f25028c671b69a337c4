@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da8fb183_75fa87b2",
+        "filename": "lib/util/string.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-02T12:40:08Z",
+      "side": 1,
+      "message": "I can\u0027t see it clarified anywhere - why do we free the buffer on error?\n\nThis could be troublesome:\n\n```\nint update_some_object(void *obj, int id) {\n   obj-\u003ename \u003d spdk_vsprintf_realloc(obj-\u003ename, \"MyObject%d\", id);\n   if (obj-\u003ename \u003d\u003d NULL) {\n      // what do we do with the entire obj now?\n      return -1; // failed to update\n   }\n}\n```\n\nIf the obj-\u003ename can\u0027t be updated and the original value is gone, then how am I supposed to implement error handling?\nI can make a copy of obj-\u003ename before calling spdk_vsprintf_realloc, but that\u0027s not very handy.",
+      "revId": "47267c0f864cf4f6d70d5f25028c671b69a337c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
