@@ -76,6 +76,12 @@ ifeq ($(CONFIG_SHARED),y)
 	$(INSTALL_SHARED_LIB)
 endif
 
+uninstall:
+	$(UNINSTALL_LIB)
+ifeq ($(CONFIG_SHARED),y)
+	$(UNINSTALL_SHARED_LIB)
+endif
+
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
