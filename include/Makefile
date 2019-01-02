@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir)%,$(HEADERS))
 
-$(DESTDIR)$(includedir)%.h:
+$(INSTALLED_HEADERS):
 	$(INSTALL_HEADER)
 
 .PHONY: $(INSTALLED_HEADERS)
@@ -49,5 +49,8 @@ clean:
 	@:
 
 install: $(INSTALLED_HEADERS)
+
+uninstall:
+	$(UNINSTALL_HEADERS)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
