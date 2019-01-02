@@ -42,7 +42,6 @@
 #include <linux/vhost.h>
 #include <linux/virtio_net.h>
 #include <sys/socket.h>
-#include <sys/un.h>
 #include <linux/if.h>
 #include <pthread.h>
 
@@ -171,12 +170,38 @@ struct guest_page {
 	uint64_t size;
 };
 
+struct vhost_user_socket;
+
 /**
  * A structure containing function pointers for transport-specific operations.
  */
 struct vhost_transport_ops {
 	/** Size of struct vhost_user_socket-derived per-socket state */
 	size_t socket_size;
+
+	/**
+	 * Initialize a vhost-user socket that is being created by
+	 * rte_vhost_driver_register().  This function checks that the flags
+	 * are valid but does not establish a vhost-user connection.
+	 *
+	 * @param vsocket
+	 *  new socket
+	 * @param flags
+	 *  flags argument from rte_vhost_driver_register()
+	 * @return
+	 *  0 on success, -1 on failure
+	 */
+	int (*socket_init)(struct vhost_user_socket *vsocket, uint64_t flags);
+
+	/**
+	 * Free resources associated with a socket, including any established
+	 * connections.  This function calls vhost_destroy_device() to destroy
+	 * established connections for this socket.
+	 *
+	 * @param vsocket
+	 *  vhost socket
+	 */
+	void (*socket_cleanup)(struct vhost_user_socket *vsocket);
 };
 
 /** The traditional AF_UNIX vhost-user protocol transport. */
@@ -242,8 +267,6 @@ struct vhost_user_socket {
 	struct vhost_user_connection_list conn_list;
 	pthread_mutex_t conn_mutex;
 	char *path;
-	int socket_fd;
-	struct sockaddr_un un;
 	bool is_server;
 	bool reconnect;
 	bool dequeue_zero_copy;
@@ -280,14 +303,12 @@ struct vhost_user {
 
 extern struct vhost_user vhost_user;
 
-int create_unix_socket(struct vhost_user_socket *vsocket);
 int vhost_user_start_server(struct vhost_user_socket *vsocket);
 int vhost_user_start_client(struct vhost_user_socket *vsocket);
 
 extern pthread_t reconn_tid;
 
 int vhost_user_reconnect_init(void);
-bool vhost_user_remove_reconnect(struct vhost_user_socket *vsocket);
 
 #define VHOST_LOG_PAGE	4096
 
