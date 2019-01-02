@@ -49,3 +49,5 @@ clean :
 	$(CLEAN_C) $(CLEAN_FILES)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+
+uninstall: all
