@@ -227,6 +227,24 @@
       "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "797676e2_f81c8697",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2019-01-02T03:45:08Z",
+      "side": 1,
+      "message": "hi Pawel Wodkowski\n   Spdk upstream already supports reconnection. This patch only deals with out of order IO when reconnecting. In the backend, reconnection is handled. Because the processing of IO submission and completion is in the backend. It is more convenient to count inflight IO. At the same time, The purpose of reconnection is to achieve  IO recovery transmission, not abort these inflight IO.",
+      "parentUuid": "3dd8bf77_2619a800",
+      "revId": "9cfada5699411977b6d774c74752b9be73a9c490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
