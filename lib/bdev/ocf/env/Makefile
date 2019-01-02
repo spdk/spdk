@@ -65,6 +65,9 @@ $(LIB):
 
 install:
 
+uninstall:
+	$(UNINSTALL_LIB)
+
 else
 
 .PHONY: all clean install ocf_inc ocf_src ocf_distclean all exportlib
@@ -90,6 +93,9 @@ $(LIB): $(OBJS)
 	$(LIB_C)
 
 install:
+
+uninstall:
+	$(UNINSTALL_LIB)
 
 endif
 

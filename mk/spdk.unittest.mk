@@ -64,3 +64,6 @@ clean:
 	$(CLEAN_C) $(APP)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+
+uninstall:
+	@:
