@@ -78,7 +78,7 @@ pkgdep:
 $(DIRS-y): mk/cc.mk include/spdk/config.h
 
 mk/cc.mk:
-	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) > $@.tmp; \
+	$(Q)scripts/detect_cc.sh --cc=$(CC) --cxx=$(CXX) --lto=$(CONFIG_LTO) --ld=$(LD_TYPE) > $@.tmp; \
 	cmp -s $@.tmp $@ || mv $@.tmp $@ ; \
 	rm -f $@.tmp
 

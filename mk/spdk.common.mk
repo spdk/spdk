@@ -112,6 +112,9 @@ LDFLAGS += -Wl,-z,relro,-z,now
 # This is the default in most environments, but it doesn't hurt to set it explicitly.
 LDFLAGS += -Wl,-z,noexecstack
 
+# Specify the linker to use
+LDFLAGS += -fuse-ld=$(LD_TYPE)
+
 ifeq ($(OS),FreeBSD)
 SYS_LIBS += -L/usr/local/lib
 COMMON_CFLAGS += -I/usr/local/include
