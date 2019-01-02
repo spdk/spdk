@@ -472,6 +472,30 @@
     },
     {
       "key": {
+        "uuid": "8e44c1d4_f3febb16",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-02T11:06:52Z",
+      "side": 1,
+      "message": "\u003e I think 0 is more correct here\n\nCan you explain why it is \"more correct\" :D I think it can be only correct or not :P",
+      "parentUuid": "0f0ab0bd_fa2fd70a",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 14
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22ee8625_3a165865",
         "filename": "lib/cas/ocfenv/ocf_env.c",
         "patchSetId": 27
