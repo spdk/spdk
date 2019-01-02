@@ -777,6 +777,12 @@ int	nvme_ctrlr_cmd_fw_commit(struct spdk_nvme_ctrlr *ctrlr,
 int	nvme_ctrlr_cmd_fw_image_download(struct spdk_nvme_ctrlr *ctrlr,
 		uint32_t size, uint32_t offset, void *payload,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp, uint16_t spsp,
+					uint8_t nssf, void *payload, uint32_t payload_size,
+					spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+int	nvme_ctrlr_cmd_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				     uint16_t spsp, uint8_t nssf, void *payload,
+				     uint32_t payload_size, spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 void	nvme_completion_poll_cb(void *arg, const struct spdk_nvme_cpl *cpl);
 int	spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 				      struct nvme_completion_poll_status *status);
