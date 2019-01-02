@@ -180,7 +180,7 @@ vhost_user_add_connection(int fd, struct vhost_user_socket *vsocket)
 		return;
 	}
 
-	vid = vhost_new_device(vsocket->features);
+	vid = vhost_new_device(vsocket->trans_ops, vsocket->features);
 	if (vid == -1) {
 		goto err;
 	}
