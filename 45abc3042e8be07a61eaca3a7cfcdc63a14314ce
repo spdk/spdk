@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "4b03d4dd_d162b16c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-02T08:56:03Z",
+      "side": 1,
+      "message": "Still, I\u0027m confused with relationship between shared_resource and histogram. In histogram creation, it seems that there is no relationship between shared_resource and histogram. So why we need to destroy histogram only when shared_resource-\u003eref \u003d\u003d 0?",
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0a57dd77_11d0793c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
