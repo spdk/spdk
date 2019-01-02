@@ -20,12 +20,21 @@ function usage()
 	err " --cc=path                 C compiler to use"
 	err " --cxx=path                C++ compiler to use"
 	err " --lto=[y|n]               Attempt to configure for LTO"
-
+	err " --ld=linker               Linker to use"
 }
 
 CC=cc
 CXX=c++
 LTO=n
+
+# Default to LLVM toolchain on FreeBSD
+if [ "$(uname)" = "FreeBSD" ]; then
+	CC=clang
+	CXX=clang++
+	LD_TYPE=lld
+fi
+
+declare -A options
 
 for i in "$@"; do
 	case "$i" in
@@ -34,13 +43,16 @@ for i in "$@"; do
 			exit 0
 			;;
 		--cc=*)
-			CC="${i#*=}"
+			options[CC]="${i#*=}"
 			;;
 		--cxx=*)
-			CXX="${i#*=}"
+			options[CXX]="${i#*=}"
 			;;
 		--lto=*)
-			LTO="${i#*=}"
+			options[LTO]="${i#*=}"
+			;;
+		--ld=*)
+			options[LD_TYPE]="${i#*=}"
 			;;
 		--)
 			break
@@ -52,9 +64,21 @@ for i in "$@"; do
 	esac
 done
 
+for opt in "${!options[@]}"; do
+	if [ -n "${options[$opt]}" ]; then
+		eval $opt="${options[$opt]}"
+	fi
+done
+
 CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
 CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
-LD_TYPE=$(ld -v 2>&1 | awk '{print $2}')
+
+if [ -z "$LD_TYPE" ]; then
+	LD_TYPE=$(ld -v 2>&1 | awk '{print $2}')
+	if [ "$LD_TYPE" = "ld" ]; then
+		LD_TYPE=bfd
+	fi
+fi
 
 if [ "$CC_TYPE" != "$CXX_TYPE" ]; then
 	err "C compiler is $CC_TYPE but C++ compiler is $CXX_TYPE"
@@ -68,7 +92,7 @@ if [ "$LTO" = "y" ]; then
 			err "Using LTO with clang requires the gold linker."
 			exit 1
 		fi
-		 CCAR="llvm-ar"
+		CCAR="llvm-ar"
 	else
 		CCAR="gcc-ar"
 	fi
@@ -78,3 +102,4 @@ echo "CC?=$CC"
 echo "CXX?=$CXX"
 echo "CCAR=$CCAR"
 echo "CC_TYPE=$CC_TYPE"
+echo "LD_TYPE=$LD_TYPE"
