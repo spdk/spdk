@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c19e48b_4d78cbee",
+        "filename": "include/Makefile",
+        "patchSetId": 8
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-02T10:14:06Z",
+      "side": 1,
+      "message": "Per-file install targets have a wildcard in name ($(DESTDIR)$(includedir)%.h), while this is a plain list of files. Please be consistent and refactor this to use wildcards as well.\n\nMy other concern is that install targets have the full path in their name (/usr/include/myfile.h), while uninstall targets are just filenames (myfile.h). This looks like a hack. I\u0027m not sure actually - what\u0027s the common practice for implementing uninstall targets? Another option is to use a single per-file target for install/uninstall and check the cmd-line-specified target name to decide whether the file should be installed or uninstalled.\n\n```\n$(DESTDIR)$(includedir)%.h:\n\tifeq ($(MAKECMDGOALS),install)\n\t\t$(INSTALL_HEADER)\n\telse\n\t\t$(UNINSTALL_HEADER)\n\tfi\n```",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 21
+      },
+      "revId": "a141b09cac715e098a36f17427c2c330b6f97c02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "676aeb83_b85c5bfa",
+        "filename": "mk/spdk.lib.mk",
+        "patchSetId": 8
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-02T10:14:06Z",
+      "side": 1,
+      "message": "please add a blank line for consistency",
+      "revId": "a141b09cac715e098a36f17427c2c330b6f97c02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

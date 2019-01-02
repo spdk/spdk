@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7133b535_c8d7fae4",
+        "filename": "app/spdk_tgt/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-02T10:14:06Z",
+      "side": 1,
+      "message": "trailing whitespace",
+      "range": {
+        "startLine": 63,
+        "startChar": 10,
+        "endLine": 63,
+        "endChar": 11
+      },
+      "revId": "ad981f8c3a7826ea969cff3a831104a928a0a1d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
