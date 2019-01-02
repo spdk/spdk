@@ -44,8 +44,20 @@
 
 #define MAX_VIRTIO_BACKLOG 128
 
+TAILQ_HEAD(vhost_user_connection_list, vhost_user_connection);
+
+struct vhost_user_connection {
+	struct vhost_user_socket *vsocket;
+	int connfd;
+	int vid;
+
+	TAILQ_ENTRY(vhost_user_connection) next;
+};
+
 struct af_unix_socket {
 	struct vhost_user_socket socket; /* must be the first field! */
+	struct vhost_user_connection_list conn_list;
+	pthread_mutex_t conn_mutex;
 	int socket_fd;
 	struct sockaddr_un un;
 };
@@ -148,6 +160,8 @@ send_fd_message(int sockfd, char *buf, int buflen, int *fds, int fd_num)
 static void
 vhost_user_add_connection(int fd, struct vhost_user_socket *vsocket)
 {
+	struct af_unix_socket *s =
+		container_of(vsocket, struct af_unix_socket, socket);
 	int vid;
 	size_t size;
 	struct vhost_user_connection *conn;
@@ -198,9 +212,9 @@ vhost_user_add_connection(int fd, struct vhost_user_socket *vsocket)
 		goto err;
 	}
 
-	pthread_mutex_lock(&vsocket->conn_mutex);
-	TAILQ_INSERT_TAIL(&vsocket->conn_list, conn, next);
-	pthread_mutex_unlock(&vsocket->conn_mutex);
+	pthread_mutex_lock(&s->conn_mutex);
+	TAILQ_INSERT_TAIL(&s->conn_list, conn, next);
+	pthread_mutex_unlock(&s->conn_mutex);
 	return;
 
 err:
@@ -227,6 +241,8 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 {
 	struct vhost_user_connection *conn = dat;
 	struct vhost_user_socket *vsocket = conn->vsocket;
+	struct af_unix_socket *s =
+		container_of(vsocket, struct af_unix_socket, socket);
 	int ret;
 
 	ret = vhost_user_msg_handler(conn->vid, connfd);
@@ -237,13 +253,13 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 		if (vsocket->notify_ops->destroy_connection)
 			vsocket->notify_ops->destroy_connection(conn->vid);
 
-		pthread_mutex_lock(&vsocket->conn_mutex);
-		TAILQ_REMOVE(&vsocket->conn_list, conn, next);
+		pthread_mutex_lock(&s->conn_mutex);
+		TAILQ_REMOVE(&s->conn_list, conn, next);
 		if (conn->connfd != -1) {
 			close(conn->connfd);
 			conn->connfd = -1;
 		}
-		pthread_mutex_unlock(&vsocket->conn_mutex);
+		pthread_mutex_unlock(&s->conn_mutex);
 
 		free(conn);
 
@@ -496,7 +512,23 @@ static int
 af_unix_socket_init(struct vhost_user_socket *vsocket,
 		    uint64_t flags __rte_unused)
 {
-	return create_unix_socket(vsocket);
+	struct af_unix_socket *s =
+		container_of(vsocket, struct af_unix_socket, socket);
+	int ret;
+
+	TAILQ_INIT(&s->conn_list);
+
+	ret = create_unix_socket(vsocket);
+	if (ret == 0) {
+		int rc;
+		rc = pthread_mutex_init(&s->conn_mutex, NULL);
+		if (rc) {
+			RTE_LOG(ERR, VHOST_CONFIG,
+				"error: failed to init connection mutex\n");
+			return -1;
+		}
+	}
+	return ret;
 }
 
 static void
@@ -504,6 +536,7 @@ af_unix_socket_cleanup(struct vhost_user_socket *vsocket)
 {
 	struct af_unix_socket *s =
 		container_of(vsocket, struct af_unix_socket, socket);
+	struct vhost_user_connection *conn;
 
 	if (vsocket->is_server) {
 		fdset_del(&vhost_user.fdset, s->socket_fd);
@@ -512,6 +545,19 @@ af_unix_socket_cleanup(struct vhost_user_socket *vsocket)
 	} else if (vsocket->reconnect) {
 		vhost_user_remove_reconnect(vsocket);
 	}
+
+	pthread_mutex_lock(&s->conn_mutex);
+	TAILQ_FOREACH(conn, &s->conn_list, next) {
+		close(conn->connfd);
+		conn->connfd = -1;
+	}
+	pthread_mutex_unlock(&s->conn_mutex);
+
+	do {
+		pthread_mutex_lock(&s->conn_mutex);
+		conn = TAILQ_FIRST(&s->conn_list);
+		pthread_mutex_unlock(&s->conn_mutex);
+	} while (conn != NULL);
 }
 
 static int

@@ -36,7 +36,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
-#include <sys/queue.h>
 #include <pthread.h>
 
 #include <rte_log.h>
@@ -177,7 +176,6 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 		free(vsocket);
 		goto out;
 	}
-	TAILQ_INIT(&vsocket->conn_list);
 	vsocket->dequeue_zero_copy = flags & RTE_VHOST_USER_DEQUEUE_ZERO_COPY;
 
 	/*
@@ -214,7 +212,6 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 		goto out;
 	}
 
-	pthread_mutex_init(&vsocket->conn_mutex, NULL);
 	vhost_user.vsockets[vhost_user.vsocket_cnt++] = vsocket;
 
 out:
@@ -232,7 +229,6 @@ rte_vhost_driver_unregister(const char *path)
 {
 	int i;
 	int count;
-	struct vhost_user_connection *conn;
 
 	pthread_mutex_lock(&vhost_user.mutex);
 
@@ -241,19 +237,6 @@ rte_vhost_driver_unregister(const char *path)
 
 		if (!strcmp(vsocket->path, path)) {
 			vsocket->trans_ops->socket_cleanup(vsocket);
-
-			pthread_mutex_lock(&vsocket->conn_mutex);
-			TAILQ_FOREACH(conn, &vsocket->conn_list, next) {
-				close(conn->connfd);
-				conn->connfd = -1;
-			}
-			pthread_mutex_unlock(&vsocket->conn_mutex);
-
-			do {
-				pthread_mutex_lock(&vsocket->conn_mutex);
-				conn = TAILQ_FIRST(&vsocket->conn_list);
-				pthread_mutex_unlock(&vsocket->conn_mutex);
-			} while (conn != NULL);
 
 			free(vsocket->path);
 			free(vsocket);
