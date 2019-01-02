@@ -51,6 +51,8 @@ struct af_unix_socket {
 };
 
 static int create_unix_socket(struct vhost_user_socket *vsocket);
+static int vhost_user_start_server(struct vhost_user_socket *vsocket);
+static int vhost_user_start_client(struct vhost_user_socket *vsocket);
 static void vhost_user_read_cb(int connfd, void *dat, int *remove);
 
 /* return bytes# of read on success or negative val on failure. */
@@ -283,7 +285,7 @@ create_unix_socket(struct vhost_user_socket *vsocket)
 	return 0;
 }
 
-int
+static int
 vhost_user_start_server(struct vhost_user_socket *vsocket)
 {
 	struct af_unix_socket *s =
@@ -422,7 +424,7 @@ vhost_user_reconnect_init(void)
 	return ret;
 }
 
-int
+static int
 vhost_user_start_client(struct vhost_user_socket *vsocket)
 {
 	struct af_unix_socket *s =
@@ -512,8 +514,18 @@ af_unix_socket_cleanup(struct vhost_user_socket *vsocket)
 	}
 }
 
+static int
+af_unix_socket_start(struct vhost_user_socket *vsocket)
+{
+	if (vsocket->is_server)
+		return vhost_user_start_server(vsocket);
+	else
+		return vhost_user_start_client(vsocket);
+}
+
 const struct vhost_transport_ops af_unix_trans_ops = {
 	.socket_size = sizeof(struct af_unix_socket),
 	.socket_init = af_unix_socket_init,
 	.socket_cleanup = af_unix_socket_cleanup,
+	.socket_start = af_unix_socket_start,
 };
