@@ -1734,27 +1734,18 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_shared_resource *shared_resource;
 
-	if (!ch) {
-		return;
-	}
-
-	if (ch->channel) {
-		spdk_put_io_channel(ch->channel);
-	}
-
-	assert(ch->io_outstanding == 0);
+	spdk_put_io_channel(ch->channel);
 
 	shared_resource = ch->shared_resource;
-	if (shared_resource) {
-		assert(ch->io_outstanding == 0);
-		assert(shared_resource->ref > 0);
-		shared_resource->ref--;
-		if (shared_resource->ref == 0) {
-			assert(shared_resource->io_outstanding == 0);
-			TAILQ_REMOVE(&shared_resource->mgmt_ch->shared_resources, shared_resource, link);
-			spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
-			free(shared_resource);
-		}
+
+	assert(ch->io_outstanding == 0);
+	assert(shared_resource->ref > 0);
+	shared_resource->ref--;
+	if (shared_resource->ref == 0) {
+		assert(shared_resource->io_outstanding == 0);
+		TAILQ_REMOVE(&shared_resource->mgmt_ch->shared_resources, shared_resource, link);
+		spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
+		free(shared_resource);
 	}
 }
 
