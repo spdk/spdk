@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a7b1cae2_041b6b2c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-02T10:35:51Z",
+      "side": 1,
+      "message": "For 1st rule, the limit of 50 character is not enforced, just don\u0027t make it too long. If you find you cannot write first line within 80 characters, maybe you should break this commit into multiple-commits.",
+      "parentUuid": "74c7be73_300dd40c",
+      "revId": "b993e374bb108fefe39275c348f2c9e7634ee775",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc2cb365_f27ec0b6",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 5
