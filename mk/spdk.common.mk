@@ -260,6 +260,12 @@ INSTALL_LIB=\
 	install -d -m 755 "$(DESTDIR)$(libdir)"; \
 	install -m 644 "$(LIB)" "$(DESTDIR)$(libdir)/"
 
+# Uninstall a library
+UNINSTALL_LIB=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(libdir)/$(notdir $(LIB))"; \
+	rm -f "$(DESTDIR)$(libdir)$(LIB)"; \
+	if [ -z "$(shell ls -A $(DESTDIR)$(libdir))" ]; then rm -d $(DESTDIR)$(libdir); fi;
+
 ifeq ($(OS),FreeBSD)
 INSTALL_REL_SYMLINK := install -l rs
 else
@@ -281,6 +287,13 @@ INSTALL_SHARED_LIB=\
 	install -m $$perm_mode "$(SHARED_REALNAME_LIB)" "$(DESTDIR)$(libdir)/"; \
 	$(call spdk_install_lib_symlink,$(notdir $(SHARED_REALNAME_LIB)),$(notdir $(SHARED_LINKED_LIB)));
 
+UNINSTALL_SHARED_LIB=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
+	rm -f "$(DESTDIR)$(libdir)/$(notdir $(SHARED_LINKED_LIB))"; \
+	rm -f "$(DESTDIR)$(libdir)/$(notdir $(SHARED_REALNAME_LIB))"; \
+	if [ -z "$(shell ls -A $(DESTDIR)$(libdir))" ]; then rm -d $(DESTDIR)$(libdir); fi;
+
+
 # Install an app binary
 INSTALL_APP=\
 	$(Q)echo "  INSTALL $(DESTDIR)$(bindir)/$(APP)"; \
@@ -292,11 +305,23 @@ INSTALL_EXAMPLE=\
 	install -d -m 755 "$(DESTDIR)$(bindir)"; \
 	install -m 755 "$(APP)" "$(DESTDIR)$(bindir)/spdk_$(strip $(subst /,_,$(subst $(SPDK_ROOT_DIR)/examples/, ,$(CURDIR))))"
 
+# Uninstall an app binary
+UNINSTALL_APP=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(bindir)/$(APP)"; \
+	rm -f "$(DESTDIR)$(bindir)/$(APP)"; \
+	if [ -z "$(shell ls -A $(DESTDIR)$(bindir))" ]; then rm -d $(DESTDIR)$(bindir); fi;
+
 # Install a header
 INSTALL_HEADER=\
 	$(Q)echo "  INSTALL $@"; \
 	install -d -m 755 "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))"; \
 	install -m 644 "$(patsubst $(DESTDIR)$(includedir)/%,%,$@)" "$(DESTDIR)$(includedir)/$(dir $(patsubst $(DESTDIR)$(includedir)/%,%,$@))/"
+
+# Uninstall a header
+UNINSTALL_HEADER=\
+	$(Q)echo "  UNINSTALL $(DESTDIR)$(includedir)/$@"; \
+	rm -f "$(DESTDIR)$(includedir)/$@"; \
+	if [ -z "$(shell ls -A $(DESTDIR)$(includedir))" ]; then rm -d $(DESTDIR)$(includedir); fi;
 
 %.o: %.c %.d $(MAKEFILE_LIST)
 	$(COMPILE_C)
