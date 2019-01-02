@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e76d841_eae6d2fc",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T09:59:18Z",
+      "side": 0,
+      "message": "Unrelated change.\nTrap removal should stay in place.",
+      "range": {
+        "startLine": 140,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 49
+      },
+      "revId": "36325127b5fd6d2ddd17790621a36f5d15cb8e12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

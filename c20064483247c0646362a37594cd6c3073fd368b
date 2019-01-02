@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6afd699c_b39a848f",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T09:59:18Z",
+      "side": 1,
+      "message": "Unrelated change.",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 47
+      },
+      "revId": "c20064483247c0646362a37594cd6c3073fd368b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21a6ff1d_56e12400",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T09:59:18Z",
+      "side": 1,
+      "message": "Unrelated change. Add to commit description.",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 25
+      },
+      "revId": "c20064483247c0646362a37594cd6c3073fd368b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aba26c82_c6206f16",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T09:59:18Z",
+      "side": 1,
+      "message": "System-wide qemu-img and qemu-system are not part of scripts/pkgdep.sh and test/common/config/vm_setup.sh, so we should not expect them to be available.\nInstead we should look for \"our\" qemu installed with vm_setup.sh\n\nAlso - using \"-snapshot\" instead of qemu-img should suffice.",
+      "range": {
+        "startLine": 107,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 8
+      },
+      "revId": "c20064483247c0646362a37594cd6c3073fd368b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd9ec679_9b625ae4",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T09:59:18Z",
+      "side": 1,
+      "message": "Unrelated change.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 121,
+        "endChar": 49
+      },
+      "revId": "c20064483247c0646362a37594cd6c3073fd368b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
