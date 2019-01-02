@@ -100,3 +100,6 @@ exportlib: all
 help:
 	@ echo "all                     Default"
 	@ echo "exportlib O=<outpath>   Default build to specified outpath"
+
+uninstall:
+	$(UNINSTALL_LIB)
