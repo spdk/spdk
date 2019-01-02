@@ -52,7 +52,7 @@ $(SHARED_REALNAME_LIB):
 $(SHARED_LINKED_LIB) : $(SHARED_REALNAME_LIB)
 	$(Q)echo "  SYMLINK $(notdir $@)"; $(BUILD_LINKERNAME_LIB)
 
-.PHONY: all clean $(DIRS-y)
+.PHONY: all clean $(DIRS-y) $(SHARED_LINKED_LIB) install uninstall
 
 all: $(SHARED_LINKED_LIB)
 
@@ -61,5 +61,8 @@ clean:
 
 install:
 	$(INSTALL_SHARED_LIB)
+
+uninstall:
+	$(UNINSTALL_SHARED_LIB)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
