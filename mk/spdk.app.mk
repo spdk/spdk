@@ -42,6 +42,12 @@ all : $(APP)
 
 install: all
 
+# To avoid overwriting warning
+empty_uninstall_rule:
+	@:
+
+uninstall: empty_uninstall_rule
+
 $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 

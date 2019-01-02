@@ -39,4 +39,7 @@ APP = identify
 install: $(APP)
 	$(INSTALL_EXAMPLE)
 
+uninstall:
+	$(UNINSTALL_EXAMPLE)
+
 include $(SPDK_ROOT_DIR)/mk/nvme.libtest.mk
