@@ -1027,6 +1027,128 @@ overlapped(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static int
+ut_compress(char *outbuf, uint32_t *compressed_len, char *inbuf, uint32_t inbuflen)
+{
+	uint32_t len = 0;
+	uint8_t count;
+	char last;
+
+	while (true) {
+		if (inbuflen == 0) {
+			*compressed_len = len;
+			return 0;
+		}
+
+		if (*compressed_len < (len + 2)) {
+			return -ENOSPC;
+		}
+
+		last = *inbuf;
+		count = 1;
+		inbuflen--;
+		inbuf++;
+
+		while (inbuflen > 0 && *inbuf == last && count < UINT8_MAX) {
+			count++;
+			inbuflen--;
+			inbuf++;
+		}
+
+		outbuf[len] = count;
+		outbuf[len + 1] = last;
+		len += 2;
+	}
+}
+
+static int
+ut_decompress(uint8_t *outbuf, uint32_t *compressed_len, uint8_t *inbuf, uint32_t inbuflen)
+{
+	uint32_t len = 0;
+
+	SPDK_CU_ASSERT_FATAL(inbuflen % 2 == 0);
+
+	while (true) {
+		if (inbuflen == 0) {
+			*compressed_len = len;
+			return 0;
+		}
+
+		if ((len + inbuf[0]) > *compressed_len) {
+			return -ENOSPC;
+		}
+
+		memset(outbuf, inbuf[1], inbuf[0]);
+		outbuf += inbuf[0];
+		len += inbuf[0];
+		inbuflen -= 2;
+		inbuf += 2;
+	}
+}
+
+#define BUFSIZE 4096
+
+static void
+compress_algorithm(void)
+{
+	uint8_t original_data[BUFSIZE];
+	uint8_t compressed_data[BUFSIZE];
+	uint8_t decompressed_data[BUFSIZE];
+	uint32_t compressed_len, decompressed_len, i;
+	int rc;
+
+	memset(original_data, 0xAA, BUFSIZE);
+	compressed_len = sizeof(compressed_data);
+	rc = ut_compress(compressed_data, &compressed_len, original_data, UINT8_MAX);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(compressed_len == 2);
+	CU_ASSERT(compressed_data[0] == UINT8_MAX);
+	CU_ASSERT(compressed_data[1] == 0xAA);
+
+	decompressed_len = sizeof(decompressed_data);
+	rc = ut_decompress(decompressed_data, &decompressed_len, compressed_data, compressed_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(decompressed_len == UINT8_MAX);
+	CU_ASSERT(memcmp(original_data, decompressed_data, decompressed_len) == 0);
+
+	compressed_len = sizeof(compressed_data);
+	rc = ut_compress(compressed_data, &compressed_len, original_data, UINT8_MAX + 1);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(compressed_len == 4);
+	CU_ASSERT(compressed_data[0] == UINT8_MAX);
+	CU_ASSERT(compressed_data[1] == 0xAA);
+	CU_ASSERT(compressed_data[2] == 1);
+	CU_ASSERT(compressed_data[3] == 0xAA);
+
+	decompressed_len = sizeof(decompressed_data);
+	rc = ut_decompress(decompressed_data, &decompressed_len, compressed_data, compressed_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(decompressed_len == UINT8_MAX + 1);
+	CU_ASSERT(memcmp(original_data, decompressed_data, decompressed_len) == 0);
+
+	for (i = 0; i < sizeof(original_data); i++) {
+		original_data[i] = i & 0xFF;
+	}
+	compressed_len = sizeof(compressed_data);
+	rc = ut_compress(compressed_data, &compressed_len, original_data, 2048);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(compressed_len == 4096);
+	CU_ASSERT(compressed_data[0] == 1);
+	CU_ASSERT(compressed_data[1] == 0);
+	CU_ASSERT(compressed_data[4094] == 1);
+	CU_ASSERT(compressed_data[4095] == 0xFF);
+
+	decompressed_len = sizeof(decompressed_data);
+	rc = ut_decompress(decompressed_data, &decompressed_len, compressed_data, compressed_len);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(decompressed_len == 2048);
+	CU_ASSERT(memcmp(original_data, decompressed_data, decompressed_len) == 0);
+
+	compressed_len = sizeof(compressed_data);
+	rc = ut_compress(compressed_data, &compressed_len, original_data, 2049);
+	CU_ASSERT(rc == -ENOSPC);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1054,7 +1176,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "read_write", read_write) == NULL ||
 		CU_add_test(suite, "destroy", destroy) == NULL ||
 		CU_add_test(suite, "defer_bdev_io", defer_bdev_io) == NULL ||
-		CU_add_test(suite, "overlapped", overlapped) == NULL
+		CU_add_test(suite, "overlapped", overlapped) == NULL ||
+		CU_add_test(suite, "compress_algorithm", compress_algorithm) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
