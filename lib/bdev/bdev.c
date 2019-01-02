@@ -1818,6 +1818,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 
 	mgmt_io_ch = spdk_get_io_channel(&g_bdev_mgr);
 	if (!mgmt_io_ch) {
+		spdk_put_io_channel(ch->channel);
 		return -1;
 	}
 
@@ -1833,6 +1834,7 @@ spdk_bdev_channel_create(void *io_device, void *ctx_buf)
 	if (shared_resource == NULL) {
 		shared_resource = calloc(1, sizeof(*shared_resource));
 		if (shared_resource == NULL) {
+			spdk_put_io_channel(ch->channel);
 			spdk_put_io_channel(mgmt_io_ch);
 			return -1;
 		}
