@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d6a9d0b_a5efa1a0",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-02T10:23:50Z",
+      "side": 1,
+      "message": "you also need to remove the nightly reference from here",
+      "range": {
+        "startLine": 90,
+        "startChar": 24,
+        "endLine": 90,
+        "endChar": 32
+      },
+      "revId": "4b9a14098d5b65a754563346dd47a95840a87631",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
