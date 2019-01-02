@@ -47,5 +47,6 @@ endif
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+uninstall: spdk_tgt
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

@@ -115,3 +115,6 @@ clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 
 install: all
+
+uninstall:
+	$(Q)echo -n ""

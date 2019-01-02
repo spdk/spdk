@@ -42,7 +42,8 @@ DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk \
-	cc_version cxx_version .libs_only_other .ldflags ldflags install
+	cc_version cxx_version .libs_only_other .ldflags ldflags install \
+	uninstall
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -66,6 +67,9 @@ clean: $(DIRS-y)
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
+
+uninstall: include lib shared_lib app examples
+	$(Q)echo "Uninstalled spdk"
 
 shared_lib: lib
 lib: $(DPDKBUILD)

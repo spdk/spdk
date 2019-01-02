@@ -40,5 +40,6 @@ DIRS-y += bdev blob ioat nvme sock
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+uninstall: nvme
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk

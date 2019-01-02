@@ -110,9 +110,21 @@ timing_enter make_install
 rm -rf /tmp/spdk
 mkdir /tmp/spdk
 $MAKE $MAKEFLAGS install DESTDIR=/tmp/spdk prefix=/usr
-ls -lR /tmp/spdk
-rm -rf /tmp/spdk
 timing_exit make_install
+
+# Test 'make uninstall'
+timing_enter make_uninstall
+$MAKE $MAKEFLAGS uninstall DESTDIR=/tmp/spdk prefix=/usr
+ls -A /tmp/spdk/usr
+if [[ $(ls -A /tmp/spdk/usr) ]]; then
+	rm -rf /tmp/spdk
+	mkdir /tmp/spdk
+	echo "Make uninstall failed"
+	exit 1
+else
+	rm -rf /tmp/spdk/usr
+fi
+timing_exit make_uninstall
 
 timing_enter doxygen
 if [ $SPDK_BUILD_DOC -eq 1 ] && hash doxygen; then
