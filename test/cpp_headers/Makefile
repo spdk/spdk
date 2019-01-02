@@ -50,3 +50,6 @@ clean :
 	$(CLEAN_C) $(CXX_SRCS)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
+
+uninstall:
+	@:
