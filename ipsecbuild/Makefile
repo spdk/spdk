@@ -45,5 +45,8 @@ all:
 
 install: all
 
+uninstall:
+	$(Q)echo -n ""
+
 clean:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb clean SHARED=n $(REDIRECT)
