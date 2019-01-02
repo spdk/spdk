@@ -38,7 +38,13 @@ HEADERS := $(wildcard $(SPDK_ROOT_DIR)/include/spdk/*.h)
 INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir)%,$(HEADERS))
 
 $(DESTDIR)$(includedir)%.h:
-	$(INSTALL_HEADER)
+	ifeq ($(MAKECMDGOALS),install)
+		$(INSTALL_HEADER)
+	else
+		$(UNINSTALL_HEADER)
+	fi
+
+.PHONY: $(INSTALLED_HEADERS) $(HEADERS)
 
 .PHONY: $(INSTALLED_HEADERS)
 
@@ -49,5 +55,7 @@ clean:
 	@:
 
 install: $(INSTALLED_HEADERS)
+
+uninstall: $(INSTALLED_HEADERS)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk

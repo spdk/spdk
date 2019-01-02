@@ -46,3 +46,4 @@ $(DIRS-y) :
 $(foreach dir,$(ALL_DEPDIRS),$(eval $(call depdirs_rule,$(dir))))
 
 install: all $(DIRS-y)
+uninstall:
