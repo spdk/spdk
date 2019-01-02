@@ -124,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "a833e6cc_13d38804",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-02T07:04:57Z",
+      "side": 1,
+      "message": "I would like to keep both \"config\" and \"load\" as separate APIs, then your framework can be re-used by SCSI/NVMoF persistent reservation features, \"load\" action can also be used by non-rpc function call.",
+      "parentUuid": "657120b1_5292c3fe",
+      "revId": "c2edb803196a9922bc70d7689cb2708b1d69c1a3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4787ae7_0311a581",
         "filename": "lib/event/json_config.c",
         "patchSetId": 40
