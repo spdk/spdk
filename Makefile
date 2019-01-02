@@ -44,7 +44,8 @@ DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
 DIRS-$(CONFIG_ISAL) += isalbuild
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk \
-	cc_version cxx_version .libs_only_other .ldflags ldflags
+	cc_version cxx_version .libs_only_other .ldflags ldflags install \
+	uninstall
 
 ifeq ($(SPDK_ROOT_DIR)/lib/env_dpdk,$(CONFIG_ENV))
 ifeq ($(CURDIR)/dpdk/build,$(CONFIG_DPDK_DIR))
@@ -76,6 +77,9 @@ clean: $(DIRS-y)
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
+
+uninstall: $(DIRS-y)
+	$(Q)echo "Uninstalled spdk"
 
 ifneq ($(SKIP_DPDK_BUILD),1)
 ifeq ($(CONFIG_ISAL),y)
