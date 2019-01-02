@@ -43,5 +43,6 @@ DIRS-$(CONFIG_FIO_PLUGIN) += fio_plugin
 
 all: $(DIRS-y)
 clean: $(DIRS-y)
+uninstall: identify perf
 
 include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
