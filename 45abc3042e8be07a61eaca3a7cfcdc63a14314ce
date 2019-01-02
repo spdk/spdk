@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "69c061e7_a1fe7487",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-02T08:46:48Z",
+      "side": 1,
+      "message": "Just to elaborate on previous comment.\nShouldn\u0027t all the handling of returned histogram be done within the provided callback ?",
+      "range": {
+        "startLine": 1096,
+        "startChar": 9,
+        "endLine": 1096,
+        "endChar": 77
+      },
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0a57dd77_11d0793c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
