@@ -154,6 +154,7 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 {
 	int ret = -1;
 	struct vhost_user_socket *vsocket;
+	const struct vhost_transport_ops *trans_ops = &af_unix_trans_ops;
 
 	if (!path)
 		return -1;
@@ -166,10 +167,11 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 		goto out;
 	}
 
-	vsocket = malloc(sizeof(struct vhost_user_socket));
+	vsocket = malloc(trans_ops->socket_size);
 	if (!vsocket)
 		goto out;
-	memset(vsocket, 0, sizeof(struct vhost_user_socket));
+	memset(vsocket, 0, trans_ops->socket_size);
+	vsocket->trans_ops = trans_ops;
 	vsocket->path = strdup(path);
 	if (!vsocket->path) {
 		free(vsocket);

@@ -42,6 +42,10 @@
 
 #define MAX_VIRTIO_BACKLOG 128
 
+struct af_unix_socket {
+	struct vhost_user_socket socket; /* must be the first field! */
+};
+
 static void vhost_user_read_cb(int connfd, void *dat, int *remove);
 
 /* return bytes# of read on success or negative val on failure. */
@@ -475,4 +479,6 @@ vhost_user_remove_reconnect(struct vhost_user_socket *vsocket)
 	return found;
 }
 
-const struct vhost_transport_ops af_unix_trans_ops = {};
+const struct vhost_transport_ops af_unix_trans_ops = {
+	.socket_size = sizeof(struct af_unix_socket),
+};
