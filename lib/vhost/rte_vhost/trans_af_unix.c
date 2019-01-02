@@ -354,7 +354,7 @@ struct vhost_user_reconnect_list {
 };
 
 static struct vhost_user_reconnect_list reconn_list;
-pthread_t reconn_tid;
+static pthread_t reconn_tid;
 
 static int
 vhost_user_connect_nonblock(int fd, struct sockaddr *un, size_t sz)
@@ -424,7 +424,7 @@ remove_fd:
 	return NULL;
 }
 
-int
+static int
 vhost_user_reconnect_init(void)
 {
 	int ret;
@@ -515,6 +515,11 @@ af_unix_socket_init(struct vhost_user_socket *vsocket,
 	struct af_unix_socket *s =
 		container_of(vsocket, struct af_unix_socket, socket);
 	int ret;
+
+	if (vsocket->reconnect && reconn_tid == 0) {
+		if (vhost_user_reconnect_init() < 0)
+			return -1;
+	}
 
 	TAILQ_INIT(&s->conn_list);
 
