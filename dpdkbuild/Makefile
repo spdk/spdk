@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-.PHONY: all clean install
+.PHONY: all clean install uninstall
 
 CRYPTO_ENABLED=n
 
@@ -123,3 +123,6 @@ clean:
 	$(Q)rm -rf $(SPDK_ROOT_DIR)/dpdk/build
 
 install: all
+
+uninstall:
+	@:
