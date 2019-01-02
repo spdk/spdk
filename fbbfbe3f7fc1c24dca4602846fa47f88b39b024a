@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6256188_cbdbf5f9",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T10:10:09Z",
+      "side": 1,
+      "message": "This step is expected to fail. Reason - we copy compiled binaries to Ubuntu based VM and try to run them there, which will not work.",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 135,
+        "endChar": 61
+      },
+      "revId": "fbbfbe3f7fc1c24dca4602846fa47f88b39b024a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cedc7789_e441cfdd",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-02T10:10:09Z",
+      "side": 1,
+      "message": "Duh, not this line...",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 148,
+        "endChar": 49
+      },
+      "revId": "fbbfbe3f7fc1c24dca4602846fa47f88b39b024a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
