@@ -409,6 +409,7 @@ if $INSTALL; then
     gdisk \
     socat \
     sshfs \
+    sshpass \
     btrfs-progs
 fi
 
