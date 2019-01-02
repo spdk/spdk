@@ -12,6 +12,9 @@ multiple separate buffers.
 
 ### nvme
 
+Wrapper functions spdk_nvme_ctrlr_security_send() and spdk_nvme_ctrlr_security_receive() are
+introduced to support further security protocol development.
+
 admin_timeout_ms was added to NVMe controller initialization options, users
 can change the default value when probing a controller.
 

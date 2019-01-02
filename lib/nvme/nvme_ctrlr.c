@@ -2742,3 +2742,43 @@ spdk_nvme_ctrlr_is_discovery(struct spdk_nvme_ctrlr *ctrlr)
 	return !strncmp(ctrlr->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN,
 			strlen(SPDK_NVMF_DISCOVERY_NQN));
 }
+
+int
+spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				 uint16_t spsp, uint8_t nssf, void *payload, size_t size)
+{
+	struct nvme_completion_poll_status	status;
+	int					res;
+
+	res = nvme_ctrlr_cmd_security_receive(ctrlr, secp, spsp, nssf, payload, size,
+					      nvme_completion_poll_cb, &status);
+	if (res) {
+		return res;
+	}
+	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_security_receive failed!\n");
+		return -ENXIO;
+	}
+
+	return 0;
+}
+
+int
+spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+			      uint16_t spsp, uint8_t nssf, void *payload, size_t size)
+{
+	struct nvme_completion_poll_status	status;
+	int					res;
+
+	res = nvme_ctrlr_cmd_security_send(ctrlr, secp, spsp, nssf, payload, size, nvme_completion_poll_cb,
+					   &status);
+	if (res) {
+		return res;
+	}
+	if (spdk_nvme_wait_for_completion_robust_lock(ctrlr->adminq, &status, &ctrlr->ctrlr_lock)) {
+		SPDK_ERRLOG("spdk_nvme_ctrlr_security_send failed!\n");
+		return -ENXIO;
+	}
+
+	return 0;
+}
