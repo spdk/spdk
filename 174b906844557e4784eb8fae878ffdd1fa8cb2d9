@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57e38100_c06cc225",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 1779,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-03T12:56:24Z",
+      "side": 1,
+      "message": "I guess there\u0027s no need for .upper() when you have all possible options in \"const\" and \"choices\"",
+      "range": {
+        "startLine": 1779,
+        "startChar": 117,
+        "endLine": 1779,
+        "endChar": 137
+      },
+      "revId": "174b906844557e4784eb8fae878ffdd1fa8cb2d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0eaf4b50_9d2689bb",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-03T12:56:24Z",
+      "side": 1,
+      "message": "2 spaces, pep8 fail",
+      "range": {
+        "startLine": 84,
+        "startChar": 32,
+        "endLine": 84,
+        "endChar": 33
+      },
+      "revId": "174b906844557e4784eb8fae878ffdd1fa8cb2d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
