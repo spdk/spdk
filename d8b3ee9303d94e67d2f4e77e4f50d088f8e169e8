@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d220854_8f83299e",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-03T08:59:18Z",
+      "side": 1,
+      "message": "What is NV metadata used for? How to enable it?",
+      "range": {
+        "startLine": 249,
+        "startChar": 38,
+        "endLine": 249,
+        "endChar": 60
+      },
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59c2dffe_34f63db7",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-03T08:59:18Z",
+      "side": 1,
+      "message": "Is this true for current mode?",
+      "range": {
+        "startLine": 250,
+        "startChar": 54,
+        "endLine": 250,
+        "endChar": 64
+      },
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30d3d57e_9b1c6350",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-03T08:59:18Z",
+      "side": 1,
+      "message": "TODO: \n1. Describe modes in which CAS works\n2. Refer to CAS documentation",
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
