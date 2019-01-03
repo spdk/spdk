@@ -464,8 +464,8 @@ spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	rc = spdk_nvmf_rdma_check_ibv_state(new_state);
 	if (rc)
 	{
-		SPDK_ERRLOG("QP#%d: bad state updated: %u\n", rqpair->qpair.qid, new_state);
-		assert(false);
+		SPDK_ERRLOG("QP#%d: bad state updated: %u, maybe hardware issue\n", rqpair->qpair.qid, new_state);
+		return IBV_QPS_UNKNOWN;
 	}
 
 	if (old_state != new_state)
@@ -483,7 +483,8 @@ static const char *str_ibv_qp_state[] = {
 	"IBV_QPS_RTS",
 	"IBV_QPS_SQD",
 	"IBV_QPS_SQE",
-	"IBV_QPS_ERR"
+	"IBV_QPS_ERR",
+	"IBV_QPS_UNKNOWN"
 };
 
 static int

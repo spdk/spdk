@@ -144,6 +144,24 @@ DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
 	    (struct spdk_nvmf_qpair *qpair),
 	    0);
 
+#ifdef KEEP_ALIVE
+void
+spdk_nvmf_subsystem_remove_keep_alive_poller(void *ctx)
+{
+}
+
+void
+spdk_nvmf_subsystem_add_keep_alive_poller(void *ctx)
+{
+}
+
+int
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
+{
+	return 0;
+}
+#endif
+
 void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
@@ -276,6 +294,9 @@ test_connect(void)
 	group.thread = spdk_get_thread();
 
 	memset(&ctrlr, 0, sizeof(ctrlr));
+#ifdef KEEP_ALIVE
+	TAILQ_INIT(&ctrlr.io_qpairs);
+#endif
 	ctrlr.subsys = &subsystem;
 	ctrlr.qpair_mask = spdk_bit_array_create(3);
 	SPDK_CU_ASSERT_FATAL(ctrlr.qpair_mask != NULL);
