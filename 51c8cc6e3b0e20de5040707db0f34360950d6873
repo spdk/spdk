@@ -22,6 +22,30 @@
       "revId": "51c8cc6e3b0e20de5040707db0f34360950d6873",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94b6531b_110ed27d",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-03T07:20:21Z",
+      "side": 1,
+      "message": "Yup, it should. Fixed.",
+      "parentUuid": "bdf2bdc3_3ecc7538",
+      "range": {
+        "startLine": 179,
+        "startChar": 2,
+        "endLine": 180,
+        "endChar": 24
+      },
+      "revId": "51c8cc6e3b0e20de5040707db0f34360950d6873",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
