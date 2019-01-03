@@ -102,6 +102,24 @@
     },
     {
       "key": {
+        "uuid": "d09c9562_4849ba1d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-03T13:26:01Z",
+      "side": 1,
+      "message": "I think spdk_bdev_channel_destroy() should be changed as following:\n\n  @@ -2043,6 +2043,10 @@ spdk_bdev_channel_destroy(void *io_device, void *ctx_buf)\n        _spdk_bdev_abort_buf_io(\u0026mgmt_ch-\u003eneed_buf_small, ch);\n        _spdk_bdev_abort_buf_io(\u0026mgmt_ch-\u003eneed_buf_large, ch);\n \n+       if (ch-\u003ehistogram) {\n+               spdk_histogram_data_free(ch-\u003ehistogram);\n+       }\n+\n        _spdk_bdev_channel_destroy_resource(ch);\n }\n\nWhat do you think?",
+      "parentUuid": "9e5f569c_3b314d95",
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0a57dd77_11d0793c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
