@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd591172_e4c51be6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 935,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-03T17:04:42Z",
+      "side": 1,
+      "message": "Change back to tab?",
+      "revId": "c719b5e5fe0d2bcbd5e5a422a763a75bd598fbcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10d61cee_2be31a30",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1918,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-03T17:04:42Z",
+      "side": 1,
+      "message": "I think you should stay consistent with using errno values in this function like we do at the top.\n-1 -\u003e -ENOMEM",
+      "revId": "c719b5e5fe0d2bcbd5e5a422a763a75bd598fbcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9ef39f9_4a543726",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1924,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-03T17:04:42Z",
+      "side": 1,
+      "message": "-EINVAL?",
+      "revId": "c719b5e5fe0d2bcbd5e5a422a763a75bd598fbcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b807292_a2368760",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1934,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-03T17:04:42Z",
+      "side": 1,
+      "message": "-ENOMEM",
+      "revId": "c719b5e5fe0d2bcbd5e5a422a763a75bd598fbcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
