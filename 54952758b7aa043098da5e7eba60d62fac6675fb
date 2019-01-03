@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84c9e26b_4c93573c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-03T01:21:58Z",
+      "side": 1,
+      "message": "This should move up to the first section of #nvme.",
+      "revId": "54952758b7aa043098da5e7eba60d62fac6675fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29337eb4_54237603",
+        "filename": "test/unit/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 416,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-03T01:21:58Z",
+      "side": 1,
+      "message": "this is different code style.",
+      "revId": "54952758b7aa043098da5e7eba60d62fac6675fb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
