@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba77edbc_3e956ce1",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:30:43Z",
+      "side": 1,
+      "message": "associated\n\nbut you don\u0027t need to re-spin unless I find other things",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b77bdc5c_0c1c0c1a",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:30:43Z",
+      "side": 1,
+      "message": "Previously the connection was not exposed as part of the public API. Now it is, but only in a roundabout way via a request. What do you envision is the use case for this callback? If the user needs to know about individual connections, should they become a first class citizen in the API with a notification callback called as part of spdk_jsonrpc_server_poll?",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
