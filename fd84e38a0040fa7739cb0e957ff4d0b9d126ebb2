@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8b5ffd45_66087965",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:48:47Z",
+      "side": 1,
+      "message": "Is this not what \u0027cc\u0027 and \u0027c++\u0027 point to on FreeBSD anyway? That\u0027s the general mechanism for using the platform\u0027s \u0027default\u0027 compiler.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e2432bf_4d9a9a1d",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:48:47Z",
+      "side": 1,
+      "message": "I think you need two new variables - \u0027LD\u0027 which points at the particular linker executable you want to use. That should probably default to just \u0027ld\u0027. And \u0027LD_TYPE\u0027 which should be one of the strings \u0027ld, lld, gold\u0027.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a18d5c1_068c6dee",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:48:47Z",
+      "side": 1,
+      "message": "What\u0027s the advantage of using this options array instead of direct assignment like it did before? I think the other way is simpler and easier to read.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf2b00bf_c9474fde",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-03T16:48:47Z",
+      "side": 1,
+      "message": "For CC/CXX, the user passes in the path to the executable instead of passing in the type. The type is then discovered by this script automatically. I think you should be doing the same thing for ld.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
