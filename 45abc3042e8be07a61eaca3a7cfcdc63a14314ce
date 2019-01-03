@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8d9f6564_bac74ad1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 1096,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-03T08:38:17Z",
+      "side": 1,
+      "message": "Histogram provided in callback is allocated per each request. User can handle it synchronously or asynchronously. I don\u0027t think we should force user to handle it synchronously.",
+      "parentUuid": "69c061e7_a1fe7487",
+      "range": {
+        "startLine": 1096,
+        "startChar": 9,
+        "endLine": 1096,
+        "endChar": 77
+      },
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b03d4dd_d162b16c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-02T08:56:03Z",
       "side": 1,
       "message": "Still, I\u0027m confused with relationship between shared_resource and histogram. In histogram creation, it seems that there is no relationship between shared_resource and histogram. So why we need to destroy histogram only when shared_resource-\u003eref \u003d\u003d 0?",
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d28d64_a571b4e1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-03T08:38:17Z",
+      "side": 1,
+      "message": "Whenever we enable histograms we want to allocate histogram structure for each existing channel.\nFor each newly created channel during enabled histograms we also allocate histogram.\n\nWe should destroy per-channel histogram during channel destroy because otherwise we would cause memory leak.\nAfter histogram disable call we destroy all remaining histograms of this bdev.",
+      "parentUuid": "4b03d4dd_d162b16c",
       "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
