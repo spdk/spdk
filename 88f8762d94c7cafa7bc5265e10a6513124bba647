@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcaac823_72485e0a",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-03T02:45:30Z",
+      "side": 1,
+      "message": "extra indent",
+      "range": {
+        "startLine": 62,
+        "startChar": 1,
+        "endLine": 62,
+        "endChar": 2
+      },
+      "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6befa18f_1326a109",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-03T02:45:30Z",
+      "side": 1,
+      "message": "extra semicolon",
+      "range": {
+        "startLine": 63,
+        "startChar": 40,
+        "endLine": 63,
+        "endChar": 41
+      },
+      "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fea82a2c_54d88729",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-03T02:45:30Z",
+      "side": 1,
+      "message": "Some of those changes could really use a separate patch.",
+      "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4b8a9b0_0d059b68",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-03T02:45:30Z",
+      "side": 1,
+      "message": "there were extra whitespaces added to the string. Was this intended?",
+      "range": {
+        "startLine": 345,
+        "startChar": 13,
+        "endLine": 345,
+        "endChar": 17
+      },
+      "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
