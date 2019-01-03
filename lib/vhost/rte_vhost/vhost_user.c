@@ -998,41 +998,9 @@ vhost_user_net_set_mtu(struct virtio_net *dev, struct VhostUserMsg *msg)
 	return 0;
 }
 
-/* return bytes# of read on success or negative val on failure. */
 static int
-read_vhost_message(int sockfd, struct VhostUserMsg *msg)
+send_vhost_reply(struct virtio_net *dev, struct VhostUserMsg *msg)
 {
-	int ret;
-
-	ret = read_fd_message(sockfd, (char *)msg, VHOST_USER_HDR_SIZE,
-		msg->fds, VHOST_MEMORY_MAX_NREGIONS);
-	if (ret <= 0)
-		return ret;
-
-	if (msg && msg->size) {
-		if (msg->size > sizeof(msg->payload)) {
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"invalid msg size: %d\n", msg->size);
-			return -1;
-		}
-		ret = read(sockfd, &msg->payload, msg->size);
-		if (ret <= 0)
-			return ret;
-		if (ret != (int)msg->size) {
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"read control message failed\n");
-			return -1;
-		}
-	}
-
-	return ret;
-}
-
-static int
-send_vhost_message(int sockfd, struct VhostUserMsg *msg)
-{
-	int ret;
-
 	if (!msg)
 		return 0;
 
@@ -1041,10 +1009,7 @@ send_vhost_message(int sockfd, struct VhostUserMsg *msg)
 	msg->flags |= VHOST_USER_VERSION;
 	msg->flags |= VHOST_USER_REPLY_MASK;
 
-	ret = send_fd_message(sockfd, (char *)msg,
-		VHOST_USER_HDR_SIZE + msg->size, NULL, 0);
-
-	return ret;
+	return dev->trans_ops->send_reply(dev, msg);
 }
 
 /*
@@ -1201,10 +1166,10 @@ vhost_user_nvme_set_bar_mr(struct virtio_net *dev, struct VhostUserMsg *pmsg)
 }
 
 int
-vhost_user_msg_handler(int vid, int fd)
+vhost_user_msg_handler(int vid, const struct VhostUserMsg *msg_)
 {
+	struct VhostUserMsg msg = *msg_; /* copy so we can build the reply */
 	struct virtio_net *dev;
-	struct VhostUserMsg msg;
 	struct vhost_vring_file file;
 	int ret;
 	uint64_t cap;
@@ -1227,18 +1192,7 @@ vhost_user_msg_handler(int vid, int fd)
 		}
 	}
 
-	ret = read_vhost_message(fd, &msg);
-	if (ret <= 0 || msg.request >= VHOST_USER_MAX) {
-		if (ret < 0)
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"vhost read message failed\n");
-		else if (ret == 0)
-			RTE_LOG(INFO, VHOST_CONFIG,
-				"vhost peer closed\n");
-		else
-			RTE_LOG(ERR, VHOST_CONFIG,
-				"vhost read incorrect message\n");
-
+	if (msg.request >= VHOST_USER_MAX) {
 		return -1;
 	}
 
@@ -1259,7 +1213,7 @@ vhost_user_msg_handler(int vid, int fd)
 						msg.payload.config.size) != 0) {
 			msg.size = sizeof(uint64_t);
 		}
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_SET_CONFIG:
 		if ((dev->notify_ops->set_config(dev->vid,
@@ -1285,7 +1239,7 @@ vhost_user_msg_handler(int vid, int fd)
 			memcpy(msg.payload.nvme.buf, &buf, 4096);
 			msg.size += 4096;
 		}
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_NVME_SET_CQ_CALL:
 		file.index = msg.payload.u64 & VHOST_USER_VRING_IDX_MASK;
@@ -1299,7 +1253,7 @@ vhost_user_msg_handler(int vid, int fd)
 		else
 			msg.payload.u64 = 0;
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_NVME_START_STOP:
 		enable = msg.payload.u64;
@@ -1322,7 +1276,7 @@ vhost_user_msg_handler(int vid, int fd)
 	case VHOST_USER_GET_FEATURES:
 		msg.payload.u64 = vhost_user_get_features(dev);
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_SET_FEATURES:
 		vhost_user_set_features(dev, msg.payload.u64);
@@ -1331,7 +1285,7 @@ vhost_user_msg_handler(int vid, int fd)
 	case VHOST_USER_GET_PROTOCOL_FEATURES:
 		msg.payload.u64 = VHOST_USER_PROTOCOL_FEATURES;
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_SET_PROTOCOL_FEATURES:
 		vhost_user_set_protocol_features(dev, msg.payload.u64);
@@ -1353,7 +1307,7 @@ vhost_user_msg_handler(int vid, int fd)
 
 		/* it needs a reply */
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 	case VHOST_USER_SET_LOG_FD:
 		close(msg.fds[0]);
@@ -1373,7 +1327,7 @@ vhost_user_msg_handler(int vid, int fd)
 	case VHOST_USER_GET_VRING_BASE:
 		vhost_user_get_vring_base(dev, &msg);
 		msg.size = sizeof(msg.payload.state);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 
 	case VHOST_USER_SET_VRING_KICK:
@@ -1392,7 +1346,7 @@ vhost_user_msg_handler(int vid, int fd)
 	case VHOST_USER_GET_QUEUE_NUM:
 		msg.payload.u64 = VHOST_MAX_QUEUE_PAIRS;
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 		break;
 
 	case VHOST_USER_SET_VRING_ENABLE:
@@ -1415,7 +1369,7 @@ vhost_user_msg_handler(int vid, int fd)
 	if (msg.flags & VHOST_USER_NEED_REPLY) {
 		msg.payload.u64 = !!ret;
 		msg.size = sizeof(msg.payload.u64);
-		send_vhost_message(fd, &msg);
+		send_vhost_reply(dev, &msg);
 	}
 
 	if (!(dev->flags & VIRTIO_DEV_RUNNING) && virtio_is_ready(dev)) {

@@ -162,10 +162,6 @@ typedef struct VhostUserMsg {
 
 
 /* vhost_user.c */
-int vhost_user_msg_handler(int vid, int fd);
-
-/* socket.c */
-int read_fd_message(int sockfd, char *buf, int buflen, int *fds, int fd_num);
-int send_fd_message(int sockfd, char *buf, int buflen, int *fds, int fd_num);
+int vhost_user_msg_handler(int vid, const struct VhostUserMsg *msg);
 
 #endif

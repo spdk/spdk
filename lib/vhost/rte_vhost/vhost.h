@@ -169,7 +169,9 @@ struct guest_page {
 	uint64_t size;
 };
 
+struct virtio_net;
 struct vhost_user_socket;
+struct VhostUserMsg;
 
 /**
  * A structure containing function pointers for transport-specific operations.
@@ -217,6 +219,18 @@ struct vhost_transport_ops {
 	 *  0 on success, -1 on failure
 	 */
 	int (*socket_start)(struct vhost_user_socket *vsocket);
+
+	/**
+	 * Send a reply to the master.
+	 *
+	 * @param dev
+	 *  vhost device
+	 * @param reply
+	 *  reply message
+	 * @return
+	 *  0 on success, -1 on failure
+	 */
+	int (*send_reply)(struct virtio_net *dev, struct VhostUserMsg *reply);
 };
 
 /** The traditional AF_UNIX vhost-user protocol transport. */
