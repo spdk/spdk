@@ -161,7 +161,12 @@ typedef struct VhostUserMsg {
 #define VHOST_USER_VERSION    0x1
 
 
+struct virtio_net;
+
 /* vhost_user.c */
+void vhost_add_guest_pages(struct virtio_net *dev,
+			   struct rte_vhost_mem_region *reg,
+			   uint64_t page_size);
 int vhost_user_msg_handler(int vid, const struct VhostUserMsg *msg);
 
 #endif
