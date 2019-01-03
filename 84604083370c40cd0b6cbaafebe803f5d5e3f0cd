@@ -52,6 +52,24 @@
       "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "507b991c_67b07e1c",
+        "filename": "lib/ftl/ftl_anm.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 448,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-03T14:22:05Z",
+      "side": 1,
+      "message": "In that case, I guess we should also remove all the other NULL checks in our external functions. Are you OK with removing those at a later time (another patch) and just getting rid of this particular one for now?\n\nHowever, I don\u0027t see a point in adding an assertion checking if the argument is non-NULL. It doesn\u0027t really give any extra value (it\u0027s equally as easy to debug assertion failure as a segfault) and only adds additional code.",
+      "parentUuid": "a43517ef_c71cc4e9",
+      "revId": "84604083370c40cd0b6cbaafebe803f5d5e3f0cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
