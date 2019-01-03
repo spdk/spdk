@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "59e93e41_d82c3912",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011280
+      },
+      "writtenOn": "2019-01-03T11:23:43Z",
+      "side": 1,
+      "message": "This should be deleted.",
+      "range": {
+        "startLine": 9,
+        "startChar": 36,
+        "endLine": 9,
+        "endChar": 38
+      },
+      "revId": "b73a2c7a1c801b63fa27885b69a99ec8940804c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
