@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "644cedda_40a2f878",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-03T15:20:51Z",
+      "side": 1,
+      "message": "I think you should give this a meaningful name like cmd_cpl or something. That way references to it later in the file aren\u0027t confusing.",
+      "revId": "df8075a40f0b5ef5ec327be48be5b97449d1fd77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
