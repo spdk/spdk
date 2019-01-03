@@ -52,6 +52,18 @@ Following the generic instructions should be sufficient for most Linux distribut
 6. VBoxManage extpack install Oracle_VM_VirtualBox_Extension_Pack-5.2.16.vbox-extpack(install the same pack as your installed version of VirtualBox)
 7. rpm -ivh vagrant_2.1.2_x86_64.rpm
 
+Virtualbox operation common commands:
+   we can refer to spec(https://download.virtualbox.org/virtualbox/6.0.0/UserManual.pdf)
+   if you create a VM by scripts, we also need commands as following:
+1. vboxmanage list vms (list all the VM with UUID)
+2. vboxmanage list hdds (list NVMe and HDD that attached with VM)
+3. vboxmanage unregistervm UUID --delete (unregister a VM which created by VirtualBox, use command 1 to get the UUID)
+4. vboxmanage closemedium UUID --delete (remove a medium from host, use command 2 to get UUID)
+
+Maybe need this commands :
+   vagrant plugin install vagrant-vbguest
+   vagrant global-status
+   vagrant box list
 
 ## Configure Vagrant
 
@@ -64,6 +76,7 @@ If you are behind a corporate firewall, configure the following proxy settings.
   $ export http_proxy=....
   $ export https_proxy=....
   $ vagrant plugin install vagrant-proxyconf
+  $
 ```
 
 ## Download SPDK from GitHub
