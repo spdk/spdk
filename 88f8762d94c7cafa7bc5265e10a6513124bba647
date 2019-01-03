@@ -85,6 +85,30 @@
       "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa2abcb7_e25e151c",
+        "filename": "test/unit/lib/jsonrpc/jsonrpc_server.c/jsonrpc_server_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-03T13:37:52Z",
+      "side": 1,
+      "message": "To check if we can parse with extra spaces in front of the request ;)",
+      "parentUuid": "e4b8a9b0_0d059b68",
+      "range": {
+        "startLine": 345,
+        "startChar": 13,
+        "endLine": 345,
+        "endChar": 17
+      },
+      "revId": "88f8762d94c7cafa7bc5265e10a6513124bba647",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
