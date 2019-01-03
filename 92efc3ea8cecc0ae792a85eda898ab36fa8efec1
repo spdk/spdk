@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64113165_37297199",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-03T10:38:08Z",
+      "side": 1,
+      "message": "Sessions can be launched on different cores yes? So I think that at least bdev_io_channel should be obtained per session. Can bdev_desc also be moved to spdk_vhost_blk_session?",
+      "range": {
+        "startLine": 71,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 41
+      },
+      "revId": "92efc3ea8cecc0ae792a85eda898ab36fa8efec1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
