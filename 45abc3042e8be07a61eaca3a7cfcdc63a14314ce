@@ -84,6 +84,24 @@
     },
     {
       "key": {
+        "uuid": "9e5f569c_3b314d95",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1757,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-03T08:54:49Z",
+      "side": 1,
+      "message": "In spdk_bdev_channel_create(), it seems that every channel has it\u0027s own unique histogram, but may share same shared_resource, so spdk_bdev_channel_create() may increase shared_resource-\u003eref or create new shared_resource. So, we should destroy histogram whenever a channel is destroyed, but only decrease shared_resource-\u003eref and destroy shared_resource only when shared_resource-\u003eref \u003d\u003d 0.\n\nMy point is relationship between channel and shared_resource is multiple to single, but relationship between channel and histogram is one to one. So we should destroy histogram whenever a channel is destroy, regardless what the shared_resource-\u003eref it is.\n\nThanks.",
+      "parentUuid": "e9d28d64_a571b4e1",
+      "revId": "45abc3042e8be07a61eaca3a7cfcdc63a14314ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0a57dd77_11d0793c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 16
