@@ -348,8 +348,10 @@ spdk_vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
-	vsession->coalescing_delay_time_base = vdev->coalescing_delay_time_base;
-	vsession->coalescing_io_rate_threshold = vdev->coalescing_io_rate_threshold;
+	vsession->coalescing_delay_time_base =
+		vdev->coalescing_delay_us * spdk_get_ticks_hz() / 1000000ULL;
+	vsession->coalescing_io_rate_threshold =
+		vdev->coalescing_iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
 	return 0;
 }
 
@@ -368,9 +370,6 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 			    1000U / SPDK_VHOST_STATS_CHECK_INTERVAL_MS);
 		return -EINVAL;
 	}
-
-	vdev->coalescing_delay_time_base = delay_time_base;
-	vdev->coalescing_io_rate_threshold = io_rate;
 
 	vdev->coalescing_delay_us = delay_base_us;
 	vdev->coalescing_iops_threshold = iops_threshold;
