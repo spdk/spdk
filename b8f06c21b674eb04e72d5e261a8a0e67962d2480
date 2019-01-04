@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "2793b8e4_e35ed35e",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T02:39:01Z",
+      "side": 1,
+      "message": "no need here, as DIF_DISABLED type is already checked before it.",
+      "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04fe42e7_71e88d7a",
         "filename": "lib/util/dif.c",
         "patchSetId": 3
@@ -30,6 +47,24 @@
       "writtenOn": "2018-12-29T01:19:57Z",
       "side": 1,
       "message": "Is this case necessary? Since line 381 already contains this case.",
+      "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24bb1554_7ea30539",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T02:39:01Z",
+      "side": 1,
+      "message": "yeah, no need the two lines here.",
+      "parentUuid": "04fe42e7_71e88d7a",
       "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
