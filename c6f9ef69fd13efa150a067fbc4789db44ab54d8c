@@ -94,6 +94,29 @@
     },
     {
       "key": {
+        "uuid": "9abf41d9_d19ea4a1",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:31:33Z",
+      "side": 1,
+      "message": "Should this be validated vs blkcfg.max_discard_sectors?",
+      "range": {
+        "startLine": 330,
+        "startChar": 29,
+        "endLine": 330,
+        "endChar": 46
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6c2a7bdd_053de619",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 10
