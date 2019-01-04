@@ -16,6 +16,24 @@
       "revId": "2778e91c95c4b4d96462b2eaf8dc40f087de7bae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58de004f_8309027b",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-04T15:11:03Z",
+      "side": 1,
+      "message": "It can\u0027t. But if you were to check this patch out and remove that assert, you would get an error from scan-build on this patch.\nMy next patch removes the need for this assert so I will remove it there, but I think I\u0027ll keep these as two different patches since this one does a lot of cleaning up in terms of the test itself.",
+      "parentUuid": "8f2ff4f0_a4746f7c",
+      "revId": "2778e91c95c4b4d96462b2eaf8dc40f087de7bae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
