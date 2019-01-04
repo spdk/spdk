@@ -22,6 +22,29 @@
       "revId": "3d6ba1f8aa64bab44cc80f7725894debaaacd175",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e20b4d35_3c77dfbe",
+        "filename": "lib/bdev/virtio/bdev_virtio_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:30:18Z",
+      "side": 1,
+      "message": "I think this should be validated against max supported sectors per segment.",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 177,
+        "endChar": 54
+      },
+      "revId": "3d6ba1f8aa64bab44cc80f7725894debaaacd175",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
