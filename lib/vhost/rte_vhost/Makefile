@@ -39,7 +39,9 @@ CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -include rte_config.h
 
 # These are the DPDK vhost files copied (for now) into SPDK
-C_SRCS += fd_man.c socket.c vhost_user.c vhost.c trans_af_unix.c virtio_pci.c
+C_SRCS += fd_man.c socket.c vhost_user.c vhost.c virtio_pci.c \
+		trans_af_unix.c \
+		trans_virtio_vhost_user.c
 
 LIBNAME = rte_vhost
 
