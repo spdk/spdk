@@ -262,6 +262,16 @@ struct vhost_transport_ops {
 	 *  0 on success, -1 on failure
 	 */
 	int (*vring_call)(struct virtio_net *dev, struct vhost_virtqueue *vq);
+
+	/**
+	* Free resources associated with this device.
+	*
+	* @param dev
+	*  vhost device
+	* @param destroy
+	*  0 on device reset, 1 on full cleanup.
+	*/
+	void (*cleanup_device)(struct virtio_net *dev, int destroy);
 };
 
 /** The traditional AF_UNIX vhost-user protocol transport. */

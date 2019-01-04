@@ -739,4 +739,5 @@ const struct vhost_transport_ops af_unix_trans_ops = {
 	.map_mem_regions = af_unix_map_mem_regions,
 	.unmap_mem_regions = af_unix_unmap_mem_regions,
 	.vring_call = af_unix_vring_call,
+	.cleanup_device = NULL,
 };

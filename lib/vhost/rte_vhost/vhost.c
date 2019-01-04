@@ -86,6 +86,9 @@ cleanup_device(struct virtio_net *dev, int destroy)
 
 	for (i = 0; i < dev->nr_vring; i++)
 		cleanup_vq(dev->virtqueue[i], destroy);
+
+	if (dev->trans_ops->cleanup_device != NULL)
+		dev->trans_ops->cleanup_device(dev, destroy);
 }
 
 /*
