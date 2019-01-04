@@ -179,11 +179,6 @@ struct spdk_vhost_dev {
 	uint32_t coalescing_delay_us;
 	uint32_t coalescing_iops_threshold;
 
-	uint32_t coalescing_delay_time_base;
-
-	/* Threshold when event coalescing for virtqueue will be turned on. */
-	uint32_t  coalescing_io_rate_threshold;
-
 	/* Active connection to the device */
 	struct spdk_vhost_session *session;
 
