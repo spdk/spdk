@@ -22,6 +22,30 @@
       "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16c3ed20_7f3da1b5",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T07:22:42Z",
+      "side": 1,
+      "message": "I would like to keep it to address some ASAN error reports.",
+      "parentUuid": "4bad4eca_32934159",
+      "range": {
+        "startLine": 46,
+        "startChar": 14,
+        "endLine": 46,
+        "endChar": 19
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
