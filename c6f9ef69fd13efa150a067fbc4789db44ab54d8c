@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a94b99e9_d1d99336",
+        "filename": "include/linux/virtio_blk.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "spaces vs tabs in this define series",
+      "range": {
+        "startLine": 41,
+        "startChar": 28,
+        "endLine": 41,
+        "endChar": 32
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8c4d5af_d9cd7b98",
+        "filename": "include/linux/virtio_blk.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 42,
+        "startChar": 33,
+        "endLine": 42,
+        "endChar": 39
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60befe38_189f967a",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "Why more than one desc is not supported?",
+      "range": {
+        "startLine": 309,
+        "startChar": 2,
+        "endLine": 309,
+        "endChar": 32
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70c823eb_48fd46fa",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "This should be debug/notice log.",
+      "range": {
+        "startLine": 324,
+        "startChar": 3,
+        "endLine": 324,
+        "endChar": 14
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6c2a7bdd_053de619",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "What is stopping us from setting this to blkcfg.seg_max?",
+      "range": {
+        "startLine": 789,
+        "startChar": 27,
+        "endLine": 789,
+        "endChar": 28
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abbe9139_83522b42",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:28:13Z",
+      "side": 1,
+      "message": "Are these an errors at all?\n\nSecond thing: you can prepare all features flags you want to enable and then call rte_vhost_driver_enable_features() once.",
+      "range": {
+        "startLine": 902,
+        "startChar": 1,
+        "endLine": 926,
+        "endChar": 2
+      },
+      "revId": "c6f9ef69fd13efa150a067fbc4789db44ab54d8c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
