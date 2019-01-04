@@ -34,6 +34,24 @@
       "revId": "2778e91c95c4b4d96462b2eaf8dc40f087de7bae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9210d8bb_2df7b0b5",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-04T18:56:07Z",
+      "side": 1,
+      "message": "Actually, since the second patch fixes the scan-build error without this assert, I will just take it out here.",
+      "parentUuid": "58de004f_8309027b",
+      "revId": "2778e91c95c4b4d96462b2eaf8dc40f087de7bae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
