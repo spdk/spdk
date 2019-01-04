@@ -250,6 +250,8 @@ int
 spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 			  struct spdk_vhost_virtqueue *virtqueue)
 {
+	int ret;
+
 	if (virtqueue->used_req_cnt == 0) {
 		return 0;
 	}
@@ -261,8 +263,14 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
 		      virtqueue - vsession->virtqueue, virtqueue->vring.last_used_idx);
 
-	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
-	return 1;
+	ret = rte_vhost_vring_call(vsession->vid, virtqueue->vring_idx);
+	if (ret == 0) {
+		/* interrupt signalled */
+		return 1;
+	} else {
+		/* interrupt not signalled */
+		return 0;
+	}
 }
 
 
@@ -1096,9 +1104,11 @@ start_device(int vid)
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
+		vsession->virtqueue[i].vring_idx = -1;
 		if (rte_vhost_get_vhost_vring(vid, i, &vsession->virtqueue[i].vring)) {
 			continue;
 		}
+		vsession->virtqueue[i].vring_idx = i;
 
 		if (vsession->virtqueue[i].vring.desc == NULL ||
 		    vsession->virtqueue[i].vring.size == 0) {
@@ -1134,9 +1144,7 @@ start_device(int vid)
 	 * Tested on QEMU 2.10.91 and 2.11.50.
 	 */
 	for (i = 0; i < vsession->max_queues; i++) {
-		if (vsession->virtqueue[i].vring.callfd != -1) {
-			eventfd_write(vsession->virtqueue[i].vring.callfd, (eventfd_t)1);
-		}
+		rte_vhost_vring_call(vsession->vid, vsession->virtqueue[i].vring_idx);
 	}
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);

@@ -248,6 +248,20 @@ struct vhost_transport_ops {
 	 *  vhost device
 	 */
 	void (*unmap_mem_regions)(struct virtio_net *dev);
+
+	/**
+	 * Notify the guest that used descriptors have been added to the vring.
+	 * The VRING_AVAIL_F_NO_INTERRUPT flag has already been checked so this
+	 * function just needs to perform the notification.
+	 *
+	 * @param dev
+	 *  vhost device
+	 * @param vq
+	 *  vhost virtqueue
+	 * @return
+	 *  0 on success, -1 on failure
+	 */
+	int (*vring_call)(struct virtio_net *dev, struct vhost_virtqueue *vq);
 };
 
 /** The traditional AF_UNIX vhost-user protocol transport. */

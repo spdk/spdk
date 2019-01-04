@@ -720,6 +720,15 @@ af_unix_unmap_mem_regions(struct virtio_net *dev)
 	}
 }
 
+static int
+af_unix_vring_call(struct virtio_net *dev __rte_unused,
+		   struct vhost_virtqueue *vq)
+{
+	if (vq->callfd >= 0)
+		eventfd_write(vq->callfd, (eventfd_t)1);
+	return 0;
+}
+
 const struct vhost_transport_ops af_unix_trans_ops = {
 	.socket_size = sizeof(struct af_unix_socket),
 	.device_size = sizeof(struct vhost_user_connection),
@@ -729,4 +738,5 @@ const struct vhost_transport_ops af_unix_trans_ops = {
 	.send_reply = af_unix_send_reply,
 	.map_mem_regions = af_unix_map_mem_regions,
 	.unmap_mem_regions = af_unix_unmap_mem_regions,
+	.vring_call = af_unix_vring_call,
 };

@@ -97,6 +97,7 @@ DEFINE_STUB(spdk_vhost_nvme_set_bar_mr, int, (int vid, void *bar, uint64_t bar_s
 DEFINE_STUB(spdk_vhost_nvme_get_cap, int, (int vid, uint64_t *cap), 0);
 DEFINE_STUB(rte_vhost_set_vhost_vring_last_idx, int,
 	    (int vid, uint16_t vring_idx, uint16_t last_avail_idx, uint16_t last_used_idx), 0);
+DEFINE_STUB(rte_vhost_vring_call, int, (int vid, uint16_t vring_idx), 0);
 
 void *
 spdk_call_unaffinitized(void *cb(void *arg), void *arg)

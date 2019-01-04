@@ -472,4 +472,19 @@ int rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
 int rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
 			      uint16_t last_avail_idx, uint16_t last_used_idx);
 
+/* This is the public API for the vhost-user transport-specific
+ * notification mechanims. It is used by spdk_vhost_vq_used_signal().
+ * This function calls the transport-specific vring call function
+ * to notify master for the consumption of the available vring
+ * descriptors.
+ *
+ * @param vid
+ *  vhost device ID
+ * @param vring_idx
+ *  vring index
+ * @return
+ *  0 on success, -1 on failure
+ */
+int rte_vhost_vring_call(int vid, uint16_t vring_idx);
+
 #endif /* _RTE_VHOST_H_ */
