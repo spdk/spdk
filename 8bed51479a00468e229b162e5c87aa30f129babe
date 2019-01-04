@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79b0646b_a0d45439",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-04T08:10:51Z",
+      "side": 1,
+      "message": "+s",
+      "range": {
+        "startLine": 7,
+        "startChar": 3,
+        "endLine": 7,
+        "endChar": 17
+      },
+      "revId": "8bed51479a00468e229b162e5c87aa30f129babe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66fbdb20_52c1872a",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-04T08:10:51Z",
+      "side": 1,
+      "message": "typo error.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 9
+      },
+      "revId": "8bed51479a00468e229b162e5c87aa30f129babe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
