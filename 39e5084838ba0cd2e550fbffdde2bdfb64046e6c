@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4bad4eca_32934159",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:07:04Z",
+      "side": 1,
+      "message": "_SAFE version is needed only if list is changed during iteration and iteration continue.",
+      "range": {
+        "startLine": 46,
+        "startChar": 14,
+        "endLine": 46,
+        "endChar": 19
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

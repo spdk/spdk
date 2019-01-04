@@ -164,6 +164,30 @@
     },
     {
       "key": {
+        "uuid": "fd72a0ab_ce24b464",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-04T07:07:04Z",
+      "side": 1,
+      "message": "OK, I see.",
+      "parentUuid": "bf3f17b8_5a41a711",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 75,
+        "endChar": 8
+      },
+      "revId": "aac7e84596d1f75a6c46e52c19aa54723a2b4c30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e55841e9_29137c0c",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 9
