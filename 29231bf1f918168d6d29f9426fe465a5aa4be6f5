@@ -22,6 +22,30 @@
       "revId": "29231bf1f918168d6d29f9426fe465a5aa4be6f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f937949_5fd437f7",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-04T18:55:10Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "56917c1f_093d0444",
+      "range": {
+        "startLine": 777,
+        "startChar": 1,
+        "endLine": 777,
+        "endChar": 49
+      },
+      "revId": "29231bf1f918168d6d29f9426fe465a5aa4be6f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
