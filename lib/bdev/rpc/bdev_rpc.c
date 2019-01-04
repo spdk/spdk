@@ -76,11 +76,20 @@ spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 		spdk_json_write_name(w, "num_write_ops");
 		spdk_json_write_uint64(w, stat->num_write_ops);
 
+		spdk_json_write_name(w, "bytes_unmapped");
+		spdk_json_write_uint64(w, stat->bytes_unmapped);
+
+		spdk_json_write_name(w, "num_unmap_ops");
+		spdk_json_write_uint64(w, stat->num_unmap_ops);
+
 		spdk_json_write_name(w, "read_latency_ticks");
 		spdk_json_write_uint64(w, stat->read_latency_ticks);
 
 		spdk_json_write_name(w, "write_latency_ticks");
 		spdk_json_write_uint64(w, stat->write_latency_ticks);
+
+		spdk_json_write_name(w, "unmap_latency_ticks");
+		spdk_json_write_uint64(w, stat->unmap_latency_ticks);
 
 		if (spdk_bdev_get_qd_sampling_period(bdev)) {
 			spdk_json_write_name(w, "queue_depth_polling_period");
