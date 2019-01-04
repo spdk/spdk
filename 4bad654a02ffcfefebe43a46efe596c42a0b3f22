@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b86a10b_c6ac118e",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-04T10:40:39Z",
+      "side": 1,
+      "message": "If that\u0027s supposed to be a comment then change to:\n# comment",
+      "range": {
+        "startLine": 98,
+        "startChar": 12,
+        "endLine": 98,
+        "endChar": 49
+      },
+      "revId": "4bad654a02ffcfefebe43a46efe596c42a0b3f22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
