@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "8c7d652d_b7a60b7a",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "No, this is intended since the definition is that CAS bdev is \"doing finish\" until it gets destroyed.\nI will write comments for the states. Is that ok?",
+      "parentUuid": "c5ad1269_e08fc66d",
+      "range": {
+        "startLine": 212,
+        "startChar": 2,
+        "endLine": 213,
+        "endChar": 17
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91e19625_b81aa436",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 36
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "For internal functions it is safe to just do \n\n  assert(name !\u003d NULL)",
+      "range": {
+        "startLine": 264,
+        "startChar": 1,
+        "endLine": 264,
+        "endChar": 20
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "853cff46_8364d3ee",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 264,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "It is available to everyone who uses \"vbdev_cas.h\" header\nSo if someone who use this function did not check for NULL, they better get NULL as a result because strcmp on NULL is undefined.",
+      "parentUuid": "91e19625_b81aa436",
       "range": {
         "startLine": 264,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d9b5e04d_73e1f1c2",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "db95b21e_c92711c2",
+      "range": {
+        "startLine": 286,
+        "startChar": 1,
+        "endLine": 289,
+        "endChar": 2
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4c936318_63c21017",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 36
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "Should this be decremented in case of ENOMEM?",
+      "range": {
+        "startLine": 349,
+        "startChar": 3,
+        "endLine": 349,
+        "endChar": 29
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1850c6f3_83b31e8e",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 349,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Yes, it is consistant and safe",
+      "parentUuid": "4c936318_63c21017",
       "range": {
         "startLine": 349,
         "startChar": 3,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "2c49de1d_ef3001ed",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1b2bca3b_52146e6e",
+      "range": {
+        "startLine": 590,
+        "startChar": 10,
+        "endLine": 590,
+        "endChar": 11
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc1214da_e778141c",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 36
@@ -128,6 +248,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "what are these magic numbers?",
+      "range": {
+        "startLine": 791,
+        "startChar": 0,
+        "endLine": 792,
+        "endChar": 46
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1417343_9f64b4b6",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "They are suggested by other OCF implementations and there is no \u0027formula\u0027 for them\nAlso they are not descrete in a sense that changing them a bit would not brake anything\nDo you think we need to change this code somehow?",
+      "parentUuid": "dc1214da_e778141c",
       "range": {
         "startLine": 791,
         "startChar": 0,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "44068885_8921f077",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 808,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "You are correct. Ack",
+      "parentUuid": "d59a395d_7b1aad39",
+      "range": {
+        "startLine": 808,
+        "startChar": 25,
+        "endLine": 808,
+        "endChar": 50
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0c5ce67d_a6008b56",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 36
@@ -174,6 +342,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "This doesn\u0027t guarantiee anything. If bdev with name \u0027vbdev_name\u0027 doesn\u0027t exist now it can be created later before register_vbdev() and vice versa if it exists now, it can be removed before register_vbdev().\n\nI think you should only use vbdev_cas_get_by_name() here.",
+      "range": {
+        "startLine": 832,
+        "startChar": 5,
+        "endLine": 832,
+        "endChar": 38
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "594e9c07_40ebc340",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "It does guarantee that at this moment there is not registered bdev with that name\nSo we might get error immediately instead of at examine for example",
+      "parentUuid": "0c5ce67d_a6008b56",
       "range": {
         "startLine": 832,
         "startChar": 5,
@@ -209,6 +401,30 @@
     },
     {
       "key": {
+        "uuid": "02da7a12_791c83e4",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "No, because there are different error messages.",
+      "parentUuid": "08aabbb2_c4df6b1c",
+      "range": {
+        "startLine": 848,
+        "startChar": 0,
+        "endLine": 860,
+        "endChar": 2
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06fe0eb2_413bfff1",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 36
@@ -220,6 +436,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "ENODEV ?",
+      "range": {
+        "startLine": 1025,
+        "startChar": 10,
+        "endLine": 1025,
+        "endChar": 16
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2969cfde_1e885c51",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "06fe0eb2_413bfff1",
       "range": {
         "startLine": 1025,
         "startChar": 10,
@@ -255,6 +495,30 @@
     },
     {
       "key": {
+        "uuid": "073ad4b9_c178e5be",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 265,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "But this is use env_memset which returns error code",
+      "parentUuid": "f8072da7_35afc2e7",
+      "range": {
+        "startLine": 265,
+        "startChar": 6,
+        "endLine": 265,
+        "endChar": 54
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b16c8b1_74af9e54",
         "filename": "lib/cas/ocfenv/ocf_env.c",
         "patchSetId": 36
@@ -266,6 +530,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "unused?",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 19
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cc26c7d_ac657f63",
+        "filename": "lib/cas/ocfenv/ocf_env.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Yes, ack",
+      "parentUuid": "2b16c8b1_74af9e54",
       "range": {
         "startLine": 52,
         "startChar": 0,
@@ -301,6 +589,30 @@
     },
     {
       "key": {
+        "uuid": "5ff55a13_6010c143",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d76d125a_4d258354",
+      "range": {
+        "startLine": 524,
+        "startChar": 0,
+        "endLine": 528,
+        "endChar": 37
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7986b341_b28b43bc",
         "filename": "lib/cas/ocfenv/ocf_env.h",
         "patchSetId": 36
@@ -312,6 +624,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "does this need to be atomic?",
+      "range": {
+        "startLine": 564,
+        "startChar": 1,
+        "endLine": 564,
+        "endChar": 33
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63270f50_422a7c59",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 564,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Yes, it is used to set states that are accessed from different threads",
+      "parentUuid": "7986b341_b28b43bc",
       "range": {
         "startLine": 564,
         "startChar": 1,
@@ -347,6 +683,30 @@
     },
     {
       "key": {
+        "uuid": "7f9cb578_93f80776",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "This one cannot because \"condition\" is a custom expression, not a variable",
+      "parentUuid": "59df8f25_4e0272bb",
+      "range": {
+        "startLine": 596,
+        "startChar": 8,
+        "endLine": 596,
+        "endChar": 26
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f25210ca_f995efb9",
         "filename": "lib/cas/ocfenv/ocf_env.h",
         "patchSetId": 36
@@ -358,6 +718,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "I looks better to write (1UL \u003c\u003c 21) than (256 \u003c\u003c 20). Also can\u0027t you put some comment why this is \"MAX_MEM\" and why only 2MB ?\n\nThe same for rest of ENV_MAX_* limits in this file.",
+      "range": {
+        "startLine": 644,
+        "startChar": 0,
+        "endLine": 644,
+        "endChar": 33
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3077996d_d0829fa4",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f25210ca_f995efb9",
       "range": {
         "startLine": 644,
         "startChar": 0,
@@ -393,6 +777,30 @@
     },
     {
       "key": {
+        "uuid": "ce214218_52355aee",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 646,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "I don\u0027t think this is an issue because these functions are for usage in OCF\nProgrammer needs to know how to define them according to documentation, not according to how they feel this functions looks like",
+      "parentUuid": "9100ce04_a1a8e946",
+      "range": {
+        "startLine": 646,
+        "startChar": 0,
+        "endLine": 646,
+        "endChar": 67
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f2757ce_505f155a",
         "filename": "lib/cas/ocfenv/ocf_env.h",
         "patchSetId": 36
@@ -416,6 +824,30 @@
     },
     {
       "key": {
+        "uuid": "6a04cf4a_6bbf3e91",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 648,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "4f2757ce_505f155a",
+      "range": {
+        "startLine": 648,
+        "startChar": 0,
+        "endLine": 648,
+        "endChar": 44
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19f55bcb_cb67d4cf",
         "filename": "lib/cas/ocfenv/ocf_env.h",
         "patchSetId": 36
@@ -427,6 +859,30 @@
       "writtenOn": "2019-01-02T11:06:52Z",
       "side": 1,
       "message": "pls make this a function.",
+      "range": {
+        "startLine": 677,
+        "startChar": 8,
+        "endLine": 677,
+        "endChar": 19
+      },
+      "revId": "6e946e1f1bdf3cae8bb5864e71c5aa07ec304365",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abeaa9c7_d6bfad11",
+        "filename": "lib/cas/ocfenv/ocf_env.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "19f55bcb_cb67d4cf",
       "range": {
         "startLine": 677,
         "startChar": 8,

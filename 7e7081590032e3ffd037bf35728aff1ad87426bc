@@ -496,6 +496,30 @@
     },
     {
       "key": {
+        "uuid": "237513c8_32058afd",
+        "filename": "lib/cas/ctx.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T15:36:36Z",
+      "side": 1,
+      "message": "Because on next iteration we always want to do memset from 0",
+      "parentUuid": "8e44c1d4_f3febb16",
+      "range": {
+        "startLine": 177,
+        "startChar": 3,
+        "endLine": 177,
+        "endChar": 14
+      },
+      "revId": "7e7081590032e3ffd037bf35728aff1ad87426bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22ee8625_3a165865",
         "filename": "lib/cas/ocfenv/ocf_env.c",
         "patchSetId": 27
