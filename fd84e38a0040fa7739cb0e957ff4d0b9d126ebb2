@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0e180c1_4d6a62a8",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-04T16:18:27Z",
+      "side": 1,
+      "message": "That\u0027s correct, they do already point at LLVM. I wanted to explicitly state that the default is to use LLVM, because gcc doesn\u0027t work with lld, so if someone, for some reason, had cc -\u003e gcc the build would fail.",
+      "parentUuid": "8b5ffd45_66087965",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7e2432bf_4d9a9a1d",
         "filename": "scripts/detect_cc.sh",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-03T16:48:47Z",
       "side": 1,
       "message": "I think you need two new variables - \u0027LD\u0027 which points at the particular linker executable you want to use. That should probably default to just \u0027ld\u0027. And \u0027LD_TYPE\u0027 which should be one of the strings \u0027ld, lld, gold\u0027.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ae225f07_2ac51d92",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-04T16:18:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e2432bf_4d9a9a1d",
       "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "14830590_6fba6426",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-04T16:18:27Z",
+      "side": 1,
+      "message": "The reason for this change was to easily use the default when empty option was provided (e.g. detect_cc.sh --cc\u003d would use cc instead of empty string). The script is called before any of the defaults are set, so it was called with empty LD_TYPE and it was easier (and cleaner) to allow empty options than to modify its call inside the Makefile. Anyway, since I\u0027m changing the script to use LD instead of LD_TYPE, I\u0027ll revert it (CC, CXX, and LD are implicitly defined by make to cc, cxx and ld respectively).",
+      "parentUuid": "9a18d5c1_068c6dee",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bf2b00bf_c9474fde",
         "filename": "scripts/detect_cc.sh",
         "patchSetId": 3
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-03T16:48:47Z",
       "side": 1,
       "message": "For CC/CXX, the user passes in the path to the executable instead of passing in the type. The type is then discovered by this script automatically. I think you should be doing the same thing for ld.",
+      "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8241835a_7d184a48",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-04T16:18:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bf2b00bf_c9474fde",
       "revId": "fd84e38a0040fa7739cb0e957ff4d0b9d126ebb2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
