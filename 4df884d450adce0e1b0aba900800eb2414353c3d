@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9cee0fea_6fa3312a",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "Is spdk bdev created right away - no, we register it later if one of base bdevs are not present",
+      "parentUuid": "190ec815_dc5093bc",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 92,
+        "endChar": 2
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3f987c94_fa10cd74",
         "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2018-12-28T15:51:55Z",
       "side": 1,
       "message": "Why?",
+      "range": {
+        "startLine": 123,
+        "startChar": 7,
+        "endLine": 123,
+        "endChar": 34
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6aaf3f6a_bb52a9ee",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "I will add spdk_strerror, ok?",
+      "parentUuid": "3f987c94_fa10cd74",
       "range": {
         "startLine": 123,
         "startChar": 7,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "746fbdf7_4d88ce3a",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "Ack, except it\u0027s ENODEV positive",
+      "parentUuid": "b4fc7bc7_a50e30c2",
+      "range": {
+        "startLine": 156,
+        "startChar": 7,
+        "endLine": 156,
+        "endChar": 32
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "001f46ca_9e559742",
         "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
         "patchSetId": 13
@@ -82,6 +154,30 @@
       "writtenOn": "2018-12-28T15:51:55Z",
       "side": 1,
       "message": "But why?",
+      "range": {
+        "startLine": 163,
+        "startChar": 7,
+        "endLine": 163,
+        "endChar": 34
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04e8c8a8_9f059c87",
+        "filename": "lib/bdev/cas/vbdev_cas_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 163,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "I will add spdk_strerror, ok?",
+      "parentUuid": "001f46ca_9e559742",
       "range": {
         "startLine": 163,
         "startChar": 7,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "598e996b_c98287b0",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "de3f301e_394e6618",
+      "range": {
+        "startLine": 156,
+        "startChar": 32,
+        "endLine": 156,
+        "endChar": 47
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "251bfe4e_22528eb6",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 13
@@ -128,6 +248,30 @@
       "writtenOn": "2018-12-28T15:51:55Z",
       "side": 1,
       "message": "Valid values are needed in doc string",
+      "range": {
+        "startLine": 50,
+        "startChar": 14,
+        "endLine": 50,
+        "endChar": 28
+      },
+      "revId": "4df884d450adce0e1b0aba900800eb2414353c3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b184c63e_d130708d",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T08:44:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "251bfe4e_22528eb6",
       "range": {
         "startLine": 50,
         "startChar": 14,
