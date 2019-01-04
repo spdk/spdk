@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5518e17_58020cfb",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-04T09:13:40Z",
+      "side": 1,
+      "message": "Doesn\u0027t this leak if no spdk_histogram_data_free(histogram) is done here ?\nI know its done as next patch, but then it shouldn\u0027t be merged separately.",
+      "range": {
+        "startLine": 706,
+        "startChar": 0,
+        "endLine": 706,
+        "endChar": 51
+      },
+      "revId": "b5bbc35621263558f5b4ba5178055cb871ad1ac9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
