@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "643e807d_deafedc5",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T20:55:33Z",
+      "side": 1,
+      "message": "CAS can restore its state from NV metadata but we do not support it yet",
+      "parentUuid": "9d220854_8f83299e",
+      "range": {
+        "startLine": 249,
+        "startChar": 38,
+        "endLine": 249,
+        "endChar": 60
+      },
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59c2dffe_34f63db7",
         "filename": "doc/bdev.md",
         "patchSetId": 2
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dcc1ae69_8b5c412a",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T20:55:33Z",
+      "side": 1,
+      "message": "Yes. Although data is sent to core bdev during same io request, it\u0027s usually won\u0027t be present immediately\nTo me, \u0027eventually\u0027 here is to not make an impression that data will be there immediately",
+      "parentUuid": "59c2dffe_34f63db7",
+      "range": {
+        "startLine": 250,
+        "startChar": 54,
+        "endLine": 250,
+        "endChar": 64
+      },
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "30d3d57e_9b1c6350",
         "filename": "doc/bdev.md",
         "patchSetId": 2
@@ -59,6 +107,24 @@
       "writtenOn": "2019-01-03T08:59:18Z",
       "side": 1,
       "message": "TODO: \n1. Describe modes in which CAS works\n2. Refer to CAS documentation",
+      "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "646bba76_a95944fc",
+        "filename": "doc/bdev.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-04T20:55:33Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "30d3d57e_9b1c6350",
       "revId": "d8b3ee9303d94e67d2f4e77e4f50d088f8e169e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
