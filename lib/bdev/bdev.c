@@ -2017,8 +2017,11 @@ _spdk_bdev_io_stat_add(struct spdk_bdev_io_stat *total, struct spdk_bdev_io_stat
 	total->num_read_ops += add->num_read_ops;
 	total->bytes_written += add->bytes_written;
 	total->num_write_ops += add->num_write_ops;
+	total->bytes_discard += add->bytes_discard;
+	total->num_discard_ops += add->num_discard_ops;
 	total->read_latency_ticks += add->read_latency_ticks;
 	total->write_latency_ticks += add->write_latency_ticks;
+	total->discard_latency_ticks += add->discard_latency_ticks;
 }
 
 static void
@@ -3074,6 +3077,10 @@ _spdk_bdev_io_complete(void *ctx)
 			bdev_io->internal.ch->stat.num_write_ops++;
 			bdev_io->internal.ch->stat.write_latency_ticks += tsc_diff;
 			break;
+		case SPDK_BDEV_IO_TYPE_UNMAP:
+			bdev_io->internal.ch->stat.bytes_discard += bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			bdev_io->internal.ch->stat.num_discard_ops++;
+			bdev_io->internal.ch->stat.discard_latency_ticks += tsc_diff;
 		default:
 			break;
 		}
@@ -3082,17 +3089,20 @@ _spdk_bdev_io_complete(void *ctx)
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->internal.ch->start_tsc + bdev_io->internal.ch->interval_tsc)) {
-		uint64_t data[5];
+		uint64_t data[7];
 
 		data[0] = bdev_io->internal.ch->stat.num_read_ops - bdev_io->internal.ch->prev_stat.num_read_ops;
 		data[1] = bdev_io->internal.ch->stat.bytes_read - bdev_io->internal.ch->prev_stat.bytes_read;
 		data[2] = bdev_io->internal.ch->stat.num_write_ops - bdev_io->internal.ch->prev_stat.num_write_ops;
 		data[3] = bdev_io->internal.ch->stat.bytes_written - bdev_io->internal.ch->prev_stat.bytes_written;
-		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
+		data[4] = bdev_io->internal.ch->stat.num_discard_ops -
+			  bdev_io->internal.ch->prev_stat.num_discard_ops;
+		data[5] = bdev_io->internal.ch->stat.bytes_discard - bdev_io->internal.ch->prev_stat.bytes_discard;
+		data[6] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->internal.ch->channel) : 0;
 
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->internal.ch->handle,
-				   __itt_metadata_u64, 5, data);
+				   __itt_metadata_u64, 7, data);
 
 		bdev_io->internal.ch->prev_stat = bdev_io->internal.ch->stat;
 		bdev_io->internal.ch->start_tsc = now_tsc;
