@@ -155,6 +155,7 @@ alloc_vring_queue(struct virtio_net *dev, uint32_t vring_idx)
 
 	dev->virtqueue[vring_idx] = vq;
 	init_vring_queue(vq);
+	dev->virtqueue[vring_idx]->vring_idx = vring_idx;
 
 	dev->nr_vring += 1;
 
