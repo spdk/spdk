@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6d006fc0_05cc718b",
+        "filename": "include/linux/virtio_blk.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 177,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T01:03:07Z",
+      "side": 1,
+      "message": "yeah, we should keep it here.",
+      "parentUuid": "40a48a4d_52e2838a",
+      "revId": "685d5d89cbee4ffede983f3278618a73a53f55bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "846c1ec8_f2af3192",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "761d19b7_3b931fef",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 890,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T01:03:07Z",
+      "side": 1,
+      "message": "good catch.",
+      "parentUuid": "846c1ec8_f2af3192",
+      "revId": "685d5d89cbee4ffede983f3278618a73a53f55bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dfa6076b_71973876",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-03T12:42:44Z",
       "side": 1,
       "message": "Maybe unrelated to this patch: if spdk_vhost_dev_unregister() failed, should we free bvdev?",
+      "revId": "685d5d89cbee4ffede983f3278618a73a53f55bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7e2974b_9a3a1e59",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 935,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-04T01:03:07Z",
+      "side": 1,
+      "message": "nice to close the block device.",
+      "parentUuid": "dfa6076b_71973876",
       "revId": "685d5d89cbee4ffede983f3278618a73a53f55bd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
