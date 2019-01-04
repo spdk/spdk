@@ -40,6 +40,8 @@ INSTALLED_HEADERS := $(patsubst $(SPDK_ROOT_DIR)/include%,$(DESTDIR)$(includedir
 $(DESTDIR)$(includedir)%.h:
 	$(INSTALL_HEADER)
 
+.PHONY: $(INSTALLED_HEADERS)
+
 all:
 	@:
 
