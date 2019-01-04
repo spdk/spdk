@@ -342,25 +342,19 @@ static int
 spdk_vhost_session_set_coalescing(struct spdk_vhost_dev *vdev,
 				  struct spdk_vhost_session *vsession, void *ctx)
 {
+	uint64_t delay_time_base;
+	uint32_t io_rate;
+
 	if (vdev == NULL || vsession == NULL) {
 		/* nothing to do */
 		return 0;
 	}
 
-	vsession->coalescing_delay_time_base = vdev->coalescing_delay_time_base;
-	vsession->coalescing_io_rate_threshold = vdev->coalescing_io_rate_threshold;
-	return 0;
-}
-
-int
-spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
-			  uint32_t iops_threshold)
-{
-	uint64_t delay_time_base = delay_base_us * spdk_get_ticks_hz() / 1000000ULL;
-	uint32_t io_rate = iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
+	delay_time_base = vdev->coalescing_delay_us * spdk_get_ticks_hz() / 1000000ULL;
+	io_rate = vdev->coalescing_iops_threshold * SPDK_VHOST_STATS_CHECK_INTERVAL_MS / 1000U;
 
 	if (delay_time_base >= UINT32_MAX) {
-		SPDK_ERRLOG("Delay time of %"PRIu32" is to big\n", delay_base_us);
+		SPDK_ERRLOG("Delay time of %"PRIu32" is to big\n", vdev->coalescing_delay_us);
 		return -EINVAL;
 	} else if (io_rate == 0) {
 		SPDK_ERRLOG("IOPS rate of %"PRIu32" is too low. Min is %u\n", io_rate,
@@ -368,9 +362,15 @@ spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
 		return -EINVAL;
 	}
 
-	vdev->coalescing_delay_time_base = delay_time_base;
-	vdev->coalescing_io_rate_threshold = io_rate;
+	vsession->coalescing_delay_time_base = delay_time_base;
+	vsession->coalescing_io_rate_threshold = io_rate;
+	return 0;
+}
 
+int
+spdk_vhost_set_coalescing(struct spdk_vhost_dev *vdev, uint32_t delay_base_us,
+			  uint32_t iops_threshold)
+{
 	vdev->coalescing_delay_us = delay_base_us;
 	vdev->coalescing_iops_threshold = iops_threshold;
 
