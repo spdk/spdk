@@ -38,13 +38,20 @@
 
 #include "spdk/vhost.h"
 
+#define UNIX 0
+#define VVU 1
+
 static const char *g_pid_path = NULL;
+
+static int chosen_trans = UNIX;
+static int valid_basename = 0;
 
 static void
 vhost_usage(void)
 {
 	printf(" -f <path>                 save pid to file under given path\n");
-	printf(" -S <path>                 directory where to create vhost sockets (default: pwd)\n");
+	printf(" -S <path>                 directory where UNIX domain sockets will be created (default: pwd) or PCI address of the VVU device\n");
+	printf(" -T <option>               choose vhost transport (\"unix\" or \"vvu\") - \"unix\" is the default\n");
 }
 
 static void
@@ -70,7 +77,10 @@ vhost_parse_arg(int ch, char *arg)
 		g_pid_path = arg;
 		break;
 	case 'S':
-		spdk_vhost_set_socket_path(arg);
+		valid_basename = spdk_vhost_set_socket_path(arg);
+		break;
+	case 'T':
+		chosen_trans = spdk_vhost_set_transport(arg);
 		break;
 	default:
 		return -EINVAL;
@@ -92,10 +102,21 @@ main(int argc, char *argv[])
 	spdk_app_opts_init(&opts);
 	opts.name = "vhost";
 
-	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:", NULL,
+	if ((rc = spdk_app_parse_args(argc, argv, &opts, "f:S:T:", NULL,
 				      vhost_parse_arg, vhost_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
 		exit(rc);
+	}
+
+	if (chosen_trans < 0) {
+		fprintf(stderr, "Exiting...\n");
+		exit(EXIT_FAILURE);
+	}
+
+	if (chosen_trans == VVU && valid_basename != 1) {
+		fprintf(stderr, "Couldn't create VVU transport without a PCI address for the VVU device.\n");
+		fprintf(stderr, "Exiting...\n");
+		exit(EXIT_FAILURE);
 	}
 
 	if (g_pid_path) {

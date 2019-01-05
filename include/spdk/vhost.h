@@ -59,13 +59,15 @@ typedef void (*spdk_vhost_init_cb)(int rc);
 typedef void (*spdk_vhost_fini_cb)(void);
 
 /**
- * Set the path to the directory where vhost sockets will be created.
+ * Set the path to the directory where vhost sockets will be created or
+ * set the PCI address of the VVU device. The behavior depends on the
+ * chosen vhost transport.
  *
  * This function must be called before spdk_vhost_init().
  *
- * \param basename Path to vhost socket directory
+ * \param basename Path to vhost socket directory or PCI address of the VVU device.
  *
- * \return 0 on success, negative errno on error.
+ * \return 1 for valid basename, 0 for empty basename, negative errno on error.
  */
 int spdk_vhost_set_socket_path(const char *basename);
 
