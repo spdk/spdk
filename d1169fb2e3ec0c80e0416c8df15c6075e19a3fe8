@@ -123,6 +123,24 @@
       "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f9f5535_e275aa50",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 772,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T03:56:57Z",
+      "side": 1,
+      "message": "I agree and think you could just add a check on line 780 for whether qpair-\u003egroup is NULL. If it is NULL, call cb_fn directly, otherwise send a message.",
+      "parentUuid": "67f9ef9e_88effa3f",
+      "revId": "d1169fb2e3ec0c80e0416c8df15c6075e19a3fe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
