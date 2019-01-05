@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0b832ac_e8e15ca4",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T03:54:29Z",
+      "side": 1,
+      "message": "This breaks the architecture. This file isn\u0027t supposed to have access to anything but the public nvmf API.",
+      "revId": "88997d120c24fb0e037ed8adea7146e71f8272b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dbdd274d_cc096c78",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T03:54:29Z",
+      "side": 1,
+      "message": "Alternatively, you could set the state to activating prior to calling this new_qpair callback. Then it is done inside the nvmf library.",
+      "revId": "88997d120c24fb0e037ed8adea7146e71f8272b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45a1022b_40571610",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T03:54:29Z",
+      "side": 1,
+      "message": "I think you should leave the thread check here, but just only do it if qpair-\u003egroup is not NULL.",
+      "revId": "88997d120c24fb0e037ed8adea7146e71f8272b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
