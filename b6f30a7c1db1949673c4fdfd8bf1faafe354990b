@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69e63467_fa047149",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-05T10:25:25Z",
+      "side": 1,
+      "message": "size maybe NULL.",
+      "revId": "b6f30a7c1db1949673c4fdfd8bf1faafe354990b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfb23f97_3545e569",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-05T10:25:25Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "b6f30a7c1db1949673c4fdfd8bf1faafe354990b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
