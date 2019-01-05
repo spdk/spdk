@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c802d71a_59e86ccb",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 621,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-05T03:47:27Z",
+      "side": 1,
+      "message": "See lib/bdev/rpc/bdev_rpc.c:82",
+      "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdb9c6c7_7049475d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3105,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-05T03:47:27Z",
+      "side": 1,
+      "message": "Use SPDK_COUNTOF(data)?",
+      "range": {
+        "startLine": 3105,
+        "startChar": 27,
+        "endLine": 3105,
+        "endChar": 28
+      },
+      "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c6bffb16_bce76892",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-05T03:47:27Z",
+      "side": 1,
+      "message": "num_read_ops for READ, num_write_ops for WRITE, so num_discard_ops for DISCARD is better? And you use \"num_discard_ops\" in doc/jsonrpc.md:621.",
+      "range": {
+        "startLine": 82,
+        "startChar": 27,
+        "endLine": 82,
+        "endChar": 44
+      },
+      "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
