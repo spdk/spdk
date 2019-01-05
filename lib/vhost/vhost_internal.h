@@ -226,6 +226,8 @@ struct spdk_vhost_dev_backend {
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
 
+struct spdk_vhost_dev *spdk_vhost_dev_find_by_path(const char *ctrlr_name);
+
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,

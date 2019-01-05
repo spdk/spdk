@@ -48,6 +48,8 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
+static int dev_dirname_len;
+
 static struct spdk_thread *g_fini_thread;
 static spdk_vhost_fini_cb g_fini_cpl_cb;
 
@@ -636,6 +638,20 @@ spdk_vhost_dev_find(const char *ctrlr_name)
 	return NULL;
 }
 
+struct spdk_vhost_dev *
+spdk_vhost_dev_find_by_path(const char *ctrlr_name)
+{
+	struct spdk_vhost_dev *vdev;
+
+	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
+		if (strcmp(vdev->path, ctrlr_name) == 0) {
+			return vdev;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 spdk_vhost_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
@@ -711,26 +727,50 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
-	if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
-		SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
-			    name);
-		rc = -EINVAL;
-		goto out;
-	}
+	if (transport != RTE_VHOST_USER_VIRTIO_TRANSPORT) {
 
-	/* Register vhost driver to handle vhost messages. */
-	if (stat(path, &file_stat) != -1) {
-		if (!S_ISSOCK(file_stat.st_mode)) {
-			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
-				    "The file already exists and is not a socket.\n",
-				    path);
-			rc = -EIO;
+		/* Insert a slash in the end of a non-empty dirname if not present already */
+		if (dev_dirname_len > 0 && dev_dirname[dev_dirname_len - 1] != '/') {
+			dev_dirname[dev_dirname_len] = '/';
+			dev_dirname[dev_dirname_len + 1]  = '\0';
+		}
+
+		if (snprintf(path, sizeof(path), "%s%s", dev_dirname, name) >= (int)sizeof(path)) {
+			SPDK_ERRLOG("Resulting socket path for controller %s is too long: %s%s\n", name, dev_dirname,
+				    name);
+			rc = -EINVAL;
 			goto out;
-		} else if (unlink(path) != 0) {
-			SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
-				    "The socket already exists and failed to unlink.\n",
-				    path);
-			rc = -EIO;
+		}
+
+		/* Register vhost driver to handle vhost messages. */
+		if (stat(path, &file_stat) != -1) {
+			if (!S_ISSOCK(file_stat.st_mode)) {
+				SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
+					    "The file already exists and is not a socket.\n",
+					    path);
+				rc = -EIO;
+				goto out;
+			} else if (unlink(path) != 0) {
+				SPDK_ERRLOG("Cannot create a domain socket at path \"%s\": "
+					    "The socket already exists and failed to unlink.\n",
+					    path);
+				rc = -EIO;
+				goto out;
+			}
+		}
+
+	} else {
+		struct spdk_pci_addr pci_addr;
+		if (spdk_pci_addr_parse(&pci_addr, dev_dirname) != 0) {
+			SPDK_ERRLOG("Invalid PCI address '%s'\n", path);
+			rc = -EINVAL;
+			goto out;
+		}
+
+		if (snprintf(path, sizeof(path), "%s", dev_dirname) != dev_dirname_len) {
+			SPDK_ERRLOG("Something went wrong while copying PCI address '%s' for controller %s.\n", dev_dirname,
+				    name);
+			rc = -EINVAL;
 			goto out;
 		}
 	}
@@ -1269,10 +1309,7 @@ spdk_vhost_set_socket_path(const char *basename)
 			return -EINVAL;
 		}
 
-		if (dev_dirname[ret - 1] != '/') {
-			dev_dirname[ret] = '/';
-			dev_dirname[ret + 1]  = '\0';
-		}
+		dev_dirname_len = ret;
 	}
 
 	return 0;
@@ -1324,7 +1361,7 @@ new_connection(int vid)
 		return -1;
 	}
 
-	vdev = spdk_vhost_dev_find(ifname);
+	vdev = spdk_vhost_dev_find_by_path(ifname);
 	if (vdev == NULL) {
 		SPDK_ERRLOG("Couldn't find device with vid %d to create connection for.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
