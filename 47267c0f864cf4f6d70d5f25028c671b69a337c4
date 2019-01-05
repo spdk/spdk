@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ec8b1346_881f9267",
+        "filename": "lib/util/string.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T04:27:12Z",
+      "side": 1,
+      "message": "I actually think there is a trick here to make this much simpler. From the man page for vsnprintf:\n\nThe functions snprintf() and vsnprintf() do not write more than size bytes (including the terminating null byte (\u0027\\0\u0027)). If the output was truncated due to this limit then the return value is the number of characters (excluding the terminating null byte) which would have been written to the final string if enough space had been available. Thus, a return value of size or more means that the output was truncated. (See also below under NOTES.)\n\nSo here\u0027s the trick - start the function by attempting the vsnprintf on the original buffer. It will then return the required size. Then just realloc the buffer to the returned size (plus one) one time and redo the vsnprintf. That eliminates a lot of the tricky parts of what to do if the second or third realloc fails.",
+      "revId": "47267c0f864cf4f6d70d5f25028c671b69a337c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da8fb183_75fa87b2",
         "filename": "lib/util/string.c",
         "patchSetId": 12
