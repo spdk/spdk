@@ -1357,7 +1357,7 @@ void
 spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_req *req;
-	struct spdk_blob_store *bs = lvol->lvol_store->blobstore;
+	struct spdk_blob_store *bs;
 
 	assert(cb_fn != NULL);
 
@@ -1385,6 +1385,7 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
+	bs = lvol->lvol_store->blobstore;
 
 	spdk_bs_delete_blob(bs, lvol->blob_id, _spdk_lvol_delete_blob_cb, req);
 }
