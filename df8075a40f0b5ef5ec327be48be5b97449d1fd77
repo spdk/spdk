@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0978f505_50a42b3e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T04:00:53Z",
+      "side": 1,
+      "message": "For a separate patch, I think there are some good opportunities to improve the packing of nvme_tcp_req. The response is 16 bytes, so putting that next to the ttag and the two boolean values would eliminate a cache line.",
+      "revId": "df8075a40f0b5ef5ec327be48be5b97449d1fd77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "644cedda_40a2f878",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 4
@@ -13,6 +30,23 @@
       "writtenOn": "2019-01-03T15:20:51Z",
       "side": 1,
       "message": "I think you should give this a meaningful name like cmd_cpl or something. That way references to it later in the file aren\u0027t confusing.",
+      "revId": "df8075a40f0b5ef5ec327be48be5b97449d1fd77",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0af2ab8_ed4629d0",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-05T04:00:53Z",
+      "side": 1,
+      "message": "Did you actually dump the assembly generated for this and see a difference? I really think it will compile to the exact same set of instructions.",
       "revId": "df8075a40f0b5ef5ec327be48be5b97449d1fd77",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
