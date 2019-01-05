@@ -155,6 +155,9 @@ rte_vhost_driver_register(const char *path, uint64_t flags)
 	struct vhost_user_socket *vsocket;
 	const struct vhost_transport_ops *trans_ops = &af_unix_trans_ops;
 
+	if (flags & RTE_VHOST_USER_VIRTIO_TRANSPORT)
+		trans_ops = &virtio_vhost_user_trans_ops;
+
 	if (!path)
 		return -1;
 
