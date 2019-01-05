@@ -1274,6 +1274,7 @@ spdk_vhost_set_socket_path(const char *basename)
 		}
 
 		dev_dirname_len = ret;
+		return 1;
 	}
 
 	return 0;
