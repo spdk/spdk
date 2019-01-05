@@ -70,6 +70,17 @@ typedef void (*spdk_vhost_fini_cb)(void);
 int spdk_vhost_set_socket_path(const char *basename);
 
 /**
+ * Set the vhost transport.
+ *
+ * This function must be called before spdk_vhost_init().
+ *
+ * \param trans Chosen transport
+ *
+ * \return 0 if chosen transport is UNIX, 1 if VVU, negative errno on error.
+ */
+int spdk_vhost_set_transport(const char *trans);
+
+/**
  * Init vhost environment.
  *
  * \param init_cb Function to be called when the initialization is complete.
