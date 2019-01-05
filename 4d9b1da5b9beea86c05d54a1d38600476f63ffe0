@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "16f9c0be_74f2100c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3105,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2019-01-05T15:19:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7dd0920a_a62a7050",
+      "range": {
+        "startLine": 3105,
+        "startChar": 27,
+        "endLine": 3105,
+        "endChar": 28
+      },
+      "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c6bffb16_bce76892",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 1
@@ -110,6 +134,30 @@
       "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c7540b2_c237f1d0",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1012701
+      },
+      "writtenOn": "2019-01-05T15:19:03Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e8527a54_eeb9d5a8",
+      "range": {
+        "startLine": 82,
+        "startChar": 27,
+        "endLine": 82,
+        "endChar": 44
+      },
+      "revId": "4d9b1da5b9beea86c05d54a1d38600476f63ffe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
