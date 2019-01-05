@@ -48,6 +48,9 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
+/* Chosen vhost-user transport. Default is unix transport. */
+static uint64_t transport;
+
 struct spdk_vhost_dev_event_ctx {
 	/** Pointer to the controller obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
@@ -732,9 +735,11 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		}
 	}
 
-	if (rte_vhost_driver_register(path, 0) != 0) {
+	if (rte_vhost_driver_register(path, transport) != 0) {
 		SPDK_ERRLOG("Could not register controller %s with vhost library\n", name);
-		SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
+		if (transport != RTE_VHOST_USER_VIRTIO_TRANSPORT) {
+			SPDK_ERRLOG("Check if domain socket %s already exists\n", path);
+		}
 		rc = -EIO;
 		goto out;
 	}
@@ -1233,6 +1238,20 @@ spdk_vhost_set_socket_path(const char *basename)
 	}
 
 	return 0;
+}
+
+int
+spdk_vhost_set_transport(const char *trans)
+{
+	if (strcmp(trans, "vvu") == 0) {
+		transport = RTE_VHOST_USER_VIRTIO_TRANSPORT;
+		return 1;
+	} else if (strcmp(trans, "unix") == 0) {
+		return 0;
+	} else {
+		SPDK_ERRLOG("Invalid transport %s\n", trans);
+		return -EINVAL;
+	}
 }
 
 static void *
