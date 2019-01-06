@@ -251,9 +251,6 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 	if (ret < 0) {
 		*remove = 1;
 
-		if (vsocket->notify_ops->destroy_connection)
-			vsocket->notify_ops->destroy_connection(conn->device.vid);
-
 		pthread_mutex_lock(&s->conn_mutex);
 		TAILQ_REMOVE(&s->conn_list, conn, next);
 		if (conn->connfd != -1) {
@@ -262,7 +259,11 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 		}
 		pthread_mutex_unlock(&s->conn_mutex);
 
+		int vid = conn->device.vid;
 		vhost_destroy_device(conn->device.vid);
+
+		if (vsocket->notify_ops->destroy_connection)
+			vsocket->notify_ops->destroy_connection(vid);
 
 		if (vsocket->reconnect) {
 			create_unix_socket(vsocket);
