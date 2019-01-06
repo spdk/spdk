@@ -111,34 +111,6 @@ struct spdk_vhost_virtqueue {
 
 } __attribute((aligned(SPDK_CACHE_LINE_SIZE)));
 
-struct spdk_vhost_dev_backend {
-	uint64_t virtio_features;
-	uint64_t disabled_features;
-
-	/**
-	 * Size of additional per-session context data
-	 * allocated whenever a new client connects.
-	 */
-	size_t session_ctx_size;
-
-	/**
-	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_dev *.
-	 * The second one is event context that has to be
-	 * passed to spdk_vhost_dev_backend_event_done().
-	 */
-	spdk_vhost_event_fn start_device;
-	spdk_vhost_event_fn stop_device;
-
-	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
-	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
-				uint32_t offset, uint32_t size, uint32_t flags);
-
-	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
-	int (*remove_device)(struct spdk_vhost_dev *vdev);
-};
-
 struct spdk_vhost_session {
 	struct spdk_vhost_dev *vdev;
 
@@ -214,6 +186,34 @@ struct spdk_vhost_dev_destroy_ctx {
 typedef int (*spdk_vhost_session_fn)(struct spdk_vhost_dev *vdev,
 				     struct spdk_vhost_session *vsession,
 				     void *arg);
+
+struct spdk_vhost_dev_backend {
+	uint64_t virtio_features;
+	uint64_t disabled_features;
+
+	/**
+	 * Size of additional per-session context data
+	 * allocated whenever a new client connects.
+	 */
+	size_t session_ctx_size;
+
+	/**
+	 * Callbacks for starting and pausing the device.
+	 * The first param is struct spdk_vhost_dev *.
+	 * The second one is event context that has to be
+	 * passed to spdk_vhost_dev_backend_event_done().
+	 */
+	spdk_vhost_event_fn start_device;
+	spdk_vhost_event_fn stop_device;
+
+	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
+	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
+				uint32_t offset, uint32_t size, uint32_t flags);
+
+	void (*dump_info_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
+	int (*remove_device)(struct spdk_vhost_dev *vdev);
+};
 
 struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 
