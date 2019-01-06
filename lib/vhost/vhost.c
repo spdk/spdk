@@ -561,12 +561,17 @@ spdk_vhost_session_mem_register(struct spdk_vhost_session *vsession)
 {
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
+	uint64_t previous_start = 0;
 
 	for (i = 0; i < vsession->mem->nregions; i++) {
 		uint64_t start, end, len;
 		region = &vsession->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		if (start == previous_start) {
+			start += (size_t) SIZE_2MB;
+		}
+		previous_start = start;
 		len = end - start;
 		SPDK_INFOLOG(SPDK_LOG_VHOST, "Registering VM memory for vtophys translation - 0x%jx len:0x%jx\n",
 			     start, len);
@@ -584,12 +589,17 @@ spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 {
 	struct rte_vhost_mem_region *region;
 	uint32_t i;
+	uint64_t previous_start = 0;
 
 	for (i = 0; i < vsession->mem->nregions; i++) {
 		uint64_t start, end, len;
 		region = &vsession->mem->regions[i];
 		start = FLOOR_2MB(region->mmap_addr);
 		end = CEIL_2MB(region->mmap_addr + region->mmap_size);
+		if (start == previous_start) {
+			start += (size_t) SIZE_2MB;
+		}
+		previous_start = start;
 		len = end - start;
 
 		if (spdk_vtophys((void *) start, NULL) == SPDK_VTOPHYS_ERROR) {
