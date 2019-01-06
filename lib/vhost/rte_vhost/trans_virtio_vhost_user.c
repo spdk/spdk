@@ -33,6 +33,9 @@
 #include "virtio_vhost_user.h"
 #include "vhost_user.h"
 
+void spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device);
+void spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device);
+
 /*
  * Data structures:
  *
@@ -911,6 +914,8 @@ vvu_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 		"Added virtio-vhost-user device at %s\n",
 		pci_dev->device.name);
 
+	spdk_vtophys_pci_device_added(pci_dev);
+
 	return 0;
 }
 
@@ -935,6 +940,9 @@ vvu_pci_remove(struct rte_pci_device *pci_dev)
 	TAILQ_REMOVE(&vvu_pci_device_list, pdev, next);
 	rte_free(pdev);
 	rte_pci_unmap_device(pci_dev);
+
+	spdk_vtophys_pci_device_removed(pci_dev);
+
 	return 0;
 }
 
