@@ -69,7 +69,6 @@ struct spdk_vhost_blk_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *bdev_desc;
-	struct spdk_io_channel *bdev_io_channel;
 	bool readonly;
 };
 
@@ -78,6 +77,7 @@ struct spdk_vhost_blk_session {
 	struct spdk_vhost_session vsession;
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_poller *requestq_poller;
+	struct spdk_io_channel *io_channel;
 	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
 };
 
@@ -217,14 +217,14 @@ static inline void
 blk_request_queue_io(struct spdk_vhost_blk_task *task)
 {
 	int rc;
-	struct spdk_vhost_blk_dev *bvdev = task->bvsession->bvdev;
-	struct spdk_bdev *bdev = bvdev->bdev;
+	struct spdk_vhost_blk_session *bvsession = task->bvsession;
+	struct spdk_bdev *bdev = bvsession->bvdev->bdev;
 
 	task->bdev_io_wait.bdev = bdev;
 	task->bdev_io_wait.cb_fn = blk_request_resubmit;
 	task->bdev_io_wait.cb_arg = task;
 
-	rc = spdk_bdev_queue_io_wait(bdev, bvdev->bdev_io_channel, &task->bdev_io_wait);
+	rc = spdk_bdev_queue_io_wait(bdev, bvsession->io_channel, &task->bdev_io_wait);
 	if (rc != 0) {
 		SPDK_ERRLOG("Queue io failed in vhost_blk, rc=%d\n", rc);
 		invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
@@ -292,12 +292,12 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 
 		if (type == VIRTIO_BLK_T_IN) {
 			task->used_len = payload_len + sizeof(*task->status);
-			rc = spdk_bdev_readv(bvdev->bdev_desc, bvdev->bdev_io_channel,
+			rc = spdk_bdev_readv(bvdev->bdev_desc, bvsession->io_channel,
 					     &task->iovs[1], task->iovcnt, req->sector * 512,
 					     payload_len, blk_request_complete_cb, task);
 		} else if (!bvdev->readonly) {
 			task->used_len = sizeof(*task->status);
-			rc = spdk_bdev_writev(bvdev->bdev_desc, bvdev->bdev_io_channel,
+			rc = spdk_bdev_writev(bvdev->bdev_desc, bvsession->io_channel,
 					      &task->iovs[1], task->iovcnt, req->sector * 512,
 					      payload_len, blk_request_complete_cb, task);
 		} else {
@@ -428,7 +428,6 @@ no_bdev_vdev_worker(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	uint16_t q_idx;
 
 	for (q_idx = 0; q_idx < vsession->max_queues; q_idx++) {
@@ -437,9 +436,9 @@ no_bdev_vdev_worker(void *arg)
 
 	spdk_vhost_session_used_signal(vsession);
 
-	if (vsession->task_cnt == 0 && bvdev->bdev_io_channel) {
-		spdk_put_io_channel(bvdev->bdev_io_channel);
-		bvdev->bdev_io_channel = NULL;
+	if (vsession->task_cnt == 0 && bvsession->io_channel) {
+		spdk_put_io_channel(bvsession->io_channel);
+		bvsession->io_channel = NULL;
 	}
 
 	return -1;
@@ -613,8 +612,8 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	if (bvdev->bdev) {
-		bvdev->bdev_io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
-		if (!bvdev->bdev_io_channel) {
+		bvsession->io_channel = spdk_bdev_get_io_channel(bvdev->bdev_desc);
+		if (!bvsession->io_channel) {
 			free_task_pool(bvsession);
 			SPDK_ERRLOG("Controller %s: IO channel allocation failed\n", vdev->name);
 			rc = -1;
@@ -635,7 +634,6 @@ static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_blk_session *bvsession = arg;
-	struct spdk_vhost_blk_dev *bvdev = bvsession->bvdev;
 	struct spdk_vhost_session *vsession = &bvsession->vsession;
 	int i;
 
@@ -650,9 +648,9 @@ destroy_device_poller_cb(void *arg)
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n", vsession->vdev->name);
 
-	if (bvdev->bdev_io_channel) {
-		spdk_put_io_channel(bvdev->bdev_io_channel);
-		bvdev->bdev_io_channel = NULL;
+	if (bvsession->io_channel) {
+		spdk_put_io_channel(bvsession->io_channel);
+		bvsession->io_channel = NULL;
 	}
 
 	free_task_pool(bvsession);
