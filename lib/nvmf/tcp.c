@@ -527,11 +527,33 @@ spdk_nvmf_tcp_qpair_destroy(struct nvme_tcp_qpair *tqpair)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Leave\n");
 }
 
+static int
+spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
+{
+	struct spdk_nvmf_tcp_transport	*ttransport;
+
+	assert(transport != NULL);
+	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
+
+	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.num_shared_buffers)) {
+		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
+			    spdk_mempool_count(ttransport->data_buf_pool),
+			    transport->opts.num_shared_buffers);
+	}
+
+	spdk_mempool_free(ttransport->data_buf_pool);
+	spdk_io_device_unregister(ttransport, NULL);
+	pthread_mutex_destroy(&ttransport->lock);
+	free(ttransport);
+	return 0;
+}
+
 static struct spdk_nvmf_transport *
 spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 	uint32_t sge_count;
+	uint32_t min_shared_buffers;
 
 	ttransport = calloc(1, sizeof(*ttransport));
 	if (!ttransport) {
@@ -581,6 +603,16 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
+	min_shared_buffers = spdk_thread_get_count() * opts->buf_cache_size;
+	if (min_shared_buffers > opts->num_shared_buffers) {
+		SPDK_ERRLOG("There are not enough buffers to satisfy"
+			    "per-poll group caches for each thread. (%" PRIu32 ")"
+			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
+		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
+		spdk_nvmf_tcp_destroy(&ttransport->transport);
+		return NULL;
+	}
+
 	pthread_mutex_init(&ttransport->lock, NULL);
 
 	spdk_io_device_register(ttransport, spdk_nvmf_tcp_mgmt_channel_create,
@@ -588,27 +620,6 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 				sizeof(struct spdk_nvmf_tcp_mgmt_channel), "tcp_transport");
 
 	return &ttransport->transport;
-}
-
-static int
-spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
-{
-	struct spdk_nvmf_tcp_transport	*ttransport;
-
-	assert(transport != NULL);
-	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
-
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.num_shared_buffers)) {
-		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(ttransport->data_buf_pool),
-			    transport->opts.num_shared_buffers);
-	}
-
-	spdk_mempool_free(ttransport->data_buf_pool);
-	spdk_io_device_unregister(ttransport, NULL);
-	pthread_mutex_destroy(&ttransport->lock);
-	free(ttransport);
-	return 0;
 }
 
 static int
@@ -2853,6 +2864,7 @@ spdk_nvmf_tcp_qpair_set_sq_size(struct spdk_nvmf_qpair *qpair)
 #define SPDK_NVMF_TCP_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE 131072
 #define SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS 512
+#define SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE 32
 
 static void
 spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
@@ -2864,6 +2876,7 @@ spdk_nvmf_tcp_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->io_unit_size =		SPDK_NVMF_TCP_DEFAULT_IO_UNIT_SIZE;
 	opts->max_aq_depth =		SPDK_NVMF_TCP_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_TCP_DEFAULT_NUM_SHARED_BUFFERS;
+	opts->buf_cache_size =		SPDK_NVMF_TCP_DEFAULT_BUFFER_CACHE_SIZE;
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
