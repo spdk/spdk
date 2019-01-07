@@ -634,6 +634,15 @@ function discover_bdevs()
 	rm -f /var/run/spdk_bdev0
 }
 
+function bdev_check_claimed()
+{
+	if $($rootdir/scripts/rpc.py get_bdevs -b "$@" | jq '.[0].claimed'); then
+		return 0;
+	else
+		return 1;
+	fi
+}
+
 function waitforblk()
 {
 	local i=0
