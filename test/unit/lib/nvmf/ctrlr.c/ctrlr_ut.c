@@ -120,6 +120,12 @@ DEFINE_STUB(spdk_nvmf_transport_qpair_set_sqsize,
 	    (struct spdk_nvmf_qpair *qpair),
 	    0);
 
+int
+spdk_nvmf_qpair_disconnect(struct spdk_nvmf_qpair *qpair, nvmf_qpair_disconnect_cb cb_fn, void *ctx)
+{
+	return 0;
+}
+
 void
 spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata)
 {
@@ -315,6 +321,7 @@ test_connect(void)
 	CU_ASSERT(rc == SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS);
 	CU_ASSERT(nvme_status_success(&rsp.nvme_cpl.status));
 	CU_ASSERT(qpair.ctrlr != NULL);
+	spdk_nvmf_ctrlr_stop_keep_alive_timer(qpair.ctrlr);
 	spdk_bit_array_free(&qpair.ctrlr->qpair_mask);
 	free(qpair.ctrlr);
 	qpair.ctrlr = NULL;
