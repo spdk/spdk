@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4ac00455_227ae186",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-07T12:55:49Z",
+      "side": 1,
+      "message": "It could be done by pkgdep.sh when it is run with \"-i\" option but update.sh calls pkgdep.sh without it.",
+      "parentUuid": "876b5ea9_58679d58",
+      "range": {
+        "startLine": 83,
+        "startChar": 1,
+        "endLine": 83,
+        "endChar": 87
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f130449d_2c22aef4",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dd59e012_004a3ce2",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-07T12:55:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f130449d_2c22aef4",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 84,
+        "endChar": 73
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43693442_afba2b2a",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 9
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-28T13:31:00Z",
       "side": 1,
       "message": "For autorun there\u0027s no need to sudo.\nssh \"mkdir /home/vagrant/output\" (default outpit dir for autorun.sh)\nssh \"spdk/autorun.sh\"\n\nShould work. Sudo is called inside autorun.sh for autotest.sh",
+      "range": {
+        "startLine": 85,
+        "startChar": 16,
+        "endLine": 85,
+        "endChar": 51
+      },
+      "revId": "be8f7ea5fd0293fdfa48c6bd5e54b5b0e8e3a17c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53d37f07_423fc678",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-07T12:55:49Z",
+      "side": 1,
+      "message": "thx for noticing it.",
+      "parentUuid": "43693442_afba2b2a",
       "range": {
         "startLine": 85,
         "startChar": 16,
