@@ -77,6 +77,11 @@ New `get_spdk_version` RPC method is introduced to get version info of the runni
 The `start_nbd_disk` RPC method now take nbd_device as an optional parameter. If nbd_device
 is specified, use that specified nbd device. If it's not specified, pick available one.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage tool can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
