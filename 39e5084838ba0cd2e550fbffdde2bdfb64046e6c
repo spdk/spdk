@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "782fef94_4e477b01",
+        "filename": "lib/scsi/dev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T07:03:46Z",
+      "side": 1,
+      "message": "checking return code in later patches may be better.",
+      "range": {
+        "startLine": 246,
+        "startChar": 1,
+        "endLine": 246,
+        "endChar": 50
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4bad4eca_32934159",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 11
@@ -42,6 +65,52 @@
         "startChar": 14,
         "endLine": 46,
         "endChar": 19
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bd0a85e_6cf63320",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T07:03:46Z",
+      "side": 1,
+      "message": "following simplification is possible?\n\n\tif (reg \u0026\u0026 dev-\u003eholder) {\n\t\treturn (dev-\u003eholder \u003d\u003d reg ||\n\t\t\tspdk_scsi_pr_is_all_registrants_type(dev));\n\t}\n\n\treturn false;",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 33
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0394323c_982dd7dc",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T07:03:46Z",
+      "side": 1,
+      "message": "you can remove this parameter?",
+      "range": {
+        "startLine": 119,
+        "startChar": 60,
+        "endLine": 119,
+        "endChar": 95
       },
       "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
