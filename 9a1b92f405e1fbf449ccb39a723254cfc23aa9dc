@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "2ab10eae_84b54e18",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-07T01:20:59Z",
+      "side": 1,
+      "message": "Thanks for your explanation.",
+      "parentUuid": "aa2aff23_2b9b0f0e",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "200fb620_5fb387ef",
         "filename": "lib/util/dif.c",
         "patchSetId": 28
@@ -105,6 +123,24 @@
       "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8a67cdd_ea1f0f30",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-07T01:20:59Z",
+      "side": 1,
+      "message": "Thanks for your explanation.",
+      "parentUuid": "86d35d61_7a439bb5",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
