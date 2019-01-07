@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "9ecfdbea_5a133fc0",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T07:43:13Z",
+      "side": 1,
+      "message": "yeah, good point.",
+      "parentUuid": "0bd0a85e_6cf63320",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 33
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0394323c_982dd7dc",
         "filename": "lib/scsi/scsi_pr.c",
         "patchSetId": 11
@@ -106,6 +130,30 @@
       "writtenOn": "2019-01-07T07:03:46Z",
       "side": 1,
       "message": "you can remove this parameter?",
+      "range": {
+        "startLine": 119,
+        "startChar": 60,
+        "endLine": 119,
+        "endChar": 95
+      },
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82eb2da5_5f392bff",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T07:43:13Z",
+      "side": 1,
+      "message": "good catch.",
+      "parentUuid": "0394323c_982dd7dc",
       "range": {
         "startLine": 119,
         "startChar": 60,
