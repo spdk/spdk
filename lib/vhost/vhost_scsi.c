@@ -113,8 +113,10 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_dev *, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_dev *dev,
+				 struct spdk_vhost_session *vsession, void *);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *,
+				struct spdk_vhost_session *vsession, void *);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -125,8 +127,8 @@ const struct spdk_vhost_dev_backend spdk_vhost_scsi_device_backend = {
 	.virtio_features = SPDK_VHOST_SCSI_FEATURES,
 	.disabled_features = SPDK_VHOST_SCSI_DISABLED_FEATURES,
 	.session_ctx_size = sizeof(struct spdk_vhost_scsi_session) - sizeof(struct spdk_vhost_session),
-	.start_device =  spdk_vhost_scsi_start,
-	.stop_device = spdk_vhost_scsi_stop,
+	.start_session =  spdk_vhost_scsi_start,
+	.stop_session = spdk_vhost_scsi_stop,
 	.dump_info_json = spdk_vhost_scsi_dump_info_json,
 	.write_config_json = spdk_vhost_scsi_write_config_json,
 	.remove_device = spdk_vhost_scsi_dev_remove,
@@ -915,7 +917,7 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	/* copy the entire device state */
 	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
 
-	if (vdev->lcore == -1) {
+	if (vsession->lcore == -1) {
 		/* All done. */
 		return 0;
 	}
@@ -1020,7 +1022,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	state->removed = true;
 
 	/* If the session isn't currently polled, unset the dev straight away */
-	if (vdev->lcore == -1) {
+	if (vsession->lcore == -1) {
 		state->dev = NULL;
 		return 0;
 	}
@@ -1206,15 +1208,11 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 	return 0;
 }
 
-/*
- * A new device is added to a data core. First the device is added to the main linked list
- * and then allocated to a specific data core.
- */
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev,
+		      struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_vhost_state *state;
 	uint32_t i;
@@ -1254,7 +1252,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 		spdk_scsi_dev_allocate_io_channels(state->dev);
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vdev->lcore);
+		     vdev->name, vsession->lcore);
 
 	svsession->requestq_poller = spdk_poller_register(vdev_worker, svsession, 0);
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
@@ -1303,9 +1301,9 @@ destroy_session_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev,
+		     struct spdk_vhost_session *vsession, void *event_ctx)
 {
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_scsi_session *svsession;
 
 	svsession = to_scsi_session(vsession);

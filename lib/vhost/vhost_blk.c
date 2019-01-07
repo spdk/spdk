@@ -664,16 +664,11 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 	return 0;
 }
 
-/*
- * A new device is added to a data core. First the device is added to the main linked list
- * and then allocated to a specific data core.
- *
- */
 static int
-spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_dev *vdev,
+		     struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_blk_session *bvsession;
 	int i, rc = 0;
 
@@ -715,7 +710,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				     bvsession, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vdev->lcore);
+		     vdev->name, vsession->lcore);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;
@@ -752,9 +747,9 @@ destroy_session_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev,
+		    struct spdk_vhost_session *vsession, void *event_ctx)
 {
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_blk_session *bvsession;
 
 	bvsession = to_blk_session(vsession);
@@ -909,8 +904,8 @@ static const struct spdk_vhost_dev_backend vhost_blk_device_backend = {
 	(1ULL << VIRTIO_BLK_F_BARRIER) | (1ULL << VIRTIO_BLK_F_SCSI) | (1ULL << VIRTIO_BLK_F_DISCARD) |
 	(1ULL << VIRTIO_BLK_F_WRITE_ZEROES),
 	.session_ctx_size = sizeof(struct spdk_vhost_blk_session) - sizeof(struct spdk_vhost_session),
-	.start_device =  spdk_vhost_blk_start,
-	.stop_device = spdk_vhost_blk_stop,
+	.start_session =  spdk_vhost_blk_start,
+	.stop_session = spdk_vhost_blk_stop,
 	.vhost_get_config = spdk_vhost_blk_get_config,
 	.dump_info_json = spdk_vhost_blk_dump_info_json,
 	.write_config_json = spdk_vhost_blk_write_config_json,
