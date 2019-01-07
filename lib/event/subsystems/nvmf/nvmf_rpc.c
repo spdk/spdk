@@ -1590,6 +1590,7 @@ dump_nvmf_transport(struct spdk_json_write_ctx *w, struct spdk_nvmf_transport *t
 	spdk_json_write_named_uint32(w, "io_unit_size", opts->io_unit_size);
 	spdk_json_write_named_uint32(w, "max_aq_depth", opts->max_aq_depth);
 	spdk_json_write_named_uint32(w, "num_shared_buffers", opts->num_shared_buffers);
+	spdk_json_write_named_uint32(w, "buf_cache_size", opts->buf_cache_size);
 
 	spdk_json_write_object_end(w);
 }
