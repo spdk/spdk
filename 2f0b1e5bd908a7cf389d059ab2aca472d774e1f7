@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "806387ad_32f8b115",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T09:04:10Z",
+      "side": 1,
+      "message": "dev-\u003epr_generation should be incremented here?",
+      "revId": "2f0b1e5bd908a7cf389d059ab2aca472d774e1f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
