@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c23aba95_3006ce6e",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "you can remove this?",
+      "range": {
+        "startLine": 543,
+        "startChar": 1,
+        "endLine": 543,
+        "endChar": 21
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cce80b1_6b8ca325",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "if you use 0 as failure and 1 as success, will you use boolean instead?",
+      "range": {
+        "startLine": 545,
+        "startChar": 9,
+        "endLine": 545,
+        "endChar": 10
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8387a1cd_cab6d18f",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "-\u003e true ?",
+      "range": {
+        "startLine": 557,
+        "startChar": 8,
+        "endLine": 557,
+        "endChar": 9
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5eb2952_ea069484",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "You can do this?\n\n\tnew_reg \u003d TAILQ_FIRST(\u0026subsystem-\u003ereg_head);\n\n\tif (new_reg \u0026\u0026 nvmf_ns_reservation_all_registrants_type(ns)) {\n\t\t/* the next valid registrant is the holder now */\n\t\tns-\u003eholder \u003d new_reg;\n\t\tTAILQ_INSERT_TAIL(\u0026new_reg-\u003ens_head, ns, link);\n\t} else {\n\t\tns-\u003ertype \u003d 0;\n\t\tns-\u003ecrkey \u003d 0;\n\t\tns-\u003eholder \u003d NULL;\n\t}",
+      "range": {
+        "startLine": 571,
+        "startChar": 0,
+        "endLine": 581,
+        "endChar": 3
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "832f060d_1c58da64",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 585,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "-\u003e bool ?",
+      "range": {
+        "startLine": 585,
+        "startChar": 7,
+        "endLine": 585,
+        "endChar": 15
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "954c3184_781de58f",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "Please choose one of reg_tmp or reg. (reg looks natural).",
+      "range": {
+        "startLine": 593,
+        "startChar": 0,
+        "endLine": 595,
+        "endChar": 17
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0417b812_bfa4c36c",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "same as above -\u003e true",
+      "range": {
+        "startLine": 598,
+        "startChar": 10,
+        "endLine": 598,
+        "endChar": 11
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bd82504_0b7e2d79",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "-\u003e false?",
+      "range": {
+        "startLine": 602,
+        "startChar": 8,
+        "endLine": 602,
+        "endChar": 9
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70801516_750d3119",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 615,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T23:50:20Z",
+      "side": 1,
+      "message": "I think you can remove this.\n- returned value is uint32_t but this is int.\n- inlining nvmf_ctrlr_register_registrant() into if block will be possible.",
+      "range": {
+        "startLine": 615,
+        "startChar": 1,
+        "endLine": 615,
+        "endChar": 8
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
