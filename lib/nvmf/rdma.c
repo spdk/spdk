@@ -2589,11 +2589,16 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			case RDMA_WR_TYPE_DATA:
 				/* If the data transfer fails still force the queue into the error state,
-				 * but the rdma_req objects should only be manipulated in response to
-				 * SEND and RECV operations. */
+				 * if we were performing an RDMA_READ, we need to force the request into a
+				 * completed state since it wasn't linked to a send. However, in the RDMA_WRITE
+				 * case, we should wait for the SEND to complete. */
 				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
-				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+
+				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
+				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
+					spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+				}
 				break;
 			case RDMA_WR_TYPE_DRAIN_RECV:
 				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_recv_wr);
