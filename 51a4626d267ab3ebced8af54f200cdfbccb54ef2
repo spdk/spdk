@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68493e11_bf452f67",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T06:24:55Z",
+      "side": 1,
+      "message": "I would like to know why we need RPC here, after loading the json configuration file, we can get each json based objects, and we can use APIs to restore each component within this subsystem, of course using RPC also can work but not mandatory. Right?",
+      "revId": "51a4626d267ab3ebced8af54f200cdfbccb54ef2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
