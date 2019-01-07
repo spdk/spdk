@@ -1231,7 +1231,6 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 err_exit:
 	while (i) {
 		i--;
-		printf("%d\n", rgroup->group.current_cache_idx);
 		if (rgroup->group.current_cache_idx < rgroup->group.buf_cache_size) {
 			rgroup->group.buffer_cache[rgroup->group.current_cache_idx] = rdma_req->data.buffers[i];
 			rgroup->group.current_cache_idx++;
