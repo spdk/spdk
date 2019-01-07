@@ -823,32 +823,72 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
+static inline bool
+number_verify(char *str)
+{
+	for (int i = 0; str[i] != '\0'; i++) {
+		if (!isdigit(str[i])) {
+			return false;
+		}
+	}
+	return true;
+}
+
+static inline bool
+bdevperf_input_verify(int num, char *str)
+{
+	size_t str_len, num_dig;
+	if (number_verify(str)) {
+		str_len = strlen(str);
+		num_dig = floor(log10(abs(g_queue_depth))) + 1;
+		if (str_len != num_dig) {
+			SPDK_ERRLOG("Input number overflows\n");
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	else {
+		SPDK_ERRLOG("Input is not valid\n");
+		return false;
+	}
+}
+
 static void
 bdevperf_parse_arg(int ch, char *arg)
 {
+	int tmp;
 	switch (ch) {
 	case 'q':
 		g_queue_depth = atoi(optarg);
+		assert(bdevperf_input_verify(g_queue_depth, optarg));
 		break;
 	case 'o':
 		g_io_size = atoi(optarg);
+		assert(bdevperf_input_verify(g_io_size, optarg));
 		break;
 	case 't':
 		g_time_in_sec = atoi(optarg);
+		assert(bdevperf_input_verify(g_time_in_sec, optarg));
 		break;
 	case 'w':
 		g_workload_type = optarg;
 		break;
 	case 'M':
 		g_rw_percentage = atoi(optarg);
+		assert(bdevperf_input_verify(g_rw_percentage, optarg));
 		g_mix_specified = true;
 		break;
 	case 'P':
 		g_show_performance_ema_period = atoi(optarg);
+		assert(bdevperf_input_verify(g_show_performance_ema_period, optarg));
 		break;
 	case 'S':
 		g_show_performance_real_time = 1;
-		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
+		tmp = atoi(optarg);
+		assert(bdevperf_input_verify(tmp, optarg));
+		g_show_performance_period_in_usec = tmp * 1000000;
 		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 						    g_show_performance_period_in_usec);
 		break;
