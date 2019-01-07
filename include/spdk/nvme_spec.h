@@ -1735,6 +1735,39 @@ enum spdk_nvme_reservation_release_action {
 };
 
 /**
+ * Reservation notification log page type
+ */
+enum spdk_nvme_reservation_notification_log_page_type {
+	SPDK_NVME_RESERVATION_LOG_PAGE_EMPTY	= 0x0,
+	SPDK_NVME_REGISTRATION_PREEMPTED	= 0x1,
+	SPDK_NVME_RESERVATION_RELEASED		= 0x2,
+	SPDK_NVME_RESERVATION_PREEMPTED		= 0x3,
+};
+
+/**
+ * Reservation notification log
+ */
+struct spdk_nvme_reservation_notification_log {
+	/** 64-bit incrementing reservation notification log page count */
+	uint64_t	log_page_count;
+	/** Reservation notification log page type */
+	uint8_t		type;
+	/** Number of additional available reservation notification log pages */
+	uint8_t		num_avail_log_pages;
+	uint8_t		reserved[2];
+	uint32_t	nsid;
+	uint8_t		reserved1[48];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_reservation_notification_log) == 64, "Incorrect size");
+
+/* Mask Registration Preempted Notificaton */
+#define SPDK_NVME_REGISTRATION_PREEMPTED_MASK	(1U << 1)
+/* Mask Reservation Released Notification */
+#define SPDK_NVME_RESERVATION_RELEASED_MASK	(1U << 2)
+/* Mask Reservation Preempted Notification */
+#define SPDK_NVME_RESERVATION_PREEMPTED_MASK	(1U << 3)
+
+/**
  * Log page identifiers for SPDK_NVME_OPC_GET_LOG_PAGE
  */
 enum spdk_nvme_log_page {
