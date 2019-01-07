@@ -66,6 +66,11 @@ This can be used to configure hugepages with different sizes, a different size l
 or different access permissions than the system's default hugepage pool.
 SPDK applications can specify a custom hugetlbfs mount with the `--huge-dir` option.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ### environment
 
 spdk_vtophys() has been refactored to accept length of the translated region as a new
