@@ -49,6 +49,10 @@
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
 
+#ifndef ROUNDUP
+#define ROUNDUP(n, d) ((((n) + (d) - 1) / (d)) * (d))
+#endif
+
 #define MODEL_NUMBER "SPDK bdev Controller"
 
 /*
@@ -97,6 +101,9 @@ ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
 
 	qpair->ctrlr = ctrlr;
 	spdk_bit_array_set(ctrlr->qpair_mask, qpair->qid);
+#ifdef KEEP_ALIVE
+	TAILQ_INSERT_TAIL(&ctrlr->io_qpairs, qpair, link_ctrlr);
+#endif
 
 	rsp->status.sc = SPDK_NVME_SC_SUCCESS;
 	rsp->status_code_specific.success.cntlid = ctrlr->cntlid;
@@ -125,6 +132,23 @@ _spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
 	spdk_nvmf_request_complete(req);
 }
 
+#ifdef KEEP_ALIVE
+static void
+_spdk_nvmf_subsystem_remove_keep_alive_poller(struct spdk_nvmf_subsystem *subsystem)
+{
+	if (subsystem->keep_alive_poller) {
+		subsystem->ka_counter--;
+		if (!subsystem->ka_counter) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem remove keep alive poller\n");
+			spdk_poller_unregister(&subsystem->keep_alive_poller);
+		}
+
+	} else {
+		SPDK_ERRLOG("No poller in this subsystem\n");
+	}
+}
+#endif
+
 static void
 _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 {
@@ -135,6 +159,11 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 
 	if (spdk_nvmf_subsystem_add_ctrlr(ctrlr->subsys, ctrlr)) {
 		SPDK_ERRLOG("Unable to add controller to subsystem\n");
+#ifdef KEEP_ALIVE
+		if (ctrlr->subsys->subtype != SPDK_NVMF_SUBTYPE_DISCOVERY) {
+			_spdk_nvmf_subsystem_remove_keep_alive_poller(ctrlr->subsys);
+		}
+#endif
 		free(ctrlr);
 		qpair->ctrlr = NULL;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -145,6 +174,138 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
 }
 
+#ifdef KEEP_ALIVE
+static void
+_spdk_nvmf_ctrlr_remove_io_qpair(void *ctx)
+{
+	struct spdk_nvmf_qpair *qpair = ctx;
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr remove io qpair\n");
+
+	if (!qpair) {
+		SPDK_ERRLOG("Qpair is NULL\n");
+		return;
+	}
+
+	rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	if (rc) {
+		SPDK_ERRLOG("Qpair disconnect fail\n");
+		return;
+	}
+}
+
+static int
+spdk_nvmf_ctrlr_remove_io_qpair(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_qpair *qpair, *tmp_qpair;
+
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return -1;
+	}
+
+	/* remove I/O qpairs list to this ctrlr */
+	TAILQ_FOREACH_SAFE(qpair, &ctrlr->io_qpairs, link_ctrlr, tmp_qpair) {
+		TAILQ_REMOVE(&qpair->ctrlr->io_qpairs, qpair, link_ctrlr);
+		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_ctrlr_remove_io_qpair, qpair);
+	}
+
+	return 0;
+}
+
+void
+spdk_nvmf_ctrlr_keep_alive_timeout(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_qpair *qpair;
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr keep alive timeout\n");
+
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return;
+	}
+
+
+	/* set the Controller Fatal Status bit to '1' */
+	if (!ctrlr->vcprop.csts.bits.cfs) {
+		ctrlr->vcprop.csts.bits.cfs = 1;
+
+		/*
+		 * 1, remove io qpiars, terminate Transport connection
+		 * 2, remove admin qpair, terminate Transport connection
+		 * 3, destroy nvmf controller, break association
+		 */
+		rc = spdk_nvmf_ctrlr_remove_io_qpair(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Remove controller i/o qpair fail\n");
+			return;
+		}
+
+		qpair = ctrlr->admin_qpair;
+		rc = spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+		if (rc) {
+			SPDK_ERRLOG("Admin qpair disconnect fail\n");
+			return;
+		}
+	}
+}
+
+static void
+spdk_nvmf_ctrlr_remove_keep_alive_poller(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr remove keep alive poller\n");
+
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return;
+	}
+
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_ERRLOG("Discovery ctrlr do not support keep alive\n");
+		return;
+	}
+
+	spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_subsystem_remove_keep_alive_poller,
+			     ctrlr->subsys);
+}
+
+
+static int
+spdk_nvmf_ctrlr_add_keep_alive_poller(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return -1;
+	}
+
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		SPDK_ERRLOG("Keep alive not allowed on discovery controller\n");
+		return -1;
+	}
+
+	ctrlr->last_keep_alive_tick = spdk_get_ticks() + ctrlr->keep_alive_interval_ticks;
+
+	/* if cleared to 0 then the Keep Alive Timer is disable */
+	if (ctrlr->feat.keep_alive_timer.bits.kato) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr add keep alive poller\n");
+		spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_subsystem_add_keep_alive_poller,
+				     ctrlr->subsys);
+	} else {
+		SPDK_ERRLOG("Keep alive not allowed when kato is 0\n");
+	}
+
+	return 0;
+}
+#endif
+
 static struct spdk_nvmf_ctrlr *
 spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		       struct spdk_nvmf_request *req,
@@ -153,6 +314,9 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 {
 	struct spdk_nvmf_ctrlr	*ctrlr;
 	struct spdk_nvmf_transport *transport;
+#ifdef KEEP_ALIVE
+	int rc;
+#endif
 
 	ctrlr = calloc(1, sizeof(*ctrlr));
 	if (ctrlr == NULL) {
@@ -172,9 +336,27 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->feat.keep_alive_timer.bits.kato = connect_cmd->kato;
+	/* round KATO up to seconds just like kernel realize */
+	ctrlr->feat.keep_alive_timer.bits.kato = ROUNDUP(connect_cmd->kato, 1000);
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
+
+#ifdef KEEP_ALIVE
+	/* Keep alive not allowed on discovery subsystem */
+	if (ctrlr->subsys->subtype != SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		ctrlr->keep_alive_interval_ticks = ctrlr->feat.keep_alive_timer.bits.kato *
+						   spdk_get_ticks_hz() / UINT64_C(1000);
+		if (connect_cmd->kato) {
+			rc = spdk_nvmf_ctrlr_add_keep_alive_poller(ctrlr);
+			if (rc) {
+				SPDK_ERRLOG("ctrlr add keep alive poller fail\n");
+				free(ctrlr);
+				return NULL;
+			}
+
+		}
+	}
+#endif
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
 	ctrlr->feat.number_of_queues.bits.ncqr = transport->opts.max_qpairs_per_ctrlr - 1 -
@@ -206,6 +388,11 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	ctrlr->vcprop.csts.raw = 0;
 	ctrlr->vcprop.csts.bits.rdy = 0; /* Init controller as not ready */
 
+#ifdef KEEP_ALIVE
+	/* I/O qpair list */
+	TAILQ_INIT(&ctrlr->io_qpairs);
+#endif
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cap 0x%" PRIx64 "\n", ctrlr->vcprop.cap.raw);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "vs 0x%x\n", ctrlr->vcprop.vs.raw);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
@@ -219,6 +406,14 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
+
+#ifdef KEEP_ALIVE
+	/* Keep alive not allowed on discovery subsystem */
+	if (ctrlr->subsys->subtype != SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		spdk_nvmf_ctrlr_remove_keep_alive_poller(ctrlr);
+	}
+#endif
+
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 
 	free(ctrlr);
@@ -877,11 +1072,18 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 
 	if (cmd->cdw11 == 0) {
 		rsp->status.sc = SPDK_NVME_SC_KEEP_ALIVE_INVALID;
+		ctrlr->feat.keep_alive_timer.bits.kato = 0;
 	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
 		ctrlr->feat.keep_alive_timer.bits.kato = MIN_KEEP_ALIVE_TIMEOUT;
 	} else {
-		ctrlr->feat.keep_alive_timer.bits.kato = cmd->cdw11;
+		/* round up to second */
+		ctrlr->feat.keep_alive_timer.bits.kato = ROUNDUP(cmd->cdw11, 1000);
 	}
+
+#ifdef KEEP_ALIVE
+	ctrlr->keep_alive_interval_ticks = ctrlr->feat.keep_alive_timer.bits.kato *
+					   spdk_get_ticks_hz() / UINT64_C(1000);
+#endif
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer set to %u ms\n",
 		      ctrlr->feat.keep_alive_timer.bits.kato);
@@ -1590,6 +1792,10 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 {
+#ifdef KEEP_ALIVE
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+#endif
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Keep Alive\n");
 	/*
 	 * To handle keep alive just clear or reset the
@@ -1599,6 +1805,11 @@ spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 	 * keep alive has exceeded the max duration and
 	 * take appropriate action.
 	 */
+#ifdef KEEP_ALIVE
+	/* kato is ms */
+	ctrlr->last_keep_alive_tick = spdk_get_ticks() + ctrlr->keep_alive_interval_ticks;
+#endif
+
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 

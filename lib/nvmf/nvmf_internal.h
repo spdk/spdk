@@ -47,6 +47,8 @@
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
+#define KEEP_ALIVE
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -180,6 +182,9 @@ struct spdk_nvmf_qpair {
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
+#ifdef KEEP_ALIVE
+	TAILQ_ENTRY(spdk_nvmf_qpair)		link_ctrlr;
+#endif
 };
 
 struct spdk_nvmf_ctrlr_feat {
@@ -221,7 +226,16 @@ struct spdk_nvmf_ctrlr {
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;
 
+#ifdef KEEP_ALIVE
+	/* Time to trigger keep-alive--poller_time = now_tick + period */
+	uint64_t last_keep_alive_tick;
+	uint64_t keep_alive_interval_ticks;
+#endif
+
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
+#ifdef KEEP_ALIVE
+	TAILQ_HEAD(, spdk_nvmf_qpair)		io_qpairs;
+#endif
 };
 
 struct spdk_nvmf_subsystem {
@@ -243,6 +257,12 @@ struct spdk_nvmf_subsystem {
 	uint32_t				max_nsid;
 	/* This is the maximum allowed nsid to a subsystem */
 	uint32_t				max_allowed_nsid;
+
+#ifdef KEEP_ALIVE
+	/* keep-alive timer poller serve all the ctrlrs of this subsystem */
+	struct spdk_poller			*keep_alive_poller;
+	uint32_t				ka_counter;
+#endif
 
 	TAILQ_HEAD(, spdk_nvmf_ctrlr)		ctrlrs;
 
@@ -302,6 +322,15 @@ int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
  * the host to send a subsequent AER.
  */
 void spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr);
+
+#ifdef KEEP_ALIVE
+
+void spdk_nvmf_ctrlr_keep_alive_timeout(void *ctx);
+
+void spdk_nvmf_subsystem_remove_keep_alive_poller(void *ctx);
+void spdk_nvmf_subsystem_add_keep_alive_poller(void *ctx);
+
+#endif
 
 /*
  * Free aer simply frees the rdma resources for the aer without informing the host.
