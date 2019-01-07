@@ -761,7 +761,7 @@ static void fio_init spdk_fio_register(void)
 }
 
 static void
-spdk_fio_finish_env(void)
+spdk_fio_bdev_finish_cpl(void *cb_arg)
 {
 	pthread_mutex_lock(&g_init_mtx);
 	g_poll_loop = false;
@@ -770,6 +770,12 @@ spdk_fio_finish_env(void)
 	pthread_join(g_init_thread_id, NULL);
 
 	spdk_thread_lib_fini();
+}
+
+static void
+spdk_fio_finish_env(void)
+{
+	spdk_bdev_finish(spdk_fio_bdev_finish_cpl, NULL);
 }
 
 static void fio_exit spdk_fio_unregister(void)
