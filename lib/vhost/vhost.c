@@ -48,15 +48,12 @@ static uint32_t *g_num_ctrlrs;
 /* Path to folder where character device will be created. Can be set by user. */
 static char dev_dirname[PATH_MAX] = "";
 
-struct spdk_vhost_dev_event_ctx {
-	/** Pointer to the controller obtained before enqueuing the event */
+struct spdk_vhost_session_fn_ctx {
+	/** Device pointer obtained before enqueuing the event */
 	struct spdk_vhost_dev *vdev;
 
-	/** ID of the vdev to send event to. */
-	unsigned vdev_id;
-
 	/** User callback function to be executed on given lcore. */
-	spdk_vhost_event_fn cb_fn;
+	spdk_vhost_session_fn cb_fn;
 
 	/** Semaphore used to signal that event is done. */
 	sem_t sem;
@@ -508,20 +505,6 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *
 	return 0;
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_find_by_id(unsigned id)
-{
-	struct spdk_vhost_dev *vdev;
-
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->id == id) {
-			return vdev;
-		}
-	}
-
-	return NULL;
-}
-
 static struct spdk_vhost_session *
 spdk_vhost_session_find_by_vid(int vid)
 {
@@ -658,24 +641,12 @@ int
 spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const char *mask_str,
 			const struct spdk_vhost_dev_backend *backend)
 {
-	static unsigned ctrlr_num;
 	char path[PATH_MAX];
 	struct stat file_stat;
 	struct spdk_cpuset *cpumask;
 	int rc;
 
 	assert(vdev);
-
-	/* We expect devices inside g_spdk_vhost_devices to be sorted in ascending
-	 * order in regard of vdev->id. For now we always set vdev->id = ctrlr_num++
-	 * and append each vdev to the very end of g_spdk_vhost_devices list.
-	 * This is required for foreach vhost events to work.
-	 */
-	if (ctrlr_num == UINT_MAX) {
-		assert(false);
-		return -EINVAL;
-	}
-
 	if (name == NULL) {
 		SPDK_ERRLOG("Can't register controller with no name\n");
 		return -EINVAL;
@@ -761,8 +732,6 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
-	vdev->id = ctrlr_num++;
-	vdev->lcore = -1;
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
 	vdev->backend = backend;
@@ -804,17 +773,10 @@ spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev)
 	return 0;
 }
 
-static struct spdk_vhost_dev *
-spdk_vhost_dev_next(unsigned i)
+static struct spdk_vhost_session *
+spdk_vhost_session_next(struct spdk_vhost_dev *vdev, unsigned prev_id)
 {
-	struct spdk_vhost_dev *vdev;
-
-	TAILQ_FOREACH(vdev, &g_spdk_vhost_devices, tailq) {
-		if (vdev->id > i) {
-			return vdev;
-		}
-	}
-
+	/* so far there's only one session per device */
 	return NULL;
 }
 
@@ -859,7 +821,7 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 void
 spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = event_ctx;
+	struct spdk_vhost_session_fn_ctx *ctx = event_ctx;
 
 	ctx->response = response;
 	sem_post(&ctx->sem);
@@ -868,57 +830,21 @@ spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
 static void
 spdk_vhost_event_cb(void *arg1, void *arg2)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
+	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 
-	ctx->cb_fn(ctx->vdev, ctx);
-}
-
-static void
-spdk_vhost_event_async_fn(void *arg1, void *arg2)
-{
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
-	struct spdk_vhost_dev *vdev;
-	struct spdk_event *ev;
-
-	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(), spdk_vhost_event_async_fn, arg1, arg2);
-		spdk_event_call(ev);
-		return;
-	}
-
-	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
-	if (vdev != ctx->vdev) {
-		/* vdev has been changed after enqueuing this event */
-		vdev = NULL;
-	}
-
-	if (vdev != NULL && vdev->lcore >= 0 &&
-	    (uint32_t)vdev->lcore != spdk_env_get_current_core()) {
-		/* if vdev has been relocated to other core, it is no longer thread-safe
-		 * to access its contents here. Even though we're running under global vhost
-		 * mutex, the controller itself (and its pollers) are not. We need to chase
-		 * the vdev thread as many times as necessary.
-		 */
-		ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_async_fn, arg1, arg2);
-		spdk_event_call(ev);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return;
-	}
-
-	ctx->cb_fn(vdev, arg2);
-	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-
-	free(ctx);
+	ctx->cb_fn(ctx->vdev, ctx->vdev->session, ctx);
 }
 
 static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
-		spdk_vhost_event_fn fn, void *arg);
+		struct spdk_vhost_session *vsession,
+		spdk_vhost_session_fn fn, void *arg);
 
 static void
 spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 {
-	struct spdk_vhost_dev_event_ctx *ctx = arg1;
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session_fn_ctx *ctx = arg1;
+	struct spdk_vhost_session *vsession = NULL;
+	struct spdk_vhost_dev *vdev = ctx->vdev;
 	struct spdk_event *ev;
 	int rc;
 
@@ -929,48 +855,39 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	vdev = spdk_vhost_dev_find_by_id(ctx->vdev_id);
-	if (vdev != ctx->vdev) {
-		/* ctx->vdev is probably a dangling pointer at this point.
-		 * It must have been removed in the meantime, so we just skip
-		 * it in our foreach chain. */
-		goto out_unlock_continue;
-	}
-
-	/* the assert is just for static analyzers, vdev cannot be NULL here */
-	assert(vdev != NULL);
-	if (vdev->lcore >= 0 &&
-	    (uint32_t)vdev->lcore != spdk_env_get_current_core()) {
-		/* if vdev has been relocated to other core, it is no longer thread-safe
-		 * to access its contents here. Even though we're running under global vhost
-		 * mutex, the controller itself (and its pollers) are not. We need to chase
-		 * the vdev thread as many times as necessary.
+	vsession = vdev->session;
+	if (vsession != NULL && vsession->lcore >= 0 &&
+	    (uint32_t)vsession->lcore != spdk_env_get_current_core()) {
+		/* if session has been relocated to other core, it is no longer thread-safe
+		 * to access its contents here. Even though we're running under the global
+		 * vhost mutex, the session itself (and its pollers) are not. We need to chase
+		 * the session thread as many times as necessary.
 		 */
-		ev = spdk_event_allocate(vdev->lcore,
+		ev = spdk_event_allocate(vsession->lcore,
 					 spdk_vhost_event_async_foreach_fn, arg1, arg2);
 		spdk_event_call(ev);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
-	rc = ctx->cb_fn(vdev, arg2);
+	rc = ctx->cb_fn(vdev, vsession, arg2);
 	if (rc < 0) {
-		goto out_unlock_return;
+		goto out_unlock;
 	}
 
-out_unlock_continue:
-	vdev = spdk_vhost_dev_next(ctx->vdev_id);
-	spdk_vhost_external_event_foreach_continue(vdev, ctx->cb_fn, arg2);
-out_unlock_return:
+	/* FIXME use a real session ID */
+	vsession = spdk_vhost_session_next(vdev, -1);
+	spdk_vhost_external_event_foreach_continue(vdev, vsession, ctx->cb_fn, arg2);
+out_unlock:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	free(ctx);
 }
 
 static int
-_spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
+_spdk_vhost_event_send(struct spdk_vhost_session *vsession, spdk_vhost_session_fn cb_fn,
 		       unsigned timeout_sec, const char *errmsg)
 {
-	struct spdk_vhost_dev_event_ctx ev_ctx = {0};
+	struct spdk_vhost_session_fn_ctx ev_ctx = {0};
 	struct spdk_event *ev;
 	struct timespec timeout;
 	int rc;
@@ -981,9 +898,9 @@ _spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 		return -errno;
 	}
 
-	ev_ctx.vdev = vdev;
+	ev_ctx.vdev = vsession->vdev;
 	ev_ctx.cb_fn = cb_fn;
-	ev = spdk_event_allocate(vdev->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
+	ev = spdk_event_allocate(vsession->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1003,12 +920,12 @@ _spdk_vhost_event_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn,
 }
 
 static int
-spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_fn, void *arg,
-			    bool foreach)
+spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession,
+		spdk_vhost_session_fn cb_fn, void *arg)
 {
-	struct spdk_vhost_dev_event_ctx *ev_ctx;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
+	struct spdk_vhost_session_fn_ctx *ev_ctx;
 	struct spdk_event *ev;
-	spdk_event_fn fn;
 
 	ev_ctx = calloc(1, sizeof(*ev_ctx));
 	if (ev_ctx == NULL) {
@@ -1018,11 +935,10 @@ spdk_vhost_event_async_send(struct spdk_vhost_dev *vdev, spdk_vhost_event_fn cb_
 	}
 
 	ev_ctx->vdev = vdev;
-	ev_ctx->vdev_id = vdev->id;
 	ev_ctx->cb_fn = cb_fn;
 
-	fn = foreach ? spdk_vhost_event_async_foreach_fn : spdk_vhost_event_async_fn;
-	ev = spdk_event_allocate(ev_ctx->vdev->lcore, fn, ev_ctx, arg);
+	ev = spdk_event_allocate(vsession->lcore,
+				 spdk_vhost_event_async_foreach_fn, ev_ctx, arg);
 	assert(ev);
 	spdk_event_call(ev);
 
@@ -1047,13 +963,13 @@ stop_device(int vid)
 	}
 
 	vdev = vsession->vdev;
-	if (vdev->lcore == -1) {
+	if (vsession->lcore == -1) {
 		SPDK_ERRLOG("Controller %s is not loaded.\n", vdev->name);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
 
-	rc = _spdk_vhost_event_send(vdev, vdev->backend->stop_device, 3, "stop device");
+	rc = _spdk_vhost_event_send(vsession, vdev->backend->stop_session, 3, "stop session");
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1070,8 +986,8 @@ stop_device(int vid)
 
 	spdk_vhost_session_mem_unregister(vsession);
 	free(vsession->mem);
-	spdk_vhost_free_reactor(vdev->lcore);
-	vdev->lcore = -1;
+	spdk_vhost_free_reactor(vsession->lcore);
+	vsession->lcore = -1;
 	assert(vdev->active_session_num > 0);
 	vdev->active_session_num--;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1094,7 +1010,7 @@ start_device(int vid)
 	}
 
 	vdev = vsession->vdev;
-	if (vdev->lcore != -1) {
+	if (vsession->lcore != -1) {
 		SPDK_ERRLOG("Controller %s already loaded.\n", vdev->name);
 		goto out;
 	}
@@ -1146,14 +1062,14 @@ start_device(int vid)
 	}
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
-	vdev->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
+	vsession->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	spdk_vhost_session_mem_register(vsession);
-	rc = _spdk_vhost_event_send(vdev, vdev->backend->start_device, 3, "start device");
+	rc = _spdk_vhost_event_send(vsession, vdev->backend->start_session, 3, "start session");
 	if (rc != 0) {
 		spdk_vhost_session_mem_unregister(vsession);
 		free(vsession->mem);
-		spdk_vhost_free_reactor(vdev->lcore);
-		vdev->lcore = -1;
+		spdk_vhost_free_reactor(vsession->lcore);
+		vsession->lcore = -1;
 		goto out;
 	}
 
@@ -1261,6 +1177,10 @@ spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ct
 int
 spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev)
 {
+	if (vdev->pending_async_op_num) {
+		return -EBUSY;
+	}
+
 	return vdev->backend->remove_device(vdev);
 }
 
@@ -1302,6 +1222,7 @@ new_connection(int vid)
 
 	vsession->vdev = vdev;
 	vsession->vid = vid;
+	vsession->lcore = -1;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
@@ -1335,72 +1256,64 @@ spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, v
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 	vdev = spdk_vhost_dev_find(ctrlr_name);
-
-	if (vdev == NULL) {
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		fn(NULL, arg);
-		return;
-	}
-
-	if (vdev->lcore == -1) {
-		fn(vdev, arg);
-	} else {
-		spdk_vhost_event_async_send(vdev, fn, arg, false);
-	}
-
+	fn(vdev, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 static void
 spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
-		spdk_vhost_event_fn fn, void *arg)
+		struct spdk_vhost_session *vsession,
+		spdk_vhost_session_fn fn, void *arg)
 {
 	int rc;
 
-	if (vdev == NULL) {
-		fn(NULL, arg);
-		return;
+	if (vsession == NULL) {
+		goto out_finish_foreach;
 	}
 
-	while (vdev->lcore == -1) {
-		rc = fn(vdev, arg);
+	while (vsession->lcore == -1) {
+		rc = fn(vdev, vsession, arg);
 		if (rc < 0) {
 			return;
 		}
-
-		vdev = spdk_vhost_dev_next(vdev->id);
-		if (vdev == NULL) {
-			fn(NULL, arg);
-			return;
+		/* FIXME use a real session ID */
+		vsession = spdk_vhost_session_next(vdev, -1);
+		if (vsession == NULL) {
+			goto out_finish_foreach;
 		}
 	}
 
-	spdk_vhost_event_async_send(vdev, fn, arg, true);
+	spdk_vhost_event_async_send_foreach_continue(vsession, fn, arg);
+	return;
+
+out_finish_foreach:
+	/* there are no more sessions to iterate through, so call the
+	 * fn one last time with vsession == NULL
+	 */
+	assert(vdev->pending_async_op_num > 0);
+	vdev->pending_async_op_num--;
+	fn(vdev, NULL, arg);
 }
 
 void
 spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 			       spdk_vhost_session_fn fn, void *arg)
 {
-	int rc = 0;
-
-	if (vdev->session != NULL) {
-		rc = fn(vdev, vdev->session, arg);
-	}
-
-	if (rc >= 0) {
-		fn(vdev, NULL, arg);
-	}
+	assert(vdev->pending_async_op_num < UINT32_MAX);
+	vdev->pending_async_op_num++;
+	spdk_vhost_external_event_foreach_continue(vdev, vdev->session, fn, arg);
 }
 
 void
 spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
 {
-	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_dev *vdev, *tmp;
 
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = TAILQ_FIRST(&g_spdk_vhost_devices);
-	spdk_vhost_external_event_foreach_continue(vdev, fn, arg);
+	TAILQ_FOREACH_SAFE(vdev, &g_spdk_vhost_devices, tailq, tmp) {
+		fn(vdev, arg);
+	}
+	fn(NULL, arg);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -1472,6 +1385,7 @@ _spdk_vhost_fini_remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
 
 	if (vdev != NULL) {
 		spdk_vhost_dev_remove(vdev);
+		/* don't care if it fails, there's nothing we can do for now */
 		return 0;
 	}
 

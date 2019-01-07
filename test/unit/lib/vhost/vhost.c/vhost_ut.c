@@ -77,6 +77,7 @@ spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 
 DEFINE_STUB(spdk_env_get_first_core, uint32_t, (void), 0);
 DEFINE_STUB(spdk_env_get_next_core, uint32_t, (uint32_t prev_core), 0);
+DEFINE_STUB(spdk_env_get_current_core, uint32_t, (void), 0);
 DEFINE_STUB_V(spdk_event_call, (struct spdk_event *event));
 DEFINE_STUB(rte_vhost_get_mem_table, int, (int vid, struct rte_vhost_memory **mem), 0);
 DEFINE_STUB(rte_vhost_get_negotiated_features, int, (int vid, uint64_t *features), 0);
@@ -150,12 +151,12 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].size = 0x400000; /* 4 MB */
 	mem->regions[1].host_user_addr = 0x2000000;
 
-	vdev->lcore = 0;
 	assert(vdev->session == NULL);
 	/* spdk_vhost_dev must be allocated on a cache line boundary. */
 	rc = posix_memalign((void **)&vdev->session, 64, sizeof(*vdev->session));
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vdev->session != NULL);
+	vdev->session->lcore = 0;
 	vdev->session->vid = 0;
 	vdev->session->mem = mem;
 }
