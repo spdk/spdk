@@ -57,6 +57,11 @@ Default size is 4096.
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
 For retrieving physical addresses, spdk_vtophys() should be used instead.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
