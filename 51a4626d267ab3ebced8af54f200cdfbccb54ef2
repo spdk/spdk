@@ -16,6 +16,24 @@
       "revId": "51a4626d267ab3ebced8af54f200cdfbccb54ef2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ded03a6_1f3e843c",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-07T09:32:13Z",
+      "side": 1,
+      "message": "Perhaps we could avoid using RPC here but this patch would be much much bigger than is now. The main reason is that RPC methods are useful for two things:\n\n  1. It is using the same path as python scipts while loading - we know it is working.\n  2. It is validating parameters as configuration might not be correct (eg changed by user).\n\nReimplementing the same things without RPC would be challenging and in my mind would be reinventing the same things again (everything is already implemented in RPC).\n\nWe could drop the \"server part\" and use only registered RPC commands but RPC commands are glued to JSON RPC server things and can\u0027t be use separatly for now. If we decouple these from eachother we can drop RPC server part for loading JSON configuration.",
+      "parentUuid": "68493e11_bf452f67",
+      "revId": "51a4626d267ab3ebced8af54f200cdfbccb54ef2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
