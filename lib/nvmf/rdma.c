@@ -1525,6 +1525,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 #define SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE 131072
 #define SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE 4096
 #define SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS 512
+#define SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE 32
 #define SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE (SPDK_NVMF_RDMA_DEFAULT_MAX_IO_SIZE / SPDK_NVMF_MAX_SGL_ENTRIES)
 
 static void
@@ -1538,6 +1539,7 @@ spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 					SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE);
 	opts->max_aq_depth =		SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH;
 	opts->num_shared_buffers =	SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS;
+	opts->buf_cache_size =		SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE;
 }
 
 static int spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
@@ -1552,6 +1554,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	uint32_t			i;
 	int				flag;
 	uint32_t			sge_count;
+	uint32_t			min_shared_buffers;
 
 	const struct spdk_mem_map_ops nvmf_rdma_map_ops = {
 		.notify_cb = spdk_nvmf_rdma_mem_notify,
@@ -1601,6 +1604,16 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		SPDK_ERRLOG("The number of shared data buffers (%d) is less than"
 			    "the minimum number required to guarantee that forward progress can be made (%d)\n",
 			    opts->num_shared_buffers, (SPDK_NVMF_MAX_SGL_ENTRIES * 2));
+		spdk_nvmf_rdma_destroy(&rtransport->transport);
+		return NULL;
+	}
+
+	min_shared_buffers = spdk_thread_get_count() * opts->buf_cache_size;
+	if (min_shared_buffers > opts->num_shared_buffers) {
+		SPDK_ERRLOG("There are not enough buffers to satisfy"
+			    "per-poll group caches for each thread. (%" PRIu32 ")"
+			    "supplied. (%" PRIu32 ") required\n", opts->num_shared_buffers, min_shared_buffers);
+		SPDK_ERRLOG("Please specify a larger number of shared buffers\n");
 		spdk_nvmf_rdma_destroy(&rtransport->transport);
 		return NULL;
 	}
