@@ -36,6 +36,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
+#include "spdk/opal.h"
 
 #define MAX_DEVS 64
 
@@ -45,6 +46,7 @@ struct dev {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns_data		*common_ns_data;
 	int					outstanding_admin_cmds;
+	struct spdk_opal_dev	*opal_dev;
 };
 
 static struct dev devs[MAX_DEVS];
@@ -139,7 +141,8 @@ static void usage(void)
 	printf("\t[5: detach namespace from controller]\n");
 	printf("\t[6: format namespace or controller]\n");
 	printf("\t[7: firmware update]\n");
-	printf("\t[8: quit]\n");
+	printf("\t[8: opal scan]\n");
+	printf("\t[9: quit]\n");
 }
 
 static void
@@ -854,6 +857,24 @@ update_firmware_image(void)
 }
 
 static void
+test_opal(void)
+{
+	struct dev *iter;
+	int i;
+	foreach_dev(iter) {
+		iter->opal_dev = spdk_init_opal_dev(iter->ctrlr, OPAL_NVME);
+	}
+
+	for (i = 0; i < num_devs; i++) {
+		if (devs[i].opal_dev->supported) {
+			printf("Opal Supported:\n");
+			display_controller(&devs[i], CONTROLLER_DISPLAY_SIMPLISTIC);
+			spdk_opal_scan(devs[i].opal_dev);
+		}
+	}
+}
+
+static void
 args_usage(const char *program_name)
 {
 	printf("%s [options]", program_name);
@@ -942,6 +963,9 @@ int main(int argc, char **argv)
 			update_firmware_image();
 			break;
 		case 8:
+			test_opal();
+			break;
+		case 9:
 			exit_flag = true;
 			break;
 		default:
