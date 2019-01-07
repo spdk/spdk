@@ -33,6 +33,24 @@
       "revId": "931674048d3169e79f6958948d0e055e7637043e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29f7ad69_2866ff43",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-07T13:08:21Z",
+      "side": 1,
+      "message": "This would require moving RPC nofications to lib/rpc/rpc.c or adding API to this file that will allow obtaining connection. I can try this. But I think declaring spdk_jsonrpc_request it will be required as knowing which connection is being closed will be required.",
+      "parentUuid": "b77bdc5c_0c1c0c1a",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
