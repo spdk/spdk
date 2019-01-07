@@ -22,16 +22,6 @@ fi
 # Network configuration
 create_veth_interfaces $TEST_TYPE
 
-# ISCSI_TEST_CORE_MASK is the biggest core mask specified by
-#  any of the iscsi_tgt tests.  Using this mask for the stub
-#  ensures that if this mask spans CPU sockets, that we will
-#  allocate memory from both sockets.  The stub will *not*
-#  run anything on the extra cores (and will sleep on master
-#  core 0) so there is no impact to the iscsi_tgt tests by
-#  specifying the bigger core mask.
-start_stub "-s 2048 -i 0 -m $ISCSI_TEST_CORE_MASK"
-trap "kill_stub; cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
-
 run_test suite ./test/iscsi_tgt/sock/sock.sh
 run_test suite ./test/iscsi_tgt/calsoft/calsoft.sh
 run_test suite ./test/iscsi_tgt/filesystem/filesystem.sh
@@ -54,12 +44,8 @@ if [ $SPDK_TEST_RBD -eq 1 ]; then
 fi
 
 trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
-kill_stub
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	# TODO: enable remote NVMe controllers with multi-process so that
-	#  we can use the stub for this test
-	# Test configure remote NVMe device from rpc and conf file
 	run_test suite ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 fi
 
