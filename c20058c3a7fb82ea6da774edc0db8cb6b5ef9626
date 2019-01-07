@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e5e1a240_8599a9c2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "true, they are aliases at this point.",
+      "parentUuid": "6e89a699_1ce0825e",
+      "range": {
+        "startLine": 557,
+        "startChar": 11,
+        "endLine": 557,
+        "endChar": 33
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "05f08f8b_38f313d7",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 34
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "65bd4ba0_95b9e421",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 927,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "05f08f8b_38f313d7",
+      "range": {
+        "startLine": 926,
+        "startChar": 41,
+        "endLine": 927,
+        "endChar": 14
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1bf3d053_16ffbff9",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 34
@@ -59,6 +107,30 @@
       "writtenOn": "2018-12-07T02:31:27Z",
       "side": 1,
       "message": "the return value of get_next_data_wr() is checked but if spdk_mempool_get() fails, should return NULL immediately.",
+      "range": {
+        "startLine": 1203,
+        "startChar": 0,
+        "endLine": 1203,
+        "endChar": 16
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb63b99b_f9c78cd3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1203,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "Thanks!",
+      "parentUuid": "1bf3d053_16ffbff9",
       "range": {
         "startLine": 1203,
         "startChar": 0,
@@ -117,6 +189,54 @@
     },
     {
       "key": {
+        "uuid": "2ec76e77_3b5fad1b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b460172b_4284feda",
+      "range": {
+        "startLine": 1282,
+        "startChar": 14,
+        "endLine": 1282,
+        "endChar": 16
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50e663ef_0c0b6425",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2332ffed_6086d3e5",
+      "range": {
+        "startLine": 1282,
+        "startChar": 50,
+        "endLine": 1282,
+        "endChar": 52
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a020b93d_42f3465f",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 34
@@ -128,6 +248,30 @@
       "writtenOn": "2018-12-07T02:31:27Z",
       "side": 1,
       "message": "this is the next iovec and match your expectation?",
+      "range": {
+        "startLine": 1324,
+        "startChar": 37,
+        "endLine": 1324,
+        "endChar": 48
+      },
+      "revId": "c20058c3a7fb82ea6da774edc0db8cb6b5ef9626",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "652c93eb_22d14a61",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-07T23:07:33Z",
+      "side": 1,
+      "message": "No, this should be above the increment. Thank you!",
+      "parentUuid": "a020b93d_42f3465f",
       "range": {
         "startLine": 1324,
         "startChar": 37,
