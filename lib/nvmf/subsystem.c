@@ -275,6 +275,7 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->max_nsid = num_ns;
 	subsystem->max_allowed_nsid = num_ns;
 	subsystem->next_cntlid = 0;
+
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);

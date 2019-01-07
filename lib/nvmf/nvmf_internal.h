@@ -47,6 +47,8 @@
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
+#define KEEP_ALIVE
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
@@ -181,6 +183,9 @@ struct spdk_nvmf_qpair {
 
 	TAILQ_HEAD(, spdk_nvmf_request)		outstanding;
 	TAILQ_ENTRY(spdk_nvmf_qpair)		link;
+#ifdef KEEP_ALIVE
+	TAILQ_ENTRY(spdk_nvmf_qpair)		link_ctrlr;
+#endif
 };
 
 struct spdk_nvmf_ctrlr_feat {
@@ -221,6 +226,11 @@ struct spdk_nvmf_ctrlr {
 
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;
+
+	/* Time to trigger keep-alive--poller_time = now_tick + period */
+	uint64_t last_keep_alive_tick;
+	uint64_t keep_alive_interval_ticks;
+	struct spdk_poller			*keep_alive_poller;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
