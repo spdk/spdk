@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "909851c4_9cdbf07e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-07T01:32:57Z",
+      "side": 1,
+      "message": "thanks, i will update.",
+      "parentUuid": "4f319287_92c4c7fe",
+      "range": {
+        "startLine": 7,
+        "startChar": 6,
+        "endLine": 7,
+        "endChar": 58
+      },
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6be93a63_e38ba701",
         "filename": "/COMMIT_MSG",
         "patchSetId": 3
@@ -65,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "867b6e16_e25e88a1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-07T01:32:57Z",
+      "side": 1,
+      "message": "the code style changed by check_format.sh. Actually i put them in the same line.",
+      "parentUuid": "710308db_b226b16d",
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db4cf0d7_83fd81ac",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -99,6 +141,24 @@
       "writtenOn": "2018-12-19T06:56:50Z",
       "side": 1,
       "message": "Is it really necessary? I think we use assert only if we encounter unrecoverable failure or impossible case.",
+      "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be46a22c_1e3dcd24",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-07T01:32:57Z",
+      "side": 1,
+      "message": "when we meet the unreasonable state, the card could be unpredictable.For example, we sent a rdma_reject but happens the kernel bug, or after disconnect qpair, we still receive disconnect event. these may cause other strange phenomenons. so i think assert may be better.",
+      "parentUuid": "f7286ed4_a228c079",
       "revId": "1c5bde73f4d1fcce709fd2ffd3c3a0985d6feb21",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
