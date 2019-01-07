@@ -2,6 +2,10 @@
 
 ## v19.01: (Upcoming Release)
 
+### Opal
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ### util
 
 A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
