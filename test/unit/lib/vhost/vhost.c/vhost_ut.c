@@ -164,12 +164,12 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	mem->regions[1].size = 0x400000; /* 4 MB */
 	mem->regions[1].host_user_addr = 0x2000000;
 
-	vdev->lcore = 0;
 	assert(vdev->session == NULL);
 	/* spdk_vhost_dev must be allocated on a cache line boundary. */
 	rc = posix_memalign((void **)&vdev->session, 64, sizeof(*vdev->session));
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vdev->session != NULL);
+	vdev->session->lcore = 0;
 	vdev->session->vid = 0;
 	vdev->session->mem = mem;
 }

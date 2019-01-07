@@ -592,10 +592,10 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
  *
  */
 static int
-spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_start(struct spdk_vhost_dev *vdev,
+		     struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev;
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_blk_session *bvsession;
 	int i, rc = 0;
 
@@ -637,7 +637,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				     bvsession, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vdev->lcore);
+		     vdev->name, vsession->lcore);
 out:
 	spdk_vhost_dev_backend_event_done(event_ctx, rc);
 	return rc;
@@ -674,9 +674,9 @@ destroy_device_poller_cb(void *arg)
 }
 
 static int
-spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev, void *event_ctx)
+spdk_vhost_blk_stop(struct spdk_vhost_dev *vdev,
+		    struct spdk_vhost_session *vsession, void *event_ctx)
 {
-	struct spdk_vhost_session *vsession = vdev->session;
 	struct spdk_vhost_blk_session *bvsession;
 
 	bvsession = to_blk_session(vsession);
