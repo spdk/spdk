@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e4f0f670_72fe3b42",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 2198,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-07T14:15:26Z",
+      "side": 1,
+      "message": "I actually think it\u0027s best to just call _nvmf_rdma_disconnect_retry directly here. It will do the right thing with sending messages already.",
+      "revId": "72a7823bb746be55e1e804cec93c991b01519ed0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
