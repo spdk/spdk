@@ -37,6 +37,7 @@
 #include "spdk/env.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/opal.h"
 
 #define MAX_DEVS 64
 
@@ -46,6 +47,7 @@ struct dev {
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	struct spdk_nvme_ns_data		*common_ns_data;
 	int					outstanding_admin_cmds;
+	struct spdk_opal_dev			*opal_dev;
 };
 
 static struct dev devs[MAX_DEVS];
@@ -140,7 +142,8 @@ static void usage(void)
 	printf("\t[5: detach namespace from controller]\n");
 	printf("\t[6: format namespace or controller]\n");
 	printf("\t[7: firmware update]\n");
-	printf("\t[8: quit]\n");
+	printf("\t[8: opal scan]\n");
+	printf("\t[9: quit]\n");
 }
 
 static void
@@ -850,6 +853,109 @@ update_firmware_image(void)
 	spdk_dma_free(fw_image);
 }
 
+static void spdk_dump_opal_info(struct spdk_opal_info *opal)
+{
+	if (!opal->opal_ssc_dev) {
+		SPDK_ERRLOG("This device is not Opal enabled. Not Supported!\n");
+		return;
+	}
+
+	if (opal->tper) {
+		printf("\nOpal TPer feature:\n");
+		printf("ACKNACK = %s", (opal->tper_acknack ? "Y, " : "N, "));
+		printf("ASYNC = %s", (opal->tper_async ? "Y, " : "N, "));
+		printf("BufferManagement = %s\n", (opal->tper_buffer_mgt ? "Y, " : "N, "));
+		printf("ComIDManagement = %s", (opal->tper_comid_mgt ? "Y, " : "N, "));
+		printf("Streaming = %s", (opal->tper_streaming ? "Y, " : "N, "));
+		printf("Sync = %s\n", (opal->tper_sync ? "Y" : "N"));
+		printf("\n");
+	}
+
+	if (opal->locking) {
+		printf("Opal Locking feature:\n");
+		printf("Locked = %s", (opal->locking_locked ? "Y, " : "N, "));
+		printf("Locking Enabled = %s", (opal->locking_locking_enabled ? "Y, " : "N, "));
+		printf("Locking supported = %s\n", (opal->locking_locking_supported ? "Y" : "N"));
+
+		printf("MBR done = %s", (opal->locking_mbr_done ? "Y, " : "N, "));
+		printf("MBR enabled = %s", (opal->locking_mbr_enabled ? "Y, " : "N, "));
+		printf("Media encrypt = %s\n", (opal->locking_media_encrypt ? "Y" : "N"));
+		printf("\n");
+	}
+
+	if (opal->geometry) {
+		printf("Opal Geometry feature:\n");
+		printf("Align = %s", (opal->geometry_align ? "Y, " : "N, "));
+		printf("Logical block size = %d, ", opal->geometry_logical_block_size);
+		printf("Lowest aligned LBA = %ld\n", opal->geometry_lowest_aligned_lba);
+		printf("\n");
+	}
+
+	if (opal->single_user_mode) {
+		printf("Opal Single User Mode feature:\n");
+		printf("Any in SUM = %s", (opal->single_user_any ? "Y, " : "N, "));
+		printf("All in SUM = %s", (opal->single_user_all ? "Y, " : "N, "));
+		printf("Policy: %s Authority,\n", (opal->single_user_policy ? "Admin" : "Users"));
+		printf("Number of locking objects = %d\n ", opal->single_user_locking_objects);
+		printf("\n");
+	}
+
+	if (opal->datastore) {
+		printf("Opal DataStore feature:\n");
+		printf("Table alignment = %d, ", opal->datastore_alignment);
+		printf("Max number of tables = %d, ", opal->datastore_max_tables);
+		printf("Max size of tables = %d\n", opal->datastore_max_table_size);
+		printf("\n");
+	}
+
+	if (opal->opal_v100) {
+		printf("Opal V100 feature:\n");
+		printf("Base comID = %d, ", opal->opal_v100_base_comid);
+		printf("Number of comIDs = %d, ", opal->opal_v100_num_comid);
+		printf("Range crossing = %s\n", (opal->opal_v100_range_crossing ? "N" : "Y"));
+		printf("\n");
+	}
+
+	if (opal->opal_v200) {
+		printf("Opal V200 feature:\n");
+		printf("Base comID = %d, ", opal->opal_v200_base_comid);
+		printf("Number of comIDs = %d, ", opal->opal_v200_num_comid);
+		printf("Initial PIN = %d,\n", opal->opal_v200_initial_pin);
+		printf("Reverted PIN = %d, ", opal->opal_v200_reverted_pin);
+		printf("Number of admins = %d, ", opal->opal_v200_num_admin);
+		printf("Number of users = %d\n", opal->opal_v200_num_user);
+		printf("\n\n");
+	}
+}
+
+static void
+test_opal(void)
+{
+	struct dev *iter;
+
+	foreach_dev(iter) {
+		if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+			iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+			if (iter->opal_dev == NULL) {
+				return;
+			}
+			if (spdk_opal_supported(iter->opal_dev)) {
+				printf("\n\nOpal Supported:\n");
+				display_controller(iter, CONTROLLER_DISPLAY_SIMPLISTIC);
+				spdk_opal_scan(iter->opal_dev);
+				spdk_dump_opal_info(spdk_opal_get_info(iter->opal_dev));
+			}
+			spdk_opal_close(iter->opal_dev);
+		} else {
+			printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\n",
+			       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+			printf("%04x:%02x:%02x.%02x: Opal Not Supported\n",
+			       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
+			continue;
+		}
+	}
+}
+
 static void
 args_usage(const char *program_name)
 {
@@ -943,6 +1049,9 @@ int main(int argc, char **argv)
 			update_firmware_image();
 			break;
 		case 8:
+			test_opal();
+			break;
+		case 9:
 			exit_flag = true;
 			break;
 		default:
