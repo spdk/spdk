@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4db26ef4_6b70e6ed",
+        "filename": "lib/util/string.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T00:03:20Z",
+      "side": 1,
+      "message": "Thank you for providing so nice idea!\nI used vsnprintf(NULL, 0, format, args_copy) + orig_size + 1 because this is safe for me.",
+      "parentUuid": "ec8b1346_881f9267",
+      "revId": "47267c0f864cf4f6d70d5f25028c671b69a337c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "da8fb183_75fa87b2",
         "filename": "lib/util/string.c",
         "patchSetId": 12
