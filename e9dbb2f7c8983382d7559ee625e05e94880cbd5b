@@ -34,6 +34,24 @@
       "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc86b6a4_492df783",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T05:57:48Z",
+      "side": 1,
+      "message": "I see, why not just remove it from spdk_dif_inject_error(), users should know well about their inputs ?",
+      "parentUuid": "680b0f54_9cecd857",
+      "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
