@@ -39,6 +39,7 @@
 #include <rte_eal_memconfig.h>
 
 #include "spdk_internal/assert.h"
+#include "spdk_internal/memory.h"
 
 #include "spdk/assert.h"
 #include "spdk/likely.h"
@@ -56,8 +57,6 @@
 
 #define MAP_256TB_IDX(vfn_2mb)	((vfn_2mb) >> (SHIFT_1GB - SHIFT_2MB))
 #define MAP_1GB_IDX(vfn_2mb)	((vfn_2mb) & ((1ULL << (SHIFT_1GB - SHIFT_2MB)) - 1))
-
-#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (VALUE_2MB - 1))
 
 /* Page is registered */
 #define REG_MAP_REGISTERED	(1ULL << 62)

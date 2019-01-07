@@ -39,6 +39,7 @@
 #include "spdk/util.h"
 
 #include "spdk_internal/log.h"
+#include "spdk_internal/memory.h"
 
 struct ioat_driver {
 	pthread_mutex_t			lock;
@@ -581,9 +582,6 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 	ioat_channel_destruct(ioat);
 	free(ioat);
 }
-
-#define _2MB_PAGE(ptr)		((ptr) & ~(0x200000 - 1))
-#define _2MB_OFFSET(ptr)	((ptr) &  (0x200000 - 1))
 
 int
 spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
