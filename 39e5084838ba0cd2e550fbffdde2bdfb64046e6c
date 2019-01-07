@@ -163,6 +163,23 @@
       "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da41f7ac_60005a0f",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T08:41:14Z",
+      "side": 1,
+      "message": "The following is good but the following may easier to follow.\n\nif (!spdk_scsi_pr_is_all_registrants_type(dev)) {\n\tif (TAILQ_EMPTY(\u0026dev-\u003ereg_head)) {\n\t\tdev-\u003ecrkey \u003d 0;\n\t\tdev-\u003etype \u003d 0;\n\t\tdev-\u003eholder \u003d NULL;\n\t} else {\n\t\tdev-\u003eholder \u003d TAILQ_FIRST(\u0026dev-\u003ereg_head);\n\t}\n} else {\n\tdev-\u003ecrkey \u003d 0;\n\tdev-\u003etype \u003d 0;\n\tdev-\u003eholder \u003d NULL;\n}",
+      "revId": "39e5084838ba0cd2e550fbffdde2bdfb64046e6c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
