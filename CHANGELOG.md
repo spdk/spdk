@@ -42,6 +42,11 @@ The size of a shared receive queue is defined by transport configuration file pa
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
