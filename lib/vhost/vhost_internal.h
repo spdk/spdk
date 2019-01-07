@@ -117,6 +117,8 @@ struct spdk_vhost_session {
 	/* rte_vhost connection ID. */
 	int vid;
 
+	int32_t lcore;
+
 	struct rte_vhost_memory *mem;
 
 	int task_cnt;
@@ -145,7 +147,6 @@ struct spdk_vhost_dev {
 	/* Unique device ID. */
 	unsigned id;
 
-	int32_t lcore;
 	struct spdk_cpuset *cpumask;
 	bool registered;
 
@@ -198,13 +199,12 @@ struct spdk_vhost_dev_backend {
 	size_t session_ctx_size;
 
 	/**
-	 * Callbacks for starting and pausing the device.
-	 * The first param is struct spdk_vhost_dev *.
-	 * The second one is event context that has to be
+	 * Callbacks for starting and pausing a session.
+	 * The third param is an event context that has to be
 	 * passed to spdk_vhost_dev_backend_event_done().
 	 */
-	spdk_vhost_event_fn start_device;
-	spdk_vhost_event_fn stop_device;
+	spdk_vhost_session_fn start_session;
+	spdk_vhost_session_fn stop_session;
 
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
