@@ -5,8 +5,10 @@ rootdir=$(readlink -f $curdir/../../..)
 
 for file in $(ls -1 $curdir)
 do
-	if [ $file == 'all.sh' ] || [ $file == 'common.sh' ]; then
+	if [[ "$curdir/$file" == "$BASH_SOURCE" ]]; then
 		continue
 	fi
-	$curdir/$file || exit 1
+	if [[ -x "$curdir/$file" ]]; then
+		$curdir/$file || exit 1
+	fi
 done
