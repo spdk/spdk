@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "773a9e26_327fccce",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 382,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T00:18:31Z",
+      "side": 1,
+      "message": "This was necessary to fix warning.\n\nwarning: enumeration value ‘SPDK_DIF_DISABLE’ not handled in switch [-Wswitch]\n\nI changed this to the following.\n\ndefault:\n  break;",
+      "parentUuid": "2793b8e4_e35ed35e",
+      "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04fe42e7_71e88d7a",
         "filename": "lib/util/dif.c",
         "patchSetId": 3
@@ -65,6 +83,24 @@
       "side": 1,
       "message": "yeah, no need the two lines here.",
       "parentUuid": "04fe42e7_71e88d7a",
+      "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3fb2db2c_23e517e2",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 433,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T00:18:31Z",
+      "side": 1,
+      "message": "Same as above.",
+      "parentUuid": "24bb1554_7ea30539",
       "revId": "b8f06c21b674eb04e72d5e261a8a0e67962d2480",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
