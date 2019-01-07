@@ -2,6 +2,11 @@
 
 ## v19.01: (Upcoming Release)
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ### environment
 
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init
