@@ -275,6 +275,9 @@ spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt,
 	subsystem->max_nsid = num_ns;
 	subsystem->max_allowed_nsid = num_ns;
 	subsystem->next_cntlid = 0;
+#ifdef KEEP_ALIVE
+	subsystem->ka_counter = 0;
+#endif
 	snprintf(subsystem->subnqn, sizeof(subsystem->subnqn), "%s", nqn);
 	TAILQ_INIT(&subsystem->listeners);
 	TAILQ_INIT(&subsystem->hosts);
@@ -1273,3 +1276,80 @@ spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsyst
 {
 	return subsystem->max_allowed_nsid;
 }
+
+#ifdef KEEP_ALIVE
+static int
+spdk_nvmf_subsystem_keep_alive_poll(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+	struct spdk_nvmf_subsystem *system = ctx;
+	uint64_t now = spdk_get_ticks();
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem poll keep alive\n");
+
+	if (!system) {
+		SPDK_ERRLOG("Subsystem is NULL\n");
+		return -1;
+	}
+
+	TAILQ_FOREACH(ctrlr, &system->ctrlrs, link) {
+		if (ctrlr->feat.keep_alive_timer.bits.kato) {
+			if (ctrlr->next_keep_alive_tick < now) {
+				spdk_thread_send_msg(ctrlr->thread, spdk_nvmf_ctrlr_keep_alive_timeout, ctrlr);
+			}
+		}
+
+	}
+
+	return 0;
+}
+
+void
+spdk_nvmf_subsystem_remove_keep_alive_poller(void *ctx)
+{
+	struct spdk_nvmf_subsystem *system = ctx;
+
+	if (!system) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return;
+	}
+
+	if (system->keep_alive_poller) {
+		system->ka_counter--;
+		if (!system->ka_counter) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem remove keep alive poller\n");
+			spdk_poller_unregister(&system->keep_alive_poller);
+		}
+
+	} else {
+		SPDK_ERRLOG("No poller in this subsystem\n");
+	}
+}
+
+
+void
+spdk_nvmf_subsystem_add_keep_alive_poller(void *ctx)
+{
+	struct spdk_nvmf_subsystem *system = ctx;
+
+	if (!system) {
+		SPDK_ERRLOG("Subsystem is NULL\n");
+		return;
+	}
+
+	if (!system->ka_counter) {
+		if (!system->keep_alive_poller) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem add keep alive poller\n");
+			/* timer poller's inteval is 1s */
+			system->keep_alive_poller = spdk_poller_register(spdk_nvmf_subsystem_keep_alive_poll, system,
+						    1000000);
+		} else {
+			SPDK_ERRLOG("Poller has been registered before\n");
+			return;
+		}
+	}
+
+	system->ka_counter++;
+}
+
+#endif

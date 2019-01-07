@@ -211,6 +211,13 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 {
 }
 
+#ifdef KEEP_ALIVE
+void
+spdk_nvmf_ctrlr_keep_alive_timeout(void *ctx)
+{
+}
+#endif
+
 static void
 test_discovery_log(void)
 {

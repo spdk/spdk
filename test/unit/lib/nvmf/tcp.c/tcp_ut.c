@@ -133,6 +133,18 @@ struct spdk_bdev {
 	uint64_t blockcnt;
 };
 
+#ifdef KEEP_ALIVE
+void
+spdk_nvmf_subsystem_remove_keep_alive_poller(void *ctx)
+{
+}
+
+void
+spdk_nvmf_subsystem_add_keep_alive_poller(void *ctx)
+{
+}
+#endif
+
 int
 spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 			       const struct spdk_nvme_transport_id *trid2)

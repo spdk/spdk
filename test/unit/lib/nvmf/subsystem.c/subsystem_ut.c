@@ -162,6 +162,13 @@ spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 {
 }
 
+#ifdef KEEP_ALIVE
+void
+spdk_nvmf_ctrlr_keep_alive_timeout(void *ctx)
+{
+}
+#endif
+
 int
 spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 {
