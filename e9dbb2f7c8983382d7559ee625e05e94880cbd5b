@@ -16,6 +16,24 @@
       "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "680b0f54_9cecd857",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T05:32:44Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\n_dif_error_set() is used only at verification.\n\nadding err_type to dif_inject_error() and using _dif_error_set() in _dif_inject_error() may be possible.\nBut the current code looks simple to me, and I don\u0027t plan to use _dif_error_set() at injection yet.\n\nBesides, I\u0027m assuming that the struct passed to injection and the struct passed to verification are different.",
+      "parentUuid": "916d77b5_77ddfc86",
+      "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
