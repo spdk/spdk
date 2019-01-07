@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71d17e06_d6f6f292",
+        "filename": "lib/util/string.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-07T07:32:25Z",
+      "side": 1,
+      "message": "Just wondering if this possible. Maybe assert would be enough. What you think?",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 141,
+        "endChar": 2
+      },
+      "revId": "1492f3101075799647d6b8cdc8b0d0953e6832f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
