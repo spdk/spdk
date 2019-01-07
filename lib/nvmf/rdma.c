@@ -2363,7 +2363,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_nvmf_rdma_poller		*poller, *tpoller;
 	struct spdk_nvmf_rdma_device		*device;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
@@ -2380,9 +2380,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller = calloc(1, sizeof(*poller));
 		if (!poller) {
 			SPDK_ERRLOG("Unable to allocate memory for new RDMA poller\n");
-			free(rgroup);
-			pthread_mutex_unlock(&rtransport->transport.lock);
-			return NULL;
+			goto err_exit;
 		}
 
 		poller->device = device;
@@ -2394,9 +2392,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		if (!poller->cq) {
 			SPDK_ERRLOG("Unable to create completion queue\n");
 			free(poller);
-			free(rgroup);
-			pthread_mutex_unlock(&rtransport->transport.lock);
-			return NULL;
+			goto err_exit;
 		}
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
@@ -2404,6 +2400,19 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	pthread_mutex_unlock(&rtransport->transport.lock);
 	return &rgroup->group;
+
+err_exit:
+	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tpoller) {
+		TAILQ_REMOVE(&rgroup->pollers, poller, link);
+		if (poller->cq) {
+			ibv_destroy_cq(poller->cq);
+		}
+		free(poller);
+	}
+
+	free(rgroup);
+	pthread_mutex_unlock(&rtransport->transport.lock);
+	return NULL;
 }
 
 static void
