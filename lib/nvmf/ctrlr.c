@@ -48,6 +48,7 @@
 #include "spdk_internal/log.h"
 
 #define MIN_KEEP_ALIVE_TIMEOUT 10000
+#define NVMF_DISC_KATO 120000ULL
 
 #define MODEL_NUMBER "SPDK bdev Controller"
 
@@ -71,6 +72,108 @@ spdk_nvmf_invalid_connect_response(struct spdk_nvmf_fabric_connect_rsp *rsp,
 	spdk_nvmf_invalid_connect_response(rsp, 0, offsetof(struct spdk_nvmf_fabric_connect_cmd, field))
 #define SPDK_NVMF_INVALID_CONNECT_DATA(rsp, field)	\
 	spdk_nvmf_invalid_connect_response(rsp, 1, offsetof(struct spdk_nvmf_fabric_connect_data, field))
+
+static void
+spdk_nvmf_ctrlr_stop_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return;
+	}
+
+	if (ctrlr->feat.keep_alive_timer.bits.kato == 0) {
+		return;
+	}
+
+	if (ctrlr->keep_alive_poller == NULL) {
+		SPDK_ERRLOG("Want to stop keep alive poller, but poller is NULL\n");
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Stop keep alive poller\n");
+	spdk_poller_unregister(&ctrlr->keep_alive_poller);
+}
+
+static int
+spdk_nvmf_ctrlr_keep_alive_timeout(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	int rc;
+
+	/* set the Controller Fatal Status bit to '1' */
+	if (ctrlr->vcprop.csts.bits.cfs == 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr keep alive timeout\n");
+		ctrlr->vcprop.csts.bits.cfs = 1;
+		/*
+		 * remove admin qpair, terminate Transport connection
+		 */
+		rc = spdk_nvmf_qpair_disconnect(ctrlr->admin_qpair, NULL, NULL);
+		if (rc) {
+			SPDK_ERRLOG("Admin qpair disconnect failed\n");
+			return rc;
+		}
+	}
+
+	return 0;
+}
+
+static int
+spdk_nvmf_ctrlr_keep_alive_poll(void *ctx)
+{
+	int rc;
+	uint64_t now = spdk_get_ticks();
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Polling ctrlr keep alive timeout\n");
+
+	/* If the Keep alive feature is in use and the timer expires */
+	if (now > ctrlr->keep_alive_timeout_tick) {
+		rc = spdk_nvmf_ctrlr_keep_alive_timeout(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("keep alive timeout handle failed\n");
+			return -1;
+		}
+	}
+
+	return 1;
+}
+
+static void
+spdk_nvmf_ctrlr_start_keep_alive_timer(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	uint64_t poller_interval;
+
+	if (!ctrlr) {
+		SPDK_ERRLOG("Controller is NULL\n");
+		return;
+	}
+
+	/* if cleared to 0 then the Keep Alive Timer is disable */
+	if (ctrlr->feat.keep_alive_timer.bits.kato != 0) {
+		ctrlr->keep_alive_interval_ticks = ctrlr->feat.keep_alive_timer.bits.kato *
+						   spdk_get_ticks_hz() / UINT64_C(1000);
+
+		/* keep_alive_timeout_tick is the deadline to trigger keep alive timeout */
+		ctrlr->keep_alive_timeout_tick = spdk_get_ticks() + ctrlr->keep_alive_interval_ticks;
+
+		/* min(kato, MIN_KEEP_ALIVE_TIMEOUT) become the period_microseconds */
+		poller_interval = spdk_min(ctrlr->feat.keep_alive_timer.bits.kato, MIN_KEEP_ALIVE_TIMEOUT) *
+				  1000;
+
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Ctrlr add keep alive poller\n");
+		/* use the MIN_KEEP_ALIVE_TIMEOUT to poll timeout */
+		ctrlr->keep_alive_poller = spdk_poller_register(spdk_nvmf_ctrlr_keep_alive_poll, ctrlr,
+					   poller_interval);
+	}
+}
+
+static void
+_spdk_nvmf_ctrlr_destruct(void *ctx)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+
+	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+	free(ctrlr);
+}
 
 static void
 ctrlr_add_qpair_and_update_rsp(struct spdk_nvmf_qpair *qpair,
@@ -120,7 +223,9 @@ _spdk_nvmf_ctrlr_add_admin_qpair(void *ctx)
 	struct spdk_nvmf_qpair *qpair = req->qpair;
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 
+
 	ctrlr->admin_qpair = qpair;
+	spdk_nvmf_ctrlr_start_keep_alive_timer(ctrlr);
 	ctrlr_add_qpair_and_update_rsp(qpair, ctrlr, rsp);
 	spdk_nvmf_request_complete(req);
 }
@@ -172,9 +277,40 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	ctrlr->feat.keep_alive_timer.bits.kato = connect_cmd->kato;
+	/*
+	 * Because Identify Controller data KAS default is 10
+	 * KAS: this field indicates the granularity of the Keep Alive Timer in 100ms units
+	 * keep-alive timeout in milliseconds
+	 */
+	ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(connect_cmd->kato, 1000) *
+			1000;
 	ctrlr->feat.async_event_configuration.bits.ns_attr_notice = 1;
 	ctrlr->feat.volatile_write_cache.bits.wce = 1;
+
+	if (ctrlr->subsys->subtype == SPDK_NVMF_SUBTYPE_DISCOVERY) {
+		/* Don't accept keep-alive timeout for discovery controllers */
+		if (ctrlr->feat.keep_alive_timer.bits.kato != 0) {
+			SPDK_ERRLOG("Discovery controller don't accept keep-alive timeout\n");
+			spdk_bit_array_free(&ctrlr->qpair_mask);
+			free(ctrlr);
+			return NULL;
+		}
+
+		/*
+		 * Discovery controllers use some arbitrary high value in order
+		 * to cleanup stale discovery sessions
+		 *
+		 * From the 1.0a nvme-of spec:
+		 * "The Keep Alive command is reserved for
+		 * Discovery controllers. A transport may specify a
+		 * fixed Discovery controller activity timeout value
+		 * (e.g., 2 minutes).  If no commands are received
+		 * by a Discovery controller within that time
+		 * period, the controller may perform the
+		 * actions for Keep Alive Timer expiration".
+		 */
+		ctrlr->feat.keep_alive_timer.bits.kato = NVMF_DISC_KATO;
+	}
 
 	/* Subtract 1 for admin queue, 1 for 0's based */
 	ctrlr->feat.number_of_queues.bits.ncqr = transport->opts.max_qpairs_per_ctrlr - 1 -
@@ -221,7 +357,7 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 
-	free(ctrlr);
+	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_destruct, ctrlr);
 }
 
 static void
@@ -881,7 +1017,13 @@ spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 	} else if (cmd->cdw11 < MIN_KEEP_ALIVE_TIMEOUT) {
 		ctrlr->feat.keep_alive_timer.bits.kato = MIN_KEEP_ALIVE_TIMEOUT;
 	} else {
-		ctrlr->feat.keep_alive_timer.bits.kato = cmd->cdw11;
+		/* round up to second */
+		ctrlr->feat.keep_alive_timer.bits.kato = spdk_divide_round_up(cmd->cdw11, 1000) * 1000;
+	}
+
+	if (cmd->cdw11 != 0) {
+		ctrlr->keep_alive_interval_ticks = ctrlr->feat.keep_alive_timer.bits.kato *
+						   spdk_get_ticks_hz() / UINT64_C(1000);
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Keep Alive Timer set to %u ms\n",
@@ -1591,6 +1733,8 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 static int
 spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 {
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Keep Alive\n");
 	/*
 	 * To handle keep alive just clear or reset the
@@ -1599,7 +1743,10 @@ spdk_nvmf_ctrlr_keep_alive(struct spdk_nvmf_request *req)
 	 * will monitor if the time since last recorded
 	 * keep alive has exceeded the max duration and
 	 * take appropriate action.
+	 * kato is millisecond.
 	 */
+	ctrlr->keep_alive_timeout_tick = spdk_get_ticks() + ctrlr->keep_alive_interval_ticks;
+
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 }
 
