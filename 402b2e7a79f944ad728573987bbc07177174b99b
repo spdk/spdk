@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52a2b068_eae09d07",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T05:50:26Z",
+      "side": 1,
+      "message": "The macro isn\u0027t necessary, just remove it is fine.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9cdd833_8756a0b3",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T05:50:26Z",
+      "side": 1,
+      "message": "Based on your code, using \"last_keep_alive_tick\" makes more sense to me, it means last ticks for the KA request.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7dc562ec_a4bc73a4",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T05:50:26Z",
+      "side": 1,
+      "message": "system-\u003esubsystem.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c32acfb_9f57ee2d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-07T05:50:26Z",
+      "side": 1,
+      "message": "Although Keep Alive Timer maybe a very big value, here it\u0027s nice to compare 1s with KATO, choose the smaller one.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
