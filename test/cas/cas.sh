@@ -15,5 +15,6 @@ function suite()
 timing_enter cas
 
 suite ./integrity/fio-mallocs.sh
+suite ./management/create-destruct.sh
 
 timing_exit cas
