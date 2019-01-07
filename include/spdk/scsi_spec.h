@@ -724,6 +724,13 @@ struct spdk_scsi_pr_out_reg_and_move_param_list {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_scsi_pr_out_reg_and_move_param_list) == 24, "Incorrect size");
 
+/*
+ * SPC-4
+ * Table-258 SECURITY PROTOCOL field in SECURITY PROTOCOL IN command
+ */
+#define SPDK_SCSI_SECP_INFO	0x00
+#define SPDK_SCSI_SECP_TCG	0x01
+
 #define SPDK_SCSI_UNMAP_LBPU			1 << 7
 #define SPDK_SCSI_UNMAP_LBPWS			1 << 6
 #define SPDK_SCSI_UNMAP_LBPWS10			1 << 5

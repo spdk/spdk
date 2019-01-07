@@ -67,6 +67,11 @@ spdk_env_fini() and spdk_env_dpdk_post_fini() were added to release any resource
 allocated by spdk_env_init() or spdk_env_dpdk_post_init() respectively. It is expected
 that common usage of those functions is to call them just before terminating the process.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
