@@ -22,6 +22,30 @@
       "revId": "4b9a14098d5b65a754563346dd47a95840a87631",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9369f218_428dcaab",
+        "filename": "test/iscsi_tgt/ip_migration/ip_migration.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T01:16:00Z",
+      "side": 1,
+      "message": "Done, Thank you.",
+      "parentUuid": "3d6a9d0b_a5efa1a0",
+      "range": {
+        "startLine": 90,
+        "startChar": 24,
+        "endLine": 90,
+        "endChar": 32
+      },
+      "revId": "4b9a14098d5b65a754563346dd47a95840a87631",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
