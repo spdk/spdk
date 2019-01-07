@@ -91,12 +91,16 @@ static pthread_mutex_t g_device_qp_lock = PTHREAD_MUTEX_INITIALIZER;
 /* When enqueueing, we need to supply the crypto driver with an array of pointers to
  * operation structs. As each of these can be max 512B, we can adjust the CRYPTO_MAX_IO
  * value in conjunction with the the other defines to make sure we're not using crazy amounts
- * of memory. All of these numbers can and probably should be adjusted based on the
+ * of memory. Since both src and dst buffers may need to be split into physically contiguous
+ * chunks, we'll need at most 3 crypto operations per block - one preceeding the nearest
+ * contiguity boundary in one buffer, one preceeding the next boundary in the other buffer,
+ * and the last one following both contiguity boundaries.
+ * All of these numbers can and probably should be adjusted based on the
  * workload. By default we'll use the worst case (smallest) block size for the
  * minimum number of array entries. As an example, a CRYPTO_MAX_IO size of 64K with 512B
- * blocks would give us an enqueue array size of 128.
+ * blocks would give us an enqueue array size of 384.
  */
-#define MAX_ENQUEUE_ARRAY_SIZE (CRYPTO_MAX_IO / 512)
+#define MAX_ENQUEUE_ARRAY_SIZE (3 * CRYPTO_MAX_IO / 512)
 
 /* The number of MBUFS we need must be a power of two and to support other small IOs
  * in addition to the limits mentioned above, we go to the next power of two. It is
@@ -527,39 +531,14 @@ crypto_dev_poller(void *args)
 	return num_dequeued_ops;
 }
 
-/* We're either encrypting on the way down or decrypting on the way back. */
 static int
-_crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation crypto_op)
+_alloc_crypto_op_resources(struct rte_crypto_op **crypto_ops, struct rte_mbuf **src_mbufs,
+			   struct rte_mbuf **dst_mbufs, enum rte_crypto_cipher_operation crypto_op,
+			   uint32_t cryop_cnt)
 {
-	uint16_t num_enqueued_ops = 0;
-	uint32_t cryop_cnt = bdev_io->u.bdev.num_blocks;
-	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
-	struct crypto_io_channel *crypto_ch = io_ctx->crypto_ch;
-	uint8_t cdev_id = crypto_ch->device_qp->device->cdev_id;
-	uint32_t crypto_len = io_ctx->crypto_bdev->crypto_bdev.blocklen;
-	uint64_t total_length = bdev_io->u.bdev.num_blocks * crypto_len;
+	uint32_t allocated;
 	int rc;
-	uint32_t enqueued = 0;
-	uint32_t iov_index = 0;
-	uint32_t allocated = 0;
-	uint8_t *current_iov = NULL;
-	uint64_t total_remaining = 0;
-	uint64_t current_iov_remaining = 0;
-	int completed = 0;
-	int crypto_index = 0;
-	uint32_t en_offset = 0;
-	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
-	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
-	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
-	int burst;
 
-	assert((bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen) <= CRYPTO_MAX_IO);
-
-	/* Get the number of source mbufs that we need. These will always be 1:1 because we
-	 * don't support chaining. The reason we don't is because of our decision to use
-	 * LBA as IV, there can be no case where we'd need >1 mbuf per crypto op or the
-	 * op would be > 1 LBA.
-	 */
 	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], cryop_cnt);
 	if (rc) {
 		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
@@ -571,8 +550,8 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], cryop_cnt);
 		if (rc) {
 			SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
-			rc = -ENOMEM;
-			goto error_get_dst;
+			spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0], cryop_cnt);
+			return -ENOMEM;
 		}
 	}
 
@@ -582,8 +561,51 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 					     crypto_ops, cryop_cnt);
 	if (allocated < cryop_cnt) {
 		SPDK_ERRLOG("ERROR trying to get crypto ops!\n");
-		rc = -ENOMEM;
-		goto error_get_ops;
+		spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0], cryop_cnt);
+		spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], cryop_cnt);
+		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+/* We're either encrypting on the way down or decrypting on the way back. */
+static int
+_crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation crypto_op)
+{
+	uint16_t num_enqueued_ops = 0;
+	uint32_t cryop_cnt = bdev_io->u.bdev.num_blocks;
+	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
+	struct crypto_io_channel *crypto_ch = io_ctx->crypto_ch;
+	uint8_t cdev_id = crypto_ch->device_qp->device->cdev_id;
+	uint64_t crypto_len;
+	uint64_t total_length = bdev_io->u.bdev.num_blocks * crypto_len;
+	int rc;
+	uint32_t enqueued = 0;
+	uint32_t iov_index = 0;
+	uint32_t allocated = 0;
+	uint8_t *current_iov = NULL;
+	uint64_t total_remaining = 0;
+	uint64_t current_iov_remaining = 0;
+	int completed = 0;
+	uint32_t crypto_index = 0;
+	uint32_t en_offset = 0;
+	struct rte_crypto_op *crypto_ops[MAX_ENQUEUE_ARRAY_SIZE];
+	struct rte_mbuf *src_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
+	struct rte_mbuf *dst_mbufs[MAX_ENQUEUE_ARRAY_SIZE];
+	int burst;
+
+	assert((bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen) <= CRYPTO_MAX_IO);
+
+	/* Get the number of crypto ops that we need. We need at least 1 src and 1 dst mbuf
+	 * per op. We preallocate the safest minimum now, and we allocate more at runtime
+	 * if we need to split any non-physically-contiguous buffers.
+	 */
+	rc = _alloc_crypto_op_resources(crypto_ops, &src_mbufs[0], &dst_mbufs[0],
+					crypto_op, cryop_cnt);
+	if (rc) {
+		SPDK_ERRLOG("ERROR trying to allocate crypto op resources!\n");
+		return rc;
 	}
 
 	/* For encryption, we need to prepare a single contiguous buffer as the encryption
@@ -608,11 +630,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		io_ctx->cry_num_blocks = bdev_io->u.bdev.num_blocks;
 	}
 
-	/* This value is used in the completion callback to determine when the bdev_io is
-	 * complete.
-	 */
-	io_ctx->cryop_cnt_remaining = cryop_cnt;
-
 	/* As we don't support chaining because of a decision to use LBA as IV, construction
 	 * of crypto operaations is straightforward. We build both the op, the mbuf and the
 	 * dst_mbuf in our local arrays by looping through the length of the bdev IO and
@@ -627,9 +644,28 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		uint8_t *iv_ptr;
 		uint64_t op_block_offset;
 
+		if (crypto_index == cryop_cnt) {
+			/* We've had to split some non-physically-contiguous buffers and put
+			 * those into more crypto ops than we originally expected. We have run
+			 * out of the preallocated ops now, so simply allocate some more.
+			 */
+			rc = _alloc_crypto_op_resources(&crypto_ops[crypto_index],
+							&src_mbufs[crypto_index],
+							&dst_mbufs[crypto_index],
+							crypto_op, 1);
+			if (rc) {
+				goto error_alloc_op_resources;
+			}
+
+			cryop_cnt++;
+		}
+
+		crypto_len = spdk_min(current_iov_remaining,
+				      io_ctx->crypto_bdev->crypto_bdev.blocklen);
+
 		/* Set the mbuf elements address and length. Null out the next pointer. */
 		src_mbufs[crypto_index]->buf_addr = current_iov;
-		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, NULL);
+		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, &crypto_len);
 		src_mbufs[crypto_index]->data_len = crypto_len;
 		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
@@ -641,10 +677,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		memset(iv_ptr, 0, AES_CBC_IV_LENGTH);
 		op_block_offset = bdev_io->u.bdev.offset_blocks + crypto_index;
 		rte_memcpy(iv_ptr, &op_block_offset, sizeof(uint64_t));
-
-		/* Set the data to encrypt/decrypt length */
-		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
-		crypto_ops[crypto_index]->sym->cipher.data.offset = 0;
 
 		/* link the mbuf to the crypto op. */
 		crypto_ops[crypto_index]->sym->m_src = src_mbufs[crypto_index];
@@ -663,11 +695,14 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			/* Set the relevant destination en_mbuf elements. */
 			dst_mbufs[crypto_index]->buf_addr = io_ctx->cry_iov.iov_base + en_offset;
 			dst_mbufs[crypto_index]->buf_iova = spdk_vtophys(dst_mbufs[crypto_index]->buf_addr,
-							    NULL);
+							    &crypto_len);
 			dst_mbufs[crypto_index]->data_len = crypto_len;
 			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 			en_offset += crypto_len;
 			dst_mbufs[crypto_index]->next = NULL;
+
+			/* Update src mbuf len */
+			src_mbufs[crypto_index]->data_len = crypto_len;
 
 			/* Attach the crypto session to the operation */
 			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
@@ -685,9 +720,11 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 				rc = -EINVAL;
 				goto error_attach_session;
 			}
-
-
 		}
+
+		/* Set the data to encrypt/decrypt length */
+		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
+		crypto_ops[crypto_index]->sym->cipher.data.offset = 0;
 
 		/* Subtract our running totals for the op in progress and the overall bdev io */
 		total_remaining -= crypto_len;
@@ -706,6 +743,11 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			current_iov_remaining = bdev_io->u.bdev.iovs[iov_index].iov_len;
 		}
 	} while (total_remaining > 0);
+
+	/* This value is used in the completion callback to determine when the bdev_io is
+	 * complete.
+	 */
+	io_ctx->cryop_cnt_remaining = cryop_cnt;
 
 	/* Enqueue everything we've got but limit by the max number of descriptors we
 	 * configured the crypto device for.
@@ -740,9 +782,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	/* Error cleanup paths. */
 error_attach_session:
 error_get_write_buffer:
+error_alloc_op_resources:
 	rte_mempool_put_bulk(g_crypto_op_mp, (void **)crypto_ops, cryop_cnt);
 	allocated = 0;
-error_get_ops:
 	if (crypto_op == RTE_CRYPTO_CIPHER_OP_ENCRYPT) {
 		spdk_mempool_put_bulk(g_mbuf_mp, (void **)&dst_mbufs[0],
 				      cryop_cnt);
@@ -751,7 +793,6 @@ error_get_ops:
 		rte_mempool_put_bulk(g_crypto_op_mp, (void **)crypto_ops,
 				     allocated);
 	}
-error_get_dst:
 	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0],
 			      cryop_cnt);
 	return rc;
