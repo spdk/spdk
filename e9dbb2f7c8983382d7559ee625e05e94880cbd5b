@@ -52,6 +52,24 @@
       "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32bb419b_a9f74ebe",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T06:32:04Z",
+      "side": 1,
+      "message": "Thank you for nice suggestion. I updated the patch according to your suggestion. I did this to DIX too.",
+      "parentUuid": "fc86b6a4_492df783",
+      "revId": "e9dbb2f7c8983382d7559ee625e05e94880cbd5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
