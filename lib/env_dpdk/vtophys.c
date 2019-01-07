@@ -39,6 +39,7 @@
 #include <rte_eal_memconfig.h>
 
 #include "spdk_internal/assert.h"
+#include "spdk_internal/memory.h"
 
 #include "spdk/assert.h"
 #include "spdk/likely.h"

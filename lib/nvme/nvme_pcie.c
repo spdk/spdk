@@ -42,6 +42,8 @@
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
+#include "spdk_internal/memory.h"
+
 /*
  * Number of completion queue entries to process before ringing the
  *  completion queue doorbell.
@@ -1773,8 +1775,6 @@ nvme_pcie_qpair_build_contig_request(struct spdk_nvme_qpair *qpair, struct nvme_
 
 	return 0;
 }
-
-#define _2MB_OFFSET(ptr)	(((uintptr_t)(ptr)) &  (0x200000 - 1))
 
 /**
  * Build SGL list describing scattered payload buffer.

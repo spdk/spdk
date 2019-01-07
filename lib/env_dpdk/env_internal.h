@@ -64,14 +64,6 @@ extern struct rte_pci_bus rte_pci_bus;
 #define SHIFT_1GB	30 /* (1 << 30) == 1 GB */
 #define MASK_1GB	((1ULL << SHIFT_1GB) - 1)
 
-#define SHIFT_2MB	21 /* (1 << 21) == 2MB */
-#define MASK_2MB	((1ULL << SHIFT_2MB) - 1)
-#define VALUE_2MB	(1 << SHIFT_2MB)
-
-#define SHIFT_4KB	12 /* (1 << 12) == 4KB */
-#define MASK_4KB	((1ULL << SHIFT_4KB) - 1)
-#define VALUE_4KB	(1 << SHIFT_4KB)
-
 #define SPDK_PMD_REGISTER_PCI(pci_drv)									\
 __attribute__((constructor)) static void pci_drv ## _register(void)					\
 {													\

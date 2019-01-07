@@ -38,9 +38,10 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 #include "spdk/barrier.h"
-
 #include "spdk/vhost.h"
 #include "vhost_internal.h"
+
+#include "spdk_internal/memory.h"
 
 static uint32_t *g_num_ctrlrs;
 
@@ -443,8 +444,6 @@ spdk_vhost_vring_desc_is_wr(struct vring_desc *cur_desc)
 {
 	return !!(cur_desc->flags & VRING_DESC_F_WRITE);
 }
-
-#define _2MB_OFFSET(ptr)	((ptr) & (0x200000 - 1))
 
 int
 spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *iov,
