@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbadd3b5_f62c72e7",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T06:01:41Z",
+      "side": 0,
+      "message": "spdk_vtophys_notify() reads *size without checking return value of spdk_mem_map_translate() (Please see the line 403 in vtophys.c).\n\nI think buffer_len which is passed to spdk_mem_map_translate() should be initialized by illegal value after this patch?",
+      "range": {
+        "startLine": 599,
+        "startChar": 0,
+        "endLine": 602,
+        "endChar": 2
+      },
+      "revId": "d02bfdcccb95b610fdf42390e1798fa288e61750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
