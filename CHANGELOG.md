@@ -71,6 +71,11 @@ that common usage of those functions is to call them just before terminating the
 
 New `get_spdk_version` RPC method is introduced to get version info of the running SPDK application.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage tool can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
