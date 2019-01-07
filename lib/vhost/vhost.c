@@ -920,6 +920,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 	struct spdk_vhost_dev_event_ctx *ctx = arg1;
 	struct spdk_vhost_dev *vdev;
 	struct spdk_event *ev;
+	int rc;
 
 	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
 		ev = spdk_event_allocate(spdk_env_get_current_core(),
@@ -952,13 +953,16 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 		return;
 	}
 
-	ctx->cb_fn(vdev, arg2);
+	rc = ctx->cb_fn(vdev, arg2);
+	if (rc < 0) {
+		goto out_unlock_return;
+	}
 
 out_unlock_continue:
 	vdev = spdk_vhost_dev_next(ctx->vdev_id);
 	spdk_vhost_external_event_foreach_continue(vdev, ctx->cb_fn, arg2);
+out_unlock_return:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-
 	free(ctx);
 }
 
@@ -1346,13 +1350,19 @@ static void
 spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		spdk_vhost_event_fn fn, void *arg)
 {
+	int rc;
+
 	if (vdev == NULL) {
 		fn(NULL, arg);
 		return;
 	}
 
 	while (vdev->lcore == -1) {
-		fn(vdev, arg);
+		rc = fn(vdev, arg);
+		if (rc < 0) {
+			return;
+		}
+
 		vdev = spdk_vhost_dev_next(vdev->id);
 		if (vdev == NULL) {
 			fn(NULL, arg);
