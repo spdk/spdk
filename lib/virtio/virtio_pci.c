@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 
 #include "spdk_internal/virtio.h"
+#include "spdk_internal/memory.h"
 
 struct virtio_hw {
 	uint8_t	    use_msix;
@@ -268,11 +269,11 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 	 * only a single hugepage (2MB). As of Virtio 1.0, the queue size
 	 * always falls within this limit.
 	 */
-	if (vq->vq_ring_size > 0x200000) {
+	if (vq->vq_ring_size > VALUE_2MB) {
 		return -ENOMEM;
 	}
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, 0x200000, &queue_mem_phys_addr);
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VALUE_2MB, &queue_mem_phys_addr);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
 	}

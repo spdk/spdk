@@ -42,8 +42,6 @@
 #include "nvme_internal.h"
 #include "nvme_uevent.h"
 
-#include "spdk_internal/memory.h"
-
 /*
  * Number of completion queue entries to process before ringing the
  *  completion queue doorbell.
@@ -516,9 +514,8 @@ nvme_pcie_ctrlr_map_cmb(struct nvme_pcie_ctrlr *pctrlr)
 		goto exit;
 	}
 
-	mem_register_start = (((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + 0x1fffff) & ~(0x200000 - 1));
-	mem_register_end = ((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + pctrlr->cmb_size);
-	mem_register_end &= ~(uint64_t)(0x200000 - 1);
+	mem_register_start = _2MB_PAGE((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + VALUE_2MB - 1);
+	mem_register_end = _2MB_PAGE((uintptr_t)pctrlr->cmb_bar_virt_addr + offset + pctrlr->cmb_size);
 	pctrlr->cmb_mem_register_addr = (void *)mem_register_start;
 	pctrlr->cmb_mem_register_size = mem_register_end - mem_register_start;
 
@@ -977,7 +974,7 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	volatile uint32_t	*doorbell_base;
 	uint64_t		offset;
 	uint16_t		num_trackers;
-	size_t			page_align = 0x200000;
+	size_t			page_align = VALUE_2MB;
 	uint32_t                flags = SPDK_MALLOC_DMA;
 
 	/*
@@ -1827,7 +1824,7 @@ nvme_pcie_qpair_build_hw_sgl_request(struct spdk_nvme_qpair *qpair, struct nvme_
 				return -1;
 			}
 
-			length = spdk_min(remaining_user_sge_len, 0x200000 - _2MB_OFFSET(virt_addr));
+			length = spdk_min(remaining_user_sge_len, VALUE_2MB - _2MB_OFFSET(virt_addr));
 			remaining_user_sge_len -= length;
 			virt_addr += length;
 

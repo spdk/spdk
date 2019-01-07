@@ -617,8 +617,8 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 			pdst_page = spdk_vtophys((void *)vdst_page);
 		}
 		op_size = remaining;
-		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vsrc)));
-		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vdst)));
+		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vsrc)));
+		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vdst)));
 		op_size = spdk_min(op_size, ioat->max_xfer_size);
 		remaining -= op_size;
 
@@ -681,7 +681,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 
 	while (remaining) {
 		op_size = remaining;
-		op_size = spdk_min(op_size, (0x200000 - _2MB_OFFSET(vdst)));
+		op_size = spdk_min(op_size, (VALUE_2MB - _2MB_OFFSET(vdst)));
 		op_size = spdk_min(op_size, ioat->max_xfer_size);
 		remaining -= op_size;
 

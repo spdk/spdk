@@ -56,6 +56,7 @@
 
 #include "spdk_internal/assert.h"
 #include "spdk_internal/log.h"
+#include "spdk_internal/memory.h"
 
 extern pid_t g_spdk_nvme_pid;
 
@@ -137,7 +138,7 @@ extern pid_t g_spdk_nvme_pid;
 /* We want to fit submission and completion rings each in a single 2MB
  * hugepage to ensure physical address contiguity.
  */
-#define MAX_IO_QUEUE_ENTRIES		(0x200000 / spdk_max( \
+#define MAX_IO_QUEUE_ENTRIES		(VALUE_2MB / spdk_max( \
 						sizeof(struct spdk_nvme_cmd), \
 						sizeof(struct spdk_nvme_cpl)))
 
