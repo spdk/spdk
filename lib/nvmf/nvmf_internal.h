@@ -180,6 +180,8 @@ struct spdk_nvmf_ns {
 	enum spdk_nvme_reservation_type rtype;
 	/* reservation holder */
 	struct spdk_nvmf_registrant *holder;
+	/* reservation notificaton mask */
+	uint32_t mask;
 	TAILQ_ENTRY(spdk_nvmf_ns) link;
 };
 
@@ -212,6 +214,14 @@ struct spdk_nvmf_ctrlr_feat {
 };
 
 /*
+ * NVMf reservation notificaton log page.
+ */
+struct spdk_nvmf_reservation_log {
+	struct spdk_nvme_reservation_notification_log	log;
+	TAILQ_ENTRY(spdk_nvmf_reservation_log)		link;
+};
+
+/*
  * This structure represents an NVMe-oF controller,
  * which is like a "session" in networking terms.
  */
@@ -238,6 +248,10 @@ struct spdk_nvmf_ctrlr {
 
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;
+
+	uint64_t	log_page_count;
+	uint8_t		num_avail_log_pages;
+	TAILQ_HEAD(log_page_head, spdk_nvmf_reservation_log)	log_head;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };

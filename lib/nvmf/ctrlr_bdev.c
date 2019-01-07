@@ -514,6 +514,58 @@ nvmf_ctrlr_get_registrant_by_hostid(struct spdk_nvmf_ctrlr *ctrlr,
 	return NULL;
 }
 
+static void
+spdk_nvmf_ctrlr_reservation_notice(struct spdk_nvmf_ctrlr *ctrlr,
+				   struct spdk_nvmf_ns *ns,
+				   enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	struct spdk_nvmf_reservation_log *log;
+
+	switch (type) {
+	case SPDK_NVME_RESERVATION_LOG_PAGE_EMPTY:
+		return;
+	case SPDK_NVME_REGISTRATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_REGISTRATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_RELEASED:
+		if (ns->mask & SPDK_NVME_RESERVATION_RELEASED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_RESERVATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	default:
+		return;
+	}
+
+	ctrlr->log_page_count++;
+
+	/* Maximum number of queued log pages is 255 */
+	if (ctrlr->num_avail_log_pages == 0xff) {
+		log = TAILQ_LAST(&ctrlr->log_head, log_page_head);
+		log->log.log_page_count = ctrlr->log_page_count;
+		return;
+	}
+
+	log = calloc(1, sizeof(*log));
+	if (!log) {
+		return;
+	}
+
+	log->log.log_page_count = ctrlr->log_page_count;
+	log->log.type = type;
+	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
+	log->log.nsid = ns->nsid;
+	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
+
+	return;
+}
+
 /* current reservation type is all registrants or not */
 static inline bool
 nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns)
