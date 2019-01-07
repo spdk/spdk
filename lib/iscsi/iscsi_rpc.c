@@ -1071,15 +1071,14 @@ spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		return;
+		goto exit;
 	}
 
 	target = spdk_iscsi_find_tgt_node(req.name);
 	if (target == NULL) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						     "Could not find target %s", req.name);
-		free_rpc_target_auth(&req);
-		return;
+		goto exit;
 	}
 
 	rc = spdk_iscsi_tgt_node_set_chap_params(target, req.disable_chap, req.require_chap,
@@ -1087,8 +1086,7 @@ spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
 	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid combination of auth params");
-		free_rpc_target_auth(&req);
-		return;
+		goto exit;
 	}
 
 	free_rpc_target_auth(&req);
@@ -1100,6 +1098,10 @@ spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
+	return;
+
+exit:
+	free_rpc_target_auth(&req);
 }
 SPDK_RPC_REGISTER("set_iscsi_target_node_auth", spdk_rpc_set_iscsi_target_node_auth,
 		  SPDK_RPC_RUNTIME)
