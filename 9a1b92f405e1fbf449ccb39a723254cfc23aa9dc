@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa2aff23_2b9b0f0e",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T01:03:52Z",
+      "side": 1,
+      "message": "Thank you for your question.\nIf you are OK, I want to improve comments in separate patches later.\nHence I reply to your question here for now.\n\n\nExtended LBA may be NVMe specific terminology.\nNVMe specification says that \"An extended LBA is a larger LBA that is created when metadata associated with the LBA is transferred contiguously with the LBA data.\"\n\nNVMe supports metadata more than 8 bytes, but to simplify explanation, I used DIF and metadata interchangeably in the following.\n\n\nThe following relationships are almost satisfied.\n\nDIF \u003d extended LBA payload \u003d interleave data and DIF into buffer\nDIX \u003d LBA payload \u003d separate data buffer and DIF buffer.\n\n\nDIF requires applications to interleave data and DIF in the same buffer for every block.\nBut this is not easy task for application and DIX alleviates this burden.\nDIX enables applications to handle data and DIF in the different buffer for every block.\n\n\nOn wire, transferring data and DIF separately is not easy task, hence NVMe-oF supports only DIF (in other words, extended LBA payload, or interleaving data and DIF).\nHence hardware converts DIX into DIF and transfers DIF payload on the wire.",
+      "parentUuid": "188cafbc_1b235384",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "200fb620_5fb387ef",
         "filename": "lib/util/dif.c",
         "patchSetId": 28
@@ -69,6 +87,47 @@
       "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86d35d61_7a439bb5",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T01:03:52Z",
+      "side": 1,
+      "message": "I understand your question :-)\n\nNo.\n\nwhat I want to do is:\n\nif data block size is 4096, metadata size is 128, DIF is located to the last 8 bytes of metadata,\nand data block is split into 1024, 1024, 1024, 1024,\n\nthe line 632 calculates CRC of [4096 + 128 - 8 : 4096].\nthe line 646 calculates CRC of [1023 : 0], [2047 : 1024], [3071 : 2048], and [4095 : 3072].\n\nBut the current ordering might cause your question.\n\nHence I move the line 632 to the line 655.",
+      "parentUuid": "0cc08297_2f055993",
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6de1d512_817d33e1",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 766,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-07T01:03:52Z",
+      "side": 1,
+      "message": "I moved this to the line 787 too.",
+      "range": {
+        "startLine": 763,
+        "startChar": 0,
+        "endLine": 766,
+        "endChar": 2
+      },
+      "revId": "9a1b92f405e1fbf449ccb39a723254cfc23aa9dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
