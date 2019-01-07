@@ -236,6 +236,10 @@ struct spdk_nvmf_ctrlr {
 	uint16_t changed_ns_list_count;
 	struct spdk_nvme_ns_list changed_ns_list;
 
+	/* Time to trigger keep-alive--poller_time = now_tick + period */
+	uint64_t last_keep_alive_tick;
+	struct spdk_poller			*keep_alive_poller;
+
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
 
