@@ -35,7 +35,7 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = nvme_ctrlr_cmd.c nvme_ctrlr.c nvme_fabric.c nvme_ns_cmd.c nvme_ns.c nvme_pcie.c nvme_qpair.c nvme.c nvme_quirks.c nvme_transport.c nvme_uevent.c nvme_ctrlr_ocssd_cmd.c \
-	nvme_ns_ocssd_cmd.c nvme_tcp.c
+	nvme_ns_ocssd_cmd.c nvme_tcp.c nvme_opal.c
 C_SRCS-$(CONFIG_RDMA) += nvme_rdma.c
 LIBNAME = nvme
 LOCAL_SYS_LIBS = -luuid
