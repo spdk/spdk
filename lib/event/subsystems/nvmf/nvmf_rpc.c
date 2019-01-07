@@ -1454,6 +1454,10 @@ static const struct spdk_json_object_decoder nvmf_rpc_create_transport_decoder[]
 		"num_shared_buffers", offsetof(struct nvmf_rpc_create_transport_ctx, opts.num_shared_buffers),
 		spdk_json_decode_uint32, true
 	},
+	{
+		"buf_cache_size", offsetof(struct nvmf_rpc_create_transport_ctx, opts.buf_cache_size),
+		spdk_json_decode_uint32, true
+	},
 };
 
 static void
