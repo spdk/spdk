@@ -341,10 +341,17 @@ struct spdk_nvmf_rdma_poller {
 	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
 };
 
-struct spdk_nvmf_rdma_poll_group {
-	struct spdk_nvmf_transport_poll_group	group;
+struct spdk_nvmf_rdma_buffer_entry {
+	void						*buf;
+	STAILQ_ENTRY(spdk_nvmf_rdma_buffer_entry)	link;
+};
 
-	TAILQ_HEAD(, spdk_nvmf_rdma_poller)	pollers;
+struct spdk_nvmf_rdma_poll_group {
+	struct spdk_nvmf_transport_poll_group		group;
+	TAILQ_HEAD(, spdk_nvmf_rdma_poller)		pollers;
+	struct spdk_nvmf_rdma_buffer_entry		*bufs;
+	STAILQ_HEAD(, spdk_nvmf_rdma_buffer_entry)	free_bufs;
+	STAILQ_HEAD(, spdk_nvmf_rdma_buffer_entry)	busy_bufs;
 };
 
 /* Assuming rdma_cm uses just one protection domain per ibv_context. */
@@ -2323,7 +2330,9 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller;
+	struct spdk_nvmf_rdma_poller		*tpoller;
 	struct spdk_nvmf_rdma_device		*device;
+	uint32_t				i;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -2361,18 +2370,64 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 	}
 
+	if (transport->opts.buf_cache_size) {
+		rgroup->bufs = calloc(sizeof(struct spdk_nvmf_rdma_buffer_entry), transport->opts.buf_cache_size);
+		if (rgroup->bufs == NULL) {
+			SPDK_ERRLOG("Unable to allocate buffer entries for poll group buffer cache\n");
+			goto err_exit;
+		}
+		STAILQ_INIT(&rgroup->busy_bufs);
+		STAILQ_INIT(&rgroup->free_bufs);
+
+		for (i = 0; i < transport->opts.buf_cache_size; i++) {
+			rgroup->bufs[i].buf = spdk_mempool_get(rtransport->data_buf_pool);
+			if (rgroup->bufs[i].buf == NULL) {
+				goto err_exit;
+			}
+		}
+	}
+
 	pthread_mutex_unlock(&rtransport->lock);
 	return &rgroup->group;
+
+	/* This needs to only be called from error paths under the mutex. */
+err_exit:
+	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tpoller) {
+		TAILQ_REMOVE(&rgroup->pollers, poller, link);
+		if (poller->cq) {
+			ibv_destroy_cq(poller->cq);
+		}
+		free(poller);
+	}
+
+	if (rgroup->bufs) {
+		for (i = 0; i < transport->opts.buf_cache_size; i++) {
+			if (rgroup->bufs[i].buf) {
+				spdk_mempool_put(rtransport->data_buf_pool, rgroup->bufs[i].buf);
+			} else {
+				/* All buffers after the first NULL will be NULL. */
+				break;
+			}
+		}
+		free(rgroup->bufs);
+	}
+
+	free(rgroup);
+	pthread_mutex_unlock(&rtransport->lock);
+	return NULL;
 }
 
 static void
 spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_rdma_poller		*poller, *tmp;
 	struct spdk_nvmf_rdma_qpair		*qpair, *tmp_qpair;
+	uint32_t				i;
 
 	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
 
 	if (!rgroup) {
 		return;
@@ -2389,6 +2444,13 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		}
 
 		free(poller);
+	}
+
+	if (rgroup->bufs) {
+		for (i = 0; i < group->transport->opts.buf_cache_size; i++) {
+			spdk_mempool_put(rtransport->data_buf_pool, rgroup->bufs[i].buf);
+		}
+		free(rgroup->bufs);
 	}
 
 	free(rgroup);
