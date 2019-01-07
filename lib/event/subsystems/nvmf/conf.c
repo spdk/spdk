@@ -524,6 +524,11 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 	if (val >= 0) {
 		opts.num_shared_buffers = val;
 	}
+	val = spdk_conf_section_get_intval(ctx->sp, "BufCacheSize");
+	if (val >= 0) {
+		opts.buf_cache_size = val;
+	}
+
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
 	if (transport) {
