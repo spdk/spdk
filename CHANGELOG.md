@@ -22,6 +22,11 @@ any registered pollers to be run on the thread.
 Added spdk_thread_is_idle() function to check if there are any scheduled operations
 to be performed on the thread at given time.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
