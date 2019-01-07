@@ -31,6 +31,11 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+### Opal
+
+Add Opal scan support for NVMe to check whether it supports SED Opal and dump
+device info. nvme_manage can be used to invoke this.
+
 ## v19.01:
 
 ### ocf bdev
