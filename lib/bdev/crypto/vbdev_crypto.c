@@ -533,7 +533,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 	struct crypto_bdev_io *io_ctx = (struct crypto_bdev_io *)bdev_io->driver_ctx;
 	struct crypto_io_channel *crypto_ch = io_ctx->crypto_ch;
 	uint8_t cdev_id = crypto_ch->device_qp->device->cdev_id;
-	uint32_t crypto_len = io_ctx->crypto_bdev->crypto_bdev.blocklen;
+	uint64_t crypto_len = io_ctx->crypto_bdev->crypto_bdev.blocklen;
 	uint64_t total_length = bdev_io->u.bdev.num_blocks * crypto_len;
 	int rc;
 	uint32_t enqueued = 0;
@@ -626,7 +626,7 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 
 		/* Set the mbuf elements address and length. Null out the next pointer. */
 		src_mbufs[crypto_index]->buf_addr = current_iov;
-		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, NULL);
+		src_mbufs[crypto_index]->buf_iova = spdk_vtophys((void *)current_iov, &crypto_len);
 		src_mbufs[crypto_index]->data_len = crypto_len;
 		src_mbufs[crypto_index]->next = NULL;
 		/* Store context in every mbuf as we don't know anything about completion order */
@@ -638,10 +638,6 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		memset(iv_ptr, 0, AES_CBC_IV_LENGTH);
 		op_block_offset = bdev_io->u.bdev.offset_blocks + crypto_index;
 		rte_memcpy(iv_ptr, &op_block_offset, sizeof(uint64_t));
-
-		/* Set the data to encrypt/decrypt length */
-		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
-		crypto_ops[crypto_index]->sym->cipher.data.offset = 0;
 
 		/* link the mbuf to the crypto op. */
 		crypto_ops[crypto_index]->sym->m_src = src_mbufs[crypto_index];
@@ -660,11 +656,13 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 			/* Set the relevant destination en_mbuf elements. */
 			dst_mbufs[crypto_index]->buf_addr = io_ctx->cry_iov.iov_base + en_offset;
 			dst_mbufs[crypto_index]->buf_iova = spdk_vtophys(dst_mbufs[crypto_index]->buf_addr,
-							    NULL);
+							    &crypto_len);
 			dst_mbufs[crypto_index]->data_len = crypto_len;
-			crypto_ops[crypto_index]->sym->m_dst = dst_mbufs[crypto_index];
 			en_offset += crypto_len;
 			dst_mbufs[crypto_index]->next = NULL;
+
+			/* Update src mbuf len */
+			src_mbufs[crypto_index]->data_len = crypto_len;
 
 			/* Attach the crypto session to the operation */
 			rc = rte_crypto_op_attach_sym_session(crypto_ops[crypto_index],
@@ -682,9 +680,11 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 				rc = -EINVAL;
 				goto error_attach_session;
 			}
-
-
 		}
+
+		/* Set the data to encrypt/decrypt length */
+		crypto_ops[crypto_index]->sym->cipher.data.length = crypto_len;
+		crypto_ops[crypto_index]->sym->cipher.data.offset = 0;
 
 		/* Subtract our running totals for the op in progress and the overall bdev io */
 		total_remaining -= crypto_len;
