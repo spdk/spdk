@@ -2991,6 +2991,48 @@ Example response:
 
 # NVMe-oF Target {#jsonrpc_components_nvmf_tgt}
 
+## nvmf_create_transport method {#rpc_nvmf_create_transport}
+
+Initialize an NVMe-oF transport with the given options.
+
+### Parameters
+
+Name                        | Optional | Type    | Description
+--------------------------- | -------- | --------| -----------
+trtype                      | Required | string  | Transport type (ex. RDMA)
+max_queue_depth             | Optional | number  | Max number of outstanding I/O per queue
+max_qpairs_per_ctrlr        | Optional | number  | Max number of SQ and CQ per controller
+in_capsule_data_size        | Optional | number  | Max number of in-capsule data size
+max_io_size                 | Optional | number  | Max I/O size (bytes)
+io_unit_size                | Optional | number  | I/O unit size (bytes)
+max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
+num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
+buf_cache_size              | Optional | number  | The number of shared buffers to cache per poll group
+
+### Example:
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "nvmf_create_transport",
+  "id": 1,
+  "params": {
+    "trtype": "RDMA",
+    "max_queue_depth": 32
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
 ## get_nvmf_subsystems method {#rpc_get_nvmf_subsystems}
 
 ### Parameters
