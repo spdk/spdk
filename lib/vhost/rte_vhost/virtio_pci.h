@@ -22,11 +22,6 @@
 
 struct virtqueue;
 
-/* VirtIO PCI vendor/device ID. */
-#define VIRTIO_PCI_VENDORID     0x1AF4
-#define VIRTIO_PCI_LEGACY_DEVICEID_VHOST_USER 0x1017
-#define VIRTIO_PCI_MODERN_DEVICEID_VHOST_USER 0x1058
-
 /* VirtIO ABI version, this must match exactly. */
 #define VIRTIO_PCI_ABI_VERSION 0
 
