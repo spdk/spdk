@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a44bc7b9_3bb6964c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-08T08:30:05Z",
+      "side": 1,
+      "message": "Update the commit info since your patch are being reviewed.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "794a58bf56e8757756ffb3db580b13225f968d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9210b277_7d71d147",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-08T08:30:05Z",
+      "side": 1,
+      "message": "unused variable.",
+      "range": {
+        "startLine": 256,
+        "startChar": 30,
+        "endLine": 256,
+        "endChar": 36
+      },
+      "revId": "794a58bf56e8757756ffb3db580b13225f968d0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
