@@ -35,7 +35,7 @@
 #include "spdk/log.h"
 
 struct spdk_cpuset {
-	char str[SPDK_CPUSET_SIZE / 4];
+	char str[SPDK_CPUSET_SIZE / 4 + 1];
 	uint8_t cpus[SPDK_CPUSET_SIZE / 8];
 };
 
