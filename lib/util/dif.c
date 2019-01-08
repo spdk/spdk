@@ -616,7 +616,7 @@ dif_inject_error(struct iovec *iovs, int iovcnt,
 
 	inject_offset_blocks = rand() % num_blocks;
 	inject_offset_bytes = start_inject_bytes + (rand() % inject_range_bytes);
-	inject_offset_bits = rand() % sizeof(uint8_t);
+	inject_offset_bits = rand() % 8;
 
 	for (offset_blocks = 0; offset_blocks < num_blocks; offset_blocks++) {
 		if (offset_blocks == inject_offset_blocks) {
