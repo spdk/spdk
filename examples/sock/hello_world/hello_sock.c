@@ -91,7 +91,7 @@ hello_sock_usage(void)
 /*
  * This function is called to parse the parameters that are specific to this application
  */
-static void hello_sock_parse_arg(int ch, char *arg)
+static int hello_sock_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
 	case 'H':
@@ -106,6 +106,7 @@ static void hello_sock_parse_arg(int ch, char *arg)
 	case 'V':
 		g_verbose = true;
 	}
+	return 0;
 }
 
 static void

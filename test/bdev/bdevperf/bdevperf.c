@@ -823,7 +823,7 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
-static void
+static int
 bdevperf_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -853,6 +853,7 @@ bdevperf_parse_arg(int ch, char *arg)
 						    g_show_performance_period_in_usec);
 		break;
 	}
+	return 0;
 }
 
 int
