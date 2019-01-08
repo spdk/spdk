@@ -1356,6 +1356,7 @@ destroy_session_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
+	struct spdk_scsi_dev_vhost_state *state;
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
@@ -1371,11 +1372,21 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svsession->scsi_dev_state[i].dev == NULL) {
+		state = &svsession->scsi_dev_state[i];
+		if (state->dev == NULL) {
 			continue;
 		}
 
-		spdk_scsi_dev_free_io_channels(svsession->scsi_dev_state[i].dev);
+		spdk_scsi_dev_free_io_channels(state->dev);
+
+		if (state->status == VHOST_SCSI_DEV_REMOVING) {
+			state->dev = NULL;
+			state->status = VHOST_SCSI_DEV_REMOVED;
+			/* try to detach it globally */
+			spdk_vhost_dev_foreach_session(vsession->vdev,
+						       spdk_vhost_scsi_session_process_removed,
+						       (void *)(uintptr_t)i);
+		}
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n",
@@ -1398,8 +1409,19 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 
 	svsession = to_scsi_session(vsession);
 	assert(svsession != NULL);
+
+	/* Stop receiving new I/O requests */
 	spdk_poller_unregister(&svsession->requestq_poller);
+
+	/* Stop receiving controlq requests, also stop processing the
+	 * asynchronous hotremove events. All the remaining events
+	 * will be finalized by the stop_poller below.
+	 */
 	spdk_poller_unregister(&svsession->mgmt_poller);
+
+	/* Wait for all pending I/Os to complete, then process all the
+	 * remaining hotremove events one last time.
+	 */
 	svsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
 				 svsession, 1000);
 
