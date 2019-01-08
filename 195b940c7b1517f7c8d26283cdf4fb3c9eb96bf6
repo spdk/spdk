@@ -22,6 +22,30 @@
       "revId": "195b940c7b1517f7c8d26283cdf4fb3c9eb96bf6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b2d1889_c4f2de85",
+        "filename": "test/cas/cas.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-08T17:00:49Z",
+      "side": 1,
+      "message": "I plan to add 2 scripts for now, but they will be fully independent of each other - and this way of running them supports that idea.\nIf you would want to cherry-pick tests, you can also just delete files you don\u0027t like (or unset executable flag) and all should work fine. Same with addition",
+      "parentUuid": "6488e444_c1771af5",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 4
+      },
+      "revId": "195b940c7b1517f7c8d26283cdf4fb3c9eb96bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
