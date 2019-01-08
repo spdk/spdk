@@ -298,9 +298,9 @@ spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_w
 	end_response(request, w);
 }
 
-void
-spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
-				 int error_code, const char *msg)
+static struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_error_response_fmt_v(struct spdk_jsonrpc_request *request, int error_code,
+					const char *fmt, va_list args)
 {
 	struct spdk_json_write_ctx *w;
 
@@ -312,18 +312,48 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 	w = begin_response(request);
 	if (w == NULL) {
 		skip_response(request);
-		return;
+		SPDK_DEBUGLOG(SPDK_LOG_RPC, "Failed to begin error response: begin_response() returned NULL\n");
+		return NULL;
 	}
 
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
-	spdk_json_write_string(w, msg);
-	spdk_json_write_object_end(w);
+	spdk_json_write_named_object_begin(w, "error");
+	spdk_json_write_named_int32(w, "code", error_code);
+	spdk_json_write_named_string_fmt_v(w, "message", fmt, args);
 
-	end_response(request, w);
+	return w;
+}
+
+struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_error_response_fmt(struct spdk_jsonrpc_request *request, int error_code,
+				      const char *fmt, ...)
+{
+	struct spdk_json_write_ctx *w;
+	va_list args;
+
+	va_start(args, fmt);
+	w = spdk_jsonrpc_begin_error_response_fmt_v(request, error_code, fmt, args);
+	va_end(args);
+
+	return w;
+}
+
+struct spdk_json_write_ctx *
+spdk_jsonrpc_begin_error_response(struct spdk_jsonrpc_request *request, int error_code,
+				  const char *msg)
+{
+	return spdk_jsonrpc_begin_error_response_fmt(request, error_code, "%s", msg);
+}
+
+void
+spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
+				 int error_code, const char *msg)
+{
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_error_response(request, error_code, msg);
+	if (w) {
+		end_response(request, w);
+	}
 }
 
 void
@@ -333,28 +363,13 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 	struct spdk_json_write_ctx *w;
 	va_list args;
 
-	if (request->id.type == SPDK_JSON_VAL_INVALID) {
-		/* For error responses, if id is missing, explicitly respond with "id": null. */
-		request->id.type = SPDK_JSON_VAL_NULL;
-	}
-
-	w = begin_response(request);
-	if (w == NULL) {
-		skip_response(request);
-		return;
-	}
-
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
 	va_start(args, fmt);
-	spdk_json_write_string_fmt_v(w, fmt, args);
+	w = spdk_jsonrpc_begin_error_response_fmt_v(request, error_code, fmt, args);
 	va_end(args);
-	spdk_json_write_object_end(w);
 
-	end_response(request, w);
+	if (w) {
+		end_response(request, w);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("rpc", SPDK_LOG_RPC)
