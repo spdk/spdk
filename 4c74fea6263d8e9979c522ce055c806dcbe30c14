@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "76cd060a_ab7cc07a",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "I\u0027m not following this assert - is this just trying to check that info is allocated on a 4KB boundary?  I\u0027m just curious why this is necessary.",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22cb9bcd_640df25e",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "I don\u0027t think this assert is necessary.  We already have an SPDK_STATIC_ASSERT In the header file to confirm this structure is exactly 32 bytes.",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8297a999_e3072906",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "just curious why this needs to be aligned on a PAGE_SIZE boundary?",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e894db_bd865e4c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "The buffer doesn\u0027t need to be aligned on 4KB.\n\nI don\u0027t this is an SPDK limitation.  The spec defines spdk_ocssd_geometry_data as 4KB.  What is the case where it would be valid to allocate something smaller than 4KB?",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ee9a36a_62e5396c",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "shouldn\u0027t this go after the spdk_nvme_cpl_is_error check?",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f80546_6fcf5bf4",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "I think this can be an assert",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77171913_0f9c8461",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "this can be an assert (or just remove it altogether)\n\nshould the name be something",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aa79569_4c9085dd",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "in general, we try to return -ESOMETHING instead of just -1 in SPDK.  So this could be -EINVAL, others below could be -ENOMEM.\n\nDon\u0027t need to do this now in this patch or previous patches in this series - but should follow up later with patches that make these adjustments.  (I didn\u0027t really notice this until just now...)",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89ea91bb_2dae3dac",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:10:40Z",
+      "side": 1,
+      "message": "size_t declaration should be moved out of for loop",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
