@@ -91,6 +91,10 @@ DEFINE_STUB(rte_vhost_driver_callback_register, int,
 DEFINE_STUB(rte_vhost_driver_disable_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_set_features, int, (const char *path, uint64_t features), 0);
 DEFINE_STUB(rte_vhost_driver_register, int, (const char *path, uint64_t flags), 0);
+DEFINE_STUB(rte_vhost_vvu_pci_probe, int, (void *probe_ctx, struct spdk_pci_device *pci_dev), 0);
+DEFINE_STUB(spdk_pci_device_attach, int, (struct spdk_pci_driver *driver,
+		spdk_pci_enum_cb enum_cb, void *enum_ctx,
+		struct spdk_pci_addr *pci_address), 0);
 DEFINE_STUB(spdk_vhost_nvme_admin_passthrough, int, (int vid, void *cmd, void *cqe, void *buf), 0);
 DEFINE_STUB(spdk_vhost_nvme_set_cq_call, int, (int vid, uint16_t qid, int fd), 0);
 DEFINE_STUB(spdk_vhost_nvme_set_bar_mr, int, (int vid, void *bar, uint64_t bar_size), 0);

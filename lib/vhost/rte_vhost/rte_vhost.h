@@ -48,6 +48,8 @@
 #include <rte_memory.h>
 #include <rte_mempool.h>
 
+#include "spdk/env.h"
+
 #define RTE_VHOST_USER_CLIENT		(1ULL << 0)
 #define RTE_VHOST_USER_NO_RECONNECT	(1ULL << 1)
 #define RTE_VHOST_USER_DEQUEUE_ZERO_COPY	(1ULL << 2)
@@ -487,5 +489,7 @@ int rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
  *  0 on success, -1 on failure
  */
 int rte_vhost_vring_call(int vid, uint16_t vring_idx);
+
+int rte_vhost_vvu_pci_probe(void *probe_ctx, struct spdk_pci_device *pci_dev);
 
 #endif /* _RTE_VHOST_H_ */

@@ -785,6 +785,12 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 			rc = -EINVAL;
 			goto out;
 		}
+
+		rc = spdk_pci_device_attach(spdk_pci_virtio_get_driver(), rte_vhost_vvu_pci_probe, NULL, &pci_addr);
+		if (rc < 0) {
+			SPDK_ERRLOG("Couldn't attach vvu PCI device '%s'.\n", path);
+			goto out;
+		}
 	}
 
 	if (rte_vhost_driver_register(path, transport) != 0) {

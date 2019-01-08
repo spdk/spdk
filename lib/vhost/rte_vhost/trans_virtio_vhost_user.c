@@ -33,9 +33,6 @@
 #include "virtio_vhost_user.h"
 #include "vhost_user.h"
 
-void spdk_vtophys_pci_device_added(struct rte_pci_device *pci_device);
-void spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device);
-
 /*
  * Data structures:
  *
@@ -62,7 +59,7 @@ struct vvu_connection;
 /** A virtio-vhost-vsock PCI adapter */
 struct vvu_pci_device {
 	struct virtio_hw hw;
-	struct rte_pci_device *pci_dev;
+	struct spdk_pci_device *pci_dev;
 	struct vvu_socket *s;
 	TAILQ_ENTRY(vvu_pci_device) next;
 };
@@ -126,7 +123,8 @@ vvu_pci_by_name(const char *name)
 	struct vvu_pci_device *pdev;
 
 	TAILQ_FOREACH(pdev, &vvu_pci_device_list, next) {
-		if (!strcmp(pdev->pci_dev->device.name, name))
+		struct rte_pci_device *dev = pdev->pci_dev->dev_handle;
+		if (!strcmp(dev->device.name, name))
 			return pdev;
 	}
 	return NULL;
@@ -268,7 +266,7 @@ vvu_map_mem_regions(struct virtio_net *dev)
 	struct vvu_connection *conn =
 		container_of(dev, struct vvu_connection, device);
 	struct vvu_socket *s = conn->s;
-	struct rte_pci_device *pci_dev = s->pdev->pci_dev;
+	struct rte_pci_device *pci_dev = s->pdev->pci_dev->dev_handle;
 	uint8_t *mmap_addr;
 	uint32_t i;
 
@@ -451,7 +449,8 @@ vvu_interrupt_handler(void *cb_arg)
 {
 	struct vvu_socket *s = cb_arg;
 	struct virtio_hw *hw = &s->pdev->hw;
-	struct rte_intr_handle *intr_handle = &s->pdev->pci_dev->intr_handle;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
+	struct rte_intr_handle *intr_handle = &dev->intr_handle;
 	uint8_t isr;
 
 	/* Read Interrupt Status Register (which also clears it) */
@@ -490,11 +489,12 @@ vvu_virtio_pci_init_rxq(struct vvu_socket *s)
 	size_t size;
 	size_t align;
 	int i;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
 
 	vq = s->pdev->hw.vqs[VVU_VQ_RX];
 
 	snprintf(name, sizeof(name), "%s vq %u rxbufs",
-		 s->pdev->pci_dev->device.name, VVU_VQ_RX);
+		 dev->device.name, VVU_VQ_RX);
 
 	/* Allocate more than sizeof(VhostUserMsg) so there is room to grow */
 	size = vq->vq_nentries * VVU_RXBUF_SIZE;
@@ -535,11 +535,12 @@ vvu_virtio_pci_init_txq(struct vvu_socket *s)
 	struct virtqueue *vq;
 	size_t size;
 	size_t align;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
 
 	vq = s->pdev->hw.vqs[VVU_VQ_TX];
 
 	snprintf(name, sizeof(name), "%s vq %u txbufs",
-		 s->pdev->pci_dev->device.name, VVU_VQ_TX);
+		 dev->device.name, VVU_VQ_TX);
 
 	/* Allocate more than sizeof(VhostUserMsg) so there is room to grow */
 	size = vq->vq_nentries * VVU_TXBUF_SIZE;
@@ -585,6 +586,7 @@ vvu_virtio_pci_init_vq(struct vvu_socket *s, int vq_idx)
 	struct virtqueue *vq;
 	uint16_t q_num;
 	size_t size;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
 
 	q_num = VTPCI_OPS(hw)->get_queue_num(hw, vq_idx);
 	RTE_LOG(DEBUG, VHOST_CONFIG, "vq %d q_num: %u\n", vq_idx, q_num);
@@ -602,7 +604,7 @@ vvu_virtio_pci_init_vq(struct vvu_socket *s, int vq_idx)
 	}
 
 	snprintf(vq_name, sizeof(vq_name), "%s vq %u",
-		 s->pdev->pci_dev->device.name, vq_idx);
+		 dev->device.name, vq_idx);
 
 	size = RTE_ALIGN_CEIL(sizeof(*vq) +
 			      q_num * sizeof(struct vq_desc_extra),
@@ -697,7 +699,8 @@ static void
 vvu_virtio_pci_intr_cleanup(struct vvu_socket *s)
 {
 	struct virtio_hw *hw = &s->pdev->hw;
-	struct rte_intr_handle *intr_handle = &s->pdev->pci_dev->intr_handle;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
+	struct rte_intr_handle *intr_handle = &dev->intr_handle;
 	int i;
 
 	for (i = 0; i < VVU_VQ_MAX; i++)
@@ -713,7 +716,8 @@ static int
 vvu_virtio_pci_init_intr(struct vvu_socket *s)
 {
 	struct virtio_hw *hw = &s->pdev->hw;
-	struct rte_intr_handle *intr_handle = &s->pdev->pci_dev->intr_handle;
+	struct rte_pci_device *dev = s->pdev->pci_dev->dev_handle;
+	struct rte_intr_handle *intr_handle = &dev->intr_handle;
 	int i;
 
 	if (!rte_intr_cap_multiple(intr_handle)) {
@@ -777,7 +781,7 @@ err_efd:
 static int
 vvu_virtio_pci_init_bar(struct vvu_socket *s)
 {
-	struct rte_pci_device *pci_dev = s->pdev->pci_dev;
+	struct rte_pci_device *pci_dev = s->pdev->pci_dev->dev_handle;
 	struct virtio_net *dev = NULL; /* just for sizeof() */
 
 	s->doorbells = pci_dev->mem_resource[2].addr;
@@ -869,11 +873,12 @@ err:
 	return -1;
 }
 
-static int
-vvu_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
-	      struct rte_pci_device *pci_dev)
+int
+rte_vhost_vvu_pci_probe(void *probe_ctx __rte_unused,
+	      struct spdk_pci_device *pci_dev)
 {
 	struct vvu_pci_device *pdev;
+	struct rte_pci_device *dev = pci_dev->dev_handle;
 
 	/* TODO support multi-process applications */
 	if (rte_eal_process_type() != RTE_PROC_PRIMARY) {
@@ -883,15 +888,15 @@ vvu_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 		return -1;
 	}
 
-	pdev = rte_zmalloc_socket(pci_dev->device.name, sizeof(*pdev),
+	pdev = rte_zmalloc_socket(dev->device.name, sizeof(*pdev),
 				  RTE_CACHE_LINE_SIZE,
-				  pci_dev->device.numa_node);
+				  dev->device.numa_node);
 	if (!pdev)
 		return -1;
 
 	pdev->pci_dev = pci_dev;
 
-	if (virtio_pci_init(pci_dev, &pdev->hw) != 0) {
+	if (virtio_pci_init(dev, &pdev->hw) != 0) {
 		rte_free(pdev);
 		return -1;
 	}
@@ -902,9 +907,9 @@ vvu_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 	if (pdev->hw.use_msix == VIRTIO_MSIX_NONE) {
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"MSI-X is required for PCI device at %s\n",
-			pci_dev->device.name);
+			dev->device.name);
 		rte_free(pdev);
-		rte_pci_unmap_device(pci_dev);
+		rte_pci_unmap_device(dev);
 		return -1;
 	}
 
@@ -912,15 +917,13 @@ vvu_pci_probe(struct rte_pci_driver *pci_drv __rte_unused,
 
 	RTE_LOG(INFO, VHOST_CONFIG,
 		"Added virtio-vhost-user device at %s\n",
-		pci_dev->device.name);
-
-	spdk_vtophys_pci_device_added(pci_dev);
+		dev->device.name);
 
 	return 0;
 }
 
 static int
-vvu_pci_remove(struct rte_pci_device *pci_dev)
+vvu_pci_remove(struct spdk_pci_device *pci_dev)
 {
 	struct vvu_pci_device *pdev;
 
@@ -931,50 +934,19 @@ vvu_pci_remove(struct rte_pci_device *pci_dev)
 		return -1;
 
 	if (pdev->s) {
+		struct rte_pci_device *dev = pci_dev->dev_handle;
 		RTE_LOG(ERR, VHOST_CONFIG,
 			"Cannot remove PCI device at %s with vhost still attached\n",
-			pci_dev->device.name);
+			dev->device.name);
 		return -1;
 	}
 
 	TAILQ_REMOVE(&vvu_pci_device_list, pdev, next);
 	rte_free(pdev);
-	rte_pci_unmap_device(pci_dev);
 
-	spdk_vtophys_pci_device_removed(pci_dev);
+	spdk_pci_device_detach(pci_dev);
 
 	return 0;
-}
-
-static const struct rte_pci_id pci_id_vvu_map[] = {
-	{ RTE_PCI_DEVICE(VIRTIO_PCI_VENDORID,
-			 VIRTIO_PCI_LEGACY_DEVICEID_VHOST_USER) },
-	{ RTE_PCI_DEVICE(VIRTIO_PCI_VENDORID,
-			 VIRTIO_PCI_MODERN_DEVICEID_VHOST_USER) },
-	{ .vendor_id = 0, /* sentinel */ },
-};
-
-static struct rte_pci_driver vvu_pci_driver = {
-	.driver = {
-		.name = "virtio_vhost_user",
-	},
-	.id_table = pci_id_vvu_map,
-	.drv_flags = RTE_PCI_DRV_NEED_MAPPING,
-	.probe = vvu_pci_probe,
-	.remove = vvu_pci_remove,
-};
-
-RTE_INIT(vvu_pci_init);
-static void
-vvu_pci_init(void)
-{
-	if (rte_eal_iopl_init() != 0) {
-		RTE_LOG(ERR, VHOST_CONFIG,
-			"IOPL call failed - cannot use virtio-vhost-user\n");
-		return;
-	}
-
-	rte_pci_register(&vvu_pci_driver);
 }
 
 static int
@@ -1042,6 +1014,9 @@ vvu_socket_cleanup(struct vhost_user_socket *vsocket)
 	vvu_virtio_pci_free_virtqueues(s);
 
 	s->pdev->s = NULL;
+
+	vvu_pci_remove(s->pdev->pci_dev);
+
 	s->pdev = NULL;
 }
 
