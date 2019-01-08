@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "96acf0f2_1599a9ee",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 543,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T05:43:29Z",
+      "side": 1,
+      "message": "good catch.",
+      "parentUuid": "c23aba95_3006ce6e",
+      "range": {
+        "startLine": 543,
+        "startChar": 1,
+        "endLine": 543,
+        "endChar": 21
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2cce80b1_6b8ca325",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-07T23:50:20Z",
       "side": 1,
       "message": "if you use 0 as failure and 1 as success, will you use boolean instead?",
+      "range": {
+        "startLine": 545,
+        "startChar": 9,
+        "endLine": 545,
+        "endChar": 10
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd37a83f_a65c12d5",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 545,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T05:43:29Z",
+      "side": 1,
+      "message": "yeah, will change it.",
+      "parentUuid": "2cce80b1_6b8ca325",
       "range": {
         "startLine": 545,
         "startChar": 9,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "2eb0becd_26645395",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T05:43:29Z",
+      "side": 1,
+      "message": "good point.",
+      "parentUuid": "a5eb2952_ea069484",
+      "range": {
+        "startLine": 571,
+        "startChar": 0,
+        "endLine": 581,
+        "endChar": 3
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "832f060d_1c58da64",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -128,6 +200,30 @@
       "writtenOn": "2019-01-07T23:50:20Z",
       "side": 1,
       "message": "Please choose one of reg_tmp or reg. (reg looks natural).",
+      "range": {
+        "startLine": 593,
+        "startChar": 0,
+        "endLine": 595,
+        "endChar": 17
+      },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c5abeb3_87f4d042",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 595,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T05:43:29Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "954c3184_781de58f",
       "range": {
         "startLine": 593,
         "startChar": 0,
