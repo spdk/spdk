@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e9acb69_e232658d",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "That ifdef shouldn\u0027t be required.",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 23
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9709a27b_dbfd700c",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Hopefully it happens unlikely, rather than likely :)",
+      "range": {
+        "startLine": 381,
+        "startChar": 5,
+        "endLine": 381,
+        "endChar": 16
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd54957f_294f90ca",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be put to function like bdev_ocssd_parse_mode() ?",
+      "range": {
+        "startLine": 530,
+        "startChar": 0,
+        "endLine": 552,
+        "endChar": 3
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7617f4e_162c7ca7",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 817,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Please move the declaration to top of the function.",
+      "range": {
+        "startLine": 817,
+        "startChar": 6,
+        "endLine": 817,
+        "endChar": 14
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7fbb52e_53988f14",
+        "filename": "lib/bdev/ocssd/bdev_ocssd_rpc.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Doesn\u0027t this \u0027range\u0027 go unused ?",
+      "range": {
+        "startLine": 107,
+        "startChar": 1,
+        "endLine": 107,
+        "endChar": 36
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5da7275_0fb28b7c",
+        "filename": "lib/bdev/ocssd/bdev_ocssd_rpc.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "See comment in bdev_ocssd.c on having it in common function",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 144,
+        "endChar": 2
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "687c5375_7d7ffabc",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 56
+      },
+      "lineNbr": 1189,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Should this parameter be exposed if only local PCIe devices are supported ?",
+      "range": {
+        "startLine": 1188,
+        "startChar": 0,
+        "endLine": 1189,
+        "endChar": 73
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f8589a8_bd62df6c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 56
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-08T13:53:12Z",
+      "side": 1,
+      "message": "Aren\u0027t there two different operations ?\n1) whether to create or restore the OCSSD\n2) whether the reads should performed on separate thread\nWhy not just make it a separate argument ?\nEven better, if uuid is required when restoring. Just base whether to restore the device, when uuid is provided and create otherwise.",
+      "range": {
+        "startLine": 1195,
+        "startChar": 0,
+        "endLine": 1196,
+        "endChar": 98
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
