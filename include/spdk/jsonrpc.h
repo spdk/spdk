@@ -156,6 +156,38 @@ struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_reques
 void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w);
 
 /**
+ * Begin an error response for a JSON-RPC request.
+ *
+ * This is shorthand for for spdk_jsonrpc_begin_result() with an error object code and message.
+ * This function is intended for crafting error message with data additional data.
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg String error message to return.
+ *
+ * \return JSON write context or NULL in case of error.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_error_response(struct spdk_jsonrpc_request *request,
+		int error_code, const char *message);
+
+/**
+ * Begin an error response for a JSON-RPC request.
+ *
+ * This is shorthand for for printf() + spdk_jsonrpc_begin_result() with an error object code and message.
+ * This function is intended for crafting error message with data additional data.
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg String error message to return.
+ *
+ * \return JSON write context or NULL in case of error.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_error_response_fmt(struct spdk_jsonrpc_request
+		*request, int error_code, const char *fmt, ...) __attribute__((format(printf, 3, 4)));
+
+/**
  * Send an error response to a JSON-RPC request.
  *
  * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result()
