@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab7045ff_acede4fa",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-08T06:43:20Z",
+      "side": 1,
+      "message": "-\u003e if ( !\u003d ) -\u003e fail",
+      "range": {
+        "startLine": 310,
+        "startChar": 2,
+        "endLine": 310,
+        "endChar": 39
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d458710_7f789ec8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-08T06:43:20Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 322,
+        "startChar": 2,
+        "endLine": 322,
+        "endChar": 39
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
