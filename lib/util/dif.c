@@ -159,27 +159,36 @@ _dif_is_disabled(enum spdk_dif_type dif_type)
 	}
 }
 
+
 static uint32_t
-_get_dif_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc)
+_get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md_interleave)
 {
 	if (dif_loc) {
 		/* For metadata formats with more than 8 bytes, if the DIF is
 		 * contained in the last 8 bytes of metadata, then the CRC
 		 * covers all metadata up to but excluding these last 8 bytes.
 		 */
-		return block_size - sizeof(struct spdk_dif);
+		if (md_interleave) {
+			return block_size - sizeof(struct spdk_dif);
+		} else {
+			return md_size - sizeof(struct spdk_dif);
+		}
 	} else {
 		/* For metadata formats with more than 8 bytes, if the DIF is
 		 * contained in the first 8 bytes of metadata, then the CRC
 		 * does not cover any metadata.
 		 */
-		return block_size - md_size;
+		if (md_interleave) {
+			return block_size - md_size;
+		} else {
+			return 0;
+		}
 	}
 }
 
 int
 spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
-		  bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag)
 {
 	if (md_size < sizeof(struct spdk_dif)) {
@@ -187,9 +196,16 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 		return -EINVAL;
 	}
 
-	if (block_size < md_size) {
-		SPDK_ERRLOG("Block size is smaller than DIF size.\n");
-		return -EINVAL;
+	if (md_interleave) {
+		if (block_size < md_size) {
+			SPDK_ERRLOG("Block size is smaller than DIF size.\n");
+			return -EINVAL;
+		}
+	} else {
+		if (block_size == 0 || (block_size % 512) != 0) {
+			SPDK_ERRLOG("Zero block size is not allowed\n");
+			return -EINVAL;
+		}
 	}
 
 	if (!_dif_type_is_valid(dif_type, dif_flags)) {
@@ -199,7 +215,7 @@ spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_siz
 
 	ctx->block_size = block_size;
 	ctx->md_size = md_size;
-	ctx->guard_interval = _get_dif_guard_interval(block_size, md_size, dif_loc);
+	ctx->guard_interval = _get_guard_interval(block_size, md_size, dif_loc, md_interleave);
 	ctx->dif_type = dif_type;
 	ctx->dif_flags = dif_flags;
 	ctx->init_ref_tag = init_ref_tag;
@@ -986,4 +1002,230 @@ spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	}
 
 	return 0;
+}
+
+static void
+dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+	     uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	struct _iov_iter data_iter, md_iter;
+	uint32_t offset_blocks;
+	uint16_t guard;
+	void *data_buf, *md_buf;
+
+	offset_blocks = 0;
+	_iov_iter_init(&data_iter, iovs, iovcnt);
+	_iov_iter_init(&md_iter, md_iov, 1);
+
+	while (offset_blocks < num_blocks &&
+	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+
+		_iov_iter_get_buf(&data_iter, &data_buf, NULL);
+		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
+
+		guard = 0;
+		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(0, data_buf, ctx->block_size);
+			guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
+		}
+
+		_dif_generate(md_buf + ctx->guard_interval, guard, offset_blocks, ctx);
+
+		_iov_iter_advance(&data_iter, ctx->block_size);
+		_iov_iter_advance(&md_iter, ctx->md_size);
+		offset_blocks++;
+	}
+}
+
+static void
+_dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
+		    uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_in_block, data_buf_len;
+	uint16_t guard;
+	void *data_buf, *md_buf;
+
+	_iov_iter_get_buf(md_iter, &md_buf, NULL);
+
+	guard = 0;
+	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(0, md_buf, ctx->guard_interval);
+	}
+
+	offset_in_block = 0;
+
+	while (offset_in_block < ctx->block_size && _iov_iter_cont(data_iter)) {
+		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
+		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
+
+		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(guard, data_buf, data_buf_len);
+		}
+
+		_iov_iter_advance(data_iter, data_buf_len);
+		offset_in_block += data_buf_len;
+	}
+
+	_iov_iter_advance(md_iter, ctx->md_size);
+
+	_dif_generate(md_buf + ctx->guard_interval, guard, offset_blocks, ctx);
+}
+
+static void
+dix_generate_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		   uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	struct _iov_iter data_iter, md_iter;
+	uint32_t offset_blocks;
+
+	offset_blocks = 0;
+	_iov_iter_init(&data_iter, iovs, iovcnt);
+	_iov_iter_init(&md_iter, md_iov, 1);
+
+	while (offset_blocks < num_blocks &&
+	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+		_dix_generate_split(&data_iter, &md_iter, offset_blocks, ctx);
+		offset_blocks++;
+	}
+}
+
+int
+spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		  uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
+	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return 0;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+		dix_generate(iovs, iovcnt, md_iov, num_blocks, ctx);
+	} else {
+		dix_generate_split(iovs, iovcnt, md_iov, num_blocks, ctx);
+	}
+
+	return 0;
+}
+
+static int
+dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+	   uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	struct _iov_iter data_iter, md_iter;
+	uint32_t offset_blocks;
+	uint16_t guard;
+	void *data_buf, *md_buf;
+	int rc;
+
+	offset_blocks = 0;
+	_iov_iter_init(&data_iter, iovs, iovcnt);
+	_iov_iter_init(&md_iter, md_iov, 1);
+
+	while (offset_blocks < num_blocks &&
+	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+
+		_iov_iter_get_buf(&data_iter, &data_buf, NULL);
+		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
+
+		guard = 0;
+		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(0, data_buf, ctx->block_size);
+			guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
+		}
+
+		rc = _dif_verify(md_buf + ctx->guard_interval, guard, offset_blocks, ctx, NULL);
+		if (rc != 0) {
+			return rc;
+		}
+
+		_iov_iter_advance(&data_iter, ctx->block_size);
+		_iov_iter_advance(&md_iter, ctx->md_size);
+		offset_blocks++;
+	}
+
+	return 0;
+}
+
+static int
+_dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
+		  uint32_t offset_blocks, const struct spdk_dif_ctx *ctx)
+{
+	uint32_t offset_in_block, data_buf_len;
+	uint16_t guard;
+	void *data_buf, *md_buf;
+
+	_iov_iter_get_buf(md_iter, &md_buf, NULL);
+
+	guard = 0;
+	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(0, md_buf, ctx->guard_interval);
+	}
+
+	offset_in_block = 0;
+
+	while (offset_in_block < ctx->block_size && _iov_iter_cont(data_iter)) {
+		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
+		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
+
+		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(guard, data_buf, data_buf_len);
+		}
+
+		_iov_iter_advance(data_iter, data_buf_len);
+		offset_in_block += data_buf_len;
+	}
+
+	_iov_iter_advance(md_iter, ctx->md_size);
+
+	return _dif_verify(md_buf + ctx->guard_interval, guard, offset_blocks, ctx, NULL);
+}
+
+static int
+dix_verify_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		 uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	struct _iov_iter data_iter, md_iter;
+	uint32_t offset_blocks;
+	int rc;
+
+	offset_blocks = 0;
+	_iov_iter_init(&data_iter, iovs, iovcnt);
+	_iov_iter_init(&md_iter, md_iov, 1);
+
+	while (offset_blocks < num_blocks &&
+	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+		rc = _dix_verify_split(&data_iter, &md_iter, offset_blocks, ctx);
+		if (rc != 0) {
+			return rc;
+		}
+		offset_blocks++;
+	}
+
+	return 0;
+}
+
+int
+spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		uint32_t num_blocks, const struct spdk_dif_ctx *ctx)
+{
+	if (!_are_iovs_valid(iovs, iovcnt, ctx->block_size * num_blocks) ||
+	    !_are_iovs_valid(md_iov, 1, ctx->md_size * num_blocks)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return 0;
+	}
+
+	if (_are_iovs_bytes_multiple(iovs, iovcnt, ctx->block_size)) {
+		return dix_verify(iovs, iovcnt, md_iov, num_blocks, ctx);
+	} else {
+		return dix_verify_split(iovs, iovcnt, md_iov, num_blocks, ctx);
+	}
 }
