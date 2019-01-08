@@ -221,9 +221,30 @@ int spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
  * \param md_iov A contiguous buffer for metadata.
  * \param num_blocks Number of blocks of the separate metadata payload.
  * \param ctx DIF context.
+ * \param err_blk Error information of the block in which DIF error is found.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
-		    uint32_t num_blocks, const struct spdk_dif_ctx *ctx);
+		    uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+		    struct spdk_dif_error *err_blk);
+
+/**
+ * Inject bit flip error to separate metadata payload.
+ *
+ * \param iovs iovec array describing the extended LBA payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the payload.
+ * \param ctx DIF context.
+ * \param inject_flags Flag to specify the action of error injection.
+ * \param inj_blk Error information of the block in which bit-flip error is injected.
+ * Injected error types are not set in inj_blk and the caller should use inject_flags
+ * instead.
+ *
+ * \return 0 on success and negated errno otherwise including no metadata.
+ */
+int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+			  uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
+			  uint32_t inject_flags, struct spdk_dif_error *inj_blk);
 #endif /* SPDK_DIF_H */
