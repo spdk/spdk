@@ -51,6 +51,57 @@
       "revId": "931674048d3169e79f6958948d0e055e7637043e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4119a10_00da19c3",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:18:59Z",
+      "side": 1,
+      "message": "form \u003d\u003e from",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c85e718f_6fe54f62",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:18:59Z",
+      "side": 1,
+      "message": "Callback",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a27c9ce7_2bd8eed5",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:18:59Z",
+      "side": 1,
+      "message": "second * can be removed",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
