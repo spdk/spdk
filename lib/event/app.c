@@ -753,7 +753,7 @@ usage(void (*app_usage)(void))
 spdk_app_parse_args_rvals_t
 spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		    const char *app_getopt_str, struct option *app_long_opts,
-		    void (*app_parse)(int ch, char *arg),
+		    int (*app_parse)(int ch, char *arg),
 		    void (*app_usage)(void))
 {
 	int ch, rc, opt_idx, global_long_opts_len, app_long_opts_len;
@@ -961,7 +961,11 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			usage(app_usage);
 			goto out;
 		default:
-			app_parse(ch, optarg);
+			rc = app_parse(ch, optarg);
+			if (rc) {
+				SPDK_ERRLOG("Parse argument failed\n");
+				goto out;
+			}
 		}
 	}
 

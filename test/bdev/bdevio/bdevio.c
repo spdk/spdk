@@ -944,9 +944,10 @@ bdevio_usage(void)
 {
 }
 
-static void
+static int
 bdevio_parse_arg(int ch, char *arg)
 {
+	return 0;
 }
 
 int

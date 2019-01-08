@@ -71,7 +71,7 @@ spdk_startup(void *arg1, void *arg2)
 	}
 }
 
-static void
+static int
 iscsi_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -82,6 +82,7 @@ iscsi_parse_arg(int ch, char *arg)
 		assert(false);
 		break;
 	}
+	return 0;
 }
 
 int
