@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6488e444_c1771af5",
+        "filename": "test/cas/cas.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-08T15:45:38Z",
+      "side": 1,
+      "message": "How many test scripts do you plan to add?\nI imagine using a loop for running all tests looks cleaner, but what if I wanted to run just a single test and comment out all the others? In that case I think the approach from test/nvmf or test/iscsi_tgt  would be better.\nUnless all test scripts are (and will be) totally stand alone and won\u0027t requite any setup before running- then I\u0027m totally OK with the for loop.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 4
+      },
+      "revId": "195b940c7b1517f7c8d26283cdf4fb3c9eb96bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
