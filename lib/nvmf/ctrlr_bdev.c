@@ -556,13 +556,11 @@ spdk_nvmf_ctrlr_reservation_notice(struct spdk_nvmf_ctrlr *ctrlr,
 	if (!log) {
 		return;
 	}
-
 	log->log.log_page_count = ctrlr->log_page_count;
 	log->log.type = type;
 	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
 	log->log.nsid = ns->nsid;
 	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
-
 	return;
 }
 
@@ -621,9 +619,23 @@ nvmf_ctrlr_register_registrant(struct spdk_nvmf_ctrlr *ctrlr, uint64_t nrkey)
 }
 
 static void
-nvmf_ctrlr_registrant_release_reservation(struct spdk_nvmf_registrant *reg)
+nvme_ctrlr_reservation_notification(struct spdk_nvmf_ns *ns,
+				    struct spdk_nvmf_ctrlr *ctrlr,
+				    enum spdk_nvme_reservation_notification_log_page_type type)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = reg->ctrlr;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_registrant *reg, *reg_tmp;
+	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, reg_tmp) {
+		if (reg->ctrlr != ctrlr) {
+			spdk_nvmf_ctrlr_reservation_notice(reg->ctrlr, ns, type);
+		}
+	}
+}
+
+static void
+nvmf_ctrlr_registrant_release_reservation(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvmf_registrant *reg, bool release_notification)
+{
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 	struct spdk_nvmf_ns *ns, *ns_tmp;
 	struct spdk_nvmf_registrant *new_reg;
@@ -641,6 +653,13 @@ nvmf_ctrlr_registrant_release_reservation(struct spdk_nvmf_registrant *reg)
 			ns->holder = new_reg;
 			TAILQ_INSERT_TAIL(&new_reg->ns_head, ns, link);
 		} else {
+			/* reservation release notificaton */
+			if (release_notification &&
+			    (ns->rtype != SPDK_NVME_RESERVE_WRITE_EXCLUSIVE ||
+			     ns->rtype != SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS)) {
+				nvme_ctrlr_reservation_notification(ns, ctrlr,
+								    SPDK_NVME_RESERVATION_RELEASED);
+			}
 			ns->rtype = 0;
 			ns->crkey = 0;
 			ns->holder = NULL;
@@ -649,13 +668,20 @@ nvmf_ctrlr_registrant_release_reservation(struct spdk_nvmf_registrant *reg)
 }
 
 static void
-nvmf_ctrlr_unregister_registrant(struct spdk_nvmf_registrant *reg)
+nvmf_ctrlr_unregister_registrant(struct spdk_nvmf_ns *ns,
+				 struct spdk_nvmf_ctrlr *ctrlr,
+				 struct spdk_nvmf_registrant *reg,
+				 bool preempt_notification)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = reg->ctrlr;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
 
+	/* registration preempted notification */
+	if (preempt_notification) {
+		nvme_ctrlr_reservation_notification(ns, ctrlr,
+						    SPDK_NVME_REGISTRATION_PREEMPTED);
+	}
 	TAILQ_REMOVE(&subsystem->reg_head, reg, link);
-	nvmf_ctrlr_registrant_release_reservation(reg);
+	nvmf_ctrlr_registrant_release_reservation(ctrlr, reg, true);
 	free(reg);
 	subsystem->regctl--;
 	subsystem->gen++;
@@ -663,7 +689,8 @@ nvmf_ctrlr_unregister_registrant(struct spdk_nvmf_registrant *reg)
 }
 
 static uint32_t
-nvmf_ctrlr_unregister_registrants_by_key(struct spdk_nvmf_ctrlr *ctrlr,
+nvmf_ctrlr_unregister_registrants_by_key(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_ctrlr *ctrlr,
 		uint64_t rkey)
 {
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -672,7 +699,7 @@ nvmf_ctrlr_unregister_registrants_by_key(struct spdk_nvmf_ctrlr *ctrlr,
 
 	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, tmp) {
 		if (reg->rkey == rkey) {
-			nvmf_ctrlr_unregister_registrant(reg);
+			nvmf_ctrlr_unregister_registrant(ns, ctrlr, reg, true);
 			count++;
 		}
 	}
@@ -680,7 +707,8 @@ nvmf_ctrlr_unregister_registrants_by_key(struct spdk_nvmf_ctrlr *ctrlr,
 }
 
 static uint32_t
-nvmf_ctrlr_unregister_all_other_registrants(struct spdk_nvmf_registrant *reg)
+nvmf_ctrlr_unregister_all_other_registrants(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_registrant *reg)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = reg->ctrlr;
 	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
@@ -689,7 +717,7 @@ nvmf_ctrlr_unregister_all_other_registrants(struct spdk_nvmf_registrant *reg)
 
 	TAILQ_FOREACH_SAFE(reg_tmp, &subsystem->reg_head, link, reg_tmp2) {
 		if (reg_tmp != reg) {
-			nvmf_ctrlr_unregister_registrant(reg_tmp);
+			nvmf_ctrlr_unregister_registrant(ns, ctrlr, reg_tmp, true);
 			count++;
 		}
 	}
@@ -721,13 +749,15 @@ nvmf_ns_acquire_reservation(struct spdk_nvmf_ns *ns, uint64_t key,
 }
 
 static uint32_t
-nvmf_ctrlr_unregister_all_registrants(struct spdk_nvmf_subsystem *subsystem)
+nvmf_ctrlr_unregister_all_registrants(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_nvmf_ctrlr *ctrlr,
+				      struct spdk_nvmf_ns *ns)
 {
 	struct spdk_nvmf_registrant *reg, *tmp;
 	uint32_t count = 0;
 
 	TAILQ_FOREACH_SAFE(reg, &subsystem->reg_head, link, tmp) {
-		nvmf_ctrlr_unregister_registrant(reg);
+		nvmf_ctrlr_unregister_registrant(ns, ctrlr, reg, true);
 		count++;
 	}
 
@@ -744,6 +774,10 @@ nvmf_ns_release_reservation(struct spdk_nvmf_ns *ns)
 	ns->rtype = 0;
 	ns->crkey = 0;
 	ns->holder = NULL;
+
+	/* reservation released notification */
+	nvme_ctrlr_reservation_notification(ns, reg->ctrlr,
+					    SPDK_NVME_RESERVATION_RELEASED);
 }
 
 static int
@@ -816,7 +850,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_request *req,
 				    "with existing registrant key\n");
 			goto conflict;
 		}
-		nvmf_ctrlr_unregister_registrant(reg);
+		nvmf_ctrlr_unregister_registrant(ns, ctrlr, reg, false);
 		break;
 	case SPDK_NVME_RESERVE_REPLACE_KEY:
 		if (!reg || (!iekey && reg->rkey != key.crkey)) {
@@ -908,7 +942,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_request *req,
 		/* no reservation holder */
 		if (!ns->holder) {
 			/* unregister with PRKEY */
-			nvmf_ctrlr_unregister_registrants_by_key(ctrlr, key.prkey);
+			nvmf_ctrlr_unregister_registrants_by_key(ns, ctrlr, key.prkey);
 			break;
 		}
 		/* only 1 reservation holder and reservation key is valid */
@@ -921,10 +955,10 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_request *req,
 			}
 
 			if (ns->crkey == key.prkey) {
-				nvmf_ctrlr_unregister_registrant(ns->holder);
+				nvmf_ctrlr_unregister_registrant(ns, ctrlr, ns->holder, true);
 				nvmf_ns_acquire_reservation(ns, key.crkey, rtype, reg);
 			} else if (key.prkey != 0) {
-				nvmf_ctrlr_unregister_registrants_by_key(ctrlr, key.prkey);
+				nvmf_ctrlr_unregister_registrants_by_key(ns, ctrlr, key.prkey);
 			} else {
 				/* PRKEY is zero */
 				SPDK_ERRLOG("Current PRKEY is zero\n");
@@ -933,10 +967,10 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_request *req,
 		} else {
 			/* release all other registrants except for the current one */
 			if (key.prkey == 0) {
-				nvmf_ctrlr_unregister_all_other_registrants(reg);
+				nvmf_ctrlr_unregister_all_other_registrants(ns, reg);
 				assert(ns->holder == reg);
 			} else {
-				count = nvmf_ctrlr_unregister_registrants_by_key(ctrlr, key.prkey);
+				count = nvmf_ctrlr_unregister_registrants_by_key(ns, ctrlr, key.prkey);
 				if (count == 0) {
 					SPDK_ERRLOG("PRKEY doesn't match any registrant\n");
 					goto conflict;
@@ -1014,7 +1048,7 @@ nvmf_ns_reservation_release(struct spdk_nvmf_request *req,
 		nvmf_ns_release_reservation(ns);
 		break;
 	case SPDK_NVME_RESERVE_CLEAR:
-		nvmf_ctrlr_unregister_all_registrants(subsystem);
+		nvmf_ctrlr_unregister_all_registrants(subsystem, ctrlr, ns);
 		break;
 	default:
 		goto invalid;
