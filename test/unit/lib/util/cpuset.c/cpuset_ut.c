@@ -216,10 +216,10 @@ test_cpuset_fmt(void)
 	for (lcore = 0; lcore < SPDK_CPUSET_SIZE; lcore++) {
 		spdk_cpuset_set_cpu(core_mask, lcore, true);
 	}
-	for (i = 0; i < SPDK_CPUSET_SIZE / 4 - 1; i++) {
+	for (i = 0; i < SPDK_CPUSET_SIZE / 4; i++) {
 		hex_mask_ref[i] = 'f';
 	}
-	hex_mask_ref[SPDK_CPUSET_SIZE / 4 - 1] = '\0';
+	hex_mask_ref[SPDK_CPUSET_SIZE / 4] = '\0';
 
 	hex_mask = spdk_cpuset_fmt(core_mask);
 	CU_ASSERT(hex_mask != NULL);
