@@ -152,7 +152,7 @@ static void
 start_vdev(struct spdk_vhost_dev *vdev)
 {
 	struct rte_vhost_memory *mem;
-	struct spdk_vhost_session *vsession;
+	struct spdk_vhost_session *vsession = NULL;
 	int rc;
 
 	mem = calloc(1, sizeof(*mem) + 2 * sizeof(struct rte_vhost_mem_region));
@@ -348,6 +348,7 @@ remove_controller_test(void)
 
 	/* Remove device when controller is in use */
 	start_vdev(vdev);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&vdev->vsessions));
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
 
