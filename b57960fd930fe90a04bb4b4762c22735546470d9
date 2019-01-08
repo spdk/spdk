@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0ce8362b_00892a5d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T14:06:38Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "20d4035a_245ff986",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c51e5e82_fb227119",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-08T12:16:58Z",
       "side": 1,
       "message": "I\u0027m curious - what is this flag supposed to do and why can\u0027t we support it?",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5243df2c_b1b84bd7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T14:06:38Z",
+      "side": 1,
+      "message": "It means the combination of Write Zeroes and Unmap commands together. For supporting this flag, we should send Write Zeroes command first and then send the Unmap command.",
+      "parentUuid": "c51e5e82_fb227119",
       "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "06acace7_5b7f034d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T14:06:38Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "d83fe6a6_254ab8b2",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8adbdcff_afe78482",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
@@ -81,6 +135,24 @@
       "writtenOn": "2019-01-08T12:16:58Z",
       "side": 1,
       "message": "do we need max_write_zeroes_seg \u003d 1 here?",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef436926_9ccd64d7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T14:06:38Z",
+      "side": 1,
+      "message": "For now Linux kernel generic block driver always uses 1 segment for write zeroes command, we can setup here but it will not take effect for now.",
+      "parentUuid": "8adbdcff_afe78482",
       "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
