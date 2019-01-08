@@ -2,6 +2,11 @@
 
 ## v19.01: (Upcoming Release)
 
+### event framework
+
+Add return value to spdk_app_parse_args's callback to check status of the parse
+functions which can protect the target from crashing by user's invalid input.
+
 ### environment
 
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init
