@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9b0cd7fd_88c6c4fd",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "To be honest, I think some of the asserts were added, because we had some bugs here early on. But you\u0027re right, I don\u0027t think they have any value right now.",
+      "parentUuid": "76cd060a_ab7cc07a",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22cb9bcd_640df25e",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 43
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-08T13:10:40Z",
       "side": 1,
       "message": "I don\u0027t think this assert is necessary.  We already have an SPDK_STATIC_ASSERT In the header file to confirm this structure is exactly 32 bytes.",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77027458_e7d3b168",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 193,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22cb9bcd_640df25e",
       "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "3c472adf_34b52370",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "I\u0027m not sure... I guess we had some problems, similar to the one below (with geo structure being 256 bytes), but I\u0027ve just quickly changed this to a lower value and everything works correctly. So I think we can get rid of this alignment.",
+      "parentUuid": "8297a999_e3072906",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4e894db_bd865e4c",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 43
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-08T13:10:40Z",
       "side": 1,
       "message": "The buffer doesn\u0027t need to be aligned on 4KB.\n\nI don\u0027t this is an SPDK limitation.  The spec defines spdk_ocssd_geometry_data as 4KB.  What is the case where it would be valid to allocate something smaller than 4KB?",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a77af7d_55db4661",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "I think the previous OC standard defined the geometry structure as 256 bytes, and the code would crash when the buffer was smaller and not aligned to 4K. Anyway, since the structure is 4K now, we can change it now.",
+      "parentUuid": "d4e894db_bd865e4c",
       "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "4d35b525_15ffd9d9",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ee9a36a_62e5396c",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0f80546_6fcf5bf4",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 43
@@ -98,6 +188,24 @@
       "writtenOn": "2019-01-08T13:10:40Z",
       "side": 1,
       "message": "I think this can be an assert",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e8e50a2_0e39f9c3",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0f80546_6fcf5bf4",
       "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "4e6b9261_2c50b5d5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "77171913_0f9c8461",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2aa79569_4c9085dd",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 43
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "d3c547a8_f9b72b66",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "OK, we\u0027ll fix it later.",
+      "parentUuid": "2aa79569_4c9085dd",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "89ea91bb_2dae3dac",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 43
@@ -149,6 +293,24 @@
       "writtenOn": "2019-01-08T13:10:40Z",
       "side": 1,
       "message": "size_t declaration should be moved out of for loop",
+      "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f57ecd1c_4ac60a55",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:04:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89ea91bb_2dae3dac",
       "revId": "4c74fea6263d8e9979c522ce055c806dcbe30c14",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
