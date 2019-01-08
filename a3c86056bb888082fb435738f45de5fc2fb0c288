@@ -135,6 +135,57 @@
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "598c5645_47e4a399",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:57:10Z",
+      "side": 1,
+      "message": "So this makes a copy of the ppa?\n\nI see - you are doing it without a lock here, but you later double check it inside a lock (ftl_ppa_cache_read).",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "297cd586_243d2697",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:57:10Z",
+      "side": 1,
+      "message": "The read thread can be different than the write/core thread, so you have lots of handling for coordinating those two. Is there any reason that the read thread needs to be dedicated though? I don\u0027t yet see any reason why you can\u0027t just do the read from the thread the I/O originated on, since it is already locking.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f3aa332_8ced431d",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:57:10Z",
+      "side": 1,
+      "message": "As I review this, I find myself constantly jumping back and forth between this file and ftl_core.c. Maybe they should just be combined.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
