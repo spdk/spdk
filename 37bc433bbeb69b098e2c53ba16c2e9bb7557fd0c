@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5276faa9_a0df3b73",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1dae39aa_e37a2edc",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5921e3b_e5a4c76b",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 24
@@ -33,6 +51,24 @@
       "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6759a47e_e1b44bb9",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b5921e3b_e5a4c76b",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "84d54530_43ec58b4",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fd1d8df_6985b416",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d80aa5bb_e0bc27dc",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 24
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-08T12:47:29Z",
       "side": 1,
       "message": "ftl_task_id is a confusing name here. This is really the thread. Maybe ftl_thread_id makes more sense? Also in the public API it looks like the ANM thread could potentially be a third thread here - I\u0027m not sure if you need it in this enum or not.",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d18dc2ef_3be62ce3",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "The ANM is a bit different story - there\u0027s only one for the whole SSD (as opposed to one for each FTL device), and the core FTL code doesn\u0027t need to interact with it directly (it only gets the ANM notifications from that thread), so it\u0027s not needed here. I\u0027ll remove this enumeration altogether, as I think it\u0027s redundant anyway.",
+      "parentUuid": "d80aa5bb_e0bc27dc",
       "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "af959775_70f7082b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "44260700_8f6c88eb",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5e540fe_9c8872cf",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 24
@@ -101,6 +191,24 @@
       "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30b23f5d_4b1108cb",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T16:59:57Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b5e540fe_9c8872cf",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
