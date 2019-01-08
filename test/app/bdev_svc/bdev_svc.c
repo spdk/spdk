@@ -44,9 +44,10 @@ bdev_svc_usage(void)
 {
 }
 
-static void
+static int
 bdev_svc_parse_arg(int ch, char *arg)
 {
+	return 0;
 }
 
 static void
