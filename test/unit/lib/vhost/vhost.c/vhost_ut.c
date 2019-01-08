@@ -348,6 +348,7 @@ remove_controller_test(void)
 
 	/* Remove device when controller is in use */
 	start_vdev(vdev);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&vdev->vsessions));
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
 
