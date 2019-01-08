@@ -34,6 +34,24 @@
       "revId": "d4a1cbdd2832c9bdb1135aa3a257ba471cc8bd63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0510e4e7_96002909",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-08T12:41:08Z",
+      "side": 1,
+      "message": "The fix will be to remove return 0 from the line 649 and add return rc here.",
+      "parentUuid": "7853a552_da0b0c2b",
+      "revId": "d4a1cbdd2832c9bdb1135aa3a257ba471cc8bd63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
