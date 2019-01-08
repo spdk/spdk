@@ -2,6 +2,12 @@
 
 ## v19.01: (Upcoming Release)
 
+### event framework
+
+For `spdk_app_parse_args`, add return value to the callback which parses application
+specific command line parameters to protect SPDK applications from crashing by invalid
+values from user input.
+
 ### environment
 
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init

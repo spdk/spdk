@@ -41,9 +41,10 @@ nvmf_usage(void)
 {
 }
 
-static void
+static int
 nvmf_parse_arg(int ch, char *arg)
 {
+	return 0;
 }
 
 static void

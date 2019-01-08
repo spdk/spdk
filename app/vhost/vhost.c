@@ -62,7 +62,7 @@ save_pid(const char *pid_path)
 	fclose(pid_file);
 }
 
-static void
+static int
 vhost_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -73,6 +73,7 @@ vhost_parse_arg(int ch, char *arg)
 		spdk_vhost_set_socket_path(arg);
 		break;
 	}
+	return 0;
 }
 
 static void

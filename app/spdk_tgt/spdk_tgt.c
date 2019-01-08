@@ -77,7 +77,7 @@ spdk_tgt_save_pid(const char *pid_path)
 }
 
 
-static void
+static int
 spdk_tgt_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -90,6 +90,7 @@ spdk_tgt_parse_arg(int ch, char *arg)
 		break;
 #endif
 	}
+	return 0;
 }
 
 static void
