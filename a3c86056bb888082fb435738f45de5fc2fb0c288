@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4042f613_d5eff417",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "It\u0027s part of the two other metadata structures, so the size is checked for those.",
+      "parentUuid": "34fcaa04_d142ad71",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c69330e1_ffce8a10",
         "filename": "lib/ftl/ftl_band.h",
         "patchSetId": 31
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-08T13:03:29Z",
       "side": 1,
       "message": "quotes on spdk includes. \u003c\u003e on system includes. Also, instead of \u003csys/queue.h\u003e include spdk/queue.h.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "755a5909_68cc9190",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c69330e1_ffce8a10",
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "1f3d7c03_4040c28e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "abafcc47_6cf47c44",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6b36e8f5_6bbde0df",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 31
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-08T13:03:29Z",
       "side": 1,
       "message": "The lbk parameter here only seems to be used to check if it is the first one? I\u0027m not following how the next chunk is actually incremented",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d4981d8_6d873dfb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "The lbk parameter here is just a number of chunk being erased (I agree that the name can be misleading). So for the first block we need to return io-\u003eppa (as it points at the chunk of the first ppa to be erased). The next one is retrieved by ftl_band_next_chunk() - it returns the next operational chunk from the band.",
+      "parentUuid": "6b36e8f5_6bbde0df",
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "971294e1_ece8dfae",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "33592cc9_f72774ce",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8934c92a_9b4ed4a3",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 31
@@ -98,6 +188,24 @@
       "writtenOn": "2019-01-08T13:03:29Z",
       "side": 1,
       "message": "ftl_erase_next_ppa seems specific to this function (it even requires the loop iterator to be passed in). I think you should just put the contents of that function right here inline.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f78b568d_5987b893",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "You\u0027re right, I think the idea was to be consistent with other _submit_ functions, but it doesn\u0027t really make much sense.",
+      "parentUuid": "8934c92a_9b4ed4a3",
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "edd19948_de82c3ef",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4603a14c_f72229c0",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "647a2ade_a4ad7f24",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 31
@@ -135,6 +261,24 @@
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dddfea11_d392c490",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "647a2ade_a4ad7f24",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -166,6 +310,24 @@
       "writtenOn": "2019-01-08T15:02:45Z",
       "side": 1,
       "message": "First get is used to check if this lba is valid or is it cached. Second get is under lock because such cached lba could be evicted after it was write to disk and someone make write to rwb_entry previously owned by this lba.",
+      "parentUuid": "598c5645_47e4a399",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab61fe72_eca81795",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-08T17:00:07Z",
+      "side": 1,
+      "message": "That\u0027s correct, we have to read the l2p to check if it points at write buffer entry, if so, lock that entry and recheck the l2p - if the l2p hasn\u0027t been updated, we can safely copy the data. Otherwise we have to retry.",
       "parentUuid": "598c5645_47e4a399",
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
