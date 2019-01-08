@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "554251fa_23626c9d",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T13:24:30Z",
+      "side": 1,
+      "message": "I saw Darek commented earlier that these changes aren\u0027t really needed in this patch.  The cleanup is fine, but should be in a separate patch.  I\u0027m not sure why he let you off the hook on this.  :-)",
+      "revId": "691e27ffff089dd8b4778c03820d8309cd790ab3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
