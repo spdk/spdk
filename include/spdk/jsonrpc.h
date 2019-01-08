@@ -156,6 +156,102 @@ struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_reques
 void spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_write_ctx *w);
 
 /**
+ * Begin an error response for a JSON-RPC request.
+ *
+ * This is shorthand for for spdk_jsonrpc_begin_result() with an error object code and message.
+ *
+ * This function is intended for crafting error message with additional data. In JSON RPC error
+ * response the "data" field can be used to communicate what went wrong. Here is an example of
+ * code that can be used to produce some doomy out-of-range response:
+ *
+ * \code{c}
+ * struct spdk_json_write_ctx *w;
+ *
+ * w = spdk_jsonrpc_begin_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Out of range");
+ * if (w) {
+ *   spdk_json_write_named_object_begin(w, "data");
+ *   spdk_json_write_named_string(w, "param_name", foo);
+ *   spdk_json_write_named_string(w, "param_type", "Integer");
+ *   spdk_json_write_named_int32(w, "min", -10);
+ *   spdk_json_write_named_int32(w, "max", 10);
+ *   spdk_json_write_object_end(w);
+ *   spdk_jsonrpc_end_error_response(request, w);
+ * }
+ *
+ * \endcode
+ *
+ * This will send following error response:
+ *
+ * \code
+ * {
+ *   "code": -32602,
+ *   "message": "Out of range",
+ *   "data": {
+ *     "param_name": "foo",
+ *     "param_type": "number,
+ *     "min": -10,
+ *     "max": 10
+ *   }
+ * }
+ * \endcode
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg String error message to return.
+ *
+ * \return JSON write context or NULL in case of error.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_error_response(struct spdk_jsonrpc_request *request,
+		int error_code, const char *msg);
+
+/**
+ * Begin an error response for a JSON-RPC request with printf-like message.
+ *
+ * This is shorthand for for printf() + spdk_jsonrpc_begin_result() with an error object code and message.
+ *
+ * \see spdk_jsonrpc_begin_error_response
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg_fmt printf-like format string from which message will be produced.
+ *
+ * \return JSON write context or NULL in case of error.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_error_response_fmt(struct spdk_jsonrpc_request
+		*request, int error_code, const char *msg_fmt, ...) __attribute__((format(printf, 3, 4)));
+
+/**
+ * Begin an error response for a JSON-RPC request with vprintf-like message.
+ *
+ * This is shorthand for for printf() + spdk_jsonrpc_begin_result() with an error object code and message.
+ *
+ * \see spdk_jsonrpc_begin_error_response
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param error_code Integer error code to return (may be one of the
+ * SPDK_JSONRPC_ERROR_ errors, or a custom error code).
+ * \param msg_fmt vprintf-like format string from which message will be produced.
+ * \param args Variadic argument list matching \c msg_fmt.
+ *
+ * \return JSON write context or NULL in case of error.
+ */
+struct spdk_json_write_ctx *spdk_jsonrpc_begin_error_response_fmt_v(struct spdk_jsonrpc_request
+		*request, int error_code, const char *fmt, va_list args);
+
+/**
+ * End response started by one of \c spdk_jsonrpc_begin_error_response_* and send it to client.
+ *
+ * \see spdk_jsonrpc_begin_error_response
+ *
+ * \param request JSON-RPC request to respond to.
+ * \param w JSON write context
+ */
+void spdk_jsonrpc_end_error_response(struct spdk_jsonrpc_request *request,
+				     struct spdk_json_write_ctx *w);
+
+/**
  * Send an error response to a JSON-RPC request.
  *
  * This is shorthand for spdk_jsonrpc_begin_result() + spdk_jsonrpc_end_result()
