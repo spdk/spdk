@@ -155,6 +155,24 @@
     },
     {
       "key": {
+        "uuid": "af60a9d0_6500b2d9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-08T15:02:45Z",
+      "side": 1,
+      "message": "First get is used to check if this lba is valid or is it cached. Second get is under lock because such cached lba could be evicted after it was write to disk and someone make write to rwb_entry previously owned by this lba.",
+      "parentUuid": "598c5645_47e4a399",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "297cd586_243d2697",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 31
@@ -172,6 +190,24 @@
     },
     {
       "key": {
+        "uuid": "0a77bd76_fd37e600",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-08T15:02:45Z",
+      "side": 1,
+      "message": "Separate read thread is optional for FTL and it was added to handle future features like read scheduling based on user SLA.",
+      "parentUuid": "297cd586_243d2697",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8f3aa332_8ced431d",
         "filename": "lib/ftl/ftl_rwb.c",
         "patchSetId": 31
@@ -183,6 +219,24 @@
       "writtenOn": "2019-01-08T13:57:10Z",
       "side": 1,
       "message": "As I review this, I find myself constantly jumping back and forth between this file and ftl_core.c. Maybe they should just be combined.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab2691a8_c22d93a8",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-08T15:02:45Z",
+      "side": 1,
+      "message": "This module was designed to be not directly dependent to ftl_dev so keeping it separately have some sense in my opinion. I think we could reconsider this when we decide how write buffer should look like in final ftl implementation but for now I vote to keep it separate.",
+      "parentUuid": "8f3aa332_8ced431d",
       "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
