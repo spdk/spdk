@@ -68,7 +68,7 @@ struct spdk_dif_ctx {
 	/** Metadata size */
 	uint32_t		md_size;
 
-	/** Interval for guard computation */
+	/** Interval for guard computation for DIF */
 	uint32_t		guard_interval;
 
 	/** DIF type */
@@ -108,6 +108,8 @@ struct spdk_dif_error {
  * \param ctx DIF context.
  * \param block_size Block size in a block.
  * \param md_size Metadata size in a block.
+ * \param md_interleave If true, metadata is interleaved with block data.
+ * If false, metadata is separated with block data.
  * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
  * If false, DIF is in the first 8 bytes of metadata.
  * \param dif_type Type of DIF.
@@ -120,7 +122,7 @@ struct spdk_dif_error {
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
-		      bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
 		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
 
 /**
@@ -196,4 +198,32 @@ int spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_io
 int spdk_dif_inject_error(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 			  const struct spdk_dif_ctx *ctx, uint32_t inject_flags,
 			  uint32_t *inject_offset);
+
+/**
+ * Generate DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \params iovcnt Number of elements in iovs.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the separate metadata payload.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		      uint32_t num_blocks, const struct spdk_dif_ctx *ctx);
+
+/**
+ * Verify DIF for separate metadata payload.
+ *
+ * \param iovs iovec array describing the LBA payload.
+ * \params iovcnt Number of elements in iovs.
+ * \param md_iov A contiguous buffer for metadata.
+ * \param num_blocks Number of blocks of the separate metadata payload.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
+		    uint32_t num_blocks, const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
