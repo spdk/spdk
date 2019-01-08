@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "20d4035a_245ff986",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T12:16:58Z",
+      "side": 1,
+      "message": "shouldn\u0027t we check for -ENOMEM here, and queue the IO - just like read/write above?",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c51e5e82_fb227119",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T12:16:58Z",
+      "side": 1,
+      "message": "I\u0027m curious - what is this flag supposed to do and why can\u0027t we support it?",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e379b798_efc95f9f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T12:16:58Z",
+      "side": 1,
+      "message": "same here regarding special check for -ENOMEM",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d83fe6a6_254ab8b2",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T12:16:58Z",
+      "side": 1,
+      "message": "extra space before blkcfg can be removed",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8adbdcff_afe78482",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-08T12:16:58Z",
+      "side": 1,
+      "message": "do we need max_write_zeroes_seg \u003d 1 here?",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
