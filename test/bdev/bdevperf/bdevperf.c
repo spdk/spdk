@@ -823,36 +823,57 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
-static void
+static inline bool
+int_range(long long num)
+{
+	if (num >= INT_MIN && num <= INT_MAX) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+static int
 bdevperf_parse_arg(int ch, char *arg)
 {
+	long long tmp;
+	char *end;
+
+	if (ch != 'w') {
+		tmp = strtoll(optarg, &end, 10);
+		if (!int_range(tmp)) {
+			fprintf(stderr, "-%c parse failed\n", ch);
+			return -ERANGE;
+		}
+	}
+
 	switch (ch) {
 	case 'q':
-		g_queue_depth = atoi(optarg);
+		g_queue_depth = tmp;
 		break;
 	case 'o':
-		g_io_size = atoi(optarg);
+		g_io_size = tmp;
 		break;
 	case 't':
-		g_time_in_sec = atoi(optarg);
+		g_time_in_sec = tmp;
 		break;
 	case 'w':
 		g_workload_type = optarg;
 		break;
 	case 'M':
-		g_rw_percentage = atoi(optarg);
-		g_mix_specified = true;
+		g_rw_percentage = tmp;
 		break;
 	case 'P':
-		g_show_performance_ema_period = atoi(optarg);
+		g_show_performance_ema_period = tmp;
 		break;
 	case 'S':
 		g_show_performance_real_time = 1;
-		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
+		g_show_performance_period_in_usec = tmp * 1000000;
 		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 						    g_show_performance_period_in_usec);
 		break;
 	}
+	return 0;
 }
 
 int
@@ -896,6 +917,11 @@ main(int argc, char **argv)
 		exit(1);
 	}
 	if (g_time_in_sec <= 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		exit(1);
+	}
+	if (g_rw_percentage != -1 && (g_rw_percentage <= 0 || g_rw_percentage >= 100)) {
 		spdk_app_usage();
 		bdevperf_usage();
 		exit(1);
