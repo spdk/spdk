@@ -22,6 +22,30 @@
       "revId": "d02bfdcccb95b610fdf42390e1798fa288e61750",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "067c0258_2f6c4d42",
+        "filename": "lib/env_dpdk/memory.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-08T16:45:21Z",
+      "side": 0,
+      "message": "\u003e spdk_vtophys_notify() reads *size without checking return value of spdk_mem_map_translate() (Please see the line 403 in vtophys.c).\n\nTrue. It\u0027s assuming the translation will succeed since it\u0027s the very same function that created this translation. Honestly, I\u0027m not sure why the size check was added in there. Maybe we could get rid of it in future.\n\n\u003e I think buffer_len which is passed to spdk_mem_map_translate() should be initialized by illegal value after this patch?\n\nIt has to be a valid value - the original *size is what this function will check contiguity for.",
+      "parentUuid": "fbadd3b5_f62c72e7",
+      "range": {
+        "startLine": 599,
+        "startChar": 0,
+        "endLine": 602,
+        "endChar": 2
+      },
+      "revId": "d02bfdcccb95b610fdf42390e1798fa288e61750",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
