@@ -42,7 +42,6 @@
 #include <linux/vhost.h>
 #include <linux/virtio_net.h>
 #include <sys/socket.h>
-#include <linux/if.h>
 #include <pthread.h>
 
 #include <rte_log.h>
