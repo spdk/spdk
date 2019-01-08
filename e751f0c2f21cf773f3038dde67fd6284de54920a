@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5703c0a2_0a1a3566",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-08T23:23:05Z",
+      "side": 1,
+      "message": "I found this was missing.",
+      "range": {
+        "startLine": 160,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 70
+      },
+      "revId": "e751f0c2f21cf773f3038dde67fd6284de54920a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
