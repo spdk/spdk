@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34fcaa04_d142ad71",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "If this structure needs to be precisely a given number of bytes, add a STATIC_ASSERT after it to check that at compile time.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c69330e1_ffce8a10",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 31
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "quotes on spdk includes. \u003c\u003e on system includes. Also, instead of \u003csys/queue.h\u003e include spdk/queue.h.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "abafcc47_6cf47c44",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "Quotes for spdk includes.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b36e8f5_6bbde0df",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 270,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "The lbk parameter here only seems to be used to check if it is the first one? I\u0027m not following how the next chunk is actually incremented",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33592cc9_f72774ce",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 297,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "variable declaration inside for loop (we are back in the C dark ages)",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8934c92a_9b4ed4a3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "ftl_erase_next_ppa seems specific to this function (it even requires the loop iterator to be passed in). I think you should just put the contents of that function right here inline.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4603a14c_f72229c0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "It\u0027s safest to do the increment prior to submitting the command, just in case it completes synchronously for some condition. You\u0027ll have to decrement if the command fails then of course.",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "647a2ade_a4ad7f24",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T13:03:29Z",
+      "side": 1,
+      "message": "This seems confusing to me. I made a comment on the previous review about just saving the core thread and the read thread inside of *dev. Then, instead of calling this function (like on line 338), you could write:\n\nif (spdk_get_thread() \u003d\u003d dev-\u003ecore_thread-\u003ethread) {\n    return ftl_submit_erase(io);\n}",
+      "revId": "a3c86056bb888082fb435738f45de5fc2fb0c288",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
