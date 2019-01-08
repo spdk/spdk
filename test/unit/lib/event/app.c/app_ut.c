@@ -56,9 +56,10 @@ unittest_usage(void)
 {
 }
 
-static void
+static int
 unittest_parse_args(int ch, char *arg)
 {
+	return 0;
 }
 
 static void
