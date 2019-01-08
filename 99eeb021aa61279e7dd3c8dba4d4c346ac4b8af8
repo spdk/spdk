@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "9838fdb1_fee7b479",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-08T08:46:25Z",
+      "side": 1,
+      "message": "done",
+      "range": {
+        "startLine": 57,
+        "startChar": 59,
+        "endLine": 57,
+        "endChar": 68
+      },
+      "revId": "99eeb021aa61279e7dd3c8dba4d4c346ac4b8af8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07979261_0f55188b",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 3
@@ -36,6 +59,30 @@
       "writtenOn": "2019-01-08T08:37:32Z",
       "side": 1,
       "message": "these",
+      "range": {
+        "startLine": 63,
+        "startChar": 11,
+        "endLine": 63,
+        "endChar": 15
+      },
+      "revId": "99eeb021aa61279e7dd3c8dba4d4c346ac4b8af8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e61c39f7_cfa73ef3",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-08T08:46:25Z",
+      "side": 1,
+      "message": "done",
+      "parentUuid": "07979261_0f55188b",
       "range": {
         "startLine": 63,
         "startChar": 11,
