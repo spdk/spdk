@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8b3ba42_14e4a4c0",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T08:38:18Z",
+      "side": 1,
+      "message": "I think you can still use the variable: guard_interval, it makes no difference for DIF/DIX.",
+      "revId": "c3ca5bf34c9d6c5c5d19ebbe110cca754442aa04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f2ee654_f7ac2427",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T08:38:18Z",
+      "side": 1,
+      "message": "both 0 and non 512 bytes aligned block size are invalid.",
+      "revId": "c3ca5bf34c9d6c5c5d19ebbe110cca754442aa04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a26c3ead_be13d11c",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 230,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T08:38:18Z",
+      "side": 1,
+      "message": "I think using _get_dix_guard_interval or combine _get_dif_guard_interval and _get_dix_guard_interval into one function, e.g.: _get_guard_interval.",
+      "revId": "c3ca5bf34c9d6c5c5d19ebbe110cca754442aa04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
