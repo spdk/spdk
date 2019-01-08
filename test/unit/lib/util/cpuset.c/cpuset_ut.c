@@ -213,6 +213,8 @@ test_cpuset_fmt(void)
 
 	/* Set all cores */
 	spdk_cpuset_zero(core_mask);
+	CU_ASSERT(cpuset_check_range(core_mask, 0, SPDK_CPUSET_SIZE - 1, false) == 0);
+
 	for (lcore = 0; lcore < SPDK_CPUSET_SIZE; lcore++) {
 		spdk_cpuset_set_cpu(core_mask, lcore, true);
 	}
@@ -221,11 +223,15 @@ test_cpuset_fmt(void)
 	}
 	hex_mask_ref[SPDK_CPUSET_SIZE / 4] = '\0';
 
+	/* Check data before format */
+	CU_ASSERT(cpuset_check_range(core_mask, 0, SPDK_CPUSET_SIZE - 1, true) == 0);
+
 	hex_mask = spdk_cpuset_fmt(core_mask);
-	CU_ASSERT(hex_mask != NULL);
-	if (hex_mask != NULL) {
-		CU_ASSERT(strcmp(hex_mask_ref, hex_mask) == 0);
-	}
+	SPDK_CU_ASSERT_FATAL(hex_mask != NULL);
+	CU_ASSERT(strcmp(hex_mask_ref, hex_mask) == 0);
+
+	/* Check data integrity after format */
+	CU_ASSERT(cpuset_check_range(core_mask, 0, SPDK_CPUSET_SIZE - 1, true) == 0);
 
 	spdk_cpuset_free(core_mask);
 }
