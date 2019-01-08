@@ -819,8 +819,8 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *mask_str)
 		goto out_unlock;
 	}
 
+	spdk_cpuset_copy(cpumask, svdev->vdev.cpumask);
 	svdev->orig_cpumask = cpumask;
-	spdk_cpuset_copy(svdev->orig_cpumask, cpumask);
 
 out_unlock:
 	spdk_vhost_unlock();
@@ -857,6 +857,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
+	spdk_cpuset_free(svdev->orig_cpumask);
 	spdk_dma_free(svdev);
 	return 0;
 }
