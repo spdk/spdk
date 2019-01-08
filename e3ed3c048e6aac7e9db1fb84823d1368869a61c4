@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b8e0ca25_077cb4dc",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T07:20:47Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "ab7045ff_acede4fa",
+      "range": {
+        "startLine": 310,
+        "startChar": 2,
+        "endLine": 310,
+        "endChar": 39
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d458710_7f789ec8",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 13
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-08T06:43:20Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 322,
+        "startChar": 2,
+        "endLine": 322,
+        "endChar": 39
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98fc949e_e308e0cc",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 322,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T07:20:47Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "3d458710_7f789ec8",
       "range": {
         "startLine": 322,
         "startChar": 2,
@@ -71,6 +119,47 @@
     },
     {
       "key": {
+        "uuid": "3d1d8c91_5b9834d3",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 326,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T07:20:47Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "e14d5974_ec48d1e9",
+      "range": {
+        "startLine": 326,
+        "startChar": 3,
+        "endLine": 326,
+        "endChar": 63
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef0bb324_4ce4f165",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 791,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T07:20:47Z",
+      "side": 1,
+      "message": "SPDK block unmap API can\u0027t support multiple ranges, so just use 1 segment here.",
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "916904cc_98fb9ef7",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 13
@@ -82,6 +171,30 @@
       "writtenOn": "2019-01-08T06:52:36Z",
       "side": 1,
       "message": "Can you print these features in hex.",
+      "range": {
+        "startLine": 916,
+        "startChar": 40,
+        "endLine": 916,
+        "endChar": 55
+      },
+      "revId": "e3ed3c048e6aac7e9db1fb84823d1368869a61c4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8ecb1b9_b322eab8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 916,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-08T07:20:47Z",
+      "side": 1,
+      "message": "done.",
+      "parentUuid": "916904cc_98fb9ef7",
       "range": {
         "startLine": 916,
         "startChar": 40,
