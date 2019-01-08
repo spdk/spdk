@@ -16,6 +16,24 @@
       "revId": "d4a1cbdd2832c9bdb1135aa3a257ba471cc8bd63",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7853a552_da0b0c2b",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 650,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-08T12:18:31Z",
+      "side": 1,
+      "message": "Oh, thanks. I thought fixing that later but\nI\u0027ll add return rc here tomorrow in this patch.",
+      "parentUuid": "b4db9f99_f134b4ed",
+      "revId": "d4a1cbdd2832c9bdb1135aa3a257ba471cc8bd63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
