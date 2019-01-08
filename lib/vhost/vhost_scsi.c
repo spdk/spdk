@@ -1325,6 +1325,7 @@ destroy_device_poller_cb(void *arg)
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n",
 		     svsession->svdev->vdev.name);
 
+	process_removed_devs(svsession);
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->destroy_ctx.poller);
