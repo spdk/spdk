@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1da62922_8be67ee3",
+        "filename": "test/cas/management/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-08T15:49:08Z",
+      "side": 1,
+      "message": "Do we need to create additional, separate common files?\ncas/integrity/common.sh and cas/management/common.sh?\nOne common.sh should be enough IMO",
+      "revId": "46b56aba86173de1fc53661cb0a00091fd4617c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
