@@ -49,6 +49,7 @@
 
 static bool g_spdk_env_initialized;
 static int g_spdk_enable_sgl = 0;
+static uint32_t g_spdk_sge_size = 4096;
 static uint32_t g_spdk_pract_flag;
 static uint32_t g_spdk_prchk_flags;
 
@@ -57,6 +58,7 @@ struct spdk_fio_options {
 	int	mem_size;
 	int	shm_id;
 	int	enable_sgl;
+	int	sge_size;
 	char	*hostnqn;
 	int	pi_act;
 	char	*pi_chk;
@@ -393,6 +395,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
 		g_spdk_enable_sgl = fio_options->enable_sgl;
+		g_spdk_sge_size = fio_options->sge_size;
 		parse_pract_flag(fio_options->pi_act);
 		parse_prchk_flags(fio_options->pi_chk);
 		if (spdk_env_init(&opts) < 0) {
@@ -616,16 +619,19 @@ spdk_nvme_io_next_sge(void *ref, void **address, uint32_t *length)
 {
 	struct spdk_fio_request *fio_req = (struct spdk_fio_request *)ref;
 	struct io_u *io_u = fio_req->io;
+	uint32_t remaining_length;
+	uint32_t iov_len;
 
 	*address = io_u->buf;
-	*length = io_u->xfer_buflen;
 
 	if (fio_req->iov_offset) {
 		assert(fio_req->iov_offset <= io_u->xfer_buflen);
 		*address += fio_req->iov_offset;
-		*length -= fio_req->iov_offset;
 	}
-
+	remaining_length = io_u->xfer_buflen - (*address - io_u->buf);
+	iov_len = remaining_length < g_spdk_sge_size ? remaining_length : g_spdk_sge_size;
+	fio_req->iov_offset += iov_len;
+	*length = iov_len;
 	return 0;
 }
 
@@ -856,6 +862,16 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, enable_sgl),
 		.def		= "0",
 		.help		= "SGL Used for I/O Commands (enable_sgl=1 or enable_sgl=0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "sge_size",
+		.lname		= "SGL size used for I/O commands",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, sge_size),
+		.def		= "4096",
+		.help		= "SGL size in bytes for I/O Commands (default 4096)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
