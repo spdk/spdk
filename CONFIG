@@ -77,7 +77,7 @@ CONFIG_DPDK_DIR=
 
 # Build SPDK FIO plugin. Requires CONFIG_FIO_SOURCE_DIR set to a valid
 # fio source code directory.
-CONFIG_FIO_PLUGIN=n
+CONFIG_FIO_PLUGIN=y
 
 # This directory should contain the source code directory for fio
 # which is required for building the SPDK FIO plugin.
