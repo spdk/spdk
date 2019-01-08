@@ -823,36 +823,107 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
-static void
+static inline bool int_range(long long num)
+{
+    if(num >= INT_MIN && num <= INT_MAX)
+        return true;
+    else
+        return false;
+}
+
+static int
 bdevperf_parse_arg(int ch, char *arg)
 {
+	long long tmp;
+    char *end;
+
+    errno = 0;
 	switch (ch) {
 	case 'q':
-		g_queue_depth = atoi(optarg);
-		break;
+        tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-q parse failed\n");
+            return errno;
+        }
+        if(int_range(tmp)) {
+            g_queue_depth = tmp;
+            break;
+        }
+        else
+            return -ERANGE;
+
 	case 'o':
-		g_io_size = atoi(optarg);
-		break;
+        tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-o parse failed\n");
+            return errno;
+        }
+        if(int_range(tmp)) {
+            g_io_size = tmp;
+            break;
+        }
+        else
+            return -ERANGE;
+
 	case 't':
-		g_time_in_sec = atoi(optarg);
-		break;
+		tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-t parse failed\n");
+            return errno;
+        }
+        if(int_range(tmp)) {
+            g_time_in_sec = tmp;
+            break;
+        }
+        else
+            return -ERANGE;
+
 	case 'w':
 		g_workload_type = optarg;
 		break;
+
 	case 'M':
-		g_rw_percentage = atoi(optarg);
-		g_mix_specified = true;
-		break;
+		tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-M parse failed\n");
+            return errno;
+        }
+        if(int_range(tmp)) {
+            g_rw_percentage = tmp;
+            break;
+        }
+        else
+            return -ERANGE;
+
 	case 'P':
-		g_show_performance_ema_period = atoi(optarg);
-		break;
+	    tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-P parse failed\n");
+            return errno;
+        }
+        if(int_range(tmp)) {
+            g_show_performance_ema_period = tmp;
+            break;
+        }
+        else
+            return -ERANGE;
+        
 	case 'S':
 		g_show_performance_real_time = 1;
-		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
+		tmp = strtoll(optarg, &end, 10);
+        if(errno) {
+            fprintf(stderr, "-S parse failed\n");
+            return errno;
+        }
+        if(!int_range(tmp)) {
+            return -ERANGE;
+        }
+		g_show_performance_period_in_usec = tmp * 1000000;
 		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 						    g_show_performance_period_in_usec);
 		break;
 	}
+	return 0;
 }
 
 int
