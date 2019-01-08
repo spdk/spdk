@@ -50,6 +50,10 @@ PLUGIN_DIR=$rootdir/examples/nvme/fio_plugin
 # Test fio_plugin as host with malloc backend
 LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/example_config.fio --filename="trtype=RDMA adrfam=IPv4 \
 traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
+
+# second test mocking multiple SGL elements
+LD_PRELOAD=$PLUGIN_DIR/fio_plugin /usr/src/fio/fio $PLUGIN_DIR/mock_sgl_config.fio --filename="trtype=RDMA adrfam=IPv4 \
+traddr=$NVMF_FIRST_TARGET_IP trsvcid=4420 ns=1"
 $rpc_py delete_nvmf_subsystem nqn.2016-06.io.spdk:cnode1
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
