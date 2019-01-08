@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1dae39aa_e37a2edc",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "Quotes for spdk includes",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5921e3b_e5a4c76b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "All POSIX includes should be inside spdk/stdinc.h",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fd1d8df_6985b416",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "Use spdk/queue.h instead",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d80aa5bb_e0bc27dc",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "ftl_task_id is a confusing name here. This is really the thread. Maybe ftl_thread_id makes more sense? Also in the public API it looks like the ANM thread could potentially be a third thread here - I\u0027m not sure if you need it in this enum or not.",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44260700_8f6c88eb",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "Similarly, naming this ftl_thread probably makes more sense.",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5e540fe_9c8872cf",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-08T12:47:29Z",
+      "side": 1,
+      "message": "There are exactly two of these per device, so it\u0027s a lot clearer if you instead wrote:\n\nstruct ftl_task *core_task;\nstruct ftl_task *read_task;\n\nIf you renamed ftl_task to ftl_thread it would be:\n\nstruct ftl_thread *core_thread;\nstruct ftl_thread *read_thread;",
+      "revId": "37bc433bbeb69b098e2c53ba16c2e9bb7557fd0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
