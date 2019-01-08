@@ -857,6 +857,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
+	spdk_cpuset_free(svdev->orig_cpumask);
 	spdk_dma_free(svdev);
 	return 0;
 }
