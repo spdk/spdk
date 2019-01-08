@@ -823,7 +823,7 @@ spdk_bdevperf_shutdown_cb(void)
 	}
 }
 
-static void
+static int
 bdevperf_parse_arg(int ch, char *arg)
 {
 	switch (ch) {
@@ -853,6 +853,7 @@ bdevperf_parse_arg(int ch, char *arg)
 						    g_show_performance_period_in_usec);
 		break;
 	}
+	return 0;
 }
 
 int
@@ -896,6 +897,11 @@ main(int argc, char **argv)
 		exit(1);
 	}
 	if (g_time_in_sec <= 0) {
+		spdk_app_usage();
+		bdevperf_usage();
+		exit(1);
+	}
+	if (g_rw_percentage != -1 && (g_rw_percentage <= 0 || g_rw_percentage >= 100)) {
 		spdk_app_usage();
 		bdevperf_usage();
 		exit(1);
