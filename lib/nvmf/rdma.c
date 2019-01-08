@@ -260,6 +260,16 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
 
+	/* The current number of outstanding WRs from this qpair's
+	 * recv queue. Should not exceed device->attr.max_queue_depth.
+	 */
+	uint16_t				current_recv_wr_qd;
+
+	/* The current number of outstanding WRs from this qpair's
+	 * send queue. Should not exceed device->attr.max_queue_depth.
+	 */
+	uint16_t				current_send_wr_qd;
+
 	/* The maximum number of active RDMA READ and WRITE operations at one time */
 	uint16_t				max_rw_depth;
 
@@ -802,6 +812,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
+		rqpair->current_recv_wr_qd++;
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
 			spdk_nvmf_rdma_qpair_destroy(rqpair);
@@ -861,6 +872,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
+	assert(rdma_req != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
 
@@ -870,6 +882,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 		return -1;
 	}
 	rqpair->current_rw_depth += rdma_req->num_outstanding_data_wr;
+	rqpair->current_send_wr_qd += rdma_req->num_outstanding_data_wr;
 	return 0;
 }
 
@@ -908,6 +921,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		return rc;
 	}
 	rdma_req->recv = NULL;
+	rqpair->current_recv_wr_qd++;
 
 	/* Build the response which consists of an optional
 	 * RDMA WRITE to transfer data, plus an RDMA SEND
@@ -930,6 +944,8 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		SPDK_ERRLOG("Unable to send response capsule\n");
 		return rc;
 	}
+	/* +1 for the send_wr */
+	rqpair->current_send_wr_qd += rdma_req->num_outstanding_data_wr + 1;
 
 	rqpair->current_rw_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
@@ -1502,6 +1518,10 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+				if (rqpair->current_send_wr_qd + rdma_req->num_outstanding_data_wr > rqpair->max_queue_depth) {
+					/* We can only have so many WRs outstanding. we have to wait until some finish. */
+					break;
+				}
 				rc = request_transfer_in(&rdma_req->req);
 				if (!rc) {
 					spdk_nvmf_rdma_request_set_state(rdma_req,
@@ -1515,6 +1535,14 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* The data transfer will be kicked off from
 				 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
 				 */
+				if ((rqpair->current_send_wr_qd + rdma_req->num_outstanding_data_wr + 1) > rqpair->max_queue_depth
+				    ||
+				    rqpair->current_recv_wr_qd >= rqpair->max_queue_depth) {
+					/* We can only have so many WRs outstanding. we have to wait until some finish.
+					* +1 since each request has an additional wr in the resp.
+					* Check the recv queue since we have one in the recv as well */
+					break;
+				}
 				spdk_nvmf_rdma_request_set_state(rdma_req,
 								 RDMA_REQUEST_STATE_READY_TO_COMPLETE);
 			} else {
@@ -2604,6 +2632,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		assert(false);
 		return;
 	}
+	rqpair->current_recv_wr_qd++;
 
 	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
 	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
@@ -2614,6 +2643,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		assert(false);
 		return;
 	}
+	rqpair->current_send_wr_qd++;
 }
 
 #ifdef DEBUG
@@ -2666,6 +2696,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				/* We're going to attempt an error recovery, so force the request into
 				 * the completed state. */
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+				rqpair->current_send_wr_qd--;
 				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 				break;
 			case RDMA_WR_TYPE_RECV:
@@ -2675,6 +2706,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				/* Dump this into the incoming queue. This gets cleaned up when
 				 * the queue pair disconnects or recovers. */
 				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+				rqpair->current_recv_wr_qd--;
 				break;
 			case RDMA_WR_TYPE_DATA:
 				/* If the data transfer fails still force the queue into the error state,
@@ -2693,12 +2725,14 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 						spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 					}
 				}
+				rqpair->current_send_wr_qd--;
 				break;
 			case RDMA_WR_TYPE_DRAIN_RECV:
 				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_recv_wr);
 				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
+				rqpair->current_recv_wr_qd--;
 				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
 					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
@@ -2710,6 +2744,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
+				rqpair->current_send_wr_qd--;
 				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
 					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
@@ -2737,6 +2772,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
 
 			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+			rqpair->current_send_wr_qd--;
 			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
 			count++;
@@ -2749,6 +2785,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+			rqpair->current_send_wr_qd--;
 
 			/* Try to process other queued requests */
 			rqpair->current_rw_depth--;
@@ -2759,6 +2796,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+			rqpair->current_send_wr_qd--;
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 			/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
@@ -2778,6 +2816,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
 			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 			rqpair = rdma_recv->qpair;
+			rqpair->current_recv_wr_qd--;
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
