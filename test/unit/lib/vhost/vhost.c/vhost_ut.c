@@ -170,6 +170,9 @@ start_vdev(struct spdk_vhost_dev *vdev)
 	rc = posix_memalign((void **)&vsession, 64, sizeof(*vsession));
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(vsession != NULL);
+	if (vsession == NULL) {
+		return; /* convince the scan-build */
+	}
 	vsession->lcore = 0;
 	vsession->vid = 0;
 	vsession->mem = mem;
@@ -348,6 +351,7 @@ remove_controller_test(void)
 
 	/* Remove device when controller is in use */
 	start_vdev(vdev);
+	SPDK_CU_ASSERT_FATAL(!TAILQ_EMPTY(&vdev->vsessions));
 	ret = spdk_vhost_dev_unregister(vdev);
 	CU_ASSERT(ret != 0);
 
