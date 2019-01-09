@@ -37,6 +37,15 @@
 #include "spdk/env.h"
 #include "spdk_internal/log.h"
 
+/* Number of buffers for mempool
+ * Need to be power of two
+ * Need to be sufficient for amount of memory that OCF uses
+ */
+#define ENV_ALLOCATOR_NBUFS 32768
+
+/* Use unique index for env allocators */
+static int g_env_allocator_index = 0;
+
 struct _env_allocator {
 	/* Memory pool ID unique name */
 	char *name;
@@ -46,53 +55,62 @@ struct _env_allocator {
 
 	/* Number of currently allocated items in pool */
 	env_atomic count;
-};
 
-struct _env_allocator_item {
-	uint32_t flags;
-	uint32_t cpu;
-	char data[];
+	/* Memory pool for efficient allocation */
+	struct spdk_mempool *pool;
 };
 
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	struct _env_allocator_item *item = NULL;
-
-	item = spdk_dma_zmalloc(allocator->item_size, 0, NULL);
+	void *item = spdk_mempool_get(allocator->pool);
 
 	if (item) {
-		item->cpu = 0;
 		env_atomic_inc(&allocator->count);
-	} else {
-		return NULL;
 	}
 
-	return &item->data;
+	return item;
 }
 
 env_allocator *
 env_allocator_create(uint32_t size, const char *name)
 {
-	size_t name_size;
 	env_allocator *allocator;
+	size_t name_size = strlen("ocf_env_99999") + 1;
 
-	allocator = spdk_dma_zmalloc(sizeof(*allocator), 0, NULL);
+	allocator = malloc(sizeof(*allocator));
+	if (allocator == NULL) {
+		return NULL;
+	}
 
-	allocator->item_size = size + sizeof(struct _env_allocator_item);
-	allocator->name = env_strdup(name, 0);
+	allocator->name = calloc(1, name_size);
+	if (allocator->name == NULL) {
+		free(allocator);
+		return NULL;
+	}
+	snprintf(allocator->name, name_size, "ocf_env_%d", g_env_allocator_index++);
+
+	allocator->item_size = size;
+	allocator->count = 0;
+
+	allocator->pool = spdk_mempool_create(allocator->name,
+					      ENV_ALLOCATOR_NBUFS, allocator->item_size,
+					      SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					      SPDK_ENV_SOCKET_ID_ANY);
+	if (allocator->pool == NULL) {
+		free(allocator->name);
+		free(allocator);
+		return NULL;
+	}
 
 	return allocator;
 }
 
 void
-env_allocator_del(env_allocator *allocator, void *obj)
+env_allocator_del(env_allocator *allocator, void *item)
 {
-	struct _env_allocator_item *item = container_of(obj, struct _env_allocator_item, data);
-
 	env_atomic_dec(&allocator->count);
-
-	spdk_dma_free(item);
+	spdk_mempool_put(allocator->pool, item);
 }
 
 void
@@ -104,8 +122,9 @@ env_allocator_destroy(env_allocator *allocator)
 			assert(false);
 		}
 
-		spdk_dma_free(allocator->name);
-		spdk_dma_free(allocator);
+		spdk_mempool_free(allocator->pool);
+		free(allocator->name);
+		free(allocator);
 	}
 }
 
