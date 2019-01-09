@@ -36,12 +36,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk/env.h"
 #include "spdk/io_channel.h"
+#include "spdk/ocf.h"
 #include "spdk_internal/log.h"
-
-#include "data.h"
-#include "dobj.h"
-#include "ctx.h"
-#include "vbdev_cas.h"
 
 static int
 opencas_dobj_open(ocf_data_obj_t obj)
@@ -256,7 +252,7 @@ prepare_submit(struct ocf_io *io)
 			return -EINVAL;
 		}
 
-		rc = ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q);
+		rc = spdk_ocf_cache_get_queue(base->parent->ocf_ctx, io->io_queue, &q);
 		if (rc) {
 			SPDK_ERRLOG("Could not get queue #%d\n", io->io_queue);
 			assert(false);

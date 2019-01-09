@@ -34,16 +34,15 @@
 #ifndef SPDK_VBDEV_CACHE_H
 #define SPDK_VBDEV_CACHE_H
 
-#include <ocf/ocf.h>
-
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
+#include "spdk/ocf.h"
 
 struct vbdev_cas;
 
 /* Context for CAS queue */
 struct vbdev_cas_qcxt {
-	struct ocf_queue            *queue;
+	struct spdk_ocf_queue       *queue;
 	struct spdk_poller          *poller;
 	struct vbdev_cas            *vbdev;
 	struct spdk_io_channel      *cache_ch;
@@ -62,19 +61,6 @@ struct vbdev_cas_state {
 	bool                         started;
 };
 
-/*
- * OCF cache configuration options
- */
-struct vbdev_cas_config {
-	/* Initial cache configuration  */
-	struct ocf_mngt_cache_config        cache;
-
-	/* Cache device config */
-	struct ocf_mngt_cache_device_config device;
-
-	/* Core initial config */
-	struct ocf_mngt_core_config         core;
-};
 
 /* Base device info */
 struct vbdev_cas_base {
@@ -112,12 +98,10 @@ struct vbdev_cas {
 	struct vbdev_cas_base        cache;
 	struct vbdev_cas_base        core;
 
-	/* Base bdevs OCF objects */
-	ocf_cache_t                  ocf_cache;
-	ocf_core_t                   ocf_core;
+	/* SPDK OCF context */
+	struct spdk_ocf_ctx         ocf_ctx;
 
 	/* Parameters */
-	struct vbdev_cas_config      cfg;
 	struct vbdev_cas_state       state;
 
 	/* Exposed SPDK bdev. Registered in bdev layer */
