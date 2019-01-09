@@ -250,6 +250,23 @@ static const struct entry_fn_table nvme_fn_table = {
 	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
 };
 
+static int nvme_dif_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+				   struct ns_entry *entry, uint64_t offset_in_ios);
+
+static int nvme_dif_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+				    struct ns_entry *entry, uint64_t offset_in_ios);
+
+static void nvme_dif_verify_io(struct perf_task *task, struct ns_entry *entry);
+
+static const struct entry_fn_table nvme_dif_fn_table = {
+	.read_io		= nvme_dif_submit_read_io,
+	.write_io		= nvme_dif_submit_write_io,
+	.check_io		= nvme_check_io,
+	.verify_io		= nvme_dif_verify_io,
+	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
+};
+
 static void
 register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
@@ -302,7 +319,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	}
 
 	entry->type = ENTRY_TYPE_NVME_NS;
-	entry->fn_table = &nvme_fn_table;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
 	entry->num_io_requests = entries;
@@ -318,6 +334,9 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
+		entry->fn_table = &nvme_dif_fn_table;
+	} else {
+		entry->fn_table = &nvme_fn_table;
 	}
 
 	if (g_max_io_md_size < entry->md_size) {
@@ -769,6 +788,44 @@ static int
 nvme_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		    struct ns_entry *entry, uint64_t offset_in_ios)
 {
+	task->is_read = true;
+	if (!g_enable_sgl) {
+		return spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					     task->buf, task->lba,
+					     entry->io_size_blocks, io_complete,
+					     task, entry->io_flags);
+	} else {
+		return spdk_nvme_ns_cmd_readv(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					      task->lba,
+					      entry->io_size_blocks, io_complete,
+					      task, entry->io_flags,
+					      task_reset_sgl, task_next_sge);
+	}
+}
+
+static int
+nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		     struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	task->is_read = false;
+	if (!g_enable_sgl) {
+		return spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					      task->buf, task->lba,
+					      entry->io_size_blocks, io_complete,
+					      task, entry->io_flags);
+	} else {
+		return spdk_nvme_ns_cmd_writev(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					       task->lba,
+					       entry->io_size_blocks, io_complete,
+					       task, entry->io_flags,
+					       task_reset_sgl, task_next_sge);
+	}
+}
+
+static int
+nvme_dif_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+			struct ns_entry *entry, uint64_t offset_in_ios)
+{
 	task_extended_lba_setup_pi(entry, task, task->lba,
 				   entry->io_size_blocks, false);
 	task->is_read = true;
@@ -790,8 +847,8 @@ nvme_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 }
 
 static int
-nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
-		     struct ns_entry *entry, uint64_t offset_in_ios)
+nvme_dif_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+			 struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	task_extended_lba_setup_pi(entry, task, task->lba,
 				   entry->io_size_blocks, true);
@@ -821,6 +878,11 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 
 static void
 nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
+}
+
+static void
+nvme_dif_verify_io(struct perf_task *task, struct ns_entry *entry)
 {
 	if (spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns) &&
 	    task->is_read && !g_metacfg_pract_flag) {
