@@ -58,5 +58,32 @@ function full()
 	$rpc_py construct_cas_bdev TestCache wt Malloc0 Malloc1
 }
 
+function hotremove()
+{
+	sleep 1
+
+	$rpc_py construct_cas_bdev TestCache wt Malloc0 Malloc1
+
+	if ! (check_claimed Malloc0 && check_claimed Malloc1); then
+		>&2 echo "Base devices expected to be claimed now"
+		return 1
+	fi
+
+	$rpc_py delete_malloc_bdev Malloc0
+
+	if check_claimed Malloc1; then
+		>&2 echo "Base device is not expected to be claimed now"
+		return 1
+	fi
+
+	status=$($rpc_py get_bdevs)
+	gone=$(echo $status | jq 'map(select(.name == "TestCache")) == []')
+	if [[ $gone == false ]]; then
+		>&2 echo "CAS bdev is expected to unregister"
+		return 1
+	fi
+}
+
 with_spdk partial
 with_spdk full
+with_spdk hotremove
