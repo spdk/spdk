@@ -37,82 +37,57 @@
 #include "spdk/env.h"
 #include "spdk_internal/log.h"
 
-struct _env_allocator {
-	/* Memory pool ID unique name */
-	char *name;
+/* Number of buffers for mempool
+ * Need to be power of two
+ * It depends on memory usage of OCF which
+ * in itself depends on the workload
+ * It is a big number because OCF uses allocators
+ * for every request it sends and recieves
+ */
+#define ENV_ALLOCATOR_NBUFS 32768
 
-	/* Size of specific item of memory pool */
-	uint32_t item_size;
-
-	/* Number of currently allocated items in pool */
-	env_atomic count;
-};
-
-struct _env_allocator_item {
-	uint32_t flags;
-	uint32_t cpu;
-	char data[];
-};
+/* Use unique index for env allocators */
+static int g_env_allocator_index = 0;
 
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	struct _env_allocator_item *item = NULL;
-
-	item = spdk_dma_zmalloc(allocator->item_size, 0, NULL);
-
-	if (item) {
-		item->cpu = 0;
-		env_atomic_inc(&allocator->count);
-	} else {
-		return NULL;
-	}
-
-	return &item->data;
+	return spdk_mempool_get(allocator);
 }
 
 env_allocator *
 env_allocator_create(uint32_t size, const char *name)
 {
-	size_t name_size;
 	env_allocator *allocator;
+	char qualified_name[128] = {0};
 
-	allocator = spdk_dma_zmalloc(sizeof(*allocator), 0, NULL);
+	snprintf(qualified_name, 128, "ocf_env_%d", g_env_allocator_index++);
 
-	allocator->item_size = size + sizeof(struct _env_allocator_item);
-	allocator->name = env_strdup(name, 0);
+	allocator = spdk_mempool_create(qualified_name,
+					ENV_ALLOCATOR_NBUFS, size,
+					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+					SPDK_ENV_SOCKET_ID_ANY);
 
 	return allocator;
 }
 
 void
-env_allocator_del(env_allocator *allocator, void *obj)
+env_allocator_del(env_allocator *allocator, void *item)
 {
-	struct _env_allocator_item *item = container_of(obj, struct _env_allocator_item, data);
-
-	env_atomic_dec(&allocator->count);
-
-	spdk_dma_free(item);
+	spdk_mempool_put(allocator, item);
 }
 
 void
 env_allocator_destroy(env_allocator *allocator)
 {
 	if (allocator) {
-		if (env_atomic_read(&allocator->count)) {
+		if (ENV_ALLOCATOR_NBUFS - spdk_mempool_count(allocator)) {
 			SPDK_ERRLOG("Not all objects deallocated\n");
 			assert(false);
 		}
 
-		spdk_dma_free(allocator->name);
-		spdk_dma_free(allocator);
+		spdk_mempool_free(allocator);
 	}
-}
-
-uint32_t
-env_allocator_item_count(env_allocator *allocator)
-{
-	return env_atomic_read(&allocator->count);
 }
 
 /* *** COMPLETION *** */
