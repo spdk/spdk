@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5abf6265_6ce58eb2",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T15:47:31Z",
+      "side": 1,
+      "message": "sorry, I overlooked this. \u0027return rc + 1\u0027 in get_buffer_size() . I think this should be \u0027\u003c\u003d 0\u0027 or get_buffer_size() should return\n\n  return rc \u003e\u003d 0 ? rc + 1 : rc;\n\nOr maybe you can inline get_buffer_size() ?",
+      "range": {
+        "startLine": 123,
+        "startChar": 5,
+        "endLine": 123,
+        "endChar": 18
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bbc4b524_88dc2b5f",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T15:47:31Z",
+      "side": 1,
+      "message": "As you implemented Ben\u0027s solution, this implementation might now fully conform to realloc() behaviour. I mean that you might just \u0027return NULL\u0027 without freeing passed buffer. This will also require changing documentation.",
+      "range": {
+        "startLine": 124,
+        "startChar": 2,
+        "endLine": 124,
+        "endChar": 15
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "099b02d7_b071916d",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T15:47:31Z",
+      "side": 1,
+      "message": "You can just use args here as this is the last place where is used.",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 19
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
