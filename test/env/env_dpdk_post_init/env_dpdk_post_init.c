@@ -36,6 +36,7 @@
 #include "spdk/nvme.h"
 #include "spdk/env.h"
 #include "spdk/env_dpdk.h"
+#include <rte_config.h>
 #include <rte_eal.h>
 
 #define MAX_DEVS 64
