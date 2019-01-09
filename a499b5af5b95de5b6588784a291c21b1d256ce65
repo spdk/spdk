@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a461ff1f_6cbe5e95",
+        "filename": "lib/util/string.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T20:45:32Z",
+      "side": 1,
+      "message": "This function can be shortened to  \n\n  return spdk_vsprintf_realloc(NULL, format, args);",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 19
+      },
+      "revId": "a499b5af5b95de5b6588784a291c21b1d256ce65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
