@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "77121942_dbfa3c59",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 354,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T17:07:03Z",
+      "side": 1,
+      "message": "Just a hint, not a must have but I recently discovered this code in spdk_poller_register() function:\n\n  quotient \u003d period_microseconds / SPDK_SEC_TO_USEC;\n  remainder \u003d period_microseconds % SPDK_SEC_TO_USEC;\n  ticks \u003d spdk_get_ticks_hz();\n  \n  poller-\u003eperiod_ticks \u003d ticks * quotient + (ticks * remainder) / SPDK_SEC_TO_USEC\n\nIt is worth extracting to its separate function and be reused in various places in SPDK tha converts MS/US/NS to ticks.",
+      "range": {
+        "startLine": 353,
+        "startChar": 0,
+        "endLine": 354,
+        "endChar": 88
+      },
+      "revId": "e588f1e6e31e5600c8e22dc4e5ee043bcd9483c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
