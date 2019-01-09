@@ -156,6 +156,8 @@ struct ns_worker_ctx {
 struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
+	struct iovec		iov;
+	uint32_t		iov_offset;
 	uint64_t		submit_tsc;
 	uint16_t		appmask;
 	uint16_t		apptag;
@@ -204,6 +206,7 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
+static bool g_enable_sgl;
 
 static const char *g_core_mask;
 
@@ -734,6 +737,31 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 	}
 }
 
+static void
+task_reset_sgl(void *ref, uint32_t sgl_offset)
+{
+	struct perf_task *task = ref;
+
+	task->iov_offset = sgl_offset;
+}
+
+static int
+task_next_sge(void *ref, void **address, uint32_t *length)
+{
+	struct perf_task *task = ref;
+
+	*address = task->iov.iov_base;
+	*length = task->iov.iov_len;
+
+	if (task->iov_offset) {
+		assert(task->iov_offset <= task->iov.iov_len);
+		*address += task->iov_offset;
+		*length -= task->iov_offset;
+	}
+
+	return 0;
+}
+
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
 
 static int
@@ -743,12 +771,21 @@ nvme_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	task_extended_lba_setup_pi(entry, task, task->lba,
 				   entry->io_size_blocks, false);
 	task->is_read = true;
-	return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-					     task->buf, NULL,
-					     task->lba,
-					     entry->io_size_blocks, io_complete,
-					     task, entry->io_flags,
-					     task->appmask, task->apptag);
+	if (!g_enable_sgl) {
+		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						     task->buf, NULL,
+						     task->lba,
+						     entry->io_size_blocks, io_complete,
+						     task, entry->io_flags,
+						     task->appmask, task->apptag);
+	} else {
+		return spdk_nvme_ns_cmd_readv_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						      task->lba,
+						      entry->io_size_blocks, io_complete,
+						      task, entry->io_flags,
+						      task_reset_sgl, task_next_sge, NULL,
+						      task->appmask, task->apptag);
+	}
 }
 
 static int
@@ -758,12 +795,21 @@ nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	task_extended_lba_setup_pi(entry, task, task->lba,
 				   entry->io_size_blocks, true);
 	task->is_read = false;
-	return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-					      task->buf, NULL,
-					      task->lba,
-					      entry->io_size_blocks, io_complete,
-					      task, entry->io_flags,
-					      task->appmask, task->apptag);
+	if (!g_enable_sgl) {
+		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						      task->buf, NULL,
+						      task->lba,
+						      entry->io_size_blocks, io_complete,
+						      task, entry->io_flags,
+						      task->appmask, task->apptag);
+	} else {
+		return spdk_nvme_ns_cmd_writev_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+						       task->lba,
+						       entry->io_size_blocks, io_complete,
+						       task, entry->io_flags,
+						       task_reset_sgl, task_next_sge, NULL,
+						       task->appmask, task->apptag);
+	}
 }
 
 static void
@@ -924,6 +970,10 @@ allocate_task(struct ns_worker_ctx *ns_ctx, int queue_depth)
 	}
 	memset(task->buf, queue_depth % 8 + 1, max_io_size_bytes);
 
+	task->iov.iov_base = task->buf;
+	task->iov.iov_len = max_io_size_bytes;
+	task->iov_offset = 0;
+
 	task->ns_ctx = ns_ctx;
 
 	return task;
@@ -1064,6 +1114,7 @@ static void usage(char *program_name)
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
+	printf("\t[-v enable SGL for io]\n");
 }
 
 static void
@@ -1464,7 +1515,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:vw:DHILM:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1501,6 +1552,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 't':
 			g_time_in_sec = atoi(optarg);
+			break;
+		case 'v':
+			g_enable_sgl = 1;
 			break;
 		case 'w':
 			workload_type = optarg;
