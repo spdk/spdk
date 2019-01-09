@@ -16,6 +16,24 @@
       "revId": "52f3b86e2a710910b3d543ef1ee59d06ee7e9e81",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "197f4e9f_c8861e2b",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T06:41:56Z",
+      "side": 1,
+      "message": "Please see the page 13 in\nhttps://www.openfabrics.org/images/2018workshop/presentations/307_TOved_T10-DIFOffload.pdf\n\nAs I talked with Sasha at Mellanox in the mailing list, I hope we can integrate DIF offload with SPDK, and I want to align SPDK with the proposed one.\n\nVerification API can know only offset which has DIF error, and it\u0027s easy for the caller to add base block address.\n\nI think returning injected offset is OK for now.",
+      "parentUuid": "ba013dd3_326167a6",
+      "revId": "52f3b86e2a710910b3d543ef1ee59d06ee7e9e81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
