@@ -1451,9 +1451,13 @@ spdk_file_get_name(struct spdk_file *file)
 uint64_t
 spdk_file_get_length(struct spdk_file *file)
 {
+	uint64_t length;
+
 	assert(file != NULL);
-	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s length=0x%jx\n", file->name, file->length);
-	return file->length;
+
+	length = file->append_pos >= file->length ? file->append_pos : file->length;
+	SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "file=%s length=0x%jx\n", file->name, length);
+	return length;
 }
 
 static void
