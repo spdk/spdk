@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "629bbe70_42ca1545",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 4133,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-09T11:36:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3eb21f92_f1889ac5",
+      "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "43b0e397_a327e760",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 17
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-07T21:40:06Z",
       "side": 1,
       "message": "don\u0027t we need to set this to true before we start the spdk_for_each_channel?  otherwise a channel could get created after the for_each process started, and it wouldn\u0027t get a histogram allocated - then later when we try to capture data, we\u0027ll get an error since the channel has no histogram",
+      "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6a1ead2e_0122ea59",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 4161,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-09T11:36:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "43b0e397_a327e760",
       "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7178905e_ace34a10",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 4200,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-09T11:36:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f6ef7adf_5eb441ed",
+      "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac3b9feb_bff7182e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 17
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-07T21:40:06Z",
       "side": 1,
       "message": "could we have the caller pass in the histogram?  then the user is responsible for both allocating and freeing the histogram - it also would allow future enhancements like putting the histogram in shared memory like we\u0027ve talked about in some of our 1x1s",
+      "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a789b00_7d8789bd",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 4261,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-09T11:36:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ac3b9feb_bff7182e",
       "revId": "ed8ad0be66d82160d8c0d0a688c0500e3412c340",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
