@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "669bcdc0_587f44e9",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T06:21:53Z",
+      "side": 1,
+      "message": "If (ctx-\u003edif_flags \u0026 GUARD_CHECK) is false, uninitialized value will be passed to dif_generate().\n\nHence this initialization is necessary.\n\nMoving this initialization to else block may be better.\nI want to keep the change to apply later.",
+      "parentUuid": "81fd872f_440c4501",
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b71203a9_005b7dbd",
         "filename": "lib/util/dif.c",
         "patchSetId": 33
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-09T06:01:46Z",
       "side": 1,
       "message": "Trivial: unnecessary assignment, feel free to remove this.",
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "faa97f84_f58927b1",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T06:21:53Z",
+      "side": 1,
+      "message": "same as above.",
+      "parentUuid": "b71203a9_005b7dbd",
       "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -83,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "aa1bd894_e1865198",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T06:21:53Z",
+      "side": 1,
+      "message": "Yes, this is verification and so source have metadata :-)",
+      "parentUuid": "32a9217e_64e5ede6",
+      "range": {
+        "startLine": 731,
+        "startChar": 36,
+        "endLine": 731,
+        "endChar": 57
+      },
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e2b46fe1_76b865da",
         "filename": "lib/util/dif.c",
         "patchSetId": 33
@@ -118,6 +178,30 @@
       "side": 1,
       "message": "Sorry for that, Please ignore my comment.",
       "parentUuid": "e2b46fe1_76b865da",
+      "range": {
+        "startLine": 737,
+        "startChar": 19,
+        "endLine": 737,
+        "endChar": 44
+      },
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "851f56dc_789ed43c",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T06:21:53Z",
+      "side": 1,
+      "message": "same as above.",
+      "parentUuid": "a488eef9_25c3066c",
       "range": {
         "startLine": 737,
         "startChar": 19,
