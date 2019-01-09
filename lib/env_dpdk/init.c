@@ -39,7 +39,7 @@
 #include "spdk/env_dpdk.h"
 
 #include <rte_config.h>
-#include <rte_eal.h>
+#include <rte_lcore.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
