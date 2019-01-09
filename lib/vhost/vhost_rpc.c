@@ -686,7 +686,7 @@ static void
 spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
-	struct rpc_vhost_nvme_ctrlr req = {0};
+	struct rpc_vhost_nvme_ctrlr req = {};
 	struct spdk_json_write_ctx *w;
 	int rc;
 
@@ -699,7 +699,6 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 
 	rc = spdk_vhost_nvme_dev_construct(req.ctrlr, req.cpumask, req.io_queues);
 	if (rc < 0) {
-		free_rpc_vhost_nvme_ctrlr(&req);
 		goto invalid;
 	}
 
@@ -715,6 +714,7 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 	return;
 
 invalid:
+	free_rpc_vhost_nvme_ctrlr(&req);
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 					 spdk_strerror(-rc));
 
