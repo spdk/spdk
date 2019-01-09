@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "0db095ef_6f0816d2",
+        "filename": "include/spdk/jsonrpc.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T08:23:29Z",
+      "side": 1,
+      "message": "I tried to implement the notification handler callback as part of spdk_jsonrpc_server_poll() but the main issue is that I need to discover relationship between spdk_jsonrpc_request and spdk_jsonrpc_server_conn. Otherwise I won\u0027t be abble to identify on which request to respond when notificaton arrives. Also I won\u0027t be abble to terminate request when client disconnect. So this way or another I will need API to obtain some kind of connection handler for given request.\n\nI\u0027m open to any idea.",
+      "parentUuid": "29f7ad69_2866ff43",
+      "revId": "931674048d3169e79f6958948d0e055e7637043e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4119a10_00da19c3",
         "filename": "include/spdk/jsonrpc.h",
         "patchSetId": 17
