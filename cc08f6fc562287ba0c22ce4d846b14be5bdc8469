@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a0a3ae5_3f1519c8",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-09T22:32:49Z",
+      "side": 1,
+      "message": "I think you mean \"at most 2 mbufs\" not crypto operations per src \u0026 dst",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "586a9aeb_454d5b9b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-09T22:32:49Z",
+      "side": 1,
+      "message": "this only controls the size of the arrays in the crypto submission function, technically you don\u0027t 3x as many crypto ops but no big deal.\n\nmbuf sizing is sort of a \"thumb it\" anyway but to account for the potential increase in number of mbufs allocated you need to change the define just below here",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9dbfb117_cf764f2c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-09T22:32:49Z",
+      "side": 1,
+      "message": "get the crypto ops, src and dst mbufs",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
