@@ -113,7 +113,7 @@ test_read_header(void)
 	re = spdk_gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
-	/* Set head->gpt_signature matched, lba_end usable_lba mismatch */
+	/* Set head->gpt_signature matched, head->my_lba mismatch */
 	to_le32(&head->header_crc32, 0xD637335A);
 	head->gpt_signature[0] = 'E';
 	head->gpt_signature[1] = 'F';
@@ -126,8 +126,14 @@ test_read_header(void)
 	re = spdk_gpt_read_header(gpt);
 	CU_ASSERT(re == -1);
 
+	/* Set head->my_lba matched, lba_end usable_lba mismatch */
+	to_le32(&head->header_crc32, 0xB3CDB2D2);
+	to_le64(&head->my_lba, 0x1);
+	re = spdk_gpt_read_header(gpt);
+	CU_ASSERT(re == -1);
+
 	/* Set gpt->lba_end usable_lba matched, passing case */
-	to_le32(&head->header_crc32, 0x30CB7378);
+	to_le32(&head->header_crc32, 0x5531F2F0);
 	to_le64(&gpt->lba_start, 0x0);
 	to_le64(&gpt->lba_end, 0x2E935FFE);
 	to_le64(&head->first_usable_lba, 0xA);
@@ -239,7 +245,8 @@ test_parse(void)
 	head->gpt_signature[5] = 'A';
 	head->gpt_signature[6] = 'R';
 	head->gpt_signature[7] = 'T';
-	to_le32(&head->header_crc32, 0x30CB7378);
+	to_le32(&head->header_crc32, 0x5531F2F0);
+	to_le64(&head->my_lba, 0x1);
 	to_le64(&gpt->lba_start, 0x0);
 	to_le64(&gpt->lba_end, 0x2E935FFE);
 	to_le64(&head->first_usable_lba, 0xA);
@@ -250,7 +257,7 @@ test_parse(void)
 	/* Set read_partitions passed, all passed */
 	to_le32(&head->size_of_partition_entry, 0x80);
 	to_le64(&head->partition_entry_lba, 0x20);
-	to_le32(&head->header_crc32, 0xE1A08822);
+	to_le32(&head->header_crc32, 0x845A09AA);
 	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
 	to_le32(&head->num_partition_entries, 0x80);
 	re = spdk_gpt_parse(gpt);

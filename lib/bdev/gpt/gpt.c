@@ -121,6 +121,7 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 {
 	uint32_t head_size;
 	uint32_t new_crc, original_crc;
+	uint64_t my_lba;
 	struct spdk_gpt_header *head;
 
 	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
@@ -146,6 +147,13 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 	if (memcmp(SPDK_GPT_SIGNATURE, head->gpt_signature,
 		   sizeof(head->gpt_signature))) {
 		SPDK_ERRLOG("signature did not match\n");
+		return -1;
+	}
+
+	my_lba = from_le64(&head->my_lba);
+	if (my_lba != GPT_PRIMARY_PARTITION_TABLE_LBA) {
+		SPDK_ERRLOG("head my_lba(%"  PRIu64 ") != expected(%d)\n",
+			    my_lba, GPT_PRIMARY_PARTITION_TABLE_LBA);
 		return -1;
 	}
 
