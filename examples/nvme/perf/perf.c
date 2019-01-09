@@ -41,7 +41,7 @@
 #include "spdk/nvme_intel.h"
 #include "spdk/histogram_data.h"
 #include "spdk/endian.h"
-#include "spdk/crc16.h"
+#include "spdk/dif.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -163,6 +163,7 @@ struct perf_task {
 	struct iovec		iov;
 	uint32_t		iov_offset;
 	uint64_t		submit_tsc;
+	struct spdk_dif_ctx	dif_ctx;
 	uint16_t		appmask;
 	uint16_t		apptag;
 	uint64_t		lba;
@@ -633,131 +634,6 @@ aio_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 #endif /* HAVE_LIBAIO */
 
 static void
-task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint64_t lba,
-			   uint32_t lba_count, bool is_write)
-{
-	struct spdk_nvme_protection_info *pi;
-	uint32_t i, pi_offset;
-	uint16_t crc16;
-
-	task->appmask = 0;
-	task->apptag = 0;
-
-	if (!entry->md_interleave) {
-		return;
-	}
-
-	if (entry->pi_type == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
-		return;
-	}
-
-	if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
-		return;
-	}
-
-	/* Type3 don't support REFTAG */
-	if (entry->pi_type == SPDK_NVME_FMT_NVM_PROTECTION_TYPE3) {
-		return;
-	}
-
-	/* PI locates at the first 8 bytes of metadata,
-	 * doesn't support now
-	 */
-	if (entry->pi_loc) {
-		return;
-	}
-
-	if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
-		/* Let's use number of lbas for application tag */
-		task->appmask = 0xffff;
-		task->apptag = lba_count;
-	}
-
-	for (i = 0; i < lba_count; i++) {
-		pi_offset = (entry->block_size * (i + 1)) - 8;
-		pi = (struct spdk_nvme_protection_info *)(task->buf + pi_offset);
-		memset(pi, 0, sizeof(*pi));
-
-		if (is_write) {
-			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
-				/* CRC buffer should not include PI */
-				crc16 = spdk_crc16_t10dif(0, task->buf + entry->block_size * i,
-							  entry->block_size - 8);
-				to_be16(&pi->guard, crc16);
-			}
-			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
-				/* Let's use number of lbas for application tag */
-				to_be16(&pi->app_tag, lba_count);
-			}
-			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
-				to_be32(&pi->ref_tag, (uint32_t)lba + i);
-			}
-		}
-	}
-}
-
-static void
-task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
-			    uint64_t lba, uint32_t lba_count)
-{
-	struct spdk_nvme_protection_info *pi;
-	uint32_t i, pi_offset, ref_tag;
-	uint16_t crc16, guard, app_tag;
-
-	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
-	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
-		return;
-	}
-
-	/* PI locates at the first 8 bytes of metadata,
-	 * doesn't support now
-	 */
-	if (entry->pi_loc) {
-		return;
-	}
-
-	for (i = 0; i < lba_count; i++) {
-		pi_offset = (entry->block_size * (i + 1)) - 8;
-		pi = (struct spdk_nvme_protection_info *)(task->buf + pi_offset);
-
-		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
-			/* CRC buffer should not include last 8 bytes of PI */
-			crc16 = spdk_crc16_t10dif(0, task->buf + entry->block_size * i,
-						  entry->block_size - 8);
-			to_be16(&guard, crc16);
-			if (pi->guard != guard) {
-				fprintf(stdout, "Get Guard Error LBA 0x%16.16"PRIx64","
-					" Preferred 0x%04x but returned with 0x%04x,"
-					" may read the LBA without write it first\n",
-					lba + i, guard, pi->guard);
-			}
-
-		}
-		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
-			/* Previously we used the number of lbas as
-			 * application tag for writes
-			 */
-			to_be16(&app_tag, lba_count);
-			if (pi->app_tag != app_tag) {
-				fprintf(stdout, "Get Application Tag Error LBA 0x%16.16"PRIx64","
-					" Preferred 0x%04x but returned with 0x%04x,"
-					" may read the LBA without write it first\n",
-					lba + i, app_tag, pi->app_tag);
-			}
-		}
-		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
-			to_be32(&ref_tag, (uint32_t)lba + i);
-			if (pi->ref_tag != ref_tag) {
-				fprintf(stdout, "Get Reference Tag Error LBA 0x%16.16"PRIx64","
-					" Preferred 0x%08x but returned with 0x%08x,"
-					" may read the LBA without write it first\n",
-					lba + i, ref_tag, pi->ref_tag);
-			}
-		}
-	}
-}
-
-static void
 task_reset_sgl(void *ref, uint32_t sgl_offset)
 {
 	struct perf_task *task = ref;
@@ -826,8 +702,6 @@ static int
 nvme_dif_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			struct ns_entry *entry, uint64_t offset_in_ios)
 {
-	task_extended_lba_setup_pi(entry, task, task->lba,
-				   entry->io_size_blocks, false);
 	task->is_read = true;
 	if (!g_enable_sgl) {
 		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
@@ -850,8 +724,21 @@ static int
 nvme_dif_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			 struct ns_entry *entry, uint64_t offset_in_ios)
 {
-	task_extended_lba_setup_pi(entry, task, task->lba,
-				   entry->io_size_blocks, true);
+	struct spdk_dif_ctx *dif_ctx = &task->dif_ctx;
+	int rc;
+
+	rc = spdk_dif_ctx_init(dif_ctx, entry->block_size, entry->md_size,
+			       entry->md_interleave, entry->pi_loc, entry->pi_type,
+			       entry->io_flags, task->lba, task->appmask, task->apptag);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, dif_ctx);
+	if (rc != 0) {
+		return rc;
+	}
+
 	task->is_read = false;
 	if (!g_enable_sgl) {
 		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
@@ -884,10 +771,16 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 static void
 nvme_dif_verify_io(struct perf_task *task, struct ns_entry *entry)
 {
+	struct spdk_dif_error err_blk = {};
+	int rc;
+
 	if (spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns) &&
 	    task->is_read && !g_metacfg_pract_flag) {
-		task_extended_lba_pi_verify(entry, task, task->lba,
-					    entry->io_size_blocks);
+		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx, &err_blk);
+		if (rc != 0) {
+			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
+				err_blk.err_type, err_blk.err_offset);
+		}
 	}
 }
 
