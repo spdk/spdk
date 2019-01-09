@@ -242,6 +242,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 	struct iovec *iov;
 	uint32_t type;
 	uint32_t payload_len;
+	uint64_t flush_bytes;
 	int rc;
 
 	if (blk_iovs_setup(bvsession, vq, task->req_idx, task->iovs, &task->iovcnt, &payload_len)) {
@@ -355,6 +356,26 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 		rc = spdk_bdev_write_zeroes(bvdev->bdev_desc, bvsession->io_channel,
 					    desc->sector * 512, desc->num_sectors * 512,
 					    blk_request_complete_cb, task);
+		if (rc) {
+			if (rc == -ENOMEM) {
+				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
+				blk_request_queue_io(task);
+			} else {
+				invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+				return -1;
+			}
+		}
+		break;
+	case VIRTIO_BLK_T_FLUSH:
+		flush_bytes = spdk_bdev_get_num_blocks(bvdev->bdev) * spdk_bdev_get_block_size(bvdev->bdev);
+		if (req->sector != 0) {
+			SPDK_NOTICELOG("sector must be zero for flush command\n");
+			invalid_blk_request(task, VIRTIO_BLK_S_IOERR);
+			return -1;
+		}
+		rc = spdk_bdev_flush(bvdev->bdev_desc, bvsession->io_channel,
+				     0, flush_bytes,
+				     blk_request_complete_cb, task);
 		if (rc) {
 			if (rc == -ENOMEM) {
 				SPDK_DEBUGLOG(SPDK_LOG_VHOST_BLK, "No memory, start to queue io.\n");
@@ -985,6 +1006,9 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	}
 	if (readonly) {
 		features |= (1ULL << VIRTIO_BLK_F_RO);
+	}
+	if (spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH)) {
+		features |= (1ULL << VIRTIO_BLK_F_FLUSH);
 	}
 
 	if (features && rte_vhost_driver_enable_features(bvdev->vdev.path, features)) {
