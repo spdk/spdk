@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "b3c5e186_6b04d739",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T13:52:04Z",
+      "side": 1,
+      "message": "We can imeplement this in SPDK virtio if needed. But the other question is what is intention of this flag in desc-\u003eflags. Is the combination of WRITE_ZEROES + UNMAP something like BLKSECDISCARD ? Otherwise I don\u0027t see reason to have this flag at all.",
+      "parentUuid": "5243df2c_b1b84bd7",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e379b798_efc95f9f",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
