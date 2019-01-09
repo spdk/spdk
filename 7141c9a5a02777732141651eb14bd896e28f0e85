@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0a8f95b3_d4bbcf3f",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-09T09:33:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7e9acb69_e232658d",
+      "range": {
+        "startLine": 136,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 23
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9709a27b_dbfd700c",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 56
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "2de1b224_7b444f06",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-09T09:33:24Z",
+      "side": 1,
+      "message": "Yeah, let\u0027s hope so :-)",
+      "parentUuid": "9709a27b_dbfd700c",
+      "range": {
+        "startLine": 381,
+        "startChar": 5,
+        "endLine": 381,
+        "endChar": 16
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bd54957f_294f90ca",
         "filename": "lib/bdev/ocssd/bdev_ocssd.c",
         "patchSetId": 56
@@ -59,6 +107,30 @@
       "writtenOn": "2019-01-08T13:53:12Z",
       "side": 1,
       "message": "Shouldn\u0027t this be put to function like bdev_ocssd_parse_mode() ?",
+      "range": {
+        "startLine": 530,
+        "startChar": 0,
+        "endLine": 552,
+        "endChar": 3
+      },
+      "revId": "7141c9a5a02777732141651eb14bd896e28f0e85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c364fbb9_f46258e0",
+        "filename": "lib/bdev/ocssd/bdev_ocssd.c",
+        "patchSetId": 56
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-09T09:33:24Z",
+      "side": 1,
+      "message": "It might seem like a good idea, but the function would require almost the whole state to be passed into (sp, opts, val, and i), so it actually makes things less readable in my opinion.",
+      "parentUuid": "bd54957f_294f90ca",
       "range": {
         "startLine": 530,
         "startChar": 0,
