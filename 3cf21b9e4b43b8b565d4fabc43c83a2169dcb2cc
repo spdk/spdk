@@ -19,6 +19,47 @@
     },
     {
       "key": {
+        "uuid": "051d282f_d782f316",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "Thank you, the name doesn\u0027t indicate the behavior at all as you say. How about spdk_sprintf_append_realloc and spdk_vsprintf_append_realloc ?",
+      "parentUuid": "2764a3e5_2668425b",
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "19be7aa0_30e3046b",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "I changed this to call just spdk_vsprintf_append_realloc(NULL, format, args) and then abandoned the next patch.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 19
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5abf6265_6ce58eb2",
         "filename": "lib/util/string.c",
         "patchSetId": 15
@@ -30,6 +71,30 @@
       "writtenOn": "2019-01-09T15:47:31Z",
       "side": 1,
       "message": "sorry, I overlooked this. \u0027return rc + 1\u0027 in get_buffer_size() . I think this should be \u0027\u003c\u003d 0\u0027 or get_buffer_size() should return\n\n  return rc \u003e\u003d 0 ? rc + 1 : rc;\n\nOr maybe you can inline get_buffer_size() ?",
+      "range": {
+        "startLine": 123,
+        "startChar": 5,
+        "endLine": 123,
+        "endChar": 18
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb02e2df_9c3ad909",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "Done, I inlined get_buffer_size().",
+      "parentUuid": "5abf6265_6ce58eb2",
       "range": {
         "startLine": 123,
         "startChar": 5,
@@ -65,6 +130,30 @@
     },
     {
       "key": {
+        "uuid": "373b7894_70d0332e",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "Done. I changed to conform realloc() behavior and updated the doc in the header file.",
+      "parentUuid": "bbc4b524_88dc2b5f",
+      "range": {
+        "startLine": 124,
+        "startChar": 2,
+        "endLine": 124,
+        "endChar": 15
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "29726e5e_4fd2f6d0",
         "filename": "lib/util/string.c",
         "patchSetId": 15
@@ -88,6 +177,30 @@
     },
     {
       "key": {
+        "uuid": "48731d65_2fcaf471",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "29726e5e_4fd2f6d0",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 126,
+        "endChar": 2
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "099b02d7_b071916d",
         "filename": "lib/util/string.c",
         "patchSetId": 15
@@ -99,6 +212,30 @@
       "writtenOn": "2019-01-09T15:47:31Z",
       "side": 1,
       "message": "You can just use args here as this is the last place where is used.",
+      "range": {
+        "startLine": 134,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 19
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be5c1f48_5761ed9f",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-09T23:23:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "099b02d7_b071916d",
       "range": {
         "startLine": 134,
         "startChar": 0,
