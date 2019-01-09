@@ -31,14 +31,6 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <ocf/ocf.h>
-#include <ocf/ocf_types.h>
-#include <ocf/ocf_mngt.h>
-
-#include "ctx.h"
-#include "data.h"
-#include "dobj.h"
-#include "utils.h"
 #include "vbdev_cas.h"
 
 #include "spdk/bdev_module.h"
@@ -46,6 +38,7 @@
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
 #include "spdk_internal/log.h"
+
 
 #define INTEL_OCF_PRODUCT_NAME "Intel(R) CAS"
 
@@ -88,15 +81,15 @@ stop_vbdev(struct vbdev_cas *vbdev)
 		return -EFAULT;
 	}
 
-	if (vbdev->ocf_cache == NULL) {
+	if (!spdk_ocf_cache_exist(vbdev->ocf_data)) {
 		return -EFAULT;
 	}
 
-	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
+	if (!spdk_ocf_cache_is_running(&vbdev->ocf_data)) {
 		return -EINVAL;
 	}
 
-	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
+	rc = spdk_ocf_mngt_cache_stop(&vbdev->ocf_data);
 	if (rc) {
 		SPDK_ERRLOG("Could not stop cache for \"%s\"\n", vbdev->name);
 		return rc;
@@ -123,8 +116,9 @@ remove_base(struct vbdev_cas_base *base)
 	/* Release OCF-part */
 	if (base->is_cache) {
 		rc = stop_vbdev(base->parent);
-	} else if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
-		rc = ocf_mngt_cache_remove_core(base->parent->ocf_cache, base->id, false);
+	} else if (!spdk_ocf_cache_exist(&base->parent->ocf_data) &&
+		   spdk_ocf_cache_is_running(&base->parent->ocf_data)) {
+		rc = spdk_ocf_mngt_cache_remove_core(base->parent->ocf_data, base->id);
 		if (rc) {
 			SPDK_ERRLOG("Could not remove core for \"%s\"\n", base->parent->name);
 		}
@@ -305,57 +299,6 @@ vbdev_cas_get_base_by_name(const char *name)
 	return NULL;
 }
 
-/* OCF queue initialization procedure
- * Called during ocf_cache_start */
-int
-opencas_ctx_queue_init(ocf_queue_t q)
-{
-	return 0;
-}
-
-/* Called during ocf_submit_io, ocf_purge*
- * and any other requests that need to submit io */
-void
-opencas_ctx_queue_kick(ocf_queue_t q)
-{
-}
-
-/* OCF queue deinitialization
- * Called at ocf_cache_stop */
-void
-opencas_ctx_queue_stop(ocf_queue_t q)
-{
-}
-
-/* Called from OCF when SPDK_IO is completed */
-static void
-opencas_io_submit_cb(struct ocf_io *io, int error)
-{
-	struct spdk_bdev_io *bdev_io = io->priv1;
-	struct bdev_ocf_data *data = io->priv2;
-	struct vbdev_cas *vbdev = bdev_io->bdev->ctxt;
-	struct ocf_queue *q;
-	struct vbdev_cas_qcxt *qctx;
-
-	if (error == 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-	} else if (error == -ENOMEM) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_NOMEM);
-	} else {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	}
-
-	if (!ocf_cache_get_queue(vbdev->ocf_cache, io->io_queue, &q)) {
-		qctx = ocf_queue_get_priv(q);
-		if (qctx) {
-			qctx->unfinished_io_cnt--;
-		}
-	}
-
-	ocf_io_put(io);
-	opencas_data_free(data);
-}
-
 /* Configure io parameters and send it to OCF */
 static int
 io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
@@ -371,14 +314,14 @@ io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
 			dir = OCF_WRITE;
 		}
-		ocf_io_configure(io, offset, len, dir, 0, 0);
-		return ocf_submit_io(io);
+		spdk_ocf_io_configure(io, offset, len, dir, 0, 0);
+		return spdk_ocf_submit_io(io);
 	case SPDK_BDEV_IO_TYPE_FLUSH:
-		ocf_io_configure(io, offset, len, OCF_WRITE, 0, OCF_WRITE_FLUSH);
-		return ocf_submit_flush(io);
+		spdk_ocf_io_configure(io, offset, len, OCF_WRITE, 0, OCF_WRITE_FLUSH);
+		return spdk_ocf_submit_flush(io);
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		ocf_io_configure(io, offset, len, 0, 0, 0);
-		return ocf_submit_discard(io);
+		spdk_ocf_io_configure(io, offset, len, 0, 0, 0);
+		return spdk_ocf_submit_discard(io);
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
@@ -405,7 +348,7 @@ io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		goto fail;
 	}
 
-	ocf_io_set_queue(io, ocf_queue_get_id(qctx->queue));
+	spdk_ocf_io_set_queue(io, spdk_ocf_queue_get_id(qctx->queue));
 
 	data = opencas_data_from_spdk_io(bdev_io);
 	if (!data) {
@@ -502,46 +445,6 @@ vbdev_cas_dump_config_info(void *opaque, struct spdk_json_write_ctx *w)
 	return 0;
 }
 
-/* OCF module cleanup */
-static void
-opencas_cleanup(void)
-{
-	opencas_refcnt--;
-	if (opencas_refcnt) {
-		return;
-	}
-
-	opencas_dobj_cleanup();
-	opencas_ctx_cleanup();
-}
-
-/* OCF module initialization */
-static int
-opencas_init(void)
-{
-	int ret;
-
-	opencas_refcnt++;
-	if (opencas_refcnt > 1) {
-		return 0;
-	}
-
-	ret = opencas_ctx_init();
-	if (ret) {
-		opencas_refcnt--;
-		return ret;
-	}
-
-	ret = opencas_dobj_init();
-	if (ret) {
-		opencas_ctx_cleanup();
-		opencas_refcnt--;
-		return ret;
-	}
-
-	return 0;
-}
-
 /* Cache vbdev function table
  * Used by bdev layer */
 static struct spdk_bdev_fn_table cache_dev_fn_table = {
@@ -558,7 +461,7 @@ start_cache(struct vbdev_cas *vbdev)
 {
 	int rc;
 
-	rc = ocf_mngt_cache_start(opencas_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
+	rc = spdk_ocf_mngt_cache_start(&vbdev->ocf_data, &vbdev->cfg);
 	if (rc) {
 		SPDK_ERRLOG("Failed to start cache instance\n");
 		return rc;
@@ -580,7 +483,7 @@ add_core(struct vbdev_cas *vbdev)
 {
 	int rc;
 
-	rc = ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->ocf_core, &vbdev->cfg.core);
+	rc = spdk_ocf_mngt_cache_add_core(&vbdev->ocf_data, &vbdev->ocf_core, &vbdev->cfg.core);
 	if (rc) {
 		SPDK_ERRLOG("Failed to add core device to cache instance\n");
 		return rc;
@@ -627,14 +530,14 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 
 	TAILQ_INSERT_TAIL(&vbdev->queues, qctx, tailq);
 
-	rc = ocf_cache_get_queue(vbdev->ocf_cache, max_queue_id, &qctx->queue);
+	rc = spdk_ocf_cache_get_queue(&vbdev->ocf_data, max_queue_id, &qctx->queue);
 	if (rc) {
 		SPDK_ERRLOG("Could not get CAS queue #%d\n", max_queue_id);
 		assert(false);
 		return rc;
 	}
 
-	ocf_queue_set_priv(qctx->queue, qctx);
+	spdk_ocf_queue_set_priv(qctx->queue, qctx);
 
 	qctx->vbdev      = vbdev;
 	qctx->cache_ch   = spdk_bdev_get_io_channel(vbdev->cache.desc);
