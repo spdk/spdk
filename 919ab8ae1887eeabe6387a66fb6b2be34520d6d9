@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac1f9610_65efde1b",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T17:26:31Z",
+      "side": 1,
+      "message": "This can race with spdk_vhost_blk_start() when you are checking bdev !\u003d NULL to obtain IO channel. Can you set this in bdev_remove_cb() ?",
+      "range": {
+        "startLine": 503,
+        "startChar": 2,
+        "endLine": 503,
+        "endChar": 21
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5869d93d_fd7ed70e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T17:26:31Z",
+      "side": 1,
+      "message": "As always I\u0027m hating this crude casting especially when SPDK_CONTAINEROF() exists.",
+      "range": {
+        "startLine": 507,
+        "startChar": 13,
+        "endLine": 507,
+        "endChar": 54
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83be79e9_0136ab36",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T17:26:31Z",
+      "side": 1,
+      "message": "For separate patch but I realized that this can be \u003e0 as no real work will be done.",
+      "range": {
+        "startLine": 510,
+        "startChar": 84,
+        "endLine": 510,
+        "endChar": 85
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
