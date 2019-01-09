@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba013dd3_326167a6",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 662,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-09T06:32:48Z",
+      "side": 1,
+      "message": "Does it better for users putting the desired block offset ? then the inject_offset used here can be a user\u0027s input variable.",
+      "revId": "52f3b86e2a710910b3d543ef1ee59d06ee7e9e81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
