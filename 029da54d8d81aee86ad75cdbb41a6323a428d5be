@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81fd872f_440c4501",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-09T06:01:46Z",
+      "side": 1,
+      "message": "Trivial: unnecessary assignment, feel free to remove this.",
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b71203a9_005b7dbd",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 728,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-09T06:01:46Z",
+      "side": 1,
+      "message": "Trivial: unnecessary assignment, feel free to remove this.",
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a10cf07_b8a51109",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-09T06:01:46Z",
+      "side": 1,
+      "message": "Maybe a stupid question: if my understanding is correct, the src doesn\u0027t have metadata, so where the src pointed if we do \"src + data_block_size\"?\n\nThanks",
+      "range": {
+        "startLine": 731,
+        "startChar": 36,
+        "endLine": 731,
+        "endChar": 57
+      },
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2b46fe1_76b865da",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 737,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-09T06:01:46Z",
+      "side": 1,
+      "message": "Ditto. src doesn\u0027t have metadata, so does dif.",
+      "range": {
+        "startLine": 737,
+        "startChar": 19,
+        "endLine": 737,
+        "endChar": 44
+      },
+      "revId": "029da54d8d81aee86ad75cdbb41a6323a428d5be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
