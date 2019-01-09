@@ -22,6 +22,30 @@
       "revId": "508f112948d8f624c16981ae860a2f69894a0465",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1d902ade_d3eea5fa",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-09T18:47:51Z",
+      "side": 0,
+      "message": "Ack",
+      "parentUuid": "b335684e_a213f62f",
+      "range": {
+        "startLine": 362,
+        "startChar": 1,
+        "endLine": 369,
+        "endChar": 2
+      },
+      "revId": "508f112948d8f624c16981ae860a2f69894a0465",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
