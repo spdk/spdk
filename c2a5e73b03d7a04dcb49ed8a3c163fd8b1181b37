@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "681a9a19_35a88a83",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 26
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-09T16:34:01Z",
+      "side": 1,
+      "message": "fio does write+read I/O to the second half of the disk and this bdevperf does write+read I/O to the entire disk - potentially conflicting with fio and causing intermittent verification errors. Could we maybe create 2 splits on top of the Virtio bdev and run bdevperf on the first one?",
+      "revId": "c2a5e73b03d7a04dcb49ed8a3c163fd8b1181b37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
