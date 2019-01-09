@@ -15,5 +15,6 @@ function suite()
 timing_enter cas
 
 suite "$testdir/integrity/fio-mallocs.sh"
+suite "$testdir/integrity/bdevperf-iotypes.sh"
 
 timing_exit cas

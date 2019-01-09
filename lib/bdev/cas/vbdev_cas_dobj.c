@@ -280,6 +280,11 @@ opencas_dobj_submit_flush(struct ocf_io *io)
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status;
 
+	if (base->is_cache) {
+		io->end(io, 0);
+		return;
+	}
+
 	prepare_submit(io);
 
 	status = spdk_bdev_flush(
