@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d923217_61fed43a",
+        "filename": "configure",
+        "patchSetId": 41
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-09T07:48:32Z",
+      "side": 1,
+      "message": "It would be best to avoid compiling the OCF during configure. Moving it to the lib compilation would make it more intuitive.\n\nEven better would be to have it be compiled beforehand by the user, not during SPDK compilation. I realize that OCF requires our env, so thats why I\u0027d be fine if only it was moved from configure to make.",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 415,
+        "endChar": 21
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73042fce_f0ffc0c2",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-09T07:48:32Z",
+      "side": 1,
+      "message": "\"OCF device\" might be better here",
+      "range": {
+        "startLine": 683,
+        "startChar": 32,
+        "endLine": 683,
+        "endChar": 54
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b191b45_dc85a673",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-09T07:48:32Z",
+      "side": 1,
+      "message": "Why not use spdk_bdev pointer !\u003d NULL to judge whether it is attached ?",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 39
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "178bf2ab_15ca57c6",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-09T07:48:32Z",
+      "side": 1,
+      "message": "Can we use better naming scheme throughout all patches ?\nInstead of \u0027cas\u0027, use \u0027ocf\u0027. Meaning \u0027exp_bdev\u0027 -\u003e \u0027ocf_bdev\u0027.\nMeanwhile keeping name for cache and core devices.",
+      "range": {
+        "startLine": 124,
+        "startChar": 30,
+        "endLine": 124,
+        "endChar": 38
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4fb22b63_13b766f6",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-09T07:48:32Z",
+      "side": 1,
+      "message": "It shouldn\u0027t matter if the ocf_bdev was registered or vbdev_cas is online.\nIt should be returned when it is created.",
+      "range": {
+        "startLine": 143,
+        "startChar": 3,
+        "endLine": 143,
+        "endChar": 22
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
