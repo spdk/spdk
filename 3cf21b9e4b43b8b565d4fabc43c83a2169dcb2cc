@@ -65,6 +65,29 @@
     },
     {
       "key": {
+        "uuid": "29726e5e_4fd2f6d0",
+        "filename": "lib/util/string.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-09T20:51:57Z",
+      "side": 1,
+      "message": "I tought this a while and I think this should be something like this:\n\n  ...\n  va_copy(args_copy, args);\n  new_size \u003d vsnprintf(NULL, 0, format, args_copy);\n  va_end(args_copy);\n  \n  if (new_size \u003c 0) {\n    return NULL;\n  }\n\n  new_size +\u003d orig_size + 1\n  ...\n\nOtherwise you might be unable to handle all error cases.",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 126,
+        "endChar": 2
+      },
+      "revId": "3cf21b9e4b43b8b565d4fabc43c83a2169dcb2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "099b02d7_b071916d",
         "filename": "lib/util/string.c",
         "patchSetId": 15
