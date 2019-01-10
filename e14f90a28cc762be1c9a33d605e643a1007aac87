@@ -322,6 +322,23 @@
     },
     {
       "key": {
+        "uuid": "9dd350bc_d92905d3",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-10T16:43:18Z",
+      "side": 1,
+      "message": "pthread_mutex_lock can return an error.\nShould be return value checked?",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9bcd7f43_7de64116",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -353,6 +370,23 @@
       "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5b676de7_7130e0ad",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-10T16:43:18Z",
+      "side": 1,
+      "message": "3 blocks above look very similar. The difference is only in status value.\n\nCan be a single cleanup block is used with an additional \"status\" variable?  \nSomething like that:\n\nif (key.nrkey \u003d\u003d 0) {\n\t\t\tSPDK_ERRLOG(\"Can\u0027t register zeroed new key\\n\");\n\t\t\t//goto invalid;\n                        status \u003d SPDK_NVME_SC_INVALID_FIELD\n                        goto exit;\n\t\t}\nexit:\nreq-\u003ersp-\u003envme_cpl.status.sct \u003d SPDK_NVME_SCT_GENERIC;\nreq-\u003ersp-\u003envme_cpl.status.sc \u003d status;\npthread_mutex_unlock(\u0026subsystem-\u003ereservation_lock);\nreturn SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
