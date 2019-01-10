@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "de9be972_52965600",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-10T15:19:00Z",
+      "side": 1,
+      "message": "I\u0027m still not following your explanation for the two scenarios, but having thought about this code path I think I may see a scenario where there is a problem. Tell me if this is the same thing you are describing:\n\n1) A new connection is created in nvmf_tgt_accept and the new_qpair_fn is called. That function returns immediately, without yet adding the qpair to a poll group.\n\n2) The qpair is disconnected by the initiator, generating an RDMA_CM_EVENT_DISCONNECT. The qpair does not yet have a poll group set, so it \"spins\" by sending messages to itself over and over waiting for that to happen.\n\n3) The user application either fails to add the qpair to a poll group or decides to exit, so it calls spdk_nvmf_qpair_disconnect (from any thread, potentially)\n\nAt this point, the loop from step #2 will never exit.\n\nIn order to properly address this, some really tricky threading cases need to be handled. I think we need to modify the code so that if a qpair does not have a poll group assigned, we perform all of the management operations (including disconnect) on the acceptor thread. The problem is that we don\u0027t currently capture the pointer to the acceptor thread today, so that\u0027s going to need to change.\n\nI think we also need something like the refcnt mechanism for calls to the new_qpair_fn to coordinate outstanding messages there with disconnect processing.",
+      "parentUuid": "dde24ecd_b0e244ed",
+      "revId": "611c837474624bc88b53ef06a7e48a12acf39dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f424c3e3_2a83dc9e",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 13
