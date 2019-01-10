@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b43451ac_f880e681",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-10T09:15:19Z",
+      "side": 1,
+      "message": "I\u0027m not sure that changing the return value of this function is necessary if you add the function I suggested and always call it in the transport before calling the user callback. I think it was just a mistake to wait to set the state to activating prior to calling that callback, so that\u0027s all you need to fix here.",
+      "revId": "611c837474624bc88b53ef06a7e48a12acf39dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f424c3e3_2a83dc9e",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-10T09:15:19Z",
+      "side": 1,
+      "message": "Maybe we should add a function here that looks like this:\n\nstatic inline void\nspdk_nvmf_qpair_initialize(struct spdk_nvmf_qpair *qpair, struct spdk_nvmf_transport *transport)\n{\n    assert(qpair !\u003d NULL);\n    qpair-\u003etransport \u003d transport;\n    qpair-\u003estate \u003d SPDK_NVMF_QPAIR_STATE_ACTIVATING;\n}\n\nThen call this inside each of the transports instead. That way you can leave spdk_nvmf_qpair_set_state where it is and with the two asserts still intact.",
+      "revId": "611c837474624bc88b53ef06a7e48a12acf39dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
