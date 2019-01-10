@@ -336,6 +336,23 @@
       "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31515861_79ca2750",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T16:12:01Z",
+      "side": 1,
+      "message": "Actually, just realized this. Don\u0027t we not want this else statement? A controller is allowed to have multiple registrants. Also, multiple registrants can have the same key. So as long as we have done the proper check for reg_hostid, then I think we can go ahead and register the host with the controller.\ni.e.\n\tcase SPDK_NVME_RESERVE_REGISTER_KEY:\n\t\tif (reg_hostid) {\n\t\t\tif (reg_hostid-\u003erkey !\u003d key.nrkey) {\n\t\t\t\tSPDK_ERRLOG(\"The same host already register a \"\n\t\t\t\t\t    \"key with 0x%\"PRIx64\"\\n\",\n\t\t\t\t\t    reg_hostid-\u003erkey);\n\t\t\t\tgoto conflict;\n\t\t\t}\n\t\t}\n\t\telse {\n\t\t\t/* register new controller */\n\t\t\tif (key.nrkey \u003d\u003d 0) {\n\t\t\t\tSPDK_ERRLOG(\"Can\u0027t register zeroed new key\\n\");\n\t\t\t\tgoto invalid;\n\t\t\t}\n\t\t\trc \u003d nvmf_ctrlr_register_registrant(ctrlr, key.nrkey);\n\t\t\tif (!rc) {\n\t\t\t\tgoto invalid;\n\t\t\t}",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
