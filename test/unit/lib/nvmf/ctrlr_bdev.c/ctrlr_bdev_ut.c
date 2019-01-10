@@ -193,6 +193,12 @@ void spdk_bdev_io_get_nvme_status(const struct spdk_bdev_io *bdev_io, int *sct, 
 {
 }
 
+
+void spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	return;
+}
+
 /*
  * Reservation Unit Test Configuration
  *       --------             --------    --------
