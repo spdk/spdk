@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "64d9e7cf_7d81faf2",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-10T15:32:48Z",
+      "side": 1,
+      "message": "Never mind.  I wrote this like 5 different ways including one that supported mbuf chaining which this one does not because it was simpler in that only QAT supports chaining but not AESNI.  Without chaining you are right, you need another crypto op.  Thinking out loud though, remember that the IV is the LBA and is associated with a crypto op.  So right now there is a 1:1 between crypto op, mbuf and IV.  If you split a block sized crpyto op into 2 crypto ops they\u0027re both going to get the same IV but I suppose that\u0027s OK because both crypto operations are operating on the same block just different memory offsets.  I assume that will work but don\u0027t know for sure of course.\n\nAnother approach would be to support chaining for QAT and not for AESNI.  AESNI never needs physical addresses so we don\u0027t have the problem there and with chaining we can just keep one crypto op and add as many src/dst buffers to it as needed to describe the non-contig buffer.  I can work on that when I\u0027m back if you like, I implemented once already a long time ago :)\n\nOr, we can try this as is.... adding chaining would also boost QAT performance",
+      "parentUuid": "197c02a5_217fa75f",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "586a9aeb_454d5b9b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
