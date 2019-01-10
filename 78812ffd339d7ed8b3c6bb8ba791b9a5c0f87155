@@ -46,6 +46,30 @@
       "revId": "78812ffd339d7ed8b3c6bb8ba791b9a5c0f87155",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2748dd80_74d47f7f",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-10T09:55:01Z",
+      "side": 1,
+      "message": "If this should be changed, I\u0027m OK checking this in as-is for now instead of rebasing the entire patch series.",
+      "parentUuid": "487fbb70_81fb9f5a",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 92
+      },
+      "revId": "78812ffd339d7ed8b3c6bb8ba791b9a5c0f87155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
