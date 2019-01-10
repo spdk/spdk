@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "534dae36_b05ea5cb",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 503,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T16:33:20Z",
+      "side": 1,
+      "message": "Oh, that\u0027s bad.\n\nI must change the bdev only after it is no longer referenced in all the sessions and that\u0027s exactly the place - I should probably fire a vhost external event here.\n\nThe same probably applies to SCSI.",
+      "parentUuid": "014965ef_aca463fd",
+      "range": {
+        "startLine": 503,
+        "startChar": 2,
+        "endLine": 503,
+        "endChar": 21
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5869d93d_fd7ed70e",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
@@ -72,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "0d5c5fac_e85abf92",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T16:33:20Z",
+      "side": 1,
+      "message": "In my opinion it\u0027s not really a case for SPDK_CONTAINEROF as we depend on the fact that vsession is the first field in bvsession.",
+      "parentUuid": "5869d93d_fd7ed70e",
+      "range": {
+        "startLine": 507,
+        "startChar": 13,
+        "endLine": 507,
+        "endChar": 54
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83be79e9_0136ab36",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
@@ -83,6 +131,30 @@
       "writtenOn": "2019-01-09T17:26:31Z",
       "side": 1,
       "message": "For separate patch but I realized that this can be \u003e0 as no real work will be done.",
+      "range": {
+        "startLine": 510,
+        "startChar": 84,
+        "endLine": 510,
+        "endChar": 85
+      },
+      "revId": "919ab8ae1887eeabe6387a66fb6b2be34520d6d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ba43daa_5d15194f",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 510,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T16:33:20Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "83be79e9_0136ab36",
       "range": {
         "startLine": 510,
         "startChar": 84,
