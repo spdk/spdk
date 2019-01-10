@@ -21,7 +21,17 @@ $testdir/pci/pci_ut
 timing_exit pci
 
 timing_enter env_dpdk_post_init
-$testdir/env_dpdk_post_init/env_dpdk_post_init
+argv=""
+if [ `uname` = Linux ]; then
+	# The default base virtaddr falls into a region reserved by ASAN.
+	# DPDK will try to find the nearest available address space by
+	# trying to do mmap over and over, which will take ages to finish.
+	# We speed up the process by specifying an address that's not
+	# supposed to be reserved by ASAN. Regular SPDK applications do
+	# this implicitly.
+	argv+="--base-virtaddr=0x200000000000"
+fi
+$testdir/env_dpdk_post_init/env_dpdk_post_init $argv
 timing_exit env_dpdk_post_init
 
 report_test_completion "env"
