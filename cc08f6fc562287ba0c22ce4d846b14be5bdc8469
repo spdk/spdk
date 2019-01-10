@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "197c02a5_217fa75f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-10T15:15:50Z",
+      "side": 1,
+      "message": "I don\u0027t think we will ever need an extra crypto operation since all we\u0027re doing here is chaining more mbufs to the existing operation. I don\u0027t understand why you think we need an extra op?\n\nIf you take the case you just mentioned and walk through the code below I still only see one crypto_op for the 4K transfer with some number of src mbufs and some number of dst mbufs depending on how contiguous the src/dst blocks are.\n\nRight?",
+      "parentUuid": "06709796_2a760b74",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "586a9aeb_454d5b9b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
