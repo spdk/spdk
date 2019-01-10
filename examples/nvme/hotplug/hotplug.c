@@ -50,6 +50,7 @@ struct dev_ctx {
 	uint64_t		prev_io_completed;
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
+	uint64_t		timeout_us;
 	char			name[1024];
 };
 
@@ -74,6 +75,26 @@ static int g_shm_id = -1;
 static void
 task_complete(struct perf_task *task);
 
+static bool
+probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	 struct spdk_nvme_ctrlr_opts *opts);
+
+static void
+attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts);
+
+static void
+remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+
+static void
+timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+{
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
+	}
+}
+
 static void
 register_dev(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -92,6 +113,9 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 	dev->is_new = true;
 	dev->is_removed = false;
 	dev->is_draining = false;
+	dev->timeout_us = 1000000;
+
+	spdk_nvme_ctrlr_register_timeout_callback(ctrlr, dev->timeout_us, timeout_cb, NULL);
 
 	dev->ns = spdk_nvme_ctrlr_get_ns(ctrlr, 1);
 
