@@ -57,12 +57,6 @@ _iov_iter_init(struct _iov_iter *i, struct iovec *iovs, int iovcnt)
 	i->iov_offset = 0;
 }
 
-static inline bool
-_iov_iter_cont(struct _iov_iter *i)
-{
-	return i->iovcnt != 0;
-}
-
 static inline void
 _iov_iter_advance(struct _iov_iter *i, uint32_t step)
 {
@@ -267,7 +261,7 @@ dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
@@ -293,7 +287,7 @@ _dif_generate_split(struct _iov_iter *iter, uint32_t offset_blocks,
 	guard = 0;
 	offset_in_block = 0;
 
-	while (offset_in_block < ctx->block_size && _iov_iter_cont(iter)) {
+	while (offset_in_block < ctx->block_size) {
 		_iov_iter_get_buf(iter, &buf, &buf_len);
 
 		if (offset_in_block < ctx->guard_interval) {
@@ -336,7 +330,7 @@ dif_generate_split(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		_dif_generate_split(&iter, offset_blocks, ctx);
 		offset_blocks++;
 	}
@@ -492,7 +486,7 @@ dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
 		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
@@ -523,7 +517,7 @@ _dif_verify_split(struct _iov_iter *iter, uint32_t offset_blocks,
 	guard = 0;
 	offset_in_block = 0;
 
-	while (offset_in_block < ctx->block_size && _iov_iter_cont(iter)) {
+	while (offset_in_block < ctx->block_size) {
 		_iov_iter_get_buf(iter, &buf, &buf_len);
 
 		if (offset_in_block < ctx->guard_interval) {
@@ -562,7 +556,7 @@ dif_verify_split(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		rc = _dif_verify_split(&iter, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
@@ -608,8 +602,7 @@ dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&src_iter) && _iov_iter_cont(&dst_iter)) {
+	while (offset_blocks < num_blocks) {
 
 		_iov_iter_get_buf(&src_iter, &src, NULL);
 		_iov_iter_get_buf(&dst_iter, &dst, NULL);
@@ -646,7 +639,7 @@ _dif_generate_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 	guard = 0;
 	offset_in_block = 0;
 
-	while (offset_in_block < data_block_size && _iov_iter_cont(src_iter)) {
+	while (offset_in_block < data_block_size) {
 		/* Compute CRC over split logical block data and copy
 		 * data to bounce buffer.
 		 */
@@ -685,8 +678,7 @@ dif_generate_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 	_iov_iter_init(&src_iter, iovs, iovcnt);
 	_iov_iter_init(&dst_iter, bounce_iov, 1);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&src_iter) && _iov_iter_cont(&dst_iter)) {
+	while (offset_blocks < num_blocks) {
 		_dif_generate_copy_split(&src_iter, &dst_iter, offset_blocks, ctx);
 		offset_blocks++;
 	}
@@ -736,8 +728,7 @@ dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 
 	data_block_size = ctx->block_size - ctx->md_size;
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&src_iter) &&
-	       _iov_iter_cont(&dst_iter)) {
+	while (offset_blocks < num_blocks) {
 
 		_iov_iter_get_buf(&src_iter, &src, NULL);
 		_iov_iter_get_buf(&dst_iter, &dst, NULL);
@@ -821,8 +812,7 @@ dif_verify_copy_split(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 	_iov_iter_init(&src_iter, bounce_iov, 1);
 	_iov_iter_init(&dst_iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&src_iter) && _iov_iter_cont(&dst_iter)) {
+	while (offset_blocks < num_blocks) {
 		rc = _dif_verify_copy_split(&src_iter, &dst_iter, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
@@ -886,7 +876,7 @@ _dif_inject_error(struct iovec *iovs, int iovcnt,
 
 	offset_in_block = 0;
 
-	while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+	while (offset_in_block < block_size) {
 		_iov_iter_get_buf(&iter, &buf, &buf_len);
 		buf_len = spdk_min(buf_len, block_size - offset_in_block);
 
@@ -1017,8 +1007,7 @@ dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_iov_iter_init(&data_iter, iovs, iovcnt);
 	_iov_iter_init(&md_iter, md_iov, 1);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+	while (offset_blocks < num_blocks) {
 
 		_iov_iter_get_buf(&data_iter, &data_buf, NULL);
 		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
@@ -1054,7 +1043,7 @@ _dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 
 	offset_in_block = 0;
 
-	while (offset_in_block < ctx->block_size && _iov_iter_cont(data_iter)) {
+	while (offset_in_block < ctx->block_size) {
 		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
 		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
 
@@ -1082,8 +1071,7 @@ dix_generate_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_iov_iter_init(&data_iter, iovs, iovcnt);
 	_iov_iter_init(&md_iter, md_iov, 1);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+	while (offset_blocks < num_blocks) {
 		_dix_generate_split(&data_iter, &md_iter, offset_blocks, ctx);
 		offset_blocks++;
 	}
@@ -1127,8 +1115,7 @@ dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_iov_iter_init(&data_iter, iovs, iovcnt);
 	_iov_iter_init(&md_iter, md_iov, 1);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+	while (offset_blocks < num_blocks) {
 
 		_iov_iter_get_buf(&data_iter, &data_buf, NULL);
 		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
@@ -1170,7 +1157,7 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 
 	offset_in_block = 0;
 
-	while (offset_in_block < ctx->block_size && _iov_iter_cont(data_iter)) {
+	while (offset_in_block < ctx->block_size) {
 		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
 		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
 
@@ -1200,8 +1187,7 @@ dix_verify_split(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	_iov_iter_init(&data_iter, iovs, iovcnt);
 	_iov_iter_init(&md_iter, md_iov, 1);
 
-	while (offset_blocks < num_blocks &&
-	       _iov_iter_cont(&data_iter) && _iov_iter_cont(&md_iter)) {
+	while (offset_blocks < num_blocks) {
 		rc = _dix_verify_split(&data_iter, &md_iter, offset_blocks, ctx, err_blk);
 		if (rc != 0) {
 			return rc;
