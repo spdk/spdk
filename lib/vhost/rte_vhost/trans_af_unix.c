@@ -724,8 +724,18 @@ static int
 af_unix_vring_call(struct virtio_net *dev __rte_unused,
 		   struct vhost_virtqueue *vq)
 {
-	if (vq->callfd >= 0)
-		eventfd_write(vq->callfd, (eventfd_t)1);
+	if (vq->callfd >= 0) {
+		int ret;
+		ret = eventfd_write(vq->callfd, (eventfd_t)1);
+
+		RTE_LOG(DEBUG, VHOST_CONFIG, "%s vq_idx %u callfd %d"
+				" (eventfd_write returned with %d)\n",
+				__func__,
+				vq->vring_idx,
+				vq->callfd,
+				ret);
+		return ret;
+	}
 	return 0;
 }
 
