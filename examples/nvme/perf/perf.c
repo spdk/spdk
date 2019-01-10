@@ -1563,7 +1563,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries, ns_size, sector_size;
+	uint32_t max_xfer_size, entries, ns_size, sector_size, md_size;
+	bool md_interleave;
 	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -1584,6 +1585,16 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "ns size %u / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       ns_size, sector_size, g_io_size_bytes);
+		g_warn = true;
+		return;
+	}
+
+	md_size = spdk_nvme_ns_get_md_size(ns);
+	md_interleave = spdk_nvme_ns_supports_extended_lba(ns);
+
+	if (md_size != 0 && !md_interleave) {
+		printf("Controller %-20.20s (%-20.20s): Skipping ns %u formatted with separate metadata\n",
+		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns));
 		g_warn = true;
 		return;
 	}
@@ -1619,8 +1630,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->io_size_blocks = g_io_size_bytes / sector_size;
 
 	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
-	entry->md_size = spdk_nvme_ns_get_md_size(ns);
-	entry->md_interleave = spdk_nvme_ns_supports_extended_lba(ns);
+	entry->md_size = md_size;
+	entry->md_interleave = md_interleave;
 	entry->pi_loc = spdk_nvme_ns_get_data(ns)->dps.md_start;
 	entry->pi_type = spdk_nvme_ns_get_pi_type(ns);
 
