@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dde24ecd_b0e244ed",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-10T12:13:51Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nMy purpose is to differentiate the following two cases:\n\n1  Failure happens in the accepted core, the qpair state is Uninitialized.\n2  The failure happening to the schedule core via Round robin.\n\nAnd you can see our current code in spdk_nvmf_qpair_disconnect. We judge qpair is uninitialized, then we just return. However, even in uninitialized state, it may not fail. Since there is a window. So I need to set it to activating state early. \nIf we call set the state before cb_fn, we still can not differentiate such case. And set the state before cb_fn, cannot solve the window I mentioned.",
+      "parentUuid": "b43451ac_f880e681",
+      "revId": "611c837474624bc88b53ef06a7e48a12acf39dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f424c3e3_2a83dc9e",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 13
