@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf07bd34_9d806b46",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T15:22:53Z",
+      "side": 1,
+      "message": "diffrent-\u003edifferent\nconfiguration-\u003econfigurations",
+      "range": {
+        "startLine": 9,
+        "startChar": 87,
+        "endLine": 9,
+        "endChar": 95
+      },
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98ecf749_e678238d",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T15:22:53Z",
+      "side": 1,
+      "message": "Do you mean to say you will test it against all of the NVMe transports (i.e. PCIe, RDMA, TCP, FC), or that you will test different configurations with each of the transports?",
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d13d5bcb_42e264f1",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T15:22:53Z",
+      "side": 1,
+      "message": "How is line 14 different from line 19?",
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
