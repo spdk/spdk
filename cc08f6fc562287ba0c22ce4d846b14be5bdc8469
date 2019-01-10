@@ -73,6 +73,24 @@
     },
     {
       "key": {
+        "uuid": "7298a6d6_cabfe03f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "In _crypto_operation I still see the crypto_index incremented for every contiguous buffer (line #740). The crypto_len in that function describes the contiguous region which can be possibly smaller than a single block.bytes.",
+      "parentUuid": "197c02a5_217fa75f",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "586a9aeb_454d5b9b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
@@ -122,6 +140,195 @@
       "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fdd89ac_d531d9f4",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ for the simplest case let\u0027s assume crypto_len is set exactly to blocklen in here.",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd893c02_091f7182",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ crypto_len is shrinked to describe the biggest possible contiguous memory region in our src buffer.",
+      "range": {
+        "startLine": 671,
+        "startChar": 73,
+        "endLine": 671,
+        "endChar": 83
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b14c85da_93e528e6",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ we start initializing a crypto_op",
+      "range": {
+        "startLine": 678,
+        "startChar": 37,
+        "endLine": 678,
+        "endChar": 61
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c7cd355_e3ba6bf7",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 685,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ we link src buffer with the crypto op",
+      "range": {
+        "startLine": 685,
+        "startChar": 2,
+        "endLine": 685,
+        "endChar": 38
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "69ff6dcf_6ed97d5f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 687,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "(This is actually a NOP since we override crypto_op-\u003em_dst in line #703.)",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73452a48_43033187",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ we shrink the crypto_len even more, it\u0027s now the smallest contiguous region of both src and dst buffers.",
+      "range": {
+        "startLine": 701,
+        "startChar": 12,
+        "endLine": 701,
+        "endChar": 22
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "145cf276_bcb3a3ee",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 703,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ we link dst buffer with the crypto op",
+      "range": {
+        "startLine": 703,
+        "startChar": 3,
+        "endLine": 703,
+        "endChar": 39
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4e479c8_ff12f74b",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ we set the crypto_op length to the biggest possible contiguous memory size - possibly 128, 512, or even something like 71.",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6993788_1777d2ab",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:56:59Z",
+      "side": 1,
+      "message": "^ increment the index, hence officially stop setting up that crypto_op and get to the next one",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 14
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
