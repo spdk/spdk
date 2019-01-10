@@ -1038,10 +1038,6 @@ _dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 	_iov_iter_get_buf(md_iter, &md_buf, NULL);
 
 	guard = 0;
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
-		guard = spdk_crc16_t10dif(0, md_buf, ctx->guard_interval);
-	}
-
 	offset_in_block = 0;
 
 	while (offset_in_block < ctx->block_size) {
@@ -1054,6 +1050,10 @@ _dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 
 		_iov_iter_advance(data_iter, data_buf_len);
 		offset_in_block += data_buf_len;
+	}
+
+	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 	}
 
 	_iov_iter_advance(md_iter, ctx->md_size);
@@ -1152,10 +1152,6 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 	_iov_iter_get_buf(md_iter, &md_buf, NULL);
 
 	guard = 0;
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
-		guard = spdk_crc16_t10dif(0, md_buf, ctx->guard_interval);
-	}
-
 	offset_in_block = 0;
 
 	while (offset_in_block < ctx->block_size) {
@@ -1168,6 +1164,10 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 
 		_iov_iter_advance(data_iter, data_buf_len);
 		offset_in_block += data_buf_len;
+	}
+
+	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 	}
 
 	_iov_iter_advance(md_iter, ctx->md_size);
