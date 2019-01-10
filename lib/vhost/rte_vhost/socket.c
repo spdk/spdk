@@ -292,7 +292,6 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 
 	ret = vhost_user_msg_handler(conn->vid, connfd);
 	if (ret < 0) {
-		close(connfd);
 		*remove = 1;
 		vhost_destroy_device(conn->vid);
 
@@ -301,6 +300,10 @@ vhost_user_read_cb(int connfd, void *dat, int *remove)
 
 		pthread_mutex_lock(&vsocket->conn_mutex);
 		TAILQ_REMOVE(&vsocket->conn_list, conn, next);
+		if (conn->connfd != -1) {
+			close(conn->connfd);
+			conn->connfd = -1;
+		}
 		pthread_mutex_unlock(&vsocket->conn_mutex);
 
 		free(conn);
@@ -736,6 +739,7 @@ rte_vhost_driver_unregister(const char *path)
 			pthread_mutex_lock(&vsocket->conn_mutex);
 			TAILQ_FOREACH(conn, &vsocket->conn_list, next) {
 				close(conn->connfd);
+				conn->connfd = -1;
 			}
 			pthread_mutex_unlock(&vsocket->conn_mutex);
 
