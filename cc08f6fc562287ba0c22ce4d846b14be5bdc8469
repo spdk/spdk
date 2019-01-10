@@ -350,6 +350,30 @@
     },
     {
       "key": {
+        "uuid": "0fcf634b_c545f8aa",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-10T21:01:14Z",
+      "side": 1,
+      "message": "I never had to use this field but it does make sense that it should be the offset into the current block size.",
+      "parentUuid": "d3bef9da_1965fe6e",
+      "range": {
+        "startLine": 730,
+        "startChar": 45,
+        "endLine": 730,
+        "endChar": 52
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f6993788_1777d2ab",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
@@ -361,6 +385,30 @@
       "writtenOn": "2019-01-10T15:56:59Z",
       "side": 1,
       "message": "^ increment the index, hence officially stop setting up that crypto_op and get to the next one",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 14
+      },
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e391e6cc_eab58dab",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-10T21:01:14Z",
+      "side": 1,
+      "message": "Yes but again here is my concern.  Let say we have:\ncrypto op A: LBA 5. src 0x100, dst 0x100, len 0x1000.  Here we set the IV to 5 so the encrypted data at 0x100 can be read later on using the same IV which would be supplied by someone reading from LBA 5\n\nNow lets say this op has to be broken into 2:\ncrypto op B: LBA 6 scr 0x1000, dst 0x1000 len 0x1000 but lets say src is broken into 2 0x800 segments:\n\ncrypto op B1: LBA6 sec 0x1000, 0xdst 0x1000 len 0x800\ncrypto op B2: LBA6 sec 0x1800, 0xdst 0x1800 len 0x800\n\nMy question would b on a subsequent read to LBA6 for 0x1000, would the fact that we used the same IV when we encrypted the first 2K as did the 2nd 2K be any kind of a problem? I have no idea.  We can ask Fiona or devise a test but either way you\u0027re right about needing to add the offset I think.  I\u0027d never tried to do sub-block sizes crypto operations before",
+      "parentUuid": "f6993788_1777d2ab",
       "range": {
         "startLine": 740,
         "startChar": 2,
