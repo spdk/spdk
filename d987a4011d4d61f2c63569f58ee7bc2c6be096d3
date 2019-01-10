@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "39698477_17050726",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T16:55:58Z",
+      "side": 1,
+      "message": "I found the following paragraph in the spec:\n  When a reservation is released as a result of actions \n  described in this section and the reservation type is\n  not Write Exclusive or Exclusive Access, a reservation \n  released notification occurs on all controllers in the\n  NVM subsystem that are associated with hosts that are \n  registrants except for controllers that are associated\n  with the host that issued the Reservation Release command\nI couldn\u0027t find much more information about this in the spec other than in section 5.21 in the set_features command description.\n\nDoes this mean that whenever we do this, we need to send a set_features command to all of the other controllers?",
+      "revId": "d987a4011d4d61f2c63569f58ee7bc2c6be096d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6fccc59b_411e55ca",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 957,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T16:55:58Z",
+      "side": 1,
+      "message": "Could you do TAILQ_REMOVE(\u0026ns-\u003eholder-\u003ens_head, ns, link); and remove line 956?",
+      "revId": "d987a4011d4d61f2c63569f58ee7bc2c6be096d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
