@@ -91,6 +91,24 @@
     },
     {
       "key": {
+        "uuid": "a65ce60c_448a879a",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T16:08:37Z",
+      "side": 1,
+      "message": "Oh ok, I missed your last message.",
+      "parentUuid": "7298a6d6_cabfe03f",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "586a9aeb_454d5b9b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
@@ -303,6 +321,29 @@
       "writtenOn": "2019-01-10T15:56:59Z",
       "side": 1,
       "message": "^ we set the crypto_op length to the biggest possible contiguous memory size - possibly 128, 512, or even something like 71.",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d3bef9da_1965fe6e",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T16:08:37Z",
+      "side": 1,
+      "message": "is this correct then, or should it be an offset within that crypto block size?",
+      "range": {
+        "startLine": 730,
+        "startChar": 45,
+        "endLine": 730,
+        "endChar": 52
+      },
       "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
