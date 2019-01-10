@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "06709796_2a760b74",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T10:10:02Z",
+      "side": 1,
+      "message": "If you\u0027re encrypting a single 4k block but both the src and dst buffer needs to be split, then you\u0027ll theoretically end up with 3 different rte_crypto_op.\n\nCould you elaborate on that comment? I didn\u0027t really get your point.",
+      "parentUuid": "1a0a3ae5_3f1519c8",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "586a9aeb_454d5b9b",
         "filename": "lib/bdev/crypto/vbdev_crypto.c",
         "patchSetId": 6
@@ -50,6 +68,24 @@
       "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6223fc8_06defa62",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T10:10:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9dbfb117_cf764f2c",
+      "revId": "cc08f6fc562287ba0c22ce4d846b14be5bdc8469",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
