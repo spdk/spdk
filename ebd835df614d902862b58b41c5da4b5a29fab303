@@ -22,6 +22,30 @@
       "revId": "ebd835df614d902862b58b41c5da4b5a29fab303",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1199074_ea39301c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T15:09:55Z",
+      "side": 1,
+      "message": "I don\u0027t think that\u0027s true. This is a per-poll group cache which means it is only being accessed from a single thread of execution.\nAs I take buffers from the free_bufs STAILQ, I place them on the head of busy_bufs, then I do the reverse in this process.\nSince I only free as many buffers as I allocated, There is no way to access another request\u0027s buffers since nobody will have touched the STAILQs in the meantime.",
+      "parentUuid": "ca12cab8_d348c143",
+      "range": {
+        "startLine": 1211,
+        "startChar": 2,
+        "endLine": 1214,
+        "endChar": 59
+      },
+      "revId": "ebd835df614d902862b58b41c5da4b5a29fab303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
