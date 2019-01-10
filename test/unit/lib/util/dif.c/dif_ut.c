@@ -54,9 +54,9 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
-		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+		while (offset_in_block < block_size) {
 			_iov_iter_get_buf(&iter, &buf, &buf_len);
 			if (offset_in_block < block_size - md_size) {
 				buf_len = spdk_min(buf_len,
@@ -90,9 +90,9 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
 
-	while (offset_blocks < num_blocks && _iov_iter_cont(&iter)) {
+	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
-		while (offset_in_block < block_size && _iov_iter_cont(&iter)) {
+		while (offset_in_block < block_size) {
 			_iov_iter_get_buf(&iter, (void *)&buf, &buf_len);
 
 			if (offset_in_block < block_size - md_size) {
