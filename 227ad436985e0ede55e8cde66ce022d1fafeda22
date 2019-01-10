@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0c924ad_2c8304ac",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-10T15:00:22Z",
+      "side": 1,
+      "message": "True, most of this documentation belongs in spdk_vhost_dev_foreach_session().",
+      "parentUuid": "f7ea3476_9af1b2b7",
+      "revId": "227ad436985e0ede55e8cde66ce022d1fafeda22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46a3a6d6_bf3178e4",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 14
