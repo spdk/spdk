@@ -90,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "0ed14d00_816f2ed0",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-10T00:47:50Z",
+      "side": 1,
+      "message": "It\u0027s a very very rare scenario, I don\u0027t want to implement it in SPDK.",
+      "parentUuid": "b3c5e186_6b04d739",
+      "revId": "b57960fd930fe90a04bb4b4762c22735546470d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e379b798_efc95f9f",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 14
