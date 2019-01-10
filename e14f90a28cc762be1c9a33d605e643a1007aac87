@@ -282,6 +282,23 @@
     },
     {
       "key": {
+        "uuid": "37410e01_95d18a22",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 606,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T16:03:09Z",
+      "side": 1,
+      "message": "After reading the spec on this for a while, it looks to me like you\u0027ve implemented it exactly.",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70801516_750d3119",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -299,6 +316,23 @@
         "endLine": 615,
         "endChar": 8
       },
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bcd7f43_7de64116",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-10T16:03:09Z",
+      "side": 1,
+      "message": "Do we also want to fail on 10b Set PTPL state to 0, or do we support changing it that way and not the other way?",
       "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
