@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ca12cab8_d348c143",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1214,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-10T07:37:30Z",
+      "side": 1,
+      "message": "I do not think the this check is right here, it may free other req\u0027s buffer_entry.",
+      "range": {
+        "startLine": 1211,
+        "startChar": 2,
+        "endLine": 1214,
+        "endChar": 59
+      },
+      "revId": "ebd835df614d902862b58b41c5da4b5a29fab303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
