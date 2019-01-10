@@ -22,6 +22,30 @@
       "revId": "78812ffd339d7ed8b3c6bb8ba791b9a5c0f87155",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "487fbb70_81fb9f5a",
+        "filename": "test/rpc_client/rpc_client_test.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-10T09:53:09Z",
+      "side": 1,
+      "message": "Hmmm - I was looking at this earlier and thought I understood what it was trying to do.  But now I\u0027m not so sure.  So now I have the same question as Shuhei.\n\nI\u0027m thinking this should just return an error if rc !\u003d 0 - what is the case where the call on line 176 should return something besides 0?",
+      "parentUuid": "5b4e0245_fc485e35",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 179,
+        "endChar": 92
+      },
+      "revId": "78812ffd339d7ed8b3c6bb8ba791b9a5c0f87155",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
