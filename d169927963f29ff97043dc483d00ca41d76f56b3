@@ -16,6 +16,24 @@
       "revId": "d169927963f29ff97043dc483d00ca41d76f56b3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65473445_4e9d9996",
+        "filename": "test/iscsi_tgt/iscsi_tgt.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-10T14:48:20Z",
+      "side": 1,
+      "message": "Thanks for pointing that out. Removed this comment as ISCSI_TEST_CORE_MASK is not used in this file.",
+      "parentUuid": "2614a381_100cb864",
+      "revId": "d169927963f29ff97043dc483d00ca41d76f56b3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
