@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f7ea3476_9af1b2b7",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-10T08:39:14Z",
+      "side": 1,
+      "message": "Separating params and behavior may be kind for reader.\n\nIf the device ha sbeen deleted in the meantime, this function will be called on last time with vdev \u003d\u003d NULL.\n\n\\param vdev vhost device.\n\\param vsession vhost session.\n\\param arg user-provided parameter.",
+      "revId": "227ad436985e0ede55e8cde66ce022d1fafeda22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46a3a6d6_bf3178e4",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-10T08:39:14Z",
+      "side": 1,
+      "message": "Only a session is passed to this function. So this sentence should be moved to spdk_vhost_dev_foreach_session()?",
+      "range": {
+        "startLine": 200,
+        "startChar": 37,
+        "endLine": 201,
+        "endChar": 20
+      },
+      "revId": "227ad436985e0ede55e8cde66ce022d1fafeda22",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
