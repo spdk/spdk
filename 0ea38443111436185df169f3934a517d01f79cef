@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae533f7b_590d3468",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1156,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-10T08:02:26Z",
+      "side": 1,
+      "message": "Maybe \"A SGL element\"?",
+      "range": {
+        "startLine": 1156,
+        "startChar": 17,
+        "endLine": 1156,
+        "endChar": 28
+      },
+      "revId": "0ea38443111436185df169f3934a517d01f79cef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
