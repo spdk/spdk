@@ -143,6 +143,7 @@ struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
 	struct iovec		iov;
+	struct iovec		md_iov;
 	uint64_t		submit_tsc;
 	uint16_t		appmask;
 	uint16_t		apptag;
@@ -226,21 +227,38 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 static void
 nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 {
-	uint32_t max_io_size_bytes;
+	struct ns_entry *entry = task->ns_ctx->entry;
+	uint32_t io_size_bytes, md_size_bytes;
 
-	/* maximum extended lba format size from all active namespace,
-	 * it's same with g_io_size_bytes for namespace without metadata.
-	 */
-	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-	task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+	/* Set up data buffer */
+	io_size_bytes = entry->io_size_blocks * entry->block_size;
+
+	task->buf = spdk_dma_zmalloc(io_size_bytes, g_io_align, NULL);
 	if (task->buf == NULL) {
-		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
+		fprintf(stderr, "spdk_dma_zmalloc() for task->buf failed\n");
 		exit(1);
 	}
-	memset(task->buf, pattern, max_io_size_bytes);
 
 	task->iov.iov_base = task->buf;
-	task->iov.iov_len = max_io_size_bytes;
+	task->iov.iov_len = io_size_bytes;
+
+	memset(task->buf, pattern, io_size_bytes);
+
+	/* Set up metadata buffer if separate metadata */
+	if (entry->md_size != 0 && !entry->md_interleave) {
+		md_size_bytes = entry->io_size_blocks * entry->md_size;
+
+		task->md_iov.iov_base = spdk_dma_zmalloc(md_size_bytes, g_io_align, NULL);
+		if (task->md_iov.iov_base == NULL) {
+			spdk_dma_free(task->buf);
+			fprintf(stderr, "spdk_dma_zmalloc() for task->md_buf failed\n");
+			exit(1);
+		}
+
+		task->md_iov.iov_len = md_size_bytes;
+
+		memset(task->md_iov.iov_base, pattern, md_size_bytes);
+	}
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
@@ -253,7 +271,7 @@ nvme_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	task->is_read = true;
 
 	return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-					     task->buf, NULL,
+					     task->buf, task->md_iov.iov_base,
 					     task->lba,
 					     entry->io_size_blocks, io_complete,
 					     task, entry->io_flags,
@@ -278,14 +296,20 @@ nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			return rc;
 		}
 
-		rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
+		if (entry->md_interleave) {
+			rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks,
+					       &task->dif_ctx);
+		} else {
+			rc = spdk_dix_generate(&task->iov, 1, &task->md_iov,
+					       entry->io_size_blocks, &task->dif_ctx);
+		}
 		if (rc != 0) {
 			return rc;
 		}
 	}
 
 	return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-					      task->buf, NULL,
+					      task->buf, task->md_iov.iov_base,
 					      task->lba,
 					      entry->io_size_blocks, io_complete,
 					      task, entry->io_flags,
@@ -304,13 +328,22 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
-	if (spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns) &&
-	    task->is_read && !g_metacfg_pract_flag) {
-		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
-				     &err_blk);
-		if (rc != 0) {
-			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
-				err_blk.err_type, err_blk.err_offset);
+	if (task->is_read && entry->md_size != 0 &&
+	    !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+		if (entry->md_interleave) {
+			rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
+					     &err_blk);
+			if (rc != 0) {
+				fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
+					err_blk.err_type, err_blk.err_offset);
+			}
+		} else {
+			rc = spdk_dix_verify(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+					     &task->dif_ctx, &err_blk);
+			if (rc != 0) {
+				fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
+					err_blk.err_type, err_blk.err_offset);
+			}
 		}
 	}
 }
@@ -789,6 +822,9 @@ task_complete(struct perf_task *task)
 	 */
 	if (ns_ctx->is_draining) {
 		spdk_dma_free(task->buf);
+		if (task->md_iov.iov_base != NULL) {
+			spdk_dma_free(task->md_iov.iov_base);
+		}
 		free(task);
 	} else {
 		submit_single_io(task);
