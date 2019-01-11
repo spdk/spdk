@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72b0a879_8ba4f5ea",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2249,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T03:48:04Z",
+      "side": 1,
+      "message": "tailq_remove(buf_entry), buf_entry-\u003ebuf \u003d tcp_req-\u003ebuffers, tailq_insert_head(buf_entry) may sit well on me.\n\nThe above do this.",
+      "revId": "0e9a0d4efc5df7cdcb861fa9092b6d47f7a9b8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e8662c1_28ec0b5c",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 2672,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T03:48:04Z",
+      "side": 1,
+      "message": "the ordering, tailq_remove(buf_entry), buf_entry-\u003ebuf \u003d buffer, tailq_insert_tail(buf_entry) sits well on me.\n\nTha above do that.",
+      "revId": "0e9a0d4efc5df7cdcb861fa9092b6d47f7a9b8be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
