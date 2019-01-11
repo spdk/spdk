@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6228ead_3a3bb603",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1219,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T02:33:48Z",
+      "side": 1,
+      "message": "add asser after this statement.\nassert (buf !\u003d NULL);",
+      "range": {
+        "startLine": 1219,
+        "startChar": 3,
+        "endLine": 1219,
+        "endChar": 24
+      },
+      "revId": "2feb507985ef826e8fe899a07e603be719bdf229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d09087f2_7648842b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T02:33:48Z",
+      "side": 1,
+      "message": "add a statement buf_entry-\u003ebuf \u003d NULL; after this statement.",
+      "range": {
+        "startLine": 1220,
+        "startChar": 3,
+        "endLine": 1220,
+        "endChar": 59
+      },
+      "revId": "2feb507985ef826e8fe899a07e603be719bdf229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6954fd4f_cfea3c45",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T02:33:48Z",
+      "side": 1,
+      "message": "add assert before this statement: assert(buf_entry-\u003ebuf \u003d\u003d NULL);",
+      "range": {
+        "startLine": 1258,
+        "startChar": 3,
+        "endLine": 1258,
+        "endChar": 48
+      },
+      "revId": "2feb507985ef826e8fe899a07e603be719bdf229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e56cc615_94cebed4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1572,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T02:33:48Z",
+      "side": 1,
+      "message": "add assert before this statement:\n\nassert(buf-\u003ebuf \u003d\u003d NULL); \n\nAlso can you change the variable of buf to buf_entry which will be meaningful.",
+      "range": {
+        "startLine": 1572,
+        "startChar": 6,
+        "endLine": 1572,
+        "endChar": 45
+      },
+      "revId": "2feb507985ef826e8fe899a07e603be719bdf229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "acf7aae9_be19bcb5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2595,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T02:33:48Z",
+      "side": 1,
+      "message": "Can I suggest, that, we should merge this code with this code Stated in 1568.\n// Maybe I can post a patch.",
+      "range": {
+        "startLine": 2594,
+        "startChar": 0,
+        "endLine": 2595,
+        "endChar": 58
+      },
+      "revId": "2feb507985ef826e8fe899a07e603be719bdf229",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
