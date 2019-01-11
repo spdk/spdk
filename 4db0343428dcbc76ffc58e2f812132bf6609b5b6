@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58ae8c94_a3100296",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:37:04Z",
+      "side": 1,
+      "message": "Is it OK not to set sct?",
+      "revId": "4db0343428dcbc76ffc58e2f812132bf6609b5b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66b1fea8_8c459af5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 889,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:37:04Z",
+      "side": 1,
+      "message": "Is it OK not to set sc and sct?",
+      "revId": "4db0343428dcbc76ffc58e2f812132bf6609b5b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d27378b_6587209b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 907,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:37:04Z",
+      "side": 1,
+      "message": "Is it OK not to set sct ? and can you use the same pattern as previous patches too?",
+      "revId": "4db0343428dcbc76ffc58e2f812132bf6609b5b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
