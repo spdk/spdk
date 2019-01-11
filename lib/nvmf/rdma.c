@@ -1336,6 +1336,25 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	return -1;
 }
 
+static void
+nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
+		       struct spdk_nvmf_rdma_transport	*rtransport)
+{
+	if (rdma_req->data_from_pool) {
+		/* Put the buffer/s back in the pool */
+		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
+			spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
+			rdma_req->req.iov[i].iov_base = NULL;
+			rdma_req->data.buffers[i] = NULL;
+		}
+		rdma_req->data_from_pool = false;
+	}
+	rdma_req->req.length = 0;
+	rdma_req->req.iovcnt = 0;
+	rdma_req->req.data = NULL;
+	spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_FREE);
+}
+
 static bool
 spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			       struct spdk_nvmf_rdma_request *rdma_req)
@@ -1534,19 +1553,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (rdma_req->data_from_pool) {
-				/* Put the buffer/s back in the pool */
-				for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-					spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
-					rdma_req->req.iov[i].iov_base = NULL;
-					rdma_req->data.buffers[i] = NULL;
-				}
-				rdma_req->data_from_pool = false;
-			}
-			rdma_req->req.length = 0;
-			rdma_req->req.iovcnt = 0;
-			rdma_req->req.data = NULL;
-			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_FREE);
+			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
 		default:
@@ -2494,19 +2501,7 @@ spdk_nvmf_rdma_request_free(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_transport	*rtransport = SPDK_CONTAINEROF(req->qpair->transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
-	if (rdma_req->data_from_pool) {
-		/* Put the buffer/s back in the pool */
-		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-			spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
-			rdma_req->req.iov[i].iov_base = NULL;
-			rdma_req->data.buffers[i] = NULL;
-		}
-		rdma_req->data_from_pool = false;
-	}
-	rdma_req->req.length = 0;
-	rdma_req->req.iovcnt = 0;
-	rdma_req->req.data = NULL;
-	spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_FREE);
+	nvmf_rdma_request_free(rdma_req, rtransport);
 	return 0;
 }
 
