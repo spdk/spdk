@@ -535,6 +535,7 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 		if (csts.bits.shst == SPDK_NVME_SHST_COMPLETE) {
 			SPDK_DEBUGLOG(SPDK_LOG_NVME, "shutdown complete in %u milliseconds\n",
 				      ms_waited);
+			ctrlr->is_shutdown = true;
 			return;
 		}
 
@@ -1520,6 +1521,11 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
 	}
 
+	/* If the ctrlr is already shutdown, we should not send aer again */
+	if (ctrlr->is_shutdown) {
+		return;
+	}
+
 	/*
 	 * Repost another asynchronous event request to replace the one
 	 *  that just completed.
@@ -2198,6 +2204,7 @@ nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr)
 	ctrlr->free_io_qids = NULL;
 	ctrlr->is_resetting = false;
 	ctrlr->is_failed = false;
+	ctrlr->is_shutdown = false;
 
 	TAILQ_INIT(&ctrlr->active_io_qpairs);
 	STAILQ_INIT(&ctrlr->queued_aborts);
