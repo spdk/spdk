@@ -373,6 +373,24 @@
     },
     {
       "key": {
+        "uuid": "cd7cd333_e7fe77e6",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T01:32:26Z",
+      "side": 1,
+      "message": "Thanks Seth, two controllers with same Host Identifier should be considered as two different registrants, so reg_hostid is only used to check the registration key, I have a unit test configuration, https://review.gerrithub.io/#/c/spdk/spdk/+/436942/ may be it can describe more clearly.",
+      "parentUuid": "31515861_79ca2750",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b676de7_7130e0ad",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -384,6 +402,24 @@
       "writtenOn": "2019-01-10T16:43:18Z",
       "side": 1,
       "message": "3 blocks above look very similar. The difference is only in status value.\n\nCan be a single cleanup block is used with an additional \"status\" variable?  \nSomething like that:\n\nif (key.nrkey \u003d\u003d 0) {\n\t\t\tSPDK_ERRLOG(\"Can\u0027t register zeroed new key\\n\");\n\t\t\t//goto invalid;\n                        status \u003d SPDK_NVME_SC_INVALID_FIELD\n                        goto exit;\n\t\t}\nexit:\nreq-\u003ersp-\u003envme_cpl.status.sct \u003d SPDK_NVME_SCT_GENERIC;\nreq-\u003ersp-\u003envme_cpl.status.sc \u003d status;\npthread_mutex_unlock(\u0026subsystem-\u003ereservation_lock);\nreturn SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;",
+      "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b988a2_716afbc5",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T01:32:26Z",
+      "side": 1,
+      "message": "sounds good to me, thanks.",
+      "parentUuid": "5b676de7_7130e0ad",
       "revId": "e14f90a28cc762be1c9a33d605e643a1007aac87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
