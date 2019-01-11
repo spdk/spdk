@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c264dfcd_8005cf9e",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1754,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T03:58:23Z",
+      "side": 1,
+      "message": "log_page_type may be better.",
+      "range": {
+        "startLine": 1754,
+        "startChar": 10,
+        "endLine": 1754,
+        "endChar": 14
+      },
+      "revId": "85d13cf94007e8d22d73ad42f970a7dff40f6272",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5822df23_3fe5bbcb",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1768,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T03:58:23Z",
+      "side": 1,
+      "message": "Can you move them to https://review.gerrithub.io/#/c/spdk/spdk/+/439931/ that use them?\n\nthey are not architecturally defined, and are difficult to review only by this patch.",
+      "range": {
+        "startLine": 1763,
+        "startChar": 0,
+        "endLine": 1768,
+        "endChar": 54
+      },
+      "revId": "85d13cf94007e8d22d73ad42f970a7dff40f6272",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
