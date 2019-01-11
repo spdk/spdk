@@ -45,6 +45,54 @@
       "revId": "f5785bd95d373f361fdd12774c84738344e7e514",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "effcd4b4_d517d5b1",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T05:36:42Z",
+      "side": 1,
+      "message": "512 is a fixed value defined in the virtio-blk specification, so it should be fine here.",
+      "parentUuid": "a5aee6cf_5065ea91",
+      "range": {
+        "startLine": 360,
+        "startChar": 31,
+        "endLine": 360,
+        "endChar": 34
+      },
+      "revId": "f5785bd95d373f361fdd12774c84738344e7e514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b8f8120_2dc1f9df",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T05:36:42Z",
+      "side": 1,
+      "message": "yeah, flush command sent from Guest doesn\u0027t contain the length, another method can be flush all the pending writes commands, but it doesn\u0027t work for all the backend, e.g. AIO",
+      "parentUuid": "90bf93d6_b199d6ee",
+      "range": {
+        "startLine": 360,
+        "startChar": 17,
+        "endLine": 360,
+        "endChar": 28
+      },
+      "revId": "f5785bd95d373f361fdd12774c84738344e7e514",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
