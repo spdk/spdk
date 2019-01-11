@@ -1,0 +1,187 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d06a57f_d3434461",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "maybe check subsystem-\u003eka_counter \u003d\u003d 0 is more intuitive here",
+      "range": {
+        "startLine": 141,
+        "startChar": 6,
+        "endLine": 141,
+        "endChar": 28
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "099691ba_52172344",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "remove this extra line",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4c1b45d_119bfae1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "remove extra line",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ae543a8_e75ca67b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "could be a problem in the multiple cases, some IO qpair is not removed yet as we route to the async thread to handle. Besides, here it seems that the admin qpair disconnect also needs to go to its associated thread? Will this timeout called on the same thread of the admin qpair?",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 3
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8038cc51_c218983d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "before this, looks like we need to free the ctrlr-\u003eqpair_mask via spdk_bit_array_free()",
+      "range": {
+        "startLine": 353,
+        "startChar": 4,
+        "endLine": 353,
+        "endChar": 16
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "295b3dff_cb6b9990",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "As Changpeng mentioned, may just remove this definition and related usage in other files.",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 18
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "016c0144_6af1c2a1",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "check \u003d\u003d 0 is preferred.",
+      "range": {
+        "startLine": 1319,
+        "startChar": 6,
+        "endLine": 1319,
+        "endChar": 28
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f874c104_30d81c86",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1323,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "remove extra line",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e2cde78_3e955fc3",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1328,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:27:45Z",
+      "side": 1,
+      "message": "remote extra line",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
