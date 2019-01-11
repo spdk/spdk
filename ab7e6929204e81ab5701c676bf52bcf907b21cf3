@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48e641e2_909b1af1",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:05:53Z",
+      "side": 1,
+      "message": "6 is missing",
+      "range": {
+        "startLine": 227,
+        "startChar": 3,
+        "endLine": 227,
+        "endChar": 4
+      },
+      "revId": "ab7e6929204e81ab5701c676bf52bcf907b21cf3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
