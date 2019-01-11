@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "116e3e19_096c473d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-11T14:42:36Z",
+      "side": 1,
+      "message": "This is a possible data race since we modify a vdev without locking the g_spdk_vhost_mutex.\n\nIt\u0027ll be fine only after the \"vhost: untie devices from lcores\" patch - by then, spdk_vhost_dev_foreach_session() will always send an async message with a trylock inside.",
+      "revId": "6bdb7c08f5fbedd4f5f08022eb488952c121bbb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
