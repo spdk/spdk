@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "383a8e22_bd480571",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:54:08Z",
+      "side": 1,
+      "message": "you will be able to simplify by the following\n\n return nvmf_ctrlr_unregister_all_other_registrants(subsystem, NULL);",
+      "range": {
+        "startLine": 674,
+        "startChar": 0,
+        "endLine": 674,
+        "endChar": 37
+      },
+      "revId": "d987a4011d4d61f2c63569f58ee7bc2c6be096d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39698477_17050726",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 4
@@ -30,6 +53,23 @@
       "writtenOn": "2019-01-10T16:55:58Z",
       "side": 1,
       "message": "Could you do TAILQ_REMOVE(\u0026ns-\u003eholder-\u003ens_head, ns, link); and remove line 956?",
+      "revId": "d987a4011d4d61f2c63569f58ee7bc2c6be096d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b47bcf73_12e3a1df",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 968,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:54:08Z",
+      "side": 1,
+      "message": "You can do the same Sasha suggested in this patch too.\n\n  status \u003d ...\n  goto exit;\n\nexit:\n  req-\u003ersp-\u003envme_cpl.status.sct \u003d SPDK_NVME_SCT_GENERIC;\n  req-\u003ersp-\u003envme_cpl.status.sc \u003d status;\n  pthread_mutex_unlock(\u0026subsystem-\u003ereservation_lock);\n  return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;",
       "revId": "d987a4011d4d61f2c63569f58ee7bc2c6be096d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
