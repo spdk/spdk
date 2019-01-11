@@ -364,7 +364,7 @@ _sock(const char *ip, int port)
 static void
 posix_sock(void)
 {
-	_sock("127.0.0.1", 3260);
+	_sock("127.0.0.1", UT_PORT);
 }
 
 static void
@@ -484,7 +484,7 @@ _sock_group(const char *ip, int port)
 static void
 posix_sock_group(void)
 {
-	_sock_group("127.0.0.1", 3260);
+	_sock_group("127.0.0.1", UT_PORT);
 }
 
 static void
@@ -520,14 +520,14 @@ posix_sock_group_fairness(void)
 	struct iovec iov;
 	int i, rc;
 
-	listen_sock = spdk_sock_listen("127.0.0.1", 3260);
+	listen_sock = spdk_sock_listen("127.0.0.1", UT_PORT);
 	SPDK_CU_ASSERT_FATAL(listen_sock != NULL);
 
 	group = spdk_sock_group_create();
 	SPDK_CU_ASSERT_FATAL(group != NULL);
 
 	for (i = 0; i < 3; i++) {
-		client_sock[i] = spdk_sock_connect("127.0.0.1", 3260);
+		client_sock[i] = spdk_sock_connect("127.0.0.1", UT_PORT);
 		SPDK_CU_ASSERT_FATAL(client_sock[i] != NULL);
 
 		usleep(1000);

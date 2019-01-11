@@ -235,7 +235,7 @@ retry:
 		if (type == SPDK_SOCK_CREATE_LISTEN) {
 			rc = bind(fd, res->ai_addr, res->ai_addrlen);
 			if (rc != 0) {
-				SPDK_ERRLOG("bind() failed, errno = %d\n", errno);
+				SPDK_ERRLOG("bind() failed at port %d, errno = %d\n", port, errno);
 				switch (errno) {
 				case EINTR:
 					/* interrupted? */
