@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "99812eee_a457a999",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T04:17:31Z",
+      "side": 1,
+      "message": "Most of the definition here are using the names from the specification, it\u0027s aligned with the specification.",
+      "parentUuid": "6e56a114_6dac27d7",
+      "range": {
+        "startLine": 178,
+        "startChar": 10,
+        "endLine": 178,
+        "endChar": 15
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d394e0ec_09e5990b",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 6
