@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff6dfedc_4a0fc972",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:44:53Z",
+      "side": 1,
+      "message": "first",
+      "range": {
+        "startLine": 820,
+        "startChar": 6,
+        "endLine": 820,
+        "endChar": 11
+      },
+      "revId": "1d6e7a62af22baf25a497f8199c4cbe55c2c3c03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
