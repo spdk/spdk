@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c9f9b272_ca65b37e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-11T09:03:31Z",
+      "side": 1,
+      "message": "Virtio 1.1 spec:\n\n  The device MUST set the status byte to VIRTIO_BLK_S_UNSUPP for discard and write zeroes commands\n  if any unknown flag is set. Furthermore, the device MUST set the status byte to VIRTIO_BLK_S_UNSUPP\n  for discard commands if the unmap flag is set.",
+      "revId": "7bf5f4694bb6edf54c40c5619b07477960cb328e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66a6d86d_45bd6d28",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 18
