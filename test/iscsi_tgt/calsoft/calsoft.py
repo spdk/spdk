@@ -40,7 +40,7 @@ def run_case(case, result_list, log_dir_path):
         case_log = subprocess.check_output("{}/{}".format(CALSOFT_BIN_PATH, case), stderr=subprocess.STDOUT, shell=True).decode('utf-8')
     except subprocess.CalledProcessError as e:
         result_list.append({"Name": case, "Result": "FAIL"})
-        case_log = e.output
+        case_log = e.output.decode('utf-8')
     else:
         result_list.append({"Name": case, "Result": "PASS"})
     with open(log_dir_path + case + '.txt', 'w') as f:
