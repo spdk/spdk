@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3996c085_1c6b436c",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-11T09:52:37Z",
+      "side": 1,
+      "message": "weard that check_format.sh faild to detect this.",
+      "parentUuid": "58a22114_d1283870",
+      "revId": "e4f571fcd3efe71f67065e7743743c9467547f3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a3dde76c_bda3be8c",
         "filename": "scripts/rpc/client.py",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-10T14:48:43Z",
       "side": 1,
       "message": "What happens if one recv(4096) returns data for two responses?  I think we will end up losing the first response.  But I\u0027ve been in meetings all day the last 4 days so my brain may not be working...",
+      "revId": "e4f571fcd3efe71f67065e7743743c9467547f3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7004191f_d2bf7036",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-11T09:52:37Z",
+      "side": 1,
+      "message": "This is guarded by line 72.",
+      "parentUuid": "a3dde76c_bda3be8c",
       "revId": "e4f571fcd3efe71f67065e7743743c9467547f3d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
