@@ -75,7 +75,12 @@ $testdir/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut
 $valgrind $testdir/lib/event/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/event/app.c/app_ut
 
-$valgrind $testdir/lib/sock/sock.c/sock_ut
+if [ $(sudo lsof -i:3260 | wc -l) = 0 ]; then
+	$valgrind $testdir/lib/sock/sock.c/sock_ut
+else
+	echo Skip sock_ut test because port 3260 is occupied! Please disable SCSI Target daemon \(tgtd\) and re-run the test!
+	exit
+fi
 
 $valgrind $testdir/lib/nvme/nvme.c/nvme_ut
 $valgrind $testdir/lib/nvme/nvme_ctrlr.c/nvme_ctrlr_ut
