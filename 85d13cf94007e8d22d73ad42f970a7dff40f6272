@@ -45,6 +45,30 @@
       "revId": "85d13cf94007e8d22d73ad42f970a7dff40f6272",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da8b2fa5_46ffc479",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1768,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-11T04:15:19Z",
+      "side": 1,
+      "message": "Actually I moved from that patch to here, because it\u0027s specification\u0027s definition, so it should be fine.",
+      "parentUuid": "5822df23_3fe5bbcb",
+      "range": {
+        "startLine": 1763,
+        "startChar": 0,
+        "endLine": 1768,
+        "endChar": 54
+      },
+      "revId": "85d13cf94007e8d22d73ad42f970a7dff40f6272",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
