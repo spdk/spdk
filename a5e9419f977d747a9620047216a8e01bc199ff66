@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "901e3d58_0fa6e50f",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "regist_key ?",
+      "range": {
+        "startLine": 166,
+        "startChar": 10,
+        "endLine": 166,
+        "endChar": 14
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3614af0e_957267c2",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "rsv_ns_head ?",
+      "range": {
+        "startLine": 168,
+        "startChar": 28,
+        "endLine": 168,
+        "endChar": 35
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e56a114_6dac27d7",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "curr_rsv_key or current_rsv_key ?",
+      "range": {
+        "startLine": 178,
+        "startChar": 10,
+        "endLine": 178,
+        "endChar": 15
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d394e0ec_09e5990b",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "rsv_type ?",
+      "range": {
+        "startLine": 180,
+        "startChar": 33,
+        "endLine": 180,
+        "endChar": 38
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d74398a_d1057de5",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "rsv_holder?",
+      "range": {
+        "startLine": 182,
+        "startChar": 30,
+        "endLine": 182,
+        "endChar": 36
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f205147b_16efdcad",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "this link is dedicated to reservation ? if so, rsv_link or something like that may avoid error.",
+      "range": {
+        "startLine": 183,
+        "startChar": 27,
+        "endLine": 183,
+        "endChar": 31
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db21d801_c118a21e",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "gen_code or generation code ?",
+      "range": {
+        "startLine": 274,
+        "startChar": 10,
+        "endLine": 274,
+        "endChar": 13
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3bdd585c_97a1ca05",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T04:10:09Z",
+      "side": 1,
+      "message": "reg_ctrlrs or num_reg_ctrlrs ?",
+      "range": {
+        "startLine": 276,
+        "startChar": 10,
+        "endLine": 276,
+        "endChar": 16
+      },
+      "revId": "a5e9419f977d747a9620047216a8e01bc199ff66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
