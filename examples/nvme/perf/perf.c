@@ -738,9 +738,18 @@ task_complete(struct perf_task *task)
 }
 
 static void
-io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
+io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	task_complete((struct perf_task *)ctx);
+	struct perf_task *task = ctx;
+
+	if (cpl->status.sct != SPDK_NVME_SCT_GENERIC ||
+	    cpl->status.sc != SPDK_NVME_SC_SUCCESS) {
+		fprintf(stderr, "%s completed with error (sct=%d, sc=%d)\n",
+			task->is_read ? "Read" : "Write",
+			cpl->status.sct, cpl->status.sc);
+	}
+
+	task_complete(task);
 }
 
 static void
