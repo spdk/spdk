@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3824a54c_e4c3ce9b",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:32:41Z",
+      "side": 1,
+      "message": "you can do the same as previous patches.\n\nstatus \u003d SPDK_NVME_SC_INVALID_FIELD;\ngoto exit;\n\nexit:\n  req-\u003ersp-\u003envme_cpl.status.sc \u003d status;\n  ...",
+      "range": {
+        "startLine": 988,
+        "startChar": 0,
+        "endLine": 990,
+        "endChar": 48
+      },
+      "revId": "1a3bb44e0748eb1b34603ba5e0b55ed317ddd563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa2c0e84_57fa8384",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 998,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:32:41Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "1a3bb44e0748eb1b34603ba5e0b55ed317ddd563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fcee57ef_24cfc18e",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:32:41Z",
+      "side": 1,
+      "message": "should we assert before using count if count \u003e\u003d subsystem-\u003eregctl ?",
+      "range": {
+        "startLine": 1011,
+        "startChar": 64,
+        "endLine": 1011,
+        "endChar": 69
+      },
+      "revId": "1a3bb44e0748eb1b34603ba5e0b55ed317ddd563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a482f48_531699c7",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-11T08:32:41Z",
+      "side": 1,
+      "message": "sizeof(uint32_t) will be better.",
+      "range": {
+        "startLine": 1020,
+        "startChar": 61,
+        "endLine": 1020,
+        "endChar": 62
+      },
+      "revId": "1a3bb44e0748eb1b34603ba5e0b55ed317ddd563",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
