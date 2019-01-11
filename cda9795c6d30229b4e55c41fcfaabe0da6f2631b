@@ -22,6 +22,29 @@
       "revId": "cda9795c6d30229b4e55c41fcfaabe0da6f2631b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad3634ef_b413e649",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 10
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-11T13:31:35Z",
+      "side": 1,
+      "message": "Currently it\u0027s needed. Once we have patches for disabling UNMAP on lvol store creation then this can be removed.",
+      "range": {
+        "startLine": 265,
+        "startChar": 0,
+        "endLine": 278,
+        "endChar": 2
+      },
+      "revId": "cda9795c6d30229b4e55c41fcfaabe0da6f2631b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
