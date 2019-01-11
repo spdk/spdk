@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "93e72024_f66e71eb",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:05:50Z",
+      "side": 1,
+      "message": "Maybe just have \"NULL\" for these function pointers as here it seems does nothing. And in this way may remove above functions.",
+      "range": {
+        "startLine": 93,
+        "startChar": 33,
+        "endLine": 93,
+        "endChar": 63
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10f55330_65834e71",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-11T08:05:50Z",
+      "side": 1,
+      "message": "Also, it\u0027s prefered to add a comment above to describe why \"the spdk_nvme_probe() operation is needed\" in the timeout_cb. Thanks.",
+      "range": {
+        "startLine": 93,
+        "startChar": 1,
+        "endLine": 93,
+        "endChar": 20
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39832e67_385b90f7",
         "filename": "examples/nvme/hotplug/hotplug.c",
         "patchSetId": 1
