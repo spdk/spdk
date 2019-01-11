@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d662b26_ca92b2ca",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-11T08:21:46Z",
+      "side": 1,
+      "message": "DEBUG or NOTICE\n\nWhen checking data provided by user (especially in IO path) please use NOTICE or DEBUG otherwise you can accidentally flood console or log file without any way to stop it.",
+      "range": {
+        "startLine": 311,
+        "startChar": 3,
+        "endLine": 311,
+        "endChar": 14
+      },
+      "revId": "1b3efe6fb4272e6bc8b5e40c29a1aa72dd0f4961",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33a535b2_cae61617",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-11T08:21:46Z",
+      "side": 1,
+      "message": "VIRTIO_BLK_S_UNSUPP ?",
+      "range": {
+        "startLine": 340,
+        "startChar": 29,
+        "endLine": 340,
+        "endChar": 47
+      },
+      "revId": "1b3efe6fb4272e6bc8b5e40c29a1aa72dd0f4961",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
