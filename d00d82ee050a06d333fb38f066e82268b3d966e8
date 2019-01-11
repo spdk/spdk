@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f15cc8aa_5827d7b3",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-11T18:46:35Z",
+      "side": 1,
+      "message": "If all of the restore operations are occurring on the core thread, then this doesn\u0027t need to be atomic.",
+      "revId": "d00d82ee050a06d333fb38f066e82268b3d966e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
