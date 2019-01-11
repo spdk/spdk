@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34b92d5a_33a68378",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 10
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-11T11:37:17Z",
+      "side": 1,
+      "message": "This script was intended to:\n- generate FIO job configuration file\n- generate SPDK/QEMU CPU map configuration file\n- run the test\n\nHowever CPU map generation does not work as intended and needs fixing.\nDirectly calling the .sh script instead via python is also better so this script will be reworked/removed in next changes. No need to review here.",
+      "range": {
+        "startLine": 206,
+        "startChar": 0,
+        "endLine": 208,
+        "endChar": 39
+      },
+      "revId": "cda9795c6d30229b4e55c41fcfaabe0da6f2631b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
