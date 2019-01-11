@@ -602,6 +602,8 @@ struct spdk_nvme_ctrlr {
 
 	bool				is_failed;
 
+	bool				is_shutdown;
+
 	bool				timeout_enabled;
 
 	uint16_t			max_sges;
