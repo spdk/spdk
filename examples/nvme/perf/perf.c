@@ -228,7 +228,7 @@ static void
 nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 {
 	struct ns_entry *entry = task->ns_ctx->entry;
-	uint32_t io_size_bytes, md_size_bytes;
+	uint32_t io_size_bytes;
 
 	/* Set up data buffer */
 	io_size_bytes = entry->io_size_blocks * entry->block_size;
@@ -243,22 +243,30 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 	task->iov.iov_len = io_size_bytes;
 
 	memset(task->buf, pattern, io_size_bytes);
+}
+
+static void
+nvme_dix_setup_payload(struct perf_task *task, uint8_t pattern)
+{
+	struct ns_entry *entry = task->ns_ctx->entry;
+	uint32_t md_size_bytes;
+
+	/* Set up data buffer */
+	nvme_setup_payload(task, pattern);
 
 	/* Set up metadata buffer if separate metadata */
-	if (entry->md_size != 0 && !entry->md_interleave) {
-		md_size_bytes = entry->io_size_blocks * entry->md_size;
+	md_size_bytes = entry->io_size_blocks * entry->md_size;
 
-		task->md_iov.iov_base = spdk_dma_zmalloc(md_size_bytes, g_io_align, NULL);
-		if (task->md_iov.iov_base == NULL) {
-			spdk_dma_free(task->buf);
-			fprintf(stderr, "spdk_dma_zmalloc() for task->md_buf failed\n");
-			exit(1);
-		}
-
-		task->md_iov.iov_len = md_size_bytes;
-
-		memset(task->md_iov.iov_base, pattern, md_size_bytes);
+	task->md_iov.iov_base = spdk_dma_zmalloc(md_size_bytes, g_io_align, NULL);
+	if (task->md_iov.iov_base == NULL) {
+		spdk_dma_free(task->buf);
+		fprintf(stderr, "spdk_dma_zmalloc() for task->md_buf failed\n");
+		exit(1);
 	}
+
+	task->md_iov.iov_len = md_size_bytes;
+
+	memset(task->md_iov.iov_base, pattern, md_size_bytes);
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
@@ -270,11 +278,22 @@ nvme_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	task->lba = offset_in_ios * entry->io_size_blocks;
 	task->is_read = true;
 
+	return spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+				     task->buf, task->lba, entry->io_size_blocks,
+				     io_complete, task, entry->io_flags);
+}
+
+static int
+nvme_dif_dix_submit_read_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+			    struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	task->lba = offset_in_ios * entry->io_size_blocks;
+	task->is_read = true;
+
 	return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
 					     task->buf, task->md_iov.iov_base,
-					     task->lba,
-					     entry->io_size_blocks, io_complete,
-					     task, entry->io_flags,
+					     task->lba, entry->io_size_blocks,
+					     io_complete, task, entry->io_flags,
 					     task->appmask, task->apptag);
 }
 
@@ -282,12 +301,24 @@ static int
 nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		     struct ns_entry *entry, uint64_t offset_in_ios)
 {
+	task->lba = offset_in_ios * entry->io_size_blocks;
+	task->is_read = false;
+
+	return spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+				      task->buf, task->lba, entry->io_size_blocks,
+				      io_complete, task, entry->io_flags);
+}
+
+static int
+nvme_dif_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+			 struct ns_entry *entry, uint64_t offset_in_ios)
+{
 	int rc;
 
 	task->lba = offset_in_ios * entry->io_size_blocks;
 	task->is_read = false;
 
-	if (entry->md_size != 0 && !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+	if (!(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
 		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
 				       entry->md_interleave, entry->pi_loc,
 				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
@@ -296,13 +327,7 @@ nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			return rc;
 		}
 
-		if (entry->md_interleave) {
-			rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks,
-					       &task->dif_ctx);
-		} else {
-			rc = spdk_dix_generate(&task->iov, 1, &task->md_iov,
-					       entry->io_size_blocks, &task->dif_ctx);
-		}
+		rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
 		if (rc != 0) {
 			return rc;
 		}
@@ -310,9 +335,40 @@ nvme_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 
 	return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
 					      task->buf, task->md_iov.iov_base,
-					      task->lba,
-					      entry->io_size_blocks, io_complete,
-					      task, entry->io_flags,
+					      task->lba, entry->io_size_blocks,
+					      io_complete, task, entry->io_flags,
+					      task->appmask, task->apptag);
+}
+
+static int
+nvme_dix_submit_write_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+			 struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	int rc;
+
+	task->lba = offset_in_ios * entry->io_size_blocks;
+	task->is_read = false;
+
+	if (!(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
+				       entry->md_interleave, entry->pi_loc,
+				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
+				       task->lba, task->appmask, task->apptag);
+		if (rc != 0) {
+			return rc;
+		}
+
+		rc = spdk_dix_generate(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+				       &task->dif_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+
+	return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					      task->buf, task->md_iov.iov_base,
+					      task->lba, entry->io_size_blocks,
+					      io_complete, task, entry->io_flags,
 					      task->appmask, task->apptag);
 }
 
@@ -325,25 +381,36 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 static void
 nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 {
+}
+
+static void
+nvme_dif_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
-	if (task->is_read && entry->md_size != 0 &&
-	    !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
-		if (entry->md_interleave) {
-			rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
-					     &err_blk);
-			if (rc != 0) {
-				fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
-					err_blk.err_type, err_blk.err_offset);
-			}
-		} else {
-			rc = spdk_dix_verify(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
-					     &task->dif_ctx, &err_blk);
-			if (rc != 0) {
-				fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
-					err_blk.err_type, err_blk.err_offset);
-			}
+	if (task->is_read && !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
+				     &err_blk);
+		if (rc != 0) {
+			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
+				err_blk.err_type, err_blk.err_offset);
+		}
+	}
+}
+
+static void
+nvme_dix_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
+	struct spdk_dif_error err_blk = {};
+	int rc;
+
+	if (task->is_read && !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+		rc = spdk_dix_verify(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+				     &task->dif_ctx, &err_blk);
+		if (rc != 0) {
+			fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
+				err_blk.err_type, err_blk.err_offset);
 		}
 	}
 }
@@ -385,6 +452,26 @@ static const struct ns_entry_fn_table nvme_fn_table = {
 	.write_io		= nvme_submit_write_io,
 	.check_io		= nvme_check_io,
 	.verify_io		= nvme_verify_io,
+	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
+};
+
+static const struct ns_entry_fn_table nvme_dif_fn_table = {
+	.setup_payload		= nvme_setup_payload,
+	.read_io		= nvme_dif_dix_submit_read_io,
+	.write_io		= nvme_dif_submit_write_io,
+	.check_io		= nvme_check_io,
+	.verify_io		= nvme_dif_verify_io,
+	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
+};
+
+static const struct ns_entry_fn_table nvme_dix_fn_table = {
+	.setup_payload		= nvme_dix_setup_payload,
+	.read_io		= nvme_dif_dix_submit_read_io,
+	.write_io		= nvme_dix_submit_write_io,
+	.check_io		= nvme_check_io,
+	.verify_io		= nvme_dix_verify_io,
 	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
 	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
 };
@@ -465,6 +552,15 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (g_max_io_size_blocks < entry->io_size_blocks) {
 		g_max_io_size_blocks = entry->io_size_blocks;
+	}
+
+	if (entry->md_size == 0 ||
+	    (entry->md_size == 8 && (entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT))) {
+		entry->fn_table = &nvme_fn_table;
+	} else if (entry->md_interleave) {
+		entry->fn_table = &nvme_dif_fn_table;
+	} else {
+		entry->fn_table = &nvme_dix_fn_table;
 	}
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
