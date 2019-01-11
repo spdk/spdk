@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66a6d86d_45bd6d28",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-11T08:54:26Z",
+      "side": 1,
+      "message": "Do you foresee this restriction causing any problems?",
+      "revId": "7bf5f4694bb6edf54c40c5619b07477960cb328e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
