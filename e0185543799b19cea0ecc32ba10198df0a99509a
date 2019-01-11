@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a70e55a2_b8971563",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-11T06:24:20Z",
+      "side": 1,
+      "message": "Ok. I will update it in next patchset.",
+      "parentUuid": "cf07bd34_9d806b46",
+      "range": {
+        "startLine": 9,
+        "startChar": 87,
+        "endLine": 9,
+        "endChar": 95
+      },
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98ecf749_e678238d",
         "filename": "test/nvmf/hotplugtestplan.md",
         "patchSetId": 4
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "31d12c2f_56f53d41",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-11T06:24:20Z",
+      "side": 1,
+      "message": "I only planned to test PCIe NVMe transport type. I think I can also test the RDMA and TCP NVMe transport type. I don\u0027t have FC NVMe transport type testing environment. So I think I can\u0027t test this NVMe transport type currently.",
+      "parentUuid": "98ecf749_e678238d",
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d13d5bcb_42e264f1",
         "filename": "test/nvmf/hotplugtestplan.md",
         "patchSetId": 4
@@ -53,6 +95,24 @@
       "writtenOn": "2019-01-10T15:22:53Z",
       "side": 1,
       "message": "How is line 14 different from line 19?",
+      "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ed96c20_2c04aa9f",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-11T06:24:20Z",
+      "side": 1,
+      "message": "line 14 is just for nvmf target. line 19 is just for 2 or more nvmf host. I can update line 19 to \"multiple nvmf host\".",
+      "parentUuid": "d13d5bcb_42e264f1",
       "revId": "e0185543799b19cea0ecc32ba10198df0a99509a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
