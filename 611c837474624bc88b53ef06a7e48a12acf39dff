@@ -55,6 +55,24 @@
     },
     {
       "key": {
+        "uuid": "d0beb88c_adaf209f",
+        "filename": "lib/event/subsystems/nvmf/nvmf_tgt.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T01:38:54Z",
+      "side": 1,
+      "message": "Hi Ben,\n2) is really a problem, which I also described in the discussions in github issues.The polling group will never be added. However, in our current code, we have pre assign the polling group to qpair.\n\nMy problem is that, for new_qpair_fn, part of is still accepted in the acceptor_core. I want to divide the functions into two parts, so I use a return value. \n(1)if there is issue for the part of the code in the acceptor core, we just reject this qpair, since we will never call the spdk_event_call;\n(2) If there is issue related with adding into the group, it is another issue.\nSo currently, our handling for (1)(2) are mixed.\nSince for part(1), if there is qpair creating issue, we can just send the message to the clients early, and say the connection is not ok, then we can avoid the unexpected disconnect. \n\nAnd for the part(2), there is another issue we want to address as you described.",
+      "parentUuid": "de9be972_52965600",
+      "revId": "611c837474624bc88b53ef06a7e48a12acf39dff",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f424c3e3_2a83dc9e",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 13
