@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c33cf38f_11fe7b7a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-11T09:08:16Z",
+      "side": 1,
+      "message": "I don\u0027t see the code that calls the new anm functions (like the device registration function) anywhere.",
+      "revId": "20ec8b5ccd1b25a7cc1fd6fdee663614f53ddb2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
