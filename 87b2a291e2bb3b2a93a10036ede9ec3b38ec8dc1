@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "83af90f4_ecda07a7",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T05:31:34Z",
+      "side": 1,
+      "message": "timeout_in_usec would be much better.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 22
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39832e67_385b90f7",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-11T05:31:34Z",
+      "side": 1,
+      "message": "Can we define a Macro for this static variable also do we need provide a parameter from user input.",
+      "range": {
+        "startLine": 116,
+        "startChar": 19,
+        "endLine": 116,
+        "endChar": 26
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
