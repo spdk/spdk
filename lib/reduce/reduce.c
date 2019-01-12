@@ -370,6 +370,7 @@ static int
 _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 {
 	uint64_t total_chunks, total_backing_io_units;
+	uint32_t i, num_metadata_io_units;
 
 	total_chunks = _get_total_chunks(vol->params.vol_size, vol->params.chunk_size);
 	vol->allocated_chunk_maps = spdk_bit_array_create(total_chunks);
@@ -381,8 +382,11 @@ _allocate_bit_arrays(struct spdk_reduce_vol *vol)
 	}
 
 	/* Set backing io unit bits associated with metadata. */
-	spdk_bit_array_set(vol->allocated_backing_io_units, 0);
-	spdk_bit_array_set(vol->allocated_backing_io_units, 1);
+	num_metadata_io_units = (sizeof(*vol->backing_super) + REDUCE_PATH_MAX) /
+				vol->backing_dev->blocklen;
+	for (i = 0; i < num_metadata_io_units; i++) {
+		spdk_bit_array_set(vol->allocated_backing_io_units, i);
+	}
 
 	return 0;
 }
