@@ -1574,8 +1574,7 @@ nvme_rdma_qpair_fail(struct spdk_nvme_qpair *qpair)
 	struct spdk_nvme_cpl cpl;
 	struct nvme_rdma_qpair *rqpair = nvme_rdma_qpair(qpair);
 
-	/* Call it power loss since we don't know what happened, but the controller is gone. */
-	cpl.status.sc = SPDK_NVME_SC_ABORTED_POWER_LOSS;
+	cpl.status.sc = SPDK_NVME_SC_ABORTED_SQ_DELETION;
 	cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->outstanding_reqs, link, tmp) {
