@@ -45,7 +45,6 @@ static char *g_volatile_pm_buf;
 static size_t g_volatile_pm_buf_len;
 static char *g_persistent_pm_buf;
 static size_t g_persistent_pm_buf_len;
-static bool g_backing_dev_closed;
 static char *g_backing_dev_buf;
 static char g_path[REDUCE_PATH_MAX];
 
@@ -263,12 +262,6 @@ backing_dev_unmap(struct spdk_reduce_backing_dev *backing_dev,
 }
 
 static void
-backing_dev_close(struct spdk_reduce_backing_dev *backing_dev)
-{
-	g_backing_dev_closed = true;
-}
-
-static void
 backing_dev_destroy(struct spdk_reduce_backing_dev *backing_dev)
 {
 	/* We don't free this during backing_dev_close so that we can test init/unload/load
@@ -290,7 +283,6 @@ backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce
 	backing_dev->readv = backing_dev_readv;
 	backing_dev->writev = backing_dev_writev;
 	backing_dev->unmap = backing_dev_unmap;
-	backing_dev->close = backing_dev_close;
 
 	g_backing_dev_buf = calloc(1, size);
 	SPDK_CU_ASSERT_FATAL(g_backing_dev_buf != NULL);
@@ -339,10 +331,8 @@ init_md(void)
 	CU_ASSERT(spdk_uuid_compare(&uuid, spdk_reduce_vol_get_uuid(g_vol)) == 0);
 
 	g_reduce_errno = -1;
-	g_backing_dev_closed = false;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
-	CU_ASSERT(g_backing_dev_closed == true);
 	CU_ASSERT(g_volatile_pm_buf == NULL);
 
 	persistent_pm_buf_destroy();
@@ -374,7 +364,6 @@ _init_backing_dev(uint32_t backing_blocklen)
 	CU_ASSERT(memcmp(g_backing_dev_buf, SPDK_REDUCE_SIGNATURE, 8) == 0);
 	persistent_params = (struct spdk_reduce_vol_params *)(g_backing_dev_buf + 8);
 	CU_ASSERT(memcmp(persistent_params, &params, sizeof(params)) == 0);
-	CU_ASSERT(backing_dev.close != NULL);
 	/* Confirm that the path to the persistent memory metadata file was persisted to
 	 *  the backing device.
 	 */
@@ -383,10 +372,8 @@ _init_backing_dev(uint32_t backing_blocklen)
 			  REDUCE_PATH_MAX) == 0);
 
 	g_reduce_errno = -1;
-	g_backing_dev_closed = false;
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
-	CU_ASSERT(g_backing_dev_closed == true);
 
 	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);

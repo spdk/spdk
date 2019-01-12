@@ -431,8 +431,8 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
-	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
-	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
+	if (backing_dev->readv == NULL || backing_dev->writev == NULL ||
+	    backing_dev->unmap == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
@@ -635,8 +635,8 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 	struct spdk_reduce_vol *vol;
 	struct reduce_init_load_ctx *load_ctx;
 
-	if (backing_dev->close == NULL || backing_dev->readv == NULL ||
-	    backing_dev->writev == NULL || backing_dev->unmap == NULL) {
+	if (backing_dev->readv == NULL || backing_dev->writev == NULL ||
+	    backing_dev->unmap == NULL) {
 		SPDK_ERRLOG("backing_dev function pointer not specified\n");
 		cb_fn(cb_arg, NULL, -EINVAL);
 		return;
@@ -697,8 +697,6 @@ spdk_reduce_vol_unload(struct spdk_reduce_vol *vol,
 		cb_fn(cb_arg, -EINVAL);
 		return;
 	}
-
-	vol->backing_dev->close(vol->backing_dev);
 
 	_init_load_cleanup(vol, NULL);
 	cb_fn(cb_arg, 0);

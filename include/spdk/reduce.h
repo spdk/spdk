@@ -105,8 +105,6 @@ struct spdk_reduce_backing_dev {
 	void (*unmap)(struct spdk_reduce_backing_dev *dev,
 		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
 
-	void (*close)(struct spdk_reduce_backing_dev *dev);
-
 	uint64_t	blockcnt;
 	uint32_t	blocklen;
 };
