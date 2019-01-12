@@ -1405,7 +1405,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			TAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, link);
 
-			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR) {
+			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 				break;
 			}
@@ -2647,6 +2647,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
+					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
@@ -2657,6 +2658,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
 				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
+					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
 					spdk_nvmf_rdma_qpair_destroy(rqpair);
 				}
 				/* Continue so that this does not trigger the disconnect path below. */
