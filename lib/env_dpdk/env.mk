@@ -98,8 +98,8 @@ ENV_DPDK_FILE = $(call spdk_lib_list_to_static_libs,env_dpdk)
 ENV_LIBS = $(ENV_DPDK_FILE) $(DPDK_LIB)
 ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--whole-archive $(DPDK_LIB) -Wl,--no-whole-archive
 
-ifeq ($(CONFIG_CRYPTO),y)
-ENV_LINKER_ARGS += -lIPSec_MB
+ifeq ($(CONFIG_IPSEC_MB),y)
+ENV_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
 endif
 
 ifneq (,$(wildcard $(DPDK_INC_DIR)/rte_config.h))

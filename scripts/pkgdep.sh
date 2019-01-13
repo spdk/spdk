@@ -11,7 +11,6 @@ function usage()
 	echo ""
 	echo "$0"
 	echo "  -h --help"
-	echo "  -i --install-crypto Install ipsec dependencies"
 	echo ""
 	exit 0
 }
@@ -23,13 +22,11 @@ while getopts 'hi-:' optchar; do
 		-)
 		case "$OPTARG" in
 			help) usage;;
-			install-crypto) INSTALL_CRYPTO=true;;
 			*) echo "Invalid argument '$OPTARG'"
 			usage;;
 		esac
 		;;
 	h) usage;;
-	i) INSTALL_CRYPTO=true;;
 	*) echo "Invalid argument '$OPTARG'"
 	usage;;
 	esac
@@ -110,28 +107,4 @@ elif [ $(uname -s) = "FreeBSD" ] ; then
 else
 	echo "pkgdep: unknown system type."
 	exit 1
-fi
-
-# Only crypto needs nasm and this lib but because the lib requires root to
-# install we do it here - when asked.
-
-if $INSTALL_CRYPTO; then
-
-	nasm_ver=$(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}')
-	if [ $nasm_ver -lt "21202" ]; then
-			echo Crypto requires NASM version 2.12.02 or newer.  Please install
-			echo or upgrade and re-run this script if you are going to use Crypto.
-	else
-		ipsec="$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)"
-		if [ "$ipsec" == "" ]; then
-			ipsec_submodule_cloned="$(find $rootdir/intel-ipsec-mb -name intel-ipsec-mb.h 2>/dev/null)"
-			if [ "$ipsec_submodule_cloned" != "" ]; then
-				su - $SUDO_USER -c "make -C $rootdir/intel-ipsec-mb"
-				make -C $rootdir/intel-ipsec-mb install
-			else
-				echo "The intel-ipsec-mb submodule has not been cloned and will not be installed."
-				echo "To enable crypto, run 'git submodule update --init' and then run this script again."
-			fi
-		fi
-	fi
 fi
