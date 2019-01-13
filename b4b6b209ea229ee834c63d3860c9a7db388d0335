@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "08497a69_2bd0a27f",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 4160,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-13T13:13:52Z",
+      "side": 1,
+      "message": "Should we set ctx-\u003ebdev-\u003einternal.histogram_enabled to false before spdk_for_each_channel()?",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "93363b68_507b20e1",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 19
