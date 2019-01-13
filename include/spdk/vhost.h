@@ -327,37 +327,6 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  */
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
 
-
-/**
- * Call function on reactor of given vhost device. If device is not in use, the
- * event will be called right away on the caller's thread.
- *
- * This function is thread safe.
- *
- * \param vdev_name name of the vhost device to run this event on.
- * \param fn function to be called. The first parameter of callback function is
- * either actual spdk_vhost_dev pointer or NULL in case vdev with given name doesn't
- * exist. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event(const char *vdev_name, spdk_vhost_event_fn fn, void *arg);
-
-/**
- * Call function for each available vhost device on
- * it's reactor.  This will call given function in a chain,
- * meaning that each callback will be called after the
- * previous one has finished. After given function has
- * been called for all vdevs, it will be called once
- * again with first param - vhost device- set to NULL.
- *
- * This function is thread safe.
- *
- * \param fn function to be called for each vdev. The first param will be
- * either vdev pointer or NULL. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
-
 #ifdef __cplusplus
 }
 #endif
