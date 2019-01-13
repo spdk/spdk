@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6fa6a7e1_37d99f7d",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:20:57Z",
+      "side": 1,
+      "message": "automatically",
+      "revId": "2e82f368125beac6fdb4980d8cb556d298a8222a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d6c820a_4e12fc25",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:20:57Z",
+      "side": 1,
+      "message": "this should be indented",
+      "revId": "2e82f368125beac6fdb4980d8cb556d298a8222a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f788d87_996e645d",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:20:57Z",
+      "side": 1,
+      "message": "artifacts",
+      "revId": "2e82f368125beac6fdb4980d8cb556d298a8222a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
