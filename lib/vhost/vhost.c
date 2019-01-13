@@ -598,6 +598,16 @@ spdk_vhost_free_reactor(uint32_t lcore)
 }
 
 struct spdk_vhost_dev *
+spdk_vhost_dev_next(struct spdk_vhost_dev *vdev)
+{
+	if (vdev == NULL) {
+		return TAILQ_FIRST(&g_spdk_vhost_devices);
+	}
+
+	return TAILQ_NEXT(vdev, tailq);
+}
+
+struct spdk_vhost_dev *
 spdk_vhost_dev_find(const char *ctrlr_name)
 {
 	struct spdk_vhost_dev *vdev;
