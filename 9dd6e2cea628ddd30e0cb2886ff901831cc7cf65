@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc36fe87_1843f6b6",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:44:47Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nThe \"busy_bufs\" is a bit confusing I think.  There is no buffer attached to these entries.  Could we instead just allocate an array of void * in the tgroup?  and a count of how many are valid.  Then when you want to allocate a buffer, you check if any are in this array, and take the last one available and decrement the count.  When freeing, if the current count is less than the shared limit, just add it to the end and increment the count.\n\nThis is similar to how we do it in bdev.c for shared bdev_io.\n\n-Jim",
+      "revId": "9dd6e2cea628ddd30e0cb2886ff901831cc7cf65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
