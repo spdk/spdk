@@ -378,13 +378,8 @@ if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 		echo Crypto requires NASM version 2.12.02 or newer.  Please install
 		echo or upgrade then re-run this script.
 		exit 1
-        else
-		if [[ "$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
-			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
-			echo "run 'make' then 'sudo make install' then re-run this script."
-			exit 1
-		fi
 	fi
+	CONFIG[IPSEC_MB]=y
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then

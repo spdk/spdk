@@ -142,6 +142,8 @@ ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif
 
+IPSEC_MB_DIR=$(SPDK_ROOT_DIR)/intel-ipsec-mb
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
