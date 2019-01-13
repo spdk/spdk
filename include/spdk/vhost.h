@@ -110,6 +110,33 @@ void spdk_vhost_shutdown_cb(void);
 struct spdk_vhost_dev;
 
 /**
+ * Lock the global vhost mutex, which synchronizes all the vhost device accesses.
+ */
+void spdk_vhost_lock(void);
+
+/**
+ * Unlock the global vhost mutex.
+ */
+void spdk_vhost_unlock(void);
+
+/**
+ * Find a vhost device by name.
+ *
+ * \return vhost device or NULL
+ */
+struct spdk_vhost_dev *spdk_vhost_dev_find(const char *name);
+
+/**
+ * Get the next vhost device. If there's no more devices to iterate
+ * through, NULL will be returned.
+ *
+ * \param vdev vhost device. If NULL, this function will return the
+ * very first device.
+ * \return vdev vhost device or NULL
+ */
+struct spdk_vhost_dev *spdk_vhost_dev_next(struct spdk_vhost_dev *vdev);
+
+/**
  * Synchronized vhost event used for user callbacks.
  *
  * \param vdev vhost device.
@@ -292,6 +319,7 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  * \return SPDK bdev associated with given vdev.
  */
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
+
 
 /**
  * Call function on reactor of given vhost device. If device is not in use, the

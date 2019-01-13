@@ -221,8 +221,6 @@ struct spdk_vhost_dev_backend {
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
 
-struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
-
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 
 uint16_t spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *vq, uint16_t *reqs,
@@ -346,8 +344,6 @@ void spdk_vhost_session_event_done(void *event_ctx, int response);
 void spdk_vhost_free_reactor(uint32_t lcore);
 uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
 
-void spdk_vhost_lock(void);
-void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
 int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
 int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
