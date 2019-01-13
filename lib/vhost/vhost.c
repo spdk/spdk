@@ -1308,17 +1308,6 @@ destroy_connection(int vid)
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
-void
-spdk_vhost_call_external_event(const char *ctrlr_name, spdk_vhost_event_fn fn, void *arg)
-{
-	struct spdk_vhost_dev *vdev;
-
-	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vdev = spdk_vhost_dev_find(ctrlr_name);
-	fn(vdev, arg);
-	pthread_mutex_unlock(&g_spdk_vhost_mutex);
-}
-
 static void
 spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_session *vsession,
@@ -1362,19 +1351,6 @@ spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *vdev,
 	assert(vdev->pending_async_op_num < UINT32_MAX);
 	vdev->pending_async_op_num++;
 	spdk_vhost_external_event_foreach_continue(vdev, vsession, fn, arg);
-}
-
-void
-spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg)
-{
-	struct spdk_vhost_dev *vdev, *tmp;
-
-	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	TAILQ_FOREACH_SAFE(vdev, &g_spdk_vhost_devices, tailq, tmp) {
-		fn(vdev, arg);
-	}
-	fn(NULL, arg);
-	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 void
@@ -1438,29 +1414,25 @@ spdk_vhost_init(void)
 	return 0;
 }
 
-static int
-_spdk_vhost_fini_remove_vdev_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	spdk_vhost_fini_cb fini_cb = arg;
-
-	if (vdev != NULL) {
-		spdk_vhost_dev_remove(vdev);
-		/* don't care if it fails, there's nothing we can do for now */
-		return 0;
-	}
-
-	/* All devices are removed now. */
-	free(g_num_ctrlrs);
-	fini_cb();
-	return 0;
-}
-
 static void
 _spdk_vhost_fini(void *arg1, void *arg2)
 {
 	spdk_vhost_fini_cb fini_cb = arg1;
+	struct spdk_vhost_dev *vdev, *tmp;
 
-	spdk_vhost_call_external_event_foreach(_spdk_vhost_fini_remove_vdev_cb, fini_cb);
+	spdk_vhost_lock();
+	vdev = spdk_vhost_dev_next(NULL);
+	while (vdev != NULL) {
+		tmp = spdk_vhost_dev_next(vdev);
+		spdk_vhost_dev_remove(vdev);
+		/* don't care if it fails, there's nothing we can do for now */
+		vdev = tmp;
+	}
+	spdk_vhost_unlock();
+
+	/* All devices are removed now. */
+	free(g_num_ctrlrs);
+	fini_cb();
 }
 
 void
@@ -1484,61 +1456,39 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 	pthread_detach(tid);
 }
 
-struct spdk_vhost_write_config_json_ctx {
-	struct spdk_json_write_ctx *w;
-	struct spdk_event *done_ev;
-};
-
-static int
-spdk_vhost_config_json_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	struct spdk_vhost_write_config_json_ctx *ctx = arg;
-	uint32_t delay_base_us;
-	uint32_t iops_threshold;
-
-	if (vdev == NULL) {
-		spdk_json_write_array_end(ctx->w);
-		spdk_event_call(ctx->done_ev);
-		free(ctx);
-		return 0;
-	}
-
-	vdev->backend->write_config_json(vdev, ctx->w);
-
-	spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
-	if (delay_base_us) {
-		spdk_json_write_object_begin(ctx->w);
-		spdk_json_write_named_string(ctx->w, "method", "set_vhost_controller_coalescing");
-
-		spdk_json_write_named_object_begin(ctx->w, "params");
-		spdk_json_write_named_string(ctx->w, "ctrlr", vdev->name);
-		spdk_json_write_named_uint32(ctx->w, "delay_base_us", delay_base_us);
-		spdk_json_write_named_uint32(ctx->w, "iops_threshold", iops_threshold);
-		spdk_json_write_object_end(ctx->w);
-
-		spdk_json_write_object_end(ctx->w);
-	}
-
-	return 0;
-}
-
 void
 spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
 {
-	struct spdk_vhost_write_config_json_ctx *ctx;
-
-	ctx = calloc(1, sizeof(*ctx));
-	if (!ctx) {
-		spdk_event_call(done_ev);
-		return;
-	}
-
-	ctx->w = w;
-	ctx->done_ev = done_ev;
+	struct spdk_vhost_dev *vdev;
+	uint32_t delay_base_us;
+	uint32_t iops_threshold;
 
 	spdk_json_write_array_begin(w);
 
-	spdk_vhost_call_external_event_foreach(spdk_vhost_config_json_cb, ctx);
+	spdk_vhost_lock();
+	vdev = spdk_vhost_dev_next(NULL);
+	while (vdev != NULL) {
+		vdev->backend->write_config_json(vdev, w);
+
+		spdk_vhost_get_coalescing(vdev, &delay_base_us, &iops_threshold);
+		if (delay_base_us) {
+			spdk_json_write_object_begin(w);
+			spdk_json_write_named_string(w, "method", "set_vhost_controller_coalescing");
+
+			spdk_json_write_named_object_begin(w, "params");
+			spdk_json_write_named_string(w, "ctrlr", vdev->name);
+			spdk_json_write_named_uint32(w, "delay_base_us", delay_base_us);
+			spdk_json_write_named_uint32(w, "iops_threshold", iops_threshold);
+			spdk_json_write_object_end(w);
+
+			spdk_json_write_object_end(w);
+		}
+		vdev = spdk_vhost_dev_next(vdev);
+	}
+	spdk_vhost_unlock();
+
+	spdk_json_write_array_end(w);
+	spdk_event_call(done_ev);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)

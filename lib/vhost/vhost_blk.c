@@ -596,21 +596,17 @@ _spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhos
 	return 0;
 }
 
-static int
-_bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     vdev->name);
-	spdk_vhost_dev_foreach_session(vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
-	return 0;
-}
-
 static void
 bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
 
-	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev);
+	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+		     bvdev->vdev.name);
+
+	spdk_vhost_lock();
+	spdk_vhost_dev_foreach_session(&bvdev->vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
+	spdk_vhost_unlock();
 }
 
 static void
