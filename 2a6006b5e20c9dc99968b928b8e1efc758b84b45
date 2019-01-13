@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "380256d0_846c4f6d",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 2065,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-13T02:44:35Z",
+      "side": 1,
+      "message": "Redundant, or is this patch still WIP?",
+      "range": {
+        "startLine": 2063,
+        "startChar": 2,
+        "endLine": 2065,
+        "endChar": 3
+      },
+      "revId": "2a6006b5e20c9dc99968b928b8e1efc758b84b45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e8d77f6_e098769b",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 657,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-13T02:44:35Z",
+      "side": 1,
+      "message": "Using sizeof(uint64_t) could be easier to understand?",
+      "range": {
+        "startLine": 657,
+        "startChar": 15,
+        "endLine": 657,
+        "endChar": 16
+      },
+      "revId": "2a6006b5e20c9dc99968b928b8e1efc758b84b45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
