@@ -208,15 +208,6 @@ spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 	return 0;
 }
 
-static int
-spdk_vhost_scsi_dev_process_removed(struct spdk_vhost_dev *vdev, void *arg)
-{
-	spdk_vhost_dev_foreach_session(vdev,
-				       spdk_vhost_scsi_session_process_removed,
-				       arg);
-	return 0;
-}
-
 static void
 process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 {
@@ -232,11 +223,12 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 			/* detach the device from this session */
 			spdk_scsi_dev_free_io_channels(dev);
 			state->dev = NULL;
-			/* try to detach it globally. we need a lock in order to modify
-			 * the vdev, so use an external event */
-			spdk_vhost_call_external_event(svsession->svdev->vdev.name,
-						       spdk_vhost_scsi_dev_process_removed,
+			/* try to detach it globally */
+			spdk_vhost_lock();
+			spdk_vhost_dev_foreach_session(&svsession->svdev->vdev,
+						       spdk_vhost_scsi_session_process_removed,
 						       (void *)(uintptr_t)i);
+			spdk_vhost_unlock();
 		}
 	}
 }
