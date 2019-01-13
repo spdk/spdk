@@ -472,7 +472,7 @@ typedef int (*thread_start_fn)(void *);
  * \param core The core to pin the thread to.
  * \param fn Entry point on the new thread.
  * \param arg Argument apssed to thread_start_fn
- *
+ *./
  * \return 0 on success, negative errno on failure.
  */
 int spdk_env_thread_launch_pinned(uint32_t core, thread_start_fn fn, void *arg);
