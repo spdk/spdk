@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "340e4a07_5cad1e83",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-13T12:20:12Z",
+      "side": 1,
+      "message": "Should be changed to:\n\n  if (add_len + sizeof(*desc) + sizeof(data-\u003eheader) \u003e data_len) {\n      break;\n  }\n  add_len +\u003d sizeof(*desc);\n\nOtherwise, add_len in line 688 is wrong.",
+      "range": {
+        "startLine": 665,
+        "startChar": 2,
+        "endLine": 668,
+        "endChar": 3
+      },
+      "revId": "34a30cc6150feda95478f4b69eb121d56220c3a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd890d41_2b0aada1",
+        "filename": "lib/scsi/scsi_pr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-13T12:20:12Z",
+      "side": 1,
+      "message": "Ditto.",
+      "range": {
+        "startLine": 680,
+        "startChar": 2,
+        "endLine": 683,
+        "endChar": 3
+      },
+      "revId": "34a30cc6150feda95478f4b69eb121d56220c3a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
