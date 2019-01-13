@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40307856_3fc6d708",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:09:28Z",
+      "side": 1,
+      "message": "I like the idea of testing IO on different channels, but the code below this only is using one channel.",
+      "revId": "401c3d161483498bc772e32801d1a511f54c383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
