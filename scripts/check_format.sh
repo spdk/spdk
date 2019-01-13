@@ -210,7 +210,7 @@ fi
 # are detected.
 echo -n "Checking whether CHANGELOG.md should be updated..."
 staged=$(git diff --name-only --cached .)
-working=$(git status -s --porcelain | grep -iv "??" | awk '{print $2}')
+working=$(git status -s --porcelain --ignore-submodules | grep -iv "??" | awk '{print $2}')
 files="$staged $working"
 if [[ "$files" = " " ]]; then
 	files=$(git diff-tree --no-commit-id --name-only -r HEAD)
