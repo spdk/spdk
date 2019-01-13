@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "802e129b_37a9e8b0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 745,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:57:02Z",
+      "side": 1,
+      "message": "I would suggest using spdk_nvme_cpl_is_error(cpl).",
+      "revId": "5c98f97f2ed6c0e9b41ba0abc0011a80a24e48ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "685afc4d_66c12315",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 749,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T00:57:02Z",
+      "side": 1,
+      "message": "I think this code is fine.  It might be nice in the future to export the status string functions in lib/nvme/nvme_qpair.c which could then be used here to print nice descriptions of the status codes.",
+      "revId": "5c98f97f2ed6c0e9b41ba0abc0011a80a24e48ce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
