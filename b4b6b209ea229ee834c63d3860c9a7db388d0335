@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee0306e9_1f99a528",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:05:58Z",
+      "side": 1,
+      "message": "aggregated",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c789737_ea47e3d0",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:05:58Z",
+      "side": 1,
+      "message": "aggregated",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5830835_8efe474d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:05:58Z",
+      "side": 1,
+      "message": "tab instead of space before *histogram",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93363b68_507b20e1",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 4205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:05:58Z",
+      "side": 1,
+      "message": "I don\u0027t think this works.  This would allow a user to start a disable-\u003eenable transition, and then while that is in progress, could start an enable-\u003edisable transition.\n\nPlease look at how this is done with QoS as I suggested previously - qos_mod_in_progress.",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c41e537_4620164c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 4259,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-13T01:05:58Z",
+      "side": 1,
+      "message": "shouldn\u0027t have tab before *histogram",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
