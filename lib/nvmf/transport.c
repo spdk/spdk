@@ -50,6 +50,7 @@ static const struct spdk_nvmf_transport_ops *const g_transport_ops[] = {
 };
 
 #define NUM_TRANSPORTS (SPDK_COUNTOF(g_transport_ops))
+#define MAX_MEMPOOL_NAME_LENGTH 40
 
 static inline const struct spdk_nvmf_transport_ops *
 spdk_nvmf_get_transport_ops(enum spdk_nvme_transport_type type)
@@ -81,6 +82,8 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 {
 	const struct spdk_nvmf_transport_ops *ops = NULL;
 	struct spdk_nvmf_transport *transport;
+	char spdk_mempool_name[MAX_MEMPOOL_NAME_LENGTH];
+	int chars_written;
 
 	if ((opts->max_io_size % opts->io_unit_size != 0) ||
 	    (opts->max_io_size / opts->io_unit_size >
@@ -109,6 +112,28 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 
 	transport->ops = ops;
 	transport->opts = *opts;
+	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
+				 spdk_nvme_transport_id_trtype_str(type), "data");
+	if (chars_written < 0) {
+		SPDK_ERRLOG("Unable to allocate buffer for data buffer pool name\n");
+		ops->destroy(transport);
+		return NULL;
+	}
+	if (chars_written == MAX_MEMPOOL_NAME_LENGTH) {
+		SPDK_NOTICELOG("Due to transport name length, your transport buffer pool name has been truncated to %s\n",
+			       spdk_mempool_name);
+	}
+	transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
+				   opts->num_shared_buffers,
+				   opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				   SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!transport->data_buf_pool) {
+		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		ops->destroy(transport);
+		return NULL;
+	}
 
 	return transport;
 }
@@ -128,6 +153,17 @@ spdk_nvmf_transport_get_next(struct spdk_nvmf_transport *transport)
 int
 spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 {
+	if (transport->data_buf_pool != NULL) {
+		if (spdk_mempool_count(transport->data_buf_pool) !=
+		    transport->opts.num_shared_buffers) {
+			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
+				    spdk_mempool_count(transport->data_buf_pool),
+				    transport->opts.num_shared_buffers);
+		}
+	}
+
+	spdk_mempool_free(transport->data_buf_pool);
+
 	return transport->ops->destroy(transport);
 }
 

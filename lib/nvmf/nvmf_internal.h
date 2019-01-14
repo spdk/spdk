@@ -47,6 +47,13 @@
 
 #define SPDK_NVMF_MAX_SGL_ENTRIES	16
 
+/* AIO backend requires block size aligned data buffers,
+ * extra 4KiB aligned data buffer should work for most devices.
+ */
+#define SHIFT_4KB			12u
+#define NVMF_DATA_BUFFER_ALIGNMENT	(1u << SHIFT_4KB)
+#define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
+
 enum spdk_nvmf_subsystem_state {
 	SPDK_NVMF_SUBSYSTEM_INACTIVE = 0,
 	SPDK_NVMF_SUBSYSTEM_ACTIVATING,
