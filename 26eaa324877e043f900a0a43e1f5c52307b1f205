@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f5389f6_e3b51f8c",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-14T16:19:42Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be better to split this line into two separate commands?:\n1)\ntgt_rpc save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty\n2)\n[[ \"$1\" \u003d\u003d \"initiator\" ]] \u0026\u0026 initiator_rpc save_config | $config_filter -method delete_global_parameters | $config_filter -method check_empty",
+      "range": {
+        "startLine": 330,
+        "startChar": 0,
+        "endLine": 334,
+        "endChar": 86
+      },
+      "revId": "26eaa324877e043f900a0a43e1f5c52307b1f205",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
