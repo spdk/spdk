@@ -1115,6 +1115,26 @@ spdk_nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
 	return addr_1 == addr_2;
 }
 
+static void
+spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
+				    struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport)
+{
+	for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
+		if (group->buf_cache_count < group->buf_cache_size) {
+			STAILQ_INSERT_HEAD(&group->buf_cache,
+					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
+			group->buf_cache_count++;
+		} else {
+			spdk_mempool_put(transport->data_buf_pool, rdma_req->data.buffers[i]);
+		}
+		rdma_req->req.iov[i].iov_base = NULL;
+		rdma_req->data.buffers[i] = NULL;
+		rdma_req->req.iov[i].iov_len = 0;
+
+	}
+	rdma_req->data_from_pool = false;
+}
+
 typedef enum spdk_nvme_data_transfer spdk_nvme_data_transfer_t;
 
 static spdk_nvme_data_transfer_t
@@ -1182,18 +1202,29 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	void		*buf = NULL;
-	uint32_t	length = rdma_req->req.length;
-	uint64_t	translation_len;
-	uint32_t	i = 0;
-	int		rc = 0;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	void					*buf = NULL;
+	uint32_t				length = rdma_req->req.length;
+	uint64_t				translation_len;
+	uint32_t				i = 0;
+	int					rc = 0;
 
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rgroup = rqpair->poller->group;
 	rdma_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
-		if (!buf) {
-			rc = -ENOMEM;
-			goto err_exit;
+		if (!(STAILQ_EMPTY(&rgroup->group.buf_cache))) {
+			rgroup->group.buf_cache_count--;
+			buf = STAILQ_FIRST(&rgroup->group.buf_cache);
+			STAILQ_REMOVE_HEAD(&rgroup->group.buf_cache, link);
+			assert(buf != NULL);
+		} else {
+			buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
+			if (!buf) {
+				rc = -ENOMEM;
+				goto err_exit;
+			}
 		}
 
 		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
@@ -1221,12 +1252,9 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	return rc;
 
 err_exit:
+	spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport);
 	while (i) {
 		i--;
-		spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
-		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->req.iov[i].iov_len = 0;
-
 		rdma_req->data.wr.sg_list[i].addr = 0;
 		rdma_req->data.wr.sg_list[i].length = 0;
 		rdma_req->data.wr.sg_list[i].lkey = 0;
@@ -1331,14 +1359,14 @@ static void
 nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 		       struct spdk_nvmf_rdma_transport	*rtransport)
 {
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+
 	if (rdma_req->data_from_pool) {
-		/* Put the buffer/s back in the pool */
-		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-			spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
-			rdma_req->req.iov[i].iov_base = NULL;
-			rdma_req->data.buffers[i] = NULL;
-		}
-		rdma_req->data_from_pool = false;
+		rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+		rgroup = rqpair->poller->group;
+
+		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport);
 	}
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
