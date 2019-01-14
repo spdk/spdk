@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19857ac7_5380f98d",
+        "filename": "test/json_config/config_filter.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T14:33:23Z",
+      "side": 1,
+      "message": "It looks like you restored an earlier version of this patch. Please rollback again.",
+      "range": {
+        "startLine": 71,
+        "startChar": 39,
+        "endLine": 71,
+        "endChar": 48
+      },
+      "revId": "e4ae0682855a49570c5657659277d75333e46bcf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
