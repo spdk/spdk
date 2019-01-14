@@ -112,6 +112,12 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 
 	transport->ops = ops;
 	transport->opts = *opts;
+	if (pthread_mutex_init(&transport->lock, NULL)) {
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		ops->destroy(transport);
+		return NULL;
+	}
+
 	chars_written = snprintf(spdk_mempool_name, MAX_MEMPOOL_NAME_LENGTH, "%s_%s_%s", "spdk_nvmf",
 				 spdk_nvme_transport_id_trtype_str(type), "data");
 	if (chars_written < 0) {
@@ -128,7 +134,6 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 				   opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				   SPDK_ENV_SOCKET_ID_ANY);
-
 	if (!transport->data_buf_pool) {
 		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
 		ops->destroy(transport);
@@ -163,6 +168,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(transport->data_buf_pool);
+
+	pthread_mutex_destroy(&transport->lock);
 
 	return transport->ops->destroy(transport);
 }
