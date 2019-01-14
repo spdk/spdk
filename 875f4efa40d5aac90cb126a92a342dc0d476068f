@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "74135a21_7b1e0963",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-14T03:55:10Z",
+      "side": 1,
+      "message": "There is only VIRTIO_BLK_T_FLUSH command for now.",
+      "parentUuid": "f8940f44_e51d3b5c",
+      "range": {
+        "startLine": 358,
+        "startChar": 6,
+        "endLine": 358,
+        "endChar": 24
+      },
+      "revId": "875f4efa40d5aac90cb126a92a342dc0d476068f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17ed901e_16bea318",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-11T08:55:09Z",
       "side": 1,
       "message": "Incoming Virtio 1.1 spec say:\n\n  5.2.6.1 Driver Requirements: Device Operation\n  ...\n  A driver MUST set sector to 0 for a VIRTIO_BLK_T_FLUSH request. A driver SHOULD NOT include any\n  data in a VIRTIO_BLK_T_FLUSH request.\n\nVirtio 1.0 is not mentioning \"sector\" field at all for VIRTIO_BLK FLUSH. What is the right behavior?",
+      "range": {
+        "startLine": 360,
+        "startChar": 2,
+        "endLine": 360,
+        "endChar": 35
+      },
+      "revId": "875f4efa40d5aac90cb126a92a342dc0d476068f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e36ad00_bceb2159",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-14T03:55:10Z",
+      "side": 1,
+      "message": "I looked into the Linux Guest driver, it will set \"sector\" field for flush command, of course, flush in the specification means flush the whole disk, so it makes no difference here.",
+      "parentUuid": "17ed901e_16bea318",
       "range": {
         "startLine": 360,
         "startChar": 2,
