@@ -105,6 +105,17 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_exit unittest
 fi
 
+if [ $SPDK_TEST_UNITTEST_ONLY -eq 1 ]; then
+	trap - SIGINT SIGTERM EXIT
+	process_core
+	timing_enter cleanup
+	autotest_cleanup
+	timing_exit cleanup
+	timing_exit autotest
+	timing_finish
+	exit 0
+fi
+
 timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
