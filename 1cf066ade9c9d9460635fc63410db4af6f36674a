@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "21042d2c_95eec7c5",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:01:25Z",
+      "side": 1,
+      "message": "These functions all actually operate at a subsystem level, so they belong in lib/nvmf/subsystem.c.",
+      "revId": "1cf066ade9c9d9460635fc63410db4af6f36674a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "729b70f0_3be2f84f",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:01:25Z",
+      "side": 1,
+      "message": "Instead of taking a lock, I\u0027d prefer to see all reservation operations get sent over to the thread that owns the subsystem.",
+      "revId": "1cf066ade9c9d9460635fc63410db4af6f36674a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efd09b65_94442a62",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:01:25Z",
+      "side": 1,
+      "message": "Where is the reservation enforced on the I/O path?",
+      "revId": "1cf066ade9c9d9460635fc63410db4af6f36674a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc89fc13_1abbe947",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:01:25Z",
+      "side": 1,
+      "message": "Align these with tabs",
+      "revId": "1cf066ade9c9d9460635fc63410db4af6f36674a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
