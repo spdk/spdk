@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "01eb190e_198a4058",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T10:22:20Z",
+      "side": 1,
+      "message": "Changpeng, please either change the spec or be compliant with it. How do you expect us to review this patch?",
+      "parentUuid": "74135a21_7b1e0963",
+      "range": {
+        "startLine": 358,
+        "startChar": 6,
+        "endLine": 358,
+        "endChar": 24
+      },
+      "revId": "875f4efa40d5aac90cb126a92a342dc0d476068f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17ed901e_16bea318",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 3
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "I looked into the Linux Guest driver, it will set \"sector\" field for flush command, of course, flush in the specification means flush the whole disk, so it makes no difference here.",
       "parentUuid": "17ed901e_16bea318",
+      "range": {
+        "startLine": 360,
+        "startChar": 2,
+        "endLine": 360,
+        "endChar": 35
+      },
+      "revId": "875f4efa40d5aac90cb126a92a342dc0d476068f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "756ee707_b55513fc",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T10:22:20Z",
+      "side": 1,
+      "message": "Virtio 1.0 actually does mention this field - it shouldn\u0027t be used for flush.\n\n\u003e 5.2.6 Device Operation\n\u003e ...\n\u003e The sector number indicates the offset (multiplied by 512) where the read or write is to occur. This field is unused and set to 0 for scsi packet commands and for flush commands.\n\nIf the linux driver really sets the sector field, then I\u0027d guess the code here in SPDK is fine, but needs to be documented. Please mention we\u0027re basing on Linux implementation, which is not compliant with the spec.",
+      "parentUuid": "4e36ad00_bceb2159",
       "range": {
         "startLine": 360,
         "startChar": 2,
