@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "60b32dd8_b930a1be",
+        "filename": "test/json_config/common.sh",
+        "patchSetId": 42
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-14T15:50:59Z",
+      "side": 1,
+      "message": "Restart",
+      "range": {
+        "startLine": 228,
+        "startChar": 6,
+        "endLine": 228,
+        "endChar": 11
+      },
+      "revId": "637e58ae2c178e061f9d128cb24bde94b10a67f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
