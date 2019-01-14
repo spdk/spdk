@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a34ce42_0d0b33ad",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:13:53Z",
+      "side": 1,
+      "message": "This value isn\u0027t a bool, so I think it would be safer to set it to 1.",
+      "revId": "8484886db0a2946b763e4c34ca3839a31220c2c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9162261b_a7b4c853",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:13:53Z",
+      "side": 1,
+      "message": "I think this comment only applies to line 124, so maybe put it after the semi-colon instead. Right now it looks like it applies to the whole code block.",
+      "revId": "8484886db0a2946b763e4c34ca3839a31220c2c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "71dfae06_4df1ec39",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:13:53Z",
+      "side": 1,
+      "message": "Use 0\u0027s and 1\u0027s here to strictly line up with the specification values. Bool can be implemented in weird ways on other platforms.",
+      "revId": "8484886db0a2946b763e4c34ca3839a31220c2c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
