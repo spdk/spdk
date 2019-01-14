@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "935f20d6_1080322f",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-14T08:53:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "83af90f4_ecda07a7",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 53,
+        "endChar": 22
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93e72024_f66e71eb",
         "filename": "examples/nvme/hotplug/hotplug.c",
         "patchSetId": 1
@@ -71,6 +95,54 @@
     },
     {
       "key": {
+        "uuid": "bb641e52_55f5bf7f",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-14T08:53:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "10f55330_65834e71",
+      "range": {
+        "startLine": 93,
+        "startChar": 1,
+        "endLine": 93,
+        "endChar": 20
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c63d653d_48b75fe1",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-14T08:53:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "93e72024_f66e71eb",
+      "range": {
+        "startLine": 93,
+        "startChar": 33,
+        "endLine": 93,
+        "endChar": 63
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "39832e67_385b90f7",
         "filename": "examples/nvme/hotplug/hotplug.c",
         "patchSetId": 1
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-11T05:31:34Z",
       "side": 1,
       "message": "Can we define a Macro for this static variable also do we need provide a parameter from user input.",
+      "range": {
+        "startLine": 116,
+        "startChar": 19,
+        "endLine": 116,
+        "endChar": 26
+      },
+      "revId": "87b2a291e2bb3b2a93a10036ede9ec3b38ec8dc1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "faaf0308_ef21afd4",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-14T08:53:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "39832e67_385b90f7",
       "range": {
         "startLine": 116,
         "startChar": 19,
