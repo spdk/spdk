@@ -1,0 +1,225 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10acf423_5ffea284",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "The changes in this file shouldn\u0027t be needed, now that FTL doesn\u0027t create its own threads?\n\nBut I\u0027d be OK adding this.  I just think it should be a separate patch, before any FTL UT code that uses it.",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e42c55b1_b0aa23c1",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 52
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "I\u0027d prefer not adding this.  I see how some of the FTL unit tests are using this - but other modules in SPDK don\u0027t try to test invalid inputs like this - meaning we don\u0027t check that an assert fires if an invalid input is provided.\n\nJust focus on testing inputs that could cause errors or corner cases, but not ones that we say are completely invalid.\n\nSame for SPDK_EXPECT_ASSERT_FAIL above.\n\nMaybe this means we need to scrub functions that are doing asserts.  I haven\u0027t looked at all of them yet.",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d5eab046_91025158",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 52
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "I\u0027d prefer to just do the memcmp inline in the two places in ftl_rwb_ut.c that need this.  We have other places in SPDK unit tests that do memory comparisons - they just do the memcmp inline in the ASSERT.\n\nCan you explain why the memcmps in ftl_rwb_ut.c need to be FATAL - meaning abort immediately?  Typically we do that to avoid dereferencing null pointers but that doesn\u0027t seem to be the case here.",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8275bb41_2d4c4101",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "in the unit tests, we should assume that calloc always succeeds - the static analyzers will complain if we don\u0027t check the return value, so just do an SPDK_CU_ASSERT_FATAL(dev !\u003d NULL).  It makes the unit test code a lot simpler.\n\nApplies to rest of this file as well.",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c64805f_9444be0b",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "if id \u003e\u003d dev-\u003egeo.num_chk, doesn\u0027t that mean the unit test is bad?  if so, we should just SPDK_CU_ASSERT_FATAL instead of returning NULL",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64496c9a_4c569a47",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "SPDK_CU_ASSERT_FATAL instead, if dev \u003d\u003d NULL?",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbfc7568_e138feff",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cae7bc5_ef7a0f83",
+        "filename": "test/unit/lib/ftl/ftl_band.c/Makefile",
+        "patchSetId": 52
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "this line can be removed",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ec42099_8777ba5f",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "this line can be removed",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5362aabe_dc3d2a77",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "variable declarations should be at beginning of function",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7bc11c87_0554ff37",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "newline after declarations are done",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a363cd5f_f004c7a5",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "this is ok for now - but we should change ftl_ppa_flatten_punit to return a uint32_t instead of unsigned int - that fits with other SPDK modules",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e11f6044_4415e2a6",
+        "filename": "test/unit/lib/ftl/ftl_band.c/ftl_band_ut.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:33:02Z",
+      "side": 1,
+      "message": "CU_ASSERT?",
+      "revId": "cb73aa1399cf2f2f20e164559ede4c386166e0a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
