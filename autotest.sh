@@ -105,6 +105,11 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_exit unittest
 fi
 
+if [ $SPDK_TEST_UNITTEST_EXCLUSIVE -eq 1 ]; then
+	trap - EXIT
+	exit 0
+fi
+
 timing_enter lib
 
 if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
