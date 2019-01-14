@@ -57,7 +57,6 @@ static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
 	= TAILQ_HEAD_INITIALIZER(g_error_config);
 
 struct vbdev_error_info {
-	bool				enabled;
 	uint32_t			error_type;
 	uint32_t			error_num;
 };
@@ -127,17 +126,14 @@ spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint3
 
 	if (0xffffffff == io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
-			error_disk->error_vector[i].enabled = true;
 			error_disk->error_vector[i].error_type = error_type;
 			error_disk->error_vector[i].error_num = error_num;
 		}
 	} else if (0 == io_type) {
 		for (i = 0; i < SPDK_COUNTOF(error_disk->error_vector); i++) {
-			error_disk->error_vector[i].enabled = false;
 			error_disk->error_vector[i].error_num = 0;
 		}
 	} else {
-		error_disk->error_vector[io_type].enabled = true;
 		error_disk->error_vector[io_type].error_type = error_type;
 		error_disk->error_vector[io_type].error_num = error_num;
 	}
@@ -160,8 +156,7 @@ vbdev_error_reset(struct error_disk *error_disk, struct spdk_bdev_io *bdev_io)
 static uint32_t
 vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 {
-	if (error_disk->error_vector[io_type].enabled &&
-	    error_disk->error_vector[io_type].error_num) {
+	if (error_disk->error_vector[io_type].error_num) {
 		return error_disk->error_vector[io_type].error_type;
 	}
 	return 0;
