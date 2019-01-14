@@ -196,6 +196,7 @@ struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_transport_poll_group *group;
+	struct spdk_nvmf_transport_pg_cache_buf *buf;
 
 	group = transport->ops->poll_group_create(transport);
 	if (!group) {
@@ -203,12 +204,33 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 	group->transport = transport;
 
+	STAILQ_INIT(&group->buf_cache);
+
+	if (transport->opts.buf_cache_size) {
+		group->buf_cache_count = 0;
+		group->buf_cache_size = transport->opts.buf_cache_size;
+		while (group->buf_cache_count < group->buf_cache_size) {
+			buf = (struct spdk_nvmf_transport_pg_cache_buf *)spdk_mempool_get(transport->data_buf_pool);
+			if (!buf) {
+				SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache.\n");
+				break;
+			}
+			STAILQ_INSERT_HEAD(&group->buf_cache, buf, link);
+			group->buf_cache_count++;
+		}
+	}
 	return group;
 }
 
 void
 spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
+	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
+
+	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
+		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
+		spdk_mempool_put(group->transport->data_buf_pool, buf);
+	}
 	group->transport->ops->poll_group_destroy(group);
 }
 
