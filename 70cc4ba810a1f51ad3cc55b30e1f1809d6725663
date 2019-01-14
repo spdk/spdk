@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3b8334b_feafd7bd",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 902,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:06:20Z",
+      "side": 1,
+      "message": "This operation doesn\u0027t need to make any bdev calls/bdev translations, so put the code in lib/nvmf/subsystem.c.",
+      "revId": "70cc4ba810a1f51ad3cc55b30e1f1809d6725663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d524fa18_ddb28521",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:06:20Z",
+      "side": 1,
+      "message": "Send message to subsystem thread to perform this operation, as opposed to taking a lock.",
+      "revId": "70cc4ba810a1f51ad3cc55b30e1f1809d6725663",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
