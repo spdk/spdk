@@ -101,9 +101,16 @@ struct spdk_nvmf_listener {
 	TAILQ_ENTRY(spdk_nvmf_listener)	link;
 };
 
+struct spdk_nvmf_transport_pg_cache_buf {
+	STAILQ_ENTRY(spdk_nvmf_transport_pg_cache_buf) link;
+};
+
 struct spdk_nvmf_transport_poll_group {
-	struct spdk_nvmf_transport			*transport;
-	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)	link;
+	struct spdk_nvmf_transport					*transport;
+	STAILQ_HEAD(, spdk_nvmf_transport_pg_cache_buf)			buf_cache;
+	uint32_t							buf_cache_count;
+	uint32_t							buf_cache_size;
+	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
 struct spdk_nvmf_subsystem_poll_group {
