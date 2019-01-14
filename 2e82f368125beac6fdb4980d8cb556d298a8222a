@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "9086f023_fb067fe9",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T09:30:31Z",
+      "side": 1,
+      "message": "and here it is simply wrong since this spdk instance doesn\u0027t run on core 0.\n\nit doesn\u0027t trigger any error since SPDK doesn\u0027t pass this param to DPDK if it\u0027s value is 0 - it is silently ignored",
+      "range": {
+        "startLine": 37,
+        "startChar": 74,
+        "endLine": 37,
+        "endChar": 78
+      },
+      "revId": "2e82f368125beac6fdb4980d8cb556d298a8222a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6331bfc6_f3ad5f46",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 50
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T09:30:31Z",
+      "side": 1,
+      "message": "primary core always defaults to the first available one, so this doesn\u0027t need to be specified here",
+      "range": {
+        "startLine": 37,
+        "startChar": 39,
+        "endLine": 37,
+        "endChar": 44
+      },
+      "revId": "2e82f368125beac6fdb4980d8cb556d298a8222a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6fa6a7e1_37d99f7d",
         "filename": "test/json_config/json_config.sh",
         "patchSetId": 50
