@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "eb488348_e3fa0a0b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 883,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-14T07:57:54Z",
+      "side": 1,
+      "message": "Thanks, it\u0027s nice to have sct code, also can be aligned with other places.",
+      "parentUuid": "58ae8c94_a3100296",
+      "revId": "4db0343428dcbc76ffc58e2f812132bf6609b5b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "66b1fea8_8c459af5",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 5
