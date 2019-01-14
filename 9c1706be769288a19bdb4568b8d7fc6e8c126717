@@ -69,6 +69,30 @@
       "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4f71d0d_ea8982eb",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2019-01-14T04:59:39Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nThanks for the review. \n\nIn the test sock_ut.c, the port 3260 is used in posix_sock() and posix_sock_group(). I tested the change in my test bed, it is workable.",
+      "parentUuid": "8eb562b0_91b00c6f",
+      "range": {
+        "startLine": 79,
+        "startChar": 21,
+        "endLine": 79,
+        "endChar": 43
+      },
+      "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
