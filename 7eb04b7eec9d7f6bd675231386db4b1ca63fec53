@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5154217_9c85cdc0",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1048,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:18:08Z",
+      "side": 1,
+      "message": "What if another thread is setting up a reservation at the time that this is occurring? There is no lock here. The completion notification of a reservation acquire needs to be strictly ordered in time with completions of other operations.",
+      "revId": "7eb04b7eec9d7f6bd675231386db4b1ca63fec53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f05b9562_10628947",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:18:08Z",
+      "side": 1,
+      "message": "This list could be mutating while this is running.",
+      "revId": "7eb04b7eec9d7f6bd675231386db4b1ca63fec53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb66132f_8f4e2414",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:18:08Z",
+      "side": 1,
+      "message": "I think the way you have to implement this is to put reservation information into the subsystem group (maybe instead of just an array of I/O channels, it needs to be an array of data structures that contain the reservation and the I/O channel). Then, any time a reservation acquire or release occurs, a message is sent to each other thread to update the subsystem group with the new state. Only when all of the threads have processed that message can the reservation operation be completed back to the user.",
+      "revId": "7eb04b7eec9d7f6bd675231386db4b1ca63fec53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
