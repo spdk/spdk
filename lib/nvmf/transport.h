@@ -47,6 +47,9 @@ struct spdk_nvmf_transport {
 	/* A mempool for transport related data transfers */
 	struct spdk_mempool		*data_buf_pool;
 
+	/* A lock for touching global data */
+	pthread_mutex_t				lock;
+
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 

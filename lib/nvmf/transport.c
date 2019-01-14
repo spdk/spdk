@@ -110,6 +110,12 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 	transport->ops = ops;
 	transport->opts = *opts;
 
+	if (pthread_mutex_init(&transport->lock, NULL)) {
+		SPDK_ERRLOG("pthread_mutex_init() failed\n");
+		ops->destroy(transport);
+		return NULL;
+	}
+
 	transport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
 				   opts->num_shared_buffers,
 				   opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
@@ -150,6 +156,8 @@ spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 	}
 
 	spdk_mempool_free(transport->data_buf_pool);
+
+	pthread_mutex_destroy(&transport->lock);
 
 	return transport->ops->destroy(transport);
 }
