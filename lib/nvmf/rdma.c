@@ -2029,7 +2029,7 @@ spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 
 static void
 spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
-				     struct spdk_nvmf_rdma_qpair *rqpair)
+				     struct spdk_nvmf_rdma_qpair *rqpair, bool drain)
 {
 	struct spdk_nvmf_rdma_recv	*rdma_recv, *recv_tmp;
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
@@ -2037,7 +2037,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	/* We process I/O in the data transfer pending queue at the highest priority. */
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING],
 			   state_link, req_tmp) {
-		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
+		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
 		}
 	}
@@ -2045,7 +2045,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	/* The second highest priority is I/O waiting on memory buffers. */
 	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->ch->pending_data_buf_queue, link,
 			   req_tmp) {
-		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
+		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
 		}
 	}
@@ -2687,7 +2687,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			count++;
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 			break;
 
 		case IBV_WC_RDMA_WRITE:
@@ -2696,7 +2696,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 			break;
 
 		case IBV_WC_RDMA_READ:
@@ -2709,7 +2709,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
 
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 			break;
 
 		case IBV_WC_RECV:
@@ -2719,7 +2719,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair);
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 			break;
 
 		default:
