@@ -103,6 +103,9 @@ struct spdk_nvmf_listener {
 
 struct spdk_nvmf_transport_poll_group {
 	struct spdk_nvmf_transport			*transport;
+	void						**buffer_cache;
+	uint32_t					current_cache_idx;
+	uint32_t					buf_cache_size;
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)	link;
 };
 
