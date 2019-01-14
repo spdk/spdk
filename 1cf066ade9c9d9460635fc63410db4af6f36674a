@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "bde39e48_115c3205",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 624,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:45:47Z",
+      "side": 1,
+      "message": "I made a bunch of comments about performing operations on the subsystem thread throughout the patch series. However, in hindsight the right way to do this is to call spdk_nvmf_subsystem_pause() each time you need to update reservation configuration, followed by spdk_nvmf_subsystem_resume(). That will already do the right thing.",
+      "parentUuid": "729b70f0_3be2f84f",
+      "revId": "1cf066ade9c9d9460635fc63410db4af6f36674a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "efd09b65_94442a62",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 7
