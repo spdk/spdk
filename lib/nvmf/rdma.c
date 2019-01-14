@@ -1246,13 +1246,20 @@ err_exit:
 
 static int
 spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
-				 struct spdk_nvmf_rdma_device *device,
+				 struct spdk_nvmf_rdma_qpair	*rqpair,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	struct spdk_nvmf_rdma_device		*device;
 
+	if ((rqpair->port == NULL) || (rqpair->port->device == NULL)) {
+		SPDK_ERRLOG("rqpair (%p) port or device is invalid\n", rqpair);
+		return -1;
+	}
+
+	device = rqpair->port->device;
 	cmd = &rdma_req->req.cmd->nvme_cmd;
 	rsp = &rdma_req->req.rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
@@ -1360,7 +1367,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			       struct spdk_nvmf_rdma_request *rdma_req)
 {
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	struct spdk_nvmf_rdma_device	*device;
 	struct spdk_nvme_cpl		*rsp = &rdma_req->req.rsp->nvme_cpl;
 	int				rc;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
@@ -1370,7 +1376,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	int				cur_rdma_rw_depth;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
 
@@ -1434,7 +1439,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			/* Try to get a data buffer */
-			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
+			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, rqpair, rdma_req);
 			if (rc < 0) {
 				TAILQ_REMOVE(&rqpair->ch->pending_data_buf_queue, rdma_req, link);
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
