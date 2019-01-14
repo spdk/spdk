@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79b6c4ea_80754bf5",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 52
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T17:26:48Z",
+      "side": 1,
+      "message": "see Darek\u0027s comment on revision 50 - it wasn\u0027t fixed here",
+      "revId": "c50867fd43aabaf155eee080b8721cd54c61e70d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a4acaa5_485ea460",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 52
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T17:26:48Z",
+      "side": 1,
+      "message": "anought?\n\nI think what you had before was correct (enough)",
+      "revId": "c50867fd43aabaf155eee080b8721cd54c61e70d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
