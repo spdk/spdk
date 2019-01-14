@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "4530b601_208991b9",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:06:53Z",
+      "side": 1,
+      "message": "These functions aren\u0027t performing any bdev operations, so move the code to lib/nvmf/subsystem.c.",
+      "revId": "d1770023d67c428d24be81252471c25613aea805",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "46c0c85c_78802026",
         "filename": "lib/nvmf/ctrlr_bdev.c",
         "patchSetId": 7
