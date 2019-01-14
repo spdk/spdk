@@ -289,8 +289,6 @@ struct spdk_nvmf_tcp_port {
 struct spdk_nvmf_tcp_transport {
 	struct spdk_nvmf_transport		transport;
 
-	pthread_mutex_t				lock;
-
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 };
 
@@ -527,7 +525,6 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
 	spdk_io_device_unregister(ttransport, NULL);
-	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
 	return 0;
 }
@@ -585,7 +582,7 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	pthread_mutex_init(&ttransport->lock, NULL);
+	pthread_mutex_init(&ttransport->transport.lock, NULL);
 
 	spdk_io_device_register(ttransport, spdk_nvmf_tcp_mgmt_channel_create,
 				spdk_nvmf_tcp_mgmt_channel_destroy,
@@ -639,7 +636,7 @@ _spdk_nvmf_tcp_canon_listen_trid(struct spdk_nvme_transport_id *canon_trid,
 /**
  * Find an existing listening port.
  *
- * Caller must hold ttransport->lock.
+ * Caller must hold ttransport->transport.lock.
  */
 static struct spdk_nvmf_tcp_port *
 _spdk_nvmf_tcp_find_port(struct spdk_nvmf_tcp_transport *ttransport,
@@ -678,14 +675,14 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		return -EINVAL;
 	}
 
-	pthread_mutex_lock(&ttransport->lock);
+	pthread_mutex_lock(&ttransport->transport.lock);
 
 	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Already listening on %s port %s\n",
 			      trid->traddr, trid->trsvcid);
 		port->ref++;
-		pthread_mutex_unlock(&ttransport->lock);
+		pthread_mutex_unlock(&ttransport->transport.lock);
 		return 0;
 	}
 
@@ -693,7 +690,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 	if (!port) {
 		SPDK_ERRLOG("Port allocation failed\n");
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
+		pthread_mutex_unlock(&ttransport->transport.lock);
 		return -ENOMEM;
 	}
 
@@ -703,7 +700,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		SPDK_ERRLOG("Invalid traddr %s / trsvcid %s\n",
 			    trid->traddr, trid->trsvcid);
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
+		pthread_mutex_unlock(&ttransport->transport.lock);
 		return -ENOMEM;
 	}
 
@@ -713,7 +710,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 			    trid->traddr, trsvcid_int,
 			    spdk_strerror(errno), errno);
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
+		pthread_mutex_unlock(&ttransport->transport.lock);
 		return -errno;
 	}
 
@@ -730,7 +727,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		SPDK_ERRLOG("Socket address family mismatch\n");
 		spdk_sock_close(&port->listen_sock);
 		free(port);
-		pthread_mutex_unlock(&ttransport->lock);
+		pthread_mutex_unlock(&ttransport->transport.lock);
 		return -EINVAL;
 	}
 
@@ -738,7 +735,7 @@ spdk_nvmf_tcp_listen(struct spdk_nvmf_transport *transport,
 		       trid->traddr, trsvcid_int);
 
 	TAILQ_INSERT_TAIL(&ttransport->ports, port, link);
-	pthread_mutex_unlock(&ttransport->lock);
+	pthread_mutex_unlock(&ttransport->transport.lock);
 
 	return 0;
 }
@@ -756,7 +753,7 @@ spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Removing listen address %s port %s\n",
 		      trid->traddr, trid->trsvcid);
 
-	pthread_mutex_lock(&ttransport->lock);
+	pthread_mutex_lock(&ttransport->transport.lock);
 	port = _spdk_nvmf_tcp_find_port(ttransport, trid);
 	if (port) {
 		assert(port->ref > 0);
@@ -771,7 +768,7 @@ spdk_nvmf_tcp_stop_listen(struct spdk_nvmf_transport *transport,
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "Port not found\n");
 		rc = -ENOENT;
 	}
-	pthread_mutex_unlock(&ttransport->lock);
+	pthread_mutex_unlock(&ttransport->transport.lock);
 
 	return rc;
 }
