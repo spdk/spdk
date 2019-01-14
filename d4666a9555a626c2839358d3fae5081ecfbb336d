@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6602a055_47bcecdd",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "remove trace_path?",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44d7d3f2_472ee1f5",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "can these be uint32_t instead of unsigned int?",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f342b812_c6854746",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 245,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "*band doesn\u0027t look aligned with rest of variable declarations",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8021ff58_72d75656",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 486,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "which thread(s) will allocate and free buffers from this pool?  just the core thread?\n\nif so, then you probably want to use something else here instead of an spdk_mempool - you could use a single-producer/single-consumer ring, where you allocate the memory these buffers separately and then insert them into the ring\n\nthe reason is that the spdk mempool isn\u0027t going to end up with any buffers in the per-core cache, meaning every access will require a spin lock \n\nthis is ok for now (functionally it\u0027s fine), but if you don\u0027t fix this now please make a note to fix it in a follow-up patch later",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ee4fec92_3e18d867",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "I think you can get rid of -\u003etid now.  Ben made some recent changes which make spdk_get_thread() cheap using a thread local variable.  So then you can just save the spdk_thread object for the core thread and read thread directly, and use that for the comparison.\n\nWe really need to make that change now, because when we break the 1:1 reactor:thread relationship, using pthread_self() here wouldn\u0027t work.",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac85bfff_4d913c17",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 820,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "should have a newline after declarations before the rest of the code starts",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75a38ce9_f85d1ae0",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 838,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "if opts-\u003econf is valid, it will overwrite what was done in spdk_ftl_conf_init_defaults - so should we just put this spdk_ftl_conf_init_defaults into an else clause?",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6b29352_c1c0cb3b",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 970,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "size_t declaration should move to top of function (or even as a separate line within the \"if (dev-\u003ebands)\" block)",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f67318d5_6a6be438",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 1042,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T21:22:15Z",
+      "side": 1,
+      "message": "I noticed that ftl_anm_init() will result in the callback getting executed on the anm thread, not the thread that called ftl_anm_init.  Will that be OK?\n\nThis might be unexpected - elsewhere in SPDK, we always call the callback on the same thread that submitted the callback.",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
