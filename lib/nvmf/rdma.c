@@ -61,13 +61,6 @@
 /* The RDMA completion queue size */
 #define NVMF_RDMA_CQ_SIZE	4096
 
-/* AIO backend requires block size aligned data buffers,
- * extra 4KiB aligned data buffer should work for most devices.
- */
-#define SHIFT_4KB			12
-#define NVMF_DATA_BUFFER_ALIGNMENT	(1 << SHIFT_4KB)
-#define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1)
-
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -370,8 +363,6 @@ struct spdk_nvmf_rdma_transport {
 	struct spdk_nvmf_transport	transport;
 
 	struct rdma_event_channel	*event_channel;
-
-	struct spdk_mempool		*data_buf_pool;
 
 	pthread_mutex_t			lock;
 
@@ -1199,7 +1190,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	rdma_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(rtransport->data_buf_pool);
+		buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
 		if (!buf) {
 			rc = -ENOMEM;
 			goto err_exit;
@@ -1232,7 +1223,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 err_exit:
 	while (i) {
 		i--;
-		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
+		spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
 		rdma_req->req.iov[i].iov_base = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
@@ -1343,7 +1334,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	if (rdma_req->data_from_pool) {
 		/* Put the buffer/s back in the pool */
 		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-			spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
+			spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
 			rdma_req->req.iov[i].iov_base = NULL;
 			rdma_req->data.buffers[i] = NULL;
 		}
@@ -1693,17 +1684,6 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		return NULL;
 	}
 
-	rtransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_rdma",
-				    opts->num_shared_buffers,
-				    opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
-				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				    SPDK_ENV_SOCKET_ID_ANY);
-	if (!rtransport->data_buf_pool) {
-		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
-		spdk_nvmf_rdma_destroy(&rtransport->transport);
-		return NULL;
-	}
-
 	contexts = rdma_get_devices(NULL);
 	if (contexts == NULL) {
 		SPDK_ERRLOG("rdma_get_devices() failed: %s (%d)\n", spdk_strerror(errno), errno);
@@ -1842,16 +1822,6 @@ spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport)
 		free(device);
 	}
 
-	if (rtransport->data_buf_pool != NULL) {
-		if (spdk_mempool_count(rtransport->data_buf_pool) !=
-		    transport->opts.num_shared_buffers) {
-			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
-				    spdk_mempool_count(rtransport->data_buf_pool),
-				    transport->opts.num_shared_buffers);
-		}
-	}
-
-	spdk_mempool_free(rtransport->data_buf_pool);
 	spdk_io_device_unregister(rtransport, NULL);
 	pthread_mutex_destroy(&rtransport->lock);
 	free(rtransport);
