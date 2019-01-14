@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46c0c85c_78802026",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 788,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T18:05:11Z",
+      "side": 1,
+      "message": "It will be more scalable and performant if you send all of these operations over to the thread that owns the subsystem, rather than take a lock. You don\u0027t want a bunch of acquire/release reservation commands to slow down the whole system.",
+      "revId": "d1770023d67c428d24be81252471c25613aea805",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
