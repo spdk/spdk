@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0d63bb9f_984ee9e6",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1524,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T20:57:57Z",
+      "side": 1,
+      "message": "Instead of adding another flag to the controller, can\u0027t you just use cc.en?",
+      "revId": "38fdf447e979095a38bc8049f3544acd13ac8d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
