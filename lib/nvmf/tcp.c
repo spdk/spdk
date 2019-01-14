@@ -2642,8 +2642,10 @@ spdk_nvmf_tcp_sock_cb(void *arg, struct spdk_sock_group *group, struct spdk_sock
 	spdk_nvmf_tcp_qpair_process_pending(ttransport, tqpair);
 	rc = spdk_nvmf_tcp_sock_process(tqpair);
 	if (rc < 0) {
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
+		tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
 		spdk_nvmf_tcp_qpair_flush_pdus(tqpair);
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
+		spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
 	}
 }
 
