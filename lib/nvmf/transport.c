@@ -110,6 +110,18 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 	transport->ops = ops;
 	transport->opts = *opts;
 
+	transport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
+				   opts->num_shared_buffers,
+				   opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+				   SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!transport->data_buf_pool) {
+		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
+		ops->destroy(transport);
+		return NULL;
+	}
+
 	return transport;
 }
 
@@ -128,6 +140,17 @@ spdk_nvmf_transport_get_next(struct spdk_nvmf_transport *transport)
 int
 spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 {
+	if (transport->data_buf_pool != NULL) {
+		if (spdk_mempool_count(transport->data_buf_pool) !=
+		    transport->opts.num_shared_buffers) {
+			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
+				    spdk_mempool_count(transport->data_buf_pool),
+				    transport->opts.num_shared_buffers);
+		}
+	}
+
+	spdk_mempool_free(transport->data_buf_pool);
+
 	return transport->ops->destroy(transport);
 }
 

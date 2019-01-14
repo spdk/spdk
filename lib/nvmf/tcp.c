@@ -49,13 +49,6 @@
 #include "spdk_internal/log.h"
 #include "spdk_internal/nvme_tcp.h"
 
-/*
- * AIO backend requires block size aligned data buffers,
- * extra 4KiB aligned data buffer should work for most devices.
- */
-#define SHIFT_4KB			12u
-#define NVMF_DATA_BUFFER_ALIGNMENT	(1u << SHIFT_4KB)
-#define NVMF_DATA_BUFFER_MASK		(NVMF_DATA_BUFFER_ALIGNMENT - 1LL)
 #define NVMF_TCP_MAX_ACCEPT_SOCK_ONE_TIME 16
 
 #define NVMF_TCP_PDU_MAX_H2C_DATA_SIZE	131072
@@ -298,8 +291,6 @@ struct spdk_nvmf_tcp_transport {
 
 	pthread_mutex_t				lock;
 
-	struct spdk_mempool			*data_buf_pool;
-
 	TAILQ_HEAD(, spdk_nvmf_tcp_port)	ports;
 };
 
@@ -535,13 +526,6 @@ spdk_nvmf_tcp_destroy(struct spdk_nvmf_transport *transport)
 	assert(transport != NULL);
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
 
-	if (spdk_mempool_count(ttransport->data_buf_pool) != (transport->opts.num_shared_buffers)) {
-		SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
-			    spdk_mempool_count(ttransport->data_buf_pool),
-			    transport->opts.num_shared_buffers);
-	}
-
-	spdk_mempool_free(ttransport->data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
 	pthread_mutex_destroy(&ttransport->lock);
 	free(ttransport);
@@ -587,18 +571,6 @@ spdk_nvmf_tcp_create(struct spdk_nvmf_transport_opts *opts)
 	sge_count = opts->max_io_size / opts->io_unit_size;
 	if (sge_count > SPDK_NVMF_MAX_SGL_ENTRIES) {
 		SPDK_ERRLOG("Unsupported IO Unit size specified, %d bytes\n", opts->io_unit_size);
-		free(ttransport);
-		return NULL;
-	}
-
-	ttransport->data_buf_pool = spdk_mempool_create("spdk_nvmf_tcp_data",
-				    opts->num_shared_buffers,
-				    opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
-				    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				    SPDK_ENV_SOCKET_ID_ANY);
-
-	if (!ttransport->data_buf_pool) {
-		SPDK_ERRLOG("Unable to allocate buffer pool for poll group\n");
 		free(ttransport);
 		return NULL;
 	}
@@ -2164,7 +2136,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 
 	tcp_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(ttransport->data_buf_pool);
+		buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
 		if (!buf) {
 			goto nomem;
 		}
@@ -2185,7 +2157,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 nomem:
 	while (i) {
 		i--;
-		spdk_mempool_put(ttransport->data_buf_pool, tcp_req->buffers[i]);
+		spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
 		tcp_req->req.iov[i].iov_base = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
 
@@ -2596,7 +2568,7 @@ spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
 			if (tcp_req->data_from_pool) {
 				/* Put the buffer/s back in the pool */
 				for (uint32_t i = 0; i < tcp_req->req.iovcnt; i++) {
-					spdk_mempool_put(ttransport->data_buf_pool, tcp_req->buffers[i]);
+					spdk_mempool_put(ttransport->transport.data_buf_pool, tcp_req->buffers[i]);
 					tcp_req->req.iov[i].iov_base = NULL;
 					tcp_req->buffers[i] = NULL;
 				}
