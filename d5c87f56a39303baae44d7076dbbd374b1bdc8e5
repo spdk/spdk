@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e75e97dd_21c8da03",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:01:15Z",
+      "side": 1,
+      "message": "can we remove dev-\u003econf.trace now, and just always enable tracing by default?  even if we remove this trace flag here, tracing won\u0027t really be enabled unless the user enables the trace group ID from the command line",
+      "revId": "d5c87f56a39303baae44d7076dbbd374b1bdc8e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46006769_888fa49c",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-14T22:01:15Z",
+      "side": 1,
+      "message": "Could the single caller (ftl_io_init) just call ftl_trace_next_id directly?  or change the name of this function to ftl_trace_alloc_id\n\nWe have the concept of trace groups and the name of this function confused me with that.",
+      "revId": "d5c87f56a39303baae44d7076dbbd374b1bdc8e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
