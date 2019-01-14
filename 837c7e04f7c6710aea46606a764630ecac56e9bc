@@ -22,6 +22,30 @@
       "revId": "837c7e04f7c6710aea46606a764630ecac56e9bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "947be57d_507b5e3d",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T15:45:49Z",
+      "side": 1,
+      "message": "(Other than that, the patch looks fine, thanks!)",
+      "parentUuid": "6629530f_d4dac535",
+      "range": {
+        "startLine": 124,
+        "startChar": 18,
+        "endLine": 124,
+        "endChar": 36
+      },
+      "revId": "837c7e04f7c6710aea46606a764630ecac56e9bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
