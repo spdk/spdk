@@ -45,6 +45,30 @@
       "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7ca289f_bc166ec7",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T04:58:31Z",
+      "side": 1,
+      "message": "Apparently sock_ut uses 3260 as well.\n\nsock_ut.c:364\n\n\u003e static void\n\u003e posix_sock(void)\n\u003e {\n\u003e \t_sock(\"127.0.0.1\", 3260);\n\u003e }",
+      "parentUuid": "8eb562b0_91b00c6f",
+      "range": {
+        "startLine": 79,
+        "startChar": 21,
+        "endLine": 79,
+        "endChar": 43
+      },
+      "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
