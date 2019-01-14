@@ -213,12 +213,37 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 	group->transport = transport;
 
+	if (transport->opts.buf_cache_size) {
+		group->buffer_cache = calloc(transport->opts.buf_cache_size, sizeof(void *));
+		if (group->buffer_cache == NULL) {
+			transport->ops->poll_group_destroy(group);
+			return NULL;
+		} else {
+			group->current_cache_idx = 0;
+			group->buf_cache_size = transport->opts.buf_cache_size;
+			while (group->current_cache_idx < group->buf_cache_size) {
+				group->buffer_cache[group->current_cache_idx] = spdk_mempool_get(transport->data_buf_pool);
+				if (!group->buffer_cache[group->current_cache_idx]) {
+					SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache.\n");
+					break;
+				}
+				group->current_cache_idx++;
+			}
+		}
+	}
+
 	return group;
 }
 
 void
 spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
+	if (group->buffer_cache) {
+		while (group->current_cache_idx > 0) {
+			group->current_cache_idx--;
+			spdk_mempool_put(group->transport->data_buf_pool, group->buffer_cache[group->current_cache_idx]);
+		}
+	}
 	group->transport->ops->poll_group_destroy(group);
 }
 
