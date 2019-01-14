@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6629530f_d4dac535",
+        "filename": "lib/vhost/rte_vhost/vhost_user.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-14T15:43:38Z",
+      "side": 1,
+      "message": "Now that you removed the check for dev-\u003emem !\u003d NULL, this is no longer safe. You should probably use dev-\u003emem_table.nregions here instead.",
+      "range": {
+        "startLine": 124,
+        "startChar": 18,
+        "endLine": 124,
+        "endChar": 36
+      },
+      "revId": "837c7e04f7c6710aea46606a764630ecac56e9bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
