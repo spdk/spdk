@@ -44,6 +44,9 @@ struct spdk_nvmf_transport {
 	const struct spdk_nvmf_transport_ops	*ops;
 	struct spdk_nvmf_transport_opts		opts;
 
+	/* A mempool for transport related data transfers */
+	struct spdk_mempool			*data_buf_pool;
+
 	TAILQ_ENTRY(spdk_nvmf_transport)	link;
 };
 

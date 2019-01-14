@@ -227,7 +227,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
 	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
-	spdk_mempool_free(ttransport->data_buf_pool);
+	spdk_mempool_free(ttransport->transport.data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
@@ -250,7 +250,7 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.in_capsule_data_size == UT_IN_CAPSULE_DATA_SIZE);
 	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
-	spdk_mempool_free(ttransport->data_buf_pool);
+	spdk_mempool_free(ttransport->transport.data_buf_pool);
 	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
