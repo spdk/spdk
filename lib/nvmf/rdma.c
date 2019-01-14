@@ -1180,18 +1180,28 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	void		*buf = NULL;
-	uint32_t	length = rdma_req->req.length;
-	uint64_t	translation_len;
-	uint32_t	i = 0;
-	int		rc = 0;
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+	void					*buf = NULL;
+	uint32_t				length = rdma_req->req.length;
+	uint64_t				translation_len;
+	uint32_t				i = 0;
+	int					rc = 0;
 
+	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+	rgroup = rqpair->poller->group;
 	rdma_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
-		if (!buf) {
-			rc = -ENOMEM;
-			goto err_exit;
+		if (rgroup->group.current_cache_idx > 0) {
+			rgroup->group.current_cache_idx--;
+			buf = rgroup->group.buffer_cache[rgroup->group.current_cache_idx];
+			assert(buf != NULL);
+		} else {
+			buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
+			if (!buf) {
+				rc = -ENOMEM;
+				goto err_exit;
+			}
 		}
 
 		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
@@ -1221,7 +1231,13 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 err_exit:
 	while (i) {
 		i--;
-		spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
+		printf("%d\n", rgroup->group.current_cache_idx);
+		if (rgroup->group.current_cache_idx < rgroup->group.buf_cache_size) {
+			rgroup->group.buffer_cache[rgroup->group.current_cache_idx] = rdma_req->data.buffers[i];
+			rgroup->group.current_cache_idx++;
+		} else {
+			spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
+		}
 		rdma_req->req.iov[i].iov_base = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
@@ -1329,10 +1345,21 @@ static void
 nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 		       struct spdk_nvmf_rdma_transport	*rtransport)
 {
+	struct spdk_nvmf_rdma_qpair		*rqpair;
+	struct spdk_nvmf_rdma_poll_group	*rgroup;
+
 	if (rdma_req->data_from_pool) {
+		rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
+		rgroup = rqpair->poller->group;
+
 		/* Put the buffer/s back in the pool */
 		for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-			spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
+			if (rgroup->group.current_cache_idx < rgroup->group.buf_cache_size) {
+				rgroup->group.buffer_cache[rgroup->group.current_cache_idx] = rdma_req->data.buffers[i];
+				rgroup->group.current_cache_idx++;
+			} else {
+				spdk_mempool_put(rtransport->transport.data_buf_pool, rdma_req->data.buffers[i]);
+			}
 			rdma_req->req.iov[i].iov_base = NULL;
 			rdma_req->data.buffers[i] = NULL;
 		}
