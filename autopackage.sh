@@ -10,6 +10,10 @@ out=$PWD
 MAKEFLAGS=${MAKEFLAGS:--j16}
 cd $rootdir
 
+if [ $SPDK_TEST_UNITTEST_EXCLUSIVE -eq 1 ]; then
+	exit 0
+fi
+
 timing_enter autopackage
 
 $MAKE clean
