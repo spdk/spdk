@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8705646b_bc822067",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T21:45:28Z",
+      "side": 1,
+      "message": "Why place keep alive behind a #define? It is required by all of the NVMe-oF transports.",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8d06a57f_d3434461",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -105,6 +122,23 @@
     },
     {
       "key": {
+        "uuid": "36db8872_90e6f5b2",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T21:45:28Z",
+      "side": 1,
+      "message": "Which section of the spec says keep alive isn\u0027t supported on discovery controllers?",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "295b3dff_cb6b9990",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 2
@@ -125,6 +159,57 @@
       "revId": "23dd059cd067561ed688113090230d9902ed73cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebe97230_a894937c",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T21:45:28Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this list. Keep alive is an admin command, so it only ever occurs on the admin queue pair. There is 1 admin queue pair per controller, and there is already a list of all of the controllers inside of the spdk_nvmf_subsystem.",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74cb7b7b_8f9d5d80",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T21:45:28Z",
+      "side": 1,
+      "message": "You should probably just be starting a poller per controller that executes on each keep alive timeout. Inside that poller, see how long ago the latest keep alive arrived. If it\u0027s longer than the keep alive timeout, disconnect the whole controller.",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f956b05_a5eaa60e",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-14T21:45:28Z",
+      "side": 1,
+      "message": "Keep alive seems to be purely a controller level operation, so all of the code should be in lib/nvmf/ctrlr.c",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
