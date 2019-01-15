@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f842a01_386a85e7",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-15T06:49:23Z",
+      "side": 1,
+      "message": "you may be able to enforce this by adding SPDK_STATIC_ASSERT(offsetof(struct spdk_vhost_blk_session, vsession) \u003d\u003d 0, \"Incorrect offset\") here.",
+      "revId": "ba2141601d00b99c9c60ca60c21b75fc0cd77003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
