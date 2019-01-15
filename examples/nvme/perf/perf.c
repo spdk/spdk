@@ -42,6 +42,7 @@
 #include "spdk/histogram_data.h"
 #include "spdk/endian.h"
 #include "spdk/crc16.h"
+#include "spdk/util.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -174,6 +175,7 @@ static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
+static int g_num_of_io_requests;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -937,6 +939,7 @@ static void usage(char *program_name)
 	printf("\t[-c core mask for I/O submission/completion.]\n");
 	printf("\t\t(default: 1)\n");
 	printf("\t[-D disable submission queue in controller memory buffer, default: enabled]\n");
+	printf("\t[-Q number of requests to allocate for each NVMe I/O queue]");
 	printf("\t[-H enable header digest for TCP transport, default: disabled]\n");
 	printf("\t[-I enable data digest for TCP transport, default: disabled]\n");
 	printf("\t[-r Transport ID for local PCIe NVMe or NVMeoF]\n");
@@ -1359,7 +1362,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:Q:")) != -1) {
 		switch (op) {
 		case 'c':
 			g_core_mask = optarg;
@@ -1415,6 +1418,9 @@ parse_args(int argc, char **argv)
 		case 'M':
 			g_rw_percentage = atoi(optarg);
 			mix_specified = true;
+			break;
+		case 'Q':
+			g_num_of_io_requests = atoi(optarg);
 			break;
 		default:
 			usage(argv[0]);
@@ -1579,6 +1585,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 * the io_queue_size as much as possible.
 	 */
 	opts->io_queue_size = UINT16_MAX;
+	opts->io_queue_requests = spdk_max(512, g_num_of_io_requests);
 
 	/* Set the header and data_digest */
 	opts->header_digest = g_header_digest;
