@@ -55,7 +55,7 @@ free_rpc_start_nbd_disk(struct rpc_start_nbd_disk *req)
 
 static const struct spdk_json_object_decoder rpc_start_nbd_disk_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_start_nbd_disk, bdev_name), spdk_json_decode_string},
-	{"nbd_device", offsetof(struct rpc_start_nbd_disk, nbd_device), spdk_json_decode_string},
+	{"nbd_device", offsetof(struct rpc_start_nbd_disk, nbd_device), spdk_json_decode_string, true},
 };
 
 static void
@@ -78,12 +78,69 @@ spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 	spdk_jsonrpc_end_result(request, w);
 }
 
+static int
+check_available_nbd_disk(char *nbd_device)
+{
+	char nbd_block_path[256];
+	char tail[2];
+	int rc;
+	unsigned int nbd_idx;
+
+	/* nbd device path must be in format of /dev/nbd<num>, with no tail. */
+	rc = sscanf(nbd_device, "/dev/nbd%u%1s", &nbd_idx, tail);
+	if (rc != 1) {
+		errno = EINVAL;
+		return -1;
+	}
+
+	/* nbd device in using has a valid pid file in /sys/block */
+	snprintf(nbd_block_path, 256, "/sys/block/nbd%u/pid", nbd_idx);
+
+	rc = open(nbd_block_path, O_RDONLY);
+	if (rc < 0) {
+		if (errno == ENOENT) {
+			/* nbd_device is available */
+			return 0;
+		} else {
+			return -1;
+		}
+	}
+
+	close(rc);
+
+	/* nbd_device is in using */
+	return 1;
+}
+
+static char *
+find_available_nbd_disk(void)
+{
+	int i, rc;
+	char nbd_device[16];
+
+	for (i = 0; ; i++) {
+		snprintf(nbd_device, 16, "/dev/nbd%d", i);
+		rc = access(nbd_device, F_OK);
+		if (rc != 0) {
+			break;
+		}
+
+		rc = check_available_nbd_disk(nbd_device);
+		if (rc == 0) {
+			return strdup(nbd_device);
+		}
+	}
+
+	return NULL;
+}
+
 static void
 spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 			const struct spdk_json_val *params)
 {
 	struct rpc_start_nbd_disk req = {};
 	struct spdk_nbd_disk *nbd;
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_start_nbd_disk_decoders,
 				    SPDK_COUNTOF(rpc_start_nbd_disk_decoders),
@@ -92,8 +149,27 @@ spdk_rpc_start_nbd_disk(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.nbd_device == NULL || req.bdev_name == NULL) {
+	if (req.bdev_name == NULL) {
 		goto invalid;
+	}
+
+	if (req.nbd_device != NULL) {
+		rc = check_available_nbd_disk(req.nbd_device);
+		if (rc == 1) {
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "NBD device %s is in using.\n", req.nbd_device);
+			goto invalid;
+		}
+
+		if (rc != 0) {
+			SPDK_DEBUGLOG(SPDK_LOG_NBD, "Illegal nbd_device %s.\n", req.nbd_device);
+			goto invalid;
+		}
+	} else {
+		req.nbd_device = find_available_nbd_disk();
+		if (req.nbd_device == NULL) {
+			SPDK_INFOLOG(SPDK_LOG_NBD, "There is no available nbd device.\n");
+			goto invalid;
+		}
 	}
 
 	/* make sure nbd_device is not registered */
