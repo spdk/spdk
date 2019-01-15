@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f24a733d_bf908172",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 60
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b985c637_f0f4068a",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8c5de906_555c89ae",
         "filename": "CONFIG",
         "patchSetId": 60
@@ -33,6 +51,24 @@
       "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7fcd69b_126cd55d",
+        "filename": "CONFIG",
+        "patchSetId": 60
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8c5de906_555c89ae",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "abb243f0_abd268f1",
+        "filename": "configure",
+        "patchSetId": 60
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9e5e6eec_57901b87",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "426856c7_29fee6b6",
         "filename": "configure",
         "patchSetId": 60
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "31da2962_8e11ddec",
+        "filename": "configure",
+        "patchSetId": 60
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "426856c7_29fee6b6",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1a815bc1_746c5680",
         "filename": "lib/env_dpdk/env.mk",
         "patchSetId": 60
@@ -81,6 +153,24 @@
       "writtenOn": "2019-01-15T22:25:50Z",
       "side": 1,
       "message": "should rte_mbuf be here too?",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9fb68fee_3d566919",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 60
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "I was thinking it wasn\u0027t needed since its Y in the DPDK config file but that doesn\u0027t link it.  I\u0027m not sure why this works, maybe because I only use struct definitions from the header file? I ran bdevio with just crypto and with both crypto and compress enabled (on a crypto vol) and there are no issues",
+      "parentUuid": "1a815bc1_746c5680",
       "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "34ad02e8_9b941adf",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 60
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a4012f64_d1b6a7e1",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "730d8a01_7d49f392",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 60
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "3cc1e7c9_ac80aaa5",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "730d8a01_7d49f392",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fec1d1e9_61423e46",
         "filename": "scripts/pkgdep.sh",
         "patchSetId": 60
@@ -135,6 +261,24 @@
       "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a44fd0e_a13d9d92",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T22:53:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fec1d1e9_61423e46",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
