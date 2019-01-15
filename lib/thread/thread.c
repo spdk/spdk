@@ -115,12 +115,12 @@ struct spdk_thread {
 	 *  of the ring, executes it, then puts it back at the tail of
 	 *  the ring.
 	 */
-	TAILQ_HEAD(, spdk_poller)	active_pollers;
+	TAILQ_HEAD(active_pollers_head, spdk_poller)	active_pollers;
 
 	/**
 	 * Contains pollers running on this thread with a periodic timer.
 	 */
-	TAILQ_HEAD(timer_pollers_head, spdk_poller) timer_pollers;
+	TAILQ_HEAD(timer_pollers_head, spdk_poller)	timer_pollers;
 
 	struct spdk_ring		*messages;
 };
@@ -328,7 +328,7 @@ int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 {
 	uint32_t msg_count;
-	struct spdk_poller *poller;
+	struct spdk_poller *poller, *tmp;
 	int rc = 0;
 
 	assert(_get_thread() == NULL);
@@ -340,18 +340,17 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		rc = 1;
 	}
 
-	poller = TAILQ_FIRST(&thread->active_pollers);
-	if (poller) {
+	TAILQ_FOREACH_REVERSE_SAFE(poller, &thread->active_pollers,
+				   active_pollers_head, tailq, tmp) {
 		int poller_rc;
 
-		TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 		poller->state = SPDK_POLLER_STATE_RUNNING;
 		poller_rc = poller->fn(poller->arg);
 		if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+			TAILQ_REMOVE(&thread->active_pollers, poller, tailq);
 			free(poller);
 		} else {
 			poller->state = SPDK_POLLER_STATE_WAITING;
-			TAILQ_INSERT_TAIL(&thread->active_pollers, poller, tailq);
 		}
 
 #ifdef DEBUG
@@ -363,34 +362,38 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		if (poller_rc > rc) {
 			rc = poller_rc;
 		}
+
 	}
 
-	poller = TAILQ_FIRST(&thread->timer_pollers);
-	if (poller) {
+	if (!TAILQ_EMPTY(&thread->timer_pollers)) {
 		uint64_t now = spdk_get_ticks();
 
-		if (now >= poller->next_run_tick) {
-			int timer_rc = 0;
+		TAILQ_FOREACH_SAFE(poller, &thread->timer_pollers, tailq, tmp) {
+			if (now >= poller->next_run_tick) {
+				int timer_rc = 0;
 
-			TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
-			poller->state = SPDK_POLLER_STATE_RUNNING;
-			timer_rc = poller->fn(poller->arg);
-			if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
-				free(poller);
-			} else {
-				poller->state = SPDK_POLLER_STATE_WAITING;
-				_spdk_poller_insert_timer(thread, poller, now);
-			}
+				TAILQ_REMOVE(&thread->timer_pollers, poller, tailq);
+				poller->state = SPDK_POLLER_STATE_RUNNING;
+				timer_rc = poller->fn(poller->arg);
+				if (poller->state == SPDK_POLLER_STATE_UNREGISTERED) {
+					free(poller);
+				} else {
+					poller->state = SPDK_POLLER_STATE_WAITING;
+					_spdk_poller_insert_timer(thread, poller, now);
+				}
 
 #ifdef DEBUG
-			if (timer_rc == -1) {
-				SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %p returned -1\n", poller);
-			}
+				if (timer_rc == -1) {
+					SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Timed poller %p returned -1\n", poller);
+				}
 #endif
 
-			if (timer_rc > rc) {
-				rc = timer_rc;
+				if (timer_rc > rc) {
+					rc = timer_rc;
 
+				}
+			} else {
+				break;
 			}
 		}
 	}
