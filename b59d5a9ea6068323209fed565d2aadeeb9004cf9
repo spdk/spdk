@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dfac01b_5c692b16",
+        "filename": "configure",
+        "patchSetId": 61
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T23:23:29Z",
+      "side": 1,
+      "message": "Should this be CONFIG[ISAL] instead of CONFIG[REDUCE]?",
+      "revId": "b59d5a9ea6068323209fed565d2aadeeb9004cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "098e7ce9_5064e33a",
+        "filename": "configure",
+        "patchSetId": 61
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T23:23:29Z",
+      "side": 1,
+      "message": "I think you can remove this.  It gets covered by CONFIG[ISAL] below.  ARM won\u0027t have ISAL, but theoretically they should be able to still use REDUCE via some other accelerator in the future",
+      "range": {
+        "startLine": 394,
+        "startChar": 1,
+        "endLine": 399,
+        "endChar": 3
+      },
+      "revId": "b59d5a9ea6068323209fed565d2aadeeb9004cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8b0c5019_c61e2469",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 61
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T23:23:29Z",
+      "side": 1,
+      "message": "install-isal",
+      "revId": "b59d5a9ea6068323209fed565d2aadeeb9004cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
