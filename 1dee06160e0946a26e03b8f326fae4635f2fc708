@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6826494_de502493",
+        "filename": "autotest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-15T11:09:08Z",
+      "side": 1,
+      "message": "I think we shouldn\u0027t exit early - we still have to:\n- exit autotest timing\n- process any coredumps (if any can occur during unit tests, idk)\n- process UT coverage and clean gcov/lcov files",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 110,
+        "endChar": 7
+      },
+      "revId": "1dee06160e0946a26e03b8f326fae4635f2fc708",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
