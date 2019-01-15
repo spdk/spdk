@@ -188,15 +188,15 @@ int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn);
 void spdk_thread_lib_fini(void);
 
 /**
- * Initializes the calling thread for I/O channel allocation.
+ * Creates a new SPDK thread object.
  *
  * \param name Human-readable name for the thread; can be retrieved with spdk_thread_get_name().
  * The string is copied, so the pointed-to data only needs to be valid during the
- * spdk_allocate_thread() call. May be NULL to specify no name.
+ * spdk_thread_create() call. May be NULL to specify no name.
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_allocate_thread(const char *name);
+struct spdk_thread *spdk_thread_create(const char *name);
 
 /**
  * Release any resources related to the given thread and destroy it. Execution

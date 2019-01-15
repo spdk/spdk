@@ -185,7 +185,7 @@ spdk_thread_lib_fini(void)
 }
 
 struct spdk_thread *
-spdk_allocate_thread(const char *name)
+spdk_thread_create(const char *name)
 {
 	struct spdk_thread *thread;
 
