@@ -45,6 +45,30 @@
       "revId": "6ed49d402d90e74cd3d78856242b303b55f815f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17e57623_910c09b2",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1015600
+      },
+      "writtenOn": "2019-01-15T08:55:05Z",
+      "side": 1,
+      "message": "Thank you so much for review. I\u0027ll modify it and test.",
+      "parentUuid": "767578e8_b4b207c0",
+      "range": {
+        "startLine": 86,
+        "startChar": 24,
+        "endLine": 86,
+        "endChar": 33
+      },
+      "revId": "6ed49d402d90e74cd3d78856242b303b55f815f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
