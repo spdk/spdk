@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b985c637_f0f4068a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 60
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "library",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c5de906_555c89ae",
+        "filename": "CONFIG",
+        "patchSetId": 60
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "could we make this CONFIG_ISAL instead?\n\nthen this extends nicely when ARM supports ISAL",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9e5e6eec_57901b87",
+        "filename": "configure",
+        "patchSetId": 60
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "so based on previous comment, the if here is fine, but I think we set CONFIG[ISAL]\u003dy instead",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "426856c7_29fee6b6",
+        "filename": "configure",
+        "patchSetId": 60
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "CONFIG[ISAL]",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a815bc1_746c5680",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 60
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "should rte_mbuf be here too?",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4012f64_d1b6a7e1",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 60
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "CONFIG_ISAL",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "730d8a01_7d49f392",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "now that isa-l isn\u0027t just for reduce/compression, we should probably change this to --install-isal",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fec1d1e9_61423e46",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 60
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:25:50Z",
+      "side": 1,
+      "message": "INSTALL_ISAL (similar changes below)",
+      "revId": "1481c751cf0a1d9bd5e8c8a6cdd9fd8c889e5523",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
