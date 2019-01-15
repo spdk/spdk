@@ -559,6 +559,11 @@ _spdk_iscsi_conn_check_pending_tasks(void *arg)
 void
 spdk_iscsi_conn_destruct(struct spdk_iscsi_conn *conn)
 {
+	/* If a connection is already in exited status, just return */
+	if (conn->state >= ISCSI_CONN_STATE_EXITED) {
+		return;
+	}
+
 	conn->state = ISCSI_CONN_STATE_EXITED;
 
 	if (conn->sess != NULL && conn->pending_task_cnt > 0) {
