@@ -72,6 +72,14 @@ void vbdev_lvol_create_clone(struct spdk_lvol *lvol, const char *clone_name,
 void vbdev_lvol_resize(struct spdk_lvol *lvol, uint64_t sz, spdk_lvol_op_complete cb_fn,
 		       void *cb_arg);
 
+/**
+ * \brief Mark lvol as read only
+ * \param lvol Handle to lvol
+ * \param cb_fn Completion callback
+ * \param cb_arg Completion callback custom arguments
+ */
+void vbdev_lvol_set_read_only(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg);
+
 void vbdev_lvol_rename(struct spdk_lvol *lvol, const char *new_lvol_name,
 		       spdk_lvol_op_complete cb_fn, void *cb_arg);
 
