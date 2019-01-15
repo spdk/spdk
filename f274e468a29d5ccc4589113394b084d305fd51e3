@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "71307be9_30214364",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 207,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:49:53Z",
+      "side": 1,
+      "message": "this comment change should go in the patch that added the spdk_thread parameter (to be pedantic)",
+      "revId": "f274e468a29d5ccc4589113394b084d305fd51e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
