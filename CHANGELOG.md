@@ -84,6 +84,11 @@ each tpoint group status.
 New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
 disable a specific tpoint group.
 
+### RPC
+
+The `start_nbd_disk` RPC method now take nbd_device as an optional parameter. If nbd_device
+is specified, use that specified nbd device. If it's not specified, pick available one.
+
 ## v18.10:
 
 ### nvme

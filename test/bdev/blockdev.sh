@@ -42,6 +42,7 @@ function nbd_function_test() {
 		waitforlisten $nbd_pid $rpc_server
 
 		nbd_rpc_data_verify $rpc_server "${bdev_list[*]}" "${nbd_list[*]}"
+		nbd_rpc_operation_verify $rpc_server "${bdev_list[*]}"
 
 		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
 
