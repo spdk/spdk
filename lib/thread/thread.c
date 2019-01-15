@@ -54,6 +54,8 @@
 
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+static spdk_new_thread_fn g_new_thread_fn = NULL;
+
 struct io_device {
 	void				*io_device;
 	char				*name;
@@ -147,9 +149,12 @@ _set_thread_name(const char *thread_name)
 }
 
 int
-spdk_thread_lib_init(void)
+spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn)
 {
 	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
+
+	assert(g_new_thread_fn == NULL);
+	g_new_thread_fn = new_thread_fn;
 
 	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
 	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
@@ -220,6 +225,10 @@ spdk_allocate_thread(const char *name)
 	TAILQ_INSERT_TAIL(&g_threads, thread, tailq);
 	g_thread_count++;
 	pthread_mutex_unlock(&g_devlist_mutex);
+
+	if (g_new_thread_fn) {
+		g_new_thread_fn(thread);
+	}
 
 	return thread;
 }

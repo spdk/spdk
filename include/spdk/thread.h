@@ -51,6 +51,15 @@ struct spdk_io_channel_iter;
 struct spdk_poller;
 
 /**
+ * A function that is called each time a new thread is created.
+ * The implementor of this function should frequently call
+ * spdk_thread_poll() on the thread provided.
+ *
+ * \param thread The new spdk_thread.
+ */
+typedef void (*spdk_new_thread_fn)(struct spdk_thread *thread);
+
+/**
  * A function that will be called on the target thread.
  *
  * \param ctx Context passed as arg to spdk_thread_pass_msg().
@@ -166,9 +175,12 @@ struct spdk_io_channel {
 /**
  * Initialize the threading library. Must be called once prior to allocating any threads.
  *
+ * \param new_thread_fn Called each time a new SPDK thread is created. The implementor
+ * is expected to frequently call spdk_thread_poll() on the provided thread.
+ *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_thread_lib_init(void);
+int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn);
 
 /**
  * Release all resources associated with this library.
