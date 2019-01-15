@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cde4dc0a_ff312a47",
+        "filename": "test/unit/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:35:51Z",
+      "side": 1,
+      "message": "this is a nit, but it\u0027s clearer if you spdk_get_thread() after the spdk_fs_init()",
+      "revId": "ff7df0bc96a0659ab5d0409f2fa7c7ef058f4a2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fe36fe9_c231aff3",
+        "filename": "test/unit/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:35:51Z",
+      "side": 1,
+      "message": "this is a nit, but it\u0027s clearer if you spdk_get_thread() after the spdk_fs_unload()",
+      "revId": "ff7df0bc96a0659ab5d0409f2fa7c7ef058f4a2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
