@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f9c0c962_75f5c1a6",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1095,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-15T08:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ee0306e9_1f99a528",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3c789737_ea47e3d0",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 19
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-13T01:05:58Z",
       "side": 1,
       "message": "aggregated",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8da05fd7_33f85df7",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 19
+      },
+      "lineNbr": 1099,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-15T08:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c789737_ea47e3d0",
       "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -81,6 +117,24 @@
       "writtenOn": "2019-01-13T01:05:58Z",
       "side": 1,
       "message": "I don\u0027t think this works.  This would allow a user to start a disable-\u003eenable transition, and then while that is in progress, could start an enable-\u003edisable transition.\n\nPlease look at how this is done with QoS as I suggested previously - qos_mod_in_progress.",
+      "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3fcd24de_53833260",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 4205,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-15T08:36:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93363b68_507b20e1",
       "revId": "b4b6b209ea229ee834c63d3860c9a7db388d0335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
