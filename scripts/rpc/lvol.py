@@ -119,6 +119,18 @@ def resize_lvol_bdev(client, name, size):
     return client.call('resize_lvol_bdev', params)
 
 
+def set_read_only_lvol_bdev(client, name):
+    """Mark logical volume as read only.
+
+    Args:
+        name: name of logical volume to set as read only
+    """
+    params = {
+        'name': name,
+    }
+    return client.call('set_read_only_lvol_bdev', params)
+
+
 def destroy_lvol_bdev(client, name):
     """Destroy a logical volume.
 
