@@ -117,6 +117,30 @@
       "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "53029181_9d5e7c3e",
+        "filename": "test/unit/unittest.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1014914
+      },
+      "writtenOn": "2019-01-15T05:55:53Z",
+      "side": 1,
+      "message": "Hi Ziye,\n\nI will change 3260 to 1234 if port 3260 is not mandatory. Will update code soon. Thanks!",
+      "parentUuid": "610bd376_7be1a57c",
+      "range": {
+        "startLine": 79,
+        "startChar": 21,
+        "endLine": 79,
+        "endChar": 43
+      },
+      "revId": "9c1706be769288a19bdb4568b8d7fc6e8c126717",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
