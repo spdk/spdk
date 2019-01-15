@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfe60128_0de913a6",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 57
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:16:45Z",
+      "side": 1,
+      "message": "I think I\u0027d prefer to do something like:\n\nDPDK_FRAMEWORK\u003dn\n\nAnd then set DPDK_FRAMEWORK\u003dy if CRYPTO or REDUCE is set.\nThen at the end you can add the libraries that are needed for the DPDK framework itself.\n\nThen we can avoid all of the _DPDK_LIB_LIST changes, and just be more careful about how we add libraries to DPDK_LIB_LIST.",
+      "revId": "2931d2b9fe16b68ab25e9ba81d7c7758fb1f107c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed2d1c0f_522f2640",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 57
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:16:45Z",
+      "side": 1,
+      "message": "I\u0027m curious - why don\u0027t we need rte_mbuf for compressdev?",
+      "revId": "2931d2b9fe16b68ab25e9ba81d7c7758fb1f107c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
