@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "833101e5_bbe8106f",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2645,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-15T10:18:12Z",
+      "side": 1,
+      "message": "Checking if tqpair-\u003estate \u003c EXITING is not necessary?",
+      "revId": "5310dbe1db8d6ba8b04570a8a31be1add4c32617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
