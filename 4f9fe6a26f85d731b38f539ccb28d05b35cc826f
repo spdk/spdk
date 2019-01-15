@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "995782e5_76088cea",
+        "filename": "dpdk",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T20:28:15Z",
+      "side": 1,
+      "message": "Agreed - looks like you may have forgotten to update your DPDK submodule before updating your patch.  This part of the patch needs to be removed.",
+      "revId": "4f9fe6a26f85d731b38f539ccb28d05b35cc826f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
