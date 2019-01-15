@@ -146,6 +146,54 @@ vtophys_spdk_malloc_test(void)
 	}
 }
 
+static void
+vtophys_non_contig_buf_test(void)
+{
+	void *buf;
+	unsigned size = 128 * 1024 * 1024;
+	uint64_t paddr, paddr2;
+	uint64_t contig_len1, contig_len2;
+
+	buf = spdk_dma_zmalloc(size, 0, NULL);
+	if (buf == NULL) {
+		return; /* silently quit */
+	}
+
+	contig_len1 = size;
+	paddr = spdk_vtophys(buf, &contig_len1);
+	assert(paddr2 != SPDK_VTOPHYS_ERROR);
+	if (contig_len1 == size) {
+		/* everything's contiguous, silently quit */
+		goto out_free;
+	}
+
+	contig_len2 = size - contig_len1;
+	paddr2 = spdk_vtophys(buf + contig_len1, &contig_len2);
+	assert(paddr2 != SPDK_VTOPHYS_ERROR);
+
+	fprintf(stderr, "\n");
+	fprintf(stderr, "Found non-physically-contiguous buffer\n");
+	fprintf(stderr, "  %p - %p (%uMB, %uMB contiguous)\n", buf, buf + contig_len1 + contig_len2,
+		(unsigned)(contig_len1 + contig_len2) / 1024 / 1024, (unsigned)contig_len1 / 1024 / 1024);
+	fprintf(stderr, "  %p maps to paddr %p\n", buf, (void *)paddr);
+	fprintf(stderr, "  %p maps to paddr %p\n", buf + contig_len1, (void *)paddr2);
+
+	assert(contig_len1 >= 4096);
+	assert(contig_len2 >= 4096);
+
+	{
+		/* make the first 64 bytes physically contiguous */
+		int _4k_contig_offset = 64;
+		/* unaligned, non-contiguous 4k buffer */
+		void *_4k_buf = buf + contig_len1 - _4k_contig_offset;
+
+		(void)_4k_buf;
+	}
+
+out_free:
+	spdk_dma_free(buf);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -173,7 +221,8 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "vtophys_malloc_test", vtophys_malloc_test) == NULL ||
-		CU_add_test(suite, "vtophys_spdk_malloc_test", vtophys_spdk_malloc_test) == NULL
+		CU_add_test(suite, "vtophys_spdk_malloc_test", vtophys_spdk_malloc_test) == NULL ||
+		CU_add_test(suite, "vtophys_non_contig_buf_test", vtophys_non_contig_buf_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
