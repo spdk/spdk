@@ -406,6 +406,8 @@ spdk_reactors_init(unsigned int max_delay_us)
 
 	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
 
+	spdk_thread_lib_init(NULL);
+
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
 		spdk_reactor_construct(reactor, i, max_delay_us);
@@ -421,6 +423,8 @@ spdk_reactors_fini(void)
 {
 	uint32_t i;
 	struct spdk_reactor *reactor;
+
+	spdk_thread_lib_fini();
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
