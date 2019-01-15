@@ -405,6 +405,12 @@ spdk_lvol_resize(struct spdk_lvol *lvol, size_t sz,  spdk_lvol_op_complete cb_fn
 	cb_fn(cb_arg, 0);
 }
 
+void
+spdk_lvol_set_read_only(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_arg)
+{
+	cb_fn(cb_arg, 0);
+}
+
 int
 spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 {
@@ -678,6 +684,12 @@ vbdev_lvol_create_complete(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 
 static void
 vbdev_lvol_resize_complete(void *cb_arg, int lvolerrno)
+{
+	g_lvolerrno = lvolerrno;
+}
+
+static void
+vbdev_lvol_set_read_only_complete(void *cb_arg, int lvolerrno)
 {
 	g_lvolerrno = lvolerrno;
 }
@@ -1116,6 +1128,45 @@ ut_lvol_resize(void)
 }
 
 static void
+ut_lvol_set_read_only(void)
+{
+	struct spdk_lvol_store *lvs;
+	struct spdk_lvol *lvol;
+	int sz = 10;
+	int rc = 0;
+
+	/* Lvol store is successfully created */
+	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
+	CU_ASSERT(g_lvol_store->bs_dev != NULL);
+	lvs = g_lvol_store;
+
+	/* Successful lvol create */
+	g_lvolerrno = -1;
+	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_lvolerrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+	lvol = g_lvol;
+
+	/* Successful set lvol as read only */
+	g_lvolerrno = -1;
+	vbdev_lvol_set_read_only(lvol, vbdev_lvol_set_read_only_complete, NULL);
+	CU_ASSERT(g_lvolerrno == 0);
+
+	/* Successful lvol destroy */
+	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvol == NULL);
+
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	CU_ASSERT(g_lvol_store == NULL);
+}
+
+static void
 ut_lvs_unload(void)
 {
 	int rc = 0;
@@ -1388,6 +1439,7 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvs_destroy", ut_lvs_destroy) == NULL ||
 		CU_add_test(suite, "ut_lvs_unload", ut_lvs_unload) == NULL ||
 		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
+		CU_add_test(suite, "ut_lvol_set_read_only", ut_lvol_set_read_only) == NULL ||
 		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_io_type_supported", ut_vbdev_lvol_io_type_supported) == NULL ||
