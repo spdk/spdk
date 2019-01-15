@@ -117,16 +117,6 @@ DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
-DEFINE_STUB(spdk_nvmf_request_complete,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1);
-
-DEFINE_STUB(spdk_nvmf_request_free,
-	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1);
-
 DEFINE_STUB(spdk_nvmf_bdev_ctrlr_read_cmd,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
@@ -161,6 +151,11 @@ DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_io,
 	    int,
 	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_transport_req_complete,
+	    int,
+	    (struct spdk_nvmf_request *req),
 	    0);
 
 struct spdk_trace_histories *g_trace_histories;
@@ -225,11 +220,6 @@ spdk_nvmf_subsystem_get_sn(const struct spdk_nvmf_subsystem *subsystem)
 
 void
 spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
-{
-}
-
-void
-spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
 {
 }
 

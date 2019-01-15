@@ -107,7 +107,6 @@ $valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
-$valgrind $testdir/lib/nvmf/request.c/request_ut
 $valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 
