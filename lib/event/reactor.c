@@ -355,7 +355,7 @@ _spdk_reactor_run(void *arg)
 
 	spdk_set_thread(thread);
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
-	spdk_free_thread(thread);
+	spdk_thread_exit(thread);
 	return 0;
 }
 
