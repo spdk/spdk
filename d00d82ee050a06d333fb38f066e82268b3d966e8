@@ -16,6 +16,24 @@
       "revId": "d00d82ee050a06d333fb38f066e82268b3d966e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b2a5fe3_048135f0",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-15T09:30:14Z",
+      "side": 1,
+      "message": "In case we are not starting separate read thread this atomic is not needed, but we still need it in case we have one.",
+      "parentUuid": "f15cc8aa_5827d7b3",
+      "revId": "d00d82ee050a06d333fb38f066e82268b3d966e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
