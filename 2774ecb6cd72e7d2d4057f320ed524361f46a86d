@@ -22,6 +22,30 @@
       "revId": "2774ecb6cd72e7d2d4057f320ed524361f46a86d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71dd8931_71714f01",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-15T09:44:32Z",
+      "side": 1,
+      "message": "fixed. Thank you for your careful review.",
+      "parentUuid": "7f8312af_c5f82d18",
+      "range": {
+        "startLine": 842,
+        "startChar": 12,
+        "endLine": 842,
+        "endChar": 13
+      },
+      "revId": "2774ecb6cd72e7d2d4057f320ed524361f46a86d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
