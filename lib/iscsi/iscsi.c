@@ -1503,6 +1503,7 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 {
 	int rc = 0;
 	struct iscsi_bhs_login_rsp *rsph;
+	struct spdk_scsi_port *initiator_port;
 
 	rsph = (struct iscsi_bhs_login_rsp *)&rsp_pdu->bhs;
 	conn->authenticated = false;
@@ -1510,21 +1511,30 @@ spdk_iscsi_op_login_set_conn_info(struct spdk_iscsi_conn *conn,
 	conn->cid = cid;
 
 	if (conn->sess == NULL) {
-		/* new session */
-		rc = spdk_create_iscsi_sess(conn, target, session_type);
-		if (rc < 0) {
-			SPDK_ERRLOG("create_sess() failed\n");
+		/* create initiator port */
+		initiator_port = spdk_scsi_port_create(spdk_iscsi_get_isid(rsph->isid), 0, initiator_port_name);
+		if (initiator_port == NULL) {
+			SPDK_ERRLOG("create_port() failed\n");
 			rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
 			rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
 			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
 		}
 
+		/* new session */
+		rc = spdk_create_iscsi_sess(conn, target, session_type);
+		if (rc < 0) {
+			spdk_scsi_port_free(&initiator_port);
+			SPDK_ERRLOG("create_sess() failed\n");
+			rsph->status_class = ISCSI_CLASS_TARGET_ERROR;
+			rsph->status_detail = ISCSI_LOGIN_STATUS_NO_RESOURCES;
+			return SPDK_ISCSI_LOGIN_ERROR_RESPONSE;
+		}
 		/* initialize parameters */
+		conn->sess->initiator_port = initiator_port;
 		conn->StatSN = from_be32(&rsph->stat_sn);
-		conn->sess->initiator_port = spdk_scsi_port_create(spdk_iscsi_get_isid(rsph->isid),
-					     0, initiator_port_name);
 		conn->sess->isid = spdk_iscsi_get_isid(rsph->isid);
 		conn->sess->target = target;
+
 		/* Initiator port TransportID */
 		spdk_scsi_port_set_iscsi_transport_id(conn->sess->initiator_port,
 						      conn->initiator_name,
