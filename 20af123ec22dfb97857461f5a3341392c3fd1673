@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f3c7d0eb_7caadbc8",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:50:26Z",
+      "side": 1,
+      "message": "the comment change related to \"calling thread\" in the spdk_thread_exit patch should be made in this patch instead",
+      "revId": "20af123ec22dfb97857461f5a3341392c3fd1673",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d2d37c13_82c4a2bf",
         "filename": "test/unit/lib/blobfs/blobfs_sync_ut/blobfs_sync_ut.c",
         "patchSetId": 1
