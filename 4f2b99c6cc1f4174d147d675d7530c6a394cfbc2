@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c1772a57_99052583",
+        "filename": "test/nvme/hotplug.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-15T11:23:42Z",
+      "side": 1,
+      "message": "All is great, but there\u0027s a lot of output coming from hotplug app when we do the test.\nThis makes log file too big sometimes ant it\u0027s not getting synced to results server.",
+      "range": {
+        "startLine": 135,
+        "startChar": 0,
+        "endLine": 136,
+        "endChar": 14
+      },
+      "revId": "4f2b99c6cc1f4174d147d675d7530c6a394cfbc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
