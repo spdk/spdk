@@ -165,6 +165,11 @@ class Commands_Rpc(object):
         output, rc = self.rpc.resize_lvol_bdev(uuid, new_size)
         return rc
 
+    def set_read_only_lvol_bdev(self, uuid):
+        print("INFO: RPC COMMAND set_read_only_lvol_bdev")
+        output, rc = self.rpc.set_read_only_lvol_bdev(uuid)
+        return rc
+
     def start_nbd_disk(self, bdev_name, nbd_name):
         print("INFO: RPC COMMAND start_nbd_disk")
         output, rc = self.rpc.start_nbd_disk(bdev_name, nbd_name)

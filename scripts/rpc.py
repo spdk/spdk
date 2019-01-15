@@ -1092,6 +1092,14 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('size', help='new size in MiB for this bdev', type=int)
     p.set_defaults(func=resize_lvol_bdev)
 
+    def set_read_only_lvol_bdev(args):
+        rpc.lvol.set_read_only_lvol_bdev(args.client,
+                                         name=args.name)
+
+    p = subparsers.add_parser('set_read_only_lvol_bdev', help='Mark lvol bdev as read only')
+    p.add_argument('name', help='lvol bdev name')
+    p.set_defaults(func=set_read_only_lvol_bdev)
+
     def destroy_lvol_bdev(args):
         rpc.lvol.destroy_lvol_bdev(args.client,
                                    name=args.name)
