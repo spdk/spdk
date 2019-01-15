@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b3cf252_b4f7470f",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-15T11:21:09Z",
+      "side": 1,
+      "message": "pls keep then in the same line.",
+      "range": {
+        "startLine": 118,
+        "startChar": 28,
+        "endLine": 119,
+        "endChar": 4
+      },
+      "revId": "6b78a1ad0c0a1ce8a2cb250540afee0a89df2b6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83c8de75_74ce45d8",
+        "filename": "autobuild.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-15T11:21:09Z",
+      "side": 1,
+      "message": "Why remaking this directory?",
+      "range": {
+        "startLine": 121,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 16
+      },
+      "revId": "6b78a1ad0c0a1ce8a2cb250540afee0a89df2b6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
