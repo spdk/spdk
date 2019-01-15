@@ -22,6 +22,30 @@
       "revId": "b253f6f49efb7d518e0aab7cf5e264e43b466b62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "21411417_0529f2e5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-15T09:28:59Z",
+      "side": 1,
+      "message": "Ack, we\u0027ll probably do a single \u0027cleanup\u0027 patch that will take care of such typos. There are other messages we should reword as well.\n\nThanks",
+      "parentUuid": "0e5dca8e_90cc552b",
+      "range": {
+        "startLine": 366,
+        "startChar": 42,
+        "endLine": 366,
+        "endChar": 45
+      },
+      "revId": "b253f6f49efb7d518e0aab7cf5e264e43b466b62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
