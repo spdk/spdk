@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b6b45966_a091ac84",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T21:28:18Z",
+      "side": 1,
+      "message": "almost all of the rpc names start with a verb (bdev_inject_error is one exception) - so let\u0027s name these disable_bdev_histogram, enable_bdev_histogram, get_bdev_histogram",
+      "revId": "b324456e3e2a915498a478fbfb7e2a34b647b74f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0519944_3b261ed8",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T21:28:18Z",
+      "side": 1,
+      "message": "surely you can find a way to avoid duplicating this entire function for just the true/false parameter to spdk_bdev_histogram_enable. :-)",
+      "revId": "b324456e3e2a915498a478fbfb7e2a34b647b74f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c8f8f5e_ae69a0af",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T21:28:18Z",
+      "side": 1,
+      "message": "TODO",
+      "revId": "b324456e3e2a915498a478fbfb7e2a34b647b74f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
