@@ -199,183 +199,6 @@ static int g_aio_optind; /* Index of first AIO filename in argv */
 static void
 task_complete(struct perf_task *task);
 
-static void
-register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
-{
-	struct ns_entry *entry;
-	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries;
-	struct spdk_nvme_io_qpair_opts opts;
-
-	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-
-	if (!spdk_nvme_ns_is_active(ns)) {
-		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
-		       cdata->mn, cdata->sn,
-		       spdk_nvme_ns_get_id(ns));
-		g_warn = true;
-		return;
-	}
-
-	if (spdk_nvme_ns_get_size(ns) < g_io_size_bytes ||
-	    spdk_nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
-		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
-		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
-		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
-		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
-		g_warn = true;
-		return;
-	}
-
-	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
-	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
-	/* NVMe driver may add additional entries based on
-	 * stripe size and maximum transfer size, we assume
-	 * 1 more entry be used for stripe.
-	 */
-	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
-	if ((g_queue_depth * entries) > opts.io_queue_size) {
-		printf("controller IO queue size %u less than required\n",
-		       opts.io_queue_size);
-		printf("Consider using lower queue depth or small IO size because "
-		       "IO requests may be queued at the NVMe driver.\n");
-		g_warn = true;
-	}
-
-	entry = calloc(1, sizeof(struct ns_entry));
-	if (entry == NULL) {
-		perror("ns_entry malloc");
-		exit(1);
-	}
-
-	entry->type = ENTRY_TYPE_NVME_NS;
-	entry->u.nvme.ctrlr = ctrlr;
-	entry->u.nvme.ns = ns;
-	entry->num_io_requests = entries;
-
-	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
-			     g_io_size_bytes;
-	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
-
-	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
-	}
-
-	if (g_max_io_md_size < spdk_nvme_ns_get_md_size(ns)) {
-		g_max_io_md_size = spdk_nvme_ns_get_md_size(ns);
-	}
-
-	if (g_max_io_size_blocks < entry->io_size_blocks) {
-		g_max_io_size_blocks = entry->io_size_blocks;
-	}
-
-	entry->nsdata = spdk_nvme_ns_get_data(ns);
-
-	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
-
-	g_num_namespaces++;
-	entry->next = g_namespaces;
-	g_namespaces = entry;
-}
-
-static void
-unregister_namespaces(void)
-{
-	struct ns_entry *entry = g_namespaces;
-
-	while (entry) {
-		struct ns_entry *next = entry->next;
-		free(entry);
-		entry = next;
-	}
-}
-
-static void
-enable_latency_tracking_complete(void *cb_arg, const struct spdk_nvme_cpl *cpl)
-{
-	if (spdk_nvme_cpl_is_error(cpl)) {
-		printf("enable_latency_tracking_complete failed\n");
-	}
-	g_outstanding_commands--;
-}
-
-static void
-set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
-{
-	int res;
-	union spdk_nvme_intel_feat_latency_tracking latency_tracking;
-
-	if (enable) {
-		latency_tracking.bits.enable = 0x01;
-	} else {
-		latency_tracking.bits.enable = 0x00;
-	}
-
-	res = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
-					      latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
-	if (res) {
-		printf("fail to allocate nvme request.\n");
-		return;
-	}
-	g_outstanding_commands++;
-
-	while (g_outstanding_commands) {
-		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
-	}
-}
-
-static void
-register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
-{
-	struct spdk_nvme_ns *ns;
-	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
-	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
-	uint32_t nsid;
-
-	if (entry == NULL) {
-		perror("ctrlr_entry malloc");
-		exit(1);
-	}
-
-	entry->latency_page = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
-					       4096, NULL);
-	if (entry->latency_page == NULL) {
-		printf("Allocation error (latency page)\n");
-		exit(1);
-	}
-
-	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
-
-	entry->ctrlr = ctrlr;
-	entry->next = g_controllers;
-	g_controllers = entry;
-
-	if (g_latency_ssd_tracking_enable &&
-	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
-		set_latency_tracking_feature(ctrlr, true);
-	}
-
-	if (trid_entry->nsid == 0) {
-		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
-		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
-			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
-			if (ns == NULL) {
-				continue;
-			}
-			register_ns(ctrlr, ns);
-		}
-	} else {
-		ns = spdk_nvme_ctrlr_get_ns(ctrlr, trid_entry->nsid);
-		if (!ns) {
-			perror("Namespace does not exist.");
-			exit(1);
-		}
-
-		register_ns(ctrlr, ns);
-	}
-
-}
-
 #if HAVE_LIBAIO
 static int
 aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd, void *buf,
@@ -635,6 +458,183 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 }
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
+
+static void
+register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
+{
+	struct ns_entry *entry;
+	const struct spdk_nvme_ctrlr_data *cdata;
+	uint32_t max_xfer_size, entries;
+	struct spdk_nvme_io_qpair_opts opts;
+
+	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+
+	if (!spdk_nvme_ns_is_active(ns)) {
+		printf("Controller %-20.20s (%-20.20s): Skipping inactive NS %u\n",
+		       cdata->mn, cdata->sn,
+		       spdk_nvme_ns_get_id(ns));
+		g_warn = true;
+		return;
+	}
+
+	if (spdk_nvme_ns_get_size(ns) < g_io_size_bytes ||
+	    spdk_nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
+		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
+		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
+		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
+		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		g_warn = true;
+		return;
+	}
+
+	max_xfer_size = spdk_nvme_ns_get_max_io_xfer_size(ns);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	/* NVMe driver may add additional entries based on
+	 * stripe size and maximum transfer size, we assume
+	 * 1 more entry be used for stripe.
+	 */
+	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+	if ((g_queue_depth * entries) > opts.io_queue_size) {
+		printf("controller IO queue size %u less than required\n",
+		       opts.io_queue_size);
+		printf("Consider using lower queue depth or small IO size because "
+		       "IO requests may be queued at the NVMe driver.\n");
+		g_warn = true;
+	}
+
+	entry = calloc(1, sizeof(struct ns_entry));
+	if (entry == NULL) {
+		perror("ns_entry malloc");
+		exit(1);
+	}
+
+	entry->type = ENTRY_TYPE_NVME_NS;
+	entry->u.nvme.ctrlr = ctrlr;
+	entry->u.nvme.ns = ns;
+	entry->num_io_requests = entries;
+
+	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
+			     g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
+
+	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
+		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
+	}
+
+	if (g_max_io_md_size < spdk_nvme_ns_get_md_size(ns)) {
+		g_max_io_md_size = spdk_nvme_ns_get_md_size(ns);
+	}
+
+	if (g_max_io_size_blocks < entry->io_size_blocks) {
+		g_max_io_size_blocks = entry->io_size_blocks;
+	}
+
+	entry->nsdata = spdk_nvme_ns_get_data(ns);
+
+	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+
+	g_num_namespaces++;
+	entry->next = g_namespaces;
+	g_namespaces = entry;
+}
+
+static void
+unregister_namespaces(void)
+{
+	struct ns_entry *entry = g_namespaces;
+
+	while (entry) {
+		struct ns_entry *next = entry->next;
+		free(entry);
+		entry = next;
+	}
+}
+
+static void
+enable_latency_tracking_complete(void *cb_arg, const struct spdk_nvme_cpl *cpl)
+{
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		printf("enable_latency_tracking_complete failed\n");
+	}
+	g_outstanding_commands--;
+}
+
+static void
+set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
+{
+	int res;
+	union spdk_nvme_intel_feat_latency_tracking latency_tracking;
+
+	if (enable) {
+		latency_tracking.bits.enable = 0x01;
+	} else {
+		latency_tracking.bits.enable = 0x00;
+	}
+
+	res = spdk_nvme_ctrlr_cmd_set_feature(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING,
+					      latency_tracking.raw, 0, NULL, 0, enable_latency_tracking_complete, NULL);
+	if (res) {
+		printf("fail to allocate nvme request.\n");
+		return;
+	}
+	g_outstanding_commands++;
+
+	while (g_outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+}
+
+static void
+register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
+{
+	struct spdk_nvme_ns *ns;
+	struct ctrlr_entry *entry = malloc(sizeof(struct ctrlr_entry));
+	const struct spdk_nvme_ctrlr_data *cdata = spdk_nvme_ctrlr_get_data(ctrlr);
+	uint32_t nsid;
+
+	if (entry == NULL) {
+		perror("ctrlr_entry malloc");
+		exit(1);
+	}
+
+	entry->latency_page = spdk_dma_zmalloc(sizeof(struct spdk_nvme_intel_rw_latency_page),
+					       4096, NULL);
+	if (entry->latency_page == NULL) {
+		printf("Allocation error (latency page)\n");
+		exit(1);
+	}
+
+	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
+
+	entry->ctrlr = ctrlr;
+	entry->next = g_controllers;
+	g_controllers = entry;
+
+	if (g_latency_ssd_tracking_enable &&
+	    spdk_nvme_ctrlr_is_feature_supported(ctrlr, SPDK_NVME_INTEL_FEAT_LATENCY_TRACKING)) {
+		set_latency_tracking_feature(ctrlr, true);
+	}
+
+	if (trid_entry->nsid == 0) {
+		for (nsid = spdk_nvme_ctrlr_get_first_active_ns(ctrlr);
+		     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {
+			ns = spdk_nvme_ctrlr_get_ns(ctrlr, nsid);
+			if (ns == NULL) {
+				continue;
+			}
+			register_ns(ctrlr, ns);
+		}
+	} else {
+		ns = spdk_nvme_ctrlr_get_ns(ctrlr, trid_entry->nsid);
+		if (!ns) {
+			perror("Namespace does not exist.");
+			exit(1);
+		}
+
+		register_ns(ctrlr, ns);
+	}
+
+}
 
 static __thread unsigned int seed = 0;
 
