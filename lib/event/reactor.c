@@ -53,9 +53,17 @@ enum spdk_reactor_state {
 	SPDK_REACTOR_STATE_SHUTDOWN = 4,
 };
 
+struct spdk_lw_thread {
+	struct spdk_thread		*thread;
+	TAILQ_ENTRY(spdk_lw_thread)	link;
+};
+
 struct spdk_reactor {
 	/* Logical core number for this reactor. */
 	uint32_t					lcore;
+
+	/* Lightweight threads running on this reactor */
+	TAILQ_HEAD(, spdk_lw_thread)			threads;
 
 	/* Poller for get the rusage for the reactor. */
 	struct spdk_poller				*rusage_poller;
@@ -285,6 +293,7 @@ _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_thread	*thread;
+	struct spdk_lw_thread	*lw_thread, *tmp;
 	uint32_t		event_count;
 	uint64_t		now;
 	uint64_t		sleep_cycles;
@@ -300,6 +309,17 @@ _spdk_reactor_run(void *arg)
 	if (!thread) {
 		return -1;
 	}
+
+	lw_thread = calloc(1, sizeof(*lw_thread));
+	if (!lw_thread) {
+		spdk_thread_exit(thread);
+		return -ENOMEM;
+	}
+
+	lw_thread->thread = thread;
+
+	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
+
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
@@ -314,19 +334,21 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		bool took_action = false;
 
-		event_count = _spdk_event_queue_run_batch(reactor, thread);
-		if (event_count > 0) {
-			rc = 1;
-			now = spdk_get_ticks();
-			spdk_reactor_add_tsc_stats(reactor, rc, now);
-			took_action = true;
-		}
+		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+			event_count = _spdk_event_queue_run_batch(reactor, lw_thread->thread);
+			if (event_count > 0) {
+				rc = 1;
+				now = spdk_get_ticks();
+				spdk_reactor_add_tsc_stats(reactor, rc, now);
+				took_action = true;
+			}
 
-		rc = spdk_thread_poll(thread, 0);
-		if (rc != 0) {
-			now = spdk_get_ticks();
-			spdk_reactor_add_tsc_stats(reactor, rc, now);
-			took_action = true;
+			rc = spdk_thread_poll(lw_thread->thread, 0);
+			if (rc != 0) {
+				now = spdk_get_ticks();
+				spdk_reactor_add_tsc_stats(reactor, rc, now);
+				took_action = true;
+			}
 		}
 
 		/* Determine if the thread can sleep */
@@ -335,6 +357,7 @@ _spdk_reactor_run(void *arg)
 
 			now = spdk_get_ticks();
 			sleep_us = reactor->max_delay_us;
+			/* TODO: This is wrong */
 			next_run_tick = spdk_thread_next_poller_expiration(thread);
 
 			/* There are timers registered, so don't sleep beyond
@@ -360,7 +383,13 @@ _spdk_reactor_run(void *arg)
 
 	spdk_set_thread(thread);
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
-	spdk_thread_exit(thread);
+	spdk_set_thread(NULL);
+
+	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		spdk_thread_exit(lw_thread->thread);
+		free(lw_thread);
+	}
 
 	tls_reactor = NULL;
 	return 0;
@@ -371,6 +400,8 @@ spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t ma
 {
 	reactor->lcore = lcore;
 	reactor->max_delay_us = max_delay_us;
+
+	TAILQ_INIT(&reactor->threads);
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	assert(reactor->events != NULL);
