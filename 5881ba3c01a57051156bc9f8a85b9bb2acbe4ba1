@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "220a423e_2b7485aa",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 4162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T21:16:42Z",
+      "side": 1,
+      "message": "wuzhouhui is right - we should set histogram_enabled\u003dfalse here before disabling the channels that were enabled before the failure",
+      "revId": "5881ba3c01a57051156bc9f8a85b9bb2acbe4ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
