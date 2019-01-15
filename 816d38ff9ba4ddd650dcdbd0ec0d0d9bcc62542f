@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "236d70cc_312a9d6a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-15T09:12:00Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "75a7fb0a_3529af92",
+      "range": {
+        "startLine": 5,
+        "startChar": 4,
+        "endLine": 5,
+        "endChar": 13
+      },
+      "revId": "816d38ff9ba4ddd650dcdbd0ec0d0d9bcc62542f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2b75f71d_561d2063",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 5
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-15T06:46:29Z",
       "side": 1,
       "message": "Looks like we can write it as:\n\nif (ch !\u003d \u0027W\u0027) {\n  tmp \u003d strtoll(optart, \u0026end, 10);\n  if (int_range(tmp) \u003d\u003d flase) {\n    fprintf(stderr, \"-%c parse failed\\n\", ch);\n    return -ERANGE;\n  }\n}\n\nswitch (ch) {\n case \u0027q\u0027:\n   g_queue_depth \u003d tmp;\n ...\n}\n\nThis could reduce some level of similar code blocks.",
+      "revId": "816d38ff9ba4ddd650dcdbd0ec0d0d9bcc62542f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6e6cfbc2_7f0dc136",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 840,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-15T09:12:00Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "2b75f71d_561d2063",
       "revId": "816d38ff9ba4ddd650dcdbd0ec0d0d9bcc62542f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
