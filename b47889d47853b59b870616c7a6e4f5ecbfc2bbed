@@ -22,6 +22,30 @@
       "revId": "b47889d47853b59b870616c7a6e4f5ecbfc2bbed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "243529dc_ffadd7ed",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 54
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-15T14:28:31Z",
+      "side": 1,
+      "message": "This delete only \"File name\" but file itseld (the content) will exist as long as it is open by SPDK application. When target exit, OS will remove it.",
+      "parentUuid": "10535dab_93b4d769",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 3
+      },
+      "revId": "b47889d47853b59b870616c7a6e4f5ecbfc2bbed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
