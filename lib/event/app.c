@@ -624,8 +624,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_log_open();
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
-	spdk_thread_lib_init(NULL);
-
 	/*
 	 * If mask not specified on command line or in configuration file,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
@@ -698,7 +696,6 @@ spdk_app_fini(void)
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
 	spdk_log_close();
-	spdk_thread_lib_fini();
 }
 
 static void
