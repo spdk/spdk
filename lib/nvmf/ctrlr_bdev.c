@@ -335,8 +335,8 @@ struct nvmf_bdev_ctrlr_unmap {
 };
 
 static void
-nvmf_bdev_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
-			void *cb_arg)
+nvmf_bdev_ctrlr_unmap_cpl(struct spdk_bdev_io *bdev_io, bool success,
+			  void *cb_arg)
 {
 	struct nvmf_bdev_ctrlr_unmap *unmap_ctx = cb_arg;
 	struct spdk_nvmf_request	*req = unmap_ctx->req;
@@ -360,11 +360,11 @@ nvmf_bdev_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
 }
 
 static int
-nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			struct nvmf_bdev_ctrlr_unmap *unmap_ctx);
+nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		      struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+		      struct nvmf_bdev_ctrlr_unmap *unmap_ctx);
 static void
-nvmf_bdev_ctrlr_dsm_cmd_resubmit(void *arg)
+nvmf_bdev_ctrlr_unmap_resubmit(void *arg)
 {
 	struct nvmf_bdev_ctrlr_unmap *unmap_ctx = arg;
 	struct spdk_nvmf_request *req = unmap_ctx->req;
@@ -372,18 +372,20 @@ nvmf_bdev_ctrlr_dsm_cmd_resubmit(void *arg)
 	struct spdk_bdev *bdev = unmap_ctx->bdev;
 	struct spdk_io_channel *ch = unmap_ctx->ch;
 
-	nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req, unmap_ctx);
+	nvmf_bdev_ctrlr_unmap(bdev, desc, ch, req, unmap_ctx);
 }
 
 static int
-nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
-			struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			struct nvmf_bdev_ctrlr_unmap *unmap_ctx)
+nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		      struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
+		      struct nvmf_bdev_ctrlr_unmap *unmap_ctx)
 {
-	uint32_t attribute;
 	uint16_t nr, i;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvme_dsm_range *dsm_range;
+	uint64_t lba;
+	uint32_t lba_count;
 	int rc;
 
 	nr = ((cmd->cdw10 & 0x000000ff) + 1);
@@ -393,57 +395,64 @@ nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
-	attribute = cmd->cdw11 & 0x00000007;
-	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
-		struct spdk_nvme_dsm_range *dsm_range;
-		uint64_t lba;
-		uint32_t lba_count;
-
-		if (unmap_ctx == NULL) {
-			unmap_ctx = calloc(1, sizeof(*unmap_ctx));
-			if (!unmap_ctx) {
-				response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-				return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
-			}
-
-			unmap_ctx->req = req;
-			unmap_ctx->desc = desc;
-			unmap_ctx->ch = ch;
-		}
-
-		response->status.sct = SPDK_NVME_SCT_GENERIC;
-		response->status.sc = SPDK_NVME_SC_SUCCESS;
-
-		dsm_range = (struct spdk_nvme_dsm_range *)req->data;
-		for (i = unmap_ctx->count; i < nr; i++) {
-			lba = dsm_range[i].starting_lba;
-			lba_count = dsm_range[i].length;
-
-			unmap_ctx->count++;
-
-			rc = spdk_bdev_unmap_blocks(desc, ch, lba, lba_count,
-						    nvmf_bdev_ctrlr_dsm_cpl, unmap_ctx);
-			if (rc) {
-				if (rc == -ENOMEM) {
-					nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_bdev_ctrlr_dsm_cmd_resubmit, unmap_ctx);
-					/* Unmap was not yet submitted to bdev */
-					unmap_ctx->count--;
-					return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
-				}
-				response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-				unmap_ctx->count--;
-				/* We can't return here - we may have to wait for any other
-				 * unmaps already sent to complete */
-				break;
-			}
-		}
-
-		if (unmap_ctx->count == 0) {
-			free(unmap_ctx);
+	if (unmap_ctx == NULL) {
+		unmap_ctx = calloc(1, sizeof(*unmap_ctx));
+		if (!unmap_ctx) {
+			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		}
 
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		unmap_ctx->req = req;
+		unmap_ctx->desc = desc;
+		unmap_ctx->ch = ch;
+	}
+
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+
+	dsm_range = (struct spdk_nvme_dsm_range *)req->data;
+	for (i = unmap_ctx->count; i < nr; i++) {
+		lba = dsm_range[i].starting_lba;
+		lba_count = dsm_range[i].length;
+
+		unmap_ctx->count++;
+
+		rc = spdk_bdev_unmap_blocks(desc, ch, lba, lba_count,
+					    nvmf_bdev_ctrlr_unmap_cpl, unmap_ctx);
+		if (rc) {
+			if (rc == -ENOMEM) {
+				nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_bdev_ctrlr_unmap_resubmit, unmap_ctx);
+				/* Unmap was not yet submitted to bdev */
+				unmap_ctx->count--;
+				return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+			}
+			response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+			unmap_ctx->count--;
+			/* We can't return here - we may have to wait for any other
+				* unmaps already sent to complete */
+			break;
+		}
+	}
+
+	if (unmap_ctx->count == 0) {
+		free(unmap_ctx);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+
+static int
+nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+			struct spdk_io_channel *ch, struct spdk_nvmf_request *req)
+{
+	uint32_t attribute;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	attribute = cmd->cdw11 & 0x00000007;
+	if (attribute & SPDK_NVME_DSM_ATTR_DEALLOCATE) {
+		return nvmf_bdev_ctrlr_unmap(bdev, desc, ch, req, NULL);
 	}
 
 	response->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -524,7 +533,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 	case SPDK_NVME_OPC_FLUSH:
 		return nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req, NULL);
+		return nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
 	default:
 		return nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
 	}
