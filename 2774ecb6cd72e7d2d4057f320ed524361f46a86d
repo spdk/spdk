@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f8312af_c5f82d18",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T09:37:33Z",
+      "side": 1,
+      "message": "small \u0027w\u0027 based on the below switch case.",
+      "range": {
+        "startLine": 842,
+        "startChar": 12,
+        "endLine": 842,
+        "endChar": 13
+      },
+      "revId": "2774ecb6cd72e7d2d4057f320ed524361f46a86d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
