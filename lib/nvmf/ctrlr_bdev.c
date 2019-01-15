@@ -326,7 +326,7 @@ nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
 
-struct nvmf_virtual_ctrlr_unmap {
+struct nvmf_bdev_ctrlr_unmap {
 	struct spdk_nvmf_request	*req;
 	uint32_t			count;
 	struct spdk_bdev_desc		*desc;
@@ -335,10 +335,10 @@ struct nvmf_virtual_ctrlr_unmap {
 };
 
 static void
-nvmf_virtual_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
-			   void *cb_arg)
+nvmf_bdev_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
+			void *cb_arg)
 {
-	struct nvmf_virtual_ctrlr_unmap *unmap_ctx = cb_arg;
+	struct nvmf_bdev_ctrlr_unmap *unmap_ctx = cb_arg;
 	struct spdk_nvmf_request	*req = unmap_ctx->req;
 	struct spdk_nvme_cpl		*response = &req->rsp->nvme_cpl;
 	int				sc, sct;
@@ -362,11 +362,11 @@ nvmf_virtual_ctrlr_dsm_cpl(struct spdk_bdev_io *bdev_io, bool success,
 static int
 nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			struct nvmf_virtual_ctrlr_unmap *unmap_ctx);
+			struct nvmf_bdev_ctrlr_unmap *unmap_ctx);
 static void
 nvmf_bdev_ctrlr_dsm_cmd_resubmit(void *arg)
 {
-	struct nvmf_virtual_ctrlr_unmap *unmap_ctx = arg;
+	struct nvmf_bdev_ctrlr_unmap *unmap_ctx = arg;
 	struct spdk_nvmf_request *req = unmap_ctx->req;
 	struct spdk_bdev_desc *desc = unmap_ctx->desc;
 	struct spdk_bdev *bdev = unmap_ctx->bdev;
@@ -378,7 +378,7 @@ nvmf_bdev_ctrlr_dsm_cmd_resubmit(void *arg)
 static int
 nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			struct spdk_io_channel *ch, struct spdk_nvmf_request *req,
-			struct nvmf_virtual_ctrlr_unmap *unmap_ctx)
+			struct nvmf_bdev_ctrlr_unmap *unmap_ctx)
 {
 	uint32_t attribute;
 	uint16_t nr, i;
@@ -422,7 +422,7 @@ nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 			unmap_ctx->count++;
 
 			rc = spdk_bdev_unmap_blocks(desc, ch, lba, lba_count,
-						    nvmf_virtual_ctrlr_dsm_cpl, unmap_ctx);
+						    nvmf_bdev_ctrlr_dsm_cpl, unmap_ctx);
 			if (rc) {
 				if (rc == -ENOMEM) {
 					nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_bdev_ctrlr_dsm_cmd_resubmit, unmap_ctx);
