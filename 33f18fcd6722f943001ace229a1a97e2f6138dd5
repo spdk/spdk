@@ -16,6 +16,24 @@
       "revId": "33f18fcd6722f943001ace229a1a97e2f6138dd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb81574d_a5444f6e",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T16:41:54Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "3bc3f24a_b1db5fdf",
+      "revId": "33f18fcd6722f943001ace229a1a97e2f6138dd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
