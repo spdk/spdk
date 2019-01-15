@@ -16,6 +16,24 @@
       "revId": "2709d33c336fd1a288c0b821932f0938e790d19f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "713a91a9_0a3d8301",
+        "filename": "test/common/lib/ut_multithread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-15T05:16:24Z",
+      "side": 1,
+      "message": "CU_ASSERT just report failure, and will not abort the test.",
+      "parentUuid": "2da6e8ae_3e7353ee",
+      "revId": "2709d33c336fd1a288c0b821932f0938e790d19f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
