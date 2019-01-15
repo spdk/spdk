@@ -121,6 +121,30 @@
     },
     {
       "key": {
+        "uuid": "c9d3d465_14c1685e",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 358,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-15T06:41:31Z",
+      "side": 1,
+      "message": "There is no VIRTIO_BLK_T_FLUSH_OUT for now, we can\u0027t do that.",
+      "parentUuid": "90b95e97_64a91a16",
+      "range": {
+        "startLine": 358,
+        "startChar": 6,
+        "endLine": 358,
+        "endChar": 24
+      },
+      "revId": "875f4efa40d5aac90cb126a92a342dc0d476068f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17ed901e_16bea318",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 3
