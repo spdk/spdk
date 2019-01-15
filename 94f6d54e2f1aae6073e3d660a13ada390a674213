@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10373b59_ed420483",
+        "filename": "dpdk",
+        "patchSetId": 6
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-15T14:15:04Z",
+      "side": 0,
+      "message": "Why this change related with DPDK.",
+      "range": {
+        "startLine": 1,
+        "startChar": 17,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "94f6d54e2f1aae6073e3d660a13ada390a674213",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
