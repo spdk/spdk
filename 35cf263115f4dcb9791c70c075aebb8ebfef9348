@@ -22,6 +22,30 @@
       "revId": "35cf263115f4dcb9791c70c075aebb8ebfef9348",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2002e68c_b170c2ee",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2648,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-15T06:38:17Z",
+      "side": 1,
+      "message": "Hi Shuei,\nYou are right, the iscsi code is also written by me. But this time, we can put into the single qpair, it is same. Let me change line 2645 to tqpair-\u003estate \u003d NVME_TCP_QPAIR_STATE_EXITED;",
+      "parentUuid": "c8039650_d74b4092",
+      "range": {
+        "startLine": 2645,
+        "startChar": 0,
+        "endLine": 2648,
+        "endChar": 57
+      },
+      "revId": "35cf263115f4dcb9791c70c075aebb8ebfef9348",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
