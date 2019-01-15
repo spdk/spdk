@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d9a67946_704b694f",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-15T08:27:24Z",
+      "side": 1,
+      "message": "Nicpick but new line needed here.",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 85,
+        "endChar": 2
+      },
+      "revId": "6ed49d402d90e74cd3d78856242b303b55f815f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "767578e8_b4b207c0",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-15T08:27:24Z",
+      "side": 1,
+      "message": "I think this function take uint32_t as first argument. Can use \u0027crc\u0027 variable?",
+      "range": {
+        "startLine": 86,
+        "startChar": 24,
+        "endLine": 86,
+        "endChar": 33
+      },
+      "revId": "6ed49d402d90e74cd3d78856242b303b55f815f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
