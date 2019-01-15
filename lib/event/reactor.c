@@ -278,6 +278,8 @@ spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t co
 	return 0;
 }
 
+static __thread struct spdk_reactor *tls_reactor = NULL;
+
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -289,6 +291,9 @@ _spdk_reactor_run(void *arg)
 	uint32_t		sleep_us;
 	int			rc = -1;
 	char			thread_name[32];
+
+	assert(tls_reactor == NULL);
+	tls_reactor = reactor;
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
 	thread = spdk_thread_create(thread_name);
@@ -356,6 +361,8 @@ _spdk_reactor_run(void *arg)
 	spdk_set_thread(thread);
 	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
 	spdk_thread_exit(thread);
+
+	tls_reactor = NULL;
 	return 0;
 }
 
