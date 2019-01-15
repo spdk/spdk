@@ -12,6 +12,11 @@ and spdk_nvme_probe_poll_async() were added to enable this feature.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### RPC
+
+The `start_nbd_disk` RPC method now take nbd_device as an optional parameter. If nbd_device
+is specified, use that specified nbd device. If it's not specified, pick available one.
+
 ## v19.01:
 
 ### ocf bdev
