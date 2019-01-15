@@ -34,6 +34,24 @@
       "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9675e935_e8bb4013",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-15T15:09:56Z",
+      "side": 1,
+      "message": "Hi, Darek, yes, you\u0027ve pointed out the real pain spot.\nI tried, but failed to find out a widely acceptable way to prevent the nbd device races.\nWe can only make sure one nbd device is in using by the pid file. But we can\u0027t conclude that one nbd device is idle if no pid file.\n\nSo it\u0027s hard to prevent the races between different applications without extra pre-negotiated operations.\nFor the races inside one SPDK application like Darek\u0027s example, we can insert function spdk_nbd_disk_find_by_nbd_path inside function find_available_nbd_disk.\n\nWhat do you think about this way, Darek \u0026 Pawel?",
+      "parentUuid": "ac261752_662db427",
+      "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
