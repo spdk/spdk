@@ -351,7 +351,7 @@ thread_name(void)
 	SPDK_CU_ASSERT_FATAL(thread != NULL);
 	name = spdk_thread_get_name(thread);
 	CU_ASSERT(name != NULL);
-	spdk_free_thread(thread);
+	spdk_thread_exit(thread);
 
 	/* Create thread named "test_thread" */
 	thread = spdk_thread_create("test_thread");
@@ -361,7 +361,7 @@ thread_name(void)
 	name = spdk_thread_get_name(thread);
 	SPDK_CU_ASSERT_FATAL(name != NULL);
 	CU_ASSERT(strcmp(name, "test_thread") == 0);
-	spdk_free_thread(thread);
+	spdk_thread_exit(thread);
 }
 
 static uint64_t device1;

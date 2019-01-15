@@ -234,7 +234,7 @@ spdk_set_thread(struct spdk_thread *thread)
 }
 
 void
-spdk_free_thread(struct spdk_thread *thread)
+spdk_thread_exit(struct spdk_thread *thread)
 {
 	struct spdk_io_channel *ch;
 

@@ -207,7 +207,7 @@ struct spdk_thread *spdk_thread_create(const char *name);
  * All I/O channel references associated with the thread must be released using
  * spdk_put_io_channel() prior to calling this function.
  */
-void spdk_free_thread(struct spdk_thread *thread);
+void spdk_thread_exit(struct spdk_thread *thread);
 
 /**
  * Perform one iteration worth of processing on the thread. This includes
