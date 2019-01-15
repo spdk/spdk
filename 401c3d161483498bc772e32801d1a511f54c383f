@@ -16,6 +16,24 @@
       "revId": "401c3d161483498bc772e32801d1a511f54c383f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d92ca138_317b656b",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1495,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-15T09:11:59Z",
+      "side": 1,
+      "message": "Agree. Need to figure out how multi thread unit test framework works. For some reason allocating channels in bdev unit tests on different channels fails.",
+      "parentUuid": "40307856_3fc6d708",
+      "revId": "401c3d161483498bc772e32801d1a511f54c383f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
