@@ -103,7 +103,8 @@ free_threads(void)
 
 	for (i = 0; i < g_ut_num_threads; i++) {
 		set_thread(i);
-		spdk_free_thread();
+		spdk_free_thread(g_ut_threads[i].thread);
+		g_ut_threads[i].thread = NULL;
 	}
 
 	g_ut_num_threads = 0;

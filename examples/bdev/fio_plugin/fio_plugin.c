@@ -143,7 +143,7 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 
 	spdk_set_thread(fio_thread->thread);
 
-	spdk_free_thread();
+	spdk_free_thread(fio_thread->thread);
 	free(fio_thread->iocq);
 	free(fio_thread);
 }
