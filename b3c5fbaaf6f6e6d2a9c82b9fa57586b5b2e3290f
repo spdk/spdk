@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9ef090e_ada319d5",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-15T15:24:18Z",
+      "side": 1,
+      "message": "In the interest of time, you probably don\u0027t need to test all of these different devices. More devices is better, but they\u0027ll mostly behave the same way.",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b605b0dd_d2e71d82",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-15T15:24:18Z",
+      "side": 1,
+      "message": "What\u0027s the difference between heavy and normal? You can probably only do \"heavy\".",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fb912e3_4ce1833b",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-15T15:24:18Z",
+      "side": 1,
+      "message": "You want to cover both RDMA and TCP transports.",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "266cfae4_ddf10985",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-15T15:24:18Z",
+      "side": 1,
+      "message": "Testing these virtual bdevs is a good thing to do and we should do it, but I\u0027m not sure we have to do it strictly as part of \"nvmf hotplug testing\". In fact, it\u0027s probably easier to do it using bdev_svc.",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
