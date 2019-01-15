@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdcb6e17_0c1902b3",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 57
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T19:27:05Z",
+      "side": 1,
+      "message": "Yup, sounds good!",
+      "parentUuid": "dfe60128_0de913a6",
+      "revId": "2931d2b9fe16b68ab25e9ba81d7c7758fb1f107c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed2d1c0f_522f2640",
         "filename": "lib/env_dpdk/env.mk",
         "patchSetId": 57
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-15T19:16:45Z",
       "side": 1,
       "message": "I\u0027m curious - why don\u0027t we need rte_mbuf for compressdev?",
+      "revId": "2931d2b9fe16b68ab25e9ba81d7c7758fb1f107c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8629246_814d870a",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 57
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T19:27:05Z",
+      "side": 1,
+      "message": "It is needed, it looks like the common option is set to Y now, I assume back when we introduced crypto it was N so we to explicitly set it.  I\u0027ll remove it from the crypto when I make the other suggested change and make sure things build individually, together or with nothing.",
+      "parentUuid": "ed2d1c0f_522f2640",
       "revId": "2931d2b9fe16b68ab25e9ba81d7c7758fb1f107c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
