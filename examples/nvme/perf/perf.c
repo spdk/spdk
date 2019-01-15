@@ -144,6 +144,7 @@ struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
 	void			*buf;
 	struct iovec		iov;
+	struct iovec		md_iov;
 	uint64_t		submit_tsc;
 	uint16_t		appmask;
 	uint16_t		apptag;
@@ -587,7 +588,7 @@ static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 static void
 nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 {
-	uint32_t max_io_size_bytes;
+	uint32_t max_io_size_bytes, max_md_size_bytes;
 
 	/* maximum extended lba format size from all active namespace,
 	 * it's same with g_io_size_bytes for namespace without metadata.
@@ -602,6 +603,14 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 
 	task->iov.iov_base = task->buf;
 	task->iov.iov_len = max_io_size_bytes;
+
+	max_md_size_bytes = g_max_io_md_size * g_max_io_size_blocks;
+	task->md_iov.iov_base = spdk_dma_zmalloc(max_md_size_bytes, g_io_align, NULL);
+	task->md_iov.iov_len = max_md_size_bytes;
+	if (task->md_iov.iov_base == NULL) {
+		fprintf(stderr, "task->md_iov.iov_base spdk_dma_zmalloc failed\n");
+		exit(1);
+	}
 }
 
 static int
@@ -631,10 +640,19 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 						     task, entry->io_flags,
 						     task->appmask, task->apptag);
 	} else {
-		rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
-		if (rc != 0) {
-			fprintf(stderr, "Generation of DIF failed\n");
-			return rc;
+		if (entry->md_interleave) {
+			rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
+			if (rc != 0) {
+				fprintf(stderr, "Generation of DIF failed\n");
+				return rc;
+			}
+		} else {
+			rc = spdk_dix_generate(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+					       &task->dif_ctx);
+			if (rc != 0) {
+				fprintf(stderr, "Generation of DIX failed\n");
+				return rc;
+			}
 		}
 
 		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
@@ -658,12 +676,22 @@ nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
-	if (spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns) &&
-	    task->is_read && !g_metacfg_pract_flag) {
+	if (entry->md_size == 0 || !task->is_read || g_metacfg_pract_flag) {
+		return;
+	}
+
+	if (entry->md_interleave) {
 		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
 				     &err_blk);
 		if (rc != 0) {
 			fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
+				err_blk.err_type, err_blk.err_offset);
+		}
+	} else {
+		rc = spdk_dix_verify(&task->iov, 1, &task->md_iov, entry->io_size_blocks,
+				     &task->dif_ctx, &err_blk);
+		if (rc != 0) {
+			fprintf(stderr, "DIX error detected. type=%d, offset=%" PRIu32 "\n",
 				err_blk.err_type, err_blk.err_offset);
 		}
 	}
