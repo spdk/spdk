@@ -306,6 +306,18 @@ bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid);
 
 void spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata);
+int spdk_nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				  struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 
 int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_ctrlr *ctrlr);

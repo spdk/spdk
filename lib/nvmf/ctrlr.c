@@ -1957,3 +1957,61 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 	spdk_nvmf_request_complete(ctrlr->aer_req);
 	ctrlr->aer_req = NULL;
 }
+
+int
+spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+{
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	/* pre-set response details for this command */
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	nsid = cmd->nsid;
+
+	if (spdk_unlikely(ctrlr == NULL)) {
+		SPDK_ERRLOG("I/O command sent before CONNECT\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_unlikely(ctrlr->vcprop.cc.bits.en != 1)) {
+		SPDK_ERRLOG("I/O command sent to disabled controller\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		response->status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	bdev = ns->bdev;
+	desc = ns->desc;
+	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_READ:
+		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_WRITE:
+		return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+		return spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_FLUSH:
+		return spdk_nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+		return spdk_nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+	default:
+		return spdk_nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+	}
+}
