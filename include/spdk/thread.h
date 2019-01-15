@@ -199,12 +199,15 @@ void spdk_thread_lib_fini(void);
 struct spdk_thread *spdk_allocate_thread(const char *name);
 
 /**
- * Release any resources related to the calling thread for I/O channel allocation.
+ * Release any resources related to the given thread and destroy it. Execution
+ * continues on the current system thread after returning.
  *
- * All I/O channel references related to the calling thread must be released using
+ * \param thread The thread to destroy.
+ *
+ * All I/O channel references associated with the thread must be released using
  * spdk_put_io_channel() prior to calling this function.
  */
-void spdk_free_thread(void);
+void spdk_free_thread(struct spdk_thread *thread);
 
 /**
  * Perform one iteration worth of processing on the thread. This includes

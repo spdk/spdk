@@ -266,7 +266,7 @@ test_nvmf_tcp_create(void)
 	transport = spdk_nvmf_tcp_create(&opts);
 	CU_ASSERT_PTR_NULL(transport);
 
-	spdk_free_thread();
+	spdk_free_thread(thread);
 }
 
 static void
@@ -294,7 +294,7 @@ test_nvmf_tcp_destroy(void)
 	/* destroy transport */
 	CU_ASSERT(spdk_nvmf_tcp_destroy(transport) == 0);
 
-	spdk_free_thread();
+	spdk_free_thread(thread);
 }
 
 static void
@@ -313,7 +313,7 @@ test_nvmf_tcp_poll_group_create(void)
 	CU_ASSERT_PTR_NOT_NULL(group);
 	spdk_nvmf_tcp_poll_group_destroy(group);
 
-	spdk_free_thread();
+	spdk_free_thread(thread);
 }
 
 static void

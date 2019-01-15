@@ -364,7 +364,7 @@ fs_delete_file_without_close(void)
 static void
 terminate_spdk_thread(void *arg)
 {
-	spdk_free_thread();
+	spdk_free_thread(spdk_get_thread());
 	pthread_exit(NULL);
 }
 
@@ -394,8 +394,6 @@ spdk_thread(void *arg)
 		spdk_thread_poll(thread, 0);
 		spdk_set_thread(thread);
 	}
-
-	spdk_free_thread();
 
 	return NULL;
 }
@@ -440,6 +438,6 @@ int main(int argc, char **argv)
 	free(g_dev_buffer);
 	send_request(terminate_spdk_thread, NULL);
 	pthread_join(spdk_tid, NULL);
-	spdk_free_thread();
+	spdk_free_thread(thread);
 	return num_failures;
 }
