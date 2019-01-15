@@ -619,7 +619,7 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 	}
 }
 
-static void io_complete(void *ctx, const struct spdk_nvme_cpl *completion);
+static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 
 static __thread unsigned int seed = 0;
 
@@ -738,9 +738,17 @@ task_complete(struct perf_task *task)
 }
 
 static void
-io_complete(void *ctx, const struct spdk_nvme_cpl *completion)
+io_complete(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
-	task_complete((struct perf_task *)ctx);
+	struct perf_task *task = ctx;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		fprintf(stderr, "%s completed with error (sct=%d, sc=%d)\n",
+			task->is_read ? "Read" : "Write",
+			cpl->status.sct, cpl->status.sc);
+	}
+
+	task_complete(task);
 }
 
 static void
