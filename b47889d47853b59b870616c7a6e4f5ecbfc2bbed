@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10535dab_93b4d769",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 54
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-15T14:13:33Z",
+      "side": 1,
+      "message": "File sample_aio can be deleted if this device is removed from spdk_tgt. See log: \"io_device aio_disk not unregistered\" in https://ci.spdk.io/spdk-jenkins/results/autotest-per-patch/builds/19698/archive/blockdev_autotest/build.log",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 3
+      },
+      "revId": "b47889d47853b59b870616c7a6e4f5ecbfc2bbed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
