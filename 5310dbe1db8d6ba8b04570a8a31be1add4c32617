@@ -16,6 +16,24 @@
       "revId": "5310dbe1db8d6ba8b04570a8a31be1add4c32617",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52952034_07186a84",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2645,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-15T13:44:54Z",
+      "side": 1,
+      "message": "It is unnecessary here. Since the return value will guarantee that.",
+      "parentUuid": "833101e5_bbe8106f",
+      "revId": "5310dbe1db8d6ba8b04570a8a31be1add4c32617",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
