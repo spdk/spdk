@@ -240,18 +240,15 @@ spdk_set_thread(struct spdk_thread *thread)
 }
 
 void
-spdk_free_thread(void)
+spdk_free_thread(struct spdk_thread *thread)
 {
-	struct spdk_thread *thread;
 	struct spdk_io_channel *ch;
 
-	thread = _get_thread();
-	if (!thread) {
-		SPDK_ERRLOG("No thread allocated\n");
-		return;
-	}
-
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
+
+	if (tls_thread == thread) {
+		tls_thread = NULL;
+	}
 
 	TAILQ_FOREACH(ch, &thread->io_channels, tailq) {
 		SPDK_ERRLOG("thread %s still has channel for io_device %s\n",
@@ -271,8 +268,6 @@ spdk_free_thread(void)
 	}
 
 	free(thread);
-
-	tls_thread = NULL;
 }
 
 static inline uint32_t
