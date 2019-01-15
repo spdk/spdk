@@ -1327,7 +1327,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     p = subparsers.add_parser('start_nbd_disk', help='Export a bdev as a nbd disk')
     p.add_argument('bdev_name', help='Blockdev name to be exported. Example: Malloc0.')
-    p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.')
+    p.add_argument('nbd_device', help='Nbd device name to be assigned. Example: /dev/nbd0.', nargs='?')
     p.set_defaults(func=start_nbd_disk)
 
     def stop_nbd_disk(args):
