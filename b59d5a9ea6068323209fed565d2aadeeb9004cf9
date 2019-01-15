@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5bce0409_7a34dc98",
+        "filename": "configure",
+        "patchSetId": 61
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T23:52:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8dfac01b_5c692b16",
+      "revId": "b59d5a9ea6068323209fed565d2aadeeb9004cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "098e7ce9_5064e33a",
         "filename": "configure",
         "patchSetId": 61
@@ -30,6 +48,30 @@
       "writtenOn": "2019-01-15T23:23:29Z",
       "side": 1,
       "message": "I think you can remove this.  It gets covered by CONFIG[ISAL] below.  ARM won\u0027t have ISAL, but theoretically they should be able to still use REDUCE via some other accelerator in the future",
+      "range": {
+        "startLine": 394,
+        "startChar": 1,
+        "endLine": 399,
+        "endChar": 3
+      },
+      "revId": "b59d5a9ea6068323209fed565d2aadeeb9004cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8dd4312_b00eb0f2",
+        "filename": "configure",
+        "patchSetId": 61
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-15T23:52:25Z",
+      "side": 1,
+      "message": "Sure, this is what I mentioned earlier though. If someone tries to build --with-reduce on ARM thinking they can use DPDK with something other than ISA-L for compression and we don\u0027t have this check they will get a build error because we will try to link the DPDK ISA_L_PMD.  With this in here we at least catch it earlier.  It\u0027s an oddball case though, I\u0027ll remove it",
+      "parentUuid": "098e7ce9_5064e33a",
       "range": {
         "startLine": 394,
         "startChar": 1,
