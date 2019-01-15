@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b119fb9c_3f0e035c",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-15T08:45:14Z",
+      "side": 1,
+      "message": "Considering that spdk_nbd_start is asynchronous, I\u0027m wondering if this code is prone to any data races - e.g. when creating multiple nbd devices from a json config, one after another, so that multiple requests could be assigned to the same /dev/nbdX. \n\nPawel, do you have any insight? Is the above possible?",
+      "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
