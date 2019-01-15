@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "802e0039_1317ede4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 701,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:03:03Z",
+      "side": 1,
+      "message": "I\u0027d prefer that we merge this with the previous patch.  Otherwise the get_bdev_histogram RPC doesn\u0027t really do anything in the previous patch.",
+      "revId": "fc857dc3b412a9bfe181bc2af8cdbea8622f09b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "341fe1a0_413d80f4",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:03:03Z",
+      "side": 1,
+      "message": "is status !\u003d 0, should we return an error response instead?  and we shouldn\u0027t try to decode the histogram in that case either (no need to send data back that we know is bad)",
+      "revId": "fc857dc3b412a9bfe181bc2af8cdbea8622f09b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61d18b6b_991f3d5d",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:03:03Z",
+      "side": 1,
+      "message": "LOL - I think you meant \"bucket_shift\". ;-)",
+      "revId": "fc857dc3b412a9bfe181bc2af8cdbea8622f09b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0484dd00_bd4cc08d",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:03:03Z",
+      "side": 1,
+      "message": "I\u0027m guessing this makes it run faster, since this RPC returns so much data - we\u0027ll receive 64KB at a time instead of 4KB?\n\nThis should probably be part of a separate patch.",
+      "revId": "fc857dc3b412a9bfe181bc2af8cdbea8622f09b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94c36405_5a0ea372",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T22:03:03Z",
+      "side": 1,
+      "message": "unnecessary whitespace change here",
+      "revId": "fc857dc3b412a9bfe181bc2af8cdbea8622f09b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
