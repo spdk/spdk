@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f92789ae_8b6f771a",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-15T14:30:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e75e97dd_21c8da03",
+      "revId": "d5c87f56a39303baae44d7076dbbd374b1bdc8e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46006769_888fa49c",
         "filename": "lib/ftl/ftl_trace.c",
         "patchSetId": 48
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-14T22:01:15Z",
       "side": 1,
       "message": "Could the single caller (ftl_io_init) just call ftl_trace_next_id directly?  or change the name of this function to ftl_trace_alloc_id\n\nWe have the concept of trace groups and the name of this function confused me with that.",
+      "revId": "d5c87f56a39303baae44d7076dbbd374b1bdc8e5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0782af5f_a42efa08",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 48
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-15T14:30:36Z",
+      "side": 1,
+      "message": "I\u0027v changed name to ftl_trace_alloc_id.",
+      "parentUuid": "46006769_888fa49c",
       "revId": "d5c87f56a39303baae44d7076dbbd374b1bdc8e5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
