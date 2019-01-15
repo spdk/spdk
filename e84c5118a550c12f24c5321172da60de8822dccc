@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "c5cfe9d9_4bb5ed74",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "I\u0027d really prefer to add this #if 0 code in the patch that will use it.  It\u0027s hard to really review here, since no code is using it yet.",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "92bcf9fe_a7445e19",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -22,6 +39,23 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e61bdfa2_69f9d672",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "I don\u0027t think we should need these.  compress works different than crypto since it\u0027s based on metadata - not on config file/RPC.  We shouldn\u0027t save any data regarding compress bdevs - these compress bdevs should be automatically identified when the application restarts once the bdev containing their metadata is found.",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -68,6 +102,23 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e61f4ac_64649028",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "same as above - let\u0027s add this #if 0 code in the patch that will make use of it",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -140,6 +191,23 @@
     },
     {
       "key": {
+        "uuid": "e0a8d338_d572a9aa",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f96103c6_d40283e1",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -163,6 +231,40 @@
     },
     {
       "key": {
+        "uuid": "d0afe580_05ce1f30",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "I don\u0027t think we need to do any of this.  This should behave similarly to logical volumes.  When a new bdev is reported, we check if it contains reduce metadata (by calling spdk_reduce_vol_load) - if it doesn\u0027t, we don\u0027t claim it.  The user can create a reduce vol on the bdev layer via RPC (which will call spdk_reduce_vol_init).",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b021e27_ee0d3da3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "pass the comp_bdev here instead for the hotremove_cb context arg - it\u0027s always a 1-to-1 mapping, so then when it does get removed, you don\u0027t have to search the list",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e4293d78_d8bbdc7c",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -177,6 +279,57 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6eee8930_e3aa8792",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "this is a nit - but compress should be COMPRESS",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b23a480e_00d3cf6d",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "copy/paste error",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "599005ff_dcaf61f0",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -200,6 +353,74 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eee985dc_56781ff3",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "copy/paste error",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f69007f3_9982a86f",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "COMPRESS",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00785a7f_ffce0dd0",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "we talked earlier about just making the compress bdev name a function of the base bdev name - that allows us to avoid worrying about having to persist the bdev name in libreduce metadata, and all of the mess with handling duplicate names",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "278a8ff2_a2f2141a",
+        "filename": "lib/bdev/compress/vbdev_compress_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:40:52Z",
+      "side": 1,
+      "message": "we will also want to return the final size of the compressed volume - it will be slightly less than the size of the base bdev (or maybe you add that in a future patch)",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
