@@ -378,6 +378,46 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 
 #if HAVE_LIBAIO
 static int
+aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd, void *buf,
+	   unsigned long nbytes, uint64_t offset, void *cb_ctx)
+{
+	iocb->aio_fildes = fd;
+	iocb->aio_reqprio = 0;
+	iocb->aio_lio_opcode = cmd;
+	iocb->u.c.buf = buf;
+	iocb->u.c.nbytes = nbytes;
+	iocb->u.c.offset = offset;
+	iocb->data = cb_ctx;
+
+	if (io_submit(aio_ctx, 1, &iocb) < 0) {
+		printf("io_submit");
+		return -1;
+	}
+
+	return 0;
+}
+
+static void
+aio_check_io(struct ns_worker_ctx *ns_ctx)
+{
+	int count, i;
+	struct timespec timeout;
+
+	timeout.tv_sec = 0;
+	timeout.tv_nsec = 0;
+
+	count = io_getevents(ns_ctx->u.aio.ctx, 1, g_queue_depth, ns_ctx->u.aio.events, &timeout);
+	if (count < 0) {
+		fprintf(stderr, "io_getevents error\n");
+		exit(1);
+	}
+
+	for (i = 0; i < count; i++) {
+		task_complete(ns_ctx->u.aio.events[i].data);
+	}
+}
+
+static int
 register_aio_file(const char *path)
 {
 	struct ns_entry *entry;
@@ -446,43 +486,18 @@ register_aio_file(const char *path)
 }
 
 static int
-aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd, void *buf,
-	   unsigned long nbytes, uint64_t offset, void *cb_ctx)
+register_aio_files(int argc, char **argv)
 {
-	iocb->aio_fildes = fd;
-	iocb->aio_reqprio = 0;
-	iocb->aio_lio_opcode = cmd;
-	iocb->u.c.buf = buf;
-	iocb->u.c.nbytes = nbytes;
-	iocb->u.c.offset = offset;
-	iocb->data = cb_ctx;
+	int i;
 
-	if (io_submit(aio_ctx, 1, &iocb) < 0) {
-		printf("io_submit");
-		return -1;
+	/* Treat everything after the options as files for AIO */
+	for (i = g_aio_optind; i < argc; i++) {
+		if (register_aio_file(argv[i]) != 0) {
+			return 1;
+		}
 	}
 
 	return 0;
-}
-
-static void
-aio_check_io(struct ns_worker_ctx *ns_ctx)
-{
-	int count, i;
-	struct timespec timeout;
-
-	timeout.tv_sec = 0;
-	timeout.tv_nsec = 0;
-
-	count = io_getevents(ns_ctx->u.aio.ctx, 1, g_queue_depth, ns_ctx->u.aio.events, &timeout);
-	if (count < 0) {
-		fprintf(stderr, "io_getevents error\n");
-		exit(1);
-	}
-
-	for (i = 0; i < count; i++) {
-		task_complete(ns_ctx->u.aio.events[i].data);
-	}
 }
 #endif /* HAVE_LIBAIO */
 
@@ -1666,23 +1681,6 @@ unregister_controllers(void)
 }
 
 static int
-register_aio_files(int argc, char **argv)
-{
-#if HAVE_LIBAIO
-	int i;
-
-	/* Treat everything after the options as files for AIO */
-	for (i = g_aio_optind; i < argc; i++) {
-		if (register_aio_file(argv[i]) != 0) {
-			return 1;
-		}
-	}
-#endif /* HAVE_LIBAIO */
-
-	return 0;
-}
-
-static int
 associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = g_namespaces;
@@ -1763,10 +1761,12 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
+#if HAVE_LIBAIO
 	if (register_aio_files(argc, argv) != 0) {
 		rc = -1;
 		goto cleanup;
 	}
+#endif
 
 	if (register_controllers() != 0) {
 		rc = -1;
