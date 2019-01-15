@@ -77,6 +77,11 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+### logical volumes
+
+Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
+This allows for basing clones on top of lvol_bdev without first creating a snapshot.
+
 ### log
 
 "trace flags" are now referred to as "log flags" in the SPDK log API.  The
