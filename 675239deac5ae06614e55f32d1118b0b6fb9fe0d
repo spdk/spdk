@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "817ce154_40fdb4d1",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T06:02:49Z",
+      "side": 1,
+      "message": "USEC_PER_SEC is preferred",
+      "range": {
+        "startLine": 39,
+        "startChar": 8,
+        "endLine": 39,
+        "endChar": 14
+      },
+      "revId": "675239deac5ae06614e55f32d1118b0b6fb9fe0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "936423e5_fef49b23",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T06:02:49Z",
+      "side": 1,
+      "message": "timeout_in_usec",
+      "range": {
+        "startLine": 55,
+        "startChar": 11,
+        "endLine": 55,
+        "endChar": 23
+      },
+      "revId": "675239deac5ae06614e55f32d1118b0b6fb9fe0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44052c14_02511ab7",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T06:02:49Z",
+      "side": 1,
+      "message": "g_timeout_in_usec",
+      "range": {
+        "startLine": 76,
+        "startChar": 11,
+        "endLine": 76,
+        "endChar": 23
+      },
+      "revId": "675239deac5ae06614e55f32d1118b0b6fb9fe0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86d75295_cfd05a26",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T06:02:49Z",
+      "side": 1,
+      "message": "if you put \"g_timeout_in_usec\" here, it seems no need to add the new member of timeout_in_usec for the dev_ctx structure which make the change more simple?",
+      "range": {
+        "startLine": 111,
+        "startChar": 50,
+        "endLine": 111,
+        "endChar": 67
+      },
+      "revId": "675239deac5ae06614e55f32d1118b0b6fb9fe0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3487bb75_e51e9cbd",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-15T06:02:49Z",
+      "side": 1,
+      "message": "timeout for each command in second (default: 1s)",
+      "range": {
+        "startLine": 411,
+        "startChar": 15,
+        "endLine": 411,
+        "endChar": 22
+      },
+      "revId": "675239deac5ae06614e55f32d1118b0b6fb9fe0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
