@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8d087cd8_34d26c12",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "this change should go in previous patch",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c4fc7500_2ff3e029",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 776,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "if rc \u003d\u003d -ENOMEM, we should use spdk_bdev_queue_io_wait\n\nsame for writev and unmap below",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c3424bd_2dd8ae7e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 777,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "erro \u003d\u003e error?\n\nsame for writev and unmap below",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b2a128ac_46aec5ac",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "I think this could all be one line",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd803c2e_774df67e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 863,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "would it be better to just claim the bdev here, rather than waiting for the init process to complete?  you can keep the desc open then as well",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da14f407_c23bd693",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "only read has been tested?",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa4d93d5_08820814",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "these changes have been checked in - you should be able to fix this up now",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c279338_a3afc023",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 877,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "you shouldn\u0027t set vol_size - this is now done by lib/reduce (and returned to you) - latest lib/reduce code will fail if you set this to something \u003e 0",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4174368_86968403",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1190,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-15T19:54:02Z",
+      "side": 1,
+      "message": "this change should go in previous patch",
+      "revId": "423dfd13759242cf50631c680d6157c403597293",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
