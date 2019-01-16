@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db0de1d4_ebd69042",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-16T20:58:40Z",
+      "side": 1,
+      "message": "trasnport-\u003etransport\nalso\nwith the RDMA transport",
+      "range": {
+        "startLine": 55,
+        "startChar": 45,
+        "endLine": 55,
+        "endChar": 54
+      },
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "145c9eb2_3bb0ae08",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-16T20:58:40Z",
+      "side": 1,
+      "message": "That is not exactly true. If we do a bulk allocation for something like a mempool, that whole memory region will be allocated and registered with the NIC as a single region. These regions can be larger than 2MB.",
+      "range": {
+        "startLine": 108,
+        "startChar": 34,
+        "endLine": 108,
+        "endChar": 88
+      },
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e128c4d0_f3a4c4f3",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-16T20:58:40Z",
+      "side": 1,
+      "message": "This is also not a hard limit. I think that instead of going into all of this detail, it would be more accurate to just note that one type of memory bottleneck is the NIC memory regions, and it can be avoided entirely by pre-allocating memory.",
+      "range": {
+        "startLine": 109,
+        "startChar": 20,
+        "endLine": 109,
+        "endChar": 52
+      },
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d98f0508_bc1272c7",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-16T20:58:40Z",
+      "side": 1,
+      "message": "The TCP transport is built into the nvmf_tgt by",
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "393b5ccd_d6f8d5d7",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 228,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-16T20:58:40Z",
+      "side": 1,
+      "message": "Just a suggestion:\nSee below for examples of the discover, connect and disconnect commands. In all three instances, the transport can be changed to TCP by interchanging \u0027rdma\u0027 for \u0027tcp\u0027",
+      "range": {
+        "startLine": 227,
+        "startChar": 0,
+        "endLine": 228,
+        "endChar": 64
+      },
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
