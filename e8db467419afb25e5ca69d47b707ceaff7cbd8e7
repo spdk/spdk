@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "483026d3_8a834239",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T21:03:23Z",
+      "side": 1,
+      "message": "The SPDK NVMe over Fabrics target is a user space application that presents block devices over a fabric such as Ethernet, Infiniband, or Fibre Channel. SPDK currently supports both RDMA (over Ethernet or Infiniband) and TCP.",
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d8ba72_ac1bff5e",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T21:03:23Z",
+      "side": 1,
+      "message": "This isn\u0027t going to show up in a way that reads as a complete sentence. This would be better:\n\nIt requires an RDMA-capable NIC with its corresponding OFED (OpenFabrics Enterprise Distribution) software package installed to run. Maybe OS distributions provide packages, but OFED is also available [here](https://downloads.openfabrics.org/OFED/).",
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5918846_5f6803e7",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T21:03:23Z",
+      "side": 1,
+      "message": "the RDMA transport",
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db0de1d4_ebd69042",
         "filename": "doc/nvmf.md",
         "patchSetId": 7
@@ -19,6 +70,23 @@
         "endLine": 55,
         "endChar": 54
       },
+      "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bfc1168_470c4c43",
+        "filename": "doc/nvmf.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T21:03:23Z",
+      "side": 1,
+      "message": "This isn\u0027t correct - we can be limited to 2048 regions and using 2MB hugepages, but still allocate far more than 4GB of memory as long as the 2MB hugepages are in larger physically contiguous regions. I see that you just moved this up from the bottom though so we can probably leave this alone for now.",
       "revId": "e8db467419afb25e5ca69d47b707ceaff7cbd8e7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
