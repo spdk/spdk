@@ -85,6 +85,7 @@ _spdk_lvs_free(struct spdk_lvol_store *lvs)
 static void
 _spdk_lvol_free(struct spdk_lvol *lvol)
 {
+	assert(lvol->ref_count == 0);
 	free(lvol->unique_id);
 	free(lvol);
 }
@@ -904,8 +905,8 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
 
 end:
-	_spdk_lvol_free(lvol);
 	req->cb_fn(req->cb_arg, lvolerrno);
+	_spdk_lvol_free(lvol);
 	free(req);
 }
 
