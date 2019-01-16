@@ -66,6 +66,7 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 
 /* Timeout for destroying defunct rqpairs */
 #define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US 4000000
+#define NVMF_REQ_MAX_BUFFERS		(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
 
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
@@ -228,7 +229,6 @@ struct spdk_nvmf_rdma_request_data {
 	struct spdk_nvmf_rdma_wr	rdma_wr;
 	struct ibv_send_wr		wr;
 	struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
-	void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 };
 
 struct spdk_nvmf_rdma_request {
@@ -246,6 +246,7 @@ struct spdk_nvmf_rdma_request {
 	} rsp;
 
 	struct spdk_nvmf_rdma_request_data	data;
+	void					*buffers[NVMF_REQ_MAX_BUFFERS];
 
 	uint32_t				num_outstanding_data_wr;
 
@@ -1288,13 +1289,13 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 	for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
+					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->buffers[i], link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, rdma_req->data.buffers[i]);
+			spdk_mempool_put(transport->data_buf_pool, rdma_req->buffers[i]);
 		}
 		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->data.buffers[i] = NULL;
+		rdma_req->buffers[i] = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
 	}
@@ -1425,12 +1426,12 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	while (i < num_buffers) {
 		if (!(STAILQ_EMPTY(&rgroup->group.buf_cache))) {
 			rgroup->group.buf_cache_count--;
-			rdma_req->data.buffers[i] = STAILQ_FIRST(&rgroup->group.buf_cache);
+			rdma_req->buffers[i] = STAILQ_FIRST(&rgroup->group.buf_cache);
 			STAILQ_REMOVE_HEAD(&rgroup->group.buf_cache, link);
-			assert(rdma_req->data.buffers[i] != NULL);
+			assert(rdma_req->buffers[i] != NULL);
 			i++;
 		} else {
-			if (spdk_mempool_get_bulk(rtransport->transport.data_buf_pool, &rdma_req->data.buffers[i],
+			if (spdk_mempool_get_bulk(rtransport->transport.data_buf_pool, &rdma_req->buffers[i],
 						  num_buffers - i)) {
 				rc = -ENOMEM;
 				goto err_exit_local_bufs_only;
@@ -1442,7 +1443,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	i = 0;
 	rdma_req->req.iovcnt = 0;
 	while (length) {
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(rdma_req->data.buffers[i] +
+		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(rdma_req->buffers[i] +
 						NVMF_DATA_BUFFER_MASK) &
 						~NVMF_DATA_BUFFER_MASK);
 		rdma_req->req.iov[i].iov_len  = spdk_min(length, rtransport->transport.opts.io_unit_size);
@@ -1453,10 +1454,10 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (!g_nvmf_hooks.get_rkey) {
 			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-							     (uint64_t)rdma_req->data.buffers[i], &translation_len))->lkey;
+							     (uint64_t)rdma_req->buffers[i], &translation_len))->lkey;
 		} else {
 			rdma_req->data.wr.sg_list[i].lkey = *((uint64_t *)spdk_mem_map_translate(device->map,
-							      (uint64_t)rdma_req->data.buffers[i], &translation_len));
+							      (uint64_t)rdma_req->buffers[i], &translation_len));
 		}
 
 		length -= rdma_req->req.iov[i].iov_len;
@@ -1479,7 +1480,7 @@ err_exit_local_bufs_only:
 	while (i > 0) {
 		i--;
 		STAILQ_INSERT_HEAD(&rgroup->group.buf_cache,
-				   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
+				   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->buffers[i], link);
 		rgroup->group.buf_cache_count++;
 	}
 	return rc;
@@ -1556,7 +1557,7 @@ spdk_nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtra
 			req->iov[req->iovcnt].iov_len  = spdk_min(current_sgl_length,
 							 rtransport->transport.opts.io_unit_size);
 
-			rdma_req->data.buffers[req->iovcnt] = buf;
+			rdma_req->buffers[req->iovcnt] = buf;
 
 			current_wr->sg_list[current_wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
 			current_wr->sg_list[current_wr->num_sge].length = req->iov[req->iovcnt].iov_len;
