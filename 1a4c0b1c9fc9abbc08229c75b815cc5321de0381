@@ -16,6 +16,24 @@
       "revId": "1a4c0b1c9fc9abbc08229c75b815cc5321de0381",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e618c9d2_567c78d3",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T08:50:45Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nThank you, your thought is reasonable.\n\nThis is software based DIF/DIX library.\nThe reason why I added this patch was that how to handle (md_size \u003e 8 and DIX and PRACT\u003d1) was not fixed in me yet.\n\nI will abandon this patch and print warning for the case (md_size \u003e 8 and DIX and PRACT\u003d1) in later patch.",
+      "parentUuid": "3c7690d3_8ae820af",
+      "revId": "1a4c0b1c9fc9abbc08229c75b815cc5321de0381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
