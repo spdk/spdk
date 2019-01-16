@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0c1f4725_31895da0",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-16T14:07:29Z",
+      "side": 1,
+      "message": "I have mixed feelings about this.\n\nI don\u0027t think that this README file is a good place to document same things which are already present in VBox User manual. On the other hand we sometimes do the similar for other tools and it doesn\u0027t really hurt to have a couple of additional lines.\n\nI\u0027m ok with having this in README, but I think that the section in which this is added (Linux setup) is not accurate. Perhaps we could move this somewhere to bottom of the file as an appendix?",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ee0a784_f61a0066",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-16T14:07:29Z",
+      "side": 1,
+      "message": "BTW - did you really need these commands?\nJust using Vagrant with vbox plugin allowed me to avoid calling any commands directly to vbox manager.\nExcept one, which I\u0027ve found very useful:\nVBoxManage hostonlyif remove vboxnet0\nSomeimes vbox manager would not cleanup the virtual network properly, which prevents running other VMs with libvirt manager.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 19
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
