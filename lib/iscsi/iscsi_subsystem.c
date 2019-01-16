@@ -122,6 +122,9 @@ spdk_iscsi_globals_config_text(FILE *fp)
 		g_spdk_iscsi.ErrorRecoveryLevel);
 }
 
+#define ISCSI_DATA_BUFFER_ALIGNMENT	(0x1000)
+#define ISCSI_DATA_BUFFER_MASK		(ISCSI_DATA_BUFFER_ALIGNMENT - 1)
+
 static void
 spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	       void *_m, __attribute__((unused)) unsigned i)
@@ -132,7 +135,8 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 
 	m->mp = mp;
 	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
-	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + 512) & ~511UL);
+	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + ISCSI_DATA_BUFFER_ALIGNMENT) &
+			  ~ISCSI_DATA_BUFFER_MASK);
 	off = (uint64_t)(uint8_t *)m->buf - (uint64_t)(uint8_t *)m;
 
 	/*
@@ -152,9 +156,9 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
-			    sizeof(struct spdk_mobj) + 512;
+			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 	int dout_mobj_size = spdk_get_data_out_buffer_size() +
-			     sizeof(struct spdk_mobj) + 512;
+			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
