@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c7690d3_8ae820af",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-16T08:41:39Z",
+      "side": 1,
+      "message": "well, I\u0027m not very confident about the PRACT flag, because we are implementing a software based DIF/DIX library, if the flag is enabled, what\u0027s the usage scenario ?",
+      "revId": "1a4c0b1c9fc9abbc08229c75b815cc5321de0381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
