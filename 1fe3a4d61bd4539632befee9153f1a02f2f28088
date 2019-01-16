@@ -22,6 +22,30 @@
       "revId": "1fe3a4d61bd4539632befee9153f1a02f2f28088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c222b4eb_b5a88e88",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T22:28:04Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nAre you concerned about non-512/4KB block length?\n\nIf blocklen is 512 or 4096, these changes are not needed - but it assumes that REDUCE_PATH_MAX is 4096 and sizeof superblock is 4096 (which we SPDK_STATIC_ASSERT).\n\nMaybe I should assert that these are each an even multiple of the blocklen?",
+      "parentUuid": "2f83ed59_260548ea",
+      "range": {
+        "startLine": 385,
+        "startChar": 25,
+        "endLine": 386,
+        "endChar": 31
+      },
+      "revId": "1fe3a4d61bd4539632befee9153f1a02f2f28088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
