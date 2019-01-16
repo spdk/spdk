@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dce1dab_fe0645be",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T18:49:54Z",
+      "side": 1,
+      "message": "There might be a slightly better way to manage this cache that doesn\u0027t require a separate memory allocation using TAILQ.\n\nFirst, define a structure like this:\n\nstruct spdk_nvmf_transport_poll_group_cache_buffer {\n    TAILQ_ENTRY(spdk_nvmf_transport_poll_group_cache_buffer) link;\n};\n\nThen, in spdk_nvmf_transport_poll_group, just add a TAILQ via TAILQ_HEAD (TAILQ_HEAD(, spdk_nvmf_transport_poll_group_cache_buffer) buffer_cache;)\n\nThen, when you pull a buffer out of the main mempool you\u0027ll end up with a void *. Just cast that void * to an spdk_nvmf_transport_poll_group_cache_buffer and do TAILQ_INSERT_TAIL on the list.",
+      "revId": "0883676f7176cc4249a39643f44b8508c022a553",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8009e161_f3163f50",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T18:49:54Z",
+      "side": 1,
+      "message": "You don\u0027t need the else {} since the if returned.",
+      "revId": "0883676f7176cc4249a39643f44b8508c022a553",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
