@@ -1286,6 +1286,39 @@ spdk_nvmf_rdma_check_contiguous_entries(uint64_t addr_1, uint64_t addr_2)
 	return addr_1 == addr_2;
 }
 
+static int
+nvmf_rdma_request_get_buffers(struct spdk_nvmf_rdma_request *rdma_req,
+			      struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport,
+			      uint32_t num_buffers)
+{
+	uint32_t i = 0;
+	while (i < num_buffers) {
+		if (!(STAILQ_EMPTY(&group->buf_cache))) {
+			group->buf_cache_count--;
+			rdma_req->buffers[i] = STAILQ_FIRST(&group->buf_cache);
+			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
+			assert(rdma_req->buffers[i] != NULL);
+			i++;
+		} else {
+			if (spdk_mempool_get_bulk(transport->data_buf_pool, &rdma_req->buffers[i], num_buffers - i)) {
+				goto err_exit;
+			}
+			i += num_buffers - i;
+		}
+	}
+
+	return 0;
+
+err_exit:
+	while (i > 0) {
+		i--;
+		STAILQ_INSERT_HEAD(&group->buf_cache,
+				   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->buffers[i], link);
+		group->buf_cache_count++;
+	}
+	return -ENOMEM;
+}
+
 static void
 spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 				    struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport)
@@ -1427,24 +1460,10 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		num_buffers++;
 	}
 
-	while (i < num_buffers) {
-		if (!(STAILQ_EMPTY(&rgroup->group.buf_cache))) {
-			rgroup->group.buf_cache_count--;
-			rdma_req->buffers[i] = STAILQ_FIRST(&rgroup->group.buf_cache);
-			STAILQ_REMOVE_HEAD(&rgroup->group.buf_cache, link);
-			assert(rdma_req->buffers[i] != NULL);
-			i++;
-		} else {
-			if (spdk_mempool_get_bulk(rtransport->transport.data_buf_pool, &rdma_req->buffers[i],
-						  num_buffers - i)) {
-				rc = -ENOMEM;
-				goto err_exit_local_bufs_only;
-			}
-			i += num_buffers - i;
-		}
+	if (nvmf_rdma_request_get_buffers(rdma_req, &rgroup->group, &rtransport->transport, num_buffers)) {
+		return -ENOMEM;
 	}
 
-	i = 0;
 	rdma_req->req.iovcnt = 0;
 	while (length) {
 		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(rdma_req->buffers[i] +
@@ -1480,14 +1499,6 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 	return rc;
 
-err_exit_local_bufs_only:
-	while (i > 0) {
-		i--;
-		STAILQ_INSERT_HEAD(&rgroup->group.buf_cache,
-				   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->buffers[i], link);
-		rgroup->group.buf_cache_count++;
-	}
-	return rc;
 err_exit:
 	spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport);
 	while (i) {
@@ -1510,10 +1521,10 @@ spdk_nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtra
 	struct ibv_send_wr			*current_wr;
 	struct spdk_nvmf_request		*req = &rdma_req->req;
 	struct spdk_nvme_sgl_descriptor		*inline_sgl, *cmd_sgl_segment;
-	void					*buf;
 	uint64_t				translation_length;
 	uint32_t				num_sgl_descriptors;
 	uint32_t				current_sgl_length;
+	uint32_t				num_buffers = 0;
 	uint32_t				ui;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
@@ -1526,51 +1537,47 @@ spdk_nvmf_rdma_request_fill_iovs_multi_sgl(struct spdk_nvmf_rdma_transport *rtra
 	cmd_sgl_segment = (struct spdk_nvme_sgl_descriptor *)rdma_req->recv->buf + inline_sgl->address;
 	num_sgl_descriptors = inline_sgl->unkeyed.length / sizeof(struct spdk_nvme_sgl_descriptor);
 	assert(num_sgl_descriptors <= SPDK_NVMF_MAX_SGL_ENTRIES);
-
-	if (nvmf_request_fill_data(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
+	for (ui = 0; ui < num_sgl_descriptors; ui++) {
+		num_buffers += cmd_sgl_segment[ui].keyed.length / rtransport->transport.opts.io_unit_size;
+		if (cmd_sgl_segment[ui].keyed.length % rtransport->transport.opts.io_unit_size) {
+			num_buffers++;
+		}
+	}
+	/* If the number of buffers is too large, then we know the I/O is larger than allowed. Fail it. */
+	if (num_buffers > NVMF_REQ_MAX_BUFFERS) {
+		return -EINVAL;
+	}
+	if (nvmf_rdma_request_get_buffers(rdma_req, &rgroup->group, &rtransport->transport,
+					  num_buffers) != 0) {
 		return -ENOMEM;
 	}
-
+	if (nvmf_request_fill_data(rtransport, rdma_req, num_sgl_descriptors - 1) != 0) {
+		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport);
+		return -ENOMEM;
+	}
 	/* The first WR must always be the embedded data WR. This is how we unwind them later. */
 	current_wr = &rdma_req->data.wr;
-
 	req->iovcnt = 0;
 	for (ui = 0; ui < num_sgl_descriptors; ui++) {
 		if (spdk_unlikely(cmd_sgl_segment[ui].generic.type != SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK)) {
 			goto err_exit;
 		}
-
 		current_wr->num_sge = 0;
 		current_sgl_length = cmd_sgl_segment[ui].keyed.length;
 		req->length += cmd_sgl_segment[ui].keyed.length;
 		while (current_sgl_length > 0) {
-			if (!(STAILQ_EMPTY(&rgroup->group.buf_cache))) {
-				rgroup->group.buf_cache_count--;
-				buf = STAILQ_FIRST(&rgroup->group.buf_cache);
-				STAILQ_REMOVE_HEAD(&rgroup->group.buf_cache, link);
-				assert(buf != NULL);
-			} else {
-				buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
-				if (!buf) {
-					goto err_exit;
-				}
-			}
-
-			req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+			req->iov[req->iovcnt].iov_base = (void *)((uintptr_t)(rdma_req->buffers[req->iovcnt] +
+							 NVMF_DATA_BUFFER_MASK) &
 							 ~NVMF_DATA_BUFFER_MASK);
 			req->iov[req->iovcnt].iov_len  = spdk_min(current_sgl_length,
 							 rtransport->transport.opts.io_unit_size);
-
-			rdma_req->buffers[req->iovcnt] = buf;
-
 			current_wr->sg_list[current_wr->num_sge].addr = (uintptr_t)(req->iov[req->iovcnt].iov_base);
 			current_wr->sg_list[current_wr->num_sge].length = req->iov[req->iovcnt].iov_len;
 			translation_length = req->iov[req->iovcnt].iov_len;
 			current_wr->sg_list[current_wr->num_sge].lkey = ((struct ibv_mr *)
 					spdk_mem_map_translate(device->map,
-							       (uint64_t)buf, &translation_length))->lkey;
-
-			if (translation_length < req->iov[req->iovcnt].iov_len) {
+							       (uint64_t)rdma_req->buffers[req->iovcnt], &translation_length))->lkey;
+			if (spdk_unlikely(translation_length < req->iov[req->iovcnt].iov_len)) {
 				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
 				goto err_exit;
 			}
