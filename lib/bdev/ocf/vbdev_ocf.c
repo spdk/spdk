@@ -154,7 +154,7 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 static int
 remove_base(struct vbdev_ocf_base *base)
 {
-	ocf_core_t core;
+	ocf_core_t core = NULL;
 	int rc = 0;
 
 	if (base == NULL) {
