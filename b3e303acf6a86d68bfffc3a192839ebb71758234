@@ -119,6 +119,23 @@
     },
     {
       "key": {
+        "uuid": "702b1587_28a6f85e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T00:13:54Z",
+      "side": 1,
+      "message": "you change the name of this function in the next patch - make that change here instead",
+      "revId": "b3e303acf6a86d68bfffc3a192839ebb71758234",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "822a0ecb_579104be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
