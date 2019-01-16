@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dab14504_93774eac",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 360,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-16T11:45:06Z",
+      "side": 1,
+      "message": "This is fine and apparently passes all the tests. Just to clarify - this means that Linux virtio-blk driver does not setup req-\u003esector, right?",
+      "revId": "c99ac71323a888fc466e625dbbd4a64207372181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
