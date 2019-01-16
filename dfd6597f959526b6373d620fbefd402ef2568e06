@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "247a86f5_7ac169ba",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-16T08:48:15Z",
+      "side": 0,
+      "message": "We want to let users input their apptag\u0026mask, since it\u0027s very complicate, so using hardcoded number of blocks as the apptag.",
+      "revId": "dfd6597f959526b6373d620fbefd402ef2568e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
