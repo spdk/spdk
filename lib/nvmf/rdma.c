@@ -1641,6 +1641,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
+	int					rc;
 
 	cmd = &rdma_req->req.cmd->nvme_cmd;
 	rsp = &rdma_req->req.rsp->nvme_cpl;
@@ -1730,9 +1731,14 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		return 0;
 	} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_LAST_SEGMENT &&
 		   sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET) {
-		if (nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req) < 0) {
+
+		rc = nvmf_rdma_request_fill_iovs_multi_sgl(rtransport, device, rdma_req);
+		if (rc == -ENOMEM) {
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "No available large data buffers. Queueing request %p\n", rdma_req);
 			return 0;
+		} else if (rc == -EINVAL) {
+			SPDK_ERRLOG("Multi SGL element request length exceeds the max I/O size\n");
+			return -1;
 		}
 
 		/* backward compatible */
