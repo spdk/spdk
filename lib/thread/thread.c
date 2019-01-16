@@ -184,12 +184,6 @@ spdk_allocate_thread(const char *name)
 {
 	struct spdk_thread *thread;
 
-	thread = _get_thread();
-	if (thread) {
-		SPDK_ERRLOG("Double allocated SPDK thread\n");
-		return NULL;
-	}
-
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
