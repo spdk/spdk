@@ -144,6 +144,30 @@
     },
     {
       "key": {
+        "uuid": "e735b6fe_ea3ecb0a",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T05:12:23Z",
+      "side": 1,
+      "message": "Yes. update_quota is better as it is both for IOPS and bandwidth",
+      "parentUuid": "d64b0a61_bb5c4863",
+      "range": {
+        "startLine": 149,
+        "startChar": 8,
+        "endLine": 149,
+        "endChar": 17
+      },
+      "revId": "b3e303acf6a86d68bfffc3a192839ebb71758234",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df50513f_f10ac28e",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -184,6 +208,24 @@
     },
     {
       "key": {
+        "uuid": "15ddc650_a502b237",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1282,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T05:12:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "702b1587_28a6f85e",
+      "revId": "b3e303acf6a86d68bfffc3a192839ebb71758234",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "822a0ecb_579104be",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -195,6 +237,24 @@
       "writtenOn": "2019-01-16T00:06:51Z",
       "side": 1,
       "message": "could we instead check qos-\u003erate_limits[i].limit, and if it is LIMIT_NOT_DEFINED, just set the function pointers to NULL?\n\nthen below, only call queue_io and update_io if the function is !\u003d NULL, then you can avoid having to check QOS_LIMIT_NOT_DEFINED in the functions above (which should save some time, especially when you add new limit types in future patches)",
+      "revId": "b3e303acf6a86d68bfffc3a192839ebb71758234",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad93398f_57026ba0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1296,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T05:12:23Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "822a0ecb_579104be",
       "revId": "b3e303acf6a86d68bfffc3a192839ebb71758234",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
