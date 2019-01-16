@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "733a4305_4984e652",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-16T20:25:16Z",
+      "side": 1,
+      "message": "I changed the strategy to this one after hitting a bug where inside of a poller, the next poller in the list was getting unregistered. That actually corrupts the TAILQ_FOREACH_SAFE iteration.",
+      "revId": "ec4bfb56aedf54a5947f74a752e4c0289e8b174d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
