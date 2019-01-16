@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "024c78c7_8ad3c18c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-16T13:36:14Z",
+      "side": 1,
+      "message": "More detailed info why we do this and what is the purpose of this test would be cool.\nYou could also add info in scripts/vagrant/README.md about possibility of testing one\u0027s changes before committing.",
+      "revId": "a33003f5a4d97065e95b77e42d5c5f52328f3701",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc7b7937_f62aa2be",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-16T13:36:14Z",
+      "side": 1,
+      "message": "You need to disable trap here, otherwise after clean and timing exit it will trigger at exiting the script and cause error (VM no longer exists)",
+      "revId": "a33003f5a4d97065e95b77e42d5c5f52328f3701",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
