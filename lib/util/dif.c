@@ -157,7 +157,7 @@ _dif_is_disabled(enum spdk_dif_type dif_type)
 static uint32_t
 _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md_interleave)
 {
-	if (dif_loc) {
+	if (!dif_loc) {
 		/* For metadata formats with more than 8 bytes, if the DIF is
 		 * contained in the last 8 bytes of metadata, then the CRC
 		 * covers all metadata up to but excluding these last 8 bytes.
