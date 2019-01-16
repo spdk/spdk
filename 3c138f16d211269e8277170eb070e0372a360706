@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0b5493b0_a7523c74",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-16T09:13:37Z",
+      "side": 1,
+      "message": "you should use uint16_t here, although specification use one byte for this field.",
+      "revId": "3c138f16d211269e8277170eb070e0372a360706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3126ea6_2f4f2518",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-16T09:13:37Z",
+      "side": 1,
+      "message": "ditto.",
+      "revId": "3c138f16d211269e8277170eb070e0372a360706",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
