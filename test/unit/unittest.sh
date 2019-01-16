@@ -69,6 +69,10 @@ if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
 
+if grep -q '#define SPDK_CONFIG_OCF 1' $rootdir/include/spdk/config.h; then
+	$valgrind $testdir/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut
+fi
+
 $valgrind $testdir/lib/bdev/mt/bdev.c/bdev_ut
 
 $valgrind $testdir/lib/blob/blob.c/blob_ut
