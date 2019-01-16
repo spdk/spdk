@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57971174_d3be3fda",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-16T09:08:38Z",
+      "side": 1,
+      "message": "Sorry about -1 again, but shouldn\u0027t we have a \"copy\" of lines 213-220?\nThat way we\u0027d have a full autotest cleanup provided by autotest_common.sh (it\u0027s more than just serup.sh reset).\n\nAlso, singe timing.svg is created as part of autopackage.sh, which is run without sudo, we need to do chmod a+r on timing.txt, otherwise crating .svg file will probably fail due to lack of permissions.",
+      "range": {
+        "startLine": 109,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 21
+      },
+      "revId": "f8fa10563a2468772b6692f86ccfa56be3ee651c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
