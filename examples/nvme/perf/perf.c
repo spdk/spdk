@@ -82,8 +82,6 @@ struct ns_entry {
 	uint32_t		num_io_requests;
 	uint64_t		size_in_ios;
 	uint32_t		io_flags;
-	uint16_t		apptag_mask;
-	uint16_t		apptag;
 	char			name[1024];
 	const struct spdk_nvme_ns_data	*nsdata;
 };
