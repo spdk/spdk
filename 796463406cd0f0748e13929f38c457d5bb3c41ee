@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26902b04_7f2a07bc",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-16T22:13:03Z",
+      "side": 1,
+      "message": "So removing the else means that someone can configure cryto with no programatic check or warning about the IPSEC requirement.  In the initial patch this seemed like a pretty strong requirement by reviewers - to be super user friendly and tolerant.  I don\u0027t think I saw another check anywhere, did you test configuring and building with and without IPSEC installed?",
+      "revId": "796463406cd0f0748e13929f38c457d5bb3c41ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9659f039_21c5c171",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-16T22:13:03Z",
+      "side": 1,
+      "message": "w/o CRYPTO, DPDK_CFLAGS is not initialized, don\u0027t know if that\u0027s a problem for +\u003d or not in a makefile but it might be clearer to init it to nothing at the top of the file",
+      "revId": "796463406cd0f0748e13929f38c457d5bb3c41ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
