@@ -1293,30 +1293,34 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 				 struct spdk_nvmf_rdma_device *device,
 				 struct spdk_nvmf_rdma_request *rdma_req)
 {
-	void		*buf = NULL;
 	uint32_t	length = rdma_req->req.length;
+	uint32_t	num_buffers;
 	uint64_t	translation_len;
 	uint32_t	i = 0;
 	int		rc = 0;
 
+	num_buffers = length / rtransport->transport.opts.io_unit_size;
+	if (length % rtransport->transport.opts.io_unit_size) {
+		num_buffers++;
+	}
+
+	if (spdk_mempool_get_bulk(rtransport->data_buf_pool, rdma_req->data.buffers, num_buffers)) {
+		rc = -ENOMEM;
+		goto err_exit_no_bufs;
+	}
+
 	rdma_req->req.iovcnt = 0;
 	while (length) {
-		buf = spdk_mempool_get(rtransport->data_buf_pool);
-		if (!buf) {
-			rc = -ENOMEM;
-			goto err_exit;
-		}
-
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(rdma_req->data.buffers[i] +
+						NVMF_DATA_BUFFER_MASK) &
 						~NVMF_DATA_BUFFER_MASK);
 		rdma_req->req.iov[i].iov_len  = spdk_min(length, rtransport->transport.opts.io_unit_size);
 		rdma_req->req.iovcnt++;
-		rdma_req->data.buffers[i] = buf;
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
 		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
 		translation_len = rdma_req->req.iov[i].iov_len;
 		rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-						     (uint64_t)buf, &translation_len))->lkey;
+						     (uint64_t)rdma_req->data.buffers[i], &translation_len))->lkey;
 		length -= rdma_req->req.iov[i].iov_len;
 
 		if (translation_len < rdma_req->req.iov[i].iov_len) {
@@ -1332,9 +1336,10 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 	return rc;
 
 err_exit:
+	spdk_mempool_put_bulk(rtransport->data_buf_pool, rdma_req->data.buffers, num_buffers);
+err_exit_no_bufs:
 	while (i) {
 		i--;
-		spdk_mempool_put(rtransport->data_buf_pool, rdma_req->data.buffers[i]);
 		rdma_req->req.iov[i].iov_base = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
