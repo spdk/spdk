@@ -183,7 +183,7 @@ dif_generate_and_verify_test(void)
 
 	/* The case that DIF is contained in the first 8 bytes of metadata. */
 	_dif_generate_and_verify(&iov,
-				 4096 + 128, 128, false,
+				 4096 + 128, 128, true,
 				 SPDK_DIF_TYPE1, dif_flags,
 				 22, 22,
 				 0x22, 0xFFFF, 0x22,
@@ -191,7 +191,7 @@ dif_generate_and_verify_test(void)
 
 	/* The case that DIF is contained in the last 8 bytes of metadata. */
 	_dif_generate_and_verify(&iov,
-				 4096 + 128, 128, true,
+				 4096 + 128, 128, false,
 				 SPDK_DIF_TYPE1, dif_flags,
 				 22, 22,
 				 0x22, 0xFFFF, 0x22,
@@ -613,11 +613,11 @@ dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 {
 	/* The case that DIF is contained in the first 8 bytes of metadata. */
 	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
-				     inject_flags, false);
+				     inject_flags, true);
 
 	/* The case that DIF is contained in the last 8 bytes of metadata. */
 	_dif_inject_error_and_verify(iovs, iovcnt, block_size, md_size, num_blocks,
-				     inject_flags, true);
+				     inject_flags, false);
 }
 
 static void
@@ -935,12 +935,12 @@ dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *b
 	/* The case that DIF is contained in the first 8 bytes of metadata. */
 	_dif_copy_inject_error_and_verify(iovs, iovcnt, bounce_iov,
 					  block_size, md_size, num_blocks,
-					  inject_flags, false);
+					  inject_flags, true);
 
 	/* The case that DIF is contained in the last 8 bytes of metadata. */
 	_dif_copy_inject_error_and_verify(iovs, iovcnt, bounce_iov,
 					  block_size, md_size, num_blocks,
-					  inject_flags, true);
+					  inject_flags, false);
 }
 
 static void
@@ -1219,11 +1219,11 @@ dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov
 {
 	/* The case that DIF is contained in the first 8 bytes of metadata. */
 	_dix_inject_error_and_verify(iovs, iovcnt, md_iov, block_size, md_size, num_blocks,
-				     inject_flags, false);
+				     inject_flags, true);
 
 	/* The case that DIF is contained in the last 8 bytes of metadata. */
 	_dix_inject_error_and_verify(iovs, iovcnt, md_iov, block_size, md_size, num_blocks,
-				     inject_flags, true);
+				     inject_flags, false);
 }
 
 static void

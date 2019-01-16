@@ -110,8 +110,8 @@ struct spdk_dif_error {
  * \param md_size Metadata size in a block.
  * \param md_interleave If true, metadata is interleaved with block data.
  * If false, metadata is separated with block data.
- * \param dif_loc DIF location. If true, DIF is set in the last 8 bytes of metadata.
- * If false, DIF is in the first 8 bytes of metadata.
+ * \param dif_loc DIF location. If true, DIF is set in the first 8 bytes of metadata.
+ * If false, DIF is in the last 8 bytes of metadata.
  * \param dif_type Type of DIF.
  * \param dif_flags Flag to specify the DIF action.
  * \param init_ref_tag Initial reference tag. For type 1, this is the
