@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cfb3178f_7b44b9c9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1589,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T10:19:45Z",
+      "side": 1,
+      "message": "opts-\u003eio_queue_requests? And if condition is necessary?",
+      "range": {
+        "startLine": 1589,
+        "startChar": 37,
+        "endLine": 1589,
+        "endChar": 40
+      },
+      "revId": "5dda498016d9adeac9541abd99b4565cd23d4e92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
