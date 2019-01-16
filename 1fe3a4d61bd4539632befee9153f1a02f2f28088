@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f83ed59_260548ea",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T04:03:50Z",
+      "side": 1,
+      "message": "should be (sizeof(*vol-\u003ebacking_super) + REDUCE_PATH_MAX + vol-\u003ebacking_dev-\u003eblocklen - 1) / vol-\u003ebacking_dev-\u003eblocklen or something like this ?",
+      "range": {
+        "startLine": 385,
+        "startChar": 25,
+        "endLine": 386,
+        "endChar": 31
+      },
+      "revId": "1fe3a4d61bd4539632befee9153f1a02f2f28088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
