@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3c38a5b1_fa7d3d3a",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T22:21:43Z",
+      "side": 1,
+      "message": "I guess I\u0027m not following.  With this patch, we don\u0027t install IPSEC now - we\u0027ll just always build and use what\u0027s in our submodule.  So there\u0027s no need to check if intel-ipsec-mb.h exists - we know it\u0027s in our submodule.\n\nWe already tell people to initialize their submodules (for DPDK) so I don\u0027t think we should check here if they initialized their submodules.  Or at least that would be something separate from this patch.",
+      "parentUuid": "26902b04_7f2a07bc",
+      "revId": "796463406cd0f0748e13929f38c457d5bb3c41ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9659f039_21c5c171",
         "filename": "dpdkbuild/Makefile",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-16T22:13:03Z",
       "side": 1,
       "message": "w/o CRYPTO, DPDK_CFLAGS is not initialized, don\u0027t know if that\u0027s a problem for +\u003d or not in a makefile but it might be clearer to init it to nothing at the top of the file",
+      "revId": "796463406cd0f0748e13929f38c457d5bb3c41ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd37d0a4_d437d37b",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 1
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T22:21:43Z",
+      "side": 1,
+      "message": "I considered adding that but decided against it.  Now that you\u0027ve mentioned it, I\u0027ll do it though.",
+      "parentUuid": "9659f039_21c5c171",
       "revId": "796463406cd0f0748e13929f38c457d5bb3c41ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
