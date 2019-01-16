@@ -22,6 +22,10 @@ An new parameter `init_crc` representing the initial CRC value was added to
 `spdk_crc16_t10dif`. The parameter can be used to calculate a CRC value spanning
 multiple separate buffers.
 
+New DIF APIs were added to generate and verify DIF by byte granularity for both DIF and DIX
+formats. Among them, DIF with copy APIs will be usable to emulate DIF operations such as DIF
+insert and strip.
+
 ### nvme
 
 Wrapper functions spdk_nvme_ctrlr_security_send() and spdk_nvme_ctrlr_security_receive() are
