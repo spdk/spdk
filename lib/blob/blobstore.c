@@ -934,6 +934,15 @@ _spdk_blob_load_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 	int				rc;
 	uint32_t			crc;
 
+	if (bserrno) {
+		SPDK_ERRLOG("Metadata page read failed: %d\n", bserrno);
+		_spdk_blob_free(blob);
+		ctx->cb_fn(seq, NULL, bserrno);
+		spdk_dma_free(ctx->pages);
+		free(ctx);
+		return;
+	}
+
 	page = &ctx->pages[ctx->num_pages - 1];
 	crc = _spdk_blob_md_page_calc_crc(page);
 	if (crc != page->crc) {
@@ -2599,6 +2608,11 @@ _spdk_bs_write_used_md(spdk_bs_sequence_t *seq, void *arg, spdk_bs_sequence_cpl 
 {
 	struct spdk_bs_load_ctx	*ctx = arg;
 	uint64_t	mask_size, lba, lba_count;
+
+	if (seq->bserrno) {
+		_spdk_bs_load_ctx_fail(seq, ctx, seq->bserrno);
+		return;
+	}
 
 	mask_size = ctx->super->used_page_mask_len * SPDK_BS_PAGE_SIZE;
 	ctx->mask = spdk_dma_zmalloc(mask_size, 0x1000, NULL);
