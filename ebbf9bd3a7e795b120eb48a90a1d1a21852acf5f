@@ -52,6 +52,24 @@
       "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39bc5d99_6c11147a",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-16T08:51:38Z",
+      "side": 1,
+      "message": "\u003e So it\u0027s hard to prevent the races between different applications without extra pre-negotiated operations.\n\nHow about brute force? We could try calling spdk_nbd_start for /dev/nbd0 and then in the completion callback retry with /dev/nbd(++i). After one callback completes successfully, it\u0027s 100% certain that we are an exclusive owner of the nbd device. After all, this is NBD - it doesn\u0027t have to be fast :)\n\nUsing spdk_nbd_disk_find_by_nbd_path also sounds fine.",
+      "parentUuid": "9675e935_e8bb4013",
+      "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
