@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6e85849_a32fefcc",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 614,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-16T06:13:39Z",
+      "side": 1,
+      "message": "Hi Shuhei, actually the definition of NVMe\u0027s metadata location here is opposite with your dif.h, if pi_loc is true in NVMe, it means the PI is locate at the first 8 bytes of the metadata space.",
+      "revId": "6c1bc2e43742ad1ebc8aa22debf75518c1dd5e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
