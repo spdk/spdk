@@ -81,9 +81,13 @@ struct ns_entry {
 	uint32_t		io_size_blocks;
 	uint32_t		num_io_requests;
 	uint64_t		size_in_ios;
+	uint32_t		block_size;
+	uint32_t		md_size;
+	bool			md_interleave;
+	bool			pi_loc;
+	enum spdk_nvme_pi_type	pi_type;
 	uint32_t		io_flags;
 	char			name[1024];
-	const struct spdk_nvme_ns_data	*nsdata;
 };
 
 static const double g_latency_cutoffs[] = {
@@ -408,18 +412,17 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 			   uint32_t lba_count, bool is_write)
 {
 	struct spdk_nvme_protection_info *pi;
-	uint32_t i, md_size, sector_size, pi_offset;
+	uint32_t i, pi_offset;
 	uint16_t crc16;
 
 	task->appmask = 0;
 	task->apptag = 0;
 
-	if (!spdk_nvme_ns_supports_extended_lba(entry->u.nvme.ns)) {
+	if (!entry->md_interleave) {
 		return;
 	}
 
-	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
-	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
+	if (entry->pi_type == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
 		return;
 	}
 
@@ -428,18 +431,14 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 	}
 
 	/* Type3 don't support REFTAG */
-	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
-	    SPDK_NVME_FMT_NVM_PROTECTION_TYPE3) {
+	if (entry->pi_type == SPDK_NVME_FMT_NVM_PROTECTION_TYPE3) {
 		return;
 	}
-
-	sector_size = spdk_nvme_ns_get_sector_size(entry->u.nvme.ns);
-	md_size = spdk_nvme_ns_get_md_size(entry->u.nvme.ns);
 
 	/* PI locates at the first 8 bytes of metadata,
 	 * doesn't support now
 	 */
-	if (entry->nsdata->dps.md_start) {
+	if (entry->pi_loc) {
 		return;
 	}
 
@@ -450,15 +449,15 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 	}
 
 	for (i = 0; i < lba_count; i++) {
-		pi_offset = ((sector_size + md_size) * (i + 1)) - 8;
+		pi_offset = (entry->block_size * (i + 1)) - 8;
 		pi = (struct spdk_nvme_protection_info *)(task->iov.iov_base + pi_offset);
 		memset(pi, 0, sizeof(*pi));
 
 		if (is_write) {
 			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 				/* CRC buffer should not include PI */
-				crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + (sector_size + md_size) * i,
-							  sector_size + md_size - 8);
+				crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + entry->block_size * i,
+							  entry->block_size - 8);
 				to_be16(&pi->guard, crc16);
 			}
 			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
@@ -477,32 +476,28 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 			    uint64_t lba, uint32_t lba_count)
 {
 	struct spdk_nvme_protection_info *pi;
-	uint32_t i, md_size, sector_size, pi_offset, ref_tag;
+	uint32_t i, pi_offset, ref_tag;
 	uint16_t crc16, guard, app_tag;
 
-	if (spdk_nvme_ns_get_pi_type(entry->u.nvme.ns) ==
-	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
+	if (entry->pi_type == SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
 		return;
 	}
-
-	sector_size = spdk_nvme_ns_get_sector_size(entry->u.nvme.ns);
-	md_size = spdk_nvme_ns_get_md_size(entry->u.nvme.ns);
 
 	/* PI locates at the first 8 bytes of metadata,
 	 * doesn't support now
 	 */
-	if (entry->nsdata->dps.md_start) {
+	if (entry->pi_loc) {
 		return;
 	}
 
 	for (i = 0; i < lba_count; i++) {
-		pi_offset = ((sector_size + md_size) * (i + 1)) - 8;
+		pi_offset = (entry->block_size * (i + 1)) - 8;
 		pi = (struct spdk_nvme_protection_info *)(task->iov.iov_base + pi_offset);
 
 		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 			/* CRC buffer should not include last 8 bytes of PI */
-			crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + (sector_size + md_size) * i,
-						  sector_size + md_size - 8);
+			crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + entry->block_size * i,
+						  entry->block_size - 8);
 			to_be16(&guard, crc16);
 			if (pi->guard != guard) {
 				fprintf(stdout, "Get Guard Error LBA 0x%16.16"PRIx64","
@@ -643,7 +638,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries;
+	uint32_t max_xfer_size, entries, ns_size, sector_size;
 	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -656,12 +651,14 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		return;
 	}
 
-	if (spdk_nvme_ns_get_size(ns) < g_io_size_bytes ||
-	    spdk_nvme_ns_get_sector_size(ns) > g_io_size_bytes) {
+	ns_size = spdk_nvme_ns_get_size(ns);
+	sector_size = spdk_nvme_ns_get_sector_size(ns);
+
+	if (ns_size < g_io_size_bytes || sector_size > g_io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
-		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
+		       "ns size %u / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
-		       spdk_nvme_ns_get_size(ns), spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
+		       ns_size, spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
 		g_warn = true;
 		return;
 	}
@@ -693,23 +690,26 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->u.nvme.ns = ns;
 	entry->num_io_requests = entries;
 
-	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
-			     g_io_size_bytes;
-	entry->io_size_blocks = g_io_size_bytes / spdk_nvme_ns_get_sector_size(ns);
+	entry->size_in_ios = ns_size / g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / sector_size;
+
+	entry->block_size = spdk_nvme_ns_get_extended_sector_size(ns);
+	entry->md_size = spdk_nvme_ns_get_md_size(ns);
+	entry->md_interleave = spdk_nvme_ns_supports_extended_lba(ns);
+	entry->pi_loc = spdk_nvme_ns_get_data(ns)->dps.md_start;
+	entry->pi_type = spdk_nvme_ns_get_pi_type(ns);
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
 	}
 
-	if (g_max_io_md_size < spdk_nvme_ns_get_md_size(ns)) {
-		g_max_io_md_size = spdk_nvme_ns_get_md_size(ns);
+	if (g_max_io_md_size < entry->md_size) {
+		g_max_io_md_size = entry->md_size;
 	}
 
 	if (g_max_io_size_blocks < entry->io_size_blocks) {
 		g_max_io_size_blocks = entry->io_size_blocks;
 	}
-
-	entry->nsdata = spdk_nvme_ns_get_data(ns);
 
 	snprintf(entry->name, 44, "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
