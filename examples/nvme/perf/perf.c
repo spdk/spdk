@@ -137,7 +137,7 @@ struct ns_worker_ctx {
 
 struct perf_task {
 	struct ns_worker_ctx	*ns_ctx;
-	void			*buf;
+	struct iovec		iov;
 	uint64_t		submit_tsc;
 	uint16_t		appmask;
 	uint16_t		apptag;
@@ -221,24 +221,25 @@ task_complete(struct perf_task *task);
 static void
 aio_setup_payload(struct perf_task *task, uint8_t pattern)
 {
-	task->buf = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
-	if (task->buf == NULL) {
+	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	task->iov.iov_len = g_io_size_bytes;
+	if (task->iov.iov_base == NULL) {
 		fprintf(stderr, "spdk_dma_zmalloc() for task->buf failed\n");
 		exit(1);
 	}
-	memset(task->buf, pattern, g_io_size_bytes);
+	memset(task->iov.iov_base, pattern, task->iov.iov_len);
 }
 
 static int
-aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd, void *buf,
-	   unsigned long nbytes, uint64_t offset, void *cb_ctx)
+aio_submit(io_context_t aio_ctx, struct iocb *iocb, int fd, enum io_iocb_cmd cmd,
+	   struct iovec *iov, uint64_t offset, void *cb_ctx)
 {
 	iocb->aio_fildes = fd;
 	iocb->aio_reqprio = 0;
 	iocb->aio_lio_opcode = cmd;
-	iocb->u.c.buf = buf;
-	iocb->u.c.nbytes = nbytes;
-	iocb->u.c.offset = offset;
+	iocb->u.c.buf = iov->iov_base;
+	iocb->u.c.nbytes = iov->iov_len;
+	iocb->u.c.offset = offset * iov->iov_len;
 	iocb->data = cb_ctx;
 
 	if (io_submit(aio_ctx, 1, &iocb) < 0) {
@@ -254,11 +255,11 @@ aio_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	      struct ns_entry *entry, uint64_t offset_in_ios)
 {
 	if (task->is_read) {
-		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD, task->buf,
-				  g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PREAD,
+				  &task->iov, offset_in_ios, task);
 	} else {
-		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE, task->buf,
-				  g_io_size_bytes, offset_in_ios * g_io_size_bytes, task);
+		return aio_submit(ns_ctx->u.aio.ctx, &task->iocb, entry->u.aio.fd, IO_CMD_PWRITE,
+				  &task->iov, offset_in_ios, task);
 	}
 }
 
@@ -452,13 +453,13 @@ task_extended_lba_setup_pi(struct ns_entry *entry, struct perf_task *task, uint6
 
 	for (i = 0; i < lba_count; i++) {
 		pi_offset = ((sector_size + md_size) * (i + 1)) - 8;
-		pi = (struct spdk_nvme_protection_info *)(task->buf + pi_offset);
+		pi = (struct spdk_nvme_protection_info *)(task->iov.iov_base + pi_offset);
 		memset(pi, 0, sizeof(*pi));
 
 		if (is_write) {
 			if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 				/* CRC buffer should not include PI */
-				crc16 = spdk_crc16_t10dif(0, task->buf + (sector_size + md_size) * i,
+				crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + (sector_size + md_size) * i,
 							  sector_size + md_size - 8);
 				to_be16(&pi->guard, crc16);
 			}
@@ -498,11 +499,11 @@ task_extended_lba_pi_verify(struct ns_entry *entry, struct perf_task *task,
 
 	for (i = 0; i < lba_count; i++) {
 		pi_offset = ((sector_size + md_size) * (i + 1)) - 8;
-		pi = (struct spdk_nvme_protection_info *)(task->buf + pi_offset);
+		pi = (struct spdk_nvme_protection_info *)(task->iov.iov_base + pi_offset);
 
 		if (entry->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 			/* CRC buffer should not include last 8 bytes of PI */
-			crc16 = spdk_crc16_t10dif(0, task->buf + (sector_size + md_size) * i,
+			crc16 = spdk_crc16_t10dif(0, task->iov.iov_base + (sector_size + md_size) * i,
 						  sector_size + md_size - 8);
 			to_be16(&guard, crc16);
 			if (pi->guard != guard) {
@@ -548,12 +549,13 @@ nvme_setup_payload(struct perf_task *task, uint8_t pattern)
 	 * it's same with g_io_size_bytes for namespace without metadata.
 	 */
 	max_io_size_bytes = g_io_size_bytes + g_max_io_md_size * g_max_io_size_blocks;
-	task->buf = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
-	if (task->buf == NULL) {
+	task->iov.iov_base = spdk_dma_zmalloc(max_io_size_bytes, g_io_align, NULL);
+	task->iov.iov_len = max_io_size_bytes;
+	if (task->iov.iov_base == NULL) {
 		fprintf(stderr, "task->buf spdk_dma_zmalloc failed\n");
 		exit(1);
 	}
-	memset(task->buf, pattern, max_io_size_bytes);
+	memset(task->iov.iov_base, pattern, task->iov.iov_len);
 }
 
 static int
@@ -567,14 +569,14 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 
 	if (task->is_read) {
 		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-						     task->buf, NULL,
+						     task->iov.iov_base, NULL,
 						     task->lba,
 						     entry->io_size_blocks, io_complete,
 						     task, entry->io_flags,
 						     task->appmask, task->apptag);
 	} else {
 		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
-						      task->buf, NULL,
+						      task->iov.iov_base, NULL,
 						      task->lba,
 						      entry->io_size_blocks, io_complete,
 						      task, entry->io_flags,
@@ -886,7 +888,7 @@ task_complete(struct perf_task *task)
 	 * the one just completed.
 	 */
 	if (ns_ctx->is_draining) {
-		spdk_dma_free(task->buf);
+		spdk_dma_free(task->iov.iov_base);
 		free(task);
 	} else {
 		submit_single_io(task);
