@@ -50,6 +50,24 @@
       "revId": "7a7df642c91afff13bb56aaae8019a18ddfbf1b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e653a024_ba1b7339",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4030,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T23:21:11Z",
+      "side": 1,
+      "message": "Thanks Jim. Let me double check the logic here for the ops initialtization. Basically it needs to cover both the Configuration file case and the RPC case where I previously thought about.",
+      "parentUuid": "537d3da0_62d4217c",
+      "revId": "7a7df642c91afff13bb56aaae8019a18ddfbf1b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
