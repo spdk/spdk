@@ -154,7 +154,6 @@ _dif_is_disabled(enum spdk_dif_type dif_type)
 	}
 }
 
-
 static uint32_t
 _get_guard_interval(uint32_t block_size, uint32_t md_size, bool dif_loc, bool md_interleave)
 {
@@ -346,7 +345,7 @@ spdk_dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
@@ -577,7 +576,7 @@ spdk_dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
@@ -699,7 +698,7 @@ spdk_dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
@@ -839,7 +838,7 @@ spdk_dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
@@ -1088,7 +1087,7 @@ spdk_dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
@@ -1210,7 +1209,7 @@ spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		return -EINVAL;
 	}
 
-	if (_dif_is_disabled(ctx->dif_type)) {
+	if (_dif_is_disabled(ctx->dif_type) || ctx->dif_flags & SPDK_DIF_STRIP_INSERT) {
 		return 0;
 	}
 
