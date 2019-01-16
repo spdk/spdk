@@ -99,3 +99,34 @@ int spdk_ocf_cache_get_queue(struct spdk_ocf_ctx *ctx, unsigned id, struct ocf_q
 {
 	return ocf_cache_get_queue(ctx->dev_cache, id, &q);
 }
+
+
+int spdk_ocf_init(struct vbdev_cas_config *cfg, const char *ocf_name, const char *cache_name,
+		  const char *core_name)
+{
+	cfg->cache.id = 0;
+	cfg->cache.name = ocf_name;
+	cfg->cache.name_size = strlen(ocf_name) + 1;
+	cfg->cache.metadata_volatile = true;
+	cfg->cache.cache_line_size = ocf_cache_line_size_4;
+	cfg->cache.backfill.max_queue_size = 65536;
+	cfg->cache.backfill.queue_unblock_size = 60000;
+
+	/* At this moment CAS queues count is static
+	 * so we choose some value for it
+	 * It has to be bigger than SPDK thread count */
+	cfg->cache.io_queues = g_queues_count;
+
+	cfg->device.cache_line_size = ocf_cache_line_size_4;
+	cfg->device.force = true;
+	cfg->device.min_free_ram = 2000;
+	cfg->device.perform_test = false;
+	cfg->device.discard_on_start = false;
+
+	cfg->core.data_obj_type = SPDK_OBJECT;
+
+	cfg->device.uuid.size = strlen(cache_name) + 1;
+	cfg->device.uuid.data = cache_name;
+	cfg->core.uuid.size = strlen(core_name) + 1;
+	cfg->core.uuid.data = core_name;
+}

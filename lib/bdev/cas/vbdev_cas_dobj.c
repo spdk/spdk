@@ -39,6 +39,8 @@
 #include "spdk/ocf.h"
 #include "spdk_internal/log.h"
 
+#include "vbdev_cas.h"
+
 static int
 opencas_dobj_open(ocf_data_obj_t obj)
 {

@@ -618,33 +618,7 @@ register_vbdev(struct vbdev_cas *vbdev)
 static void
 init_vbdev_config(struct vbdev_cas *vbdev)
 {
-	struct vbdev_cas_config *cfg = &vbdev->cfg;
-
-	cfg->cache.id = 0;
-	cfg->cache.name = vbdev->name;
-	cfg->cache.name_size = strlen(vbdev->name) + 1;
-	cfg->cache.metadata_volatile = true;
-	cfg->cache.cache_line_size = ocf_cache_line_size_4;
-	cfg->cache.backfill.max_queue_size = 65536;
-	cfg->cache.backfill.queue_unblock_size = 60000;
-
-	/* At this moment CAS queues count is static
-	 * so we choose some value for it
-	 * It has to be bigger than SPDK thread count */
-	cfg->cache.io_queues = g_queues_count;
-
-	cfg->device.cache_line_size = ocf_cache_line_size_4;
-	cfg->device.force = true;
-	cfg->device.min_free_ram = 2000;
-	cfg->device.perform_test = false;
-	cfg->device.discard_on_start = false;
-
-	cfg->core.data_obj_type = SPDK_OBJECT;
-
-	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
-	cfg->device.uuid.data = vbdev->cache.name;
-	cfg->core.uuid.size = strlen(vbdev->core.name) + 1;
-	cfg->core.uuid.data = vbdev->core.name;
+	spdk_ocf_init(&vbdev->cfg, vbdev->name, vbdev->cache.name, vbdev->core.name);
 }
 
 /* Allocate vbdev structure object and add it to the global list */
@@ -704,7 +678,7 @@ init_vbdev(const char *vbdev_name,
 
 	init_vbdev_config(vbdev);
 
-	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
+
 	return rc;
 
 error_mem:
