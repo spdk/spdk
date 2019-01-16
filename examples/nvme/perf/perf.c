@@ -86,7 +86,6 @@ struct ns_entry {
 	bool			md_interleave;
 	bool			pi_loc;
 	enum spdk_nvme_pi_type	pi_type;
-	uint32_t		io_flags;
 	char			name[1024];
 };
 
@@ -429,24 +428,37 @@ static int
 nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	       struct ns_entry *entry, uint64_t offset_in_ios)
 {
+	uint64_t lba = offset_in_ios * entry->io_size_blocks;
+
+	if (task->is_read) {
+		return spdk_nvme_ns_cmd_read(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					     task->iov.iov_base, lba, entry->io_size_blocks,
+					     io_complete, task, g_metacfg_pract_flag);
+	} else {
+		return spdk_nvme_ns_cmd_write(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+					      task->iov.iov_base, lba, entry->io_size_blocks,
+					      io_complete, task, g_metacfg_pract_flag);
+	}
+}
+
+static int
+nvme_dif_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		   struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	struct spdk_dif_ctx *dif_ctx = &task->dif_ctx;
 	uint64_t lba;
-	bool dif_enabled;
 	int rc;
 
 	lba = offset_in_ios * entry->io_size_blocks;
 
-	dif_enabled = entry->md_size != 0 && entry->md_interleave &&
-		      !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT);
-
-	if (dif_enabled) {
-		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
-				       entry->md_interleave, entry->pi_loc,
-				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
-				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks);
-		if (rc != 0) {
-			fprintf(stderr, "Initialization of DIF context failed\n");
-			exit(1);
-		}
+	rc = spdk_dif_ctx_init(dif_ctx, entry->block_size, entry->md_size,
+			       entry->md_interleave, entry->pi_loc,
+			       (enum spdk_dif_type)entry->pi_type,
+			       g_metacfg_pract_flag | g_metacfg_prchk_flags,
+			       lba, 0xFFFF, (uint16_t)entry->io_size_blocks);
+	if (rc != 0) {
+		fprintf(stderr, "Initialization of DIF context failed\n");
+		exit(1);
 	}
 
 	if (task->is_read) {
@@ -454,23 +466,21 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 						     task->iov.iov_base, NULL,
 						     lba,
 						     entry->io_size_blocks, io_complete,
-						     task, entry->io_flags,
-						     task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+						     task, dif_ctx->dif_flags,
+						     dif_ctx->apptag_mask, dif_ctx->app_tag);
 	} else {
-		if (dif_enabled) {
-			rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
-			if (rc != 0) {
-				fprintf(stderr, "Generation of DIF failed\n");
-				return rc;
-			}
+		rc = spdk_dif_generate(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx);
+		if (rc != 0) {
+			fprintf(stderr, "Generation of DIF failed\n");
+			return rc;
 		}
 
 		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
 						      task->iov.iov_base, NULL,
 						      lba,
 						      entry->io_size_blocks, io_complete,
-						      task, entry->io_flags,
-						      task->dif_ctx.apptag_mask, task->dif_ctx.app_tag);
+						      task, dif_ctx->dif_flags,
+						      dif_ctx->apptag_mask, dif_ctx->app_tag);
 	}
 }
 
@@ -483,11 +493,15 @@ nvme_check_io(struct ns_worker_ctx *ns_ctx)
 static void
 nvme_verify_io(struct perf_task *task, struct ns_entry *entry)
 {
+}
+
+static void
+nvme_dif_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
 	struct spdk_dif_error err_blk = {};
 	int rc;
 
-	if (task->is_read && entry->md_size != 0 && entry->md_interleave &&
-	    !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
+	if (task->is_read) {
 		rc = spdk_dif_verify(&task->iov, 1, entry->io_size_blocks, &task->dif_ctx,
 				     &err_blk);
 		if (rc != 0) {
@@ -533,6 +547,15 @@ static const struct ns_fn_table nvme_fn_table = {
 	.submit_io		= nvme_submit_io,
 	.check_io		= nvme_check_io,
 	.verify_io		= nvme_verify_io,
+	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
+};
+
+static const struct ns_fn_table nvme_dif_fn_table = {
+	.setup_payload		= nvme_setup_payload,
+	.submit_io		= nvme_dif_submit_io,
+	.check_io		= nvme_check_io,
+	.verify_io		= nvme_dif_verify_io,
 	.init_ns_worker_ctx	= nvme_init_ns_worker_ctx,
 	.cleanup_ns_worker_ctx	= nvme_cleanup_ns_worker_ctx,
 };
@@ -589,7 +612,6 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	}
 
 	entry->type = ENTRY_TYPE_NVME_NS;
-	entry->fn_table = &nvme_fn_table;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
 	entry->num_io_requests = entries;
@@ -603,8 +625,26 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->pi_loc = spdk_nvme_ns_get_data(ns)->dps.md_start;
 	entry->pi_type = spdk_nvme_ns_get_pi_type(ns);
 
-	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
+	/* DIX is handled as no DIF for now. */
+	if (entry->md_size == 0) {
+		entry->fn_table = &nvme_fn_table;
+	} else if (entry->md_size == 8) {
+		if (g_metacfg_pract_flag) {
+			entry->fn_table = &nvme_fn_table;
+		} else if (entry->md_interleave) {
+			entry->fn_table = &nvme_dif_fn_table;
+		} else {
+			entry->fn_table = &nvme_fn_table;
+		}
+	} else {
+		if (g_metacfg_pract_flag) {
+			printf("WARNING: metadata size > 8 and PRACT = 1 should be avoided for now\n");
+			entry->fn_table = &nvme_fn_table;
+		} else if (entry->md_interleave) {
+			entry->fn_table = &nvme_dif_fn_table;
+		} else {
+			entry->fn_table = &nvme_fn_table;
+		}
 	}
 
 	if (g_max_io_md_size < entry->md_size) {
