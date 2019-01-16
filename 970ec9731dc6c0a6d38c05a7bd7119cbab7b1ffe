@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "406e27c2_f1d71471",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T13:22:12Z",
+      "side": 1,
+      "message": "looks like this has been forgot to remove and below line 186",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 18
+      },
+      "revId": "970ec9731dc6c0a6d38c05a7bd7119cbab7b1ffe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52941ffa_720d1172",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-16T13:22:12Z",
+      "side": 1,
+      "message": "this change is not needed",
+      "revId": "970ec9731dc6c0a6d38c05a7bd7119cbab7b1ffe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
