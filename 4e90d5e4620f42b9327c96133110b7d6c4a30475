@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73993c98_044fd453",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-16T08:55:37Z",
+      "side": 1,
+      "message": "will be destroyed",
+      "range": {
+        "startLine": 175,
+        "startChar": 67,
+        "endLine": 175,
+        "endChar": 86
+      },
+      "revId": "4e90d5e4620f42b9327c96133110b7d6c4a30475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb675481_c7d06bf8",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-16T08:55:37Z",
+      "side": 1,
+      "message": "You never check in_call.\nDid you mean to skip client if it is already processing response?",
+      "range": {
+        "startLine": 198,
+        "startChar": 3,
+        "endLine": 205,
+        "endChar": 0
+      },
+      "revId": "4e90d5e4620f42b9327c96133110b7d6c4a30475",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
