@@ -88,6 +88,24 @@
       "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e47c431_e43df8e0",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-16T12:01:34Z",
+      "side": 1,
+      "message": "I forgot second part:\n\nWhen/if NBD_SET_SOCK will work then we can try brute force way iterating over all /dev/nbdX devices.",
+      "parentUuid": "6d0c63f7_ea50a923",
+      "revId": "ebbf9bd3a7e795b120eb48a90a1d1a21852acf5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
