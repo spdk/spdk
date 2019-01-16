@@ -34,6 +34,24 @@
       "revId": "1a4c0b1c9fc9abbc08229c75b815cc5321de0381",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "640ce987_80bae49d",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T08:52:07Z",
+      "side": 1,
+      "message": "I also add warning print for the case (md_size \u003e 8 and DIF and PRACT\u003d1)",
+      "parentUuid": "e618c9d2_567c78d3",
+      "revId": "1a4c0b1c9fc9abbc08229c75b815cc5321de0381",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
