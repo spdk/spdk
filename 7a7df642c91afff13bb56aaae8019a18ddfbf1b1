@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "763d95d0_16b55484",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1836,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T16:33:57Z",
+      "side": 1,
+      "message": "do we need this here?  we\u0027ve already initialized the ops when we created the qos structure in _spdk_bdev_set_qos_rate_limits",
+      "revId": "7a7df642c91afff13bb56aaae8019a18ddfbf1b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b576cdf_d5340e2c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2034,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T16:33:57Z",
+      "side": 1,
+      "message": "Is this needed?  We copied the function pointers from the old_qos - do we need to set them here again?",
+      "revId": "7a7df642c91afff13bb56aaae8019a18ddfbf1b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "537d3da0_62d4217c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4030,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-16T16:33:57Z",
+      "side": 1,
+      "message": "I think this is the only place where we need to call this function.  If so, I think we can make the code more concise by moving the contents of _spdk_bdev_qos_init_ops to here.",
+      "revId": "7a7df642c91afff13bb56aaae8019a18ddfbf1b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
