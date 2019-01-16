@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "388d2df3_b39558f1",
+        "filename": "configure",
+        "patchSetId": 62
+      },
+      "lineNbr": 288,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-16T07:28:02Z",
+      "side": 1,
+      "message": "If with statement, it requires that hth users must install isa-l?",
+      "range": {
+        "startLine": 282,
+        "startChar": 0,
+        "endLine": 288,
+        "endChar": 2
+      },
+      "revId": "1c763827fd87d7a61a9ba893749b80440e8496d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
