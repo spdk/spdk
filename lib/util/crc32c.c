@@ -32,9 +32,21 @@
  */
 
 #include "spdk/crc32.h"
+#include "spdk/config.h"
 
 #if defined(__x86_64__) && defined(__SSE4_2__)
 #include <x86intrin.h>
+
+#ifdef SPDK_CONFIG_ISAL
+#include <isa-l/crc.h>
+
+uint32_t
+spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
+{
+	return crc32_iscsi((unsigned char *)buf, len, crc);
+}
+
+#else
 
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
@@ -70,6 +82,7 @@ spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 	return crc;
 }
 
+#endif
 #else /* SSE 4.2 (CRC32 instruction) not available */
 
 static struct spdk_crc32_table g_crc32c_table;

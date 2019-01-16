@@ -124,6 +124,11 @@ LD = ld.lld
 endif
 endif
 
+ifeq ($(CONFIG_ISAL),y)
+COMMON_CFLAGS += -I/usr/include
+SYS_LIBS += -lisal
+endif
+
 # Attach only if PMDK lib specified with configure
 ifneq ($(CONFIG_PMDK_DIR),)
 LIBS += -L$(CONFIG_PMDK_DIR)/src/nondebug
