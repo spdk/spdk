@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba39d3cf_77bacc24",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 539,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T04:13:07Z",
+      "side": 1,
+      "message": "you can free(ret) in mem_err path because free(NULL) is no harm.\n\nchar *tmp \u003d NULL;\n\nret \u003d spdk_sprintf_alloc(...);\nif (!ret) {\n  goto mem_err;\n}\n\ntmp \u003d spdk_sprintf_append_realloc(ret, ... );\nif (!tmp) {\n  goto mem_err;\n}\n\nmem_err:\n  free(ret);\n  return NULL;",
+      "range": {
+        "startLine": 534,
+        "startChar": 0,
+        "endLine": 539,
+        "endChar": 12
+      },
+      "revId": "71b9a95372f78c62cb629c2ea3a5340fadc20c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d719e6b3_951255ba",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 567,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T04:13:07Z",
+      "side": 1,
+      "message": "return tmp simply.",
+      "range": {
+        "startLine": 565,
+        "startChar": 0,
+        "endLine": 567,
+        "endChar": 12
+      },
+      "revId": "71b9a95372f78c62cb629c2ea3a5340fadc20c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67319072_32af4937",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-16T04:13:07Z",
+      "side": 1,
+      "message": "Will you explain why static is necessary?",
+      "range": {
+        "startLine": 607,
+        "startChar": 1,
+        "endLine": 607,
+        "endChar": 7
+      },
+      "revId": "71b9a95372f78c62cb629c2ea3a5340fadc20c6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
