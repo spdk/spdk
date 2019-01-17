@@ -59,7 +59,8 @@
 #define NVMF_DEFAULT_RX_SGE		2
 
 /* The RDMA completion queue size */
-#define NVMF_RDMA_CQ_SIZE	4096
+#define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
+#define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
 /* AIO backend requires block size aligned data buffers,
  * extra 4KiB aligned data buffer should work for most devices.
@@ -334,6 +335,8 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
 
+	int					num_cqe;
+	int					required_num_wr;
 	struct ibv_cq				*cq;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
@@ -664,6 +667,10 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->cm_id) {
 		rdma_destroy_qp(rqpair->cm_id);
 		rdma_destroy_id(rqpair->cm_id);
+
+		if (rqpair->poller) {
+			rqpair->poller->required_num_wr -= MAX_WR_PER_QP(rqpair->max_queue_depth);
+		}
 	}
 
 	if (rqpair->mgmt_channel) {
@@ -684,7 +691,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	int				rc, i;
+	struct spdk_nvmf_rdma_poller	*rpoller;
+	int				rc, i, num_cqe, required_num_wr;;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_transport	*transport;
@@ -708,6 +716,38 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	ibv_init_attr.cap.max_send_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
 	ibv_init_attr.cap.max_recv_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
 
+	/* Enlarge CQ size dynamically */
+	rpoller = rqpair->poller;
+	required_num_wr = rpoller->required_num_wr + MAX_WR_PER_QP(rqpair->max_queue_depth);
+	num_cqe = rpoller->num_cqe;
+	if (num_cqe < required_num_wr) {
+		num_cqe = spdk_max(num_cqe * 2, required_num_wr);
+		num_cqe = spdk_min(num_cqe, device->attr.max_cqe);
+	}
+
+	if (rpoller->num_cqe != num_cqe) {
+		if (required_num_wr > device->attr.max_cqe) {
+			SPDK_ERRLOG("RDMA CQE requirement (%d) exceeds device max_cqe limitation (%d)\n",
+				    required_num_wr, device->attr.max_cqe);
+			rdma_destroy_id(rqpair->cm_id);
+			rqpair->cm_id = NULL;
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
+			return -1;
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Resize RDMA CQ from %d to %d\n", rpoller->num_cqe, num_cqe);
+		rc = ibv_resize_cq(rpoller->cq, num_cqe);
+		if (rc) {
+			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
+			rdma_destroy_id(rqpair->cm_id);
+			rqpair->cm_id = NULL;
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
+			return -1;
+		}
+
+		rpoller->num_cqe = num_cqe;
+	}
+
 	rc = rdma_create_qp(rqpair->cm_id, rqpair->port->device->pd, &ibv_init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
@@ -716,6 +756,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_qpair_destroy(rqpair);
 		return -1;
 	}
+
+	rpoller->required_num_wr = required_num_wr;
 
 	rqpair->max_send_sge = spdk_min(NVMF_DEFAULT_TX_SGE, ibv_init_attr.cap.max_send_sge);
 	rqpair->max_recv_sge = spdk_min(NVMF_DEFAULT_RX_SGE, ibv_init_attr.cap.max_recv_sge);
@@ -2389,7 +2431,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		TAILQ_INIT(&poller->qpairs);
 
-		poller->cq = ibv_create_cq(device->context, NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
+		poller->cq = ibv_create_cq(device->context, DEFAULT_NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
 		if (!poller->cq) {
 			SPDK_ERRLOG("Unable to create completion queue\n");
 			free(poller);
@@ -2397,6 +2439,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 			pthread_mutex_unlock(&rtransport->lock);
 			return NULL;
 		}
+		poller->num_cqe = DEFAULT_NVMF_RDMA_CQ_SIZE;
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 	}
