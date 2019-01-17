@@ -110,6 +110,7 @@ spdk_fio_init_thread(struct thread_data *td)
 		SPDK_ERRLOG("failed to allocate thread\n");
 		return -1;
 	}
+	spdk_set_thread(fio_thread->thread);
 
 	fio_thread->iocq_size = td->o.iodepth;
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
@@ -648,7 +649,13 @@ spdk_fio_event(struct thread_data *td, int event)
 static size_t
 spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
 {
-	return spdk_thread_poll(fio_thread->thread, 0);
+	size_t rc;
+
+	spdk_set_thread(NULL);
+	rc = spdk_thread_poll(fio_thread->thread, 0);
+	spdk_set_thread(fio_thread->thread);
+
+	return rc;
 }
 
 static int
