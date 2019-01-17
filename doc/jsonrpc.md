@@ -4475,3 +4475,50 @@ Example response:
 
 }
 ~~~
+
+## nvme_security_receive {#rpc_nvme_security_receive}
+
+Get the status and data result of one or more Security Send commands that were previously submitted to the controller.
+
+If `00h` is specified to the `secp` parameter, this RPC will get return information about the security protocols
+supported by the controller. The return information is used in the security discovery process and is not associated
+with a Security Send command.
+
+### Parameters
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Name of the corresponding NVMe bdev
+nssf                    | Required | number      | NVMe Security Specific field
+secp                    | Required | number      | Security Protocol that is used
+spsp                    | Required | number      | Security Protocol Specific field
+recvlen                 | Required | number      | Receive length
+
+### Response
+Name                    | Type        | Description
+----------------------- | ----------- | -----------
+sec_buffer              | string      | Data transfered from controller to host
+
+### Example
+
+Example request:
+~~
+{
+  "jsonrpc": "2.0",
+  "method": "nvme_security_receive",
+  "id": 1,
+  "params": {
+    "name": "Nvme0n1",
+    "nssf": 0,
+    "secp": 0,
+    "spsp": 0,
+    "recvlen": 16
+  }
+}
+~~
+
+Example response:
+~~~
+NVMe Security Receive Command Success
+ | Offset |  0  1  2  3  4  5  6  7  8  9  a  b  c  d  e  f
+   0x0000:   00 00 00 00 00 00 00 03 00 01 02 00 00 00 00 00
+~~~

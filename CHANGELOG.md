@@ -40,6 +40,9 @@ for parsing host address and host service ID arguments on a per connection basis
 The RPC `construct_nvme_bdev` now allows a user to specify a source address and service id for the host to
 use when connecting to the controller backing the NVMe bdev.
 
+New `nvme_security_receive` RPC was added to get security protocol data supported by specific NVMe controller.
+See the [nvme_security_receive](http://spdk.io/doc/jsonrpc.html#rpc_nvme_security_receive) documentation for more details.
+
 ### NVMe-oF Target
 
 The `spdk_nvmf_tgt_opts` struct has been deprecated in favor of `spdk_nvmf_transport_opts`.
