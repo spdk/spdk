@@ -2507,7 +2507,6 @@ struct spdk_bs_load_ctx {
 	uint32_t			page_index;
 	uint32_t			cur_page;
 	struct spdk_blob_md_page	*page;
-	bool				is_load;
 
 	spdk_bs_sequence_t			*seq;
 	spdk_blob_op_with_handle_complete	iter_cb_fn;
@@ -2521,13 +2520,7 @@ _spdk_bs_load_ctx_fail(spdk_bs_sequence_t *seq, struct spdk_bs_load_ctx *ctx, in
 
 	spdk_dma_free(ctx->super);
 	spdk_bs_sequence_finish(seq, bserrno);
-	/*
-	 * Only free the blobstore when a load fails.  If an unload fails (for some reason)
-	 *  we want to keep the blobstore in case the caller wants to try again.
-	 */
-	if (ctx->is_load) {
-		_spdk_bs_free(ctx->bs);
-	}
+	_spdk_bs_free(ctx->bs);
 	free(ctx);
 }
 
@@ -3179,7 +3172,6 @@ spdk_bs_load(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 	}
 
 	ctx->bs = bs;
-	ctx->is_load = true;
 	ctx->iter_cb_fn = opts.iter_cb_fn;
 	ctx->iter_cb_arg = opts.iter_cb_arg;
 
@@ -3844,7 +3836,6 @@ spdk_bs_unload(struct spdk_blob_store *bs, spdk_bs_op_complete cb_fn, void *cb_a
 	}
 
 	ctx->bs = bs;
-	ctx->is_load = false;
 
 	ctx->super = spdk_dma_zmalloc(sizeof(*ctx->super), 0x1000, NULL);
 	if (!ctx->super) {
