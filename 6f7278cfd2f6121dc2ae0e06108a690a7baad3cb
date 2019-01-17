@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc7ee649_ede675dc",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-17T09:36:41Z",
+      "side": 1,
+      "message": "this needs to be changed to bvsession-\u003eio_channel",
+      "range": {
+        "startLine": 376,
+        "startChar": 41,
+        "endLine": 376,
+        "endChar": 63
+      },
+      "revId": "6f7278cfd2f6121dc2ae0e06108a690a7baad3cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
