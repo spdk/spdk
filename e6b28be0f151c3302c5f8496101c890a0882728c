@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5485181_0d71a899",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 909,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-17T15:09:52Z",
+      "side": 1,
+      "message": "The cb should not reference the original lvol, since it should be assumed to be freed by the time cb is called.\nMoving it after cb_fn changes that.\n\nIf you are encountering issue with this in hotremove it might be better to fix elsewhere.\n\nI tried looking at patch that reproduces this https://review.gerrithub.io/#/c/spdk/spdk/+/440951\n\nDo I get it right that there all lvols are deleted, before delete is issued to AIO only unloading lvol store ? With change to aio_bdev.c it makes it so that unloading does not succeed.",
+      "range": {
+        "startLine": 909,
+        "startChar": 0,
+        "endLine": 909,
+        "endChar": 23
+      },
+      "revId": "e6b28be0f151c3302c5f8496101c890a0882728c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
