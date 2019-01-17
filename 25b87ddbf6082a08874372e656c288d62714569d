@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0ed86660_46187007",
+        "filename": "test/cas/management/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "280706d1_397edabc",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 1
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dc836547_979f0c3a",
         "filename": "test/cas/management/common.sh",
         "patchSetId": 8
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-17T10:08:44Z",
       "side": 1,
       "message": "NOPE.\nI understand what you\u0027re doing here, but I\u0027m all against introducing \"eval\" unless it\u0027s critical.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 8
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32244c3f_01e544ff",
+        "filename": "test/cas/management/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dc836547_979f0c3a",
       "range": {
         "startLine": 17,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "236ed3bb_37301126",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "I am not sure how common this is, but OK",
+      "parentUuid": "6845c85a_2b794bc0",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 24
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0051593b_a589f1c0",
         "filename": "test/cas/management/create-destruct.sh",
         "patchSetId": 8
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-17T10:08:44Z",
       "side": 1,
       "message": "status\u003d$(rpc_pr get_bdevs -b $1), no need to get info on all devices if you\u0027re filtering out using jq",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ec9d046_63433405",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0051593b_a589f1c0",
       "range": {
         "startLine": 9,
         "startChar": 1,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "25ffd486_fe23afcb",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "Thanks, ack",
+      "parentUuid": "114dc9a6_c08d5d25",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 3
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "56d0938d_a70a9eb9",
         "filename": "test/cas/management/create-destruct.sh",
         "patchSetId": 8
@@ -137,6 +257,30 @@
       "revId": "25b87ddbf6082a08874372e656c288d62714569d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6037f62e_c2d553aa",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:34:22Z",
+      "side": 1,
+      "message": "Yes, it does run twice, it does so on purpose because we want to test shutdown with different states of CAS bdev.\nI can implement one scenario with adding more than one device to do that\nDo you think it would be better?",
+      "parentUuid": "56d0938d_a70a9eb9",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 14
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
