@@ -489,8 +489,26 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 }
 
 static void
+nvmf_tcp_dump_qpair_req_contents(struct nvme_tcp_qpair *tqpair)
+{
+	int i;
+	struct nvme_tcp_req *tcp_req;
+
+	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", tqpair->qpair.qid);
+	for (i = 1; i < TCP_REQUEST_NUM_STATES; i++) {
+		SPDK_ERRLOG("\tNum of requests in state[%d] = %d\n", i, tqpair->state_cntr[i]);
+		TAILQ_FOREACH(tcp_req, &tqpair->state_queue[i], state_link) {
+			SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", tcp_req->data_from_pool);
+			SPDK_ERRLOG("\t\tRequest opcode: %d\n", tcp_req->req.cmd->nvmf_cmd.opcode);
+		}
+	}
+}
+
+static void
 spdk_nvmf_tcp_qpair_destroy(struct nvme_tcp_qpair *tqpair)
 {
+	int err = 0;
+
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 
 	spdk_poller_unregister(&tqpair->flush_poller);
@@ -504,19 +522,25 @@ spdk_nvmf_tcp_qpair_destroy(struct nvme_tcp_qpair *tqpair)
 		SPDK_ERRLOG("tqpair(%p) free pdu pool num is %u but should be %u\n", tqpair,
 			    tqpair->free_pdu_num,
 			    (tqpair->max_queue_depth + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM));
+		err++;
 	}
 
 	if (tqpair->state_cntr[TCP_REQUEST_STATE_FREE] != tqpair->max_queue_depth) {
 		SPDK_ERRLOG("tqpair(%p) free tcp request num is %u but should be %u\n", tqpair,
 			    tqpair->state_cntr[TCP_REQUEST_STATE_FREE],
 			    tqpair->max_queue_depth);
+		err++;
 	}
 
 	if (tqpair->c2h_data_pdu_cnt != 0) {
 		SPDK_ERRLOG("tqpair(%p) free c2h_data_pdu cnt is %u but should be 0\n", tqpair,
 			    tqpair->c2h_data_pdu_cnt);
+		err++;
 	}
 
+	if (err > 0) {
+		nvmf_tcp_dump_qpair_req_contents(tqpair);
+	}
 	free(tqpair->pdu);
 	free(tqpair->pdu_pool);
 	free(tqpair->req);
