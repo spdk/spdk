@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85410cd3_75ef5aaa",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T10:35:17Z",
+      "side": 1,
+      "message": "tab is not aligned.",
+      "range": {
+        "startLine": 109,
+        "startChar": 30,
+        "endLine": 109,
+        "endChar": 32
+      },
+      "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
