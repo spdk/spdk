@@ -19,6 +19,40 @@
     },
     {
       "key": {
+        "uuid": "b69648ca_2bbdbff1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T21:29:30Z",
+      "side": 1,
+      "message": "g_num_io_requests is OK",
+      "revId": "86a822fc364f738801ad21425d38b33b47b3e3b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "126ba8e5_a5e28190",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T21:29:30Z",
+      "side": 1,
+      "message": "I think the better option is to save this \"entries\" value in the ns_entry.  This is the number of io_requests we should set when allocate the qpair.  Then we don\u0027t need to add a new command line option at all.",
+      "revId": "86a822fc364f738801ad21425d38b33b47b3e3b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bf313a91_8b714be8",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 2
