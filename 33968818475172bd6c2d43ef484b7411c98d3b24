@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d7c44729_4274ee84",
+        "filename": "autobuild.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:19:43Z",
+      "side": 1,
+      "message": "Thanks, that\u0027s missclick xd. Ack",
+      "parentUuid": "c2055313_2436cf78",
+      "revId": "33968818475172bd6c2d43ef484b7411c98d3b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dec0bffe_705e9bf1",
         "filename": "test/cas/integrity/common.sh",
         "patchSetId": 23
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "Do we need this file at all? There\u0027s nothing to share between tests yet. Could we define fio_verify() directly in fio-mallocs.sh?",
       "parentUuid": "dec0bffe_705e9bf1",
+      "revId": "33968818475172bd6c2d43ef484b7411c98d3b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58ea42f0_5d52aa95",
+        "filename": "test/cas/integrity/common.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:19:43Z",
+      "side": 1,
+      "message": "You are right, Ack",
+      "parentUuid": "2255b100_e4f48a77",
       "revId": "33968818475172bd6c2d43ef484b7411c98d3b24",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
