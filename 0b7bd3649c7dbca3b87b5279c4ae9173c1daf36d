@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "767d170f_92353fcd",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-17T09:17:29Z",
+      "side": 1,
+      "message": "The patch seems to be ready for merging. Can you update the commit msg and mention it reduces the overall test time?",
+      "revId": "0b7bd3649c7dbca3b87b5279c4ae9173c1daf36d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
