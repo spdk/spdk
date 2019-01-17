@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "372c8a0f_5b979d19",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T10:27:30Z",
+      "side": 1,
+      "message": "You will find SHIFT_4KB in include/spdk_internal/memory.h",
+      "range": {
+        "startLine": 53,
+        "startChar": 8,
+        "endLine": 53,
+        "endChar": 17
+      },
+      "revId": "fa7451bb2a6c7ea04175f45ddbd50b747af49466",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
