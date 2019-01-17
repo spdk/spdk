@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "27afb7b4_7d216e66",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-17T02:07:36Z",
+      "side": 1,
+      "message": "Vbox is not stable, it leads to failed in some cases. the main commands are in https://download.virtualbox.org/virtualbox/6.0.0/UserManual.pdf\nand I also notices that \"if you create a VM by scripts\", all creations are done by the scripts.\n\nExtra commands which I mentioned as below is to help to clear a broken VM environment. \nA guide is also a document that can help to improve to use the Vbox ,I think this\u0027s useful .\n\nVagrant commands are not must. I know that libvirt need more other commands , I also tried libvirt,such as vagrant plugin install vagrant libvirt.yum install libvirt. you also can help to add this like vm_setup installing packages . \n\nWe need a beginning about this， or can you give a template.\nAnd I think this is a branch which is creates by manual or scripts.",
+      "parentUuid": "0c1f4725_31895da0",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ee0a784_f61a0066",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-16T14:07:29Z",
       "side": 1,
       "message": "BTW - did you really need these commands?\nJust using Vagrant with vbox plugin allowed me to avoid calling any commands directly to vbox manager.\nExcept one, which I\u0027ve found very useful:\nVBoxManage hostonlyif remove vboxnet0\nSomeimes vbox manager would not cleanup the virtual network properly, which prevents running other VMs with libvirt manager.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 19
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "016c8217_d5a60d11",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-01-17T02:07:36Z",
+      "side": 1,
+      "message": "already mentioned  that \"Maybe need these commands \"",
+      "parentUuid": "9ee0a784_f61a0066",
       "range": {
         "startLine": 58,
         "startChar": 0,
