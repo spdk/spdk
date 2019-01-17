@@ -18,6 +18,9 @@ multiple separate buffers.
 
 ### nvme
 
+New rpc method nvme_security_receive is added to get security protocol data supported by specific controller.
+Please refer to [nvme_security_receive](http://spdk.io/doc/jsonrpc.html#rpc_nvme_security_receive) for more details.
+
 Wrapper functions spdk_nvme_ctrlr_security_send() and spdk_nvme_ctrlr_security_receive() are
 introduced to support further security protocol development.
 
