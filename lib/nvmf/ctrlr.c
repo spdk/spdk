@@ -135,6 +135,7 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 
 	if (spdk_nvmf_subsystem_add_ctrlr(ctrlr->subsys, ctrlr)) {
 		SPDK_ERRLOG("Unable to add controller to subsystem\n");
+		spdk_bit_array_free(&ctrlr->qpair_mask);
 		free(ctrlr);
 		qpair->ctrlr = NULL;
 		rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -160,7 +161,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
-	req->qpair->ctrlr = ctrlr;
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
 
@@ -211,6 +211,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "cc 0x%x\n", ctrlr->vcprop.cc.raw);
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
+	req->qpair->ctrlr = ctrlr;
 	spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
