@@ -157,7 +157,7 @@ vbdev_lvs_hotremove_cb(void *ctx)
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_bdev(bdev);
 	if (lvs_bdev != NULL) {
-		vbdev_lvs_unload(lvs_bdev->lvs, NULL, NULL);
+		vbdev_lvs_destruct(lvs_bdev->lvs, NULL, NULL);
 	}
 }
 
@@ -360,29 +360,8 @@ _vbdev_lvs_remove_lvol_cb(void *cb_arg, int lvolerrno)
 	assert(false);
 }
 
-static void
-_vbdev_lvs_remove_bdev_unregistered_cb(void *cb_arg, int bdeverrno)
-{
-	struct lvol_store_bdev *lvs_bdev = cb_arg;
-	struct spdk_lvol_store *lvs = lvs_bdev->lvs;
-	struct spdk_lvol *lvol, *tmp;
-
-	if (bdeverrno != 0) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_LVOL, "Lvol unregistered with errno %d\n", bdeverrno);
-	}
-
-	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-		if (lvol->ref_count != 0) {
-			/* An lvol is still open, don't unload whole lvol store. */
-			return;
-		}
-	}
-	spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
-}
-
-static void
-_vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg,
-		  bool destroy)
+void
+vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvs_req *req;
 	struct lvol_store_bdev *lvs_bdev;
@@ -418,33 +397,10 @@ _vbdev_lvs_remove(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void 
 	}
 
 	if (all_lvols_closed == true) {
-		if (destroy) {
-			spdk_lvs_destroy(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
-		} else {
-			spdk_lvs_unload(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
-		}
+		spdk_lvs_destroy(lvs, _vbdev_lvs_remove_cb, lvs_bdev);
 	} else {
-		lvs->destruct = destroy;
-		if (destroy) {
-			_vbdev_lvs_remove_lvol_cb(lvs_bdev, 0);
-		} else {
-			TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
-				spdk_bdev_unregister(lvol->bdev, _vbdev_lvs_remove_bdev_unregistered_cb, lvs_bdev);
-			}
-		}
+		_vbdev_lvs_remove_lvol_cb(lvs_bdev, 0);
 	}
-}
-
-void
-vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
-{
-	_vbdev_lvs_remove(lvs, cb_fn, cb_arg, false);
-}
-
-void
-vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg)
-{
-	_vbdev_lvs_remove(lvs, cb_fn, cb_arg, true);
 }
 
 struct lvol_store_bdev *
@@ -546,6 +502,7 @@ vbdev_lvol_unregister(void *ctx)
 
 	spdk_bdev_alias_del_all(lvol->bdev);
 	spdk_lvol_close(lvol, _vbdev_lvol_unregister_cb, lvol->bdev);
+	lvol->bdev = NULL;
 
 	/* return 1 to indicate we have an operation that must finish asynchronously before the
 	 *  lvol is closed

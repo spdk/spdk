@@ -1062,11 +1062,8 @@ ut_lvol_destroy(void)
 	CU_ASSERT(g_lvol == NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Hot remove lvol bdev */
-	vbdev_lvol_unregister(lvol2);
-
-	/* Unload lvol store */
-	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 }
@@ -1142,7 +1139,7 @@ ut_lvs_unload(void)
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
 	/* Unload lvol store */
-	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 	CU_ASSERT(g_lvol != NULL);
