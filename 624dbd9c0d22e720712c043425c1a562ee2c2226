@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7d876ee_c59848b2",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 1208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T06:46:47Z",
+      "side": 1,
+      "message": "Whole changes in this file should be done in a patch before, i.e., 416672?\n\nI\u0027m OK even if these changes are in this patch if OK for Jim.",
+      "range": {
+        "startLine": 1203,
+        "startChar": 0,
+        "endLine": 1208,
+        "endChar": 4
+      },
+      "revId": "624dbd9c0d22e720712c043425c1a562ee2c2226",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
