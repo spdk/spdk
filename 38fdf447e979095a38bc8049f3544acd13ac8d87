@@ -16,6 +16,24 @@
       "revId": "38fdf447e979095a38bc8049f3544acd13ac8d87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0eafb2c2_7d0e6462",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1524,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-17T02:04:24Z",
+      "side": 1,
+      "message": "For cc.en, I did not see any local variable to store ths. You still need to get the value through the transport, it will need you to send the request to through the qpair again, to get it from the target. So I do not think it is efficient.",
+      "parentUuid": "0d63bb9f_984ee9e6",
+      "revId": "38fdf447e979095a38bc8049f3544acd13ac8d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
