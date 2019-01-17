@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0222705b_cf9a8004",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 633,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T07:17:54Z",
+      "side": 1,
+      "message": "Hi Shuhei, I don\u0027t think we need so many fn tables for NVMe device, API spdk_nvme_ns_cmd_write_with_md()/spdk_nvme_ns_cmd_read_with_md() can cover all the test cases, md_size and md_interleave provide enough information about DIF/DIX.",
+      "revId": "7fd872ee056a6251aaf96a7087f32b7a75df4841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49e0deb8_68fe8645",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T07:17:54Z",
+      "side": 1,
+      "message": "PRACT\u003d1 with metadata size bigger than 8 bytes doesn\u0027t violate the NVMe specification.",
+      "revId": "7fd872ee056a6251aaf96a7087f32b7a75df4841",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
