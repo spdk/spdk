@@ -37,6 +37,46 @@
     },
     {
       "key": {
+        "uuid": "4241c5ee_bdc26e14",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T23:44:14Z",
+      "side": 1,
+      "message": "After this patch, last_pdu_time will be updated only in error cases? Is this reasonable and the name last_pdu_time is appropriate?",
+      "range": {
+        "startLine": 1339,
+        "startChar": 9,
+        "endLine": 1339,
+        "endChar": 22
+      },
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "277389cd_49563b05",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T23:44:14Z",
+      "side": 1,
+      "message": "if this 1 byte read success, this call will fall in infinite loop? This case is probable?",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f367687_5d2992ce",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 8
