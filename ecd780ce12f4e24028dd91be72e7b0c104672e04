@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "dbc577ae_8f11bbec",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T20:18:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85410cd3_75ef5aaa",
+      "range": {
+        "startLine": 109,
+        "startChar": 30,
+        "endLine": 109,
+        "endChar": 32
+      },
+      "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef546547_8b85369d",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 4
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-17T19:27:14Z",
       "side": 1,
       "message": "You can remove this index, right?",
+      "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c19c9703_2be4736c",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T20:18:58Z",
+      "side": 1,
+      "message": "Not really because we need to track the number of entries, but like you mentioned in your comment on the next patch, it should be something that doesn\u0027t make it sound like an array index.",
+      "parentUuid": "ef546547_8b85369d",
       "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
