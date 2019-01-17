@@ -459,7 +459,9 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 	struct nvme_tcp_pdu *pdu, *tmp_pdu;
 
 	/* For the requests in TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
-	 * they can be refreed via the pdu in the send_queue
+	 * they can be freed via the folowing cases:
+	 * (1) The pdu in the send_queue;
+	 * (2) The requests are in queued_c2h_data_tcp_req.
 	  */
 	TAILQ_FOREACH_SAFE(pdu, &tqpair->send_queue, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
@@ -467,6 +469,11 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 		pdu->cb_fn(pdu->cb_arg);
 		spdk_nvmf_tcp_pdu_put(pdu);
 	}
+
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
+		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
+	}
+	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
@@ -480,11 +487,6 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_EXECUTING);
-
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
-		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
-	}
-
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 }
 
@@ -522,6 +524,11 @@ spdk_nvmf_tcp_qpair_destroy(struct nvme_tcp_qpair *tqpair)
 		SPDK_ERRLOG("tqpair(%p) free pdu pool num is %u but should be %u\n", tqpair,
 			    tqpair->free_pdu_num,
 			    (tqpair->max_queue_depth + NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM));
+
+		if (tqpair->c2h_data_pdu_cnt != 0) {
+			SPDK_ERRLOG("tqpair(%p) c2h_data_pdu_cnt= %u but should be 0\n", tqpair, tqpair->c2h_data_pdu_cnt);
+		}
+
 		err++;
 	}
 
@@ -1580,7 +1587,9 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 #if LINUX_KERNEL_SUPPORT_NOT_SENDING_RESP_FOR_C2H
 		nvmf_tcp_request_free(tcp_req);
 #else
-		spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
+		if (spdk_likely(tqpair->state != NVME_TCP_QPAIR_STATE_EXITED)) {
+			spdk_nvmf_tcp_send_capsule_resp_pdu(tcp_req, tqpair);
+		}
 #endif
 	}
 
@@ -2388,6 +2397,11 @@ static void
 spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct nvme_tcp_qpair *tqpair)
 {
 	struct nvme_tcp_req *tcp_req;
+
+	/* Do not handling the c2h_data_queue if the tqpair is in EXITED state */
+	if (spdk_unlikely(tqpair->state == NVME_TCP_QPAIR_STATE_EXITED)) {
+		return;
+	}
 
 	while (!TAILQ_EMPTY(&tqpair->queued_c2h_data_tcp_req) &&
 	       (tqpair->c2h_data_pdu_cnt < NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM)) {
