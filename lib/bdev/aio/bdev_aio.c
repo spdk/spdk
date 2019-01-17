@@ -377,7 +377,9 @@ static int _bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev
 
 static void bdev_aio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	if (_bdev_aio_submit_request(ch, bdev_io) < 0) {
+	struct file_disk *fdisk = bdev_io->bdev->ctxt;
+
+	if (fdisk->delete_cb_arg || _bdev_aio_submit_request(ch, bdev_io) < 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
 }
