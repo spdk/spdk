@@ -63,6 +63,16 @@ unittest_parse_args(int ch, char *arg)
 }
 
 static void
+clean_opts(struct spdk_app_opts *opts)
+{
+	free(opts->pci_whitelist);
+	opts->pci_whitelist = NULL;
+	free(opts->pci_blacklist);
+	opts->pci_blacklist = NULL;
+	memset(opts, 0, sizeof(struct spdk_app_opts));
+}
+
+static void
 test_spdk_app_parse_args(void)
 {
 	spdk_app_parse_args_rvals_t rc;
@@ -109,24 +119,28 @@ test_spdk_app_parse_args(void)
 	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, "", NULL, unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Test invalid short option Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "", NULL, unittest_parse_args,
 				 NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Test valid global and local options. Expected result: PASS */
 	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "z", NULL, unittest_parse_args,
 				 unittest_usage);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Test invalid long option Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, argv_added_long_opt, &opts, "", NULL, unittest_parse_args,
 				 NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Test valid global and local options. Expected result: PASS */
 	my_options[0].name = "test-long-opt";
@@ -134,23 +148,27 @@ test_spdk_app_parse_args(void)
 				 unittest_usage);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Test overlapping global and local options. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, SPDK_APP_GETOPT_STRING, NULL,
 				 unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Specify -B and -W options at the same time. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, unittest_parse_args, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
+	clean_opts(&opts);
 
 	/* Omit necessary argument to option */
 	rc = spdk_app_parse_args(test_argc, invalid_argv_missing_option, &opts, "", NULL,
 				 unittest_parse_args, NULL);
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
+	clean_opts(&opts);
 }
 
 int
