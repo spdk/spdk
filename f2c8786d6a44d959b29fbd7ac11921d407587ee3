@@ -34,6 +34,24 @@
       "revId": "f2c8786d6a44d959b29fbd7ac11921d407587ee3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "559b6080_e6b82113",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T22:34:29Z",
+      "side": 1,
+      "message": "Thanks for good Question Paul, and thanks for clarification Jim.\n\nAs Jim says, I have used block_size to mean sector_size + md_size.\n\nCurrent struct spdk_bdev have blocklen and NVMe bdev module hold sector_size + md_size in it, so I have followed that. (Oh, it may be better to use blocklen as name, but I can do that change later.)\n\nNVMe Perf tool is for NVMe and so extended_sector_size \u003d sector_size + md_size may be better but I hope these differences are not critical for now.",
+      "parentUuid": "ed84ccd3_0468275b",
+      "revId": "f2c8786d6a44d959b29fbd7ac11921d407587ee3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
