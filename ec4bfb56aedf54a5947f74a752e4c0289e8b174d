@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6ffcf6c1_de802845",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T18:03:47Z",
+      "side": 1,
+      "message": "Correct. I debated about which way to go here, but if the poller unregisters itself during the current poll call, I elected to make it count as no work was done. The use of that return value is to decide whether a thread is busy or not and whether it can sleep, so I didn\u0027t think pollers that are unregistering should be allowed to vote in that process.",
+      "parentUuid": "8313acfe_f85a2a98",
+      "range": {
+        "startLine": 381,
+        "startChar": 3,
+        "endLine": 381,
+        "endChar": 12
+      },
+      "revId": "ec4bfb56aedf54a5947f74a752e4c0289e8b174d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "733a4305_4984e652",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
