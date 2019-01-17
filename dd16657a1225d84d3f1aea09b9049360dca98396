@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf3f2bfc_29ebb50b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T19:37:11Z",
+      "side": 1,
+      "message": "let\u0027s keep the original functionality - immediately return once we hit our first I/O that must be queued\n\nmy concern is that if we have the case where 128 I/O are queued, and we can only submit 1 I/O per timeslice, this code will now need to iterate through all 128 I/O on every timeslice - previously it would only need to iterate through 2 I/O (1 which would be submitted, 1 which would be queued and we\u0027d exit this loop).  That is going to take too much time.\n\nBen and I talked about this, and I\u0027d like to get this patch as is, minus this one change, and then let\u0027s follow up with a patch that implements an improved version so that we do not need to iterate through so many I/O unnecessarily.\n\nThe idea is that we keep two pointers in the QoS structure - one for next read I/O, one for next write I/O.  We start from the beginning of the queue.  When we find an I/O that cannot be submitted, we check if it is a read or write I/O, and update the appropriate pointer.  If it is a read I/O, we immediately jump to the I/O in the queue pointed to by the write I/O pointer, and continue from there.\n\nThere are obviously some details we need to work out, which is why I want to do that in a separate patch.",
+      "revId": "dd16657a1225d84d3f1aea09b9049360dca98396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
