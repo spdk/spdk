@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2055313_2436cf78",
+        "filename": "autobuild.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:20:02Z",
+      "side": 1,
+      "message": "unnecessary change (nitpicking, sorry)",
+      "revId": "33968818475172bd6c2d43ef484b7411c98d3b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dec0bffe_705e9bf1",
+        "filename": "test/cas/integrity/common.sh",
+        "patchSetId": 23
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:20:02Z",
+      "side": 1,
+      "message": "Is it really necessary to have a separate common.sh for each directory?\nWhy not just cas/common.sh?",
+      "revId": "33968818475172bd6c2d43ef484b7411c98d3b24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
