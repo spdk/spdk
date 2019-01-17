@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "8313acfe_f85a2a98",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 381,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T05:54:36Z",
+      "side": 1,
+      "message": "Just for my learning. when the poller is set to unregistered in its execution, its is not set to spdk_thread_poll()\u0027s rc.",
+      "range": {
+        "startLine": 381,
+        "startChar": 3,
+        "endLine": 381,
+        "endChar": 12
+      },
+      "revId": "ec4bfb56aedf54a5947f74a752e4c0289e8b174d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "733a4305_4984e652",
         "filename": "lib/thread/thread.c",
         "patchSetId": 3
