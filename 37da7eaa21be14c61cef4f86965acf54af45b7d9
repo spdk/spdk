@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dedf4cbf_d8435286",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:42:40Z",
+      "side": 1,
+      "message": "I will add more info on rpc options (as they are ready) and link to OCF documentation.\nWould that be ok?",
+      "parentUuid": "306fe3b7_421d0335",
+      "revId": "37da7eaa21be14c61cef4f86965acf54af45b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f3b10596_7e3bbb18",
         "filename": "doc/bdev.md",
         "patchSetId": 3
@@ -58,6 +76,54 @@
         "startChar": 73,
         "endLine": 248,
         "endChar": 74
+      },
+      "revId": "37da7eaa21be14c61cef4f86965acf54af45b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e0e3a27_f84fb11c",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:42:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "be1220c6_374ab2c8",
+      "range": {
+        "startLine": 248,
+        "startChar": 73,
+        "endLine": 248,
+        "endChar": 74
+      },
+      "revId": "37da7eaa21be14c61cef4f86965acf54af45b7d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0cdaa160_45e352e3",
+        "filename": "doc/bdev.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-17T13:42:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f3b10596_7e3bbb18",
+      "range": {
+        "startLine": 248,
+        "startChar": 105,
+        "endLine": 248,
+        "endChar": 106
       },
       "revId": "37da7eaa21be14c61cef4f86965acf54af45b7d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
