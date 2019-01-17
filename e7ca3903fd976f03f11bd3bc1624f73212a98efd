@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9affcab_630da425",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1239,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:21:05Z",
+      "side": 1,
+      "message": "I don\u0027t think the function spdk_nvmf_tcp_qpair_handle_timeout() makes sense here, is this required by TCP transport protocol? Otherwise we should drop the function here, and just leave keep alive feature.",
+      "revId": "e7ca3903fd976f03f11bd3bc1624f73212a98efd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
