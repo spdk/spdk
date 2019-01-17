@@ -1430,7 +1430,14 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 
 		vbdev->crypto_bdev.product_name = "crypto";
 		vbdev->crypto_bdev.write_cache = bdev->write_cache;
-		vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
+		if (strcmp(vbdev->drv_name, QAT) == 0) {
+			vbdev->crypto_bdev.required_alignment =
+				spdk_max(spdk_u32log2(bdev->blocklen), bdev->required_alignment);
+			SPDK_NOTICELOG("QAT in use: Required alignment set to %u\n",
+				       vbdev->crypto_bdev.required_alignment);
+		} else {
+			vbdev->crypto_bdev.required_alignment = bdev->required_alignment;
+		}
 		/* Note: CRYPTO_MAX_IO is in units of bytes, optimal_io_boundary is
 		 * in units of blocks.
 		 */
