@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9e0e274f_1961ed2b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "what about the IO queue pairs? How do we process them ?",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db4c4511_c615e6a9",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "how about rename this function to spdk_nvmf_ctrlr_keep_alive_poll or spdk_nvmf_ctrlr_keep_alive_update.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8bf176ea_afc71825",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "if (now - last_keep_alive_tick \u003e last_keep_alive_tick) should be better.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5781d879_fd1ef9ff",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "you don\u0027t need add the interval value here. see upper comment.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db4df2e7_1b66ee37",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "no need line 1013.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a34fcf04_2a3b15fd",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1737,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T08:37:41Z",
+      "side": 1,
+      "message": "just get the current ticks.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
