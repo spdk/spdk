@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "63116c2d_68bc9a37",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:27:14Z",
+      "side": 1,
+      "message": "I first saw someone embed the list pointers into the buffer itself in a buffer pool implementation 7 or 8 years ago on a project I used to work on. The author of that buffer pool? Jim Harris.",
+      "parentUuid": "b69e9aef_c76ea63a",
+      "revId": "0883676f7176cc4249a39643f44b8508c022a553",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8009e161_f3163f50",
         "filename": "lib/nvmf/transport.c",
         "patchSetId": 3

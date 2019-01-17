@@ -22,6 +22,40 @@
       "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef546547_8b85369d",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:27:14Z",
+      "side": 1,
+      "message": "You can remove this index, right?",
+      "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc9faf38_44f97468",
+        "filename": "lib/nvmf/transport.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 209,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:27:14Z",
+      "side": 1,
+      "message": "I think \"current_cache_idx\" can just be a local variable.",
+      "revId": "ecd780ce12f4e24028dd91be72e7b0c104672e04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
