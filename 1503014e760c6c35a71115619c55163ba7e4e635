@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6e043526_6d521aca",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1234,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-17T09:55:16Z",
+      "side": 1,
+      "message": "put tsc as interal variable will not be efficent.",
+      "parentUuid": "49128bbc_bee48f50",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f367687_5d2992ce",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 8
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-17T07:51:45Z",
       "side": 1,
       "message": "move the previous {} section.",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa5e9c4c_2602fe09",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-17T09:55:16Z",
+      "side": 1,
+      "message": "What does thie mean?  The NVMe_TCP_QPAIR_STATE_EXITING can be ret without return rc \u003c 0",
+      "parentUuid": "0f367687_5d2992ce",
       "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
