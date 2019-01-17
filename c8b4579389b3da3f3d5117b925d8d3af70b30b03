@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ab30a58_cd5185cd",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T21:33:03Z",
+      "side": 1,
+      "message": "I think you need to set it back to NULL before you later call spdk_thread_poll.",
+      "revId": "c8b4579389b3da3f3d5117b925d8d3af70b30b03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
