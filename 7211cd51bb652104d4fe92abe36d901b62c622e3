@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb7553ab_2a557f91",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T22:05:01Z",
+      "side": 1,
+      "message": "up above, you set state-\u003eremove_cb \u003d NULL - any reason not to do that here as well?",
+      "revId": "7211cd51bb652104d4fe92abe36d901b62c622e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
