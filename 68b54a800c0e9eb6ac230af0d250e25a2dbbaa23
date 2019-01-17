@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "618db6a2_a1e00d8d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T08:40:07Z",
+      "side": 1,
+      "message": "Is this remainder?\n\nif a \u003d q * d + r, or r \u003d q % d, then r is called remainder.",
+      "range": {
+        "startLine": 150,
+        "startChar": 5,
+        "endLine": 150,
+        "endChar": 15
+      },
+      "revId": "68b54a800c0e9eb6ac230af0d250e25a2dbbaa23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ea2ef2b_0bcfde5c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T08:40:07Z",
+      "side": 1,
+      "message": "limit_remainder ?",
+      "range": {
+        "startLine": 151,
+        "startChar": 10,
+        "endLine": 151,
+        "endChar": 26
+      },
+      "revId": "68b54a800c0e9eb6ac230af0d250e25a2dbbaa23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

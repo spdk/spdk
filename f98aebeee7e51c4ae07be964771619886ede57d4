@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73c22de2_fc78c184",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 26
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T08:40:07Z",
+      "side": 1,
+      "message": "Will you add any comment like, remove limitation that limit must be multiple of minimum ?",
+      "revId": "f98aebeee7e51c4ae07be964771619886ede57d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
