@@ -46,6 +46,30 @@
       "revId": "1fe3a4d61bd4539632befee9153f1a02f2f28088",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b78d731_ed7d09af",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T04:33:20Z",
+      "side": 1,
+      "message": "Hi Jim,\n\nSorry for odd question.\n\nThanks to your feedback, I may be able to describe my confusion.\n\nsuperblock is statically verified to be 4096, as absolute value.\n\nIn _validate_vol_params(), chunk_size and backing_io_unit_size in params are verified to be one is mutiples of another, as relative value.\n\nIn this function _allocate_bit_arrays(), vol-\u003ebacking_dev-\u003eblocklen and vol-\u003eparams.backing_io_unit_size looks similar.\n\nBy continuing code inspection, I will be able to have clearer picuture in reduce library.\n\nSo, this patch is fine and you don\u0027t have to add any assertion.",
+      "parentUuid": "c222b4eb_b5a88e88",
+      "range": {
+        "startLine": 385,
+        "startChar": 25,
+        "endLine": 386,
+        "endChar": 31
+      },
+      "revId": "1fe3a4d61bd4539632befee9153f1a02f2f28088",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
