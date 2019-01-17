@@ -34,6 +34,24 @@
       "revId": "dfd6597f959526b6373d620fbefd402ef2568e06",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d40105f_d613ea90",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T05:29:34Z",
+      "side": 0,
+      "message": "LEtting user specify apptag_mask and app_tag per namespace will be not so simple. So, if you are OK, I want to do after this patch series.",
+      "parentUuid": "8654ba70_50ae8e29",
+      "revId": "dfd6597f959526b6373d620fbefd402ef2568e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
