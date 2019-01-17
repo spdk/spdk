@@ -33,6 +33,32 @@
 
 #include "spdk/crc32.h"
 
+#ifdef SPDK_HAVE_ARM_CRC
+
+uint32_t
+spdk_crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, uint32_t crc)
+{
+        size_t count;
+
+        count = len / 8;
+        while (count--) {
+                uint64_t block;
+                memcpy(&block, buf, sizeof(block));
+                crc = __crc32d(crc, block);
+                buf += sizeof(block);
+        }
+
+        count = len & 7;
+        while (count--) {
+                crc = __crc32b(crc, *(const uint8_t *)buf);
+                buf++;
+        }
+
+        return crc;
+}
+
+#else
+
 void
 spdk_crc32_table_init(struct spdk_crc32_table *table, uint32_t polynomial_reflect)
 {
@@ -64,3 +90,5 @@ spdk_crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t 
 
 	return crc;
 }
+
+#endif
