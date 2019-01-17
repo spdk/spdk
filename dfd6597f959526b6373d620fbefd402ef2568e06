@@ -16,6 +16,24 @@
       "revId": "dfd6597f959526b6373d620fbefd402ef2568e06",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8654ba70_50ae8e29",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T05:24:57Z",
+      "side": 0,
+      "message": "Sounds good. I will change this patch to let user input apptag and mask, and I set default of them to 0 and 0xFFFF respectively.",
+      "parentUuid": "247a86f5_7ac169ba",
+      "revId": "dfd6597f959526b6373d620fbefd402ef2568e06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
