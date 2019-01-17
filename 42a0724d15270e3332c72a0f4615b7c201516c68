@@ -22,6 +22,53 @@
       "revId": "42a0724d15270e3332c72a0f4615b7c201516c68",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2363f07d_629db291",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-17T08:05:04Z",
+      "side": 1,
+      "message": "Yes. 0 and 100 should be valid for g_rw_percentage.\nBut there seems to have range check in the main function. Thus, I will remove this.Thank you for your review.",
+      "parentUuid": "9c48b10c_57c9e797",
+      "range": {
+        "startLine": 915,
+        "startChar": 31,
+        "endLine": 915,
+        "endChar": 77
+      },
+      "revId": "42a0724d15270e3332c72a0f4615b7c201516c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d92e0b3d_c6d0546c",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-17T08:05:04Z",
+      "side": 1,
+      "message": "Here.Range check for g_rw_percentage.",
+      "range": {
+        "startLine": 1002,
+        "startChar": 2,
+        "endLine": 1006,
+        "endChar": 11
+      },
+      "revId": "42a0724d15270e3332c72a0f4615b7c201516c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
