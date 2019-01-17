@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a8411f8_d6146dd6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T19:45:04Z",
+      "side": 1,
+      "message": "It seems to me that this ratio would change depending on the types of workloads you are doing. What workloads did you test this against in order to find this ratio?",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05fad536_08381e86",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T19:45:04Z",
+      "side": 1,
+      "message": "This is a little confusing to me. 256 * 3 + 2 \u003d 770 which is much smaller than the default CQE size of 4096. Do you mean that each qpair requires 770 requests which means the 20 qpairs could in theory require 154000 cg entries?",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
