@@ -632,7 +632,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 *  reactor.
 	 */
 	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
-		SPDK_ERRLOG("Invalid reactor mask.\n");
+		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
 		goto app_start_log_close_err;
 	}
 
