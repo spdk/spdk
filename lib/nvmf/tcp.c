@@ -468,6 +468,11 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 		spdk_nvmf_tcp_pdu_put(pdu);
 	}
 
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
+		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
+	}
+	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
+
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T);
@@ -481,9 +486,6 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_EXECUTING);
 
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
-		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
-	}
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 }
