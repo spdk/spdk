@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcfbbe47_d79fbbee",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1434,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T17:19:55Z",
+      "side": 1,
+      "message": "I think technically this should be the max of the u32log2 and the underlying bdev\u0027s required alignment.\n\nI can\u0027t think of any example where the blocklen would be smaller than the required_alignment, but better safe than sorry.",
+      "revId": "20d562982fa695e3d087dba53fcf1cd27f0c5520",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
