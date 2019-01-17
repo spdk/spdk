@@ -453,15 +453,21 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 	struct nvme_tcp_req *tcp_req, *req_tmp;
 	struct nvme_tcp_pdu *pdu, *tmp_pdu;
 
-	/* For the requests in TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST,
-	 * they can be refreed via the pdu in the send_queue
-	  */
+	/* Free the pdus in the send_queue */
 	TAILQ_FOREACH_SAFE(pdu, &tqpair->send_queue, tailq, tmp_pdu) {
 		TAILQ_REMOVE(&tqpair->send_queue, pdu, tailq);
-		assert(pdu->cb_fn != NULL);
-		pdu->cb_fn(pdu->cb_arg);
+		/* Also check the pdu type, we need to calculte the c2h_data_pdu_cnt later */
+		if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) {
+			assert(tqpair->c2h_data_pdu_cnt > 0);
+			tqpair->c2h_data_pdu_cnt--;
+		}
 		spdk_nvmf_tcp_pdu_put(pdu);
 	}
+
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
+		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
+	}
+	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST);
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEW);
 
@@ -475,11 +481,6 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_NEED_BUFFER);
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_EXECUTING);
-
-	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
-		TAILQ_REMOVE(&tqpair->queued_c2h_data_tcp_req, tcp_req, link);
-	}
-
 	spdk_nvmf_tcp_drain_state_queue(tqpair, TCP_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 }
 
