@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "280706d1_397edabc",
+        "filename": "test/cas/management/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "I don\u0027t think redirecting to null is a good idea, we probably want to be aware if anything unusual happens.\n\nDo we even need a function for a oneliner?\nAlso - there\u0027s a killprocess() function in autotest_common.sh to use:)",
+      "range": {
+        "startLine": 5,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 1
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc836547_979f0c3a",
+        "filename": "test/cas/management/common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "NOPE.\nI understand what you\u0027re doing here, but I\u0027m all against introducing \"eval\" unless it\u0027s critical.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 8
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6845c85a_2b794bc0",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "This function should be in some common file (autotest_common.sh maybe?)",
+      "range": {
+        "startLine": 7,
+        "startChar": 9,
+        "endLine": 7,
+        "endChar": 24
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0051593b_a589f1c0",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "status\u003d$(rpc_pr get_bdevs -b $1), no need to get info on all devices if you\u0027re filtering out using jq",
+      "range": {
+        "startLine": 9,
+        "startChar": 1,
+        "endLine": 9,
+        "endChar": 28
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "114dc9a6_c08d5d25",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "This all could be shortened to:\n\nif $(jq \".[] | .claimed\" \u003c\u003c\u003c $status); then\n  return 0\nfi\nreturn 1",
+      "range": {
+        "startLine": 10,
+        "startChar": 1,
+        "endLine": 15,
+        "endChar": 3
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56d0938d_a70a9eb9",
+        "filename": "test/cas/management/create-destruct.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-17T10:08:44Z",
+      "side": 1,
+      "message": "Doesn\u0027t this cause spdk app to run twice? Do we need to run-close and then re-run SPDK for such simple test?",
+      "range": {
+        "startLine": 61,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 14
+      },
+      "revId": "25b87ddbf6082a08874372e656c288d62714569d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
