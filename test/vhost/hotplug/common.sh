@@ -1,7 +1,7 @@
 dry_run=false
 no_shutdown=false
 fio_bin="fio"
-fio_jobs="$BASE_DIR/fio_jobs/"
+fio_jobs="$HOTPLUG_DIR/fio_jobs/"
 test_type=spdk_vhost_scsi
 reuse_vms=false
 vms=()
@@ -58,10 +58,10 @@ while getopts 'xh-:' optchar; do
 done
 shift $(( OPTIND - 1 ))
 
-fio_job=$BASE_DIR/fio_jobs/default_integrity.job
-tmp_attach_job=$BASE_DIR/fio_jobs/fio_attach.job.tmp
-tmp_detach_job=$BASE_DIR/fio_jobs/fio_detach.job.tmp
-. $BASE_DIR/../common/common.sh
+fio_job=$HOTPLUG_DIR/fio_jobs/default_integrity.job
+tmp_attach_job=$HOTPLUG_DIR/fio_jobs/fio_attach.job.tmp
+tmp_detach_job=$HOTPLUG_DIR/fio_jobs/fio_detach.job.tmp
+. $HOTPLUG_DIR/../common/common.sh
 
 rpc_py="$SPDK_BUILD_DIR/scripts/rpc.py -s $(get_vhost_dir)/rpc.sock"
 
@@ -76,12 +76,19 @@ function print_test_fio_header() {
     fi
 }
 
-function run_vhost() {
+function run_and_configure_vhost() {
     notice "==============="
     notice ""
     notice "running SPDK"
     notice ""
-    spdk_vhost_run --conf-path=$BASE_DIR
+    spdk_vhost_run
+    $rpc_py set_bdev_nvme_hotplug -e
+    $rpc_py construct_split_vbdev Nvme0n1 16
+    $rpc_py construct_split_vbdev HotInNvme0n1 2
+    $rpc_py construct_split_vbdev HotInNvme1n1 2
+    $rpc_py construct_split_vbdev HotInNvme2n1 2
+    $rpc_py construct_split_vbdev HotInNvme3n1 2
+    $rpc_py get_bdevs
     notice ""
 }
 
