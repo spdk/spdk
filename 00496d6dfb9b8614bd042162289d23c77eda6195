@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "01f002d8_aafdd2d4",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T23:32:34Z",
+      "side": 1,
+      "message": "Joining the full path to itself again looks off. I think that it still works since file is an absolute path and python throws away all previous arguments when it encounters a new absolute path, but it looks weird.",
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6996877_9a5d50c6",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-17T23:32:34Z",
+      "side": 1,
+      "message": "leftover debugging code?",
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
