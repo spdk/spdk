@@ -16,6 +16,24 @@
       "revId": "f2c8786d6a44d959b29fbd7ac11921d407587ee3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ed84ccd3_0468275b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 459,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T21:45:27Z",
+      "side": 1,
+      "message": "Good question Paul.  They\u0027re not exactly the same - for most common cases, sector_size is 512 or 4096 and md_size is 0.  But Shuhei is doing all of the DIF/DIX work where CRCs are saved with the data - in this case, md_size \u003e 0.\n\nFurther down, he saves the \"extended_sector_size\" in entry-\u003eblock_size.  This is equivalent to the sector_size + md_size.  So using entry-\u003eblock_size across the board here makes the code a bit easier to read.",
+      "parentUuid": "328c1406_c6ee7ee7",
+      "revId": "f2c8786d6a44d959b29fbd7ac11921d407587ee3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
