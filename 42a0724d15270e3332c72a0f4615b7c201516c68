@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c48b10c_57c9e797",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-17T05:12:47Z",
+      "side": 1,
+      "message": "Just a quick question, it seems allow to set 0 (all write) and 100 (all read) for the mixed r/w opeation?",
+      "range": {
+        "startLine": 915,
+        "startChar": 31,
+        "endLine": 915,
+        "endChar": 77
+      },
+      "revId": "42a0724d15270e3332c72a0f4615b7c201516c68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
