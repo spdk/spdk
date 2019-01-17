@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26e5fb62_9adcd92a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "unnecessary macro here for SPDK_MSEC_TO_USEC.",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b46c2f26_11e4088a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "SPDK already has such definition.",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc1d9fe7_53508b8d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "same here, see util.h",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca0bcc8a_f5c8faf3",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "you can remove line 253.",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6011247d_b49a88c8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "just use free(ctrlr) is ok here.",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "383d5497_182353f1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T04:39:18Z",
+      "side": 1,
+      "message": "you can remove this line of comments \"Round KATO up to seconds just like kernel realize\", we don\u0027t care about the kernel\u0027s implementation.",
+      "revId": "527237d587327aa63f66cc11533bbcdbc05024fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
