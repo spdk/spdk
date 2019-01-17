@@ -318,11 +318,11 @@ _vbdev_lvs_remove_cb(void *cb_arg, int lvserrno)
 	struct spdk_lvs_req *req = lvs_bdev->req;
 
 	if (lvserrno != 0) {
-		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Could not remove lvol store bdev\n");
-	} else {
-		TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
-		free(lvs_bdev);
+		SPDK_INFOLOG(SPDK_LOG_VBDEV_LVOL, "Lvol store removed with error: %d.\n", lvserrno);
 	}
+
+	TAILQ_REMOVE(&g_spdk_lvol_pairs, lvs_bdev, lvol_stores);
+	free(lvs_bdev);
 
 	if (req->cb_fn != NULL) {
 		req->cb_fn(req->cb_arg, lvserrno);
