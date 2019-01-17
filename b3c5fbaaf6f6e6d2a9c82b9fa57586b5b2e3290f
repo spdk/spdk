@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f5556c7b_38a71410",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-17T01:18:10Z",
+      "side": 1,
+      "message": "Ok. I will update this sentence to be \"Intel U.2 NVMe SSD\".",
+      "parentUuid": "a9ef090e_ada319d5",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b605b0dd_d2e71d82",
         "filename": "test/nvmf/hotplugtestplan.md",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-15T15:24:18Z",
       "side": 1,
       "message": "What\u0027s the difference between heavy and normal? You can probably only do \"heavy\".",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "243c2a3b_ca55753f",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-17T01:18:10Z",
+      "side": 1,
+      "message": "Ok. I will update this sentence to be \"heavy fio workload\". The heavy fio workload can refer to github issue 498,https://github.com/spdk/spdk/issues/498 .",
+      "parentUuid": "b605b0dd_d2e71d82",
       "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "5b5ab1f0_9b452262",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-17T01:18:10Z",
+      "side": 1,
+      "message": "I will update this sentence to be \"different nvmf, transport(PCIe, RDMA and TCP) and NVMe configuration. \"",
+      "parentUuid": "0fb912e3_4ce1833b",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "266cfae4_ddf10985",
         "filename": "test/nvmf/hotplugtestplan.md",
         "patchSetId": 5
@@ -64,6 +118,24 @@
       "writtenOn": "2019-01-15T15:24:18Z",
       "side": 1,
       "message": "Testing these virtual bdevs is a good thing to do and we should do it, but I\u0027m not sure we have to do it strictly as part of \"nvmf hotplug testing\". In fact, it\u0027s probably easier to do it using bdev_svc.",
+      "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5002fe36_8ec26113",
+        "filename": "test/nvmf/hotplugtestplan.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-01-17T01:18:10Z",
+      "side": 1,
+      "message": "I prefer to keep the virtual bdevs testing since there is already one github issue about the vbdev hotplug problem.",
+      "parentUuid": "266cfae4_ddf10985",
       "revId": "b3c5fbaaf6f6e6d2a9c82b9fa57586b5b2e3290f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
