@@ -410,6 +410,7 @@ if $INSTALL; then
     socat \
     sshfs \
     sshpass \
+    python3-pandas \
     btrfs-progs
 fi
 
