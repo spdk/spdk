@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "854e96c6_4515db08",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1196,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:32:37Z",
+      "side": 1,
+      "message": "You can use STAILQ_EMPTY instead of tracking the current_cache_idx.",
+      "revId": "d993b17f2b5da7a6c0f86c6f55d987b153dd9d29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eae8b0d5_720498cb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:32:37Z",
+      "side": 1,
+      "message": "I guess for this one you really do need to track the total number of buffers in the pool. So you can keep the count on the poll group, but let\u0027s call it \"buf_cache_count\" or something - it\u0027s not an index into an array anymore.",
+      "revId": "d993b17f2b5da7a6c0f86c6f55d987b153dd9d29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c81197e9_48a864ec",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T19:32:37Z",
+      "side": 1,
+      "message": "This is identical to the code above - maybe a small static function to put the buffer back in the right place?",
+      "revId": "d993b17f2b5da7a6c0f86c6f55d987b153dd9d29",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
