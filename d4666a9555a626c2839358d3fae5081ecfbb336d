@@ -195,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "336cb400_efddca2d",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-17T20:38:54Z",
+      "side": 1,
+      "message": "You\u0027re hitting a newly introduced bug in the bdev fio_plugin. Here is the fix: https://review.gerrithub.io/c/spdk/spdk/+/441066. That fix makes sure the fio pthreads are always associated with an SPDK thread.",
+      "parentUuid": "f6b9b611_35ef2821",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ac85bfff_4d913c17",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 46
