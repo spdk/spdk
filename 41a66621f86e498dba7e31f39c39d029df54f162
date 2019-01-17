@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22a4c3a9_ed19eb97",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1435,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-17T17:41:27Z",
+      "side": 1,
+      "message": "last parameter needs to be bdev-\u003erequired_alignment - you haven\u0027t set vbdev-\u003ecrypto_bdev.required_alignment here yet",
+      "revId": "41a66621f86e498dba7e31f39c39d029df54f162",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
