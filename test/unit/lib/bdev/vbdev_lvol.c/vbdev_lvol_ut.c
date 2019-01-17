@@ -714,7 +714,7 @@ ut_lvs_destroy(void)
 	CU_ASSERT(g_lvolerrno == 0);
 	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
 
-	/* Unload lvol store */
+	/* Destruct lvol store */
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
@@ -1023,7 +1023,6 @@ ut_lvol_destroy(void)
 {
 	struct spdk_lvol_store *lvs;
 	struct spdk_lvol *lvol;
-	struct spdk_lvol *lvol2;
 	int sz = 10;
 	int rc;
 
@@ -1048,7 +1047,6 @@ ut_lvol_destroy(void)
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 	CU_ASSERT(g_lvol != NULL);
 	CU_ASSERT(g_lvolerrno == 0);
-	lvol2 = g_lvol;
 
 	/* Unsuccessful lvols destroy */
 	g_lvol_deletable = false;
@@ -1062,11 +1060,8 @@ ut_lvol_destroy(void)
 	CU_ASSERT(g_lvol == NULL);
 	CU_ASSERT(g_lvolerrno == 0);
 
-	/* Hot remove lvol bdev */
-	vbdev_lvol_unregister(lvol2);
-
-	/* Unload lvol store */
-	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
+	/* Destroy lvol store */
+	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
 }
@@ -1113,39 +1108,6 @@ ut_lvol_resize(void)
 	vbdev_lvs_destruct(lvs, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvserrno == 0);
 	CU_ASSERT(g_lvol_store == NULL);
-}
-
-static void
-ut_lvs_unload(void)
-{
-	int rc = 0;
-	int sz = 10;
-	struct spdk_lvol_store *lvs;
-
-	/* Lvol store is successfully created */
-	rc = vbdev_lvs_create(&g_bdev, "lvs", 0, lvol_store_op_with_handle_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvserrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol_store != NULL);
-	CU_ASSERT(g_lvol_store->bs_dev != NULL);
-
-	lvs = g_lvol_store;
-	g_lvol_store = NULL;
-
-	spdk_uuid_generate(&lvs->uuid);
-
-	/* Successfully create lvol, which should be destroyed with lvs later */
-	g_lvolerrno = -1;
-	rc = vbdev_lvol_create(lvs, "lvol", sz, false, vbdev_lvol_create_complete, NULL);
-	CU_ASSERT(rc == 0);
-	CU_ASSERT(g_lvolerrno == 0);
-	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
-
-	/* Unload lvol store */
-	vbdev_lvs_unload(lvs, lvol_store_op_complete, NULL);
-	CU_ASSERT(g_lvserrno == 0);
-	CU_ASSERT(g_lvol_store == NULL);
-	CU_ASSERT(g_lvol != NULL);
 }
 
 static void
@@ -1386,7 +1348,6 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "ut_lvol_snapshot", ut_lvol_snapshot) == NULL ||
 		CU_add_test(suite, "ut_lvol_clone", ut_lvol_clone) == NULL ||
 		CU_add_test(suite, "ut_lvs_destroy", ut_lvs_destroy) == NULL ||
-		CU_add_test(suite, "ut_lvs_unload", ut_lvs_unload) == NULL ||
 		CU_add_test(suite, "ut_lvol_resize", ut_lvol_resize) == NULL ||
 		CU_add_test(suite, "lvol_hotremove", ut_lvol_hotremove) == NULL ||
 		CU_add_test(suite, "ut_vbdev_lvol_get_io_channel", ut_vbdev_lvol_get_io_channel) == NULL ||
