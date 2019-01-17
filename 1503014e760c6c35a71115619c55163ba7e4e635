@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "49128bbc_bee48f50",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1234,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T07:51:45Z",
+      "side": 1,
+      "message": "you can move tsc as internal variable, or just merge the function into its caller.",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f367687_5d2992ce",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T07:51:45Z",
+      "side": 1,
+      "message": "move the previous {} section.",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
