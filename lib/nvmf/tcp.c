@@ -1233,6 +1233,11 @@ spdk_nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 static void
 spdk_nvmf_tcp_qpair_handle_timeout(struct nvme_tcp_qpair *tqpair, uint64_t tsc)
 {
+	/* by pass the admin qpair until there is keep alvive feature support */
+	if (tqpair->qpair.qid == 0) {
+		return;
+	}
+
 	if ((tqpair->state == NVME_TCP_QPAIR_STATE_EXITING) ||
 	    (tqpair->state == NVME_TCP_QPAIR_STATE_EXITED)) {
 		return;
