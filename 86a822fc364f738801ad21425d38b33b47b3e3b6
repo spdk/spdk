@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c183925_5bba9f2b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1588,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-17T10:19:23Z",
+      "side": 1,
+      "message": "initial value is already 512, DEFAULT_IO_QUEUE_REQUESTS ?\nSo, opts-\u003eio_queue_requests \u003d spdk_max(opts-\u003eio_queue_requests, g_num_of_io_requests) ?",
+      "range": {
+        "startLine": 1588,
+        "startChar": 36,
+        "endLine": 1588,
+        "endChar": 39
+      },
+      "revId": "86a822fc364f738801ad21425d38b33b47b3e3b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
