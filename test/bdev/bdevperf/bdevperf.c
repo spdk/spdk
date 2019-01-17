@@ -826,32 +826,46 @@ spdk_bdevperf_shutdown_cb(void)
 static int
 bdevperf_parse_arg(int ch, char *arg)
 {
-	switch (ch) {
-	case 'q':
-		g_queue_depth = atoi(optarg);
-		break;
-	case 'o':
-		g_io_size = atoi(optarg);
-		break;
-	case 't':
-		g_time_in_sec = atoi(optarg);
-		break;
-	case 'w':
+	long long tmp;
+	char *end;
+
+	if (ch == 'w') {
 		g_workload_type = optarg;
-		break;
-	case 'M':
-		g_rw_percentage = atoi(optarg);
-		g_mix_specified = true;
-		break;
-	case 'P':
-		g_show_performance_ema_period = atoi(optarg);
-		break;
-	case 'S':
-		g_show_performance_real_time = 1;
-		g_show_performance_period_in_usec = atoi(optarg) * 1000000;
-		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
-						    g_show_performance_period_in_usec);
-		break;
+	} else {
+		tmp = strtoll(optarg, &end, 10);
+		if (tmp <= INT_MIN || tmp >= INT_MAX) {
+			fprintf(stderr, "-%c out of range. Parse failed\n", ch);
+			return -ERANGE;
+		}
+
+
+		switch (ch) {
+		case 'q':
+			g_queue_depth = tmp;
+			break;
+		case 'o':
+			g_io_size = tmp;
+			break;
+		case 't':
+			g_time_in_sec = tmp;
+			break;
+		case 'w':
+			g_workload_type = optarg;
+			break;
+		case 'M':
+			g_rw_percentage = tmp;
+			g_mix_specified = true;
+			break;
+		case 'P':
+			g_show_performance_ema_period = tmp;
+			break;
+		case 'S':
+			g_show_performance_real_time = 1;
+			g_show_performance_period_in_usec = tmp * 1000000;
+			g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
+							    g_show_performance_period_in_usec);
+			break;
+		}
 	}
 	return 0;
 }
