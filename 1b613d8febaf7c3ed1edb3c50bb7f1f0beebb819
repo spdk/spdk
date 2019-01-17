@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d0a9edb_7014e53b",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 583,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-17T07:24:39Z",
+      "side": 1,
+      "message": "I think it\u0027s ok to let dif/dix_verify as well as normal IO routine in the same nvme_verify_io().",
+      "revId": "1b613d8febaf7c3ed1edb3c50bb7f1f0beebb819",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
