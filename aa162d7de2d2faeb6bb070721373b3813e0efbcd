@@ -69,6 +69,23 @@
       "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd206d96_cddb181d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-18T18:08:36Z",
+      "side": 1,
+      "message": "Overrunning the CQ results in the disconnection of all of the QPs, which is a really bad condition to hit. I don\u0027t think we can rely on a heuristic that keeps us safe most of the time. Instead, whenever this function is called, we should check if the worst case scenario number of CQEs would become greater than the current CQ size and then dynamically resize it. You could consider dynamically shrinking it whenever a QP is destroyed too (maybe down to a minimum size).\n\nI know this will potentially consume quite a bit of memory, but I think it is the only way to really guarantee that no I/O commands are lost.",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
