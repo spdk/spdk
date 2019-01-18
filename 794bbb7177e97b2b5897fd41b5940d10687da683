@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "2bbe35c6_8d4c83cf",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-18T06:14:13Z",
+      "side": 1,
+      "message": "You can refer to function spdk_nvmf_poll_group_remove_subsystem() to disconnect all the queue pairs.",
+      "parentUuid": "4e8344de_b7f055b6",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99c2ea6a_80ee57ba",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 8
