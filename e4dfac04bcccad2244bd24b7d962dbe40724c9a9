@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90468373_61dc2d41",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 500,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-18T05:37:59Z",
+      "side": 1,
+      "message": "So addtional entries could be strip and parent entry? So could you update comments in 494, say two additional entries could be strip and parent.\n\nThen update line 496, with  + 3.",
+      "range": {
+        "startLine": 500,
+        "startChar": 1,
+        "endLine": 500,
+        "endChar": 14
+      },
+      "revId": "e4dfac04bcccad2244bd24b7d962dbe40724c9a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
