@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34158d16_4058d5fb",
+        "filename": "test/vhost/shared/bdev.conf",
+        "patchSetId": 34
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "Add a \"Name\" parameter here and assign it a hardcoded name.\nWe will only test with 1 bdev so I guess that\u0027s OK for now and makes the test script less complicated.",
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39336fd7_80ec2c85",
+        "filename": "test/vhost/shared/default_shared_lower.job",
+        "patchSetId": 34
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "This fio config and the next one are almost identical.\nWe could just use one config file like that:\n\n```\n[global]\n{COMMON OPTIONS HERE}\n\n[job1]\n{job1 options here}\n\n[job2]\n{job2 options here}\n```\n\nand run fio with --section option, which allows us to choose which  job to run",
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "68b8c203_2b7cd29e",
+        "filename": "test/vhost/shared/default_shared_lower.job",
+        "patchSetId": 34
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "8 looks weird. Make it 10:)",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 9
+      },
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cb2671f_a55fc054",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "Default FIO path we use for installation in vm_setup.sh is /usr/src/fio/fio",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f52b49bd_dea54f17",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "By adding a \"Name\" to bdev.conf you can skip these 3 lines. That way we avoid running additional discover_bdevs app and can just use the name from bdev.conf.",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 26,
+        "endChar": 32
+      },
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c65b09b8_09ccd760",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 34
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T12:16:18Z",
+      "side": 1,
+      "message": "Any reason why is this commented?:)",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 37
+      },
+      "revId": "85d774967254792f891a855014b8d80b7362160a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
