@@ -632,6 +632,88 @@ Example response:
 }
 ~~~
 
+## bdev_histogram {#rpc_bdev_histogram}
+
+Control whether collecting data for histogram is enabled for specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+enable                  | Required | string      | Enable or disable histogram on specified device
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "bdev_histogram",
+  "params": {
+    "name": "Nvme0n1"
+    "enable": true
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_bdev_histogram {#rpc_get_bdev_histogram}
+
+Get latency histogram for specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Result
+
+Name                    | Description
+------------------------| -----------
+histogram               | Base64 encoded histogram
+bucket_shift            | Granularity of the histogram buckets
+tsc_rate                | Ticks per second
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_bdev_histogram",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "histogram": "AAAAAAAAAAAAAA...AAAAAAAAA==",
+    "tsc_rate": 2300000000,
+    "bucket_shift": 7
+  }
+}
+~~~
+
 ## delete_bdev {#rpc_delete_bdev}
 
 Unregister a block device.
