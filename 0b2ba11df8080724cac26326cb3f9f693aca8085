@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "79d68b26_192588a8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T00:16:06Z",
+      "side": 1,
+      "message": "I\u0027m not confident, but you may be able to say for example, \"For the API `spdk_app_parse_args`, add return value to the callback which parses application specific command line parameters to protect SPDK applications from crashing by invalid values of them.\"",
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6f3a6f31_8b517ecf",
+        "filename": "lib/event/app.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T00:16:06Z",
+      "side": 1,
+      "message": "For example, \"Parsing application specific arguments failed: %d\\n\"",
+      "range": {
+        "startLine": 997,
+        "startChar": 21,
+        "endLine": 997,
+        "endChar": 33
+      },
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dfa58af9_05f61d54",
         "filename": "test/bdev/bdevperf/Makefile",
         "patchSetId": 10
