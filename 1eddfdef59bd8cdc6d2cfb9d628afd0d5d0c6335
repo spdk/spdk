@@ -16,6 +16,24 @@
       "revId": "1eddfdef59bd8cdc6d2cfb9d628afd0d5d0c6335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "24c48838_943759d0",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 41
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T06:16:15Z",
+      "side": 1,
+      "message": "This is to make heavy IO workloads so that we can rate limit more precise. If not changed, the actual IOPS without QoS is low and after enabled QoS, the goal may or may not hit as a false alarm. So as to change this to have the higher IOPS without QoS enabled.",
+      "parentUuid": "2448f963_633bd94e",
+      "revId": "1eddfdef59bd8cdc6d2cfb9d628afd0d5d0c6335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
