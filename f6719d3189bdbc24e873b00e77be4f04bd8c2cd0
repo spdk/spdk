@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cde3402_823045e1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1218,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T10:51:37Z",
+      "side": 1,
+      "message": "it could be worth asserting rgroup-\u003egroup.buf_cache_count \u003e 0",
+      "revId": "f6719d3189bdbc24e873b00e77be4f04bd8c2cd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
