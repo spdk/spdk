@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6bb74c3f_31ec0769",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-18T12:48:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "024c78c7_8ad3c18c",
+      "revId": "a33003f5a4d97065e95b77e42d5c5f52328f3701",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc7b7937_f62aa2be",
         "filename": "test/vagrant/vagrant.sh",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-16T13:36:14Z",
       "side": 1,
       "message": "You need to disable trap here, otherwise after clean and timing exit it will trigger at exiting the script and cause error (VM no longer exists)",
+      "revId": "a33003f5a4d97065e95b77e42d5c5f52328f3701",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "91925cad_51c96267",
+        "filename": "test/vagrant/vagrant.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 95,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-18T12:48:45Z",
+      "side": 1,
+      "message": "Done, thx",
+      "parentUuid": "cc7b7937_f62aa2be",
       "revId": "a33003f5a4d97065e95b77e42d5c5f52328f3701",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
