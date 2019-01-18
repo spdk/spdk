@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "445434c7_0b2d561c",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:13:22Z",
+      "side": 1,
+      "message": "no need to memset here - spdk_dma_zmalloc will already zero the buffer",
+      "revId": "0edfc7c9b6db1e15859d8b3d357a669c9a9dbdb1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d2caae5_dee2f4a2",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 11
