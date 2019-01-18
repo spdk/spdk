@@ -351,7 +351,6 @@ spdk_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *c
 
 	TAILQ_FOREACH_SAFE(lvol, &lvs->lvols, link, tmp) {
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
-		free(lvol->unique_id);
 		free(lvol);
 	}
 	g_lvol_store = NULL;
@@ -384,7 +383,6 @@ spdk_lvs_destroy(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 		spdk_bdev_alias_del(lvol->bdev, alias);
 
 		free(alias);
-		free(lvol->unique_id);
 		free(lvol);
 	}
 	g_lvol_store = NULL;
@@ -456,7 +454,6 @@ spdk_lvol_destroy(struct spdk_lvol *lvol, spdk_lvol_op_complete cb_fn, void *cb_
 	cb_fn(cb_arg, 0);
 
 	g_lvol = NULL;
-	free(lvol->unique_id);
 	free(lvol);
 }
 
@@ -611,8 +608,7 @@ _lvol_create(struct spdk_lvol_store *lvs)
 
 	lvol->lvol_store = lvs;
 	lvol->ref_count++;
-	lvol->unique_id = spdk_sprintf_alloc("%s", "UNIT_TEST_UUID");
-	SPDK_CU_ASSERT_FATAL(lvol->unique_id != NULL);
+	snprintf(lvol->unique_id, sizeof(lvol->unique_id), "%s", "UNIT_TEST_UUID");
 
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->lvols, lvol, link);
 

@@ -42,6 +42,9 @@
 /* Default size of blobstore cluster */
 #define SPDK_LVS_OPTS_CLUSTER_SZ (4 * 1024 * 1024)
 
+/* UUID + null terminator + blobid. */
+#define SPDK_LVOL_UNIQUE_ID_MAX (SPDK_UUID_STRING_LEN + sizeof(uint64_t) * 2)
+
 struct spdk_lvs_req {
 	spdk_lvs_op_complete    cb_fn;
 	void                    *cb_arg;
@@ -100,7 +103,7 @@ struct spdk_lvol {
 	struct spdk_lvol_store		*lvol_store;
 	struct spdk_blob		*blob;
 	spdk_blob_id			blob_id;
-	char				*unique_id;
+	char				unique_id[SPDK_UUID_STRING_LEN + sizeof(uint64_t) * 2 + 1];
 	char				name[SPDK_LVOL_NAME_MAX];
 	struct spdk_uuid		uuid;
 	char				uuid_str[SPDK_UUID_STRING_LEN];
