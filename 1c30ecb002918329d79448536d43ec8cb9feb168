@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05995d99_b1d7308c",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 57
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "the assertion mocking is really something I don\u0027t want to encourage in SPDK - we have a precedent that asserts are used to denote completely invalid inputs based on what the API specifies\n\nI don\u0027t want to set a precedent, that people should write unit tests to ensure that asserts are really happening.  We should use return values for that instead in SPDK.",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ef61ce1_a058a7f3",
+        "filename": "test/unit/lib/ftl/ftl_band.c/Makefile",
+        "patchSetId": 57
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "you can remove spdk.app.mk and spdk.mock.unittest.mk - they get pulled in now via spdk.unittest.mk\n\nI did a bunch of cleanup on this fairly recently - probably after you took an existing Makefile as a template for the FTL ones\n\n(same for other Makefiles including spdk.unittest.mk)",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b9535d5_05b7fddd",
+        "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "let\u0027s just have ftl_l2p_set return an error code if invalid values are passed in\n\nit\u0027s even fine to keep the assert in ftl_l2p_set\n\nwe use assert() in spdk to indicate something terribly bad has happened, or the user has passed a value that the API says shall not be passed - I don\u0027t want to set a precedent that people should be testing the asserts with unit tests",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b60fef11_6fb78aac",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/Makefile",
+        "patchSetId": 57
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "do we need to add ENV_CFLAGS?",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b8e5b3a_a3971f57",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "move size_t declaration",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9b09dcf7_9da96312",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "rc declaration should be at beginning of function, or beginning of code block",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2c70d70_6e019581",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "move size_t declaration",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0ad8a97_60710678",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "move size_t declaration",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1618fd2_e9e4c215",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "why does this need to be volatile?",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "942e347f_16987322",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T17:38:58Z",
+      "side": 1,
+      "message": "let\u0027s make ftl_rwb_set_limits return an error code, and assert on that instead",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
