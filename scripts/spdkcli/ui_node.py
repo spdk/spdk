@@ -309,7 +309,8 @@ class UINvmeBdev(UIBdev):
 
     def delete(self, name):
         try:
-            self.get_root().delete_nvme_controller(name=name)
+            ctrlr_name, _ = name.rsplit("n", 1)
+            self.get_root().delete_nvme_controller(name=ctrlr_name)
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
@@ -336,7 +337,7 @@ class UINvmeBdev(UIBdev):
         Deletes NVMe controller from configuration.
 
         Arguments:
-        name - Is a unique identifier of the NVMe controller to be deleted.
+        name - Is a unique identifier of the NVMe bdev to be deleted.
         """
         self.delete(name)
         self.get_root().refresh()
