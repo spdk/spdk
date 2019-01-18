@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c6a61c8_87e7ea4e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4482,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T07:31:58Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nIt may be better to add the following here. This is almost from NVMe specification. Please feel free to revise as you like.\n\n\"The association between a Security Receive command and previous Security Send commands is\ndependent on the value of the `secp` parameter. The format of the data to be transferred is dependent on it.\"",
+      "revId": "a36e95d3a8e213e53c5aeec920e6f8ff0963f82f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
