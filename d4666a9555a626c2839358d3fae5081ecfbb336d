@@ -213,6 +213,24 @@
     },
     {
       "key": {
+        "uuid": "f78871e8_b67dd655",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-18T11:17:51Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI\u0027ve looked at your fix and I think we have still same issue:\n\nIn spdk_thread_pool we are setting always tls_thread to NULL on return:\nspdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)\n{\n    assert(_get_thread() \u003d\u003d NULL);\n    tls_thread \u003d thread;\n    ….\n    tls_thread \u003d NULL;\n}\n\nSo if we set spdk_set_thread() in spdk_fio_init_thread() we will end up with assert in spdk_thread_poll().\n\nOrginal reason of this issue is that we are calling (in FIO scenario) spdk_get_thread() outside spdk_thread_poll() so it always return NULL. I think that we should make some changes in spdk_thread_pool() to handle this scenario correctly.\n\nFor better view here is  example backtrace from FIO workload:\n#0  spdk_get_thread () at thread.c:440\n#1  0x00007ffff7a73207 in ftl_check_read_thread (dev\u003d0x7fffd800e280) at ftl_core.c:329\n#2  0x00007ffff7a75893 in ftl_io_read (io\u003d0x2000125931c0) at ftl_core.c:1395\n#3  0x00007ffff7a75a20 in spdk_ftl_read (dev\u003d0x7fffd800e280, ch\u003d0x7fffcc0103d0, lba\u003d3425867, lba_cnt\u003d1, \n    iov\u003d0x200003a49dd0, iov_cnt\u003d1, cb_fn\u003d0x7ffff7a7f399 \u003cbdev_ocssd_cb\u003e, cb_arg\u003d0x200003a4a100) at ftl_core.c:1447\n#4  0x00007ffff7a7f534 in bdev_ocssd_readv (bdev\u003d0x7fffd8008c20, ch\u003d0x7fffcc010130, io\u003d0x200003a4a100)\n    at bdev_ocssd.c:293\n#5  0x00007ffff7a7f624 in bdev_ocssd_get_buf_cb (ch\u003d0x7fffcc010130, bdev_io\u003d0x200003a49dc0) at bdev_ocssd.c:327\n#6  0x00007ffff7a8c9a8 in spdk_bdev_io_get_buf (bdev_io\u003d0x200003a49dc0, cb\u003d0x7ffff7a7f5f0 \u003cbdev_ocssd_get_buf_cb\u003e, \n    len\u003d4096) at bdev.c:579\n#7  0x00007ffff7a7f710 in _bdev_ocssd_submit_request (ch\u003d0x7fffcc010130, bdev_io\u003d0x200003a49dc0) at bdev_ocssd.c:355\n#8  0x00007ffff7a7f781 in bdev_ocssd_submit_request (ch\u003d0x7fffcc010130, bdev_io\u003d0x200003a49dc0) at bdev_ocssd.c:377\n#9  0x00007ffff7a8edb4 in _spdk_bdev_io_submit (ctx\u003d0x200003a49dc0) at bdev.c:1588\n#10 0x00007ffff7a8f0e6 in spdk_bdev_io_submit (bdev_io\u003d0x200003a49dc0) at bdev.c:1636\n#11 0x00007ffff7a90cda in spdk_bdev_read_blocks (desc\u003d0x7fffcc010030, ch\u003d0x7fffcc010070, buf\u003d0x200012235000, \n    offset_blocks\u003d3425867, num_blocks\u003d1, cb\u003d0x7ffff7a15482 \u003cspdk_fio_completion_cb\u003e, cb_arg\u003d0x7fffcc00ac70)\n    at bdev.c:2417\n#12 0x00007ffff7a90b95 in spdk_bdev_read (desc\u003d0x7fffcc010030, ch\u003d0x7fffcc010070, buf\u003d0x200012235000,",
+      "parentUuid": "336cb400_efddca2d",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ac85bfff_4d913c17",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 46
