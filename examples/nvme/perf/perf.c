@@ -494,6 +494,10 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	 * 1 more entry be used for stripe.
 	 */
 	entries = (g_io_size_bytes - 1) / max_xfer_size + 2;
+	/* For requests which have children requests, parent request itself
+	 * will also occupy 1 entry.
+	 */
+	entries += 1;
 	if ((g_queue_depth * entries) > opts.io_queue_size) {
 		printf("controller IO queue size %u less than required\n",
 		       opts.io_queue_size);
@@ -511,7 +515,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->type = ENTRY_TYPE_NVME_NS;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
-	entry->num_io_requests = entries;
+	entry->num_io_requests = g_queue_depth * entries;
 
 	entry->size_in_ios = spdk_nvme_ns_get_size(ns) /
 			     g_io_size_bytes;
