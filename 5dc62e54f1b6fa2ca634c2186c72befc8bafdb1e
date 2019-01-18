@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "149419be_88cacaa3",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T00:28:44Z",
+      "side": 1,
+      "message": "You may be able to do\n\nif (ch \u003d\u003d \u0027w\u0027) {\n\tg_workload_type \u003d optarg;\n} else {\n\ttmp \u003d strtoll(optarg, \u0026end, 10);\n\tif (tmp \u003c\u003d INT_MIN || tmp \u003e\u003d INT_MAX) {\n\t\tfprintf(stderr, \"-%c parse failed\\n\", ch);\n\t\treturn -ERANGE;\n\t}\n\n\tswitch (ch) {\n\tcase \u0027q\u0027:\n\t\tg_queue_depth \u003d tmp;\n\t\tbreak;\n\tcase \u0027o\u0027:\n\t\tg_io_size \u003d tmp;\n\t\tbreak;\n\n\t\t(snip)\n\t}\n}\n\nreturn 0;",
+      "revId": "5dc62e54f1b6fa2ca634c2186c72befc8bafdb1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c108510_c63e3006",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T00:28:44Z",
+      "side": 1,
+      "message": "is out of range of int?",
+      "range": {
+        "startLine": 835,
+        "startChar": 24,
+        "endLine": 835,
+        "endChar": 36
+      },
+      "revId": "5dc62e54f1b6fa2ca634c2186c72befc8bafdb1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
