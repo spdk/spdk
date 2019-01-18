@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85784888_ab9cfcac",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T06:43:09Z",
+      "side": 1,
+      "message": "to align with above commments, \"timeout\" is prefered.",
+      "range": {
+        "startLine": 409,
+        "startChar": 15,
+        "endLine": 409,
+        "endChar": 16
+      },
+      "revId": "b7a19eefa5c915019999efaa3b0ab22863bafec0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
