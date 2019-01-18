@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "91552400_2baaa920",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T02:04:52Z",
+      "side": 1,
+      "message": "Hi Shuhei, thanks for your time. Based on your review, I did a little modification. Please help review again. Thank you.",
+      "parentUuid": "79d68b26_192588a8",
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6f3a6f31_8b517ecf",
         "filename": "lib/event/app.c",
         "patchSetId": 10
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "d3d0d610_a234f848",
+        "filename": "lib/event/app.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T02:04:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6f3a6f31_8b517ecf",
+      "range": {
+        "startLine": 997,
+        "startChar": 21,
+        "endLine": 997,
+        "endChar": 33
+      },
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dfa58af9_05f61d54",
         "filename": "test/bdev/bdevperf/Makefile",
         "patchSetId": 10
@@ -53,6 +95,30 @@
       "writtenOn": "2019-01-18T00:04:53Z",
       "side": 1,
       "message": "Is this change necessary?",
+      "range": {
+        "startLine": 45,
+        "startChar": 15,
+        "endLine": 45,
+        "endChar": 15
+      },
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7aeda237_c0932958",
+        "filename": "test/bdev/bdevperf/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T02:04:52Z",
+      "side": 1,
+      "message": "Hi Shuhei. This is not necessary anymore since we are not using math.h header. Thank you for your careful review.",
+      "parentUuid": "dfa58af9_05f61d54",
       "range": {
         "startLine": 45,
         "startChar": 15,
