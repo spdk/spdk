@@ -2025,14 +2025,11 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 static bool
 spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
 {
-	int cur_queue_depth, cur_rdma_rw_depth;
 	struct spdk_nvmf_rdma_qpair *rqpair;
 
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	cur_queue_depth = spdk_nvmf_rdma_cur_queue_depth(rqpair);
-	cur_rdma_rw_depth = spdk_nvmf_rdma_cur_rw_depth(rqpair);
 
-	if (cur_queue_depth == 0 && cur_rdma_rw_depth == 0) {
+	if (spdk_nvmf_rdma_cur_queue_depth(rqpair) == 0) {
 		return true;
 	}
 	return false;
