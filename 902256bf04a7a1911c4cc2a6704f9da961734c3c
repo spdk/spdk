@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e33a8527_eb73084f",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T09:38:27Z",
+      "side": 1,
+      "message": "I think there\u0027s no need to check for fedora as we check for RHEL based distros on line 43 and it looks like they share the same names for asan an ubsan",
+      "range": {
+        "startLine": 78,
+        "startChar": 1,
+        "endLine": 78,
+        "endChar": 40
+      },
+      "revId": "902256bf04a7a1911c4cc2a6704f9da961734c3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "45d8cebc_b14ed3c6",
+        "filename": "scripts/pkgdep.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T09:38:27Z",
+      "side": 1,
+      "message": "libasan and libusan are provided in test/common/config/vm_setup.sh\n\nBasically:\n- pkgdep.sh is a script where we add all dependencies which are needed to just build SPDK\n- vm_setup.sh is a script used to install test dependencies for SPDK",
+      "range": {
+        "startLine": 79,
+        "startChar": 2,
+        "endLine": 79,
+        "endChar": 33
+      },
+      "revId": "902256bf04a7a1911c4cc2a6704f9da961734c3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
