@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d9c90b9_93379603",
+        "filename": "test/vhost/shared/default_shared_lower.job",
+        "patchSetId": 36
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T13:30:57Z",
+      "side": 1,
+      "message": "We don\u0027t really need two separate configs for each fio instance. Could you use a single config file and specify an offset for each fio instance by command line?\n\ne.g.\nfio --config $cfg_file --offset\u003d0 --size\u003d50%\nfio --config $cfg_file --offset\u003d50% --size\u003d50%\n\nSpecifying the size through the command line - like I did above - would also make that test script way more readable in my opinion.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 6
+      },
+      "revId": "d218f91f19efde3d2ee510be40400aa9d6487a79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e756b69c_59c868b4",
+        "filename": "test/vhost/vhost.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T13:30:57Z",
+      "side": 1,
+      "message": "why is this commented out?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 1
+      },
+      "revId": "d218f91f19efde3d2ee510be40400aa9d6487a79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
