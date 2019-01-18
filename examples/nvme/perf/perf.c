@@ -581,6 +581,10 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 		       "IO requests may be queued at the NVMe driver.\n");
 		g_warn = true;
 	}
+	/* For requests which have children requests, parent request itself
+	 * will also occupy 1 entry.
+	 */
+	entries += 1;
 
 	entry = calloc(1, sizeof(struct ns_entry));
 	if (entry == NULL) {
@@ -592,7 +596,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->fn_table = &nvme_fn_table;
 	entry->u.nvme.ctrlr = ctrlr;
 	entry->u.nvme.ns = ns;
-	entry->num_io_requests = entries;
+	entry->num_io_requests = g_queue_depth * entries;
 
 	entry->size_in_ios = ns_size / g_io_size_bytes;
 	entry->io_size_blocks = g_io_size_bytes / sector_size;
