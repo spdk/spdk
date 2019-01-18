@@ -16,6 +16,24 @@
       "revId": "a36e95d3a8e213e53c5aeec920e6f8ff0963f82f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5131637d_421266aa",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 4482,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T09:51:33Z",
+      "side": 1,
+      "message": "Hi Shuhei,Thank you for your time and your detail review. I added refer to NVMe spec at the end.",
+      "parentUuid": "7c6a61c8_87e7ea4e",
+      "revId": "a36e95d3a8e213e53c5aeec920e6f8ff0963f82f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
