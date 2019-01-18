@@ -231,6 +231,24 @@
     },
     {
       "key": {
+        "uuid": "4394454e_b514a720",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 566,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-18T16:22:31Z",
+      "side": 1,
+      "message": "This patch should fix the spdk_thread_poll behavior: https://review.gerrithub.io/c/spdk/spdk/+/441159",
+      "parentUuid": "f78871e8_b67dd655",
+      "revId": "d4666a9555a626c2839358d3fae5081ecfbb336d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ac85bfff_4d913c17",
         "filename": "lib/ftl/ftl_init.c",
         "patchSetId": 46
