@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "2c38de40_57a9dfca",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T02:20:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "149419be_88cacaa3",
+      "revId": "5dc62e54f1b6fa2ca634c2186c72befc8bafdb1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c108510_c63e3006",
         "filename": "test/bdev/bdevperf/bdevperf.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-01-18T00:28:44Z",
       "side": 1,
       "message": "is out of range of int?",
+      "range": {
+        "startLine": 835,
+        "startChar": 24,
+        "endLine": 835,
+        "endChar": 36
+      },
+      "revId": "5dc62e54f1b6fa2ca634c2186c72befc8bafdb1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9853e590_633fce91",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-18T02:20:53Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "7c108510_c63e3006",
       "range": {
         "startLine": 835,
         "startChar": 24,
