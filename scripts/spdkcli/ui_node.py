@@ -308,8 +308,13 @@ class UINvmeBdev(UIBdev):
         UIBdev.__init__(self, "nvme", parent)
 
     def delete(self, name):
+        ctrlr_name = name
+        for ctrlr in self.get_root().get_nvme_controllers():
+            if ctrlr['name'] in name:
+                ctrlr_name = ctrlr['name']
+                break
         try:
-            self.get_root().delete_nvme_controller(name=name)
+            self.get_root().delete_nvme_controller(name=ctrlr_name)
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 

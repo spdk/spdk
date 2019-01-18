@@ -269,6 +269,13 @@ class UIRoot(UINode):
                 yield VhostCtrlr(ctrlr)
 
     @verbose
+    @is_method_available
+    def get_nvme_controllers(self):
+        if self.is_init:
+            for nvme_ctrlr in rpc.nvme.get_nvme_controllers(self.client):
+                yield nvme_ctrlr
+
+    @verbose
     def remove_vhost_controller(self, **kwargs):
         rpc.vhost.remove_vhost_controller(self.client, **kwargs)
 
