@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5c8909d9_a2ee135a",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T08:18:54Z",
+      "side": 1,
+      "message": "Note to self:\nTHIS. PEP8 prohibits this and we fail on check format ;(",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 30
+      },
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "01f002d8_aafdd2d4",
         "filename": "scripts/perf/nvmf/run_nvmf.py",
         "patchSetId": 19
@@ -13,6 +36,24 @@
       "writtenOn": "2019-01-17T23:32:34Z",
       "side": 1,
       "message": "Joining the full path to itself again looks off. I think that it still works since file is an absolute path and python throws away all previous arguments when it encounters a new absolute path, but it looks weird.",
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb998e1a_15ee340d",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T08:18:54Z",
+      "side": 1,
+      "message": "Yeah, this looks off :P I don\u0027t know what I was thinking here",
+      "parentUuid": "01f002d8_aafdd2d4",
       "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -33,6 +74,47 @@
       "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00270f16_2e133655",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T08:18:54Z",
+      "side": 1,
+      "message": "Yup",
+      "parentUuid": "f6996877_9a5d50c6",
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f63d751_7e006fb2",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-18T08:18:54Z",
+      "side": 1,
+      "message": "Note to self:\nTHIS.",
+      "range": {
+        "startLine": 686,
+        "startChar": 4,
+        "endLine": 686,
+        "endChar": 58
+      },
+      "revId": "00496d6dfb9b8614bd042162289d23c77eda6195",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
