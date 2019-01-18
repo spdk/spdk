@@ -109,6 +109,24 @@
       "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d8e131a4_28b9c13d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2662,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-18T00:46:57Z",
+      "side": 1,
+      "message": "you don\u0027t need to change this part of code, so just combine the two if sections together.",
+      "parentUuid": "aa5e9c4c_2602fe09",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
