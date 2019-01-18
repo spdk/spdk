@@ -22,6 +22,30 @@
       "revId": "67254eb5a6b3111352e4f39483dc7d7fc964a1bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f06ce0a4_4f1d238c",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 71
+      },
+      "lineNbr": 1437,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:51:20Z",
+      "side": 1,
+      "message": "Please let\u0027s just return submitted_ios here, instead of adding another 50 lines of code.\n\nI want to keep this patch simpler.  In my mind, we won\u0027t need all of the checks against each possible rate limit in the final solution.  So I\u0027d prefer to defer any decisions on how we handle that until after these initial patches are merged.",
+      "parentUuid": "10c8da00_e63f41c8",
+      "range": {
+        "startLine": 1437,
+        "startChar": 9,
+        "endLine": 1437,
+        "endChar": 37
+      },
+      "revId": "67254eb5a6b3111352e4f39483dc7d7fc964a1bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
