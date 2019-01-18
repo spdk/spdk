@@ -16,6 +16,24 @@
       "revId": "dd16657a1225d84d3f1aea09b9049360dca98396",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92f975ea_98c560d2",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 1396,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T02:16:43Z",
+      "side": 1,
+      "message": "Agreed. Actually in my previous change, I have introduced two local variables like read_io and write_io to track the exact submitted read and write IO count specially. It will terminate the loop much earlier. Let me see how to address this.",
+      "parentUuid": "bf3f2bfc_29ebb50b",
+      "revId": "dd16657a1225d84d3f1aea09b9049360dca98396",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
