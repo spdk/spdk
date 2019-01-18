@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e824434_08ea7750",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "return -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "43bd481d_1d3d2027",
+        "filename": "app/spdk_tgt/spdk_tgt.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "should we have a default: case here that returns -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a7c3d9f_96cb7fd5",
+        "filename": "app/vhost/vhost.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "default: with return -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f279d7f_192b0dd2",
+        "filename": "examples/bdev/hello_world/hello_bdev.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "default with return -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1f1b20b_19f8d153",
+        "filename": "examples/sock/hello_world/hello_sock.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "default with return -1?\n\n(let\u0027s also put a break; after g_verbose \u003d true)",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de61d503_f56193da",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 854,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "default: with return -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0d11138_33773ac3",
+        "filename": "test/blobfs/mkfs/mkfs.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T15:44:11Z",
+      "side": 1,
+      "message": "return -1?",
+      "revId": "01e5610da80ef88670cad2e1826ece98cd0a2fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
