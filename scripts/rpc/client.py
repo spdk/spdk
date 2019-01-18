@@ -71,6 +71,7 @@ class JSONRPCClient(object):
 
                 buf += newdata.decode("utf-8")
                 response = json.loads(buf)
+                print(response)
             except socket.timeout:
                 break
             except ValueError:
