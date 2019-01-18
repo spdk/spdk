@@ -920,7 +920,6 @@ _create_lvol_disk_unload_cb(void *cb_arg, int bdeverrno)
 	}
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-	free(lvol->unique_id);
 	free(lvol);
 }
 
@@ -932,10 +931,6 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	uint64_t total_size;
 	unsigned char *alias;
 	int rc;
-
-	if (!lvol->unique_id) {
-		return -EINVAL;
-	}
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (lvs_bdev == NULL) {
@@ -1234,7 +1229,6 @@ _vbdev_lvs_examine_finish(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno)
 		SPDK_ERRLOG("Error opening lvol %s\n", lvol->unique_id);
 		TAILQ_REMOVE(&lvs->lvols, lvol, link);
 		lvs->lvol_count--;
-		free(lvol->unique_id);
 		free(lvol);
 		goto end;
 	}
