@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "904dcb34_b82b82c3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:53:52Z",
+      "side": 1,
+      "message": "New `nvme_security_receive` RPC was added to get security protocol data supported by specific NVMe controller.\nSee the [nvme_security_receive](http://spdk.io/doc/jsonrpc.html#rpc_nvme_security_receive) documentation for more details.\n\nI feel it\u0027s better to follow the previous example as possible as we can. I saw the line 102.\n\nAnd, please append this to the end of the nvme section.",
+      "range": {
+        "startLine": 21,
+        "startChar": 0,
+        "endLine": 22,
+        "endChar": 116
+      },
+      "revId": "ed62bff7f3ea173682d79581c1c31a058aac9e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bbda3da_de8a8452",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4483,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:53:52Z",
+      "side": 1,
+      "message": "Will you change the line?",
+      "range": {
+        "startLine": 4483,
+        "startChar": 163,
+        "endLine": 4483,
+        "endChar": 166
+      },
+      "revId": "ed62bff7f3ea173682d79581c1c31a058aac9e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f3b26ba_0c56e3c6",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4483,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:53:52Z",
+      "side": 1,
+      "message": "I hope you will find some improvement.\n\n\nPlease start sentence by a verb first. My feedback is for example,\n\nGet the status and data result of one or more Security Send commands that were previously submitted to the controller.\n\nIf `00h` is specified to the `secp` parameter, this RPC will return return information about the security protocols supported by the controller.\nThe returned information is used in the security discovery process and is not associated with a Security Send command.",
+      "range": {
+        "startLine": 4481,
+        "startChar": 0,
+        "endLine": 4483,
+        "endChar": 271
+      },
+      "revId": "ed62bff7f3ea173682d79581c1c31a058aac9e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4aeb7d14_a63f1dad",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4519,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:53:52Z",
+      "side": 1,
+      "message": "Just writing success output simply is enough ?",
+      "range": {
+        "startLine": 4519,
+        "startChar": 0,
+        "endLine": 4519,
+        "endChar": 14
+      },
+      "revId": "ed62bff7f3ea173682d79581c1c31a058aac9e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "afbe2d11_363e6606",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 4525,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:53:52Z",
+      "side": 1,
+      "message": "is this necessary?",
+      "range": {
+        "startLine": 4525,
+        "startChar": 0,
+        "endLine": 4525,
+        "endChar": 11
+      },
+      "revId": "ed62bff7f3ea173682d79581c1c31a058aac9e68",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
