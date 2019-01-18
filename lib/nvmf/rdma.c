@@ -256,8 +256,8 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
 
-	/* The maximum number of active RDMA READ and WRITE operations at one time */
-	uint16_t				max_rw_depth;
+	/* The maximum number of active RDMA READ and ATOMIC operations at one time */
+	uint16_t				max_read_depth;
 
 	/* The maximum number of SGEs per WR on the send queue */
 	uint32_t				max_send_sge;
@@ -584,10 +584,9 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 static int
-spdk_nvmf_rdma_cur_rw_depth(struct spdk_nvmf_rdma_qpair *rqpair)
+spdk_nvmf_rdma_cur_read_depth(struct spdk_nvmf_rdma_qpair *rqpair)
 {
-	return rqpair->state_cntr[RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER] +
-	       rqpair->state_cntr[RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST];
+	return rqpair->state_cntr[RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER];
 }
 
 static int
@@ -950,7 +949,7 @@ spdk_nvmf_rdma_event_accept(struct rdma_cm_id *id, struct spdk_nvmf_rdma_qpair *
 	ctrlr_event_data.private_data_len = sizeof(accept_data);
 	if (id->ps == RDMA_PS_TCP) {
 		ctrlr_event_data.responder_resources = 0; /* We accept 0 reads from the host */
-		ctrlr_event_data.initiator_depth = rqpair->max_rw_depth;
+		ctrlr_event_data.initiator_depth = rqpair->max_read_depth;
 	}
 
 	rc = rdma_accept(id, &ctrlr_event_data);
@@ -984,7 +983,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	struct rdma_conn_param		*rdma_param = NULL;
 	const struct spdk_nvmf_rdma_request_private_data *private_data = NULL;
 	uint16_t			max_queue_depth;
-	uint16_t			max_rw_depth;
+	uint16_t			max_read_depth;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -1021,7 +1020,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	/* Start with the maximum queue depth allowed by the target */
 	max_queue_depth = rtransport->transport.opts.max_queue_depth;
-	max_rw_depth = rtransport->transport.opts.max_queue_depth;
+	max_read_depth = rtransport->transport.opts.max_queue_depth;
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Target Max Queue Depth: %d\n",
 		      rtransport->transport.opts.max_queue_depth);
 
@@ -1030,14 +1029,14 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      port->device->attr.max_qp_wr, port->device->attr.max_qp_rd_atom);
 	max_queue_depth = spdk_min(max_queue_depth, port->device->attr.max_qp_wr);
-	max_rw_depth = spdk_min(max_rw_depth, port->device->attr.max_qp_rd_atom);
+	max_read_depth = spdk_min(max_read_depth, port->device->attr.max_qp_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
 	if (rdma_param->initiator_depth > 0) {
-		max_rw_depth = spdk_min(max_rw_depth, rdma_param->initiator_depth);
+		max_read_depth = spdk_min(max_read_depth, rdma_param->initiator_depth);
 	}
 
 	/* Finally check for the host software requested values, which are
@@ -1051,7 +1050,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Final Negotiated Queue Depth: %d R/W Depth: %d\n",
-		      max_queue_depth, max_rw_depth);
+		      max_queue_depth, max_read_depth);
 
 	rqpair = calloc(1, sizeof(struct spdk_nvmf_rdma_qpair));
 	if (rqpair == NULL) {
@@ -1062,7 +1061,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	rqpair->port = port;
 	rqpair->max_queue_depth = max_queue_depth;
-	rqpair->max_rw_depth = max_rw_depth;
+	rqpair->max_read_depth = max_read_depth;
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
@@ -1386,7 +1385,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	enum spdk_nvmf_rdma_request_state prev_state;
 	bool				progress = false;
 	int				data_posted;
-	int				cur_rdma_rw_depth;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 	device = rqpair->port->device;
@@ -1486,14 +1484,13 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* This request needs to wait in line to perform RDMA */
 				break;
 			}
-			cur_rdma_rw_depth = spdk_nvmf_rdma_cur_rw_depth(rqpair);
-
-			if (cur_rdma_rw_depth >= rqpair->max_rw_depth) {
-				/* R/W queue is full, need to wait */
-				break;
-			}
 
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+
+				if (spdk_nvmf_rdma_cur_read_depth(rqpair) >= rqpair->max_read_depth) {
+					/* Read operation queue is full, need to wait */
+					break;
+				}
 				rc = request_transfer_in(&rdma_req->req);
 				if (!rc) {
 					spdk_nvmf_rdma_request_set_state(rdma_req,
