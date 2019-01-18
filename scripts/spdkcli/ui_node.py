@@ -309,7 +309,8 @@ class UINvmeBdev(UIBdev):
 
     def delete(self, name):
         try:
-            self.get_root().delete_nvme_controller(name=name)
+            ctrlr_name = name.rsplit("n", 1)[0]
+            self.get_root().delete_nvme_controller(name=ctrlr_name)
         except JSONRPCException as e:
             self.shell.log.error(e.message)
 
