@@ -600,6 +600,9 @@ spdk_nvmf_rdma_cur_queue_depth(struct spdk_nvmf_rdma_qpair *rqpair)
 static void
 nvmf_rdma_dump_request(struct spdk_nvmf_rdma_request *req)
 {
+	if (!req || !req->req.cmd || !req->recv) {
+		return;
+	}
 	SPDK_ERRLOG("\t\tRequest Data From Pool: %d\n", req->data_from_pool);
 	SPDK_ERRLOG("\t\tRequest opcode: %d\n", req->req.cmd->nvmf_cmd.opcode);
 	SPDK_ERRLOG("\t\tRequest recv wr_id%lu\n", req->recv->wr.wr_id);
