@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dfa58af9_05f61d54",
+        "filename": "test/bdev/bdevperf/Makefile",
+        "patchSetId": 10
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T00:04:53Z",
+      "side": 1,
+      "message": "Is this change necessary?",
+      "range": {
+        "startLine": 45,
+        "startChar": 15,
+        "endLine": 45,
+        "endChar": 15
+      },
+      "revId": "0b2ba11df8080724cac26326cb3f9f693aca8085",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
