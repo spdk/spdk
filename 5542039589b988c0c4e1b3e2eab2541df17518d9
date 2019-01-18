@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4359ce0a_076c3de1",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T20:34:36Z",
+      "side": 1,
+      "message": "I see how this works, but I think it\u0027s a bit nasty.  What if instead we added a new backend function pointer for \"get_lcore\" or something like that?  then for blk and nvme, it can just use spdk_vhost_allocate_reactor as is, but scsi can do something different - i.e. use spdk_vhost_allocate_reactor for the first session, save that lcore in the svdev, and then use that lcore for subsequent sessions\n\nI just think that\u0027s a lot more clear than all of this vdev-\u003ecpumask manipulation.",
+      "revId": "5542039589b988c0c4e1b3e2eab2541df17518d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
