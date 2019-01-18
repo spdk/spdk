@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4e8344de_b7f055b6",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T06:09:26Z",
+      "side": 1,
+      "message": "I am a little confused here. Ben said \"Keep alive is an admin command, so it only ever occurs on the admin queue pair. \". So i think he means we should just care about the admin qpair, IO qpairs will disconnect when they find CFS \u003d\u003d 1.",
+      "parentUuid": "5d964c8d_a671aa20",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "99c2ea6a_80ee57ba",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 8
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "98eb0223_7d7b243a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T06:09:26Z",
+      "side": 1,
+      "message": "yeah it\u0027s not clear here, i will rename last_keep_alive_tick and add some comments.",
+      "parentUuid": "99c2ea6a_80ee57ba",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a92c5044_5e9a678f",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 8
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-18T03:47:54Z",
       "side": 1,
       "message": "Since you are naming the parameter with last_keep_alive_tick, so here just record the current ticks makes more sense, right ?",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7ac2467_4554105e",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1747,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T06:09:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a92c5044_5e9a678f",
       "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
