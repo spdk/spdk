@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e48a8e74_862b5cf1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "The #define makes me easy to locate where i have changed, i have removed these.",
+      "parentUuid": "8705646b_bc822067",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d06a57f_d3434461",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-01-11T08:27:45Z",
       "side": 1,
       "message": "maybe check subsystem-\u003eka_counter \u003d\u003d 0 is more intuitive here",
+      "range": {
+        "startLine": 141,
+        "startChar": 6,
+        "endLine": 141,
+        "endChar": 28
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b435d2a7_8c7a63fa",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8d06a57f_d3434461",
       "range": {
         "startLine": 141,
         "startChar": 6,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "2877c6ed_b1c76f91",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 145,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "099691ba_52172344",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4c1b45d_119bfae1",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -76,6 +136,24 @@
     },
     {
       "key": {
+        "uuid": "edcc96cd_65c7cebb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b4c1b45d_119bfae1",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3ae543a8_e75ca67b",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -87,6 +165,30 @@
       "writtenOn": "2019-01-11T08:27:45Z",
       "side": 1,
       "message": "could be a problem in the multiple cases, some IO qpair is not removed yet as we route to the async thread to handle. Besides, here it seems that the admin qpair disconnect also needs to go to its associated thread? Will this timeout called on the same thread of the admin qpair?",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 253,
+        "endChar": 3
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e88fe72_f879734b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "1，Yeah，i have to check the IO qpair remove.\n2，The admin qpair disconnect i think it is ok. see subsystem.c:func spdk_nvmf_subsystem_keep_alive_poll-\u003espdk_thread_send_msg(ctrlr-\u003ethread, spdk_nvmf_ctrlr_keep_alive_timeout, ctrlr);",
+      "parentUuid": "3ae543a8_e75ca67b",
       "range": {
         "startLine": 248,
         "startChar": 0,
@@ -122,6 +224,30 @@
     },
     {
       "key": {
+        "uuid": "86aaeff5_dddf0e06",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8038cc51_c218983d",
+      "range": {
+        "startLine": 353,
+        "startChar": 4,
+        "endLine": 353,
+        "endChar": 16
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36db8872_90e6f5b2",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 2
@@ -136,6 +262,24 @@
       "revId": "23dd059cd067561ed688113090230d9902ed73cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e802b26_c2f9c9a1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Sorry, i have misunderstanded the kernel code. Have updated it.",
+      "parentUuid": "36db8872_90e6f5b2",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -179,6 +323,24 @@
     },
     {
       "key": {
+        "uuid": "4cd618eb_6527e0ef",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ebe97230_a894937c",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "74cb7b7b_8f9d5d80",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 2
@@ -213,6 +375,24 @@
     },
     {
       "key": {
+        "uuid": "2211b9b7_491eb6ae",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1279,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "At first i thought there would have too many ctrlr keep-alive pollers, so only the subsystem has a keep-alive poller may be a good choice. i have updated the code.",
+      "parentUuid": "3f956b05_a5eaa60e",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "016c0144_6af1c2a1",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 2
@@ -224,6 +404,30 @@
       "writtenOn": "2019-01-11T08:27:45Z",
       "side": 1,
       "message": "check \u003d\u003d 0 is preferred.",
+      "range": {
+        "startLine": 1319,
+        "startChar": 6,
+        "endLine": 1319,
+        "endChar": 28
+      },
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e41967ed_22a91339",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "016c0144_6af1c2a1",
       "range": {
         "startLine": 1319,
         "startChar": 6,
@@ -253,6 +457,24 @@
     },
     {
       "key": {
+        "uuid": "6a917e82_e46da6f6",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1323,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f874c104_30d81c86",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6e2cde78_3e955fc3",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 2
@@ -264,6 +486,24 @@
       "writtenOn": "2019-01-11T08:27:45Z",
       "side": 1,
       "message": "remote extra line",
+      "revId": "23dd059cd067561ed688113090230d9902ed73cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eefe98ea_c8f9091d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1328,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6e2cde78_3e955fc3",
       "revId": "23dd059cd067561ed688113090230d9902ed73cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

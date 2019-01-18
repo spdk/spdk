@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4cbbcfc7_d7f29bc0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Yeah，it is very useful.",
+      "parentUuid": "a339983f_fa59a48e",
+      "range": {
+        "startLine": 366,
+        "startChar": 4,
+        "endLine": 366,
+        "endChar": 16
+      },
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52a2b068_eae09d07",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 1
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-07T05:50:26Z",
       "side": 1,
       "message": "The macro isn\u0027t necessary, just remove it is fine.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "655e9fc0_97068e8e",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "At last, i will remove it. Just now, i know what i have changed",
+      "parentUuid": "52a2b068_eae09d07",
       "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "af24409b_2ec3aeee",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 231,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c9cdd833_8756a0b3",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f293fb3_4b16e251",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 1
@@ -70,6 +130,30 @@
       "writtenOn": "2019-01-07T07:00:26Z",
       "side": 1,
       "message": "Better to add another \"tab\" to align the above member.",
+      "range": {
+        "startLine": 237,
+        "startChar": 30,
+        "endLine": 237,
+        "endChar": 31
+      },
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "00198fd6_25482979",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0f293fb3_4b16e251",
       "range": {
         "startLine": 237,
         "startChar": 30,
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "993b82aa_9a5530b0",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "05f1da4c_9724982a",
+      "range": {
+        "startLine": 262,
+        "startChar": 28,
+        "endLine": 262,
+        "endChar": 34
+      },
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7dc562ec_a4bc73a4",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 1
@@ -122,6 +230,24 @@
     },
     {
       "key": {
+        "uuid": "9c0396e9_d2c2890d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1285,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7dc562ec_a4bc73a4",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c32acfb_9f57ee2d",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 1
@@ -133,6 +259,24 @@
       "writtenOn": "2019-01-07T05:50:26Z",
       "side": 1,
       "message": "Although Keep Alive Timer maybe a very big value, here it\u0027s nice to compare 1s with KATO, choose the smaller one.",
+      "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1666ebb3_96882eab",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1345,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7c32acfb_9f57ee2d",
       "revId": "402b2e7a79f944ad728573987bbc07177174b99b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false

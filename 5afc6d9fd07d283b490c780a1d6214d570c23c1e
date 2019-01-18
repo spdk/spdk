@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1474aa78_088a11b8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "I am a little confused here. Ben say \"Keep alive is an admin command, so it only ever occurs on the admin queue pair. \". So i think he means we should just care about the admin qpair, IO qpairs will disconnect when they find CFS \u003d\u003d 1.",
+      "parentUuid": "9e0e274f_1961ed2b",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "db4c4511_c615e6a9",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-17T08:37:41Z",
       "side": 1,
       "message": "how about rename this function to spdk_nvmf_ctrlr_keep_alive_poll or spdk_nvmf_ctrlr_keep_alive_update.",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b7c09cc_1ff451c4",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "db4c4511_c615e6a9",
       "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -50,6 +86,24 @@
       "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8dcc435_c942b0ed",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-18T05:21:40Z",
+      "side": 1,
+      "message": "confused. we have to compute the interval value again and again if we don\u0027t use ctrlr-\u003ekeep_alive_interval_ticks.",
+      "parentUuid": "8bf176ea_afc71825",
+      "revId": "5afc6d9fd07d283b490c780a1d6214d570c23c1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
