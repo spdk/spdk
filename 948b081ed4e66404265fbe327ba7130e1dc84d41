@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ca3aa5d3_b717a4b6",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T12:03:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c84831a4_6db97725",
+      "range": {
+        "startLine": 464,
+        "startChar": 10,
+        "endLine": 464,
+        "endChar": 15
+      },
+      "revId": "948b081ed4e66404265fbe327ba7130e1dc84d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3b8f2b4_0a1a0a44",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 24
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-18T06:23:00Z",
       "side": 1,
       "message": "simply printf?",
+      "range": {
+        "startLine": 520,
+        "startChar": 9,
+        "endLine": 520,
+        "endChar": 15
+      },
+      "revId": "948b081ed4e66404265fbe327ba7130e1dc84d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3136f78_6aec612e",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 520,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T12:03:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3b8f2b4_0a1a0a44",
       "range": {
         "startLine": 520,
         "startChar": 9,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "2cacd870_b25ffee7",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T12:03:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "55bc17d5_6890d284",
+      "range": {
+        "startLine": 629,
+        "startChar": 9,
+        "endLine": 629,
+        "endChar": 15
+      },
+      "revId": "948b081ed4e66404265fbe327ba7130e1dc84d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e0cc42bb_399d85ee",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 24
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-18T06:23:00Z",
       "side": 1,
       "message": "same as above",
+      "range": {
+        "startLine": 637,
+        "startChar": 10,
+        "endLine": 637,
+        "endChar": 16
+      },
+      "revId": "948b081ed4e66404265fbe327ba7130e1dc84d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d966148_f9af09f4",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T12:03:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0cc42bb_399d85ee",
       "range": {
         "startLine": 637,
         "startChar": 10,
