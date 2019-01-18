@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cd32d6cf_1c6f0df0",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 677,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T10:01:19Z",
+      "side": 1,
+      "message": "considering that\n\n*address \u003d\u003d io_u-\u003ebuf + fio_req-\u003eiov_offset\n\ncould we simplify this to just\n\nremaining_length \u003d io_u-\u003exfer_buflen - fio_req-\u003eiov_offset;",
+      "range": {
+        "startLine": 677,
+        "startChar": 40,
+        "endLine": 677,
+        "endChar": 62
+      },
+      "revId": "aa7fce341edd8fed094fd933a1382779493e1362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38448afd_70548c25",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T10:01:19Z",
+      "side": 1,
+      "message": "this is fine, although is there a reason why we can\u0027t use spdk_min() here?",
+      "range": {
+        "startLine": 678,
+        "startChar": 11,
+        "endLine": 678,
+        "endChar": 78
+      },
+      "revId": "aa7fce341edd8fed094fd933a1382779493e1362",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
