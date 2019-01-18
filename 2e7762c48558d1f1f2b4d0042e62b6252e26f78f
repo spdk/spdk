@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6538378_4e90b799",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-18T17:02:13Z",
+      "side": 1,
+      "message": "This function is unused, remove?",
+      "revId": "2e7762c48558d1f1f2b4d0042e62b6252e26f78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53417596_8773cb55",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-18T17:02:13Z",
+      "side": 1,
+      "message": "This function is also unused, remove?",
+      "revId": "2e7762c48558d1f1f2b4d0042e62b6252e26f78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
