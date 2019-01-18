@@ -149,6 +149,24 @@
     },
     {
       "key": {
+        "uuid": "02d2baaa_5099141b",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T04:00:03Z",
+      "side": 1,
+      "message": "Oh, so sorry, I misunderstood that the loop is do { } while (current_state \u003d\u003d prev_state);",
+      "parentUuid": "2e32ed5b_a8d0896e",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f367687_5d2992ce",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 8
