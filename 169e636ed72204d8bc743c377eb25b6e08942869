@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cbee1a29_b9759c8c",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T20:24:41Z",
+      "side": 1,
+      "message": "A new session\n\nIs the second sentence in this comment still valid?",
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f13b416b_6685c163",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T20:24:41Z",
+      "side": 1,
+      "message": "should these pointers now be called start_session and stop_session?",
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a883dc0d_8ab859cb",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1208,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T20:24:41Z",
+      "side": 1,
+      "message": "A new session\n\nis the second sentence in this comment still valid?",
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
