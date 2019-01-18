@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "14530d74_5c34b3ad",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T02:16:27Z",
+      "side": 1,
+      "message": "I tried test env, Liang described in github/spdk/issue#498, which has only 1 lcore for nvmf-tgt with 1 subsystem and 9 NS. The host side run fio with 9 jobs * 12 numjobs, queue-depth is 256.\nIn that env, the CQ is responsible to 83K WRs (9 jobs * 12 numjobs * (256 * 3 +2) per qpair), despite the admin qpair. It run over in 1 minutes. But for 9 jobs * 4 numjobs, it runs well for hours. So just take one ratio round down power of 2",
+      "parentUuid": "8a8411f8_d6146dd6",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05fad536_08381e86",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-17T19:45:04Z",
       "side": 1,
       "message": "This is a little confusing to me. 256 * 3 + 2 \u003d 770 which is much smaller than the default CQE size of 4096. Do you mean that each qpair requires 770 requests which means the 20 qpairs could in theory require 154000 cg entries?",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6684d23_53688a6e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 643,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-18T02:16:27Z",
+      "side": 1,
+      "message": "Yes, 20 qpairs are binded to a same CQ, so the total required CQE is their sum.",
+      "parentUuid": "05fad536_08381e86",
       "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
