@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "132e4e07_b48811d4",
+        "filename": "configure",
+        "patchSetId": 41
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-18T15:51:24Z",
+      "side": 1,
+      "message": "We do compile OCF during make. This step does export of OCF headers and sources ( as suggested https://github.com/Open-CAS/ocf#deployment )\n\nUnfortunately, OCF cannot be compiled as standalone library, it requieres our headers in lib/cas/ocfenv/ for that.\nAs something \u0027closer\u0027 - we now have option of using precompiled static library instead of compiling ourselves\n\nAre you OK with this?",
+      "parentUuid": "5d923217_61fed43a",
+      "range": {
+        "startLine": 413,
+        "startChar": 0,
+        "endLine": 415,
+        "endChar": 21
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "73042fce_f0ffc0c2",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 41
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-09T07:48:32Z",
       "side": 1,
       "message": "\"OCF device\" might be better here",
+      "range": {
+        "startLine": 683,
+        "startChar": 32,
+        "endLine": 683,
+        "endChar": 54
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37e0b927_9c681112",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 683,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-18T15:51:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "73042fce_f0ffc0c2",
       "range": {
         "startLine": 683,
         "startChar": 32,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "b3ba0fc5_a0b5ab24",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-18T15:51:24Z",
+      "side": 1,
+      "message": "Comment was outdated. I fixed it.\n\u0027attached\u0027 is true when base spdk_bdev got opened and claimed.\nTo me, it is more direct, readable and maintainable when using separate field\nDo you agree?",
+      "parentUuid": "8b191b45_dc85a673",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 97,
+        "endChar": 39
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "178bf2ab_15ca57c6",
         "filename": "lib/bdev/cas/vbdev_cas.h",
         "patchSetId": 41
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "006717c2_b12127c3",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-18T15:51:24Z",
+      "side": 1,
+      "message": "Have you concidered that we would have struct vbdev_ocf with ocf_bdev in it?\nIt might be confusing IMO.\nWhat do you think about just \u0027bdev\u0027?",
+      "parentUuid": "178bf2ab_15ca57c6",
+      "range": {
+        "startLine": 124,
+        "startChar": 30,
+        "endLine": 124,
+        "endChar": 38
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4fb22b63_13b766f6",
         "filename": "lib/bdev/cas/vbdev_cas.h",
         "patchSetId": 41
@@ -114,6 +210,30 @@
       "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2765bebd_0e82b0c7",
+        "filename": "lib/bdev/cas/vbdev_cas.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-18T15:51:24Z",
+      "side": 1,
+      "message": "It works as you said, but I guess the \u0027online\u0027 is little misleading?",
+      "parentUuid": "4fb22b63_13b766f6",
+      "range": {
+        "startLine": 143,
+        "startChar": 3,
+        "endLine": 143,
+        "endChar": 22
+      },
+      "revId": "e7ad18caa3c66117599922298af5cc0350f7382e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
