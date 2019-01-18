@@ -36,6 +36,8 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/histogram_data.h"
+#include "spdk/base64.h"
 
 #include "spdk/bdev_module.h"
 
@@ -585,3 +587,169 @@ exit:
 }
 
 SPDK_RPC_REGISTER("set_bdev_qos_limit", spdk_rpc_set_bdev_qos_limit, SPDK_RPC_RUNTIME)
+
+/* SPDK_RPC_HISTOGRAM COMMON */
+
+struct rpc_bdev_histogram_request {
+	char *name;
+};
+
+static void
+free_rpc_bdev_histogram_request(struct rpc_bdev_histogram_request *r)
+{
+	free(r->name);
+}
+
+static const struct spdk_json_object_decoder rpc_bdev_histogram_request_decoders[] = {
+	{"name", offsetof(struct rpc_bdev_histogram_request, name), spdk_json_decode_string},
+};
+
+static void
+_spdk_bdev_histogram_status_cb(void *cb_arg, int status)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, status == 0);
+	spdk_jsonrpc_end_result(request, w);
+}
+
+/* SPDK_RPC_HISTOGRAM_ENABLE and SPDK_RPC_HISTOGRAM_DISABLE */
+
+static void
+spdk_rpc_bdev_histogram_state(struct spdk_jsonrpc_request *request,
+			      const struct spdk_json_val *params, bool enable)
+{
+	struct rpc_bdev_histogram_request req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_histogram_request_decoders,
+				    SPDK_COUNTOF(rpc_bdev_histogram_request_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	spdk_bdev_histogram_enable(bdev, _spdk_bdev_histogram_status_cb, request, enable);
+
+	free_rpc_bdev_histogram_request(&req);
+
+	return;
+
+invalid:
+	free_rpc_bdev_histogram_request(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+static void
+spdk_rpc_enable_bdev_histogram(struct spdk_jsonrpc_request *request,
+			       const struct spdk_json_val *params)
+{
+	spdk_rpc_bdev_histogram_state(request, params, true);
+}
+
+static void
+spdk_rpc_disable_bdev_histogram(struct spdk_jsonrpc_request *request,
+				const struct spdk_json_val *params)
+{
+	spdk_rpc_bdev_histogram_state(request, params, false);
+}
+
+SPDK_RPC_REGISTER("enable_bdev_histogram", spdk_rpc_enable_bdev_histogram, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER("disable_bdev_histogram", spdk_rpc_disable_bdev_histogram, SPDK_RPC_RUNTIME)
+
+/* SPDK_RPC_HISTOGRAM_GET */
+
+static void
+_spdk_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram_data *histogram)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+	int rc;
+	char *encoded_histogram;
+	size_t src_len, dst_len;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+	if (status != 0) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, "Cannot convert to base64");
+		goto invalid;
+	}
+
+	src_len = SPDK_HISTOGRAM_NUM_BUCKETS(histogram) * sizeof(uint64_t);
+	dst_len = spdk_base64_get_encoded_strlen(src_len) + 1;
+	encoded_histogram = calloc(dst_len, sizeof(*encoded_histogram));
+	rc = spdk_base64_encode(encoded_histogram, histogram->bucket, src_len);
+
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, -ENOMEM, "Cannot convert to base64");
+		goto invalid_encode;
+	}
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "histogram", encoded_histogram);
+	spdk_json_write_named_bool(w, "status", status == 0);
+	spdk_json_write_named_int64(w, "bucket_shift", histogram->bucket_shift);
+	spdk_json_write_object_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+invalid_encode:
+	free(encoded_histogram);
+invalid:
+	spdk_histogram_data_free(histogram);
+}
+
+static void
+spdk_rpc_get_bdev_histogram(struct spdk_jsonrpc_request *request,
+			    const struct spdk_json_val *params)
+{
+	struct rpc_bdev_histogram_request req = {NULL};
+	struct spdk_histogram_data *histogram;
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_bdev_histogram_request_decoders,
+				    SPDK_COUNTOF(rpc_bdev_histogram_request_decoders),
+				    &req)) {
+		SPDK_ERRLOG("spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	histogram = spdk_histogram_data_alloc();
+	if (histogram == NULL) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+
+	spdk_bdev_histogram_get(bdev, histogram, _spdk_rpc_bdev_histogram_data_cb, request);
+
+	free_rpc_bdev_histogram_request(&req);
+	return;
+
+invalid:
+	free_rpc_bdev_histogram_request(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+
+SPDK_RPC_REGISTER("get_bdev_histogram", spdk_rpc_get_bdev_histogram, SPDK_RPC_RUNTIME)
