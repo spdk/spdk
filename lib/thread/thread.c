@@ -328,11 +328,11 @@ int
 spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 {
 	uint32_t msg_count;
+	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller;
 	int rc = 0;
 
-	assert(_get_thread() == NULL);
-
+	orig_thread = _get_thread();
 	tls_thread = thread;
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
@@ -395,7 +395,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		}
 	}
 
-	tls_thread = NULL;
+	tls_thread = orig_thread;
 
 	return rc;
 }
