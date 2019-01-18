@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d465bc5f_0e059f33",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-18T08:06:02Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 64,
+        "startChar": 15,
+        "endLine": 65,
+        "endChar": 16
+      },
+      "revId": "8d590ed709b4c6fbb56611118e8dec38c3507049",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10471985_be672b43",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-18T08:06:02Z",
+      "side": 1,
+      "message": "I\u0027m not an expert about ARM arch, but wouldn\u0027t \nthis be a bit faster if you move this loop at\nthe top of this function and then use operate\non dwords instead memcopy? Something like:\n  \n  const uint64_t *dword_buf;\n\n  count \u003d len \u0026 7;\n  while (count--) {\n    crc \u003d __crc32b(crc, *(const uint8_t *)buf);\n    buf++;\n  }\n\n  count \u003d len / 8;\n  word_buf \u003d buf;\n  while (count--) {\n    crc \u003d __crc32d(crc, *dword_buf);\n    dword_buf++;\n  }",
+      "range": {
+        "startLine": 70,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 9
+      },
+      "revId": "8d590ed709b4c6fbb56611118e8dec38c3507049",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
