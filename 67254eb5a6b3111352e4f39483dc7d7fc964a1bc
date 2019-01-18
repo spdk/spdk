@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10c8da00_e63f41c8",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 71
+      },
+      "lineNbr": 1437,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T06:10:57Z",
+      "side": 1,
+      "message": "Hi Jim, I\u0027ve added this new function (detailed above) to terminate the loop earlier for the read and write cases. As suggested, for the later optimization with pointers to read / write bdev_io, I will work on this in a separate patch. Thanks.",
+      "range": {
+        "startLine": 1437,
+        "startChar": 9,
+        "endLine": 1437,
+        "endChar": 37
+      },
+      "revId": "67254eb5a6b3111352e4f39483dc7d7fc964a1bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
