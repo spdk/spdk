@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "c84831a4_6db97725",
+        "filename": "app/trace_porter/trace_porter.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T06:55:56Z",
+      "side": 1,
+      "message": "do we have to check if len is not negative ?",
+      "range": {
+        "startLine": 464,
+        "startChar": 10,
+        "endLine": 464,
+        "endChar": 15
+      },
+      "revId": "948b081ed4e66404265fbe327ba7130e1dc84d41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3b8f2b4_0a1a0a44",
         "filename": "app/trace_porter/trace_porter.c",
         "patchSetId": 24
