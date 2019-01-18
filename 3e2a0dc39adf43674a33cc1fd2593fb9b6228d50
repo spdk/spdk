@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "383cdc65_0a0e75c7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-18T16:20:19Z",
+      "side": 1,
+      "message": "How do we ensure that we don\u0027t overshoot the max_send_wr value in this case? It used to be the case that we only had up to max_queue_depth recvs for each qpair, and we only returned them once we had initiated the send operation. This gave us the balance we needed to avoid overshooting this value, but wouldn\u0027t it be possible for a single qpair with a very high queue depth to have enough active recvs to end up submitting more send operations than the qpair could handle and we could get errors in ibv_post_send?\nI am not sure this is the case. The checks for rdma_wr_depth in request_process might give us adequate protection, but I can\u0027t prove that because of the intermediate states where we have processed the recv, but haven\u0027t submitted the send requests yet.\nHave you tested the case where we have a very high queue depth and only 1 queue pair? I think if that test case passes, it should be fine.",
+      "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ad8113a_1166fc20",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-18T16:20:19Z",
+      "side": 1,
+      "message": "ibv_init_attr.cap.max_recv_sge is ignored if srq is enabled. I don\u0027t think it hurts to define it unconditionally, but I think that it may be more readable if you put it in the ifdef above.",
+      "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
