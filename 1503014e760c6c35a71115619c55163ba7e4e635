@@ -77,6 +77,24 @@
     },
     {
       "key": {
+        "uuid": "d5850539_198b3ac9",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-18T01:43:56Z",
+      "side": 1,
+      "message": "Yes, this case is possible. \n1 If the return value is -1, which means that the fd is closed. It will not be entered into the endless loop. We do not want to use other system call to check now(it is not provided in the socket yet), so using the same read will be OK.\n2 If the return value is 1. it is OK. This time, the timer is kicked off, any further received data will not be handled. And if the client does not close the socket, our target will close it. And it obeys the spec.",
+      "parentUuid": "277389cd_49563b05",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f367687_5d2992ce",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 8
