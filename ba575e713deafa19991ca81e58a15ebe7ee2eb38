@@ -2,6 +2,138 @@
   "comments": [
     {
       "key": {
+        "uuid": "1aedbbd3_092c0cb0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "May change it to NVMF_MIN_KEEP_ALIVE_TIMEOUT_IN_MS",
+      "range": {
+        "startLine": 50,
+        "startChar": 8,
+        "endLine": 50,
+        "endChar": 30
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "797b3daf_02590ea1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "Looks like this is better to be NVMF_DISC_KATA_IN_MS 120000ULL which looks like matching the below comment of 2 minutes.",
+      "range": {
+        "startLine": 51,
+        "startChar": 8,
+        "endLine": 51,
+        "endChar": 22
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4312559d_d0dd575c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "Just have a question that this is to remove the admin qpair, will it also cover to remove the IO qpairs? Thanks.",
+      "range": {
+        "startLine": 109,
+        "startChar": 7,
+        "endLine": 109,
+        "endChar": 33
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f9a09aa_f120cbdb",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "disabled",
+      "range": {
+        "startLine": 150,
+        "startChar": 49,
+        "endLine": 150,
+        "endChar": 56
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2899d5ff_387145d0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "Is this just set as poller_interval \u003d ctrlr-\u003e....bits.kato as the kato has been set at code blocks 1017 - 1022?",
+      "range": {
+        "startLine": 159,
+        "startChar": 2,
+        "endLine": 160,
+        "endChar": 11
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f3f8f0b4_39e575d8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "this newline is not needed",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0565f63_189e3177",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -13,6 +145,47 @@
       "writtenOn": "2019-01-18T07:07:38Z",
       "side": 1,
       "message": "spdk_divide_round_up(connect_cmd-\u003ekato, cdata-\u003ekas * 100) *\n\t\t\t1000",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf77053b_cba05e06",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "Agreed that cdata-\u003ekas * 100 is better in the case that cdata-\u003ekas has another value.",
+      "parentUuid": "c0565f63_189e3177",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa4d6f84_d504a26d",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "this like looks millisecond?",
+      "range": {
+        "startLine": 1020,
+        "startChar": 17,
+        "endLine": 1020,
+        "endChar": 23
+      },
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -36,6 +209,29 @@
     },
     {
       "key": {
+        "uuid": "73017fd5_2b161313",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1021,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "May use what we defined like SEC_TO_MSEC (1000). If not defined already, you may define one here.",
+      "range": {
+        "startLine": 1021,
+        "startChar": 84,
+        "endLine": 1021,
+        "endChar": 88
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e4d5a37_b76cedf2",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -47,6 +243,52 @@
       "writtenOn": "2019-01-18T07:07:38Z",
       "side": 1,
       "message": "line 1024 isn\u0027t required.",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98a51373_7f1fe1f3",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1027,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "Is this also set at line 152?",
+      "range": {
+        "startLine": 1024,
+        "startChar": 0,
+        "endLine": 1027,
+        "endChar": 2
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17fd8571_231418e3",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1746,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-18T11:37:50Z",
+      "side": 1,
+      "message": "This commend looks like need to move to line 311 where kata is described and set",
+      "range": {
+        "startLine": 1746,
+        "startChar": 4,
+        "endLine": 1746,
+        "endChar": 24
+      },
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
