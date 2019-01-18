@@ -51,6 +51,27 @@ if bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1; then
 	exit 1
 fi
 
+$rpc_py construct_ocf_bdev HotCache wt Malloc0 Malloc1
+
+if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
+	>&2 echo "Base devices expected to be claimed now"
+	exit 1
+fi
+
+$rpc_py delete_malloc_bdev Malloc0
+
+if bdev_check_claimed Malloc1; then
+	>&2 echo "Base device is not expected to be claimed now"
+	exit 1
+fi
+
+status=$($rpc_py get_bdevs)
+gone=$(echo $status | jq 'map(select(.name == "HotCache")) == []')
+if [[ $gone == false ]]; then
+	>&2 echo "OCF bdev is expected to unregister"
+	exit 1
+fi
+
 # check if shutdown of running CAS bdev is ok
 $rpc_py construct_ocf_bdev PartCache wt NonExisting Malloc1
 
