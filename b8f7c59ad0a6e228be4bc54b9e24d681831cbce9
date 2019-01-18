@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ad181eb_2f15a7d7",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1363,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-18T20:05:33Z",
+      "side": 1,
+      "message": "how does a user of this know that one of the fn() calls failed?  normally when the foreach is completed, you get one last call with vdev \u003d\u003d NULL - but once we return here doesn\u0027t that mean the user never gets this final callback?\n\nsame for changes above",
+      "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
