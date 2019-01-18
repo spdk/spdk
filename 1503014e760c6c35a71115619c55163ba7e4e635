@@ -131,6 +131,24 @@
     },
     {
       "key": {
+        "uuid": "2e32ed5b_a8d0896e",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2084,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-18T02:30:35Z",
+      "side": 1,
+      "message": "Yes, it has chance, you can see that. our while loop checks the state, if it is in the same state twice, it will break and return. So definitely, the timeout function will be called.",
+      "parentUuid": "51d27036_8bdfd8a0",
+      "revId": "1503014e760c6c35a71115619c55163ba7e4e635",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f367687_5d2992ce",
         "filename": "lib/nvmf/tcp.c",
         "patchSetId": 8
