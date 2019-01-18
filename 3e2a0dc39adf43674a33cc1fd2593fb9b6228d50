@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "48c2d060_7a089a37",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-18T21:17:12Z",
+      "side": 1,
+      "message": "Seth has a point here. Specifically, the NVMe queue depth on an NVMe queue pair was previously only being enforced via the number of posted recvs. If we have a shared recv queue with a couple of queue depth worth of entries, a malfunctioning or malicious initiator could send more commands on an NVMe queue than they are technically allowed to send. This would result in attempting to perform more RDMA send operations (to send NVMe completions) than the RDMA qp is prepared to handle.\n\nI think we need to enforce NVMe queue depth limits by actually keeping counts in the rqpair. We can keep the counts regardless of whether we support SRQ or not to keep the code unified.",
+      "parentUuid": "383cdc65_0a0e75c7",
+      "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7ad8113a_1166fc20",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
