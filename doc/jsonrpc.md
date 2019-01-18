@@ -631,6 +631,109 @@ Example response:
 }
 ~~~
 
+## enable_bdev_histogram {#rpc_enable_bdev_histogram}
+
+Enable histogram for specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "enable_bdev_histogram",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## disable_bdev_histogram {#rpc_disable_bdev_histogram}
+
+Disable histogram for specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "disable_bdev_histogram",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_bdev_histogram {#rpc_enable_bdev_histogram}
+
+Get latency histogram for specified bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "enable_bdev_histogram",
+  "params": {
+    "name": "Nvme0n1"
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  'jsonrpc': '2.0',
+  'id': 1,
+  'result':
+  {
+    'histogram': '<base64 encoded response>',
+    'status': True, 
+    'bucket_shift': 7}
+  }
+~~~
+
 ## delete_bdev {#rpc_delete_bdev}
 
 Unregister a block device.
