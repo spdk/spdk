@@ -16,6 +16,24 @@
       "revId": "7211cd51bb652104d4fe92abe36d901b62c622e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60986a8e_28f2fc04",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1013,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-18T06:50:07Z",
+      "side": 1,
+      "message": "True, we should probably set it to NULL here for consistency, but not doing that doesn\u0027t cause any issues right now.",
+      "parentUuid": "fb7553ab_2a557f91",
+      "revId": "7211cd51bb652104d4fe92abe36d901b62c622e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
