@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5d964c8d_a671aa20",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-18T03:47:54Z",
+      "side": 1,
+      "message": "same here, you can use spdk_nvmf_qpair_disconnect() to disconnect all the queue pairs, set the second parameter to the next queue pair.",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "99c2ea6a_80ee57ba",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-18T03:47:54Z",
+      "side": 1,
+      "message": "you can refer to my previous comment, it\u0027s not clear here, or you can rename last_keep_alive_tick.",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a92c5044_5e9a678f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1747,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-18T03:47:54Z",
+      "side": 1,
+      "message": "Since you are naming the parameter with last_keep_alive_tick, so here just record the current ticks makes more sense, right ?",
+      "revId": "794bbb7177e97b2b5897fd41b5940d10687da683",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
