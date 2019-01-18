@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4ca6eb6_eab15644",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1517,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-18T03:33:05Z",
+      "side": 1,
+      "message": "initiator_port is already NULL. You can remove this?",
+      "range": {
+        "startLine": 1517,
+        "startChar": 3,
+        "endLine": 1517,
+        "endChar": 40
+      },
+      "revId": "62230d2f7e5781a2e00feda2a435ed701a3a927c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
