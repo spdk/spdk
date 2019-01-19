@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cd31bb9_87450a17",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-19T05:34:55Z",
+      "side": 1,
+      "message": "The max queue depth allowed is 128 so that to enlarge the IO size from 512 to 1024 as it also needs to cover the bandwidth case besides the IOPS case.",
+      "range": {
+        "startLine": 23,
+        "startChar": 9,
+        "endLine": 23,
+        "endChar": 17
+      },
+      "revId": "123762f8e839447753d36a96b7371abc893fc37c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
