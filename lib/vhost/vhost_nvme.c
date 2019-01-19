@@ -983,7 +983,7 @@ spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf)
 	}
 
 	if (ret) {
-		SPDK_ERRLOG("Admin Passthrough Faild with %u\n", req->opc);
+		SPDK_ERRLOG("Admin Passthrough Failed with %u\n", req->opc);
 	}
 
 	return 0;
