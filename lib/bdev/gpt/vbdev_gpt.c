@@ -145,6 +145,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	}
 
 	gpt = &gpt_base->gpt;
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
 	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, bdev->blocklen);
 	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
 	if (!gpt->buf) {
@@ -355,9 +356,15 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 		goto end;
 	}
 
-	rc = spdk_gpt_parse(&gpt_base->gpt);
+	rc = spdk_gpt_parse_mbr(&gpt_base->gpt);
 	if (rc) {
-		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse gpt\n");
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse mbr\n");
+		goto end;
+	}
+
+	rc = spdk_gpt_parse_partition_table(&gpt_base->gpt);
+	if (rc) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse primary partition table\n");
 		goto end;
 	}
 
