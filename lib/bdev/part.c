@@ -310,7 +310,8 @@ struct spdk_bdev_part_base *
 	rc = spdk_bdev_open(bdev, false, remove_cb, base, &base->desc);
 	if (rc) {
 		spdk_bdev_part_base_free(base);
-		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(bdev));
+		SPDK_ERRLOG("could not open bdev %s: %s\n", spdk_bdev_get_name(bdev),
+			    spdk_strerror(-rc));
 		return NULL;
 	}
 
