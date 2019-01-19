@@ -46,6 +46,30 @@
       "revId": "67254eb5a6b3111352e4f39483dc7d7fc964a1bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b23aa81e_9173e3bc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 71
+      },
+      "lineNbr": 1437,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-19T01:08:00Z",
+      "side": 1,
+      "message": "Got it. Let me just change back to immediately return. Thanks and have another patch to address the improvement later.",
+      "parentUuid": "f06ce0a4_4f1d238c",
+      "range": {
+        "startLine": 1437,
+        "startChar": 9,
+        "endLine": 1437,
+        "endChar": 37
+      },
+      "revId": "67254eb5a6b3111352e4f39483dc7d7fc964a1bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
