@@ -340,7 +340,7 @@ vbdev_gpt_create_bdevs(struct gpt_base *gpt_base)
 }
 
 static void
-spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+spdk_gpt_read_secondary_table_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 {
 	struct gpt_base *gpt_base = (struct gpt_base *)arg;
 	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
@@ -349,6 +349,69 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	spdk_bdev_free_io(bdev_io);
 	spdk_put_io_channel(gpt_base->ch);
 	gpt_base->ch = NULL;
+
+	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
+		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
+			    spdk_bdev_get_name(bdev), status);
+		goto end;
+	}
+
+	rc = spdk_gpt_parse_partition_table(&gpt_base->gpt);
+	if (rc) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse secondary partition table\n");
+		goto end;
+	}
+
+	SPDK_WARNLOG("Gpt: bdev=%s primary partition table broken, use the secondary.",
+		     spdk_bdev_get_name(bdev));
+
+	num_partitions = vbdev_gpt_create_bdevs(gpt_base);
+	if (num_partitions < 0) {
+		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to split dev=%s by gpt table\n",
+			      spdk_bdev_get_name(bdev));
+	}
+
+end:
+	spdk_bdev_module_examine_done(&gpt_if);
+	if (num_partitions <= 0) {
+		/* If no gpt_disk instances were created, free the base context */
+		spdk_bdev_part_base_free(gpt_base->part_base);
+	}
+}
+
+static int
+vbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)
+{
+	struct spdk_gpt *gpt;
+	struct spdk_bdev_desc *part_base_desc;
+	uint64_t secondary_offset;
+	int rc;
+
+	gpt = &gpt_base->gpt;
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_SECONDARY;
+	gpt->header = NULL;
+	gpt->partitions = NULL;
+
+	part_base_desc = spdk_bdev_part_base_get_desc(gpt_base->part_base);
+
+	secondary_offset = gpt->total_sectors * gpt->sector_size - gpt->buf_size;
+	rc = spdk_bdev_read(part_base_desc, gpt_base->ch, gpt_base->gpt.buf, secondary_offset,
+			    gpt_base->gpt.buf_size, spdk_gpt_read_secondary_table_complete,
+			    gpt_base);
+	if (rc < 0) {
+		return -1;
+	}
+	return 0;
+}
+
+static void
+spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+{
+	struct gpt_base *gpt_base = (struct gpt_base *)arg;
+	struct spdk_bdev *bdev = spdk_bdev_part_base_get_bdev(gpt_base->part_base);
+	int rc, num_partitions = 0;
+
+	spdk_bdev_free_io(bdev_io);
 
 	if (status != SPDK_BDEV_IO_STATUS_SUCCESS) {
 		SPDK_ERRLOG("Gpt: bdev=%s io error status=%d\n",
@@ -365,7 +428,12 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	rc = spdk_gpt_parse_partition_table(&gpt_base->gpt);
 	if (rc) {
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_GPT, "Failed to parse primary partition table\n");
-		goto end;
+		rc = vbdev_gpt_read_secondary_table(gpt_base);
+		if (rc) {
+			SPDK_ERRLOG("Failed to send bdev_io command\n");
+			goto end;
+		}
+		return;
 	}
 
 	num_partitions = vbdev_gpt_create_bdevs(gpt_base);
@@ -375,6 +443,8 @@ spdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
 	}
 
 end:
+	spdk_put_io_channel(gpt_base->ch);
+	gpt_base->ch = NULL;
 	/*
 	 * Notify the generic bdev layer that the actions related to the original examine
 	 *  callback are now completed.
