@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a49fd69_17960934",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-19T14:44:24Z",
+      "side": 1,
+      "message": "This one of the shortcoming that I would like to remove shortly but for now, after spdk_jsonrpc_begin_result() you can\u0027t send error response.",
+      "range": {
+        "startLine": 699,
+        "startChar": 0,
+        "endLine": 702,
+        "endChar": 2
+      },
+      "revId": "391df4dcb851faf4d1deed4fb8ace22d15551816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
