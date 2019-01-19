@@ -44,6 +44,65 @@
 #define GPT_PROTECTIVE_MBR 1
 #define SPDK_MAX_NUM_PARTITION_ENTRIES 128
 
+static uint64_t
+spdk_gpt_get_expected_head_lba(struct spdk_gpt *gpt)
+{
+	switch (gpt->parse_phase) {
+	case SPDK_GPT_PARSE_PHASE_PRIMARY:
+		return GPT_PRIMARY_PARTITION_TABLE_LBA;
+	case SPDK_GPT_PARSE_PHASE_SECONDARY:
+		return gpt->lba_end;
+	default:
+		assert(false);
+	}
+	return 0;
+}
+
+static struct spdk_gpt_header *
+spdk_gpt_get_header_buf(struct spdk_gpt *gpt)
+{
+	switch (gpt->parse_phase) {
+	case SPDK_GPT_PARSE_PHASE_PRIMARY:
+		return (struct spdk_gpt_header *)
+		       (gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
+	case SPDK_GPT_PARSE_PHASE_SECONDARY:
+		return (struct spdk_gpt_header *)
+		       (gpt->buf + (gpt->buf_size - gpt->sector_size));
+	default:
+		assert(false);
+	}
+	return NULL;
+}
+
+static struct spdk_gpt_partition_entry *
+spdk_gpt_get_partitions_buf(struct spdk_gpt *gpt, uint64_t total_partition_size,
+			    uint64_t partition_start_lba)
+{
+	uint64_t secondary_total_size;
+
+	switch (gpt->parse_phase) {
+	case SPDK_GPT_PARSE_PHASE_PRIMARY:
+		if ((total_partition_size + partition_start_lba * gpt->sector_size) >
+		    gpt->buf_size) {
+			SPDK_ERRLOG("Buffer size is not enough\n");
+			return NULL;
+		}
+		return (struct spdk_gpt_partition_entry *)
+		       (gpt->buf + partition_start_lba * gpt->sector_size);
+	case SPDK_GPT_PARSE_PHASE_SECONDARY:
+		secondary_total_size = (gpt->lba_end - partition_start_lba + 1) * gpt->sector_size;
+		if (secondary_total_size > gpt->buf_size) {
+			SPDK_ERRLOG("Buffer size is not enough\n");
+			return NULL;
+		}
+		return (struct spdk_gpt_partition_entry *)
+		       (gpt->buf + (gpt->buf_size - secondary_total_size));
+	default:
+		assert(false);
+	}
+	return NULL;
+}
+
 static int
 spdk_gpt_read_partitions(struct spdk_gpt *gpt)
 {
@@ -68,13 +127,12 @@ spdk_gpt_read_partitions(struct spdk_gpt *gpt)
 
 	total_partition_size = num_partition_entries * partition_entry_size;
 	partition_start_lba = from_le64(&head->partition_entry_lba);
-	if ((total_partition_size + partition_start_lba * gpt->sector_size) > SPDK_GPT_BUFFER_SIZE) {
-		SPDK_ERRLOG("Buffer size is not enough\n");
+	gpt->partitions = spdk_gpt_get_partitions_buf(gpt, total_partition_size,
+			  partition_start_lba);
+	if (!gpt->partitions) {
+		SPDK_ERRLOG("Failed to get gpt partitions buf\n");
 		return -1;
 	}
-
-	gpt->partitions = (struct spdk_gpt_partition_entry *)(gpt->buf +
-			  partition_start_lba * gpt->sector_size);
 
 	crc32 = spdk_crc32_ieee_update(gpt->partitions, total_partition_size, ~0);
 	crc32 ^= ~0;
@@ -121,10 +179,15 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 {
 	uint32_t head_size;
 	uint32_t new_crc, original_crc;
-	uint64_t my_lba;
+	uint64_t my_lba, head_lba;
 	struct spdk_gpt_header *head;
 
-	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
+	head = spdk_gpt_get_header_buf(gpt);
+	if (!head) {
+		SPDK_ERRLOG("Failed to get gpt header buf\n");
+		return -1;
+	}
+
 	head_size = from_le32(&head->header_size);
 	if (head_size < sizeof(*head) || head_size > gpt->sector_size) {
 		SPDK_ERRLOG("head_size=%u\n", head_size);
@@ -150,10 +213,11 @@ spdk_gpt_read_header(struct spdk_gpt *gpt)
 		return -1;
 	}
 
+	head_lba = spdk_gpt_get_expected_head_lba(gpt);
 	my_lba = from_le64(&head->my_lba);
-	if (my_lba != GPT_PRIMARY_PARTITION_TABLE_LBA) {
-		SPDK_ERRLOG("head my_lba(%" PRIu64 ") != expected(%d)\n",
-			    my_lba, GPT_PRIMARY_PARTITION_TABLE_LBA);
+	if (my_lba != head_lba) {
+		SPDK_ERRLOG("head my_lba(%" PRIu64 ") != expected(%" PRIu64 ")\n",
+			    my_lba, head_lba);
 		return -1;
 	}
 
@@ -215,7 +279,7 @@ spdk_gpt_check_mbr(struct spdk_gpt *gpt)
 }
 
 int
-spdk_gpt_parse(struct spdk_gpt *gpt)
+spdk_gpt_parse_mbr(struct spdk_gpt *gpt)
 {
 	int rc;
 
@@ -229,6 +293,14 @@ spdk_gpt_parse(struct spdk_gpt *gpt)
 		SPDK_DEBUGLOG(SPDK_LOG_GPT_PARSE, "Failed to detect gpt in MBR\n");
 		return rc;
 	}
+
+	return 0;
+}
+
+int
+spdk_gpt_parse_partition_table(struct spdk_gpt *gpt)
+{
+	int rc;
 
 	rc = spdk_gpt_read_header(gpt);
 	if (rc) {
