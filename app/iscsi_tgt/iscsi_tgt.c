@@ -100,7 +100,7 @@ main(int argc, char **argv)
 
 	if (g_daemon_mode) {
 		if (daemon(1, 0) < 0) {
-			SPDK_ERRLOG("Start iscsi target daemon faild.\n");
+			SPDK_ERRLOG("Start iscsi target daemon failed.\n");
 			exit(EXIT_FAILURE);
 		}
 	}
