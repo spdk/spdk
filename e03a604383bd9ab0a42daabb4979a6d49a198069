@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06cee505_6285e7ba",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T12:01:31Z",
+      "side": 1,
+      "message": "We KNOW we are getting header from buf, so I think we can use struct spdk_gpt_buffer * directly.",
+      "range": {
+        "startLine": 60,
+        "startChar": 7,
+        "endLine": 60,
+        "endChar": 22
+      },
+      "revId": "e03a604383bd9ab0a42daabb4979a6d49a198069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8fe1d471_557eecea",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T12:01:31Z",
+      "side": 1,
+      "message": "Ditto, we can use struct spdk_gpt_partition_entry * directly.",
+      "range": {
+        "startLine": 73,
+        "startChar": 7,
+        "endLine": 73,
+        "endChar": 22
+      },
+      "revId": "e03a604383bd9ab0a42daabb4979a6d49a198069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e75aca93_d834f76b",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T12:01:31Z",
+      "side": 1,
+      "message": "Some comments are unrelated to this patch, maybe you can fix them in another patch:\n1. for primary, checking GPT_PRIMARY_PARTITION_TABLE_LBA is not enough. E.g. for 512-byts sector, the usable_lab_start must be \u003e\u003d 34.\n2. for secondary, we should check useable range doesn\u0027t overlapped with partition table.",
+      "range": {
+        "startLine": 162,
+        "startChar": 1,
+        "endLine": 166,
+        "endChar": 2
+      },
+      "revId": "e03a604383bd9ab0a42daabb4979a6d49a198069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
