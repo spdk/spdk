@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "9cffb574_53694827",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T02:48:16Z",
+      "side": 1,
+      "message": "If we goto invalid, the we will lost memory allocated by w. So I would suggest call spdk_jsonrpc_begin_result() just before line 703, so we can handle failure and free resource easily.",
+      "range": {
+        "startLine": 689,
+        "startChar": 1,
+        "endLine": 692,
+        "endChar": 2
+      },
+      "revId": "391df4dcb851faf4d1deed4fb8ace22d15551816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4cdd4ec_10ac6d9e",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T02:48:16Z",
+      "side": 1,
+      "message": "calloc maybe failed.",
+      "revId": "391df4dcb851faf4d1deed4fb8ace22d15551816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5a49fd69_17960934",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 25
@@ -22,6 +62,30 @@
       "revId": "391df4dcb851faf4d1deed4fb8ace22d15551816",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b168628d_d274c384",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 702,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T02:48:16Z",
+      "side": 1,
+      "message": "Right.",
+      "parentUuid": "5a49fd69_17960934",
+      "range": {
+        "startLine": 699,
+        "startChar": 0,
+        "endLine": 702,
+        "endChar": 2
+      },
+      "revId": "391df4dcb851faf4d1deed4fb8ace22d15551816",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
