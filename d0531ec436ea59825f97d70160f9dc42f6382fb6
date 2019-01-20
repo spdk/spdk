@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc30e246_27a96405",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T05:27:05Z",
+      "side": 1,
+      "message": "The old code use %PRIu64 to convert a uint64_t variable to a decimal string, so how do we know the length of resulted string? (Unless we convert uint64_t to a hex, instead of decimal. Or we know the max value of uint64_t).",
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "192499b6_5ce17672",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T05:27:05Z",
+      "side": 1,
+      "message": "+1 for null terminator? Since you have mentioned null terminator in comment.",
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "248bfcff_98008265",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-20T05:27:05Z",
+      "side": 1,
+      "message": "Why not use SPDK_LVOL_UNIQUE_ID_MAX?",
+      "range": {
+        "startLine": 106,
+        "startChar": 19,
+        "endLine": 106,
+        "endChar": 66
+      },
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
