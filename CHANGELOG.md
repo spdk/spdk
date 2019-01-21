@@ -14,6 +14,10 @@ A new public header file env_dpdk.h has been introduced, and function spdk_env_d
 is added into it. If user is using DPDK, and already called rte_eal_init, then include
 include/spdk/env_dpdk.h, and call spdk_env_dpdk_post_init() instead of spdk_env_init.
 
+ISA-L has been added as an SPDK submodule.  ISA-L is enabled by default on x86 architecture
+to accelerate algorithms such as CRC for iSCSI and NVMe-oF.  Users may still disable ISA-L
+by explicitly passing --without-isal to the configure script.
+
 ### util
 
 A new uuid API `spdk_uuid_copy` was added to make a copy of the source uuid.
