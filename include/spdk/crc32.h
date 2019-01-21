@@ -40,6 +40,7 @@
 #define SPDK_CRC32_H
 
 #include "spdk/stdinc.h"
+#include "spdk/config.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,8 +54,13 @@ extern "C" {
 #endif
 
 #if defined(__x86_64__) && defined(__SSE4_2__)
+#ifdef SPDK_CONFIG_ISAL
+#define SPDK_HAVE_ISAL
+#include <isa-l/include/crc.h>
+#else
 #define SPDK_HAVE_SSE4_2
 #include <x86intrin.h>
+#endif
 #endif
 /**
  * IEEE CRC-32 polynomial (bit reflected)
