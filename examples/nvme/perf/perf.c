@@ -1272,7 +1272,6 @@ add_trid(const char *trid_str)
 	}
 
 	trid = &trid_entry->trid;
-	memset(trid, 0, sizeof(*trid));
 	trid->trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(trid->subnqn, sizeof(trid->subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
 
@@ -1733,11 +1732,10 @@ associate_workers_with_ns(void)
 			break;
 		}
 
-		ns_ctx = malloc(sizeof(struct ns_worker_ctx));
+		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
 		if (!ns_ctx) {
 			return -1;
 		}
-		memset(ns_ctx, 0, sizeof(*ns_ctx));
 
 		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
 		ns_ctx->min_tsc = UINT64_MAX;
