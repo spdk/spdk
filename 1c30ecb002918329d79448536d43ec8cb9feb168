@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "987d9698_82d6942a",
+        "filename": "test/spdk_cunit.h",
+        "patchSetId": 57
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Ok, I will remove it.",
+      "parentUuid": "05995d99_b1d7308c",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ef61ce1_a058a7f3",
         "filename": "test/unit/lib/ftl/ftl_band.c/Makefile",
         "patchSetId": 57
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "521d11a1_3e8b1a35",
+        "filename": "test/unit/lib/ftl/ftl_band.c/Makefile",
+        "patchSetId": 57
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5ef61ce1_a058a7f3",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b9535d5_05b7fddd",
         "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
         "patchSetId": 57
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-18T17:38:58Z",
       "side": 1,
       "message": "let\u0027s just have ftl_l2p_set return an error code if invalid values are passed in\n\nit\u0027s even fine to keep the assert in ftl_l2p_set\n\nwe use assert() in spdk to indicate something terribly bad has happened, or the user has passed a value that the API says shall not be passed - I don\u0027t want to set a precedent that people should be testing the asserts with unit tests",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "445db81d_dd0ef85e",
+        "filename": "test/unit/lib/ftl/ftl_ppa/ftl_ppa_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 236,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Ok, I will remove those test, but I think l2p_set shouldn\u0027t return any error code - we don\u0027t have any good way to handle such errors (such situation should never happen)",
+      "parentUuid": "5b9535d5_05b7fddd",
       "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "0e888e10_bac37f56",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/Makefile",
+        "patchSetId": 57
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "I think this is not needed anymore, I will remove it.",
+      "parentUuid": "b60fef11_6fb78aac",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b8e5b3a_a3971f57",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 57
@@ -84,6 +156,24 @@
       "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4eee3f0f_d47e72ca",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b8e5b3a_a3971f57",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "15e38ed4_0f14a5ec",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9b09dcf7_9da96312",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2c70d70_6e019581",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 57
@@ -118,6 +226,24 @@
       "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c94a07f_f83ea2b4",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c2c70d70_6e019581",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "0231eeda_cbb600a2",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0ad8a97_60710678",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1618fd2_e9e4c215",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 57
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "b01d2f31_c8609b3e",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 286,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "It is not needed anymore since SPDK_EXPECT_ASSERT_FAIL has been removed.",
+      "parentUuid": "e1618fd2_e9e4c215",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "942e347f_16987322",
         "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
         "patchSetId": 57
@@ -166,6 +328,24 @@
       "writtenOn": "2019-01-18T17:38:58Z",
       "side": 1,
       "message": "let\u0027s make ftl_rwb_set_limits return an error code, and assert on that instead",
+      "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05868fc8_ff70d93e",
+        "filename": "test/unit/lib/ftl/ftl_rwb.c/ftl_rwb_ut.c",
+        "patchSetId": 57
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-21T10:32:25Z",
+      "side": 1,
+      "message": "I\u0027ve removed this check - I think ftl_rwb_set_limits shouldn\u0027t return error code - FTL shoudn\u0027t allow for such situation.",
+      "parentUuid": "942e347f_16987322",
       "revId": "1c30ecb002918329d79448536d43ec8cb9feb168",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
