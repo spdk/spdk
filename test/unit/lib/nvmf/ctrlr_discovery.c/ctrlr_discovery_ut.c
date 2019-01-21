@@ -170,6 +170,11 @@ spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
 }
 
+void
+spdk_nvmf_ns_reservation_check_done(void *ctx)
+{
+}
+
 int
 spdk_nvmf_poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				      struct spdk_nvmf_subsystem *subsystem)
