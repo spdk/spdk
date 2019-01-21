@@ -1017,6 +1017,57 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 }
 
 static int
+spdk_nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Reservation Persistence\n");
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	/* NSID with 0xffffffffu also included */
+	if (ns == NULL) {
+		SPDK_ERRLOG("Get Features - Invalid Namespace ID\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: Persistence feature can't support for now */
+	response->cdw0 = 0;
+
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Persistence\n");
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	if (cmd->nsid != 0xffffffffu && ns == NULL) {
+		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: Feature not changeable for now */
+	response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	response->status.sc = SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -1713,6 +1764,8 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+		return spdk_nvmf_ctrlr_get_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -1749,6 +1802,8 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+		return spdk_nvmf_ctrlr_set_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
