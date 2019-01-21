@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "7f6bab76_35f89dfc",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-21T09:25:40Z",
+      "side": 1,
+      "message": "Fixed. Thank you for your review.",
+      "parentUuid": "e9cf86a1_97e1b7a3",
+      "range": {
+        "startLine": 82,
+        "startChar": 2,
+        "endLine": 82,
+        "endChar": 8
+      },
+      "revId": "fefb4b5d8959e75a83fc0a4181409b791a7d83d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fd2e9b56_1a8345e1",
         "filename": "app/iscsi_tgt/iscsi_tgt.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-21T09:16:29Z",
       "side": 1,
       "message": "^",
+      "range": {
+        "startLine": 84,
+        "startChar": 2,
+        "endLine": 84,
+        "endChar": 7
+      },
+      "revId": "fefb4b5d8959e75a83fc0a4181409b791a7d83d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7484c0d9_3b6cc57c",
+        "filename": "app/iscsi_tgt/iscsi_tgt.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-21T09:25:40Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd2e9b56_1a8345e1",
       "range": {
         "startLine": 84,
         "startChar": 2,
