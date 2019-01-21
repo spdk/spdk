@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c02ebb37_8446c765",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T11:54:01Z",
+      "side": 1,
+      "message": "I remember I tried to remove this comment within some other refactor, but was smacked for doing unrelated changes. I guess it\u0027s time for a second try.",
+      "parentUuid": "cbee1a29_b9759c8c",
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f13b416b_6685c163",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-18T20:24:41Z",
       "side": 1,
       "message": "should these pointers now be called start_session and stop_session?",
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eae6abca_afdda67c",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T11:54:01Z",
+      "side": 1,
+      "message": "Ack, although I don\u0027t have a strong preference.",
+      "parentUuid": "f13b416b_6685c163",
       "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
