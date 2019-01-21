@@ -105,6 +105,9 @@ static int hello_sock_parse_arg(int ch, char *arg)
 		break;
 	case 'V':
 		g_verbose = true;
+		break;
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }
