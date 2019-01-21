@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "91f2662b_8786f7f5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1aedbbd3_092c0cb0",
+      "range": {
+        "startLine": 50,
+        "startChar": 8,
+        "endLine": 50,
+        "endChar": 30
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "797b3daf_02590ea1",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-18T11:37:50Z",
       "side": 1,
       "message": "Looks like this is better to be NVMF_DISC_KATA_IN_MS 120000ULL which looks like matching the below comment of 2 minutes.",
+      "range": {
+        "startLine": 51,
+        "startChar": 8,
+        "endLine": 51,
+        "endChar": 22
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bdc84b8_fe41fbb0",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "797b3daf_02590ea1",
       "range": {
         "startLine": 51,
         "startChar": 8,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "1d1f4f15_73e4bb5c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack\nNVMe base spec：“If a command attempts to disable Keep Alive by setting the timeout value to 0h or to a value that exceeds the maximum allowed by the associated NVMe Transport binding specification, a status value of Keep Alive Invalid shall be returned.”\nSo it seems we can\u0027t disable the keep alive。",
+      "parentUuid": "c871f222_5a8cff8f",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a34b9080_8d8f663c",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -82,6 +148,24 @@
     },
     {
       "key": {
+        "uuid": "d50f400e_eec20ded",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a34b9080_8d8f663c",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c477a065_6274e62f",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -96,6 +180,24 @@
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1eb9801b_9dde8401",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c477a065_6274e62f",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -146,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "1e50a727_6877c292",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Have updated it.\nIterate through all the threads, in each thread check the pg-\u003eqpairs and if qpair-\u003ectrlr \u003d\u003d ctrlr, we should disconnect the qpair.",
+      "parentUuid": "d7172162_77873037",
+      "range": {
+        "startLine": 109,
+        "startChar": 7,
+        "endLine": 109,
+        "endChar": 33
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f9a09aa_f120cbdb",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -157,6 +283,30 @@
       "writtenOn": "2019-01-18T11:37:50Z",
       "side": 1,
       "message": "disabled",
+      "range": {
+        "startLine": 150,
+        "startChar": 49,
+        "endLine": 150,
+        "endChar": 56
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1dac0e4c_b2c2330b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1f9a09aa_f120cbdb",
       "range": {
         "startLine": 150,
         "startChar": 49,
@@ -186,6 +336,24 @@
     },
     {
       "key": {
+        "uuid": "1116659a_ce0c8fde",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cbd401df_d54e7b11",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2899d5ff_387145d0",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -209,6 +377,30 @@
     },
     {
       "key": {
+        "uuid": "80d358ff_35f9da5f",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Kato will be changed through set_feature_keep_alive cmd, So the poller_interval should be changed(kato \u003e\u003d MIN_KEEP_ALIVE_TIMEOUT_IN_MS), i just want use the min value as the default poller_interval or we use the kato and update poller\u0027s interval after set_feature_keep_alive cmd.",
+      "parentUuid": "2899d5ff_387145d0",
+      "range": {
+        "startLine": 159,
+        "startChar": 2,
+        "endLine": 160,
+        "endChar": 11
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f3f8f0b4_39e575d8",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -220,6 +412,24 @@
       "writtenOn": "2019-01-18T11:37:50Z",
       "side": 1,
       "message": "this newline is not needed",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76af9cf8_e52ee814",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 226,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f3f8f0b4_39e575d8",
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -261,6 +471,24 @@
     },
     {
       "key": {
+        "uuid": "4ac6e348_3aa3306c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Yeah, i agree. I just don\u0027t know how to get kas value when we use the nvmf ctrlr. Or we can define the default value of kas with a “#define”。",
+      "parentUuid": "bf77053b_cba05e06",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92dc49a8_ad12fe22",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -278,6 +506,24 @@
     },
     {
       "key": {
+        "uuid": "d031a6f3_f67ae887",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "92dc49a8_ad12fe22",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aa4d6f84_d504a26d",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -289,6 +535,30 @@
       "writtenOn": "2019-01-18T11:37:50Z",
       "side": 1,
       "message": "this like looks millisecond?",
+      "range": {
+        "startLine": 1020,
+        "startChar": 17,
+        "endLine": 1020,
+        "endChar": 23
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65461218_5b4877e6",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "kato is in millisecond, we round it up to second. Because cdate-\u003ekas is 10.",
+      "parentUuid": "aa4d6f84_d504a26d",
       "range": {
         "startLine": 1020,
         "startChar": 17,
@@ -341,6 +611,48 @@
     },
     {
       "key": {
+        "uuid": "52106ceb_16cc54e8",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1021,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b3098a27_a074f672",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "211f5269_71ee6a68",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1021,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "73017fd5_2b161313",
+      "range": {
+        "startLine": 1021,
+        "startChar": 84,
+        "endLine": 1021,
+        "endChar": 88
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e4d5a37_b76cedf2",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -352,6 +664,24 @@
       "writtenOn": "2019-01-18T07:07:38Z",
       "side": 1,
       "message": "line 1024 isn\u0027t required.",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "358c0aae_6780f2a5",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1024,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0e4d5a37_b76cedf2",
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -375,6 +705,24 @@
     },
     {
       "key": {
+        "uuid": "3e0c7472_5ffcfe50",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "39ec6c19_e119f4c4",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98a51373_7f1fe1f3",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 9
@@ -386,6 +734,30 @@
       "writtenOn": "2019-01-18T11:37:50Z",
       "side": 1,
       "message": "Is this also set at line 152?",
+      "range": {
+        "startLine": 1024,
+        "startChar": 0,
+        "endLine": 1027,
+        "endChar": 2
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4b3b71d4_db4f5bcc",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1027,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Yeah, set_feature cmd could change the value of kato.",
+      "parentUuid": "98a51373_7f1fe1f3",
       "range": {
         "startLine": 1024,
         "startChar": 0,
@@ -421,6 +793,30 @@
     },
     {
       "key": {
+        "uuid": "724134ca_8bd712b7",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1746,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "17fd8571_231418e3",
+      "range": {
+        "startLine": 1746,
+        "startChar": 4,
+        "endLine": 1746,
+        "endChar": 24
+      },
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7ca8f0d3_9c9e34b0",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 9
@@ -435,6 +831,24 @@
       "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42e2ff13_75688961",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T03:03:30Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7ca8f0d3_9c9e34b0",
+      "revId": "ba575e713deafa19991ca81e58a15ebe7ee2eb38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
