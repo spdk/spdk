@@ -2080,10 +2080,6 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 {
 	uint32_t nsid;
 	struct spdk_nvmf_ns *ns;
-	struct spdk_bdev *bdev;
-	struct spdk_bdev_desc *desc;
-	struct spdk_io_channel *ch;
-	struct spdk_nvmf_poll_group *group = req->qpair->group;
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
 	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
@@ -2114,28 +2110,66 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_ns_reservation_check, req);
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+}
+
+void spdk_nvmf_ns_reservation_check_done(void *ctx)
+{
+	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	uint32_t nsid;
+	int rc;
+
+	if (spdk_nvme_cpl_is_error(response)) {
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	nsid = cmd->nsid;
+	ns = _spdk_nvmf_subsystem_get_ns(subsystem, nsid);
 	bdev = ns->bdev;
 	desc = ns->desc;
-	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
+	ch = group->sgroups[subsystem->id].channels[nsid - 1];
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
-		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
+		rc =  spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
+		break;
 	case SPDK_NVME_OPC_WRITE:
-		return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		rc = spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+		break;
 	case SPDK_NVME_OPC_WRITE_ZEROES:
-		return spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
+		rc = spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
+		break;
 	case SPDK_NVME_OPC_FLUSH:
-		return spdk_nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
+		rc = spdk_nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
+		break;
 	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
-		return spdk_nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+		rc = spdk_nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+		break;
 	case SPDK_NVME_OPC_RESERVATION_REGISTER:
 	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 	case SPDK_NVME_OPC_RESERVATION_REPORT:
 		spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_subsystem_reservation_request, req);
-		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		rc = SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+		break;
 	default:
-		return spdk_nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+		rc = spdk_nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+		break;
+	}
+
+	if (rc == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+		return;
 	}
 }
 
