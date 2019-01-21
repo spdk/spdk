@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "072ca8b7_e31685db",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T08:48:05Z",
+      "side": 1,
+      "message": "\u003e The old code use %PRIu64\nI was blind I think. I have seen PRIx64 there ;P. Stupid mistake.\n\n\u003e so how do we know the length of resulted string\n\nstrlen(UUID) + \u0027_\u0027 + ceil(log(10, UINT64_MAX)) + \u0027\\0\u0027\n\nThis is the size of the string we need.",
+      "parentUuid": "dc30e246_27a96405",
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "192499b6_5ce17672",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 5
@@ -54,6 +72,42 @@
     },
     {
       "key": {
+        "uuid": "2b9cc93b_325fb73a",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T08:48:05Z",
+      "side": 1,
+      "message": "True, thanks.",
+      "parentUuid": "4549b75d_d9343158",
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5c179e1_93e6b18d",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T08:48:05Z",
+      "side": 1,
+      "message": "Null terminator is already added in SPDK_UUID_STRING_LEN.",
+      "parentUuid": "192499b6_5ce17672",
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "248bfcff_98008265",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 5
@@ -65,6 +119,30 @@
       "writtenOn": "2019-01-20T05:27:05Z",
       "side": 1,
       "message": "Why not use SPDK_LVOL_UNIQUE_ID_MAX?",
+      "range": {
+        "startLine": 106,
+        "startChar": 19,
+        "endLine": 106,
+        "endChar": 66
+      },
+      "revId": "d0531ec436ea59825f97d70160f9dc42f6382fb6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20ad8282_824b4f12",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T08:48:05Z",
+      "side": 1,
+      "message": "True, I forgot to use it here.",
+      "parentUuid": "248bfcff_98008265",
       "range": {
         "startLine": 106,
         "startChar": 19,
