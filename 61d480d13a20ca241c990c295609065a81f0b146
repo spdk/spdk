@@ -1,0 +1,170 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e15f80bd_f4fc0962",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "What happens to the cached I/O that hasn\u0027t been written to the core disk yet? Does this function block until all data is written, does it do some work asynchronously, or does it exit with an error? Could we have some comments here?",
+      "range": {
+        "startLine": 101,
+        "startChar": 6,
+        "endLine": 101,
+        "endChar": 25
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82f1778a_4d146d29",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "you should keep the claimed state in the base struct. The bdev-\u003einternal mustn\u0027t be accessed by anything but bdev.c",
+      "range": {
+        "startLine": 135,
+        "startChar": 17,
+        "endLine": 135,
+        "endChar": 25
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ea34efd7_a765e10d",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "There might be still some active io_channels with their pollers running in the background, which still reference this cas vbdev. In most cases, those io_channels will have an already pending asynchronous removals, but you still have to wait for those to actually finish, otherwise you risk having io_channel pollers to access freed memory.\n\nThe second argument in spdk_io_device_unregister is a callback to be called after all io channels are put, and only after it\u0027s called you should be able to free the vbdev resources.\n\nI\u0027d suggest doing something like that:\n\n```\nif (vbdev-\u003estate.started) {\n  stop_vbdev(vbdev);\n  spdk_io_device_unregister(vbdev, _cas_vbdev_stop_cb);\n} else {\n  // io_device not registered, free vbdev resources directly\n  _cas_vbdev_stop_cb(vbdev);\n}\n```\n\nThis brings me to the next question - why do we check pending I/O for all the queues here? (line #164) Do we expect I/O pollers to be still running or is it just a fail-safe that prevents us from crashing?",
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8fd0f4a_f8da1516",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "Is this assert necessary? ocf_cache_get_queue an external function after all and we don\u0027t know under what circumstances it could possibly fail.",
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5482aff1_773ea49c",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 652,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "Is there any reason for delaying this removal? The ctx_buf memory is freed by the io_channel lib right after this callback is called, so the qctx poller will operate on already freed memory.\n\nThis callback is run of the same thread that polls the queue, so you\u0027re free to release any qctx resources here directly - including stopping the poller.",
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "57c7e768_38efd28c",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 690,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "what\u0027s the need for this macro? Could you use \u0026cache_if directly?",
+      "range": {
+        "startLine": 690,
+        "startChar": 26,
+        "endLine": 690,
+        "endChar": 46
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "205cefa6_895ddfd3",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 972,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "CAS bdev?",
+      "range": {
+        "startLine": 972,
+        "startChar": 18,
+        "endLine": 972,
+        "endChar": 29
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97dcdb08_63bce847",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 976,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T06:26:36Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 976,
+        "startChar": 18,
+        "endLine": 976,
+        "endChar": 29
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
