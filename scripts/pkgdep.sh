@@ -71,6 +71,8 @@ if [ -s /etc/redhat-release ]; then
 	if ! echo "$ID $VERSION_ID" | egrep -q 'rhel 7|centos 7'; then
 		yum install -y python3-configshell python3-pexpect
 	fi
+	# Additional dependencies for ISA-L used in compression
+	yum install -y autoconf automake libtool
 elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
@@ -86,6 +88,8 @@ elif [ -f /etc/debian_version ]; then
 	# Additional dependencies for SPDK CLI - not available on older Ubuntus
 	apt-get install -y python3-configshell-fb python3-pexpect || echo \
 		"Note: Some SPDK CLI dependencies could not be installed."
+	# Additional dependencies for ISA-L used in compression
+	apt-get install -y autoconf automake libtool
 elif [ -f /etc/SuSE-release ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
 		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
@@ -99,11 +103,15 @@ elif [ -f /etc/SuSE-release ]; then
 	zypper install -y libpmemblk-devel
 	# Additional dependencies for building docs
 	zypper install -y doxygen mscgen graphviz
+	# Additional dependencies for ISA-L used in compression
+	zypper install -y autoconf automake libtool
 elif [ $(uname -s) = "FreeBSD" ] ; then
 	pkg install -y gmake cunit openssl git devel/astyle bash py27-pycodestyle \
 		python misc/e2fsprogs-libuuid sysutils/sg3_utils nasm
 	# Additional dependencies for building docs
 	pkg install -y doxygen mscgen graphviz
+	# Additional dependencies for ISA-L used in compression
+	pkg install -y autoconf automake libtool
 else
 	echo "pkgdep: unknown system type."
 	exit 1
