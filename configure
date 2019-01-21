@@ -269,6 +269,12 @@ for i in "$@"; do
 		--without-ftl)
 			CONFIG[FTL]=n
 			;;
+		--with-isal)
+                        CONFIG[ISAL]=y
+                        ;;
+                --without-isal)
+                        CONFIG[ISAL]=n
+                        ;;
 		--)
 			break
 			;;
@@ -278,6 +284,13 @@ for i in "$@"; do
 			exit 1
 	esac
 done
+
+# Detect architecture and force no isal if non x86 archtecture
+arch=$(uname -i)
+if [[ $arch != x86_64* ]]; then
+	echo "Notice: ISAL is available only for x86_64 architecture but building for $arch - disabling ISAL"
+	CONFIG[ISAL]=n
+fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
 	rootdir=$(readlink -f $(dirname $0))
@@ -373,13 +386,33 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade then re-run this script.
-		exit 1
+if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+		echo "Notice: ISAL, compression & crypto auto-disabled due to nasm dependency."
+		echo "These features require NASM version 2.12.02 or newer.  Please install"
+		echo "or upgrade then re-run this script."
+		CONFIG[ISAL]=n
+		CONFIG[CRYPTO]=n
+		CONFIG[IPSEC_MB]=n
+	else
+		CONFIG[IPSEC_MB]=y
 	fi
-	CONFIG[IPSEC_MB]=y
+fi
+
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	 if [ ! -d "$rootdir/"isa-l ]; then
+		echo "isa-l folder is not found; If you do wanto support that, please run:"
+		echo "  git submodule update --init"
+		CONFIG[ISAL]=n
+		CONFIG[CRYPTO]=n
+		CONFIG[IPSEC_MB]=n
+	elif [ ! -d "$rootdir/"isa-l/Makefile ]; then
+		echo "isa-l/Makefile is not found;"
+		echo "You need to go to isa-l folder and run 'autogen.sh', 'configure', 'make'"
+		CONFIG[ISAL]=n
+		CONFIG[CRYPTO]=n
+		CONFIG[IPSEC_MB]=n
+	 fi
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
