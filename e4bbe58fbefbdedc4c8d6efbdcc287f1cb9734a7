@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e6cdd040_b6af414b",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T15:58:22Z",
+      "side": 1,
+      "message": "Please mention something about what arch is supported. Something like:\n\n  \"ISAL available only for x86_64 architecture but building for $arch - disabling ISAL\"",
+      "range": {
+        "startLine": 291,
+        "startChar": 44,
+        "endLine": 291,
+        "endChar": 59
+      },
+      "revId": "e4bbe58fbefbdedc4c8d6efbdcc287f1cb9734a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87d74f2e_cf2c8fa4",
+        "filename": "include/spdk/crc32.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T15:58:22Z",
+      "side": 1,
+      "message": "I think this will make compilation issues if there is \"crc.h\" in any of \"-I\u003cpath\u003e\" or installed in system (eg from custom package). You will get strange \"undeffined function\" compilation error.\n\n\nI think this should receive some prefix like \"isal/crc.h\".",
+      "range": {
+        "startLine": 59,
+        "startChar": 0,
+        "endLine": 59,
+        "endChar": 16
+      },
+      "revId": "e4bbe58fbefbdedc4c8d6efbdcc287f1cb9734a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
