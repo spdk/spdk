@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "e1b7cdf0_e5599c9e",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 507,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-21T22:09:14Z",
+      "side": 1,
+      "message": "Thank you, I missed that and raid_bdev_reset_io_submit_fail_process is OK as name.",
+      "parentUuid": "3cebe404_b8bf4a6b",
+      "range": {
+        "startLine": 507,
+        "startChar": 0,
+        "endLine": 507,
+        "endChar": 38
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f444600c_11f4af83",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 1
@@ -143,6 +167,53 @@
     },
     {
       "key": {
+        "uuid": "b4904bbe_5baaf6f3",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-21T22:09:14Z",
+      "side": 1,
+      "message": "Thanks for correcting me. I was wrong.\n\nBut doing raid_io-\u003ebase_bdev_reset_waited \u003d raid_io-\u003ebase_bdev_reset_submitted is not necessary if raid_io-\u003ebase_bdev_reset_completed \u003d\u003d raid_io-\u003ebase_bdev_reset_waited.\n\nSo, if acceptable for you, the following is easier to understand.\n\n\tif (raid_io-\u003ebase_bdev_reset_completed \u003d\u003d raid_io-\u003ebase_bdev_reset_submitted) {\n\t\tspdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);\n\t} else {\n\t\traid_io-\u003ebase_bdev_reset_status \u003d SPDK_BDEV_IO_STATUS_FAILED;\n\t\traid_io-\u003ebase_bdev_reset_waited \u003d raid_io-\u003ebase_bdev_reset_submitted;\n\t}",
+      "parentUuid": "2a6d9084_9c780b2e",
+      "range": {
+        "startLine": 513,
+        "startChar": 0,
+        "endLine": 518,
+        "endChar": 2
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "54bfd298_49627692",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-21T22:09:14Z",
+      "side": 1,
+      "message": "I saw raid_bdev_io_submit_fail_process executes both ENOMEM and other cases.\n\nSo how about doing the same in raid_bdev_reset_io_fail_process?\n\nstatic void\nraid_bdev_reset_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,\n\t\t\t\t       struct raid_bdev_io *raid_io, int ret)\n\n\tif (ret \u003d\u003d -ENOMEM) {\n\t\traid_io-\u003ewaitq_entry.bdev \u003d raid_bdev-\u003ebase_bdev_info[i].bdev;\n\t\traid_io-\u003ewaitq_entry.cb_fn \u003d _raid_bdev_submit_reset_request_next;\n\t\traid_io-\u003ewaitq_entry.cb_arg \u003d bdev_io;\n\t\tspdk_bdev_queue_io_wait(raid_bdev-\u003ebase_bdev_info[i].bdev,\n\t\t\t\t\traid_ch-\u003ebase_channel[i],\n\t\t\t\t\t\u0026raid_io-\u003ewaitq_entry);\n\t} else {\n\t\traid_io-\u003ebase_bdev_reset_status \u003d SPDK_BDEV_IO_STATUS_FAILED;\n\t\traid_io-\u003ebase_bdev_reset_waited \u003d raid_io-\u003ebase_bdev_reset_submitted;\n\n\t\tif (raid_io-\u003ebase_bdev_reset_completed \u003d\u003d raid_io-\u003ebase_bdev_reset_waited) {\n\t\t\tspdk_bdev_io_complete(raid_bdev_io, raid_io-\u003ebase_bdev_reset_status);\n\t\t}\n\t}\n}",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 563,
+        "endChar": 3
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "120e8281_98325df5",
         "filename": "lib/bdev/raid/bdev_raid.h",
         "patchSetId": 1
@@ -178,6 +249,30 @@
       "side": 1,
       "message": "For the reset case, the ending condition can be either number of waited requests, or the last reset disk, so it is really more intuitive if change it to be base_bdev_reset_last.\n\nI\u0027m just also drafting patch to enable unmap support for raid0 which has a similar child IO submission. So these facilites for reset can also be used for unmap. But the ending condition is not exactly same, in that case, only number of waited requests is used.",
       "parentUuid": "120e8281_98325df5",
+      "range": {
+        "startLine": 143,
+        "startChar": 28,
+        "endLine": 143,
+        "endChar": 34
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa629c31_2f16be37",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-21T22:09:14Z",
+      "side": 1,
+      "message": "OK, I\u0027ll continue reading your patch series.",
+      "parentUuid": "42ed18c6_0ad8b862",
       "range": {
         "startLine": 143,
         "startChar": 28,
