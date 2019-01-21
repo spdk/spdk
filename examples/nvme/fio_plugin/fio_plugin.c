@@ -47,10 +47,10 @@
 #define NVME_IO_ALIGN		4096
 #define FIO_NVME_PI_APPTAG	0x1234
 
-static bool spdk_env_initialized;
-static int spdk_enable_sgl = 0;
-static uint32_t spdk_pract_flag;
-static uint32_t spdk_prchk_flags;
+static bool g_spdk_env_initialized;
+static int g_spdk_enable_sgl = 0;
+static uint32_t g_spdk_pract_flag;
+static uint32_t g_spdk_prchk_flags;
 
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
@@ -82,10 +82,10 @@ struct spdk_fio_ctrlr {
 	struct spdk_fio_ctrlr		*next;
 };
 
-static struct spdk_fio_ctrlr *ctrlr_g;
-static int td_count;
+static struct spdk_fio_ctrlr *g_ctrlr;
+static int g_td_count;
 static pthread_t g_ctrlr_thread_id = 0;
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static bool g_error;
 
 struct spdk_fio_qpair {
@@ -126,15 +126,15 @@ spdk_fio_poll_ctrlrs(void *arg)
 				    rc, spdk_strerror(rc));
 		}
 
-		pthread_mutex_lock(&mutex);
-		fio_ctrlr = ctrlr_g;
+		pthread_mutex_lock(&g_mutex);
+		fio_ctrlr = g_ctrlr;
 
 		while (fio_ctrlr) {
 			spdk_nvme_ctrlr_process_admin_completions(fio_ctrlr->ctrlr);
 			fio_ctrlr = fio_ctrlr->next;
 		}
 
-		pthread_mutex_unlock(&mutex);
+		pthread_mutex_unlock(&g_mutex);
 
 		rc = pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
 		if (rc != 0) {
@@ -177,7 +177,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static struct spdk_fio_ctrlr *
 get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 {
-	struct spdk_fio_ctrlr	*fio_ctrlr = ctrlr_g;
+	struct spdk_fio_ctrlr	*fio_ctrlr = g_ctrlr;
 	while (fio_ctrlr) {
 		if (spdk_nvme_transport_id_compare(trid, &fio_ctrlr->tr_id) == 0) {
 			return fio_ctrlr;
@@ -265,8 +265,8 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		fio_ctrlr->opts = *opts;
 		fio_ctrlr->ctrlr = ctrlr;
 		fio_ctrlr->tr_id = *trid;
-		fio_ctrlr->next = ctrlr_g;
-		ctrlr_g = fio_ctrlr;
+		fio_ctrlr->next = g_ctrlr;
+		g_ctrlr = fio_ctrlr;
 	}
 
 	ns = spdk_nvme_ctrlr_get_ns(fio_ctrlr->ctrlr, ns_id);
@@ -316,7 +316,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	fio_thread->fio_qpair = fio_qpair;
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
-		fio_qpair->io_flags = spdk_pract_flag | spdk_prchk_flags;
+		fio_qpair->io_flags = g_spdk_pract_flag | g_spdk_prchk_flags;
 	}
 
 	fio_qpair->do_nvme_pi = fio_do_nvme_pi_check(fio_qpair);
@@ -339,22 +339,22 @@ static void parse_prchk_flags(const char *prchk_str)
 	}
 
 	if (strstr(prchk_str, "GUARD") != NULL) {
-		spdk_prchk_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+		g_spdk_prchk_flags = SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 	}
 	if (strstr(prchk_str, "REFTAG") != NULL) {
-		spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+		g_spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
 	}
 	if (strstr(prchk_str, "APPTAG") != NULL) {
-		spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
+		g_spdk_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_APPTAG;
 	}
 }
 
 static void parse_pract_flag(int pract)
 {
 	if (pract == 1) {
-		spdk_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
+		g_spdk_pract_flag = SPDK_NVME_IO_FLAGS_PRACT;
 	} else {
-		spdk_pract_flag = 0;
+		g_spdk_pract_flag = 0;
 	}
 }
 
@@ -381,7 +381,7 @@ static int spdk_fio_setup(struct thread_data *td)
 		return 1;
 	}
 
-	pthread_mutex_lock(&mutex);
+	pthread_mutex_lock(&g_mutex);
 
 	fio_thread = calloc(1, sizeof(*fio_thread));
 	assert(fio_thread != NULL);
@@ -393,12 +393,12 @@ static int spdk_fio_setup(struct thread_data *td)
 	fio_thread->iocq = calloc(fio_thread->iocq_size, sizeof(struct io_u *));
 	assert(fio_thread->iocq != NULL);
 
-	if (!spdk_env_initialized) {
+	if (!g_spdk_env_initialized) {
 		spdk_env_opts_init(&opts);
 		opts.name = "fio";
 		opts.mem_size = fio_options->mem_size;
 		opts.shm_id = fio_options->shm_id;
-		spdk_enable_sgl = fio_options->enable_sgl;
+		g_spdk_enable_sgl = fio_options->enable_sgl;
 		parse_pract_flag(fio_options->pi_act);
 		parse_prchk_flags(fio_options->pi_chk);
 		if (spdk_env_init(&opts) < 0) {
@@ -406,10 +406,10 @@ static int spdk_fio_setup(struct thread_data *td)
 			free(fio_thread->iocq);
 			free(fio_thread);
 			fio_thread = NULL;
-			pthread_mutex_unlock(&mutex);
+			pthread_mutex_unlock(&g_mutex);
 			return 1;
 		}
-		spdk_env_initialized = true;
+		g_spdk_env_initialized = true;
 		spdk_unaffinitize_thread();
 
 		/* Spawn a thread to continue polling the controllers */
@@ -478,9 +478,9 @@ static int spdk_fio_setup(struct thread_data *td)
 		}
 	}
 
-	td_count++;
+	g_td_count++;
 
-	pthread_mutex_unlock(&mutex);
+	pthread_mutex_unlock(&g_mutex);
 
 	return rc;
 }
@@ -720,7 +720,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 
 	switch (io_u->ddir) {
 	case DDIR_READ:
-		if (!spdk_enable_sgl) {
+		if (!g_spdk_enable_sgl) {
 			rc = spdk_nvme_ns_cmd_read_with_md(ns, fio_qpair->qpair, io_u->buf, NULL, lba, lba_count,
 							   spdk_fio_completion_cb, fio_req,
 							   fio_qpair->io_flags, fio_req->appmask, fio_req->apptag);
@@ -732,7 +732,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 		}
 		break;
 	case DDIR_WRITE:
-		if (!spdk_enable_sgl) {
+		if (!g_spdk_enable_sgl) {
 			rc = spdk_nvme_ns_cmd_write_with_md(ns, fio_qpair->qpair, io_u->buf, NULL, lba, lba_count,
 							    spdk_fio_completion_cb, fio_req,
 							    fio_qpair->io_flags, fio_req->appmask, fio_req->apptag);
@@ -844,22 +844,22 @@ static void spdk_fio_cleanup(struct thread_data *td)
 
 	free(fio_thread);
 
-	pthread_mutex_lock(&mutex);
-	td_count--;
-	if (td_count == 0) {
+	pthread_mutex_lock(&g_mutex);
+	g_td_count--;
+	if (g_td_count == 0) {
 		struct spdk_fio_ctrlr	*fio_ctrlr, *fio_ctrlr_tmp;
 
-		fio_ctrlr = ctrlr_g;
+		fio_ctrlr = g_ctrlr;
 		while (fio_ctrlr != NULL) {
 			spdk_nvme_detach(fio_ctrlr->ctrlr);
 			fio_ctrlr_tmp = fio_ctrlr->next;
 			free(fio_ctrlr);
 			fio_ctrlr = fio_ctrlr_tmp;
 		}
-		ctrlr_g = NULL;
+		g_ctrlr = NULL;
 	}
-	pthread_mutex_unlock(&mutex);
-	if (!ctrlr_g) {
+	pthread_mutex_unlock(&g_mutex);
+	if (!g_ctrlr) {
 		if (pthread_cancel(g_ctrlr_thread_id) == 0) {
 			pthread_join(g_ctrlr_thread_id, NULL);
 		}
