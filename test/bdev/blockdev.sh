@@ -20,6 +20,7 @@ function run_fio()
 
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
+source $testdir/raid_common.sh
 
 function nbd_function_test() {
 	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
@@ -46,6 +47,49 @@ function nbd_function_test() {
 		$rpc_py -s $rpc_server delete_passthru_bdev TestPT
 
 		killprocess $nbd_pid
+	fi
+
+	return 0
+}
+
+function raid_function_test() {
+	if [ $(uname -s) = Linux ] && modprobe -n nbd; then
+		local rpc_server=/var/tmp/spdk-raid.sock
+		local conf=$1
+		local nbd=/dev/nbd0
+		local raid_bdev
+
+		if [ ! -e $conf ]; then
+			return 1
+		fi
+
+		modprobe nbd
+		$rootdir/test/app/bdev_svc/bdev_svc -r $rpc_server -i 0 -c ${conf} &
+		raid_pid=$!
+		echo "Process raid pid: $raid_pid"
+		waitforlisten $raid_pid $rpc_server
+
+		raid_bdev=$($rootdir/scripts/rpc.py -s $rpc_server get_raid_bdevs online | cut -d ' ' -f 1)
+		if [ $raid_bdev = "" ]; then
+			echo "No raid0 device in SPDK app"
+			return 1
+		fi
+
+		nbd_start_disks $rpc_server $raid_bdev $nbd
+		count=$(nbd_get_count $rpc_server)
+		if [ $count -ne 1 ]; then
+			return -1
+		fi
+
+		raid_data_verify $nbd $rpc_server
+
+		nbd_stop_disks $rpc_server $nbd
+		count=$(nbd_get_count $rpc_server)
+		if [ $count -ne 0 ]; then
+			return -1
+		fi
+
+		killprocess $raid_pid
 	fi
 
 	return 0
@@ -109,6 +153,10 @@ timing_enter nbd
 bdevs_name=$(echo $bdevs | jq -r '.name')
 nbd_function_test $testdir/bdev.conf "$bdevs_name"
 timing_exit nbd
+
+timing_enter raid0
+raid_function_test $testdir/bdev.conf
+timing_exit raid0
 
 if [ -d /usr/src/fio ] && [ $SPDK_RUN_ASAN -eq 0 ]; then
 	timing_enter fio
