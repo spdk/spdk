@@ -113,7 +113,7 @@ mkfs_parse_arg(int ch, char *arg)
 		spdk_parse_capacity(arg, &g_cluster_size, &has_prefix);
 		break;
 	default:
-		break;
+		return -EINVAL;
 	}
 	return 0;
 }

@@ -73,6 +73,8 @@ static int hello_bdev_parse_arg(int ch, char *arg)
 	case 'b':
 		g_bdev_name = arg;
 		break;
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }

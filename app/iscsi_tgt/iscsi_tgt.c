@@ -80,6 +80,7 @@ iscsi_parse_arg(int ch, char *arg)
 		break;
 	default:
 		assert(false);
+		return -EINVAL;
 		break;
 	}
 	return 0;
