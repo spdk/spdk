@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f91feb21_49dd0f4e",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T15:37:54Z",
+      "side": 1,
+      "message": "Because spdk_vhost_external_event_foreach_continue is also called from #923 with vdev \u003d\u003d NULL. :)\n\nHere we just assume the vdev we got from user is valid - there\u0027s no point in calling spdk_vhost_dev_foreach_session() with NULL vdev.",
+      "parentUuid": "d648a0cf_d7e1363f",
+      "range": {
+        "startLine": 1333,
+        "startChar": 50,
+        "endLine": 1333,
+        "endChar": 63
+      },
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbee1a29_b9759c8c",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
