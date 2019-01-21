@@ -600,6 +600,107 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 
 /*
  * brief:
+ * _raid_bdev_submit_unmap_request_next function submits the next batch of unmap requests
+ * to member disks; it will submit as many as possible unless one unmap fails with -ENOMEM, in
+ * which case it will queue it for later submission
+ * params:
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * returns:
+ * none
+ */
+static void
+_raid_bdev_submit_unmap_request_next(void *_bdev_io)
+{
+	struct spdk_bdev_io		*bdev_io = _bdev_io;
+	struct raid_bdev_io		*raid_io;
+	struct raid_bdev		*raid_bdev;
+	struct raid_bdev_io_channel	*raid_ch;
+	uint64_t			g_start_strip;
+	uint64_t			g_end_strip;
+	uint64_t			l_start_strip;
+	uint64_t			l_end_strip;
+	uint64_t			offset_in_strip;
+	uint64_t			offset_in_disk;
+	uint64_t			end_offset_in_disk;
+	uint64_t			nblocks_in_disk;
+	int				disk_idx;
+	uint8_t				n_disk;
+	int				ret;
+
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
+	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+
+	g_start_strip = bdev_io->u.bdev.offset_blocks >> raid_bdev->strip_size_shift;
+	g_end_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) >>
+		      raid_bdev->strip_size_shift;
+
+	/* Calculate how many base_bdevs are involved in unmap operation */
+	n_disk = (g_end_strip - g_start_strip + 1);
+	n_disk = n_disk > bdev_io->u.bdev.num_blocks ? bdev_io->u.bdev.num_blocks : n_disk;
+	raid_io->base_bdev_io_waited = n_disk;
+
+	while (raid_io->base_bdev_io_submitted < n_disk) {
+		disk_idx = (g_start_strip + raid_io->base_bdev_io_submitted) % raid_bdev->num_base_bdevs;
+
+		/* Find out lba offset in base_bdev, the first base_bdev has unaligned offset. */
+		l_start_strip = (g_start_strip + raid_bdev->num_base_bdevs - 1 - disk_idx) /
+				raid_bdev->num_base_bdevs;
+		offset_in_strip = bdev_io->u.bdev.offset_blocks & (raid_bdev->strip_size - 1);
+		offset_in_strip = raid_io->base_bdev_io_submitted == 0 ? offset_in_strip : 0;
+		offset_in_disk = (l_start_strip << raid_bdev->strip_size_shift) + offset_in_strip;
+
+		/* Find out lba end offset in base_bdev, the last base_bdev has unaligned end offset. */
+		l_end_strip = (g_end_strip - disk_idx) / raid_bdev->num_base_bdevs;
+		offset_in_strip = (bdev_io->u.bdev.offset_blocks + bdev_io->u.bdev.num_blocks - 1) &
+				  (raid_bdev->strip_size - 1);
+		offset_in_strip = raid_io->base_bdev_io_submitted == (n_disk - 1) ? offset_in_strip : 0;
+		end_offset_in_disk = (l_end_strip << raid_bdev->strip_size_shift) + offset_in_strip;
+
+		assert(end_offset_in_disk > offset_in_disk);
+
+		nblocks_in_disk = end_offset_in_disk - offset_in_disk + 1;
+
+		ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
+					     raid_ch->base_channel[disk_idx],
+					     offset_in_disk, nblocks_in_disk,
+					     raid_bdev_base_io_completion, bdev_io);
+		if (ret == 0) {
+			raid_io->base_bdev_io_submitted++;
+		} else {
+			raid_bdev_base_io_submit_fail_process(bdev_io, ret, disk_idx,
+					_raid_bdev_submit_unmap_request_next);
+			return;
+		}
+	}
+}
+
+/*
+ * brief:
+ * _raid_bdev_submit_unmap_request function is the submit_request function for
+ * unmap requests
+ * params:
+ * ch - pointer to raid bdev io channel
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * returns:
+ * none
+ */
+static void
+_raid_bdev_submit_unmap_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	struct raid_bdev_io		*raid_io;
+
+	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
+	raid_io->ch = ch;
+	raid_io->base_bdev_io_submitted = 0;
+	raid_io->base_bdev_io_completed = 0;
+	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+
+	_raid_bdev_submit_unmap_request_next(bdev_io);
+}
+
+/*
+ * brief:
  * raid_bdev_submit_request function is the submit_request function pointer of
  * raid bdev function table. This is used to submit the io on raid_bdev to below
  * layers.
@@ -635,12 +736,50 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		_raid_bdev_submit_reset_request(ch, bdev_io);
 		break;
 
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		_raid_bdev_submit_unmap_request(ch, bdev_io);
+		break;
+
 	default:
 		SPDK_ERRLOG("submit request, invalid io type %u\n", bdev_io->type);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		break;
 	}
 
+}
+
+/*
+ * brief:
+ * raid_bdev_io_type_unmap_supported is check whether unmap is supported in
+ * raid bdev module. If anyone among the base_bdevs doesn't support, the
+ * raid device doesn't supports. For the base_bdev which is not discovered, by default
+ * it is thought supported.
+ * params:
+ * ctx - pointer to raid bdev context
+ * returns:
+ * true - io_type is supported
+ * false - io_type is not supported
+ */
+static bool
+raid_bdev_io_type_unmap_supported(void *ctx)
+{
+	struct raid_bdev *raid_bdev = ctx;
+	bool supported = true;
+	uint16_t i;
+
+	for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+		if (raid_bdev->base_bdev_info[i].bdev == NULL) {
+			continue;
+		}
+
+		supported = spdk_bdev_io_type_supported(raid_bdev->base_bdev_info[i].bdev,
+							SPDK_BDEV_IO_TYPE_UNMAP);
+		if (supported == false) {
+			break;
+		}
+	}
+
+	return supported;
 }
 
 /*
@@ -658,12 +797,17 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 static bool
 raid_bdev_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 {
+
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
+
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+		return raid_bdev_io_type_unmap_supported(ctx);
+
 	default:
 		return false;
 	}
