@@ -1826,6 +1826,77 @@ exit:
 	return;
 }
 
+static void
+_nvmf_subsys_reservation_check(struct spdk_nvmf_subsystem *subsystem,
+			       struct spdk_nvmf_ctrlr *ctrlr,
+			       struct spdk_nvmf_ns *ns,
+			       struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_registrant *reg;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+	uint8_t racqa;
+
+	if (!ns->holder || !ns->rtype) {
+		goto exit;
+	}
+
+	reg = nvmf_subsys_get_registrant(subsystem, ctrlr);
+	if (nvmf_ns_registrant_is_holder(ns, reg)) {
+		goto exit;
+	}
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_READ:
+	case SPDK_NVME_OPC_COMPARE:
+		if (ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		if ((ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY ||
+		     ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS) && !reg) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	case SPDK_NVME_OPC_FLUSH:
+	case SPDK_NVME_OPC_WRITE:
+	case SPDK_NVME_OPC_WRITE_UNCORRECTABLE:
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+		if (ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE ||
+		    ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		if (!reg) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		racqa = cmd->cdw10 & 0x7u;
+		if (cmd->opc == SPDK_NVME_OPC_RESERVATION_ACQUIRE &&
+		    racqa == SPDK_NVME_RESERVE_ACQUIRE) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		if (!reg) {
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	default:
+		break;
+	}
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
 void
 spdk_nvmf_subsystem_reservation_request(void *ctx)
 {
@@ -1855,4 +1926,19 @@ spdk_nvmf_subsystem_reservation_request(void *ctx)
 		break;
 	}
 	spdk_thread_send_msg(group->thread, _spdk_nvmf_request_complete, req);
+}
+
+void
+spdk_nvmf_ns_reservation_check(void *ctx)
+{
+	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+
+	_nvmf_subsys_reservation_check(subsystem, ctrlr,
+				       _spdk_nvmf_subsystem_get_ns(subsystem, cmd->nsid),
+				       req);
+	spdk_thread_send_msg(group->thread, spdk_nvmf_ns_reservation_check_done, req);
 }

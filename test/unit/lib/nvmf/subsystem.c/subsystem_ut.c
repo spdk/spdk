@@ -238,6 +238,11 @@ spdk_bdev_get_uuid(const struct spdk_bdev *bdev)
 	return &bdev->uuid;
 }
 
+void
+spdk_nvmf_ns_reservation_check_done(void *ctx)
+{
+}
+
 static void
 test_spdk_nvmf_subsystem_add_ns(void)
 {

@@ -352,6 +352,8 @@ struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_subsystem_reservation_request(void *ctx);
+void spdk_nvmf_ns_reservation_check(void *ctx);
+void spdk_nvmf_ns_reservation_check_done(void *ctx);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
