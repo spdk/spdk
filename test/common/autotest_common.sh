@@ -40,6 +40,7 @@ fi
 : ${SPDK_RUN_SCANBUILD=1}; export SPDK_RUN_SCANBUILD
 : ${SPDK_RUN_VALGRIND=1}; export SPDK_RUN_VALGRIND
 : ${SPDK_TEST_UNITTEST=1}; export SPDK_TEST_UNITTEST
+: ${SPDK_TEST_ISAL=1}; export SPDK_TEST_ISAL
 : ${SPDK_TEST_ISCSI=1}; export SPDK_TEST_ISCSI
 : ${SPDK_TEST_ISCSI_INITIATOR=1}; export SPDK_TEST_ISCSI_INITIATOR
 : ${SPDK_TEST_NVME=1}; export SPDK_TEST_NVME
@@ -195,6 +196,10 @@ fi
 
 if [ $SPDK_TEST_FTL -eq 1 ]; then
 	config_params+=' --with-ftl'
+fi
+
+if [ $SPDK_TEST_ISAL -eq 0 ]; then
+	config_params+=' --without-isal'
 fi
 
 export config_params
