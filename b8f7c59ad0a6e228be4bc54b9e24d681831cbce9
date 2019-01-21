@@ -16,6 +16,24 @@
       "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82e77668_be063301",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1363,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T10:56:48Z",
+      "side": 1,
+      "message": "This was added for a very specific foreach_session() use case where we need to modify the vdev after making sure all sessions meet some conditions. If at least one of them doesn\u0027t, then it would simply return -1 preventing the final fn() from being called.\n\nI know this function is still used for external events and not foreach_session(), but I wanted to change it in a separate commit and there are no cases where we return !\u003d 0 in current code.\n\nTo answer the original question:\n\n\u003e how does a user of this know that one of the fn() calls failed? \n\nSince it was the user that returned -1, he should additionally handle any work that would be done in the final callback.",
+      "parentUuid": "2ad181eb_2f15a7d7",
+      "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
