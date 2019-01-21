@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ddf50dd9_ea6246f1",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-21T07:39:55Z",
+      "side": 1,
+      "message": "seems this will always be non zero after checking the cdw11 !\u003d 0.\n\nSo that this code block can be:\n\nif (alive_poller !\u003d NULL) {\n  poller_unregister()\n}\n\nkeep_alive_poller \u003d poller_regiester();",
+      "range": {
+        "startLine": 1055,
+        "startChar": 4,
+        "endLine": 1055,
+        "endChar": 59
+      },
+      "revId": "d8e33f1ac84df4fbeb707a916a90d8bc452b9f40",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
