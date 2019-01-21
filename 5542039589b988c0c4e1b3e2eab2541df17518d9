@@ -16,6 +16,24 @@
       "revId": "5542039589b988c0c4e1b3e2eab2541df17518d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f90125bd_fafd3c0f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T14:44:23Z",
+      "side": 1,
+      "message": "It would be much simpler if spdk_vhost_dev::cpumask will be treatened as \"cpu white list\" and you just add  \u0027*cpumask_blacklist\u0027. Then the backend can set blacklist on it\u0027s own. Ofcourse spdk_vhost_allocate_reactor should be changed too.",
+      "parentUuid": "4359ce0a_076c3de1",
+      "revId": "5542039589b988c0c4e1b3e2eab2541df17518d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
