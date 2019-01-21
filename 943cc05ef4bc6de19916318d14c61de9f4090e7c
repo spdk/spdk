@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff981036_eca0dfd2",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-21T09:41:18Z",
+      "side": 1,
+      "message": "SPDK_JSONRPC_ERROR_INTERNAL_ERROR?",
+      "range": {
+        "startLine": 696,
+        "startChar": 44,
+        "endLine": 696,
+        "endChar": 50
+      },
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a90bd33_f38fd571",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 705,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-21T09:41:18Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM))?",
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5c4a892_7a05aed5",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-21T09:41:18Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, \"Cannot convert histogram to base64\")?",
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65666c40_dab7d868",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-21T09:41:18Z",
+      "side": 1,
+      "message": "spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM))?",
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
