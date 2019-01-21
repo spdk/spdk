@@ -479,7 +479,6 @@ static void
 raid_bdev_reset_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
-	struct raid_bdev *raid_bdev = (struct raid_bdev *)parent_io->bdev->ctxt;
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
 
 	spdk_bdev_free_io(bdev_io);
@@ -489,8 +488,33 @@ raid_bdev_reset_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	}
 
 	raid_io->base_bdev_reset_completed++;
-	if (raid_io->base_bdev_reset_completed == raid_bdev->num_base_bdevs) {
+	if (raid_io->base_bdev_reset_completed == raid_io->base_bdev_reset_waited) {
 		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_reset_status);
+	}
+}
+
+/*
+ * brief:
+ * raid_bdev_reset_io_submit_fail_process processes the IO for member disk resets
+ * which failed to submit and was not due to ENOMEM.
+ * params:
+ * raid_bdev_io - pointer to raid bdev_io
+ * ret - return code
+ * returns:
+ * none
+ */
+static void
+raid_bdev_reset_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, int ret)
+{
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
+
+	assert(ret != 0);
+
+	raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
+	raid_io->base_bdev_reset_waited = raid_io->base_bdev_reset_submitted;
+
+	if (raid_io->base_bdev_reset_completed == raid_io->base_bdev_reset_waited) {
+		spdk_bdev_io_complete(raid_bdev_io, raid_io->base_bdev_reset_status);
 	}
 }
 
@@ -534,8 +558,7 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 						&raid_io->waitq_entry);
 			return;
 		} else {
-			assert(false);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			raid_bdev_reset_io_submit_fail_process(bdev_io, ret);
 			return;
 		}
 	}
@@ -555,11 +578,14 @@ static void
 _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
+	struct raid_bdev		*raid_bdev;
 
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
-	raid_io->base_bdev_reset_submitted = 0;
 	raid_io->base_bdev_reset_completed = 0;
+	raid_io->base_bdev_reset_submitted = 0;
+	raid_io->base_bdev_reset_waited = raid_bdev->num_base_bdevs;
 	raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	_raid_bdev_submit_reset_request_next(bdev_io);
 }
