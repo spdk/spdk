@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "170c3f69_9347ff56",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1033,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T13:26:26Z",
+      "side": 1,
+      "message": "It is not true. This won\u0027t work if there is more than one session.",
+      "range": {
+        "startLine": 1030,
+        "startChar": 0,
+        "endLine": 1033,
+        "endChar": 11
+      },
+      "revId": "f614b8ececeac9fffa0dc3ce87b02eaa015d966e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
