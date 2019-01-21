@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db8aa5a2_74ba5dbd",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1475,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T13:11:05Z",
+      "side": 1,
+      "message": "could you also initialize g_status to an invalid value, so that CU_ASSERT(g_status \u003d\u003d 0) below will fail if no work was done? This will make the UT automatically pick up cases where spdk_bdev_histogram_enable was broken to the point it doesn\u0027t do anything.",
+      "revId": "0b0b4722d6d626208489b1beeb3bc336d3467875",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba9f982e_7faa35af",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1482,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T13:11:05Z",
+      "side": 1,
+      "message": "don\u0027t we need SPDK_CU_ASSERT_FATAL(histogram !\u003d NULL) here? I\u0027m wondering how scan-build missed that for you :)",
+      "range": {
+        "startLine": 1482,
+        "startChar": 1,
+        "endLine": 1482,
+        "endChar": 11
+      },
+      "revId": "0b0b4722d6d626208489b1beeb3bc336d3467875",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68b5ba04_c60b01b0",
+        "filename": "test/unit/lib/bdev/bdev.c/bdev_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1509,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-21T13:11:05Z",
+      "side": 1,
+      "message": "could we clear g_histogram here?",
+      "revId": "0b0b4722d6d626208489b1beeb3bc336d3467875",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
