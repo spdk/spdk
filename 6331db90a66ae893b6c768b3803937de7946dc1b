@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e639a04_8dd36667",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-21T05:17:29Z",
+      "side": 1,
+      "message": "just using 120000 is ok.",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7980402_754c6193",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-21T05:17:29Z",
+      "side": 1,
+      "message": "maybe using nvmf_ctrlr_disconnect_qpairs() here.",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58b86444_ce42e007",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-21T05:17:29Z",
+      "side": 1,
+      "message": "It\u0027s not very accurate here:\nif (poller_started) {\n    stop;\n    start;\n} else if (kato !\u003d 0) {\n    start;\n}",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
