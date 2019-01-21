@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bd929d2d_def0f41f",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-21T13:26:32Z",
+      "side": 1,
+      "message": "Not used.",
+      "parentUuid": "d6538378_4e90b799",
+      "revId": "2e7762c48558d1f1f2b4d0042e62b6252e26f78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "53417596_8773cb55",
         "filename": "scripts/perf/nvmf/common.py",
         "patchSetId": 21
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-18T17:02:13Z",
       "side": 1,
       "message": "This function is also unused, remove?",
+      "revId": "2e7762c48558d1f1f2b4d0042e62b6252e26f78f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1437272_3bf9a307",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 21
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-21T13:26:32Z",
+      "side": 1,
+      "message": "Yes, not used anymore.\nThis was an attempt to automatically choose CPUs from accross various NUMA nodes in case any NVMe drive was found on second NUMA.\nLet\u0027s remove that for now and maybe I\u0027ll try introducing this in future.",
+      "parentUuid": "53417596_8773cb55",
       "revId": "2e7762c48558d1f1f2b4d0042e62b6252e26f78f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
