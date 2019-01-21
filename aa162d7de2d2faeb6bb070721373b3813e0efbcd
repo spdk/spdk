@@ -86,6 +86,24 @@
       "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fb8d732_6bd8810c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-21T08:53:57Z",
+      "side": 1,
+      "message": "Ok, will enlarge it to cover the worst case.\nHow about just enlarge CQ size at present? just think for a target, if it has ever reached a heavy workload with lots of connections, the heavy workload probably may come again.",
+      "parentUuid": "fd206d96_cddb181d",
+      "revId": "aa162d7de2d2faeb6bb070721373b3813e0efbcd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
