@@ -33,7 +33,15 @@
 
 #include "spdk/crc32.h"
 
-#ifdef SPDK_HAVE_SSE4_2
+#ifdef SPDK_HAVE_ISAL
+
+uint32_t
+spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
+{
+	return crc32_iscsi((unsigned char *)buf, len, crc);
+}
+
+#elif defined(SPDK_HAVE_SSE4_2)
 
 uint32_t
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
