@@ -68,7 +68,6 @@ static void   raid_bdev_examine(struct spdk_bdev *bdev);
 static int    raid_bdev_init(void);
 static void   raid_bdev_waitq_io_process(void *ctx);
 static void   raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
-static void   _raid_bdev_submit_reset_request_next(void *_bdev_io);
 
 
 /*
@@ -468,16 +467,16 @@ raid_bdev_start_rw_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev
 
 /*
  * brief:
- * raid_bdev_reset_completion is the completion callback for member disk resets
+ * raid_bdev_base_io_completion is the completion callback for member disk requests
  * params:
- * bdev_io - pointer to member disk reset bdev_io
- * success - true if reset was successful, false if unsuccessful
- * cb_arg - callback argument (parent reset bdev_io)
+ * bdev_io - pointer to member disk requested bdev_io
+ * success - true if successful, false if unsuccessful
+ * cb_arg - callback argument (parent raid bdev_io)
  * returns:
  * none
  */
 static void
-raid_bdev_reset_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
@@ -485,28 +484,30 @@ raid_bdev_reset_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_
 	spdk_bdev_free_io(bdev_io);
 
 	if (!success) {
-		raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
+		raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
 	}
 
-	raid_io->base_bdev_reset_completed++;
-	if (raid_io->base_bdev_reset_completed == raid_io->base_bdev_reset_waiting) {
-		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_reset_status);
+	raid_io->base_bdev_io_completed++;
+	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_waiting) {
+		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
 	}
 }
 
 /*
  * brief:
- * raid_bdev_reset_io_submit_fail_process processes reset IO for member disk
- * which failed to submit.
+ * raid_bdev_base_io_submit_fail_process processes IO requests for member disk
+ * which failed to submit
  * params:
  * raid_bdev_io - pointer to raid bdev_io
  * pd_idx - base_dev index in raid_bdev
+ * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
  * ret - return code
  * returns:
  * none
  */
 static void
-raid_bdev_reset_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx, int ret)
+raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+				      spdk_bdev_io_wait_cb cb_fn, int ret)
 {
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
 	struct raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
@@ -516,7 +517,7 @@ raid_bdev_reset_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_
 
 	if (ret == -ENOMEM) {
 		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
-		raid_io->waitq_entry.cb_fn = _raid_bdev_submit_reset_request_next;
+		raid_io->waitq_entry.cb_fn = cb_fn;
 		raid_io->waitq_entry.cb_arg = raid_bdev_io;
 		spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
 					raid_ch->base_channel[pd_idx],
@@ -524,11 +525,11 @@ raid_bdev_reset_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_
 		return;
 	}
 
-	if (raid_io->base_bdev_reset_completed == raid_io->base_bdev_reset_submitted) {
+	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_submitted) {
 		spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	} else {
-		raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_FAILED;
-		raid_io->base_bdev_reset_waiting = raid_io->base_bdev_reset_submitted;
+		raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_FAILED;
+		raid_io->base_bdev_io_waiting = raid_io->base_bdev_io_submitted;
 	}
 }
 
@@ -556,15 +557,16 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
 
-	while (raid_io->base_bdev_reset_submitted < raid_bdev->num_base_bdevs) {
-		i = raid_io->base_bdev_reset_submitted;
+	while (raid_io->base_bdev_io_submitted < raid_bdev->num_base_bdevs) {
+		i = raid_io->base_bdev_io_submitted;
 		ret = spdk_bdev_reset(raid_bdev->base_bdev_info[i].desc,
 				      raid_ch->base_channel[i],
-				      raid_bdev_reset_completion, bdev_io);
+				      raid_bdev_base_io_completion, bdev_io);
 		if (ret == 0) {
-			raid_io->base_bdev_reset_submitted++;
+			raid_io->base_bdev_io_submitted++;
 		} else {
-			raid_bdev_reset_io_submit_fail_process(bdev_io, i, ret);
+			raid_bdev_base_io_submit_fail_process(bdev_io, i,
+							      _raid_bdev_submit_reset_request_next, ret);
 			return;
 		}
 	}
@@ -589,10 +591,10 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
-	raid_io->base_bdev_reset_submitted = 0;
-	raid_io->base_bdev_reset_completed = 0;
-	raid_io->base_bdev_reset_waiting = raid_bdev->num_base_bdevs;
-	raid_io->base_bdev_reset_status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	raid_io->base_bdev_io_submitted = 0;
+	raid_io->base_bdev_io_completed = 0;
+	raid_io->base_bdev_io_waiting = raid_bdev->num_base_bdevs;
+	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	_raid_bdev_submit_reset_request_next(bdev_io);
 }
 
