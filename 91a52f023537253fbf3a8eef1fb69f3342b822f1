@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "571ae918_bb0dabe7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-21T09:10:00Z",
+      "side": 1,
+      "message": "Done.\nGood point!",
+      "parentUuid": "e0a092aa_3bf9d76c",
+      "range": {
+        "startLine": 62,
+        "startChar": 8,
+        "endLine": 62,
+        "endChar": 25
+      },
+      "revId": "91a52f023537253fbf3a8eef1fb69f3342b822f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f182932d_1703dac9",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-21T07:59:29Z",
       "side": 1,
       "message": "put this variable out, and move it to line 694 (maybe)",
+      "range": {
+        "startLine": 721,
+        "startChar": 2,
+        "endLine": 721,
+        "endChar": 20
+      },
+      "revId": "91a52f023537253fbf3a8eef1fb69f3342b822f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78d3a2a6_5f865631",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-21T09:10:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f182932d_1703dac9",
       "range": {
         "startLine": 721,
         "startChar": 2,
