@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8106bd56_cec18f71",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T05:46:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5e639a04_8dd36667",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7980402_754c6193",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 11
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "e44867fd_96cde128",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T05:46:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e7980402_754c6193",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58b86444_ce42e007",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 11
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-21T05:17:29Z",
       "side": 1,
       "message": "It\u0027s not very accurate here:\nif (poller_started) {\n    stop;\n    start;\n} else if (kato !\u003d 0) {\n    start;\n}",
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "932b69ff_e7824f39",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1045,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-21T05:46:26Z",
+      "side": 1,
+      "message": "Yeah，this place is out of my consideration. Thanks.",
+      "parentUuid": "58b86444_ce42e007",
       "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
