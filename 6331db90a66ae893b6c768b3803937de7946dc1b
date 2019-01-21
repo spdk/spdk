@@ -37,6 +37,29 @@
     },
     {
       "key": {
+        "uuid": "69b431d6_d72f38fa",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-21T07:36:10Z",
+      "side": 1,
+      "message": "A question on the admin qpair, if the last IO qpair is removed, the admin qpair will be destroyed consequently along with the ctrlr. Is this understanding correct? As we have the comment from line 153-154. Thanks, Gang",
+      "range": {
+        "startLine": 109,
+        "startChar": 8,
+        "endLine": 109,
+        "endChar": 34
+      },
+      "revId": "6331db90a66ae893b6c768b3803937de7946dc1b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7980402_754c6193",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 11
