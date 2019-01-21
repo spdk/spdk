@@ -118,6 +118,14 @@ spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_da
 	nsdata->lbaf[0].lbads = spdk_u32log2(spdk_bdev_get_block_size(bdev));
 	nsdata->noiob = spdk_bdev_get_optimal_io_boundary(bdev);
 	nsdata->nmic.can_share = 1;
+	nsdata->nsrescap.rescap.persist = 0; /* TODO: don't support for now */
+	nsdata->nsrescap.rescap.write_exclusive = 1;
+	nsdata->nsrescap.rescap.exclusive_access = 1;
+	nsdata->nsrescap.rescap.write_exclusive_reg_only = 1;
+	nsdata->nsrescap.rescap.exclusive_access_reg_only = 1;
+	nsdata->nsrescap.rescap.write_exclusive_all_reg = 1;
+	nsdata->nsrescap.rescap.exclusive_access_all_reg = 1;
+	nsdata->nsrescap.rescap.ignore_existing_key = 1;
 
 	SPDK_STATIC_ASSERT(sizeof(nsdata->nguid) == sizeof(ns->opts.nguid), "size mismatch");
 	memcpy(nsdata->nguid, ns->opts.nguid, sizeof(nsdata->nguid));
