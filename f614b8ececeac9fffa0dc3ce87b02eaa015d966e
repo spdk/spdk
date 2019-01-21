@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "a4d05a36_4c09f802",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 995,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T13:32:11Z",
+      "side": 1,
+      "message": "BTW: I checked the spdk_vhost_dev_foreach_session() function and there is no path that does fn(NULL, NULL). What this is for?",
+      "range": {
+        "startLine": 992,
+        "startChar": 1,
+        "endLine": 995,
+        "endChar": 2
+      },
+      "revId": "f614b8ececeac9fffa0dc3ce87b02eaa015d966e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "170c3f69_9347ff56",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 8
