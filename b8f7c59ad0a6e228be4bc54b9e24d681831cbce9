@@ -34,6 +34,24 @@
       "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49ddf8ac_d1818f1f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1363,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T13:39:32Z",
+      "side": 1,
+      "message": "\u003e I know this function is still used for external events and not foreach_session(), but I wanted to change it in a separate commit\n\nIf this going to be done soon, it is ok for me but if mentioned change will merged after 19.01 pls update_vhost_call_external_event_foreach documentation.\n\nBTW: as we are here: doc for spdk_vhost_dev_foreach_session() should mention that if fn return value \u003c 0 it will stop iterating.",
+      "parentUuid": "82e77668_be063301",
+      "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
