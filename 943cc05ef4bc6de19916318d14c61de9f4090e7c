@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1db59724_e6801599",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T15:20:02Z",
+      "side": 1,
+      "message": "..., \"Histogram error: %s\", status-to_error-string())\n\nBTW what mean \"Histogram error\" at all?",
+      "parentUuid": "ff981036_eca0dfd2",
+      "range": {
+        "startLine": 696,
+        "startChar": 44,
+        "endLine": 696,
+        "endChar": 50
+      },
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a90bd33_f38fd571",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 27
@@ -59,6 +83,24 @@
     },
     {
       "key": {
+        "uuid": "866a1dd7_1311701c",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T15:20:02Z",
+      "side": 1,
+      "message": "..., \"Cannot convert histogram to base64: %s\", spdk_strerror(rc));",
+      "parentUuid": "c5c4a892_7a05aed5",
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "65666c40_dab7d868",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 27
@@ -70,6 +112,24 @@
       "writtenOn": "2019-01-21T09:41:18Z",
       "side": 1,
       "message": "spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM))?",
+      "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d0fabca_f80505a1",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T15:20:02Z",
+      "side": 1,
+      "message": "\u003e if (w \u003d\u003d NULL)\n\nThis is not an error! Please read the documentation!",
+      "parentUuid": "65666c40_dab7d868",
       "revId": "943cc05ef4bc6de19916318d14c61de9f4090e7c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
