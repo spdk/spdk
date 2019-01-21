@@ -50,6 +50,24 @@
       "revId": "7eb04b7eec9d7f6bd675231386db4b1ca63fec53",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d796215_bde05173",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1058,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-21T08:13:26Z",
+      "side": 1,
+      "message": "what about also running this function in subsystem\u0027s thread ? this will add the latency of each IO.  If I use atomic variable for \u0027rtype\u0027 in spdk_nvmf_ns structure, will this helpful ?",
+      "parentUuid": "cb66132f_8f4e2414",
+      "revId": "7eb04b7eec9d7f6bd675231386db4b1ca63fec53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
