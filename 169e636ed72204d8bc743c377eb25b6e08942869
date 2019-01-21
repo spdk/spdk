@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "d648a0cf_d7e1363f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T14:04:43Z",
+      "side": 1,
+      "message": "If vdev is NULL this will crash. So why checking vdev \u003d\u003d NULL in line 1304?",
+      "range": {
+        "startLine": 1333,
+        "startChar": 50,
+        "endLine": 1333,
+        "endChar": 63
+      },
+      "revId": "169e636ed72204d8bc743c377eb25b6e08942869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbee1a29_b9759c8c",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 6
