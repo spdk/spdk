@@ -89,6 +89,8 @@ spdk_tgt_parse_arg(int ch, char *arg)
 		spdk_vhost_set_socket_path(arg);
 		break;
 #endif
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }

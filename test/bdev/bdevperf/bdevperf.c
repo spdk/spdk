@@ -852,6 +852,8 @@ bdevperf_parse_arg(int ch, char *arg)
 		g_show_performance_period_in_usec = spdk_max(g_show_performance_period_in_usec,
 						    g_show_performance_period_in_usec);
 		break;
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }
