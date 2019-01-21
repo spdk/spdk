@@ -22,6 +22,30 @@
       "revId": "cbfb10ee5ff88329be966898e734a3bef7893d7d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9178415_9057da60",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 298,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-21T15:44:38Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e27c1250_66c15b1f",
+      "range": {
+        "startLine": 295,
+        "startChar": 11,
+        "endLine": 298,
+        "endChar": 35
+      },
+      "revId": "cbfb10ee5ff88329be966898e734a3bef7893d7d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
