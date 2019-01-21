@@ -269,6 +269,12 @@ for i in "$@"; do
 		--without-ftl)
 			CONFIG[FTL]=n
 			;;
+		--with-isal)
+                        CONFIG[ISAL]=y
+                        ;;
+                --without-isal)
+                        CONFIG[ISAL]=n
+                        ;;
 		--)
 			break
 			;;
@@ -278,6 +284,13 @@ for i in "$@"; do
 			exit 1
 	esac
 done
+
+# Detect architecture and force no isal if non x86 archt
+arch=$(uname -i)
+if [[ $arch != x86_64* ]]; then
+	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
+	CONFIG[ISAL]=n
+fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
 	rootdir=$(readlink -f $(dirname $0))

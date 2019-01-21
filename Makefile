@@ -41,6 +41,7 @@ DIRS-$(CONFIG_SHARED) += shared_lib
 DIRS-y += examples app include
 DIRS-$(CONFIG_TESTS) += test
 DIRS-$(CONFIG_IPSEC_MB) += ipsecbuild
+DIRS-$(CONFIG_ISAL) += isalbuild
 
 .PHONY: all clean $(DIRS-y) include/spdk/config.h mk/config.mk mk/cc.mk \
 	cc_version cxx_version .libs_only_other .ldflags ldflags
@@ -62,6 +63,10 @@ endif
 
 ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild
+endif
+
+ifeq ($(CONFIG_ISAL),y)
+LIB += isalbuild
 endif
 
 all: $(DIRS-y)
