@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "035359b8_d2d85430",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 837,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-21T07:03:35Z",
+      "side": 1,
+      "message": "As Darek suggested, will you remove this? This is duplicated with spdk_app_parse_args() in lib/event/app.c.",
+      "range": {
+        "startLine": 837,
+        "startChar": 3,
+        "endLine": 837,
+        "endChar": 59
+      },
+      "revId": "8a2b5d590b43185ab85bcf77345ae2761dbfff5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
