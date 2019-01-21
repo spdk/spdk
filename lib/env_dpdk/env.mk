@@ -102,6 +102,10 @@ ifeq ($(CONFIG_IPSEC_MB),y)
 ENV_LINKER_ARGS += -lIPSec_MB -L$(IPSEC_MB_DIR)
 endif
 
+ifeq ($(CONFIG_ISAL),y)
+ENV_LINKER_ARGS += -lisal -L$(ISAL_DIR)/.libs
+endif
+
 ifneq (,$(wildcard $(DPDK_INC_DIR)/rte_config.h))
 ifneq (,$(shell grep -e "define RTE_LIBRTE_VHOST_NUMA 1" -e "define RTE_EAL_NUMA_AWARE_HUGEPAGES 1" $(DPDK_INC_DIR)/rte_config.h))
 ENV_LINKER_ARGS += -lnuma
