@@ -140,6 +140,7 @@ struct raid_bdev_io {
 	/* Used for tracking progress on resets sent to member disks. */
 	uint8_t				base_bdev_reset_submitted;
 	uint8_t				base_bdev_reset_completed;
+	uint8_t				base_bdev_reset_waiting;
 	uint8_t				base_bdev_reset_status;
 };
 
