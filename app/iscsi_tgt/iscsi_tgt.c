@@ -79,8 +79,7 @@ iscsi_parse_arg(int ch, char *arg)
 		g_daemon_mode = 1;
 		break;
 	default:
-		assert(false);
-		break;
+		return -EINVAL;
 	}
 	return 0;
 }

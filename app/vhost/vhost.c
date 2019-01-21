@@ -72,6 +72,8 @@ vhost_parse_arg(int ch, char *arg)
 	case 'S':
 		spdk_vhost_set_socket_path(arg);
 		break;
+	default:
+		return -EINVAL;
 	}
 	return 0;
 }
