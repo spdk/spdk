@@ -159,6 +159,7 @@ DEFINE_STUB(spdk_nvmf_transport_req_complete,
 	    0);
 
 DEFINE_STUB_V(spdk_nvmf_subsystem_reservation_request, (void *ctx));
+DEFINE_STUB_V(spdk_nvmf_ns_reservation_check, (void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
 
