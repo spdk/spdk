@@ -144,6 +144,14 @@ endif
 
 IPSEC_MB_DIR=$(SPDK_ROOT_DIR)/intel-ipsec-mb
 
+ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
+ifeq ($(CONFIG_ISAL), y)
+ISAL_LIB = -L$(ISAL_DIR)/.libs -lisal
+SYS_LIBS += $(ISAL_LIB)
+COMMON_CFLAGS += -I$(ISAL_DIR)/..
+ENV_LINKER_ARGS = $(ENV_DPDK_FILE) -Wl,--whole-archive $(ISAL_LIB) -lisal -Wl,--no-whole-archive
+endif
+
 #Attach only if FreeBSD and RDMA is specified with configure
 ifeq ($(OS),FreeBSD)
 ifeq ($(CONFIG_RDMA),y)
