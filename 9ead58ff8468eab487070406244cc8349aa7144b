@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fb84cbec_d3f32b4f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 932,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T14:26:13Z",
+      "side": 1,
+      "message": "You have unique vsession_id now. It should be guarantied that spdk_vhost_session_find_by_id() will return NULL if vsession is deleted.\n\nThis should make vsession pointer in spdk_vhost_session_fn_ctx not needed.",
+      "range": {
+        "startLine": 932,
+        "startChar": 17,
+        "endLine": 932,
+        "endChar": 30
+      },
+      "revId": "9ead58ff8468eab487070406244cc8349aa7144b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc92ee95_556e90b5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T14:26:13Z",
+      "side": 1,
+      "message": "This is shared by all controllers so for heavy \"docked\" environment this 4G-sessions name space can be drained very quickly. It would be better idea to move this to spdk_vhost_dev. Also making this uint64_t won\u0027t harm.",
+      "range": {
+        "startLine": 1265,
+        "startChar": 1,
+        "endLine": 1265,
+        "endChar": 29
+      },
+      "revId": "9ead58ff8468eab487070406244cc8349aa7144b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce75011f_1f2ba6e3",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-21T14:26:13Z",
+      "side": 1,
+      "message": "vdev-\u003evsessions ?\n\nI think that this whole comment is outdated.",
+      "range": {
+        "startLine": 1272,
+        "startChar": 29,
+        "endLine": 1272,
+        "endChar": 49
+      },
+      "revId": "9ead58ff8468eab487070406244cc8349aa7144b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
