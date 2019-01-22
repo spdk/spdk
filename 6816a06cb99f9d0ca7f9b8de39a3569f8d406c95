@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "28f99f2d_e1944f3e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 70
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T10:04:04Z",
+      "side": 1,
+      "message": "This is not in the patch.",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 51
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef489364_07c19fce",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 70
@@ -59,6 +82,23 @@
       "writtenOn": "2019-01-22T09:44:58Z",
       "side": 1,
       "message": "Can we add part of the tests that perform RPC added in previous patch ? This will allow to verify if they work properly.",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49486e24_a99db314",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T10:04:04Z",
+      "side": 1,
+      "message": "Have you considered changing ./scripts/gen_nvme.sh to accomodate FTL with PUNIT/MODE/UUID, rather than adding it here ?\nThe gen_nvme.sh outputs config for ini file to use (and json config but FTL does not support that yet).",
       "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
