@@ -343,6 +343,9 @@ int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
  */
 void spdk_vhost_session_event_done(void *event_ctx, int response);
 
+void spdk_vhost_free_reactor(uint32_t lcore);
+uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
+
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
