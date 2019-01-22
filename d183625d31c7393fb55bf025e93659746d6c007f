@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c6ca3fb_a231e348",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-22T05:22:22Z",
+      "side": 1,
+      "message": "Can we move this local variable into line 62? You may also update the other function (SSE related optimization function)",
+      "range": {
+        "startLine": 72,
+        "startChar": 14,
+        "endLine": 72,
+        "endChar": 31
+      },
+      "revId": "d183625d31c7393fb55bf025e93659746d6c007f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "446a054e_d931a243",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-22T05:22:22Z",
+      "side": 1,
+      "message": "uncessary line",
+      "revId": "d183625d31c7393fb55bf025e93659746d6c007f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
