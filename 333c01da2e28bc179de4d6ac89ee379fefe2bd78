@@ -16,6 +16,24 @@
       "revId": "333c01da2e28bc179de4d6ac89ee379fefe2bd78",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b38d8fe_cd07b6c7",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T18:37:39Z",
+      "side": 1,
+      "message": "This function is called only in ftl_rwb_init and whole cleanup in error case is made there. This change is needed because scan-build detects errors (valid ones) when I change flow of some of rwb unit test - we were doing double free in some error paths on batch-\u003ebuffer.",
+      "parentUuid": "29121741_3b875b86",
+      "revId": "333c01da2e28bc179de4d6ac89ee379fefe2bd78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
