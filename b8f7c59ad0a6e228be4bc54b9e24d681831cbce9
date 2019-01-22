@@ -52,6 +52,24 @@
       "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4376239_cd8374e2",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1363,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T16:21:22Z",
+      "side": 1,
+      "message": "\u003e If this going to be done soon, it is ok for me but if mentioned change will merged after 19.01 pls update_vhost_call_external_event_foreach documentation.\n\nIt is changed 3 patches later: \"vhost: untie devices from lcores\" https://review.gerrithub.io/c/spdk/spdk/+/439323\n\n\u003e BTW: as we are here: doc for spdk_vhost_dev_foreach_session() should mention that if fn return value \u003c 0 it will stop iterating.\n\nIt\u0027s true. I should definitely put more focus onto writing docs, but on the other hand I don\u0027t want to change them on every patch within this series. After all, we\u0027re refactoring a huge amount of code here.\n\nSo far I tried describing all the changes in commit messages, so that those patches are reviewable.\n\nI\u0027m actually thinking of putting all documentation updates in a single patch at the end of the series.",
+      "parentUuid": "49ddf8ac_d1818f1f",
+      "revId": "b8f7c59ad0a6e228be4bc54b9e24d681831cbce9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
