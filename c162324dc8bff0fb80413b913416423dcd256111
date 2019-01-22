@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b396607f_b01c1771",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T15:29:37Z",
+      "side": 1,
+      "message": "why use specific MB values when we can use % for --size and --offset?",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 125
+      },
+      "revId": "c162324dc8bff0fb80413b913416423dcd256111",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
