@@ -77,6 +77,9 @@ struct spdk_scsi_dev_vhost_state {
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+
+	/* The CPU chosen to poll I/O of all active vhost sessions */
+	int32_t lcore;
 } __rte_cache_aligned;
 
 struct spdk_vhost_scsi_session {
@@ -1266,14 +1269,30 @@ out:
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
-	if (vsession->vdev->active_session_num > 0) {
-		/* We're trying to start a second session */
-		SPDK_ERRLOG("Vhost-SCSI devices can support only one simultaneous connection.\n");
-		return -1;
+	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	svdev = svsession->svdev;
+
+	if (svdev->vdev.active_session_num == 0) {
+		svdev->lcore = spdk_vhost_allocate_reactor(svdev->vdev.cpumask);
 	}
 
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
-					     3, "start session");
+	vsession->lcore = svdev->lcore;
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
+					   3, "start session");
+	if (rc != 0) {
+		vsession->lcore = -1;
+
+		if (svdev->vdev.active_session_num == 0) {
+			spdk_vhost_free_reactor(svdev->lcore);
+			svdev->lcore = -1;
+		}
+	}
+
+	return rc;
 }
 
 static int
@@ -1339,8 +1358,22 @@ err:
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
-					     3, "stop session");
+	struct spdk_vhost_scsi_session *svsession;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
+					   3, "stop session");
+	if (rc != 0) {
+		return rc;
+	}
+
+	vsession->lcore = -1;
+	if (vsession->vdev->active_session_num == 1) {
+		spdk_vhost_free_reactor(svsession->svdev->lcore);
+		svsession->svdev->lcore = -1;
+	}
+	return 0;
 }
 
 static void
