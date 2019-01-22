@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "af34ff95_a6460173",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "Why is the clear method a pointer? It\u0027s cheaper to pass around a 4 byte enum than an 8 byte pointer.",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "642d618d_681eef43",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "tab align",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14e46504_cb84c912",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "Make case insensitive (strcasecmp).",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32e29391_e666c5ab",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d2d0c72_b32af21c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "I think it would be nice architecturally if we didn\u0027t need to add an xattr for this. Does this setting actually need to be persistent? Can we add an option to spdk_blob_open instead? (You may need to define an spdk_blob_open_ext() with an options structure to add the clear method in a backward compatible way).\n\nThe xattr could still be used to persist the setting in the lvol layer if that was required, but then at least blobstore doesn\u0027t have to understand the xattr.",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "749fa91b_27a0b638",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T20:21:41Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
