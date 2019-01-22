@@ -719,8 +719,18 @@ out:
 static int
 spdk_vhost_blk_start(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_blk_start_cb,
-					     3, "start session");
+	int rc;
+
+	vsession->lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_blk_start_cb,
+					   3, "start session");
+
+	if (rc != 0) {
+		spdk_vhost_free_reactor(vsession->lcore);
+		vsession->lcore = -1;
+	}
+
+	return rc;
 }
 
 static int
