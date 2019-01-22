@@ -16,6 +16,24 @@
       "revId": "f3a9eb2a57ad758332affccf1003c21ca134014b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d3d4328_fc487422",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-22T09:42:34Z",
+      "side": 1,
+      "message": "Do you mean spdk_strerror(rc) ?",
+      "parentUuid": "e927328e_bbe1a5e1",
+      "revId": "f3a9eb2a57ad758332affccf1003c21ca134014b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
