@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62e38d07_66e65595",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T18:55:15Z",
+      "side": 1,
+      "message": "comment about third parameter is a bit confusing - it doesn\u0027t mean the third parameter to spdk_vhost_session_send_event, but rather the third parameter to the cb_fn; \"is a context object to be passed to\" could be worded more strongly too, I think you mean that this parameter *must* be passed to spdk_vhost_session_event_done\n\nmight need to be worded more like:\n\nthe void *arg parameter to cb_fn must be passed to spdk_vhost_session_event_done",
+      "revId": "824b058e6841415d98c5564b78f3ff7811742d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
