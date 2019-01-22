@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a79bc3c_0af43a3b",
+        "filename": "lib/bdev/ocf/data.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "You don\u0027t have to allocate additional buffers here. Bdev modules have a get_ctx_size callback that should return the size of per-I/O context data that bdev layer will allocate for you. After setting it to sizeof(struct bdev_ocf_data), you should be able to say data \u003d (struct bdev_ocf_data *)bdev_io-\u003edriver_ctx.\n\nPractically, this bdev_io memory is still there at the moment, but it\u0027s simply wasted for CAS bdev.",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 32
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb61423_03e96a5b",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "Every I/O completion decrements rq_cnt, but rq_cnt is only incremented from 0 to 1 on I/O submission (line #248). Shouldn\u0027t we always increment the rq_cnt? Otherwise we risk having it \u003c 0. \n\nBesides, what\u0027s the correct way to use atomics here? Ignoring the fact that those ocf atomics are poorly implemented, we tend to use both atomic_* C11 macros and env_atomic_* functions. Can we decide on one for consistency? I\u0027d vote for the functions.",
+      "range": {
+        "startLine": 208,
+        "startChar": 5,
+        "endLine": 208,
+        "endChar": 46
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9bb0e56_e8ee4f54",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "Code like this always looks suspicious. Are those two operations supposed to be atomic? They\u0027re not and we can end up with rq_cnt \u003e 1.",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 30
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e05ebad7_7430b361",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "Considering this already has an internal atomic counter, do we even need a second counter in io_ctx?",
+      "range": {
+        "startLine": 251,
+        "startChar": 2,
+        "endLine": 251,
+        "endChar": 23
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd940c5d_9f28c8db",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "You\u0027re calling this function only if the bdev is not attached, so this would be a good candidate to become a simple assert instead of a full check.",
+      "range": {
+        "startLine": 118,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 2
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62c5e452_cce723b3",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:53:00Z",
+      "side": 1,
+      "message": "do we still need this check? From what I see, open_base() will always open the descriptor if attach was successful.\n\nBesides, what\u0027s with the naming? open_base() attaches the base. Shouldn\u0027t we be consistent with either \"open\" or \"attach\"?",
+      "range": {
+        "startLine": 134,
+        "startChar": 2,
+        "endLine": 134,
+        "endChar": 18
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
