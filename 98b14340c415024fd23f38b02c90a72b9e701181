@@ -1,0 +1,259 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1095b56_a8ac706f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 69
+      },
+      "lineNbr": 1421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "Let\u0027s add that these RPCs are subject to change.\n\nI think eventually we\u0027ll want block FTL to be able to reuse more of the existing NVMe RPCs.  I don\u0027t know what that will exactly look like yet, but good to mark these so that users know they might change.",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e54ab36e_d687559f",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "what if user tries to specify an NVMe-oF trid?\n\nI think it would be better to *not* automatically set the trtype to PCIE here; instead check that trtype \u003d\u003d PCIE and fail if it doesn\u0027t\n\nit does mean that the user needs to pedantically specify the trtype, but that\u0027s OK - that\u0027s what everyone has to do today with the regular NVMe driver",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a899b97_38085bbf",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "let\u0027s change bdev to ftl_bdev\n\nalso align the variable name with the variables just below",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4dc6997_93ba9996",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "I think you shouldn\u0027t check the return code here - this can only fail if dev or \u0026attrs is NULL - which can\u0027t be the case here\n\nprobably spdk_ftl_dev_get_attrs could be modified to return void - we don\u0027t need to do that change in this patch, but we can simplify this code and just don\u0027t check this return code",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bb008b8_5c4da77b",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "this is intended to specify that the data buffers must have certain alignment - I don\u0027t think that\u0027s the case for FTL though",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d143a73_b01d2cae",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "this passes NULL for cb_fn - but spdk_ftl_dev_free() will immediately fail with -EINVAL status then - should spdk_ftl_dev_free be modified, or should this call be removed here?",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de106fe7_579fa396",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "let\u0027s rename this variable to ftl_bdev - pretty much throughout all of the bdev modules in SPDK, the name \"bdev\" is always used to point to a struct spdk_bdev",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4bb7e162_54a38452",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "we don\u0027t void cast unused variables in SPDK - so you can remove this",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9b8f87f_edd686dd",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "move declaration to beginning of function",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "359a74d0_d988bd70",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "I don\u0027t think you can just drop through here.  If you did hit an error case, you need to call spdk_bdev_module_init_done(), since you\u0027ll never get to bdev_ftl_initialize_cb getting called.",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c65e21e0_743e5c2c",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "let\u0027s make these asserts",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c0ad9761_be34768b",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "it\u0027s better to just call spdk_nvme_connect instead of spdk_nvme_probe with a NULL probe_fn\n\nthis also guards against the case where user passes an empty trid (i.e. something with just whitespace) which when paired with PCIE transport, will try to connect to *every* PCIe SSD when no probe_cb is specified",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1421dfd8_bb09c865",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "we don\u0027t void cast unused variables in SPDK - so you can remove this",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7bb1caf_e532f3df",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "this doesn\u0027t seem to match the format that bdev_ftl_read_bdev_config is expecting\n\nI\u0027m OK just removing config_text support (including this function) unless you really need it for testing - we are moving to having everything JSON based",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a9e6f08a_1fdf6d52",
+        "filename": "lib/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 69
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:21:19Z",
+      "side": 1,
+      "message": "uint32_t",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
