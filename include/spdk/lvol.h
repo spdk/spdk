@@ -48,6 +48,14 @@ struct spdk_bs_dev;
 struct spdk_lvol_store;
 struct spdk_lvol;
 
+enum lvol_clear_method {
+	LVOL_CLEAR_WITH_DEFAULT,
+	LVOL_CLEAR_WITH_NONE,
+	LVOL_CLEAR_WITH_UNMAP,
+	LVOL_CLEAR_WITH_WRITE_ZEROES,
+};
+
+
 /* Must include null terminator. */
 #define SPDK_LVS_NAME_MAX	64
 #define SPDK_LVOL_NAME_MAX	64
@@ -164,13 +172,15 @@ int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
  * \param name Name of lvol.
  * \param sz size of lvol in bytes.
  * \param thin_provisioned Enables thin provisioning.
+ * \param clear_method Changes default data clusters clear method
  * \param cb_fn Completion callback.
  * \param cb_arg Completion callback custom arguments.
  *
  * \return 0 on success, negative errno on failure.
  */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		     bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+		     bool thin_provisioned, enum lvol_clear_method clear_method,
+		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 /**
  * Create snapshot of given lvol.
  *

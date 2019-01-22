@@ -108,6 +108,7 @@ struct spdk_lvol {
 	struct spdk_bdev		*bdev;
 	int				ref_count;
 	bool				action_in_progress;
+	enum blob_clear_method		clear_method;
 	TAILQ_ENTRY(spdk_lvol) link;
 };
 
