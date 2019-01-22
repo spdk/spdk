@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3e84df0_36056b4a",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T09:51:21Z",
+      "side": 1,
+      "message": "Could we instead split on NVMe bdev name? bdev is identified by controller name + namespace ID, i.e. Nvme0n1.\nIf you do rsplit(\u0027n\u0027) you get controller name.",
+      "range": {
+        "startLine": 311,
+        "startChar": 8,
+        "endLine": 315,
+        "endChar": 21
+      },
+      "revId": "3a7ded1a6232b64e4b80d8fa74325b99d0235874",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
