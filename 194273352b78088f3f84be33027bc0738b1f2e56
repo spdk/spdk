@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6987f05d_5f827234",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-22T08:49:08Z",
+      "side": 1,
+      "message": "just return if the poller pointer is null.",
+      "range": {
+        "startLine": 86,
+        "startChar": 2,
+        "endLine": 91,
+        "endChar": 3
+      },
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb5822fe_3f5d5635",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-22T08:49:08Z",
+      "side": 1,
+      "message": "spdk_for_each_channel_continue(i, rc) need to be called at last.",
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
