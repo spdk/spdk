@@ -862,7 +862,7 @@ spdk_iscsi_auth_params(struct spdk_iscsi_conn *conn,
 		/* mutual CHAP? */
 		identifier = spdk_iscsi_param_get_val(params, "CHAP_I");
 		if (identifier != NULL) {
-			conn->auth.chap_mid[0] = (uint8_t) strtol(identifier, NULL, 10);
+			conn->auth.chap_mid[0] = (uint8_t) spdk_strtol(identifier, 10);
 			challenge = spdk_iscsi_param_get_val(params, "CHAP_C");
 			if (challenge == NULL) {
 				SPDK_ERRLOG("CHAP sequence error\n");
