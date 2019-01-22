@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91a8ef0d_806a1645",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 71
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T14:59:10Z",
+      "side": 1,
+      "message": "This script (compared to FIO_plugin tests) is good place to check out the RPC for FTL.\n-create\n-restore\n-delete",
+      "revId": "c3f7e3d1533fa42a1454d376da4671e2b24aa707",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
