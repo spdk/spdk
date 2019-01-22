@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ac88dba_667b7da3",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T10:35:50Z",
+      "side": 1,
+      "message": "get_bdev_histogram?",
+      "range": {
+        "startLine": 717,
+        "startChar": 13,
+        "endLine": 717,
+        "endChar": 34
+      },
+      "revId": "5b18156caa7c26ab9de6855786c742b4dcbb6ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ee381834_c408df89",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 32
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T10:35:50Z",
+      "side": 1,
+      "message": "These fields need to be described. I don\u0027t know what bucket_shoft is. Also don\u0027t know when \"status\" can be False.",
+      "range": {
+        "startLine": 731,
+        "startChar": 0,
+        "endLine": 733,
+        "endChar": 21
+      },
+      "revId": "5b18156caa7c26ab9de6855786c742b4dcbb6ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eeaa41f5_629dce90",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 704,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T10:35:50Z",
+      "side": 1,
+      "message": "as you are allocating ~80kb data here I don\u0027t recomend calloc as this will memset it. can you use malloc()?",
+      "range": {
+        "startLine": 704,
+        "startChar": 21,
+        "endLine": 704,
+        "endChar": 27
+      },
+      "revId": "5b18156caa7c26ab9de6855786c742b4dcbb6ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b744f44e_69ae7401",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T10:35:50Z",
+      "side": 1,
+      "message": "+ \\n",
+      "range": {
+        "startLine": 721,
+        "startChar": 1,
+        "endLine": 722,
+        "endChar": 1
+      },
+      "revId": "5b18156caa7c26ab9de6855786c742b4dcbb6ab7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "260bcb02_c24c02b2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 29
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T10:35:50Z",
+      "side": 1,
+      "message": "\"histogram\" can be truncated but everything else need to be real response.",
+      "parentUuid": "60028b16_bf4ca4d1",
+      "range": {
+        "startLine": 727,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 3
+      },
+      "revId": "668b629edd40cddff435df0216d86ff89ade61a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eba2542f_a37038b7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 29
