@@ -297,6 +297,7 @@ Example response:
     "get_lvol_stores",
     "destroy_lvol_bdev",
     "resize_lvol_bdev",
+    "set_read_only_lvol_bdev",
     "decouple_parent_lvol_bdev",
     "inflate_lvol_bdev",
     "rename_lvol_bdev",
@@ -4347,6 +4348,39 @@ Example request:
   "params": {
     "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
     "size": 2097152
+  }
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## set_read_only_lvol_bdev{#rpc_set_read_only_lvol_bdev}
+
+Mark logical volume as read only.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | UUID or alias of the logical volume to set as read only
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "set_read_only_lvol_bdev",
+  "id": 1,
+  "params": {
+    "name": "51638754-ca16-43a7-9f8f-294a0805ab0a",
   }
 }
 ~~~
