@@ -19,6 +19,8 @@ done
 
 $rpc_py construct_ocf_bdev PartCache wt Malloc0 NonExisting
 
+$rpc_py get_ocf_bdevs
+
 if ! bdev_check_claimed Malloc0; then
 	>&2 echo "Base device expected to be claimed now"
 	exit 1
@@ -36,6 +38,8 @@ if ! (bdev_check_claimed Malloc2 && bdev_check_claimed Malloc3); then
 	>&2 echo "Base devices expected to be claimed now"
 	exit 1
 fi
+
+$rpc_py get_ocf_bdevs
 
 $rpc_py delete_ocf_bdev FullCache
 if bdev_check_claimed Malloc2 && bdev_check_claimed Malloc3; then
