@@ -4183,6 +4183,7 @@ size                    | Required | number      | Desired size of logical volum
 thin_provision          | Optional | boolean     | True to enable thin provisioning
 uuid                    | Optional | string      | UUID of logical volume store to create logical volume on
 lvs_name                | Optional | string      | Name of logical volume store to create logical volume on
+clear_method            | Optional | string      | Change default data clusters clear method. Available: none, unmap, write_zeroes
 
 Size will be rounded up to a multiple of cluster size. Either uuid or lvs_name must be specified, but not both.
 lvol_name will be used in the alias of the created logical volume.
@@ -4203,6 +4204,7 @@ Example request:
     "lvol_name": "LVOL0",
     "size": 1048576,
     "lvs_name": "LVS0",
+    "clear_method": "unmap",
     "thin_provision": true
   }
 }

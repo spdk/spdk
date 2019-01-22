@@ -70,6 +70,13 @@ typedef uint64_t spdk_blob_id;
 #define SPDK_BLOBID_INVALID	(uint64_t)-1
 #define SPDK_BLOBSTORE_TYPE_LENGTH 16
 
+enum blob_clear_method {
+	BLOB_CLEAR_WITH_DEFAULT,
+	BLOB_CLEAR_WITH_NONE,
+	BLOB_CLEAR_WITH_UNMAP,
+	BLOB_CLEAR_WITH_WRITE_ZEROES,
+};
+
 struct spdk_blob_store;
 struct spdk_io_channel;
 struct spdk_blob;
@@ -572,6 +579,17 @@ void spdk_bs_inflate_blob(struct spdk_blob_store *bs, struct spdk_io_channel *ch
 void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_channel *channel,
 				  spdk_blob_id blobid, spdk_blob_op_complete cb_fn, void *cb_arg);
 
+struct spdk_blob_open_opts {
+	enum blob_clear_method  clear_method;
+};
+
+/**
+ * Initialize a spdk_blob_open_opts structure to the default blob option values.
+ *
+ * \param opts spdk_blob_open_opts structure to initialize.
+ */
+void spdk_blob_open_opts_init(struct spdk_blob_open_opts *opts);
+
 /**
  * Open a blob from the given blobstore.
  *
@@ -582,6 +600,18 @@ void spdk_bs_blob_decouple_parent(struct spdk_blob_store *bs, struct spdk_io_cha
  */
 void spdk_bs_open_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		       spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
+
+/**
+ * Open a blob from the given blobstore with additional options.
+ *
+ * \param bs blobstore.
+ * \param blobid The id of the blob to open.
+ * \param opts The structure which contains the option values for the blob.
+ * \param cb_fn Called when the operation is complete.
+ * \param cb_arg Argument passed to function cb_fn.
+ */
+void spdk_bs_open_blob_ext(struct spdk_blob_store *bs, spdk_blob_id blobid,
+			   struct spdk_blob_open_opts *opts, spdk_blob_op_with_handle_complete cb_fn, void *cb_arg);
 
 /**
  * Resize a blob to 'sz' clusters. These changes are not persisted to disk until
