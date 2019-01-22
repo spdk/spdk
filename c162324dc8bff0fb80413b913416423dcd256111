@@ -22,6 +22,30 @@
       "revId": "c162324dc8bff0fb80413b913416423dcd256111",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93806abf_baac2834",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 47
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-22T16:45:53Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b396607f_b01c1771",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 125
+      },
+      "revId": "c162324dc8bff0fb80413b913416423dcd256111",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
