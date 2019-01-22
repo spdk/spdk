@@ -52,6 +52,12 @@
 #define SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS 512
 #define SPDK_BLOB_BLOBID_HIGH_BIT (1ULL << 32)
 
+enum blob_clear_method {
+	BLOB_CLEAR_WITH_NONE,
+	BLOB_CLEAR_WITH_UNMAP,
+	BLOB_CLEAR_WITH_WRITE_ZEROES,
+};
+
 struct spdk_xattr {
 	uint32_t	index;
 	uint16_t	value_len;
@@ -268,6 +274,7 @@ struct spdk_blob_md_descriptor_extent {
 
 #define SPDK_BLOB_THIN_PROV (1ULL << 0)
 #define SPDK_BLOB_INTERNAL_XATTR (1ULL << 1)
+
 #define SPDK_BLOB_INVALID_FLAGS_MASK	(SPDK_BLOB_THIN_PROV | SPDK_BLOB_INTERNAL_XATTR)
 
 #define SPDK_BLOB_READ_ONLY (1ULL << 0)

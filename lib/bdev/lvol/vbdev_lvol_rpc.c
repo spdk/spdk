@@ -323,6 +323,7 @@ struct rpc_construct_lvol_bdev {
 	char *lvol_name;
 	uint64_t size;
 	bool thin_provision;
+	char *clear_method;
 };
 
 static void
@@ -331,6 +332,7 @@ free_rpc_construct_lvol_bdev(struct rpc_construct_lvol_bdev *req)
 	free(req->uuid);
 	free(req->lvs_name);
 	free(req->lvol_name);
+	free(req->clear_method);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] = {
@@ -339,6 +341,7 @@ static const struct spdk_json_object_decoder rpc_construct_lvol_bdev_decoders[] 
 	{"lvol_name", offsetof(struct rpc_construct_lvol_bdev, lvol_name), spdk_json_decode_string, true},
 	{"size", offsetof(struct rpc_construct_lvol_bdev, size), spdk_json_decode_uint64},
 	{"thin_provision", offsetof(struct rpc_construct_lvol_bdev, thin_provision), spdk_json_decode_bool, true},
+	{"clear_method", offsetof(struct rpc_construct_lvol_bdev, clear_method), spdk_json_decode_string, true},
 };
 
 static void
@@ -370,6 +373,8 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
 	struct rpc_construct_lvol_bdev req = {};
+	enum lvol_clear_method *clear_method_arg;
+	enum lvol_clear_method clear_method;
 	int rc;
 	struct spdk_lvol_store *lvs = NULL;
 
@@ -394,8 +399,24 @@ spdk_rpc_construct_lvol_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (req.clear_method != NULL) {
+		if (!strcmp(req.clear_method, "none")) {
+			clear_method = LVOL_CLEAR_WITH_NONE;
+		} else if (!strcmp(req.clear_method, "unmap")) {
+			clear_method = LVOL_CLEAR_WITH_UNMAP;
+		} else if (!strcmp(req.clear_method, "write_zeroes")) {
+			clear_method = LVOL_CLEAR_WITH_WRITE_ZEROES;
+		} else {
+			rc = -EINVAL;
+			goto invalid;
+		}
+		clear_method_arg = &clear_method;
+	} else {
+		clear_method_arg = NULL;
+	}
+
 	rc = vbdev_lvol_create(lvs, req.lvol_name, req.size, req.thin_provision,
-			       _spdk_rpc_construct_lvol_bdev_cb, request);
+			       clear_method_arg, _spdk_rpc_construct_lvol_bdev_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}

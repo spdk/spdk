@@ -47,7 +47,8 @@
 
 #include "blobstore.h"
 
-#define BLOB_CRC32C_INITIAL    0xffffffffUL
+#define BLOB_CRC32C_INITIAL			0xffffffffUL
+#define BLOB_CLEAR_METHOD_NAME_MAX	16
 
 static int spdk_bs_register_md_thread(struct spdk_blob_store *bs);
 static int spdk_bs_unregister_md_thread(struct spdk_blob_store *bs);
@@ -1064,6 +1065,22 @@ struct spdk_blob_persist_ctx {
 };
 
 static void
+spdk_bs_batch_clear_dev(struct spdk_blob_persist_ctx *ctx, spdk_bs_batch_t *batch, uint64_t lba,
+			uint32_t lba_count)
+{
+	const void *clear_method;
+	size_t clear_method_len;
+	int rc;
+
+	rc = _spdk_blob_get_xattr_value(ctx->blob, "clear_method", &clear_method, &clear_method_len, false);
+	if (rc != 0 || *(int *)clear_method == BLOB_CLEAR_WITH_UNMAP) {
+		spdk_bs_batch_unmap_dev(batch, lba, lba_count);
+	} else if (*(int *)clear_method == BLOB_CLEAR_WITH_WRITE_ZEROES) {
+		spdk_bs_batch_write_zeroes_dev(batch, lba, lba_count);
+	}
+}
+
+static void
 _spdk_blob_persist_complete(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
@@ -1115,7 +1132,7 @@ _spdk_blob_persist_unmap_clusters_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int
 }
 
 static void
-_spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
+_spdk_blob_persist_clear_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bserrno)
 {
 	struct spdk_blob_persist_ctx	*ctx = cb_arg;
 	struct spdk_blob		*blob = ctx->blob;
@@ -1131,7 +1148,7 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 	batch = spdk_bs_sequence_to_batch(seq, _spdk_blob_persist_unmap_clusters_cpl, ctx);
 
-	/* Unmap all clusters that were truncated */
+	/* Clear all clusters that were truncated */
 	lba = 0;
 	lba_count = 0;
 	for (i = blob->active.num_clusters; i < blob->active.cluster_array_size; i++) {
@@ -1146,11 +1163,9 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 
 		/* This cluster is not contiguous with the previous one. */
 
-		/* If a run of LBAs previously existing, send them
-		 * as an unmap.
-		 */
+		/* If a run of LBAs previously existing, clear them now */
 		if (lba_count > 0) {
-			spdk_bs_batch_unmap_dev(batch, lba, lba_count);
+			spdk_bs_batch_clear_dev(ctx, batch, lba, lba_count);
 		}
 
 		/* Start building the next batch */
@@ -1162,9 +1177,9 @@ _spdk_blob_persist_unmap_clusters(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		}
 	}
 
-	/* If we ended with a contiguous set of LBAs, send the unmap now */
+	/* If we ended with a contiguous set of LBAs, clear them now */
 	if (lba_count > 0) {
-		spdk_bs_batch_unmap_dev(batch, lba, lba_count);
+		spdk_bs_batch_clear_dev(ctx, batch, lba, lba_count);
 	}
 
 	spdk_bs_batch_close(batch);
@@ -1193,8 +1208,8 @@ _spdk_blob_persist_zero_pages_cpl(spdk_bs_sequence_t *seq, void *cb_arg, int bse
 		spdk_bit_array_clear(bs->used_md_pages, page_num);
 	}
 
-	/* Move on to unmapping clusters */
-	_spdk_blob_persist_unmap_clusters(seq, ctx, 0);
+	/* Move on to clearing clusters */
+	_spdk_blob_persist_clear_clusters(seq, ctx, 0);
 }
 
 static void
