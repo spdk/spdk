@@ -67,6 +67,40 @@
       "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1a7e38e_72210189",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 6
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:40:38Z",
+      "side": 1,
+      "message": "I\u0027d suggest dropping these here.  They already get added in env/spdk.common.mk.",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e28994d_60c5bb04",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:40:38Z",
+      "side": 1,
+      "message": "-lisal should be added to SYS_LIBS instead of LIBS\n\nthis ensures ordering on the link line is correct - otherwise I get some unit test link failures, which are fixed by making this change",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
