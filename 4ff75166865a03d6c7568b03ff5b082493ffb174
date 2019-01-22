@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9911675e_2f5667f3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:25:17Z",
+      "side": 1,
+      "message": "if we are using SHARED\u003dn, why do we need to use LD_LIBRARY_PATH?",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "08c8e295_8243e172",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:25:17Z",
+      "side": 1,
+      "message": "we should only print this if CONFIG[ISAL]\u003dy - otherwise it will always print for non-x86 architectures which may be confusing",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b220cd43_9a5b2156",
+        "filename": "configure",
+        "patchSetId": 6
+      },
+      "lineNbr": 415,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:25:17Z",
+      "side": 1,
+      "message": "don\u0027t \u0027make\u0027 and \u0027make install\u0027 here - we should do this as part of the actual build\n\nI think we should redirect autogen.sh and isa-l configure output to some kind of temp file, so that it doesn\u0027t pollute the rest of our script.\n\nI don\u0027t think we want to \u0027make install\u0027 at all if we can avoid it - we want to just include and link from the isal submodule directory - not system directories, otherwise the user has to be root",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "833f4644_5b1d7edc",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 6
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T22:25:17Z",
+      "side": 1,
+      "message": "Paul can add this in later patch - let\u0027s remove it from here for now.",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
