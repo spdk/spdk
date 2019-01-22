@@ -201,13 +201,8 @@ struct spdk_vhost_dev_backend {
 	 */
 	size_t session_ctx_size;
 
-	/**
-	 * Callbacks for starting and pausing a session.
-	 * The third param is an event context that has to be
-	 * passed to spdk_vhost_dev_backend_event_done().
-	 */
-	spdk_vhost_session_fn start_session;
-	spdk_vhost_session_fn stop_session;
+	int (*start_session)(struct spdk_vhost_session *vsession);
+	int (*stop_session)(struct spdk_vhost_session *vsession);
 
 	int (*vhost_get_config)(struct spdk_vhost_dev *vdev, uint8_t *config, uint32_t len);
 	int (*vhost_set_config)(struct spdk_vhost_dev *vdev, uint8_t *config,
@@ -311,7 +306,35 @@ void spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
  */
 void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
 				    spdk_vhost_session_fn fn, void *arg);
-void spdk_vhost_dev_backend_event_done(void *event_ctx, int response);
+
+/**
+ * Call provided function on the session's lcore and block until
+ * spdk_vhost_session_event_done() is called.
+ *
+ * As an optimization, this function will unlock the vhost mutex
+ * while it's waiting, which makes it prone to data races.
+ * Practically, it is only useful for session start/stop and still
+ * has to be used with extra caution.
+ *
+ * \param vsession vhost session
+ * \param cb_fn function to call. The third parameter is a context
+ * object to be passed to spdk_vhost_session_event_done().
+ * \param timeout_sec timeout in seconds. This function will still
+ * block after the timeout expires, but will print the provided errmsg.
+ * \param errmsg error message to print once the timeout expires
+ * \return return the code passed to spdk_vhost_session_event_done().
+ */
+int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
+				  spdk_vhost_session_fn cb_fn, unsigned timeout_sec, const char *errmsg);
+
+/**
+ * Finish a blocking spdk_vhost_session_send_event() call.
+ *
+ * \param event_ctx event context
+ * \param response return code
+ */
+void spdk_vhost_session_event_done(void *event_ctx, int response);
+
 void spdk_vhost_lock(void);
 void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
