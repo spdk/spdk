@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6867974b_c0a9fbcb",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 46
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T00:57:11Z",
+      "side": 1,
+      "message": "Can you elaborate? I don\u0027t get your point.",
+      "parentUuid": "c4c7fec7_bce3a018",
+      "revId": "83645f14468ab80291ec2912f06dbb7540c7c2cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "76237324_7de06aa6",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 46
