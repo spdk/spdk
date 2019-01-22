@@ -16,6 +16,24 @@
       "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a5ba161_dac18ab6",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T18:23:40Z",
+      "side": 1,
+      "message": "sorry - I meant the spdk_scsi_dev_vhost_state",
+      "parentUuid": "f345b36e_112b3c59",
+      "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
