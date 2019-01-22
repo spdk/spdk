@@ -178,6 +178,8 @@ struct spdk_nvmf_ns {
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_nvmf_ns_opts opts;
+	/* reservation notificaton mask */
+	uint32_t mask;
 };
 
 struct spdk_nvmf_qpair {
