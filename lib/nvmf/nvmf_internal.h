@@ -228,6 +228,14 @@ struct spdk_nvmf_ctrlr_feat {
 };
 
 /*
+ * NVMf reservation notificaton log page.
+ */
+struct spdk_nvmf_reservation_log {
+	struct spdk_nvme_reservation_notification_log	log;
+	TAILQ_ENTRY(spdk_nvmf_reservation_log)		link;
+};
+
+/*
  * This structure represents an NVMe-oF controller,
  * which is like a "session" in networking terms.
  */
@@ -258,6 +266,9 @@ struct spdk_nvmf_ctrlr {
 	/* Time to trigger keep-alive--poller_time = now_tick + period */
 	uint64_t last_keep_alive_tick;
 	struct spdk_poller			*keep_alive_poller;
+	uint64_t log_page_count;
+	uint8_t num_avail_log_pages;
+	TAILQ_HEAD(log_page_head, spdk_nvmf_reservation_log) log_head;
 
 	TAILQ_ENTRY(spdk_nvmf_ctrlr)		link;
 };
