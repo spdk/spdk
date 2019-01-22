@@ -479,6 +479,7 @@ static void
 ut_reservation_init(void)
 {
 	TAILQ_INIT(&g_subsystem.reg_head);
+	TAILQ_INIT(&g_subsystem.ctrlrs);
 	g_subsystem.regctl = 0;
 	g_subsystem.gen = 0;
 
@@ -486,19 +487,23 @@ ut_reservation_init(void)
 	spdk_uuid_generate(&g_ctrlr1_A.hostid);
 	g_ctrlr1_A.subsys = &g_subsystem;
 	TAILQ_INIT(&g_ctrlr1_A.log_head);
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr1_A, link);
 	spdk_uuid_copy(&g_ctrlr2_A.hostid, &g_ctrlr1_A.hostid);
 	g_ctrlr2_A.subsys = &g_subsystem;
 	TAILQ_INIT(&g_ctrlr2_A.log_head);
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr2_A, link);
 
 	/* Host B has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_B.hostid);
 	g_ctrlr_B.subsys = &g_subsystem;
 	TAILQ_INIT(&g_ctrlr_B.log_head);
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_B, link);
 
 	/* Host C has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_C.hostid);
 	g_ctrlr_C.subsys = &g_subsystem;
 	TAILQ_INIT(&g_ctrlr_C.log_head);
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_C, link);
 }
 
 static void
@@ -506,11 +511,13 @@ ut_reservation_deinit(void)
 {
 	struct spdk_nvmf_registrant *reg, *tmp;
 	struct spdk_nvmf_reservation_log *log, *log_tmp;
+	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 
 	TAILQ_FOREACH_SAFE(reg, &g_subsystem.reg_head, link, tmp) {
 		TAILQ_REMOVE(&g_subsystem.reg_head, reg, link);
 		free(reg);
 	}
+
 	TAILQ_FOREACH_SAFE(log, &g_ctrlr1_A.log_head, link, log_tmp) {
 		TAILQ_REMOVE(&g_ctrlr1_A.log_head, log, link);
 		free(log);
@@ -531,6 +538,10 @@ ut_reservation_deinit(void)
 		free(log);
 	}
 	g_ctrlr_C.num_avail_log_pages = 0;
+
+	TAILQ_FOREACH_SAFE(ctrlr, &g_subsystem.ctrlrs, link, ctrlr_tmp) {
+		TAILQ_REMOVE(&g_subsystem.ctrlrs, ctrlr, link);
+	}
 
 	g_ns.rtype = 0;
 	g_ns.crkey = 0;
@@ -1107,6 +1118,48 @@ test_reservation_exclusive_access_regs_only_and_all_regs(void)
 		SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
 }
 
+static void
+test_reservation_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	_nvmf_subsys_reservation_acquire(&g_subsystem, &g_ctrlr_B, &g_ns, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_C preempt g_ctrlr_B,
+	 * g_ctrlr_B registrant is unregistred, and reservation is preempted.
+	 * Registration Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A/g_ctrlr_B.
+	 * Reservation Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A.
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS, 0xc1, 0xb1);
+	_nvmf_subsys_reservation_acquire(&g_subsystem, &g_ctrlr_C, &g_ns, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
+	SPDK_CU_ASSERT_FATAL(2 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(2 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1134,7 +1187,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
 			    test_reservation_write_exclusive_regs_only_and_all_regs) == NULL ||
 		CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
-			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL
+			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
+		CU_add_test(suite, "reservation_notification", test_reservation_notification) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
