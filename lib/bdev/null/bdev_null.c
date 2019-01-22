@@ -38,6 +38,7 @@
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
+#include "spdk/string.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -329,8 +330,8 @@ bdev_null_initialize(void)
 			block_size = 512;
 		} else {
 			errno = 0;
-			block_size = (int)strtol(val, NULL, 10);
-			if (errno) {
+			block_size = (int)spdk_strtol(val, 10);
+			if (block_size <= 0) {
 				SPDK_ERRLOG("Null entry %d: Invalid block size %s\n", i, val);
 				continue;
 			}
