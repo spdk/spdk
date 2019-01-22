@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "b162268f_089c7eec",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:51:51Z",
+      "side": 1,
+      "message": "Sorry, I didn\u0027t mean Ack\nThis is good because this is a function for OCF that it is using for printing\nWrapping that OCF messages in \u003c*NOTICE* file line\u003e is useless and makes logs unreadable",
+      "parentUuid": "851b9637_28663622",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 35
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "155a06a7_84cba49f",
         "filename": "lib/bdev/ocf/ctx.c",
         "patchSetId": 61
