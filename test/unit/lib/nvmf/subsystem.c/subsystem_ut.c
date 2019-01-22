@@ -485,27 +485,53 @@ ut_reservation_init(void)
 	/* Host A has two controllers */
 	spdk_uuid_generate(&g_ctrlr1_A.hostid);
 	g_ctrlr1_A.subsys = &g_subsystem;
+	TAILQ_INIT(&g_ctrlr1_A.log_head);
 	spdk_uuid_copy(&g_ctrlr2_A.hostid, &g_ctrlr1_A.hostid);
 	g_ctrlr2_A.subsys = &g_subsystem;
+	TAILQ_INIT(&g_ctrlr2_A.log_head);
 
 	/* Host B has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_B.hostid);
 	g_ctrlr_B.subsys = &g_subsystem;
+	TAILQ_INIT(&g_ctrlr_B.log_head);
 
 	/* Host C has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_C.hostid);
 	g_ctrlr_C.subsys = &g_subsystem;
+	TAILQ_INIT(&g_ctrlr_C.log_head);
 }
 
 static void
 ut_reservation_deinit(void)
 {
 	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	TAILQ_FOREACH_SAFE(reg, &g_subsystem.reg_head, link, tmp) {
 		TAILQ_REMOVE(&g_subsystem.reg_head, reg, link);
 		free(reg);
 	}
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr1_A.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr1_A.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr1_A.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr2_A.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr2_A.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr2_A.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr_B.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr_B.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr_B.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr_C.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr_C.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr_C.num_avail_log_pages = 0;
+
 	g_ns.rtype = 0;
 	g_ns.crkey = 0;
 	g_ns.holder = NULL;
@@ -612,7 +638,7 @@ ut_reservation_build_registrants(void)
 	/* TEST CASE: g_ctrlr1_A register with a new key */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
 					      0, 0, 0, 0xa1);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr1_A);
 	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xa1);
@@ -623,14 +649,14 @@ ut_reservation_build_registrants(void)
 	 */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
 					      0, 0, 0, 0xa2);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr2_A, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr2_A, &g_ns, req);
 	/* Reservation conflict for other key than 0xa1 */
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_RESERVATION_CONFLICT);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr2_A);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
 					      0, 0, 0, 0xa1);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr2_A, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr2_A, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr2_A);
 	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xa1);
@@ -639,7 +665,7 @@ ut_reservation_build_registrants(void)
 	/* g_ctrlr_B register with a new key */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
 					      0, 0, 0, 0xb1);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_B, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_B, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr_B);
 	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xb1);
@@ -648,7 +674,7 @@ ut_reservation_build_registrants(void)
 	/* g_ctrlr_C register with a new key */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REGISTER_KEY,
 					      0, 0, 0, 0xc1);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr_C);
 	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xc1);
@@ -676,7 +702,7 @@ test_reservation_register(void)
 	/* TEST CASE: Replace g_ctrlr1_A with a new key */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_REPLACE_KEY,
 					      0, 0, 0xa1, 0xa11);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr1_A);
 	SPDK_CU_ASSERT_FATAL(reg->rkey == 0xa11);
@@ -698,7 +724,7 @@ test_reservation_register(void)
 	/* TEST CASE: g_ctrlr_C unregister with IEKEY enabled */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_UNREGISTER_KEY,
 					      1, 0, 0, 0);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr_C);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
@@ -706,7 +732,7 @@ test_reservation_register(void)
 	/* TEST CASE: g_ctrlr_B unregister with correct key */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_UNREGISTER_KEY,
 					      0, 0, 0xb1, 0);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_B, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_B, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr_B);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
@@ -716,7 +742,7 @@ test_reservation_register(void)
 	 */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_UNREGISTER_KEY,
 					      0, 0, 0xa11, 0);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr1_A, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr1_A);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
@@ -901,7 +927,7 @@ test_reservation_write_exclusive(void)
 	/* Unregister Host C */
 	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_UNREGISTER_KEY,
 					      1, 0, 0, 0);
-	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, req);
+	_nvmf_subsys_reservation_register(&g_subsystem, &g_ctrlr_C, &g_ns, req);
 	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
 	reg = nvmf_subsys_get_registrant(&g_subsystem, &g_ctrlr_C);
 	SPDK_CU_ASSERT_FATAL(reg == NULL);
