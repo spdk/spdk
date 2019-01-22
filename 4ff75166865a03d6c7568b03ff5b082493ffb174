@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1882aaac_9221f993",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 6
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-22T23:23:23Z",
+      "side": 1,
+      "message": "agree",
+      "parentUuid": "9911675e_2f5667f3",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "08c8e295_8243e172",
         "filename": "configure",
         "patchSetId": 6
@@ -98,6 +116,24 @@
       "writtenOn": "2019-01-22T22:40:38Z",
       "side": 1,
       "message": "-lisal should be added to SYS_LIBS instead of LIBS\n\nthis ensures ordering on the link line is correct - otherwise I get some unit test link failures, which are fixed by making this change",
+      "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09059765_d6824a13",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-22T23:23:23Z",
+      "side": 1,
+      "message": "Here\u0027s what I\u0027m using, the location of the include dir is updated too:\nSYS_LIBS +\u003d -L$(ISAL_DIR)/.libs -lisal\nCOMMON_CFLAGS +\u003d -I$(ISAL_DIR)/include",
+      "parentUuid": "4e28994d_60c5bb04",
       "revId": "4ff75166865a03d6c7568b03ff5b082493ffb174",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
