@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "78d133ec_751757e1",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 70
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "28f99f2d_e1944f3e",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 51
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ef489364_07c19fce",
         "filename": "test/common/autotest_common.sh",
         "patchSetId": 70
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-22T09:42:41Z",
       "side": 1,
       "message": "is this change needed?\n\nWe grep the function name \"report_test_completion\", which is all lowercase.",
+      "range": {
+        "startLine": 255,
+        "startChar": 10,
+        "endLine": 255,
+        "endChar": 11
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd9318f8_90cfd1bc",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "This flag is used to skip greping on binary files - I think it should stay.",
+      "parentUuid": "ef489364_07c19fce",
       "range": {
         "startLine": 255,
         "startChar": 10,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "c4b4fe5d_88eadd2e",
+        "filename": "test/ftl/config/fio/randrw-verify-j2.fio.in",
+        "patchSetId": 70
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "I think this is good idea. Could we proceed this as separate patch? We had plan to refactor those functional tests.",
+      "parentUuid": "75e7f806_bdc8fc6d",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2243b599_0699366a",
         "filename": "test/ftl/fio.sh",
         "patchSetId": 70
@@ -76,6 +142,30 @@
       "writtenOn": "2019-01-22T10:11:47Z",
       "side": 1,
       "message": "Only 3 out of 9 added fio configs are used.\nCan we delete unused fio configs from this commit and add them when they\u0027re actually used?",
+      "range": {
+        "startLine": 10,
+        "startChar": 7,
+        "endLine": 10,
+        "endChar": 57
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82283a73_750830f6",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2243b599_0699366a",
       "range": {
         "startLine": 10,
         "startChar": 7,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "fe6ccedf_b296a66b",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "451b3ecf_7c14561e",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 7
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81912399_37bf0507",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 70
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "6b7ec780_14ff6da6",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "I removed this flag",
+      "parentUuid": "81912399_37bf0507",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 28
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de1cff3a_fd21b00d",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 70
@@ -145,6 +283,30 @@
       "writtenOn": "2019-01-22T10:11:47Z",
       "side": 1,
       "message": "If exit 0 is intended when we\u0027re lacking needed hardware, then I suggest changing echo message to smth like:\nCould not find FTL device. Skipping tests, or Tests skipped.\n\nMakes it easier to find things in logs later.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 7
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8579fce_f83dcc0c",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de1cff3a_fd21b00d",
       "range": {
         "startLine": 37,
         "startChar": 0,
@@ -185,6 +347,24 @@
       "writtenOn": "2019-01-22T10:04:04Z",
       "side": 1,
       "message": "Have you considered changing ./scripts/gen_nvme.sh to accomodate FTL with PUNIT/MODE/UUID, rather than adding it here ?\nThe gen_nvme.sh outputs config for ini file to use (and json config but FTL does not support that yet).",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c040c9d0_98af74d4",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:39Z",
+      "side": 1,
+      "message": "Could we make this change as separate patch?",
+      "parentUuid": "49486e24_a99db314",
       "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
