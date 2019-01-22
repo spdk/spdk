@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "feb41de1_3a5d053f",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 689,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T01:09:23Z",
+      "side": 1,
+      "message": "why was this changed? Not only it\u0027s unrelated change, but it also stands out among all those \u003d{0} we use throughout this file.",
+      "revId": "2d81de3910be461b8fd6eaf17ac0a2cad76100b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
