@@ -218,3 +218,43 @@ end:
 	free_rpc_get_ocf_stats(&req);
 }
 SPDK_RPC_REGISTER("get_ocf_stats", spdk_rpc_get_ocf_stats, SPDK_RPC_RUNTIME)
+
+static void
+get_bdevs_fn(struct vbdev_ocf *vbdev, void *ctx)
+{
+	struct spdk_json_write_ctx *w = ctx;
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", vbdev->name);
+	spdk_json_write_named_bool(w, "started", vbdev->state.started);
+
+	spdk_json_write_named_object_begin(w, "cache");
+	spdk_json_write_named_string(w, "name", vbdev->cache.name);
+	spdk_json_write_named_bool(w, "attached", vbdev->core.attached);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_named_object_begin(w, "core");
+	spdk_json_write_named_string(w, "name", vbdev->core.name);
+	spdk_json_write_named_bool(w, "attached", vbdev->core.attached);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_ocf_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+	vbdev_ocf_foreach(get_bdevs_fn, w);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_ocf_bdevs", spdk_rpc_get_ocf_bdevs, SPDK_RPC_RUNTIME)

@@ -228,6 +228,21 @@ vbdev_ocf_get_base_by_name(const char *name)
 	return NULL;
 }
 
+/* Execute fn for each OCF device that is online or waits for base devices */
+void
+vbdev_ocf_foreach(vbdev_ocf_foreach_fn fn, void *ctx)
+{
+	struct vbdev_ocf *vbdev;
+
+	assert(fn != NULL);
+
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (!vbdev->state.doing_finish) {
+			fn(vbdev, ctx);
+		}
+	}
+}
+
 /* Called from OCF when SPDK_IO is completed */
 static void
 vbdev_ocf_io_submit_cb(struct ocf_io *io, int error)
