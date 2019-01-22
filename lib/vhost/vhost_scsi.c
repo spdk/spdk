@@ -113,10 +113,8 @@ struct spdk_vhost_scsi_task {
 	struct spdk_vhost_virtqueue *vq;
 };
 
-static int spdk_vhost_scsi_start(struct spdk_vhost_dev *dev,
-				 struct spdk_vhost_session *vsession, void *);
-static int spdk_vhost_scsi_stop(struct spdk_vhost_dev *,
-				struct spdk_vhost_session *vsession, void *);
+static int spdk_vhost_scsi_start(struct spdk_vhost_session *vsession);
+static int spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession);
 static void spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev,
 		struct spdk_json_write_ctx *w);
 static void spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev,
@@ -1237,8 +1235,8 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 }
 
 static int
-spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev,
-		      struct spdk_vhost_session *vsession, void *event_ctx)
+spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
+			 struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_scsi_session *svsession;
@@ -1289,8 +1287,15 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev,
 					 MGMT_POLL_PERIOD_US);
 	}
 out:
-	spdk_vhost_dev_backend_event_done(event_ctx, rc);
+	spdk_vhost_session_event_done(event_ctx, rc);
 	return rc;
+}
+
+static int
+spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
+{
+	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
+					     3, "start session");
 }
 
 static int
@@ -1323,14 +1328,14 @@ destroy_session_poller_cb(void *arg)
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->destroy_ctx.poller);
-	spdk_vhost_dev_backend_event_done(svsession->destroy_ctx.event_ctx, 0);
+	spdk_vhost_session_event_done(svsession->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
 
 static int
-spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev,
-		     struct spdk_vhost_session *vsession, void *event_ctx)
+spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
+			struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_scsi_session *svsession;
 
@@ -1349,8 +1354,15 @@ spdk_vhost_scsi_stop(struct spdk_vhost_dev *vdev,
 	return 0;
 
 err:
-	spdk_vhost_dev_backend_event_done(event_ctx, -1);
+	spdk_vhost_session_event_done(event_ctx, -1);
 	return -1;
+}
+
+static int
+spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
+{
+	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
+					     3, "stop session");
 }
 
 static void

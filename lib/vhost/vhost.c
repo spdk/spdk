@@ -849,7 +849,7 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 }
 
 void
-spdk_vhost_dev_backend_event_done(void *event_ctx, int response)
+spdk_vhost_session_event_done(void *event_ctx, int response)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = event_ctx;
 
@@ -926,9 +926,10 @@ out_unlock_return:
 	free(ctx);
 }
 
-static int
-_spdk_vhost_event_send(struct spdk_vhost_session *vsession, spdk_vhost_session_fn cb_fn,
-		       unsigned timeout_sec, const char *errmsg)
+int
+spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
+			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
+			      const char *errmsg)
 {
 	struct spdk_vhost_session_fn_ctx ev_ctx = {0};
 	struct spdk_event *ev;
@@ -1013,7 +1014,7 @@ stop_device(int vid)
 		return;
 	}
 
-	rc = _spdk_vhost_event_send(vsession, vdev->backend->stop_session, 3, "stop session");
+	rc = vdev->backend->stop_session(vsession);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1106,7 +1107,7 @@ start_device(int vid)
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
 	vsession->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	spdk_vhost_session_mem_register(vsession);
-	rc = _spdk_vhost_event_send(vsession, vdev->backend->start_session, 3, "start session");
+	rc = vdev->backend->start_session(vsession);
 	if (rc != 0) {
 		spdk_vhost_session_mem_unregister(vsession);
 		free(vsession->mem);

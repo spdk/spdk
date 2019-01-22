@@ -1066,12 +1066,9 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 	return 0;
 }
 
-/* new device means enable the
- * virtual NVMe controller
- */
 static int
-spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev,
-			     struct spdk_vhost_session *vsession, void *event_ctx)
+spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
+			 struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
@@ -1099,8 +1096,15 @@ spdk_vhost_nvme_start_device(struct spdk_vhost_dev *vdev,
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
-	spdk_vhost_dev_backend_event_done(event_ctx, 0);
+	spdk_vhost_session_event_done(event_ctx, 0);
 	return 0;
+}
+
+static int
+spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
+{
+	return spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_start_cb,
+					     3, "start session");
 }
 
 static void
@@ -1155,16 +1159,14 @@ destroy_device_poller_cb(void *arg)
 	}
 
 	spdk_poller_unregister(&nvme->destroy_ctx.poller);
-	spdk_vhost_dev_backend_event_done(nvme->destroy_ctx.event_ctx, 0);
+	spdk_vhost_session_event_done(nvme->destroy_ctx.event_ctx, 0);
 
 	return -1;
 }
 
-/* Disable NVMe controller
- */
 static int
-spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev,
-			    struct spdk_vhost_session *vsession, void *event_ctx)
+spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
+			struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
@@ -1180,6 +1182,13 @@ spdk_vhost_nvme_stop_device(struct spdk_vhost_dev *vdev,
 	nvme->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
 
 	return 0;
+}
+
+static int
+spdk_vhost_nvme_stop(struct spdk_vhost_session *vsession)
+{
+	return spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_stop_cb,
+					     3, "start session");
 }
 
 static void
@@ -1252,8 +1261,8 @@ spdk_vhost_nvme_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend = {
 	.session_ctx_size = 0,
-	.start_session = spdk_vhost_nvme_start_device,
-	.stop_session = spdk_vhost_nvme_stop_device,
+	.start_session = spdk_vhost_nvme_start,
+	.stop_session = spdk_vhost_nvme_stop,
 	.dump_info_json = spdk_vhost_nvme_dump_info_json,
 	.write_config_json = spdk_vhost_nvme_write_config_json,
 	.remove_device = spdk_vhost_nvme_dev_remove,
