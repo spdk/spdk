@@ -170,7 +170,8 @@ int spdk_lvs_destroy(struct spdk_lvol_store *lvol_store,
  * \return 0 on success, negative errno on failure.
  */
 int spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		     bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+		     bool thin_provisioned, bool write_zeroes,
+		     spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
 /**
  * Create snapshot of given lvol.
  *

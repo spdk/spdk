@@ -53,7 +53,8 @@ void vbdev_lvs_destruct(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn,
 void vbdev_lvs_unload(struct spdk_lvol_store *lvs, spdk_lvs_op_complete cb_fn, void *cb_arg);
 
 int vbdev_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		      bool thin_provisioned, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);
+		      bool thin_provisioned, bool write_zeroes, spdk_lvol_op_with_handle_complete cb_fn,
+		      void *cb_arg);
 
 void vbdev_lvol_create_snapshot(struct spdk_lvol *lvol, const char *snapshot_name,
 				spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg);

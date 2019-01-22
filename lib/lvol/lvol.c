@@ -1032,7 +1032,8 @@ _spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+		 bool thin_provision, bool write_zeroes, spdk_lvol_op_with_handle_complete cb_fn,
+		 void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_store *bs;
@@ -1079,6 +1080,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 
 	spdk_blob_opts_init(&opts);
 	opts.thin_provision = thin_provision;
+	opts.write_zeroes = write_zeroes;
 	opts.num_clusters = num_clusters;
 	opts.xattrs.count = SPDK_COUNTOF(xattr_names);
 	opts.xattrs.names = xattr_names;

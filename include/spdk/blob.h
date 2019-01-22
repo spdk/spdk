@@ -394,6 +394,7 @@ struct spdk_blob_xattr_opts {
 struct spdk_blob_opts {
 	uint64_t  num_clusters;
 	bool	thin_provision;
+	bool	write_zeroes;
 	struct spdk_blob_xattr_opts xattrs;
 };
 
