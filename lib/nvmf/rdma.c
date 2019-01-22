@@ -234,6 +234,8 @@ struct spdk_nvmf_rdma_request {
 
 	struct spdk_nvmf_rdma_request_data	data;
 
+	uint32_t				num_outstanding_data_wr;
+
 	struct spdk_nvmf_rdma_wr		rdma_wr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
@@ -1315,6 +1317,9 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
 
+		/* set the number of outstanding data WRs for this request. */
+		rdma_req->num_outstanding_data_wr = 1;
+
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Request %p took %d buffer/s from central pool\n", rdma_req,
 			      rdma_req->req.iovcnt);
 
@@ -1342,6 +1347,7 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 			return -1;
 		}
 
+		rdma_req->num_outstanding_data_wr = 0;
 		rdma_req->req.data = rdma_req->recv->buf + offset;
 		rdma_req->data_from_pool = false;
 		rdma_req->req.length = sgl->unkeyed.length;
@@ -2683,7 +2689,11 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
-					spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+					assert(rdma_req->num_outstanding_data_wr > 0);
+					rdma_req->num_outstanding_data_wr--;
+					if (rdma_req->num_outstanding_data_wr == 0) {
+						spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
+					}
 				}
 				break;
 			case RDMA_WR_TYPE_DRAIN_RECV:
@@ -2752,8 +2762,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
-			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+			/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
+			assert(rdma_req->num_outstanding_data_wr > 0);
+			rdma_req->num_outstanding_data_wr--;
+			if (rdma_req->num_outstanding_data_wr == 0) {
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
+				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+			}
 
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
