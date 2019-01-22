@@ -511,6 +511,7 @@ ut_reservation_deinit(void)
 		TAILQ_REMOVE(&g_subsystem.reg_head, reg, link);
 		free(reg);
 	}
+
 	TAILQ_FOREACH_SAFE(log, &g_ctrlr1_A.log_head, link, log_tmp) {
 		TAILQ_REMOVE(&g_ctrlr1_A.log_head, log, link);
 		free(log);
@@ -986,6 +987,48 @@ test_reservation_exclusive_access(void)
 	ut_reservation_deinit();
 }
 
+static void
+test_reservation_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	rsp = &req->rsp->nvme_cpl;
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	_nvmf_subsys_reservation_acquire(&g_subsystem, &g_ctrlr_B, &g_ns, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_C preempt g_ctrlr_B,
+	 * g_ctrlr_B registrant is unregistred, and reservation is preempted.
+	 * Registration Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A/g_ctrlr_B.
+	 * Reservation Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A.
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS, 0xc1, 0xb1);
+	_nvmf_subsys_reservation_acquire(&g_subsystem, &g_ctrlr_C, &g_ns, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
+	SPDK_CU_ASSERT_FATAL(2 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(2 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1009,7 +1052,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "reservation_acquire_preempt_1", test_reservation_acquire_preempt_1) == NULL ||
 		CU_add_test(suite, "reservation_release", test_reservation_release) == NULL ||
 		CU_add_test(suite, "reservation_write_exclusive", test_reservation_write_exclusive) == NULL ||
-		CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access) == NULL
+		CU_add_test(suite, "reservation_exclusive_access", test_reservation_exclusive_access) == NULL ||
+		CU_add_test(suite, "reservation_notification", test_reservation_notification) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
