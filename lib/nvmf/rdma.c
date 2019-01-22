@@ -248,8 +248,6 @@ struct spdk_nvmf_rdma_request {
 
 	uint32_t				num_outstanding_data_wr;
 
-	struct spdk_nvmf_rdma_wr		rdma_wr;
-
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
