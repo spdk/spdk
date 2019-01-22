@@ -2617,6 +2617,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 static int
 spdk_nvmf_rdma_req_is_completing(struct spdk_nvmf_rdma_request *rdma_req)
 {
+	SPDK_ERRLOG(" ***** rdma_req->state = %d *****\n", rdma_req->state);
 	return rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST ||
 	       rdma_req->state == RDMA_REQUEST_STATE_COMPLETING;
 }

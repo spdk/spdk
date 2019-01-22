@@ -707,6 +707,21 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	struct spdk_nvmf_ctrlr *ctrlr = qpair->ctrlr;
 	struct spdk_nvmf_transport_poll_group *tgroup;
 	int rc;
+	struct spdk_nvmf_request *req, *tmp;
+	struct spdk_nvmf_poll_group *group =  qpair->group;
+
+	if (ctrlr) {
+		struct spdk_nvmf_subsystem_poll_group *sgroup = &group->sgroups[ctrlr->subsys->id];
+		/* Release all queued requests */
+		TAILQ_FOREACH_SAFE(req, &sgroup->queued, link, tmp) {
+			if (req->qpair == qpair) {
+				TAILQ_REMOVE(&sgroup->queued, req, link);
+				if (spdk_nvmf_transport_req_free(req)) {
+					SPDK_ERRLOG("Transport request free error!\n");
+				}
+			}
+		}
+	}
 
 	assert(qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING);
 	spdk_nvmf_qpair_set_state(qpair, SPDK_NVMF_QPAIR_ERROR);
