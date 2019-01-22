@@ -154,4 +154,9 @@ struct vbdev_ocf_base *vbdev_ocf_get_base_by_name(const char *name);
 /* Stop OCF cache and unregister SPDK bdev */
 int vbdev_ocf_delete(struct vbdev_ocf *vbdev);
 
+typedef void (*vbdev_ocf_foreach_fn)(struct vbdev_ocf *, void *);
+
+/* Execute fn for each OCF device that is online or waits for base devices */
+void vbdev_ocf_foreach(vbdev_ocf_foreach_fn fn, void *ctx);
+
 #endif

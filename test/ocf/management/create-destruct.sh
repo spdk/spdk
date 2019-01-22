@@ -27,6 +27,9 @@ $rpc_py construct_malloc_bdev 101 512 -b Malloc1
 
 $rpc_py construct_ocf_bdev PartCache wt Malloc0 NonExisting
 
+$rpc_py get_ocf_bdevs | jq -e \
+	'map(select(.name == "PartCache")) | .[0] | .started == false and .cache.attached and .core.attached == false'
+
 if ! bdev_check_claimed Malloc0; then
 	>&2 echo "Base device expected to be claimed now"
 	exit 1
@@ -39,6 +42,9 @@ if bdev_check_claimed Malloc0; then
 fi
 
 $rpc_py construct_ocf_bdev FullCache wt Malloc0 Malloc1
+
+$rpc_py get_ocf_bdevs | jq -e \
+	'map(select(.name == "FullCache")) | .[0] | .started and .cache.attached and .core.attached'
 
 if ! (bdev_check_claimed Malloc0 && bdev_check_claimed Malloc1); then
 	>&2 echo "Base devices expected to be claimed now"

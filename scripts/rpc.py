@@ -175,6 +175,12 @@ if __name__ == "__main__":
     p.add_argument('name', help='Name of OCF bdev')
     p.set_defaults(func=get_ocf_stats)
 
+    def get_ocf_bdevs(args):
+        print_dict(rpc.bdev.get_ocf_bdevs(args.client))
+    p = subparsers.add_parser('get_ocf_bdevs',
+                              help='Get list of OCF devices including unregistered ones')
+    p.set_defaults(func=get_ocf_bdevs)
+
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,

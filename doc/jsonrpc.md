@@ -1076,6 +1076,53 @@ Example response:
 }
 ~~~
 
+## get_ocf_bdevs {#rpc_get_ocf_bdevs}
+
+Get list of OCF devices including unregistered ones.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+Array of OCF devices with their current status, along with core and cache bdevs.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_ocf_bdevs",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "PartCache",
+      "started": false,
+      "cache": {
+        "name": "Malloc0",
+        "attached": true
+      },
+      "core": {
+        "name": "Malloc1",
+        "attached": false
+      }
+    }
+  ]
+}
+~~~
+
 ## construct_malloc_bdev {#rpc_construct_malloc_bdev}
 
 Construct @ref bdev_config_malloc
