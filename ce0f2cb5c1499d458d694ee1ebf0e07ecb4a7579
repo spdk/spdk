@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96d41bfd_c2e6222e",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:58:04Z",
+      "side": 1,
+      "message": "Administrator doesn\u0027t need to know about malformed requests. Please remove logging of  spdk_json_decode_object() failure here and in RPC calls.",
+      "range": {
+        "startLine": 76,
+        "startChar": 2,
+        "endLine": 76,
+        "endChar": 50
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "612430b6_6e4a6511",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:58:04Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 130,
+        "startChar": 2,
+        "endLine": 130,
+        "endChar": 13
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "463a3745_6a5f29af",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:58:04Z",
+      "side": 1,
+      "message": "There should be nothing requiring print_dict() during delete call.",
+      "range": {
+        "startLine": 162,
+        "startChar": 8,
+        "endLine": 162,
+        "endChar": 18
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2ac5b8d3_3e00a1d5",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:58:04Z",
+      "side": 1,
+      "message": "Not true",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 12
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
