@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c8a4058_5433088d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T22:53:15Z",
+      "side": 1,
+      "message": "send_wr is just a pointer to the chain of wr\u0027s to be sent. The comment should really be +1 for the rsp wr.",
+      "revId": "1a151e347810019447fbb5e50c60316b60992992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc52b84b_64818590",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1538,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T22:53:15Z",
+      "side": 1,
+      "message": "If you check the current_recv_wr_qd when the recv first arrives, you don\u0027t need to do it here.",
+      "revId": "1a151e347810019447fbb5e50c60316b60992992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9386eb54_4bff042c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2634,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T22:53:15Z",
+      "side": 1,
+      "message": "Reverse the count direction on recv",
+      "revId": "1a151e347810019447fbb5e50c60316b60992992",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
