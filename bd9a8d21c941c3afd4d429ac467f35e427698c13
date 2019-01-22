@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c7061b15_f87d9239",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2690,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T21:54:35Z",
+      "side": 1,
+      "message": "I think this should be:\n\nif (rdma_req-\u003edata.wr.opcode \u003d\u003d IBV_WR_RDMA_READ) {\n    assert(rdma_req-\u003enum_outstanding_data_wr \u003e 0);\n    rdma_req-\u003enum_outstanding_data_wr--;\n    if (rdma_req-\u003enum_outstanding_data_wr \u003d\u003d 0) {\n        spdk_nvmf_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);\n    }\n}",
+      "revId": "bd9a8d21c941c3afd4d429ac467f35e427698c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3ef6537d_0f69f157",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2761,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T21:54:35Z",
+      "side": 1,
+      "message": "Same comment as above.",
+      "revId": "bd9a8d21c941c3afd4d429ac467f35e427698c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
