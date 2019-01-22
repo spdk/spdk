@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1e75e64_cc77caf7",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T11:01:06Z",
+      "side": 1,
+      "message": "Can we consider changing this to enum with three options:\n- None (do nothing)\n- Unmap (default right now)\n- Write_zeroes",
+      "range": {
+        "startLine": 397,
+        "startChar": 0,
+        "endLine": 397,
+        "endChar": 19
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c8de355c_baa47299",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T11:01:06Z",
+      "side": 1,
+      "message": "If we are changing name of this function, lets change the cpl too.",
+      "range": {
+        "startLine": 1144,
+        "startChar": 40,
+        "endLine": 1144,
+        "endChar": 77
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "30425d8b_bf6a4b40",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1207,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T11:01:06Z",
+      "side": 1,
+      "message": "When third option is used \u0027None\u0027, please consider skipping this function and go straight to _spdk_blob_persist_unmap_clusters_cpl()",
+      "range": {
+        "startLine": 1207,
+        "startChar": 1,
+        "endLine": 1207,
+        "endChar": 48
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
