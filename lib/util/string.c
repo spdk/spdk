@@ -410,3 +410,65 @@ spdk_mem_all_zero(const void *data, size_t size)
 
 	return true;
 }
+
+long int
+spdk_strtol(const char *nptr, int base)
+{
+	long val;
+	char *endptr;
+
+	/* Since strtoll() can legitimately return 0, LONG_MAX, or LONG_MIN
+	 * on both success and failure, the calling program should set errno
+	 * to 0 before the call.
+	 */
+	errno = 0;
+
+	val = strtol(nptr, &endptr, base);
+
+	if (*endptr != '\0') {
+		/* Non integer character was found. */
+		return -EINVAL;
+	} else if (errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) {
+		/* Overflow occurred. */
+		return -ERANGE;
+	} else if (errno != 0 && val == 0) {
+		/* Other error occurred. */
+		return -errno;
+	} else if (val < 0) {
+		/* Input string was negative number. */
+		return -ERANGE;
+	}
+
+	return val;
+}
+
+long long int
+spdk_strtoll(const char *nptr, int base)
+{
+	long long val;
+	char *endptr;
+
+	/* Since strtoll() can legitimately return 0, LLONG_MAX, or LLONG_MIN
+	 * on both success and failure, the calling program should set errno
+	 * to 0 before the call.
+	 */
+	errno = 0;
+
+	val = strtoll(nptr, &endptr, base);
+
+	if (*endptr != '\0') {
+		/* Non integer character was found. */
+		return -EINVAL;
+	} else if (errno == ERANGE && (val == LLONG_MAX || val == LLONG_MIN)) {
+		/* Overflow occurred. */
+		return -ERANGE;
+	} else if (errno != 0 && val == 0) {
+		/* Other error occurred. */
+		return -errno;
+	} else if (val < 0) {
+		/* Input string was negative number. */
+		return -ERANGE;
+	}
+
+	return val;
+}
