@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae52c1ac_b64454f3",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T16:05:48Z",
+      "side": 1,
+      "message": "Could we keep a single RPC with an `enable` param rather than 2 separate RPCs for enable/disable? I\u0027m pretty sure we want to keep the API as small as possible.\n\nThat\u0027s already how \"context_switch_monitor\" and \"set_bdev_nvme_hotplug\" work.",
+      "revId": "38a22c8865b17659711eda5e09ba926a6ab55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
