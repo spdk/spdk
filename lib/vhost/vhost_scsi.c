@@ -1114,6 +1114,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	svdev = to_scsi_dev(vdev);
+	assert(svdev != NULL);
 	svsession->svdev = svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
