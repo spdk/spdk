@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c48c6fc_1961b8be",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 67
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T14:56:13Z",
+      "side": 1,
+      "message": "I think you want to set 4th field as true to make it optional. Otherwise on create case it won\u0027t be proceed further.",
+      "range": {
+        "startLine": 60,
+        "startChar": 1,
+        "endLine": 60,
+        "endChar": 77
+      },
+      "revId": "2b8fb45575b367b089f6ae0c1d32a8a0e1b95efa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
