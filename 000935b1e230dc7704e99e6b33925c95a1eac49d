@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d2c5416_8a78b034",
+        "filename": "CONFIG",
+        "patchSetId": 61
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T15:27:09Z",
+      "side": 1,
+      "message": "Can\u0027t see any usage of that.",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 16
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83e486e7_64120eb0",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T15:27:09Z",
+      "side": 1,
+      "message": "spdk_log(\u003clevel here\u003e, fmt, args)",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 35
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "155a06a7_84cba49f",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T15:27:09Z",
+      "side": 1,
+      "message": "Oh man, you have backtrace printing already embedded in SPDK_ERROR () if you configure SPDK with \u0027--enable-log-bt\u0027. Why reinventing the wheal?",
+      "range": {
+        "startLine": 388,
+        "startChar": 0,
+        "endLine": 411,
+        "endChar": 11
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
