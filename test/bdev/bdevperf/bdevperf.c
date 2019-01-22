@@ -827,14 +827,16 @@ static int
 bdevperf_parse_arg(int ch, char *arg)
 {
 	long long tmp;
-	char *end;
 
 	if (ch == 'w') {
 		g_workload_type = optarg;
 	} else {
-		tmp = strtoll(optarg, &end, 10);
-		if (tmp <= INT_MIN || tmp >= INT_MAX) {
-			fprintf(stderr, "-%c out of range. Parse failed\n", ch);
+		tmp = spdk_strtoll(optarg, 10);
+		if (tmp < 0) {
+			fprintf(stderr, "Parse failed for the option %c.\n", ch);
+			return tmp;
+		} else if (tmp >= INT_MAX) {
+			fprintf(stderr, "Parsed option was too large %c.\n", ch);
 			return -ERANGE;
 		}
 
