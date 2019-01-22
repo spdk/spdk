@@ -964,6 +964,8 @@ spdk_nvmf_ns_hot_remove(void *remove_ctx)
 	struct spdk_nvmf_ns *ns = remove_ctx;
 	int rc;
 
+	SPDK_NOTICELOG(" ***** HOT REMOVE *****\n");
+
 	rc = spdk_nvmf_subsystem_pause(ns->subsystem, _spdk_nvmf_ns_hot_remove, ns);
 	if (rc) {
 		SPDK_ERRLOG("Unable to pause subsystem to process namespace removal!\n");
