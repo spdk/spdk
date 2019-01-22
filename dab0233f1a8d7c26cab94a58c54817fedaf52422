@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "139bdaac_861cd395",
+        "filename": "include/spdk/blob.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-22T15:05:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1e75e64_cc77caf7",
+      "range": {
+        "startLine": 397,
+        "startChar": 0,
+        "endLine": 397,
+        "endChar": 19
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c8de355c_baa47299",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "807aba5b_4187aab3",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1144,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-22T15:05:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c8de355c_baa47299",
+      "range": {
+        "startLine": 1144,
+        "startChar": 40,
+        "endLine": 1144,
+        "endChar": 77
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "30425d8b_bf6a4b40",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 1
@@ -59,6 +107,30 @@
       "writtenOn": "2019-01-22T11:01:06Z",
       "side": 1,
       "message": "When third option is used \u0027None\u0027, please consider skipping this function and go straight to _spdk_blob_persist_unmap_clusters_cpl()",
+      "range": {
+        "startLine": 1207,
+        "startChar": 1,
+        "endLine": 1207,
+        "endChar": 48
+      },
+      "revId": "dab0233f1a8d7c26cab94a58c54817fedaf52422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1fe5d7a_740d2605",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1207,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-22T15:05:15Z",
+      "side": 1,
+      "message": "This is reasonable change, but this will make code less readable. I\u0027m not sure if this is a good idea. With recent change we will have to read xattrs twice.",
+      "parentUuid": "30425d8b_bf6a4b40",
       "range": {
         "startLine": 1207,
         "startChar": 1,
