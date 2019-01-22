@@ -234,8 +234,6 @@ struct spdk_nvmf_rdma_request {
 
 	struct spdk_nvmf_rdma_request_data	data;
 
-	struct spdk_nvmf_rdma_wr		rdma_wr;
-
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
