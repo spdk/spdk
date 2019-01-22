@@ -868,8 +868,6 @@ request_transfer_in(struct spdk_nvmf_request *req)
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
 
-	rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
-	rdma_req->data.wr.next = NULL;
 	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
@@ -923,12 +921,8 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
-
-		rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
-
-		rdma_req->data.wr.next = send_wr;
-		*data_posted = 1;
 		send_wr = &rdma_req->data.wr;
+		*data_posted = 1;
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
@@ -1316,6 +1310,13 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 		rdma_req->data.wr.num_sge = rdma_req->req.iovcnt;
 		rdma_req->data.wr.wr.rdma.rkey = sgl->keyed.key;
 		rdma_req->data.wr.wr.rdma.remote_addr = sgl->address;
+		if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+			rdma_req->data.wr.opcode = IBV_WR_RDMA_WRITE;
+			rdma_req->data.wr.next = &rdma_req->rsp.wr;
+		} else if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
+			rdma_req->data.wr.opcode = IBV_WR_RDMA_READ;
+			rdma_req->data.wr.next = NULL;
+		}
 
 		/* set the number of outstanding data WRs for this request. */
 		rdma_req->num_outstanding_data_wr = 1;
