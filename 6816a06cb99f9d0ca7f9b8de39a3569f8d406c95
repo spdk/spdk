@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef489364_07c19fce",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T09:42:41Z",
+      "side": 1,
+      "message": "is this change needed?\n\nWe grep the function name \"report_test_completion\", which is all lowercase.",
+      "range": {
+        "startLine": 255,
+        "startChar": 10,
+        "endLine": 255,
+        "endChar": 11
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
