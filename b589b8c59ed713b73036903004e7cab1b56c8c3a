@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa8f6ae4_ece39fee",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-22T01:06:42Z",
+      "side": 1,
+      "message": "We can simplify much by submitting split IOs sequentially.\n\nPlease see the following (not compiled yet).\n\nstatic void\nraid_bdev_unmap_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)\n{\n\tstruct spdk_bdev_io *parent_io \u003d cb_arg;\n\tstruct raid_bdev_io *raid_io \u003d (struct raid_bdev_io *)parent_io-\u003edriver_ctx;\n\n\tspdk_bdev_free_io(bdev_io);\n\t\n\tif (!success) {\n\t\tspdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_FAILED);\n\t} else if (raid_io-\u003eremaining_num_blocks \u003d\u003d 0) {\n\t\tspdk_bdev_io_complete(parent_io, SPDK_BDEV_IO_STATUS_SUCCESS);\n\t}\n}\n\nstatic void\n_raid_bdev_submit_unmap_request_next(void *_bdev_io)\n{\n\tstruct spdk_bdev_io\t\t*bdev_io \u003d _bdev_io;\n\tstruct raid_bdev_io\t\t*raid_io;\n\tstruct raid_bdev\t\t*raid_bdev;\n\tstruct raid_bdev_io_channel\t*raid_ch;\n\tuint64_t\t\t\tcurrent_offset;\n\tuint64_t\t\t\tremaining;\n\tuint64_t\t\t\tpd_strip;\n\tuint32_t\t\t\toffset_in_strip;\n\tuint64_t\t\t\tpd_lba;\n\tuint64_t\t\t\tpd_blocks;\n\tuint32_t\t\t\tpd_idx;\n\tint\t\t\t\tret \u003d 0;\n\n\traid_bdev \u003d (struct raid_bdev *)bdev_io-\u003ebdev-\u003ectxt;\n\traid_io \u003d (struct raid_bdev_io *)bdev_io-\u003edriver_ctx;\n\traid_ch \u003d spdk_io_channel_get_ctx(raid_io-\u003ech);\n\n\tcurrent_offset \u003d raid_io-\u003ecurrent_offset_blocks;\n\tremaining \u003d raid_io-\u003eremaining_num_blocks;\n\n\tstrip \u003d offset_blocks \u003e\u003e raid_bdev-\u003estrip_size_shift;\n\tpd_strip \u003d strip / raid_bdev-\u003enum_base_bdevs;\n\tpd_idx \u003d strip % raid_bdev-\u003enum_base_bdevs;;\n\toffset_in_strip \u003d offset_blocks \u0026 (raid_bdev-\u003estrip_size - 1);\n\n\tpd_lba \u003d (pd_strip \u003c\u003c raid_bdev-\u003estrip_size_shift) + offset_in_strip;\n\n\tpd_blocks \u003d raid_bdev-\u003estrip_size - (current_offset % raid_bdev-\u003estrip_size);\n\tpd_blocks \u003d spdk_min(pd_blocks, remaining);\n\n\tret \u003d spdk_bdev_unmap_blocks(raid_bdev-\u003ebase_bdev_info[disk_idx].desc,\n\t\t\t\t     raid_ch-\u003ebase_channel[disk_idx],\n\t\t\t\t     offset_in_disk, nblocks_in_disk,\n\t\t\t\t     raid_bdev_unmap_io_completion, bdev_io);\n\n\tif (ret \u003d\u003d 0) {\n\t\traid_io-\u003ecurrent_offset_blocks +\u003d pd_blocks;\n\t\traid_io-\u003eremaining_num_blocks +\u003d pd_blocks;\n\t} else {\n\t\traid_bdev_unmap_io_submit_fail_process(bdev_io, ret);\n\t}\n}\n\nstatic void\n_raid_bdev_submit_unmap_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)\n{\n\tstruct raid_bdev_io\t*raid_io;\n\n\traid_io \u003d (struct raid_bdev_io *)bdev_io-\u003edriver_ctx;\n\traid_io-\u003ech \u003d ch;\n\traid_io-\u003ecurrent_offset_blocks \u003d bdev_io-\u003eu.bdev.offset_blocks;\n\traid_io-\u003eremaining_num_blocks \u003d bdev_io-\u003eu.bdev.num_blocks;\n\n\t_raid_bdev_submit_unmap_request_next(bdev_io);\n}",
+      "revId": "b589b8c59ed713b73036903004e7cab1b56c8c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
