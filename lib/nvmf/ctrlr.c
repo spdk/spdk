@@ -352,6 +352,9 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "csts 0x%x\n", ctrlr->vcprop.csts.raw);
 
 	req->qpair->ctrlr = ctrlr;
+	ctrlr->log_page_count = 0;
+	TAILQ_INIT(&ctrlr->log_head);
+
 	spdk_thread_send_msg(subsystem->thread, _spdk_nvmf_subsystem_add_ctrlr, req);
 
 	return ctrlr;
@@ -361,14 +364,22 @@ static void
 _spdk_nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+
+	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
+		TAILQ_REMOVE(&ctrlr->log_head, log, link);
+		free(log);
+	}
+
 	free(ctrlr);
 }
 
 void
 spdk_nvmf_ctrlr_destruct(struct spdk_nvmf_ctrlr *ctrlr)
 {
+
 	spdk_nvmf_subsystem_remove_ctrlr(ctrlr->subsys, ctrlr);
 
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_destruct, ctrlr);
