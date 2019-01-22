@@ -823,8 +823,12 @@ bdev_rbd_library_init(void)
 		if (val == NULL) {
 			block_size = 512; /* default value */
 		} else {
-			block_size = (int)strtol(val, NULL, 10);
-			if (block_size & 0x1ff) {
+			block_size = (int)spdk_strtol(val, 10);
+			if (block_size < 0) {
+				SPDK_ERRLOG("Invalid block size\n");
+				rc = -1;
+				goto end;
+			} else if (block_size & 0x1ff) {
 				SPDK_ERRLOG("current block_size = %d, it should be multiple of 512\n",
 					    block_size);
 				rc = -1;

@@ -37,6 +37,7 @@
 #include "spdk/conf.h"
 #include "spdk/sock.h"
 #include "spdk/scsi.h"
+#include "spdk/string.h"
 
 #include "spdk_internal/log.h"
 
@@ -78,7 +79,7 @@ spdk_iscsi_ipv6_netmask_allow_addr(const char *netmask, const char *addr)
 	p++;
 
 	if (p[0] == '/') {
-		bits = (int) strtol(p + 1, NULL, 10);
+		bits = (int)spdk_strtol(p + 1, 10);
 		if (bits <= 0 || bits > 128) {
 			return false;
 		}
@@ -138,7 +139,7 @@ spdk_iscsi_ipv4_netmask_allow_addr(const char *netmask, const char *addr)
 	mask[n] = '\0';
 
 	if (p[0] == '/') {
-		bits = (int) strtol(p + 1, NULL, 10);
+		bits = (int)spdk_strtol(p + 1, 10);
 		if (bits <= 0 || bits > 32) {
 			return false;
 		}
@@ -1150,7 +1151,7 @@ spdk_iscsi_parse_tgt_node(struct spdk_conf_section *sp)
 	if (val == NULL) {
 		queue_depth = g_spdk_iscsi.MaxQueueDepth;
 	} else {
-		queue_depth = (int) strtol(val, NULL, 10);
+		queue_depth = (int)spdk_strtol(val, 10);
 	}
 
 	num_luns = 0;

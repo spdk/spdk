@@ -419,7 +419,7 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 		return -1;
 	}
 
-	value = (int)strtol(v, NULL, 10);
+	value = (int)spdk_strtol(v, 10);
 	return value;
 }
 
@@ -474,7 +474,7 @@ parse_line(struct spdk_conf *cp, char *lp)
 		for (p = key; *p != '\0' && !isdigit((int) *p); p++)
 			;
 		if (*p != '\0') {
-			num = (int)strtol(p, NULL, 10);
+			num = (int)spdk_strtol(p, 10);
 		} else {
 			num = 0;
 		}
