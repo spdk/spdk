@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "37af6620_516a4cfa",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T08:59:01Z",
+      "side": 1,
+      "message": "Was it verified that required_alignment is actually required ?",
+      "range": {
+        "startLine": 637,
+        "startChar": 1,
+        "endLine": 637,
+        "endChar": 62
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "efac430b_99e74aad",
         "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
         "patchSetId": 66
