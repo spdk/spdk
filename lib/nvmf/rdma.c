@@ -258,6 +258,12 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of I/O outstanding on this connection at one time */
 	uint16_t				max_queue_depth;
 
+	/* The current number of I/O outstanding on this connection.
+	 * This is equal to the current number of recv completions
+	 * received from the qpair for which the recv has not been reposted.
+	 */
+	uint16_t				current_queue_depth;
+
 	/* The maximum number of active RDMA READ and WRITE operations at one time */
 	uint16_t				max_rw_depth;
 
@@ -906,6 +912,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rqpair);
 	rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
+	rqpair->current_queue_depth--;
 	if (rc) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return rc;
@@ -2763,6 +2770,12 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
 			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 			rqpair = rdma_recv->qpair;
+			if (++rqpair->current_queue_depth > rqpair->max_queue_depth) {
+				if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
+					/* Disconnect the connection. The initiator is misbehaving. */
+					spdk_nvmf_qpair_disconnect(&rqpair->qpair, NULL, NULL);
+				}
+			}
 
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
