@@ -21,7 +21,7 @@ $testdir/pci/pci_ut
 timing_exit pci
 
 timing_enter env_dpdk_post_init
-argv=""
+argv="-c 0x1 "
 if [ `uname` = Linux ]; then
 	# The default base virtaddr falls into a region reserved by ASAN.
 	# DPDK will try to find the nearest available address space by
