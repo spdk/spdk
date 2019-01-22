@@ -50,6 +50,24 @@
       "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1357bbc8_c1fe6697",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T19:12:24Z",
+      "side": 1,
+      "message": "It just means that this patch depends on the next one getting merged.  I hate having those kinds of implicit dependencies - especially if this patch were to get merged and the next one was delayed a couple of days.",
+      "parentUuid": "644ff0ed_c532affc",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
