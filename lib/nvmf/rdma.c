@@ -1025,7 +1025,6 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 
 	/* Start with the maximum queue depth allowed by the target */
 	max_queue_depth = rtransport->transport.opts.max_queue_depth;
-	max_rw_depth = rtransport->transport.opts.max_queue_depth;
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Target Max Queue Depth: %d\n",
 		      rtransport->transport.opts.max_queue_depth);
 
@@ -1034,15 +1033,12 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 		      "Local NIC Max Send/Recv Queue Depth: %d Max Read/Write Queue Depth: %d\n",
 		      port->device->attr.max_qp_wr, port->device->attr.max_qp_rd_atom);
 	max_queue_depth = spdk_min(max_queue_depth, port->device->attr.max_qp_wr);
-	max_rw_depth = spdk_min(max_rw_depth, port->device->attr.max_qp_rd_atom);
+	max_rw_depth = spdk_min(rdma_param->initiator_depth, port->device->attr.max_qp_init_rd_atom);
 
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
 		      rdma_param->initiator_depth, rdma_param->responder_resources);
-	if (rdma_param->initiator_depth > 0) {
-		max_rw_depth = spdk_min(max_rw_depth, rdma_param->initiator_depth);
-	}
 
 	/* Finally check for the host software requested values, which are
 	 * optional. */
