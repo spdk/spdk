@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6cd82c01_ada36aa4",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T19:09:27Z",
+      "side": 1,
+      "message": "I\u0027d prefer if we used uint32_t (or uintXXX_t) instead of just unsigned - but we can do that later",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb9d5d6e_c17bf343",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T19:09:27Z",
+      "side": 1,
+      "message": "uint32_t?\n\nalso would num_active_vsessions be more precise?  \"started\" could be interpreted as \"how many total have been started since this vhost_dev was created\", including ones that have since been stopped",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
