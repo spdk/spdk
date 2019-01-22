@@ -1081,7 +1081,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 				cmd_chosen++;
 				cli_context->action = CLI_FILL;
 				cli_context->blobid = atoll(optarg);
-				cli_context->fill_value = atoi(argv[optind]);
+				cli_context->fill_value = spdk_strtol(argv[optind], 10);
 			} else {
 				usage(cli_context, "ERROR: missing parameter.\n");
 			}
@@ -1141,7 +1141,7 @@ cmd_parser(int argc, char **argv, struct cli_context_t *cli_context)
 			}
 			break;
 		case 'n':
-			cli_context->num_clusters = atoi(optarg);
+			cli_context->num_clusters = spdk_strtol(optarg, 10);
 			if (cli_context->num_clusters > 0) {
 				cmd_chosen++;
 				cli_context->action = CLI_CREATE_BLOB;
@@ -1251,7 +1251,7 @@ line_parser(struct cli_context_t *cli_context)
 		cli_context->argv[cli_context->argc] = strdup(tok);
 		if (tok[0] == '$' && tok[1] == 'B') {
 			tok += 2;
-			blob_num = atoi(tok);
+			blob_num = spdk_strtol(tok, 10);
 			if (blob_num >= 0 && blob_num < MAX_SCRIPT_BLOBS) {
 				cli_context->argv[cli_context->argc] =
 					realloc(cli_context->argv[cli_context->argc], BUFSIZE);
