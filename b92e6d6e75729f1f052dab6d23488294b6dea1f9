@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6abf9b84_364d91af",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2010,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T17:14:36Z",
+      "side": 1,
+      "message": "spdk_nvmf_rdma_listen is called each time a new listen address is created (i.e. it creates an spdk_nvmf_rmda_port). All of the listen addresses share the same spdk_nvmf_rdma_device (which is an ibv_context). Therefore, device-\u003emap may already exist at this point.\n\nI was asking whether you need a different protection domain per listen address or whether you just need one per rdma device (per ibv context) to try and sort this out. You\u0027ve moved the code to create the memory map/protection domain here instead of having it in the initialization of the transport, so my assumption is that you do indeed need a different protection domain for each listen address. But in that case, you need to move the memory map and the pd to the spdk_nvmf_rdma_port structure instead of keeping it on the device.",
+      "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
