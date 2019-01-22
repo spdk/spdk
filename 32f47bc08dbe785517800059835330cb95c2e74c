@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a8539a4_455eed65",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 33
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T13:46:15Z",
+      "side": 1,
+      "message": "I think that here you are not telling us the truth :) Can you rework this to reflect reality?",
+      "range": {
+        "startLine": 714,
+        "startChar": 0,
+        "endLine": 714,
+        "endChar": 85
+      },
+      "revId": "32f47bc08dbe785517800059835330cb95c2e74c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
