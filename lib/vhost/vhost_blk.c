@@ -569,6 +569,8 @@ _spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhos
 		/* All sessions have been notified, time to close the bdev */
 		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
+		assert(bvdev != NULL);
+
 		spdk_bdev_close(bvdev->bdev_desc);
 		bvdev->bdev_desc = NULL;
 		bvdev->bdev = NULL;
@@ -685,6 +687,7 @@ spdk_vhost_blk_start(struct spdk_vhost_dev *vdev, void *event_ctx)
 	}
 
 	bvdev = to_blk_dev(vdev);
+	assert(bvdev != NULL);
 	bvsession->bvdev = bvdev;
 
 	/* validate all I/O queues are in a contiguous index range */
