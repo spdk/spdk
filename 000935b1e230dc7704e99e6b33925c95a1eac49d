@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4ab51ccc_a36d95c1",
+        "filename": "CONFIG",
+        "patchSetId": 61
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:44:28Z",
+      "side": 1,
+      "message": "There is an example usage when we do testing with OCF - we compile OCF first and then use it as a static library.",
+      "parentUuid": "6d2c5416_8a78b034",
+      "range": {
+        "startLine": 131,
+        "startChar": 0,
+        "endLine": 131,
+        "endChar": 16
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83e486e7_64120eb0",
         "filename": "lib/bdev/ocf/ctx.c",
         "patchSetId": 61
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "851b9637_28663622",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:44:28Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "83e486e7_64120eb0",
+      "range": {
+        "startLine": 372,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 35
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "155a06a7_84cba49f",
         "filename": "lib/bdev/ocf/ctx.c",
         "patchSetId": 61
@@ -59,6 +107,30 @@
       "writtenOn": "2019-01-22T15:27:09Z",
       "side": 1,
       "message": "Oh man, you have backtrace printing already embedded in SPDK_ERROR () if you configure SPDK with \u0027--enable-log-bt\u0027. Why reinventing the wheal?",
+      "range": {
+        "startLine": 388,
+        "startChar": 0,
+        "endLine": 411,
+        "endChar": 11
+      },
+      "revId": "000935b1e230dc7704e99e6b33925c95a1eac49d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbef07ac_ced45fce",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 61
+      },
+      "lineNbr": 411,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:44:28Z",
+      "side": 1,
+      "message": "I don\u0027t understand your suggestion.What can be done better here?\nNote that this is a OCF callback that OCF invokes when it thinks there is a need for that",
+      "parentUuid": "155a06a7_84cba49f",
       "range": {
         "startLine": 388,
         "startChar": 0,
