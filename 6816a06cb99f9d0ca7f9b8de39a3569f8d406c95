@@ -48,6 +48,69 @@
     },
     {
       "key": {
+        "uuid": "75e7f806_bdc8fc6d",
+        "filename": "test/ftl/config/fio/randrw-verify-j2.fio.in",
+        "patchSetId": 70
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T10:11:47Z",
+      "side": 1,
+      "message": "Looking at the fio config filenames the tests are grouped right?\nNot a must, but you could consider reducing the number of fio config files.\nFor example by merging randrw-verify-* into 1 file, as they are pretty similar. You could then have multiple [job] sections in a single file and use --section to run specific ones.",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2243b599_0699366a",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T10:11:47Z",
+      "side": 1,
+      "message": "Only 3 out of 9 added fio configs are used.\nCan we delete unused fio configs from this commit and add them when they\u0027re actually used?",
+      "range": {
+        "startLine": 10,
+        "startChar": 7,
+        "endLine": 10,
+        "endChar": 57
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "451b3ecf_7c14561e",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T10:11:47Z",
+      "side": 1,
+      "message": "Do we really want to exit with no error even though needed deps were not met?",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 7
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "81912399_37bf0507",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 70
@@ -64,6 +127,29 @@
         "startChar": 0,
         "endLine": 10,
         "endChar": 28
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de1cff3a_fd21b00d",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T10:11:47Z",
+      "side": 1,
+      "message": "If exit 0 is intended when we\u0027re lacking needed hardware, then I suggest changing echo message to smth like:\nCould not find FTL device. Skipping tests, or Tests skipped.\n\nMakes it easier to find things in logs later.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 38,
+        "endChar": 7
       },
       "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -116,6 +202,24 @@
       "writtenOn": "2019-01-22T09:44:58Z",
       "side": 1,
       "message": "Why create this script, instead of using rpc.py directly - since it already exposes start_nbd_disk ?",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cb769e5_aaa3966e",
+        "filename": "test/ftl/start_nbd.py",
+        "patchSetId": 70
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-22T10:11:47Z",
+      "side": 1,
+      "message": "I agree.\nYou already have client module imported.\nimport rpc and you can call it\u0027s methods directly: rpc.bdev.get_bdevs(client)",
+      "parentUuid": "ad4c02ba_0257dd47",
       "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
