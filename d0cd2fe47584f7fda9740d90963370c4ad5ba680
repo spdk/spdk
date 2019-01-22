@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9036fa30_d6390ec8",
+        "filename": "lib/bdev/ocf/env/ocf_env.h",
+        "patchSetId": 62
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T20:53:39Z",
+      "side": 1,
+      "message": "We\u0027ll end up with something like:\nfile.c: 999:_function: *NOTICE*: WARNING (file.c:999)\n\nCan we remove those extra __FILE__ and __LINE__ at the end?",
+      "range": {
+        "startLine": 109,
+        "startChar": 4,
+        "endLine": 109,
+        "endChar": 12
+      },
+      "revId": "d0cd2fe47584f7fda9740d90963370c4ad5ba680",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "75d32365_36b8e2e0",
+        "filename": "lib/bdev/cas/vbdev_cas.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T20:53:39Z",
+      "side": 1,
+      "message": "What if there\u0027s an io_channel on the same thread that\u0027s now blocked? The I/O poller won\u0027t have a chance to run and we\u0027ll have a deadlock. Is that correct?",
+      "parentUuid": "0b6034ee_341178fc",
+      "range": {
+        "startLine": 101,
+        "startChar": 6,
+        "endLine": 101,
+        "endChar": 25
+      },
+      "revId": "61d480d13a20ca241c990c295609065a81f0b146",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82f1778a_4d146d29",
         "filename": "lib/bdev/cas/vbdev_cas.c",
         "patchSetId": 58
