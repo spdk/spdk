@@ -16,6 +16,24 @@
       "revId": "d91d8cfad7deec2d9eb188bcced6886d7480cc2f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f91fc36b_8122be26",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-22T13:54:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "618a94b6_b0b2ce5e",
+      "revId": "d91d8cfad7deec2d9eb188bcced6886d7480cc2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
