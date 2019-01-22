@@ -22,6 +22,63 @@
       "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81912399_37bf0507",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T09:44:58Z",
+      "side": 1,
+      "message": "Why is this variable here ? Is there a reason not to test restore in some cases ?",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 28
+      },
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4319480e_f9efc8b9",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 70
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T09:44:58Z",
+      "side": 1,
+      "message": "Can we add part of the tests that perform RPC added in previous patch ? This will allow to verify if they work properly.",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ad4c02ba_0257dd47",
+        "filename": "test/ftl/start_nbd.py",
+        "patchSetId": 70
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-22T09:44:58Z",
+      "side": 1,
+      "message": "Why create this script, instead of using rpc.py directly - since it already exposes start_nbd_disk ?",
+      "revId": "6816a06cb99f9d0ca7f9b8de39a3569f8d406c95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
