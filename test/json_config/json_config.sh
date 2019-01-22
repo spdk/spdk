@@ -111,15 +111,26 @@ function create_bdev_subsystem_config() {
 				return 1
 			fi
 		fi
+		tgt_rpc get_notifications -n 100 > $rootdir/notifications.log &
 
 		tgt_rpc construct_split_vbdev $lvol_store_base_bdev 2
 		tgt_rpc construct_split_vbdev Malloc0 3
 		tgt_rpc construct_passthru_bdev -b Malloc3 -p PTBdevFromMalloc3
 
+		# Verify that PTBdevFromMalloc3 sent notification
+		cat $rootdir/notifications.log | jq -r ".[] .name" | grep -qi PTBdevFromMalloc3
+
 		tgt_rpc construct_null_bdev Null0 32 512
+
+		# Verify that Null0 sent notification
+		cat $rootdir/notifications.log | jq -r ".[] .name" | grep -qi Null0
 
 		tgt_rpc construct_malloc_bdev 32 512 --name Malloc0
 		tgt_rpc construct_malloc_bdev 16 4096 --name Malloc1
+
+		# Verify that Malloc0 and Malloc1 sent notification
+		cat $rootdir/notifications.log | jq -r ".[] .name" | grep -qi Malloc0
+		cat $rootdir/notifications.log | jq -r ".[] .name" | grep -qi Malloc1
 
 		if [[ $(uname -s) = Linux ]]; then
 			# This AIO bdev must be large enough to be used as LVOL store
