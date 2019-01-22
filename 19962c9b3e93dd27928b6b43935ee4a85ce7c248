@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "44b60c6a_40bb84f6",
+        "filename": "lib/bdev/ocf/data.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8a79bc3c_0af43a3b",
+      "range": {
+        "startLine": 116,
+        "startChar": 1,
+        "endLine": 116,
+        "endChar": 32
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbb61423_03e96a5b",
         "filename": "lib/bdev/ocf/dobj.c",
         "patchSetId": 59
@@ -45,6 +69,30 @@
       "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45bd2a66_0d555fac",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "Ack, we should always increment.\n\nYeah, it is probably better to use env_ versions\nI will replace C11 by env_",
+      "parentUuid": "cbb61423_03e96a5b",
+      "range": {
+        "startLine": 208,
+        "startChar": 5,
+        "endLine": 208,
+        "endChar": 46
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5456c8cf_ad2356e7",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "Ack\nThe order has to be changed because it is actually intended that rq_cnt can be \u003e 1 since OCF sometimes uses one ocf_io to submit many requests but with different offset",
+      "parentUuid": "e9bb0e56_e8ee4f54",
+      "range": {
+        "startLine": 248,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 30
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e05ebad7_7430b361",
         "filename": "lib/bdev/ocf/dobj.c",
         "patchSetId": 59
@@ -91,6 +163,30 @@
       "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "964ab2a7_821fc028",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "We need both because they really serve different purposes\nrq_cnt is for completion callback to OCF\nref is for memory free\n\nThere might be a situation when rq_cnt \u003d 0 but ref is not because OCF still keeps IO for something",
+      "parentUuid": "e05ebad7_7430b361",
+      "range": {
+        "startLine": 251,
+        "startChar": 2,
+        "endLine": 251,
+        "endChar": 23
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "014499f3_1051a28a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "bd940c5d_9f28c8db",
+      "range": {
+        "startLine": 118,
+        "startChar": 1,
+        "endLine": 121,
+        "endChar": 2
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "62c5e452_cce723b3",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 59
@@ -137,6 +257,30 @@
       "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a24bbe5_c1cfff1b",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T11:05:04Z",
+      "side": 1,
+      "message": "Ack, we don\u0027t need to check\nAck, \u0027attach_base\u0027 is more consistant",
+      "parentUuid": "62c5e452_cce723b3",
+      "range": {
+        "startLine": 134,
+        "startChar": 2,
+        "endLine": 134,
+        "endChar": 18
+      },
+      "revId": "19962c9b3e93dd27928b6b43935ee4a85ce7c248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
