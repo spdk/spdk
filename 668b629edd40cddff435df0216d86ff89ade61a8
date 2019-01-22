@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ba55f856_9ec3c81a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 29
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T09:06:02Z",
+      "side": 1,
+      "message": "Would be great if you paste here real response not hand-crafted.",
+      "range": {
+        "startLine": 727,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 3
+      },
+      "revId": "668b629edd40cddff435df0216d86ff89ade61a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eba2542f_a37038b7",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 720,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T09:06:02Z",
+      "side": 1,
+      "message": "you need to invent better name for this jump",
+      "range": {
+        "startLine": 720,
+        "startChar": 7,
+        "endLine": 720,
+        "endChar": 21
+      },
+      "revId": "668b629edd40cddff435df0216d86ff89ade61a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "658c10e4_abc78bc4",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 29
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T09:06:02Z",
+      "side": 1,
+      "message": "You have \"verbose\" mode you can use.",
+      "range": {
+        "startLine": 74,
+        "startChar": 16,
+        "endLine": 74,
+        "endChar": 31
+      },
+      "revId": "668b629edd40cddff435df0216d86ff89ade61a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
