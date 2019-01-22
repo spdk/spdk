@@ -81,6 +81,41 @@
       "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e592bec_b0cc43f6",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T19:57:06Z",
+      "side": 1,
+      "message": "Without calling spdk_for_each_channel_continue this won\u0027t end up completing the iteration, which will cause a lot of problems.",
+      "parentUuid": "5a304ced_fe1bc375",
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f70c7a69_231beeb6",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T19:57:06Z",
+      "side": 1,
+      "message": "Just move this line to line 160 and eliminate this intermediate function.",
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
