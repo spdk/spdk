@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac8cb09e_c1458793",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 571,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:08:32Z",
+      "side": 1,
+      "message": "+\\n",
+      "range": {
+        "startLine": 570,
+        "startChar": 2,
+        "endLine": 571,
+        "endChar": 2
+      },
+      "revId": "d8c41cdcc2e27f246aaf4025cb94ce01ad4743b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
