@@ -439,6 +439,11 @@ spdk_app_json_config_load_subsystem(void *_ctx)
 		if (spdk_rpc_get_state() == SPDK_RPC_STARTUP) {
 			SPDK_DEBUG_APP_CFG("No more entries for current state, calling 'start_subsystem_init'\n");
 			req = spdk_jsonrpc_client_create_request();
+			if (!req) {
+				spdk_app_json_config_load_done(ctx, -ENOMEM);
+				return;
+			}
+
 			w = spdk_jsonrpc_begin_request(req, ctx->rpc_request_id++, "start_subsystem_init");
 			if (!w) {
 				spdk_jsonrpc_client_free_request(req);
