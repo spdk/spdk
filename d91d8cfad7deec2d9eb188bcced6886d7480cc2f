@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "618a94b6_b0b2ce5e",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-22T12:51:27Z",
+      "side": 1,
+      "message": "I have trouble understanding any of this. Can we add a comment somewhere describing what is happening here?",
+      "revId": "d91d8cfad7deec2d9eb188bcced6886d7480cc2f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
