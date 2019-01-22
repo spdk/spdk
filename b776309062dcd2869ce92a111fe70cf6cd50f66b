@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "be62430d_e9031379",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "Ok, I will add TODO for config_json",
+      "parentUuid": "d3f99a43_a1a105e6",
+      "range": {
+        "startLine": 132,
+        "startChar": 2,
+        "endLine": 132,
+        "endChar": 13
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37af6620_516a4cfa",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 66
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-22T08:59:01Z",
       "side": 1,
       "message": "Was it verified that required_alignment is actually required ?",
+      "range": {
+        "startLine": 637,
+        "startChar": 1,
+        "endLine": 637,
+        "endChar": 62
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ce7a8cbd_e1a6c65a",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "It looks that it is still needed in nbd scenarios. Probably it is some qemu or ocssd nvme layer bug - we agreed that it could stay for now.",
+      "parentUuid": "37af6620_516a4cfa",
       "range": {
         "startLine": 637,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "9bf1a9e3_b4596498",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "I will remove mode parameter.",
+      "parentUuid": "efac430b_99e74aad",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 77
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1276747_81be1f09",
         "filename": "scripts/rpc.py",
         "patchSetId": 66
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-22T07:54:45Z",
       "side": 1,
       "message": "\u003e Should this parameter be exposed if only local PCIe devices are\n \u003e supported ?",
+      "range": {
+        "startLine": 1196,
+        "startChar": 0,
+        "endLine": 1197,
+        "endChar": 73
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd2994bd_eba6cb69",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 66
+      },
+      "lineNbr": 1197,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "Yes, I will remove this option.",
+      "parentUuid": "b1276747_81be1f09",
       "range": {
         "startLine": 1196,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "8978f395_bc78d3df",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 66
+      },
+      "lineNbr": 1204,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a83ced86_a8ae4fb6",
+      "range": {
+        "startLine": 1203,
+        "startChar": 70,
+        "endLine": 1204,
+        "endChar": 96
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc5eb170_a051a019",
         "filename": "scripts/rpc.py",
         "patchSetId": 66
@@ -128,6 +248,30 @@
       "writtenOn": "2019-01-22T07:54:45Z",
       "side": 1,
       "message": "\u003e Aren\u0027t there two different operations ?\n \u003e 1) whether to create or restore the OCSSD\n \u003e 2) whether the reads should performed on separate thread\n \u003e Why not just make it a separate argument ?\n \u003e Even better, if uuid is required when restoring. Just base whether\n \u003e to restore the device, when uuid is provided and create otherwise.",
+      "range": {
+        "startLine": 1203,
+        "startChar": 0,
+        "endLine": 1205,
+        "endChar": 39
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f85a8067_86cee7ea",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 66
+      },
+      "lineNbr": 1205,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "I will remove mode param.",
+      "parentUuid": "fc5eb170_a051a019",
       "range": {
         "startLine": 1203,
         "startChar": 0,
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "e2a25ff2_6097aff1",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 66
+      },
+      "lineNbr": 456,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "Please look at my previous comment on read thread.",
+      "parentUuid": "52b78c0b_36379075",
+      "range": {
+        "startLine": 456,
+        "startChar": 46,
+        "endLine": 456,
+        "endChar": 69
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fcd997d_0b6d0ff6",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 66
@@ -174,6 +342,30 @@
       "writtenOn": "2019-01-22T07:54:45Z",
       "side": 1,
       "message": "Please add descriptions to jsonrpc.md for those two.",
+      "range": {
+        "startLine": 448,
+        "startChar": 0,
+        "endLine": 477,
+        "endChar": 49
+      },
+      "revId": "b776309062dcd2869ce92a111fe70cf6cd50f66b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e59178d_428f8743",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 66
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-22T14:16:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7fcd997d_0b6d0ff6",
       "range": {
         "startLine": 448,
         "startChar": 0,
