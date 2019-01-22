@@ -1038,7 +1038,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	/* Next check the remote NIC's hardware limitations */
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA,
 		      "Host (Initiator) NIC Max Incoming RDMA R/W operations: %d Max Outgoing RDMA R/W operations: %d\n",
-		      rdma_param->initiator_depth, rdma_param->responder_resources);
+		      rdma_param->responder_resources, rdma_param->initiator_depth);
 
 	/* Finally check for the host software requested values, which are
 	 * optional. */
