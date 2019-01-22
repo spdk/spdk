@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4a128466_9cf8b1f9",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:32:10Z",
+      "side": 1,
+      "message": "what? You are setting this to \n\n config_params\u003d\"$config_params --with-ocf\u003d/$rootdir/build/ocf.a\"\n\nint autobuild.sh. Which version is correct?",
+      "range": {
+        "startLine": 93,
+        "startChar": 1,
+        "endLine": 93,
+        "endChar": 42
+      },
+      "revId": "ef67c3e81692f5a9427033bb8fa5af8932425559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
