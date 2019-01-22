@@ -264,6 +264,9 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of active RDMA READ and ATOMIC operations at one time */
 	uint16_t				max_read_depth;
 
+	/* The current number of active RDMA READ operations */
+	uint16_t				current_read_depth;
+
 	/* The maximum number of SGEs per WR on the send queue */
 	uint32_t				max_send_sge;
 
@@ -593,12 +596,6 @@ spdk_nvmf_rdma_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 }
 
 static int
-spdk_nvmf_rdma_cur_read_depth(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	return rqpair->state_cntr[RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER];
-}
-
-static int
 spdk_nvmf_rdma_cur_queue_depth(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	return rqpair->max_queue_depth -
@@ -914,6 +911,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 		SPDK_ERRLOG("Unable to transfer data from host to target\n");
 		return -1;
 	}
+	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
 }
 
@@ -972,9 +970,10 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
 	if (rc) {
 		SPDK_ERRLOG("Unable to send response capsule\n");
+		return rc;
 	}
 
-	return rc;
+	return 0;
 }
 
 static int
@@ -1540,7 +1539,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
 
-				if (spdk_nvmf_rdma_cur_read_depth(rqpair) >= rqpair->max_read_depth) {
+				if (rqpair->current_read_depth >= rqpair->max_read_depth) {
 					/* Read operation queue is full, need to wait */
 					break;
 				}
@@ -2728,6 +2727,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
 					assert(rdma_req->num_outstanding_data_wr > 0);
+					rqpair->current_read_depth--;
 					rdma_req->num_outstanding_data_wr--;
 					if (rdma_req->num_outstanding_data_wr == 0) {
 						spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
@@ -2802,6 +2802,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
 			/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
 			assert(rdma_req->num_outstanding_data_wr > 0);
+			rqpair->current_read_depth--;
 			rdma_req->num_outstanding_data_wr--;
 			if (rdma_req->num_outstanding_data_wr == 0) {
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
