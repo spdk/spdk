@@ -184,7 +184,7 @@ spdk_iscsi_portal_open(struct spdk_iscsi_portal *p)
 		return -1;
 	}
 
-	port = (int)strtol(p->port, NULL, 0);
+	port = (int)spdk_strtol(p->port, 0);
 	sock = spdk_sock_listen(p->host, port);
 	if (sock == NULL) {
 		SPDK_ERRLOG("listen error %.64s.%d\n", p->host, port);

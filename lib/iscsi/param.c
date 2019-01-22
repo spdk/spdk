@@ -564,14 +564,14 @@ spdk_iscsi_special_param_construction(struct spdk_iscsi_conn *conn,
 		param_first = spdk_iscsi_param_find(conn->sess->params,
 						    "FirstBurstLength");
 		if (param_first != NULL) {
-			FirstBurstLength = (uint32_t)strtol(param_first->val, NULL, 10);
+			FirstBurstLength = (uint32_t)spdk_strtol(param_first->val, 10);
 		} else {
 			FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 		}
 		param_max = spdk_iscsi_param_find(conn->sess->params,
 						  "MaxBurstLength");
 		if (param_max != NULL) {
-			MaxBurstLength = (uint32_t)strtol(param_max->val, NULL, 10);
+			MaxBurstLength = (uint32_t)spdk_strtol(param_max->val, 10);
 		} else {
 			MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 		}
@@ -693,18 +693,18 @@ static char *spdk_iscsi_negotiate_param_numerical(int *add_param_value,
 		return NULL;
 	}
 
-	val_i = (int)strtol(param->val, NULL, 10);
+	val_i = (int)spdk_strtol(param->val, 10);
 	/* check whether the key is FirstBurstLength, if that we use in_val */
 	if (strcasecmp(param->key, "FirstBurstLength") == 0) {
-		val_i = (int)strtol(in_val, NULL, 10);
+		val_i = (int)spdk_strtol(in_val, 10);
 	}
 
-	cur_val_i = (int)strtol(cur_val, NULL, 10);
+	cur_val_i = (int)spdk_strtol(cur_val, 10);
 	valid_next = valid_list;
 	min_val = spdk_strsepq(&valid_next, ",");
 	max_val = spdk_strsepq(&valid_next, ",");
-	min_i = (min_val != NULL) ? (int)strtol(min_val, NULL, 10) : 0;
-	max_i = (max_val != NULL) ? (int)strtol(max_val, NULL, 10) : 0;
+	min_i = (min_val != NULL) ? (int)spdk_strtol(min_val, 10) : 0;
+	max_i = (max_val != NULL) ? (int)spdk_strtol(max_val, 10) : 0;
 	if (val_i < min_i || val_i > max_i) {
 		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "key %.64s reject\n", param->key);
 		new_val = NULL;
@@ -1018,13 +1018,11 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 			}
 
 			if (strcasecmp(param->key, "FirstBurstLength") == 0) {
-				FirstBurstLength = (uint32_t)strtol(param->val, NULL,
-								    10);
+				FirstBurstLength = (uint32_t)spdk_strtol(param->val, 10);
 				new_val = spdk_iscsi_param_get_val(conn->sess->params,
 								   "MaxBurstLength");
 				if (new_val != NULL) {
-					MaxBurstLength = (uint32_t) strtol(new_val, NULL,
-									   10);
+					MaxBurstLength = (uint32_t)spdk_strtol(new_val, 10);
 				} else {
 					MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 				}
@@ -1100,7 +1098,7 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "copy MaxRecvDataSegmentLength=%s\n", val);
-	conn->MaxRecvDataSegmentLength = (int)strtol(val, NULL, 10);
+	conn->MaxRecvDataSegmentLength = (int)spdk_strtol(val, 10);
 	if (conn->MaxRecvDataSegmentLength > SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH) {
 		conn->MaxRecvDataSegmentLength = SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH;
 	}
@@ -1136,28 +1134,28 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "copy MaxConnections=%s\n", val);
-	conn->sess->MaxConnections = (uint32_t) strtol(val, NULL, 10);
+	conn->sess->MaxConnections = (uint32_t)spdk_strtol(val, 10);
 	val = spdk_iscsi_param_get_val(conn->sess->params, "MaxOutstandingR2T");
 	if (val == NULL) {
 		SPDK_ERRLOG("Getval MaxOutstandingR2T failed\n");
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "copy MaxOutstandingR2T=%s\n", val);
-	conn->sess->MaxOutstandingR2T = (uint32_t) strtol(val, NULL, 10);
+	conn->sess->MaxOutstandingR2T = (uint32_t)spdk_strtol(val, 10);
 	val = spdk_iscsi_param_get_val(conn->sess->params, "FirstBurstLength");
 	if (val == NULL) {
 		SPDK_ERRLOG("Getval FirstBurstLength failed\n");
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "copy FirstBurstLength=%s\n", val);
-	conn->sess->FirstBurstLength = (uint32_t) strtol(val, NULL, 10);
+	conn->sess->FirstBurstLength = (uint32_t)spdk_strtol(val, 10);
 	val = spdk_iscsi_param_get_val(conn->sess->params, "MaxBurstLength");
 	if (val == NULL) {
 		SPDK_ERRLOG("Getval MaxBurstLength failed\n");
 		return -1;
 	}
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "copy MaxBurstLength=%s\n", val);
-	conn->sess->MaxBurstLength = (uint32_t) strtol(val, NULL, 10);
+	conn->sess->MaxBurstLength = (uint32_t)spdk_strtol(val, 10);
 	val = spdk_iscsi_param_get_val(conn->sess->params, "InitialR2T");
 	if (val == NULL) {
 		SPDK_ERRLOG("Getval InitialR2T failed\n");
