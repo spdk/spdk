@@ -111,6 +111,7 @@ void
 spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
+	struct spdk_blob_open_opts opts;
 
 	assert(cb_fn != NULL);
 
@@ -143,7 +144,10 @@ spdk_lvol_open(struct spdk_lvol *lvol, spdk_lvol_op_with_handle_complete cb_fn, 
 	req->cb_arg = cb_arg;
 	req->lvol = lvol;
 
-	spdk_bs_open_blob(lvol->lvol_store->blobstore, lvol->blob_id, _spdk_lvol_open_cb, req);
+	spdk_blob_open_opts_init(&opts);
+	opts.clear_method = lvol->clear_method;
+
+	spdk_bs_open_blob_ext(lvol->lvol_store->blobstore, lvol->blob_id, &opts, _spdk_lvol_open_cb, req);
 }
 
 static void
@@ -165,6 +169,7 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 	spdk_blob_id blob_id;
 	char uuid[SPDK_UUID_STRING_LEN];
 	const char *attr;
+	const enum blob_clear_method *clear_method;
 	size_t value_len;
 	int rc;
 
@@ -225,6 +230,13 @@ _spdk_load_next_lvol(void *cb_arg, struct spdk_blob *blob, int lvolerrno)
 		_spdk_lvol_free(lvol);
 		req->lvserrno = -EINVAL;
 		goto invalid;
+	}
+
+	rc = spdk_blob_get_xattr_value(blob, "clear_method", (const void **)&clear_method, &value_len);
+	if (rc != 0) {
+		lvol->clear_method = BLOB_CLEAR_WITH_DEFAULT;
+	} else {
+		lvol->clear_method = *clear_method;
 	}
 
 	snprintf(lvol->name, sizeof(lvol->name), "%s", attr);
@@ -968,6 +980,7 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 {
 	struct spdk_lvol_with_handle_req *req = cb_arg;
 	struct spdk_blob_store *bs;
+	struct spdk_blob_open_opts opts;
 
 	if (lvolerrno < 0) {
 		TAILQ_REMOVE(&req->lvol->lvol_store->pending_lvols, req->lvol, link);
@@ -978,9 +991,11 @@ _spdk_lvol_create_cb(void *cb_arg, spdk_blob_id blobid, int lvolerrno)
 		return;
 	}
 
+	spdk_blob_open_opts_init(&opts);
+	opts.clear_method = req->lvol->clear_method;
 	bs = req->lvol->lvol_store->blobstore;
 
-	spdk_bs_open_blob(bs, blobid, _spdk_lvol_create_open_cb, req);
+	spdk_bs_open_blob_ext(bs, blobid, &opts, _spdk_lvol_create_open_cb, req);
 }
 
 static void
@@ -995,6 +1010,9 @@ spdk_lvol_get_xattr_value(void *xattr_ctx, const char *name,
 	} else if (!strcmp("uuid", name)) {
 		*value = lvol->uuid_str;
 		*value_len = sizeof(lvol->uuid_str);
+	} else if (!strcmp("clear_method", name)) {
+		*value = &lvol->clear_method;
+		*value_len = sizeof(int);
 	}
 }
 
@@ -1032,14 +1050,15 @@ _spdk_lvs_verify_lvol_name(struct spdk_lvol_store *lvs, const char *name)
 
 int
 spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
-		 bool thin_provision, spdk_lvol_op_with_handle_complete cb_fn, void *cb_arg)
+		 bool thin_provision, enum lvol_clear_method clear_method, spdk_lvol_op_with_handle_complete cb_fn,
+		 void *cb_arg)
 {
 	struct spdk_lvol_with_handle_req *req;
 	struct spdk_blob_store *bs;
 	struct spdk_lvol *lvol;
 	struct spdk_blob_opts opts;
 	uint64_t num_clusters;
-	char *xattr_names[] = {LVOL_NAME, "uuid"};
+	char *xattr_names[] = {LVOL_NAME, "uuid", "clear_method"};
 	int rc;
 
 	if (lvs == NULL) {
@@ -1071,6 +1090,7 @@ spdk_lvol_create(struct spdk_lvol_store *lvs, const char *name, uint64_t sz,
 	lvol->lvol_store = lvs;
 	num_clusters = spdk_divide_round_up(sz, spdk_bs_get_cluster_size(bs));
 	lvol->thin_provision = thin_provision;
+	lvol->clear_method = (enum blob_clear_method)clear_method;
 	snprintf(lvol->name, sizeof(lvol->name), "%s", name);
 	TAILQ_INSERT_TAIL(&lvol->lvol_store->pending_lvols, lvol, link);
 	spdk_uuid_generate(&lvol->uuid);

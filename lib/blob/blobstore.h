@@ -149,6 +149,7 @@ struct spdk_blob {
 
 	uint32_t frozen_refcnt;
 	bool resize_in_progress;
+	enum blob_clear_method clear_method;
 };
 
 struct spdk_blob_store {
