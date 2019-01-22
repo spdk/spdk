@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf50155a_9dd3c2b3",
+        "filename": "lib/event/json_config.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-22T14:03:17Z",
+      "side": 1,
+      "message": "can you put assert here. If we are here spdk_json_next() shouldn\u0027t return  NULL.",
+      "range": {
+        "startLine": 340,
+        "startChar": 2,
+        "endLine": 340,
+        "endChar": 27
+      },
+      "revId": "26894b4a90f8211ee174283958fac61f6392a6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
