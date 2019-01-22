@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4faa7385_6278f6cd",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 59
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T21:27:59Z",
+      "side": 1,
+      "message": "You don\u0027t need this change right? You didn\u0027t actually changed spdk_cunit.h and that file doesn\u0027t have any POSIX includes in it.",
+      "revId": "f65a109ed318ab3b100fae4bb932e5dc05988be1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0947e51c_4b2efc58",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 59
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-22T21:27:59Z",
+      "side": 1,
+      "message": "spdk includes with quotes.",
+      "revId": "f65a109ed318ab3b100fae4bb932e5dc05988be1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
