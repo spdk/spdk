@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "be9ca6bc_4c025196",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-22T21:44:41Z",
+      "side": 1,
+      "message": "would this be easier if we just specified begin and end as separate inputs?\n\nI\u0027m not asking you to change it - this all just seems fairly complex\n\nI wouldn\u0027t mind having this code check that begin \u003c\u003d end - I know that ftl_check_init_opts() does this, but I had to go search through the code to make sure - having a check here would simplify this for the reader",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e54ab36e_d687559f",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
