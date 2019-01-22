@@ -22,6 +22,30 @@
       "revId": "ef67c3e81692f5a9427033bb8fa5af8932425559",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77c4e0d3_8a6c95e9",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:17:34Z",
+      "side": 1,
+      "message": "I first build OCF with /usr/src/ocf (output to /build/ocf.a) and then I use that lib by setting --with-ocf\u003d$rootdir/build/ocf.a\n\nThere is a comment in autobuild.sh explaining why this needs to be done like that",
+      "parentUuid": "4a128466_9cf8b1f9",
+      "range": {
+        "startLine": 93,
+        "startChar": 1,
+        "endLine": 93,
+        "endChar": 42
+      },
+      "revId": "ef67c3e81692f5a9427033bb8fa5af8932425559",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

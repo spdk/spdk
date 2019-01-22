@@ -46,6 +46,30 @@
       "revId": "195b940c7b1517f7c8d26283cdf4fb3c9eb96bf6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c03d2e2_6a1d7ca8",
+        "filename": "test/cas/cas.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-22T15:17:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b2d1889_c4f2de85",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 4
+      },
+      "revId": "195b940c7b1517f7c8d26283cdf4fb3c9eb96bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
