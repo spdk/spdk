@@ -1106,14 +1106,24 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_nvme_start(struct spdk_vhost_session *vsession)
 {
+	int rc;
+
 	if (vsession->vdev->vsessions_started_cnt > 0) {
 		/* We're trying to start a second session */
 		SPDK_ERRLOG("Vhost-NVMe devices can support only one simultaneous connection.\n");
 		return -1;
 	}
 
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_start_cb,
-					     3, "start session");
+	vsession->lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_start_cb,
+					   3, "start session");
+
+	if (rc != 0) {
+		spdk_vhost_free_reactor(vsession->lcore);
+		vsession->lcore = -1;
+	}
+
+	return rc;
 }
 
 static void
@@ -1196,8 +1206,17 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 static int
 spdk_vhost_nvme_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_stop_cb,
-					     3, "start session");
+	int rc;
+
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_nvme_stop_cb,
+					   3, "start session");
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_vhost_free_reactor(vsession->lcore);
+	vsession->lcore = -1;
+	return 0;
 }
 
 static void

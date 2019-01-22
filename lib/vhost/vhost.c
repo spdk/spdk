@@ -608,7 +608,7 @@ spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 
 }
 
-static void
+void
 spdk_vhost_free_reactor(uint32_t lcore)
 {
 	g_num_ctrlrs[lcore]--;
@@ -851,7 +851,7 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 	return vdev->cpumask;
 }
 
-static uint32_t
+uint32_t
 spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 {
 	uint32_t i, selected_core;
@@ -1071,7 +1071,6 @@ stop_device(int vid)
 
 	spdk_vhost_session_mem_unregister(vsession);
 	free(vsession->mem);
-	spdk_vhost_free_reactor(vsession->lcore);
 	vsession->lcore = -1;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
@@ -1145,13 +1144,11 @@ start_device(int vid)
 	}
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
-	vsession->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	spdk_vhost_session_mem_register(vsession);
 	rc = vdev->backend->start_session(vsession);
 	if (rc != 0) {
 		spdk_vhost_session_mem_unregister(vsession);
 		free(vsession->mem);
-		spdk_vhost_free_reactor(vsession->lcore);
 		goto out;
 	}
 

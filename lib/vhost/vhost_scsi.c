@@ -77,6 +77,9 @@ struct spdk_scsi_dev_vhost_state {
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+
+	/* The CPU chosen to poll I/O of all active vhost sessions */
+	int32_t lcore;
 } __rte_cache_aligned;
 
 struct spdk_vhost_scsi_session {
@@ -1294,8 +1297,26 @@ out:
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
-					     3, "start session");
+	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	svdev = svsession->svdev;
+
+	if (svdev->vdev.vsessions_started_cnt == 0) {
+		svdev->lcore = spdk_vhost_allocate_reactor(svdev->vdev.cpumask);
+	}
+
+	vsession->lcore = svdev->lcore;
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
+					   3, "start session");
+	if (rc != 0) {
+		spdk_vhost_free_reactor(vsession->lcore);
+		vsession->lcore = -1;
+	}
+
+	return rc;
 }
 
 static int
@@ -1361,8 +1382,22 @@ err:
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
-					     3, "stop session");
+	struct spdk_vhost_scsi_session *svsession;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
+					   3, "stop session");
+	if (rc != 0) {
+		return rc;
+	}
+
+	vsession->lcore = -1;
+	if (vsession->vdev->vsessions_started_cnt == 1) {
+		spdk_vhost_free_reactor(svsession->svdev->lcore);
+		svsession->svdev->lcore = -1;
+	}
+	return 0;
 }
 
 static void
