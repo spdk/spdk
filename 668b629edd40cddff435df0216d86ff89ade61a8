@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "60028b16_bf4ca4d1",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 29
+      },
+      "lineNbr": 734,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-22T09:21:37Z",
+      "side": 1,
+      "message": "real response is usually really long (80kb), are you sure we want to include that here?",
+      "parentUuid": "ba55f856_9ec3c81a",
+      "range": {
+        "startLine": 727,
+        "startChar": 0,
+        "endLine": 734,
+        "endChar": 3
+      },
+      "revId": "668b629edd40cddff435df0216d86ff89ade61a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eba2542f_a37038b7",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 29
