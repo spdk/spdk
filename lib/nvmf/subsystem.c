@@ -1368,6 +1368,8 @@ nvmf_ctrlr_gen_rsv_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
 	log->log.nsid = ns->nsid;
 	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
+	/* Asynchronous event */
+	spdk_nvmf_ctrlr_async_event_reservation_notification(ctrlr);
 
 	return;
 }

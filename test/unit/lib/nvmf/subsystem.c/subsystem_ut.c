@@ -454,6 +454,11 @@ test_spdk_nvmf_subsystem_set_sn(void)
 	CU_ASSERT(spdk_nvmf_subsystem_set_sn(&subsystem, "abcd\txyz") < 0);
 }
 
+void
+spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
+{
+}
+
 /*
  * Reservation Unit Test Configuration
  *       --------             --------    --------
