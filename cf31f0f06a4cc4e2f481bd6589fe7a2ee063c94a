@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b3acfa9_838349bf",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 49
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T09:21:32Z",
+      "side": 1,
+      "message": "Pawel, why did you add sections here? I just suggested using % instead of \"MB\".\nI know that I mentioned this somewhere around PS37, but Darek was right to just use \"--size\" and \"--offset\" because its simpler than \"--sections\".",
+      "range": {
+        "startLine": 24,
+        "startChar": 0,
+        "endLine": 27,
+        "endChar": 119
+      },
+      "revId": "cf31f0f06a4cc4e2f481bd6589fe7a2ee063c94a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
