@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2901c938_2890edb4",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T14:18:38Z",
+      "side": 1,
+      "message": "This call is especially useful in case when a ocf vbdev is not yet exposed as a bdev (either core or cache is not available). Can we list names of both along with their status ?",
+      "range": {
+        "startLine": 229,
+        "startChar": 0,
+        "endLine": 229,
+        "endChar": 64
+      },
+      "revId": "31a6187ea0290fedd0675279adabf397b2e1e6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79173612_53ab072e",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 244,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T14:18:38Z",
+      "side": 1,
+      "message": "I think an actual iterator (see get_lvol_stores) or might be better implementation or simply accessing the g_ocf_vbdev_head TAILQ (see raid bdev). I\u0027m fine with keeping it as is for now.",
+      "range": {
+        "startLine": 244,
+        "startChar": 1,
+        "endLine": 244,
+        "endChar": 36
+      },
+      "revId": "31a6187ea0290fedd0675279adabf397b2e1e6fc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
