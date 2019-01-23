@@ -1144,6 +1144,91 @@
     },
     {
       "key": {
+        "uuid": "84516c4e_1e96d6cf",
+        "filename": "lib/cache/libocf/ocf_env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-23T01:57:27Z",
+      "side": 1,
+      "message": "remove line 70.",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1cb561d0_1beb1d9c",
+        "filename": "lib/cache/libocf/ocf_env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-23T01:57:27Z",
+      "side": 1,
+      "message": "SPDK already has a definition for round up.",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52536873_96ad9f6a",
+        "filename": "lib/cache/libocf/ocf_env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-23T01:57:27Z",
+      "side": 1,
+      "message": "use spdk_min() here.",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ae3e5b7_4ed0f18e",
+        "filename": "lib/cache/libocf/ocf_env.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-23T01:57:27Z",
+      "side": 1,
+      "message": "SPDK_COUNTOF()",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "820a4a23_e6a5d779",
+        "filename": "lib/cache/libocf/ocf_env_list.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-23T01:57:27Z",
+      "side": 1,
+      "message": "consider using the definitions from SPDK queue_extra.h for list.",
+      "revId": "7d3066c3fa2f9bfcd8056854e3cb8c15fae7e29a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f359ea6a_020e0ace",
         "filename": "lib/cache/stats.c",
         "patchSetId": 13
