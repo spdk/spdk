@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "45f7d570_3d1799f7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:24:46Z",
+      "side": 1,
+      "message": "This part of the commit message can be removed.  We are handling these steps in configure script - we don\u0027t want user to think they have to do these steps manually.",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5346ce25_fc9c01b9",
         "filename": "CHANGELOG.md",
         "patchSetId": 10
@@ -53,6 +70,23 @@
     },
     {
       "key": {
+        "uuid": "65eac654_e474feab",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:24:46Z",
+      "side": 1,
+      "message": "Also please looks at comments from version 6 of this patch.  I don\u0027t see them addressed here.",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5f4bc761_b65f492c",
         "filename": "configure",
         "patchSetId": 10
@@ -64,6 +98,24 @@
       "writtenOn": "2019-01-23T23:15:17Z",
       "side": 1,
       "message": "here we need a check to see if ISAL and RBD are both enabled and if they are disable ISAL and print a notice like I suggest in the other comments here.  There appears to be conflicting names when ISAL is linked in between Ceph and us.  Still working on a possible solution but for now disabling ISAL when RBD is on will still provide functionality .",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c88b7cc7_9fc53ef8",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:24:46Z",
+      "side": 1,
+      "message": "agree with Paul - if user specifies RBD, we need to disable ISAL",
+      "parentUuid": "5f4bc761_b65f492c",
       "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -173,6 +225,30 @@
     },
     {
       "key": {
+        "uuid": "1728cdcd_835a1f80",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:24:46Z",
+      "side": 1,
+      "message": "I agree with Tomek on this one.  User is supposed to do the git submodule update before running configure - we specify this in our README.  I think it\u0027s better to exit 1 and make sure the user does the git submodule update.  It\u0027s likely their DPDK build will fail anyways if they haven\u0027t updated the submodules.",
+      "parentUuid": "e148b989_3e545d9f",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 408,
+        "endChar": 20
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "575ad253_5c4d4795",
         "filename": "configure",
         "patchSetId": 10
@@ -184,6 +260,30 @@
       "writtenOn": "2019-01-23T20:27:45Z",
       "side": 1,
       "message": "exit 1 - see above",
+      "range": {
+        "startLine": 412,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 20
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21c7c5fa_3d114ad5",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:24:46Z",
+      "side": 1,
+      "message": "We should do the ISA-L autogen.sh and configure --enable-shared\u003dno here - don\u0027t make the user do it.  Please take a look at the comment I made here on version 6 of this patch.",
+      "parentUuid": "575ad253_5c4d4795",
       "range": {
         "startLine": 412,
         "startChar": 0,
