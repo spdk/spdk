@@ -429,7 +429,7 @@ vbdev_split_init(void)
 			goto err;
 		}
 
-		split_count = atoi(split_count_str);
+		split_count = spdk_strtol(split_count_str, 10);
 		if (split_count < 1) {
 			SPDK_ERRLOG("Invalid Split count %d\n", split_count);
 			rc = -EINVAL;
@@ -440,7 +440,7 @@ vbdev_split_init(void)
 		split_size = 0;
 		split_size_str = spdk_conf_section_get_nmval(sp, "Split", i, 2);
 		if (split_size_str) {
-			split_size = atoi(split_size_str);
+			split_size = spdk_strtol(split_size_str, 10);
 			if (split_size <= 0) {
 				SPDK_ERRLOG("Invalid Split size %d\n", split_size);
 				rc = -EINVAL;
