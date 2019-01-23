@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "29265f97_e78e148a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015763
+      },
+      "writtenOn": "2019-01-23T23:56:48Z",
+      "side": 1,
+      "message": "Typo: s/strol/strtol/",
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
