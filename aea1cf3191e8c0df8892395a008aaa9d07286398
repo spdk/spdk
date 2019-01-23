@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ebbfaef_846c252a",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T13:42:48Z",
+      "side": 1,
+      "message": "How are those two related ? Can we base ENV_ALLOCATOR_NBUFS on that requirement somehow, instead of using magic number ?",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 59
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f2133e_1545f050",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T13:42:48Z",
+      "side": 1,
+      "message": "Is this even used anywhere ? If yes, maybe ENV_ALLOCATOR_NBUFS - spdk_mempool_count() can be used. Otherwise remove it. Making the count in _env_allocator not used at all.",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 24
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
