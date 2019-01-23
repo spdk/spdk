@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c460048f_6dd62923",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:53:52Z",
+      "side": 1,
+      "message": "Ack, let\u0027s do it now.",
+      "parentUuid": "6cd82c01_ada36aa4",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fb9d5d6e_c17bf343",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 6
@@ -33,6 +51,24 @@
       "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecc3e5aa_de9d4f15",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:53:52Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "fb9d5d6e_c17bf343",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +101,24 @@
       "side": 1,
       "message": "It just means that this patch depends on the next one getting merged.  I hate having those kinds of implicit dependencies - especially if this patch were to get merged and the next one was delayed a couple of days.",
       "parentUuid": "644ff0ed_c532affc",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06613e82_c568d5b3",
+        "filename": "lib/vhost/vhost_nvme.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1109,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:53:52Z",
+      "side": 1,
+      "message": "Thanks, I didn\u0027t think of adding the same check to Vhost-SCSI. Done now.",
+      "parentUuid": "1357bbc8_c1fe6697",
       "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
