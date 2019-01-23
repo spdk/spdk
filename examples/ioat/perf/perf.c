@@ -264,16 +264,16 @@ parse_args(int argc, char **argv)
 	while ((op = getopt(argc, argv, "c:hn:o:q:t:v")) != -1) {
 		switch (op) {
 		case 'o':
-			g_user_config.xfer_size_bytes = atoi(optarg);
+			g_user_config.xfer_size_bytes = spdk_strtol(optarg, 10);
 			break;
 		case 'n':
-			g_user_config.ioat_chan_num = atoi(optarg);
+			g_user_config.ioat_chan_num = spdk_strtol(optarg, 10);
 			break;
 		case 'q':
-			g_user_config.queue_depth = atoi(optarg);
+			g_user_config.queue_depth = spdk_strtol(optarg, 10);
 			break;
 		case 't':
-			g_user_config.time_in_sec = atoi(optarg);
+			g_user_config.time_in_sec = spdk_strtol(optarg, 10);
 			break;
 		case 'c':
 			g_user_config.core_mask = optarg;
@@ -289,9 +289,9 @@ parse_args(int argc, char **argv)
 			return 1;
 		}
 	}
-	if (!g_user_config.xfer_size_bytes || !g_user_config.queue_depth ||
-	    !g_user_config.time_in_sec || !g_user_config.core_mask ||
-	    !g_user_config.ioat_chan_num) {
+	if (g_user_config.xfer_size_bytes <= 0 || g_user_config.queue_depth <= 0 ||
+	    g_user_config.time_in_sec <= 0 || !g_user_config.core_mask ||
+	    g_user_config.ioat_chan_num <= 0) {
 		usage(argv[0]);
 		return 1;
 	}
