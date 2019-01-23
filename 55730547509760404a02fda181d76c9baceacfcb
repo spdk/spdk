@@ -22,6 +22,30 @@
       "revId": "55730547509760404a02fda181d76c9baceacfcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48b7d8fa_79cf19f7",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T17:03:33Z",
+      "side": 1,
+      "message": "My mistake. i didn\u0027t notice dest.",
+      "parentUuid": "bf1634dd_e2a9cac9",
+      "range": {
+        "startLine": 439,
+        "startChar": 4,
+        "endLine": 439,
+        "endChar": 121
+      },
+      "revId": "55730547509760404a02fda181d76c9baceacfcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
