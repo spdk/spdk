@@ -191,6 +191,30 @@
     },
     {
       "key": {
+        "uuid": "573b9f1a_0896b1a4",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 518,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T06:55:58Z",
+      "side": 1,
+      "message": "Applied.\nThanks, Shuhei.",
+      "parentUuid": "b4904bbe_5baaf6f3",
+      "range": {
+        "startLine": 513,
+        "startChar": 0,
+        "endLine": 518,
+        "endChar": 2
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "54bfd298_49627692",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 1
@@ -202,6 +226,30 @@
       "writtenOn": "2019-01-21T22:09:14Z",
       "side": 1,
       "message": "I saw raid_bdev_io_submit_fail_process executes both ENOMEM and other cases.\n\nSo how about doing the same in raid_bdev_reset_io_fail_process?\n\nstatic void\nraid_bdev_reset_io_submit_fail_process(struct raid_bdev *raid_bdev, struct spdk_bdev_io *bdev_io,\n\t\t\t\t       struct raid_bdev_io *raid_io, int ret)\n\n\tif (ret \u003d\u003d -ENOMEM) {\n\t\traid_io-\u003ewaitq_entry.bdev \u003d raid_bdev-\u003ebase_bdev_info[i].bdev;\n\t\traid_io-\u003ewaitq_entry.cb_fn \u003d _raid_bdev_submit_reset_request_next;\n\t\traid_io-\u003ewaitq_entry.cb_arg \u003d bdev_io;\n\t\tspdk_bdev_queue_io_wait(raid_bdev-\u003ebase_bdev_info[i].bdev,\n\t\t\t\t\traid_ch-\u003ebase_channel[i],\n\t\t\t\t\t\u0026raid_io-\u003ewaitq_entry);\n\t} else {\n\t\traid_io-\u003ebase_bdev_reset_status \u003d SPDK_BDEV_IO_STATUS_FAILED;\n\t\traid_io-\u003ebase_bdev_reset_waited \u003d raid_io-\u003ebase_bdev_reset_submitted;\n\n\t\tif (raid_io-\u003ebase_bdev_reset_completed \u003d\u003d raid_io-\u003ebase_bdev_reset_waited) {\n\t\t\tspdk_bdev_io_complete(raid_bdev_io, raid_io-\u003ebase_bdev_reset_status);\n\t\t}\n\t}\n}",
+      "range": {
+        "startLine": 550,
+        "startChar": 0,
+        "endLine": 563,
+        "endChar": 3
+      },
+      "revId": "87ee9a56f690a3d2b8ef06108ad3f114d3bc28ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6ac960d_2a195bdd",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T06:55:58Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54bfd298_49627692",
       "range": {
         "startLine": 550,
         "startChar": 0,
