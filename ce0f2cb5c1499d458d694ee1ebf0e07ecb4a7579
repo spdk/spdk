@@ -119,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "a72d3bc0_4bce1383",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-23T11:55:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "463a3745_6a5f29af",
+      "range": {
+        "startLine": 162,
+        "startChar": 8,
+        "endLine": 162,
+        "endChar": 18
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2ac5b8d3_3e00a1d5",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 28
@@ -130,6 +154,30 @@
       "writtenOn": "2019-01-22T14:58:04Z",
       "side": 1,
       "message": "Not true",
+      "range": {
+        "startLine": 68,
+        "startChar": 1,
+        "endLine": 69,
+        "endChar": 12
+      },
+      "revId": "ce0f2cb5c1499d458d694ee1ebf0e07ecb4a7579",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "74f8e116_70f3f214",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-23T11:55:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2ac5b8d3_3e00a1d5",
       "range": {
         "startLine": 68,
         "startChar": 1,
