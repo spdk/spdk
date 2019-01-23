@@ -35,6 +35,7 @@
 
 #include "spdk/event.h"
 #include "spdk/nvme.h"
+#include "spdk/string.h"
 
 static char g_path[256];
 
@@ -100,6 +101,7 @@ main(int argc, char **argv)
 {
 	int ch;
 	struct spdk_app_opts opts = {};
+	long int val;
 
 	/* default value in opts structure */
 	spdk_app_opts_init(&opts);
@@ -108,26 +110,35 @@ main(int argc, char **argv)
 	opts.rpc_addr = NULL;
 
 	while ((ch = getopt(argc, argv, "i:m:n:p:s:H")) != -1) {
-		switch (ch) {
-		case 'i':
-			opts.shm_id = atoi(optarg);
-			break;
-		case 'm':
+		if (ch == 'm') {
 			opts.reactor_mask = optarg;
-			break;
-		case 'n':
-			opts.mem_channel = atoi(optarg);
-			break;
-		case 'p':
-			opts.master_core = atoi(optarg);
-			break;
-		case 's':
-			opts.mem_size = atoi(optarg);
-			break;
-		case 'H':
-		default:
+		} else if (ch == '?') {
 			usage(argv[0]);
-			exit(EXIT_SUCCESS);
+			exit(1);
+		} else {
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				exit(1);
+			}
+			switch (ch) {
+			case 'i':
+				opts.shm_id = val;
+				break;
+			case 'n':
+				opts.mem_channel = val;
+				break;
+			case 'p':
+				opts.master_core = val;
+				break;
+			case 's':
+				opts.mem_size = val;
+				break;
+			case 'H':
+			default:
+				usage(argv[0]);
+				exit(EXIT_SUCCESS);
+			}
 		}
 	}
 
