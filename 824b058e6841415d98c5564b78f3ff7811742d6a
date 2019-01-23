@@ -16,6 +16,24 @@
       "revId": "824b058e6841415d98c5564b78f3ff7811742d6a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad0845c2_6a84fabc",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:50:28Z",
+      "side": 1,
+      "message": "Ack, thanks!",
+      "parentUuid": "62e38d07_66e65595",
+      "revId": "824b058e6841415d98c5564b78f3ff7811742d6a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
