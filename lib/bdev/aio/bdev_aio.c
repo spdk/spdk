@@ -686,6 +686,7 @@ bdev_aio_initialize(void)
 		const char *name;
 		const char *block_size_str;
 		uint32_t block_size = 0;
+		long int tmp;
 
 		file = spdk_conf_section_get_nmval(sp, "AIO", i, 0);
 		if (!file) {
@@ -701,7 +702,13 @@ bdev_aio_initialize(void)
 
 		block_size_str = spdk_conf_section_get_nmval(sp, "AIO", i, 2);
 		if (block_size_str) {
-			block_size = atoi(block_size_str);
+			tmp = spdk_strtol(block_size_str, 10);
+			if (tmp < 0) {
+				SPDK_ERRLOG("Invalid block size for AIO disk with file %s\n", file);
+				i++;
+				continue;
+			}
+			block_size = (uint32_t)tmp;
 		}
 
 		bdev = create_aio_disk(name, file, block_size);
