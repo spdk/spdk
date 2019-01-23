@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "373f5e6a_f23ec2d8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2061,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T18:08:33Z",
+      "side": 1,
+      "message": "I know you didn\u0027t change this in this patch, but isn\u0027t the read depth check here redundant? It\u0027s impossible for cur_queue_depth to be 0 if the read depth is not also 0.",
+      "revId": "ce3bb0187d36def0ff86948adce1b9f6ef228853",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
