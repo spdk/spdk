@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f5e4577_f914ce99",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1110,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T08:14:52Z",
+      "side": 1,
+      "message": "After bdev_nvme_ctrlr_destruct() was called, the function will return immediately, so how could we reference destroyed nvme_ctrlr?",
+      "range": {
+        "startLine": 1110,
+        "startChar": 3,
+        "endLine": 1110,
+        "endChar": 10
+      },
+      "revId": "2ad27e0ad9fac70a70051164e70ba5d1ce252e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
