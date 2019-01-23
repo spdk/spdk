@@ -25,6 +25,23 @@
     },
     {
       "key": {
+        "uuid": "3adca9e4_ab417ddb",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T22:59:53Z",
+      "side": 1,
+      "message": "I bevel we do, the reason is because the requirement for nasm is pretty strict and there are many distros that don\u0027t have it (older of course).  For example in our test pool there are some that simply don\u0027t have nasm.  Although we have capabilities to limit what gets executed and what doesn\u0027t per machine in the pool its not a solution that scales well.  There\u0027s another ISAL patch that some of this came from that I\u0027m going to rebase on top of this once this is done that does exit 1 when there are conflicting options, like you can\u0027t say --without-isal and --with-crypto but I\u0027m thinking that letting \"configure\" finish without error is the better way to go.",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec12d36c_f656b06c",
         "filename": "configure",
         "patchSetId": 10
