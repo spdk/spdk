@@ -49,6 +49,54 @@
     },
     {
       "key": {
+        "uuid": "591ebffc_8e3bfe89",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T08:30:51Z",
+      "side": 1,
+      "message": "Like I said - I\u0027m OK with having this section added as a useful help, but I\u0027d suggest moving in to later sections in the document, maybe some appendix section",
+      "parentUuid": "27afb7b4_7d216e66",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de1f528d_970ede11",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T08:30:51Z",
+      "side": 1,
+      "message": "Like I said - I\u0027m OK with having this section added as a useful help, but I\u0027d suggest moving in to later sections in the document, maybe some appendix section",
+      "parentUuid": "27afb7b4_7d216e66",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 55,
+        "endChar": 37
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9ee0a784_f61a0066",
         "filename": "scripts/vagrant/README.md",
         "patchSetId": 4
@@ -84,6 +132,30 @@
       "side": 1,
       "message": "already mentioned  that \"Maybe need these commands \"",
       "parentUuid": "9ee0a784_f61a0066",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 19
+      },
+      "revId": "1bdd0157b8cc80df1369511560fda7417c308846",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "603884b2_954cbe99",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T08:30:51Z",
+      "side": 1,
+      "message": "Currently it\u0027s \"if you create a VM by scripts, we also need commands as below:\" which suggests that you actually will need these commands.\nLet\u0027s rephrase to:\n\"Following commands may prove useful in case of manual operations in test environment\"",
+      "parentUuid": "016c8217_d5a60d11",
       "range": {
         "startLine": 58,
         "startChar": 0,
