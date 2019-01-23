@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68825094_0ae0ba35",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 37
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T15:53:27Z",
+      "side": 1,
+      "message": "commit message says bdev_histogram_get but RPC name is actually get_bdev_histogram",
+      "revId": "2bdfeddf200eb575e772d961ffc7e66fae09cd0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49259875_b140291f",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 37
+      },
+      "lineNbr": 635,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T15:53:27Z",
+      "side": 1,
+      "message": "enable_bdev_histogram?  with the true/false parameter like you have here\n\nthat matches the C API\n\nall function names (including RPCs) should have a verb in the name",
+      "revId": "2bdfeddf200eb575e772d961ffc7e66fae09cd0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8819b400_af02cb7a",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 37
+      },
+      "lineNbr": 644,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T15:53:27Z",
+      "side": 1,
+      "message": "shouldn\u0027t the type here be boolean instead of string?",
+      "revId": "2bdfeddf200eb575e772d961ffc7e66fae09cd0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
