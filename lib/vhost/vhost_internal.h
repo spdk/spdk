@@ -157,8 +157,11 @@ struct spdk_vhost_dev {
 	uint32_t coalescing_delay_us;
 	uint32_t coalescing_iops_threshold;
 
-	/* Active connection to the device */
+	/* Current connection to the device */
 	struct spdk_vhost_session *session;
+
+	/* Number of started and actively polled sessions */
+	uint32_t active_session_num;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
