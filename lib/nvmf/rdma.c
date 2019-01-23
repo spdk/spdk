@@ -72,9 +72,9 @@ enum spdk_nvmf_rdma_request_state {
 	RDMA_REQUEST_STATE_NEED_BUFFER,
 
 	/* The request is waiting on RDMA queue depth availability
-	 * to transfer data between the host and the controller.
+	 * to transfer data from the host to the controller.
 	 */
-	RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING,
+	RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING,
 
 	/* The request is currently transferring data from the host to the controller. */
 	RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
@@ -87,6 +87,11 @@ enum spdk_nvmf_rdma_request_state {
 
 	/* The request finished executing at the block device */
 	RDMA_REQUEST_STATE_EXECUTED,
+
+	/* The request is waiting on RDMA queue depth availability
+	 * to transfer data from the controller to the host.
+	 */
+	RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING,
 
 	/* The request is ready to send a completion */
 	RDMA_REQUEST_STATE_READY_TO_COMPLETE,
@@ -111,21 +116,22 @@ enum spdk_nvmf_rdma_request_state {
 #define TRACE_GROUP_NVMF_RDMA				0x4
 #define TRACE_RDMA_REQUEST_STATE_NEW					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x0)
 #define TRACE_RDMA_REQUEST_STATE_NEED_BUFFER				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x1)
-#define TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x2)
+#define TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x2)
 #define TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x3)
 #define TRACE_RDMA_REQUEST_STATE_READY_TO_EXECUTE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x4)
 #define TRACE_RDMA_REQUEST_STATE_EXECUTING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x5)
 #define TRACE_RDMA_REQUEST_STATE_EXECUTED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x6)
-#define TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x7)
-#define TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x8)
-#define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
-#define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xA)
-#define TRACE_RDMA_QP_CREATE						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xB)
-#define TRACE_RDMA_IBV_ASYNC_EVENT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xC)
-#define TRACE_RDMA_CM_ASYNC_EVENT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xD)
-#define TRACE_RDMA_QP_STATE_CHANGE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xE)
-#define TRACE_RDMA_QP_DISCONNECT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xF)
-#define TRACE_RDMA_QP_DESTROY						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x10)
+#define TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING		SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x7)
+#define TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x8)
+#define TRACE_RDMA_REQUEST_STATE_TRANSFERRING_CONTROLLER_TO_HOST	SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x9)
+#define TRACE_RDMA_REQUEST_STATE_COMPLETING				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xA)
+#define TRACE_RDMA_REQUEST_STATE_COMPLETED				SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xB)
+#define TRACE_RDMA_QP_CREATE						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xC)
+#define TRACE_RDMA_IBV_ASYNC_EVENT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xD)
+#define TRACE_RDMA_CM_ASYNC_EVENT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xE)
+#define TRACE_RDMA_QP_STATE_CHANGE					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0xF)
+#define TRACE_RDMA_QP_DISCONNECT					SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x10)
+#define TRACE_RDMA_QP_DESTROY						SPDK_TPOINT_ID(TRACE_GROUP_NVMF_RDMA, 0x11)
 
 SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 {
@@ -136,8 +142,11 @@ SPDK_TRACE_REGISTER_FN(nvmf_trace, "nvmf_rdma", TRACE_GROUP_NVMF_RDMA)
 	spdk_trace_register_description("RDMA_REQ_NEED_BUFFER", "",
 					TRACE_RDMA_REQUEST_STATE_NEED_BUFFER,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
+	spdk_trace_register_description("RDMA_REQ_TX_PENDING_C_TO_H", "",
+					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING,
+					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
 	spdk_trace_register_description("RDMA_REQ_TX_PENDING_H_TO_C", "",
-					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING,
+					TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING,
 					OWNER_NONE, OBJECT_NVMF_RDMA_IO, 0, 1, "cmid:   ");
 	spdk_trace_register_description("RDMA_REQ_TX_H_TO_C", "",
 					TRACE_RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER,
@@ -1502,53 +1511,34 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			 * arrive using in capsule data, we need to do a transfer from the host.
 			 */
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool) {
-				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING);
 				break;
 			}
 
 			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_EXECUTE);
 			break;
-		case RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING:
-			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING, 0, 0,
+		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (rdma_req != TAILQ_FIRST(&rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING])) {
+			if (rdma_req != TAILQ_FIRST(
+				    &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING])) {
 				/* This request needs to wait in line to perform RDMA */
 				break;
 			}
-
-			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER) {
-				if (rqpair->current_send_depth + rdma_req->num_outstanding_data_wr > rqpair->max_send_depth
-				    || rqpair->current_read_depth + rdma_req->num_outstanding_data_wr > rqpair->max_read_depth) {
-					/* We can only have so many WRs outstanding. we have to wait until some finish. */
-					break;
-				}
-				rc = request_transfer_in(&rdma_req->req);
-				if (!rc) {
-					spdk_nvmf_rdma_request_set_state(rdma_req,
-									 RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-				} else {
-					rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
-					spdk_nvmf_rdma_request_set_state(rdma_req,
-									 RDMA_REQUEST_STATE_READY_TO_COMPLETE);
-				}
-			} else if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-				/* The data transfer will be kicked off from
-				 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
-				 */
-				if ((rqpair->current_send_depth + rdma_req->num_outstanding_data_wr + 1) >
-				    rqpair->max_send_depth) {
-					/* We can only have so many WRs outstanding. we have to wait until some finish.
-					* +1 since each request has an additional wr in the resp.
-					* Check the recv queue since we have one in the recv as well */
-					break;
-				}
+			if (rqpair->current_send_depth + rdma_req->num_outstanding_data_wr > rqpair->max_send_depth
+			    || rqpair->current_read_depth + rdma_req->num_outstanding_data_wr > rqpair->max_read_depth) {
+				/* We can only have so many WRs outstanding. we have to wait until some finish. */
+				break;
+			}
+			rc = request_transfer_in(&rdma_req->req);
+			if (!rc) {
+				spdk_nvmf_rdma_request_set_state(rdma_req,
+								 RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
+			} else {
+				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				spdk_nvmf_rdma_request_set_state(rdma_req,
 								 RDMA_REQUEST_STATE_READY_TO_COMPLETE);
-			} else {
-				SPDK_ERRLOG("Cannot perform data transfer, unknown state: %u\n",
-					    rdma_req->req.xfer);
-				assert(0);
 			}
 			break;
 		case RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER:
@@ -1573,10 +1563,30 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING);
+				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING);
 			} else {
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_COMPLETE);
 			}
+			break;
+		case RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING:
+			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING, 0, 0,
+					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
+
+			if (rdma_req != TAILQ_FIRST(
+				    &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING])) {
+				/* This request needs to wait in line to perform RDMA */
+				break;
+			}
+			if ((rqpair->current_send_depth + rdma_req->num_outstanding_data_wr + 1) >
+			    rqpair->max_send_depth) {
+				/* We can only have so many WRs outstanding. we have to wait until some finish.
+				 * +1 since each request has an additional wr in the resp. */
+				break;
+			}
+			/* The data transfer will be kicked off from
+			 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
+			 */
+			spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_COMPLETE);
 			break;
 		case RDMA_REQUEST_STATE_READY_TO_COMPLETE:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_READY_TO_COMPLETE, 0, 0,
@@ -2099,8 +2109,17 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	struct spdk_nvmf_rdma_recv	*rdma_recv, *recv_tmp;
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
 
-	/* We process I/O in the data transfer pending queue at the highest priority. */
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_PENDING],
+	/* We process I/O in the data transfer pending queue at the highest priority. RDMA reads first */
+	TAILQ_FOREACH_SAFE(rdma_req,
+			   &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING],
+			   state_link, req_tmp) {
+		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
+			break;
+		}
+	}
+
+	/* Then RDMA writes sincereads have stronger restrictions than writes */
+	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING],
 			   state_link, req_tmp) {
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
