@@ -16,6 +16,24 @@
       "revId": "626feb67f16c81c91531066c1615420a9abacdac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "86361405_04fad8d4",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T19:43:08Z",
+      "side": 1,
+      "message": "I agree with you, but I was thinking that if we have plan to move to json config we can leave it as it is for now. I think the user interface we have now is a subject to change an and we can address it in future?",
+      "parentUuid": "bc38dad2_f77e22c8",
+      "revId": "626feb67f16c81c91531066c1615420a9abacdac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
