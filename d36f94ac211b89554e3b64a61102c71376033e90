@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e21a304a_fc179a10",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 73
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T13:14:57Z",
+      "side": 1,
+      "message": "Please add a default here for SPDK_TEST_BDEV_FTL too. (Sorry missed that in previous review)",
+      "revId": "d36f94ac211b89554e3b64a61102c71376033e90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92ee68ff_87d886a1",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 73
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T13:14:57Z",
+      "side": 1,
+      "message": "Using \u0027rpc.py start_nbd\u0027 would allow to not add new file (start_nbd.py) doing the same thing. Can you please change it ?",
+      "range": {
+        "startLine": 36,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 21
+      },
+      "revId": "d36f94ac211b89554e3b64a61102c71376033e90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
