@@ -274,7 +274,8 @@ spdk_jsonrpc_server_conn_recv(struct spdk_jsonrpc_server_conn *conn)
 
 	if (rc == 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "remote closed connection\n");
-		return -1;
+		conn->closed = true;
+		return 0;
 	}
 
 	conn->recv_len += rc;
@@ -386,7 +387,12 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	struct spdk_jsonrpc_server_conn *conn, *conn_tmp;
 
 	TAILQ_FOREACH_SAFE(conn, &server->conns, link, conn_tmp) {
-		if (conn->closed) {
+		/* If we can't receive and there are no outstanding requests close the connection. */
+		if (conn->closed == true && conn->outstanding_requests == 0) {
+			spdk_jsonrpc_server_conn_close(conn);
+		}
+
+		if (conn->sockfd == -1) {
 			struct spdk_jsonrpc_request *request;
 
 			/*
@@ -416,7 +422,7 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 	}
 
 	TAILQ_FOREACH(conn, &server->conns, link) {
-		if (conn->closed) {
+		if (conn->sockfd == -1) {
 			continue;
 		}
 
@@ -426,10 +432,11 @@ spdk_jsonrpc_server_poll(struct spdk_jsonrpc_server *server)
 			continue;
 		}
 
-		rc = spdk_jsonrpc_server_conn_recv(conn);
-		if (rc != 0) {
-			spdk_jsonrpc_server_conn_close(conn);
-			continue;
+		if (!conn->closed) {
+			rc = spdk_jsonrpc_server_conn_recv(conn);
+			if (rc != 0) {
+				spdk_jsonrpc_server_conn_close(conn);
+			}
 		}
 	}
 
