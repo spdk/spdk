@@ -132,3 +132,130 @@ valid blocks to all user blocks), its age (2) (when was it written) and its writ
 index of its chunks (3) (how many times the band was written to). The lower the ratio (1), the
 higher its age (2) and the lower its write count (3), the higher the chance the band will be chosen
 for defrag.
+
+# Usage {#ftl_usage}
+
+## Prerequisites {#ftl_prereq}
+
+In order to use the FTL module, an Open Channel SSD is required. The easiest way to obtain one is to
+emulate it using QEMU. The QEMU with the patches providing Open Channel support can be found on the
+SPDK's QEMU fork on [spdk-3.0.0](https://github.com/spdk/qemu/tree/spdk-3.0.0) branch.
+
+## Configuring QEMU {#ftl_qemu_config}
+
+To emulate an Open Channel device, QEMU expects parameters describing the characteristics and
+geometry of the SSD:
+ - `serial` - serial number,
+ - `lver` - version of the OCSSD standard (0 - disabled, 1 - "1.2", 2 - "2.0"), libftl only supports
+   2.0,
+ - `lba_index` - default LBA format. Possible values (libftl only supports lba_index >= 3):
+        |lba_index| data| metadata|
+        |---------|-----|---------|
+        |    0    | 512B|    0B   |
+        |    1    | 512B|    8B   |
+        |    2    | 512B|   16B   |
+        |    3    |4096B|    0B   |
+        |    4    |4096B|   64B   |
+        |    5    |4096B|  128B   |
+        |    6    |4096B|   16B   |
+ - `lnum_ch` - number of groups,
+ - `lnum_lun` - number of parallel units
+ - `lnum_pln` - number of planes (logical blocks from all planes constitute a chunk)
+ - `lpgs_per_blk` - number of pages (smallest programmable unit) per chunk
+ - `lsecs_per_pg` - number of sectors in a page
+ - `lblks_per_pln` - number of chunks in a parallel unit
+ - `laer_thread_sleep` - timeout in ms between asynchronous events requesting the host to relocate
+   the data based on media feedback
+ - `lmetadata` - metadata file
+
+For more detailed description of the available options, consult the `hw/block/nvme.c` file in
+the QEMU repository.
+
+Example:
+
+```
+$ /path/to/qemu [OTHER PARAMETERS] -drive format=raw,file=/path/to/data/file,if=none,id=myocssd0
+        -device nvme,drive=myocssd0,serial=deadbeef,lver=2,lba_index=3,lnum_ch=1,lnum_lun=8,lnum_pln=4,
+        lpgs_per_blk=1536,lsecs_per_pg=4,lblks_per_pln=512,lmetadata=/path/to/md/file
+```
+
+In the above example, a device is created with 1 channel, 8 parallel units, 512 chunks per parallel
+unit, 24576 (`lnum_pln` * `lpgs_per_blk` * `lsecs_per_pg`) logical blocks in each chunk with logical
+block being 4096B. Therefore the data file needs to be at least 384G (8 * 512 * 24576 * 4096B) of
+size and can be created with the following command:
+
+```
+$ fallocate -l 384G /path/to/data/file
+```
+
+## Configuring SPDK {#ftl_spdk_config}
+
+To verify that the drive is emulated correctly, one can check the output of the NVMe identify app
+(assuming that `scripts/setup.sh` was called before and the driver has been changed for that
+device):
+
+```
+$ examples/nvme/identify/identify
+=====================================================
+NVMe Controller at 0000:00:0a.0 [1d1d:1f1f]
+=====================================================
+Controller Capabilities/Features
+================================
+Vendor ID:                             1d1d
+Subsystem Vendor ID:                   1af4
+Serial Number:                         deadbeef
+Model Number:                          QEMU NVMe Ctrl
+
+... other info ...
+
+Namespace OCSSD Geometry
+=======================
+OC version: maj:2 min:0
+
+... other info ...
+
+Groups (channels): 1
+PUs (LUNs) per group: 8
+Chunks per LUN: 512
+Logical blks per chunk: 24576
+
+... other info ...
+
+```
+
+Similarly to other bdevs, the FTL bdevs can be created either based on config files or via RPC. Both
+interfaces require the same arguments which are described by the `--help` option of the
+`construct_ftl_bdev` RPC call, which are:
+ - bdev's name
+ - transport type of the device (e.g. PCIe)
+ - transport address of the device (e.g. `00:0a.0`)
+ - parallel unit range
+ - UUID of the FTL device (if the FTL is to be restored from the SSD)
+
+Example config:
+
+```
+[Ftl]
+ TransportID "trtype:PCIe traddr:00:0a.0" nvme0 "0-3"
+ TransportID "trtype:PCIe traddr:00:0a.0" nvme1 "4-5" e9825835-b03c-49d7-bc3e-5827cbde8a88
+```
+
+The above will result in creation of two devices:
+ - `nvme0` on `00:0a.0` using parallel units 0-3, created from scratch
+ - `nvme1` on the same device using parallel units 4-5, restored from the SSD using the UUID
+   provided
+
+The same can be achieved with the following two RPC calls:
+
+```
+$ scripts/rpc.py construct_ftl_bdev -b nvme0 -l 0-3 -a 00:0a.0
+{
+        "name": "nvme0",
+        "uuid": "b4624a89-3174-476a-b9e5-5fd27d73e870"
+}
+$ scripts/rpc.py construct_ftl_bdev -b nvme1 -l 0-3 -a 00:0a.0 -u e9825835-b03c-49d7-bc3e-5827cbde8a88
+{
+        "name": "nvme1",
+        "uuid": "e9825835-b03c-49d7-bc3e-5827cbde8a88"
+}
+```
