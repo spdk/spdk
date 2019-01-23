@@ -37,6 +37,7 @@
 #include "spdk/event.h"
 #include "spdk_internal/event.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 
 static uint64_t g_tsc_rate;
 static uint64_t g_tsc_us_rate;
@@ -153,7 +154,11 @@ main(int argc, char **argv)
 			opts.reactor_mask = optarg;
 			break;
 		case 't':
-			g_time_in_sec = atoi(optarg);
+			g_time_in_sec = spdk_strtol(optarg, 10);
+			if (g_time_in_sec < 0) {
+				fprintf(stderr, "Invalid run time\n");
+				return g_time_in_sec;
+			}
 			break;
 		default:
 			usage(argv[0]);
