@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ebe35777_308858f2",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 22
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T20:57:54Z",
+      "side": 1,
+      "message": "If there\u0027s a company with \"non\" in their name, their device will show up here :)\n\nCould we reuse iter_pci_class_code from spdk/scripts/common.sh? We use it e.g. in setup.sh",
+      "range": {
+        "startLine": 18,
+        "startChar": 43,
+        "endLine": 18,
+        "endChar": 46
+      },
+      "revId": "b4ddef7dd0582772db1e2205f6d9bcb18c89785b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
