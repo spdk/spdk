@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf1634dd_e2a9cac9",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T16:55:35Z",
+      "side": 1,
+      "message": "This one is not used anywhere. We should implement this, or at least remove this argument for now.",
+      "range": {
+        "startLine": 439,
+        "startChar": 4,
+        "endLine": 439,
+        "endChar": 121
+      },
+      "revId": "55730547509760404a02fda181d76c9baceacfcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
