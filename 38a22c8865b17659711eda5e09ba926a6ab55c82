@@ -16,6 +16,47 @@
       "revId": "38a22c8865b17659711eda5e09ba926a6ab55c82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6ecf2fc_13c29fc5",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 680,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T02:59:25Z",
+      "side": 1,
+      "message": "Agreed.",
+      "parentUuid": "ae52c1ac_b64454f3",
+      "revId": "38a22c8865b17659711eda5e09ba926a6ab55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fcf33767_14286a62",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 714,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T02:59:25Z",
+      "side": 1,
+      "message": "spdk_base64_encode() return negative value if failed, so we should use -rc.",
+      "range": {
+        "startLine": 714,
+        "startChar": 21,
+        "endLine": 714,
+        "endChar": 23
+      },
+      "revId": "38a22c8865b17659711eda5e09ba926a6ab55c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
