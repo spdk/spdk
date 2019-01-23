@@ -50,6 +50,24 @@
       "revId": "4fd56cac8b9cc32f8818da7cdd3c41b55e9f060f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "79bd3d28_089a504d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1994,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2019-01-23T01:25:00Z",
+      "side": 1,
+      "message": "We only require a PD per RDMA device. In fact with shared PD there is only a single PD per RDMA device that is shared across all processes (rather than one PD per RDMA device per process).",
+      "parentUuid": "2bb2f17f_48d9a2aa",
+      "revId": "4fd56cac8b9cc32f8818da7cdd3c41b55e9f060f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

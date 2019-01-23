@@ -16,6 +16,24 @@
       "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd16e8c4_dba44e0c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2010,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2019-01-23T01:25:00Z",
+      "side": 1,
+      "message": "Actually the main reason that I have moved the code for setting up device-\u003epd/map from \u0027spdk_nvmf_rdma_create\u0027 to \u0027spdk_nvmf_rdma_listen\u0027 is that I do need port-\u003eid for creating pd, which I can retrieve it in spdk_nvmf_rdma_listen not in spdk_nvmf_rdma_create as port are not set up yet there. \nI can move pd/map from device into port, but then in getting keys in spdk_mem_map_translate for example in call spdk_nvmf_rdma_request_fill_iovs:\nrdma_req-\u003edata.wr.sg_list[i].lkey \u003d ((struct ibv_mr *)spdk_mem_map_translate(device-\u003emap,...\nI have to use pd of one of the ports listed in rtrasport-\u003eports, which it doesn\u0027t seem right to me actually.",
+      "parentUuid": "6abf9b84_364d91af",
+      "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
