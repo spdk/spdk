@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "271a8a41_bd4dd249",
+        "filename": "lib/bdev/rpc/bdev_rpc.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T21:43:37Z",
+      "side": 1,
+      "message": "It would be cleaner to initialize encoded_histogram to NULL (line #698) and then use the \"invalid\" label to free it unconditionally. We don\u0027t need two separate goto labels here.",
+      "range": {
+        "startLine": 738,
+        "startChar": 6,
+        "endLine": 738,
+        "endChar": 23
+      },
+      "revId": "55730547509760404a02fda181d76c9baceacfcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bf1634dd_e2a9cac9",
         "filename": "scripts/rpc.py",
         "patchSetId": 38
@@ -43,6 +66,23 @@
         "endLine": 439,
         "endChar": 121
       },
+      "revId": "55730547509760404a02fda181d76c9baceacfcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63654aa6_38874e96",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 38
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T21:43:37Z",
+      "side": 1,
+      "message": "the \"enable\" param is missing",
       "revId": "55730547509760404a02fda181d76c9baceacfcb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
