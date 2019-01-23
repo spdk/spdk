@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "540a1be4_50cca6d3",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 302,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T15:54:23Z",
+      "side": 1,
+      "message": "structures",
+      "range": {
+        "startLine": 302,
+        "startChar": 72,
+        "endLine": 302,
+        "endChar": 82
+      },
+      "revId": "df69601acb8c8e570c379aa30aa3c9320d68e7ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
