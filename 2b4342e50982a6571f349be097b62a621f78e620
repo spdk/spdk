@@ -22,6 +22,30 @@
       "revId": "2b4342e50982a6571f349be097b62a621f78e620",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e32460a_ddce005d",
+        "filename": "test/bdev/bdevperf/Makefile",
+        "patchSetId": 19
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T23:15:09Z",
+      "side": 1,
+      "message": "Agreed.  I\u0027m OK not making this a separate patch, but it should be mentioned.",
+      "parentUuid": "2c18e62e_4786f228",
+      "range": {
+        "startLine": 44,
+        "startChar": 64,
+        "endLine": 44,
+        "endChar": 72
+      },
+      "revId": "2b4342e50982a6571f349be097b62a621f78e620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
