@@ -99,6 +99,12 @@ each tpoint group status.
 New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
 disable a specific tpoint group.
 
+### ftl
+
+EXPERIMENTAL: Added basic flash translation layer module allowing for using Open Channel SSDs as
+block devices. The module is split into the library (located in lib/ftl) and bdev_ftl
+(lib/bdev/ftl). See the [documentation](https://spdk.io/doc/ftl.html) for more details.
+
 ## v18.10:
 
 ### nvme
