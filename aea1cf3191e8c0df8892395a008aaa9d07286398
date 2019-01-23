@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c73fcbb6_1f059e7c",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-23T14:06:30Z",
+      "side": 1,
+      "message": "I gonna guess that you had in mind initialization memory requirement of OCF?\nIf so, it is not the memory that we should care about here. Memory \"requirement\" I mention is how much ocf_requests we expect to be allocated.",
+      "parentUuid": "7ebbfaef_846c252a",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 59
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4f2133e_1545f050",
         "filename": "lib/bdev/ocf/env/ocf_env.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-23T13:42:48Z",
       "side": 1,
       "message": "Is this even used anywhere ? If yes, maybe ENV_ALLOCATOR_NBUFS - spdk_mempool_count() can be used. Otherwise remove it. Making the count in _env_allocator not used at all.",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 24
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b54ecb7_2288b3a2",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-23T14:06:30Z",
+      "side": 1,
+      "message": "We use it for debugging (on destroy)\nBut yes, I think I can use your suggestion instead, Ack",
+      "parentUuid": "b4f2133e_1545f050",
       "range": {
         "startLine": 132,
         "startChar": 0,
