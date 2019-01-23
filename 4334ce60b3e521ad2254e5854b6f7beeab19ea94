@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "001b9c7a_8b60e7f6",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "I was using pointer so that it may be optional - user may just pass NULL if he/she wants to use default behavior. With current implementation I\u0027ve added\u0027default\u0027 value to enums and handle that on blob layer, but this will require from user to actually check what he/she needs to put in argument even if he/she does not care about this argument.",
+      "parentUuid": "af34ff95_a6460173",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "642d618d_681eef43",
         "filename": "include/spdk_internal/lvolstore.h",
         "patchSetId": 3
@@ -33,6 +51,24 @@
       "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2af8add_b851360a",
+        "filename": "include/spdk_internal/lvolstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "642d618d_681eef43",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "13a4cacf_d3137ad7",
+        "filename": "lib/bdev/lvol/vbdev_lvol_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14e46504_cb84c912",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32e29391_e666c5ab",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -67,6 +121,24 @@
       "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa108c39_495a29ed",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32e29391_e666c5ab",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "2c012237_1bf95121",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1067,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "The idea is to define clearing method on lvol creation. We have to persist that as we want to have the same behavior every time we reload lvol store and lvols. I can move whole logic to lvol layer and just add blob structure field that will indicate requested clearing method (and load it using spdk_blob_open_ex()). Let me know if this is what you were thinking about.",
+      "parentUuid": "1d2d0c72_b32af21c",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "749fa91b_27a0b638",
         "filename": "lib/blob/blobstore.h",
         "patchSetId": 3
@@ -101,6 +191,24 @@
       "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e083bd12_c57e03ad",
+        "filename": "lib/blob/blobstore.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-23T12:52:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "749fa91b_27a0b638",
+      "revId": "4334ce60b3e521ad2254e5854b6f7beeab19ea94",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
