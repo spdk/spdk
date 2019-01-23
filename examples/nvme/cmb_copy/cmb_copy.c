@@ -35,6 +35,7 @@
 
 #include "spdk/env.h"
 #include "spdk/nvme.h"
+#include "spdk/string.h"
 
 #define CMB_COPY_DELIM "-"
 #define CMB_COPY_READ 0
@@ -227,6 +228,7 @@ static void
 parse(char *in, struct nvme_io *io)
 {
 	char *tok = NULL;
+	long int val;
 
 	tok = strtok(in, CMB_COPY_DELIM);
 	if (tok == NULL) {
@@ -239,19 +241,31 @@ parse(char *in, struct nvme_io *io)
 	if (tok == NULL) {
 		goto err;
 	}
-	io->nsid  = atoi(tok);
+	val = spdk_strtol(tok, 10);
+	if (val < 0) {
+		goto err;
+	}
+	io->nsid  = (unsigned)val;
 
 	tok = strtok(NULL, CMB_COPY_DELIM);
 	if (tok == NULL) {
 		goto err;
 	}
-	io->slba  = atoi(tok);
+	val = spdk_strtol(tok, 10);
+	if (val < 0) {
+		goto err;
+	}
+	io->slba  = (unsigned)val;
 
 	tok = strtok(NULL, CMB_COPY_DELIM);
 	if (tok == NULL) {
 		goto err;
 	}
-	io->nlbas = atoi(tok);
+	val = spdk_strtol(tok, 10);
+	if (val < 0) {
+		goto err;
+	}
+	io->nlbas = (unsigned)val;
 
 	tok = strtok(NULL, CMB_COPY_DELIM);
 	if (tok != NULL) {

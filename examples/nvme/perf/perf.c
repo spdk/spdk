@@ -1301,7 +1301,7 @@ add_trid(const char *trid_str)
 		memcpy(nsid_str, ns, len);
 		nsid_str[len] = '\0';
 
-		nsid = atoi(nsid_str);
+		nsid = spdk_strtol(nsid_str, 10);
 		if (nsid <= 0 || nsid > 65535) {
 			fprintf(stderr, "NVMe namespace IDs must be less than 65536 and greater than 0\n");
 			free(trid_entry);
@@ -1411,6 +1411,7 @@ parse_args(int argc, char **argv)
 	const char *workload_type;
 	int op;
 	bool mix_specified = false;
+	long int val;
 
 	/* default value */
 	g_queue_depth = 0;
@@ -1423,6 +1424,43 @@ parse_args(int argc, char **argv)
 
 	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
 		switch (op) {
+		case 'i':
+		case 'm':
+		case 'o':
+		case 'q':
+		case 's':
+		case 't':
+		case 'M':
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'i':
+				g_shm_id = val;
+				break;
+			case 'm':
+				g_max_completions = val;
+				break;
+			case 'o':
+				g_io_size_bytes = val;
+				break;
+			case 'q':
+				g_queue_depth = val;
+				break;
+			case 's':
+				g_dpdk_mem = val;
+				break;
+			case 't':
+				g_time_in_sec = val;
+				break;
+			case 'M':
+				g_rw_percentage = val;
+				mix_specified = true;
+				break;
+			}
+			break;
 		case 'c':
 			g_core_mask = optarg;
 			break;
@@ -1432,32 +1470,14 @@ parse_args(int argc, char **argv)
 				return 1;
 			}
 			break;
-		case 'i':
-			g_shm_id = atoi(optarg);
-			break;
 		case 'l':
 			g_latency_ssd_tracking_enable = true;
-			break;
-		case 'm':
-			g_max_completions = atoi(optarg);
-			break;
-		case 'o':
-			g_io_size_bytes = atoi(optarg);
-			break;
-		case 'q':
-			g_queue_depth = atoi(optarg);
 			break;
 		case 'r':
 			if (add_trid(optarg)) {
 				usage(argv[0]);
 				return 1;
 			}
-			break;
-		case 's':
-			g_dpdk_mem = atoi(optarg);
-			break;
-		case 't':
-			g_time_in_sec = atoi(optarg);
 			break;
 		case 'w':
 			workload_type = optarg;
@@ -1473,10 +1493,6 @@ parse_args(int argc, char **argv)
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
-			break;
-		case 'M':
-			g_rw_percentage = atoi(optarg);
-			mix_specified = true;
 			break;
 		default:
 			usage(argv[0]);
