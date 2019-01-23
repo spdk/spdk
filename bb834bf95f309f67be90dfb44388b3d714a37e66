@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "988829e9_16bd616f",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-23T14:37:22Z",
+      "side": 1,
+      "message": "Can you put comment here at least why/when vdev can be NULL.",
+      "parentUuid": "bfcb4458_76402220",
+      "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5ac138e4_1e78f768",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 9
