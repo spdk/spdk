@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ca6fb61_43960cc9",
+        "filename": "test/ocf/integrity/fio-mallocs.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T20:51:50Z",
+      "side": 1,
+      "message": "Why do we need to specify this parameter ?\nBesides most of if not all of the generated lives within the test directory.",
+      "range": {
+        "startLine": 10,
+        "startChar": 68,
+        "endLine": 10,
+        "endChar": 84
+      },
+      "revId": "02d2c1b64a5c6ac68ecef81c2be3ba8528d08887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
