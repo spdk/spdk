@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "719d955b_03258996",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 782,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T11:21:34Z",
+      "side": 1,
+      "message": "raid_bdev_io_type_unmap_supported() is only called by raid_bdev_io_type_supported(), so we KNOW the type of ctx, let\u0027s use struct raid_bdev * directly.",
+      "range": {
+        "startLine": 782,
+        "startChar": 34,
+        "endLine": 782,
+        "endChar": 40
+      },
+      "revId": "1977040bf3cf7f46eff047d6e11390a5f55d389d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f356e7a2_f5b51315",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 818,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T11:21:34Z",
+      "side": 1,
+      "message": "Unnecessary change.",
+      "revId": "1977040bf3cf7f46eff047d6e11390a5f55d389d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
