@@ -2,6 +2,74 @@
   "comments": [
     {
       "key": {
+        "uuid": "5346ce25_fc9c01b9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "probably good to note here that there is an override and also maybe say \"default requirement\" or something",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c7fe9fc_c7dc38c5",
+        "filename": "CONFIG",
+        "patchSetId": 10
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "We want default to Y and in configure set to N if not x86",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83933ef3_98ea2c98",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "lets mention that its been automatically disabled for this build.  Here\u0027s what I had:\nif [[ $arch !\u003d x86_64* ]]; then\n\techo \"Notice: ISAL auto-disabled due to CPU incompatiblity.\"\n\tCONFIG[ISAL]\u003dn\nfi",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f4bc761_b65f492c",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "here we need a check to see if ISAL and RBD are both enabled and if they are disable ISAL and print a notice like I suggest in the other comments here.  There appears to be conflicting names when ISAL is linked in between Ceph and us.  Still working on a possible solution but for now disabling ISAL when RBD is on will still provide functionality .",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "098bdcf7_7c1275d9",
         "filename": "configure",
         "patchSetId": 10
@@ -65,6 +133,23 @@
     },
     {
       "key": {
+        "uuid": "87d4c620_b2172c31",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "here and in all the auto-disable cases please add a print, something like this (well, replace the options names accordingly):\necho \"Notice: ISAL, compression \u0026 crypto auto-disabled due to nasm dependency.\"",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e148b989_3e545d9f",
         "filename": "configure",
         "patchSetId": 10
@@ -108,6 +193,40 @@
       "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "07b72a7f_4a648873",
+        "filename": "include/spdk/crc32.h",
+        "patchSetId": 10
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "I haven\u0027t tried with your patch but on my local system I have #include \u003c../isa-l/include/crc.h\u003e and it works.  Maybe both do, I dunno :)",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a7dec5e_32c8bf49",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 10
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-23T23:15:17Z",
+      "side": 1,
+      "message": "so on my local system here\u0027s what I have that works (I a\u003dhave include at the end of the path).  I will try yours tomorrow:\nISAL_DIR\u003d$(SPDK_ROOT_DIR)/isa-l\nifeq ($(CONFIG_ISAL), y)\nSYS_LIBS +\u003d -L$(ISAL_DIR)/.libs -lisal\nCOMMON_CFLAGS +\u003d -I$(ISAL_DIR)/include\nendif",
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
