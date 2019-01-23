@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bc38dad2_f77e22c8",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T19:04:54Z",
+      "side": 1,
+      "message": "I still don\u0027t think this matches bdev_ftl_read_bdev_config.  That function is trying to read the data as:\n\n[Ftl]\nTransportID \u003ctrid\u003e \u003cname\u003e \u003crange\u003e \u003cuuid - optional\u003e\n\nBut this function here is printing the data in a completely different format.",
+      "revId": "626feb67f16c81c91531066c1615420a9abacdac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "f928fb4c_5145dd57",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T19:04:54Z",
+      "side": 1,
+      "message": "Sounds good.",
+      "parentUuid": "49b5546b_1f2a62cb",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e54ab36e_d687559f",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -206,6 +224,24 @@
       "side": 1,
       "message": "This is needed because some of our test that use ndb are failing without this alignment. I think we already agreed that it could stay for now until we found the root cause (probably there is some bug in qemu or ocssd nvme layer in spdk). I can add TODO for this.",
       "parentUuid": "6bb008b8_5c4da77b",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "002a2cb5_d2001647",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-23T19:04:54Z",
+      "side": 1,
+      "message": "OK - the TODO here is fine for now.",
+      "parentUuid": "9154607c_5883ba6b",
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
