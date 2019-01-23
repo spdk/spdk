@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1e3e8149_4e000d8d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T11:54:04Z",
+      "side": 1,
+      "message": "We\u0027re not enabling anything here.\n\"Fix vhost hotplug tests\"?",
+      "range": {
+        "startLine": 7,
+        "startChar": 20,
+        "endLine": 7,
+        "endChar": 67
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd0ea662_8adc7fe6",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 2
