@@ -68,6 +68,29 @@
       "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bac4d561_4d6f576f",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-23T11:08:42Z",
+      "side": 1,
+      "message": "Unnecessary change, since old codes already have raid_io-\u003ebase_bdev_reset_submitted \u003d 0 in line 561 (line number in old code)",
+      "range": {
+        "startLine": 593,
+        "startChar": 1,
+        "endLine": 593,
+        "endChar": 40
+      },
+      "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
