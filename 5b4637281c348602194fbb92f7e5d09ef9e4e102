@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09ef0bf9_47942a86",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T12:01:30Z",
+      "side": 1,
+      "message": "Small nit, we usually call those functions in same manner as the callback. Meaning this would change to vbdev_ocf_dump_info_json.",
+      "range": {
+        "startLine": 398,
+        "startChar": 0,
+        "endLine": 398,
+        "endChar": 26
+      },
+      "revId": "5b4637281c348602194fbb92f7e5d09ef9e4e102",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
