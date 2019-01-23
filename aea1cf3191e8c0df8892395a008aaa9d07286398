@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "01f2d41f_8d83e07f",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-23T14:31:26Z",
+      "side": 1,
+      "message": "I don\u0027t see a good way of estimating number of buffers OCF is going to need\nIt has to be connected with max_queue_depth configuration option for OCF but I am not aware how to say for sure\nThis value was proven sufficient for workloads of functional tests\n\nDo you have any suggestions related to this?",
+      "parentUuid": "c73fcbb6_1f059e7c",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 42,
+        "endChar": 59
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b4f2133e_1545f050",
         "filename": "lib/bdev/ocf/env/ocf_env.c",
         "patchSetId": 10
