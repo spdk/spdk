@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f6517b1_2d0790ec",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-01-23T14:44:08Z",
+      "side": 1,
+      "message": "IMHO its better to construct/delete Malloc bdevs via RPC commands in this test and not use conf file. It will be more readable and will provide better information when e.g. deleting cache bdev breakes integrity and so on.",
+      "range": {
+        "startLine": 9,
+        "startChar": 33,
+        "endLine": 9,
+        "endChar": 62
+      },
+      "revId": "f2ec8ee513a69304fba83b81d61eabe2e33b51df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7600877b_19fdd8b2",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-01-23T14:44:08Z",
+      "side": 1,
+      "message": "You should to wait until iscsi_tgt starts listening instead using sleep, like that:\n\nwaitforlisten $spdk_pid",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 7
+      },
+      "revId": "f2ec8ee513a69304fba83b81d61eabe2e33b51df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
