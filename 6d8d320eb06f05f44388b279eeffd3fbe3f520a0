@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "098bdcf7_7c1275d9",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T20:27:45Z",
+      "side": 1,
+      "message": "When feature is explicitly enabled and some depdendency is not found, usually we exited - rather than disable that feature and proceed.\nDo we want to actually proceed this way ?",
+      "range": {
+        "startLine": 394,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 20
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec12d36c_f656b06c",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T20:27:45Z",
+      "side": 1,
+      "message": "want to",
+      "range": {
+        "startLine": 404,
+        "startChar": 42,
+        "endLine": 404,
+        "endChar": 50
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e148b989_3e545d9f",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T20:27:45Z",
+      "side": 1,
+      "message": "exit 1 - see above",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 408,
+        "endChar": 20
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "575ad253_5c4d4795",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-23T20:27:45Z",
+      "side": 1,
+      "message": "exit 1 - see above",
+      "range": {
+        "startLine": 412,
+        "startChar": 0,
+        "endLine": 414,
+        "endChar": 20
+      },
+      "revId": "6d8d320eb06f05f44388b279eeffd3fbe3f520a0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
