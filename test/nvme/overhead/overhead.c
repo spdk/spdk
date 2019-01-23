@@ -545,6 +545,7 @@ static int
 parse_args(int argc, char **argv)
 {
 	int op;
+	long int val;
 
 	/* default value */
 	g_io_size_bytes = 0;
@@ -557,10 +558,19 @@ parse_args(int argc, char **argv)
 			exit(0);
 			break;
 		case 's':
-			g_io_size_bytes = atoi(optarg);
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Invalid io size\n");
+				return val;
+			}
+			g_io_size_bytes = (uint32_t)val;
 			break;
 		case 't':
-			g_time_in_sec = atoi(optarg);
+			g_time_in_sec = spdk_strtol(optarg, 10);
+			if (g_time_in_sec < 0) {
+				fprintf(stderr, "Invalid run time\n");
+				return g_time_in_sec;
+			}
 			break;
 		case 'H':
 			g_enable_histogram = true;

@@ -36,6 +36,7 @@
 #include "spdk/log.h"
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
 
 #define MAX_DEVS 64
 
@@ -303,6 +304,7 @@ static int
 parse_args(int argc, char **argv)
 {
 	int op, rc;
+	long int val;
 
 	g_trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	snprintf(g_trid.subnqn, sizeof(g_trid.subnqn), "%s", SPDK_NVMF_DISCOVERY_NQN);
@@ -310,7 +312,12 @@ parse_args(int argc, char **argv)
 	while ((op = getopt(argc, argv, "n:r:HL:T")) != -1) {
 		switch (op) {
 		case 'n':
-			expected_ns_test = atoi(optarg);
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Invalid NS attribute notice ID\n");
+				return val;
+			}
+			expected_ns_test = (uint32_t)val;
 			break;
 		case 'r':
 			if (spdk_nvme_transport_id_parse(&g_trid, optarg) != 0) {
