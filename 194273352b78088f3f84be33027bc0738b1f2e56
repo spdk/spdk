@@ -102,6 +102,24 @@
     },
     {
       "key": {
+        "uuid": "11d6e7b9_3a38c84b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-23T03:05:01Z",
+      "side": 1,
+      "message": "Thanks, Ben. I misled Changpeng. will update.",
+      "parentUuid": "9e592bec_b0cc43f6",
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f70c7a69_231beeb6",
         "filename": "lib/nvmf/ctrlr.c",
         "patchSetId": 13
@@ -116,6 +134,24 @@
       "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "00fe6314_03e25cda",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-01-23T03:05:01Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f70c7a69_231beeb6",
+      "revId": "194273352b78088f3f84be33027bc0738b1f2e56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
