@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "27ec07dd_c3792def",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 69
+      },
+      "lineNbr": 1421,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1095b56_a8ac706f",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be9ca6bc_4c025196",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-22T21:44:41Z",
       "side": 1,
       "message": "would this be easier if we just specified begin and end as separate inputs?\n\nI\u0027m not asking you to change it - this all just seems fairly complex\n\nI wouldn\u0027t mind having this code check that begin \u003c\u003d end - I know that ftl_check_init_opts() does this, but I had to go search through the code to make sure - having a check here would simplify this for the reader",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49b5546b_1f2a62cb",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Ok I will add this check. I think we could separate this input to lun begin and end. This will allow us to remove this regex logic. I would prefer to change this after we replace config_text to config_json.",
+      "parentUuid": "be9ca6bc_4c025196",
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "88417ed3_7ef771db",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 496,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Ok, I will add this to user interface.",
+      "parentUuid": "e54ab36e_d687559f",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7a899b97_38085bbf",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -67,6 +121,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9437d293_669cbffd",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a899b97_38085bbf",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "6e45277b_19ab49a4",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4dc6997_93ba9996",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bb008b8_5c4da77b",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -98,6 +188,24 @@
       "writtenOn": "2019-01-22T21:21:19Z",
       "side": 1,
       "message": "this is intended to specify that the data buffers must have certain alignment - I don\u0027t think that\u0027s the case for FTL though",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9154607c_5883ba6b",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "This is needed because some of our test that use ndb are failing without this alignment. I think we already agreed that it could stay for now until we found the root cause (probably there is some bug in qemu or ocssd nvme layer in spdk). I can add TODO for this.",
+      "parentUuid": "6bb008b8_5c4da77b",
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "0ef12729_383dbc17",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 653,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "This should be removed, ftil_init_fail will do all necessary cleanups.",
+      "parentUuid": "0d143a73_b01d2cae",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "de106fe7_579fa396",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -135,6 +261,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "993ed0a8_e001ac26",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "de106fe7_579fa396",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -155,6 +299,24 @@
     },
     {
       "key": {
+        "uuid": "1e635c22_aa1ec3fa",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4bb7e162_54a38452",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b9b8f87f_edd686dd",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -169,6 +331,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e56e41c0_058496e8",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9b8f87f_edd686dd",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -189,6 +369,24 @@
     },
     {
       "key": {
+        "uuid": "37442622_9ad2a23f",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 836,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "359a74d0_d988bd70",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c65e21e0_743e5c2c",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -203,6 +401,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f0506c4_84e7a449",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 849,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c65e21e0_743e5c2c",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -223,6 +439,24 @@
     },
     {
       "key": {
+        "uuid": "2b704da4_48676d64",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 871,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c0ad9761_be34768b",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1421dfd8_bb09c865",
         "filename": "lib/bdev/ftl/bdev_ftl.c",
         "patchSetId": 69
@@ -237,6 +471,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d58f386_cc8d4089",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 901,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1421dfd8_bb09c865",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -257,6 +509,24 @@
     },
     {
       "key": {
+        "uuid": "2a7e4b47_e47e5a20",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "I\u0027ve already added TODO to change config_text_support to config_json. I will prefer to do this as separate patch - our test currently depends on this text_support.",
+      "parentUuid": "f7bb1caf_e532f3df",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a9e6f08a_1fdf6d52",
         "filename": "lib/bdev/ftl/bdev_ftl.h",
         "patchSetId": 69
@@ -271,6 +541,24 @@
       "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48da0d48_2cc13f96",
+        "filename": "lib/bdev/ftl/bdev_ftl.h",
+        "patchSetId": 69
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-23T14:23:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9e6f08a_1fdf6d52",
+      "revId": "98b14340c415024fd23f38b02c90a72b9e701181",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
