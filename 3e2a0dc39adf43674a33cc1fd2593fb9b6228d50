@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f9f9fb89_1d3ed1fb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 804,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-23T07:03:31Z",
+      "side": 1,
+      "message": "I think, NVMe queue depth should be enforced in upper layers, not in RDMA implementation.",
+      "parentUuid": "48c2d060_7a089a37",
+      "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7ad8113a_1166fc20",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
@@ -51,6 +69,24 @@
       "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e28299db_62695e3a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 811,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-23T07:03:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7ad8113a_1166fc20",
+      "revId": "3e2a0dc39adf43674a33cc1fd2593fb9b6228d50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
