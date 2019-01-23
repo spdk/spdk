@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4afd2edd_10dbef58",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-23T21:39:34Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this * 2 here.\nShouldn\u0027t it be num_cqe \u003d spdk_max(rpoller-\u003enum_cqe, required_num_wr). That way rpoller-\u003enum_cqe will stay the same unless required_num_wr is greater than it.",
+      "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
