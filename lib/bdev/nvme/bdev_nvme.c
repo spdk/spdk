@@ -1081,11 +1081,11 @@ static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
 	uint32_t i;
-	struct nvme_ctrlr *nvme_ctrlr;
+	struct nvme_ctrlr *nvme_ctrlr, *nvme_ctrlr_tmp;
 	struct nvme_bdev *nvme_bdev;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+	TAILQ_FOREACH_SAFE(nvme_ctrlr, &g_nvme_ctrlrs, tailq, nvme_ctrlr_tmp) {
 		if (nvme_ctrlr->ctrlr == ctrlr) {
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			for (i = 0; i < nvme_ctrlr->num_ns; i++) {
