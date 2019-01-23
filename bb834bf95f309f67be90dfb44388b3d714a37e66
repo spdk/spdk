@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "98e1338a_8c771a79",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:44:49Z",
+      "side": 1,
+      "message": "The entire vhost device could be theoretically removed during our foreach chain.\n\nThis was nothing but a dirty check that prevented us from crashing in those cases. Since you pointed it out, I added extra checks to prevent removing a device while such operations are still pending and then removed those `vdev \u003d\u003d NULL` checks here. Quoting from the patch \"vhost: untie devices from lcores\" [1]\n\n```\nAdditionally, since we don\u0027t want to handle cases\nwhere the entire vhost device gets removed while\nan asynchronous foreach_session chain is pending,\na new per-vdev counter of pending async operations\nwas added. We\u0027ll fail the device removal request\nif there are any pending operations. Eventually\nwe would like the device removal to be asynchronous,\nbut that\u0027s a todo for later.\n```\n\n[1] https://review.gerrithub.io/c/spdk/spdk/+/439323",
+      "parentUuid": "5ac138e4_1e78f768",
+      "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dcc3892c_f4d74aec",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 9
@@ -68,6 +86,24 @@
       "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1867990f_bed0ff3d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:44:49Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "dcc3892c_f4d74aec",
+      "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -118,6 +154,24 @@
       "side": 1,
       "message": "so in summary, I think just move these two fields into the spdk_scsi_dev_vhost_state structure directly, and just pass the state object around as the context to foreach_session",
       "parentUuid": "2a5ba161_dac18ab6",
+      "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22875c54_1ebcf966",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1088,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-23T15:44:49Z",
+      "side": 1,
+      "message": "That wouldn\u0027t make much sense, this field is basically a counter of currently polled sessions, so there\u0027s no need to track it on per-scsi-device basis. I added vdev-\u003eactive_session_num instead.",
+      "parentUuid": "4f4e2f6f_6d535754",
       "revId": "bb834bf95f309f67be90dfb44388b3d714a37e66",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
