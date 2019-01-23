@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "983c4efa_4168d3f4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1493,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:29:06Z",
+      "side": 1,
+      "message": "I just realized that this condition will block writes if there is a queued up read",
+      "revId": "ce3bb0187d36def0ff86948adce1b9f6ef228853",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "373f5e6a_f23ec2d8",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 3
