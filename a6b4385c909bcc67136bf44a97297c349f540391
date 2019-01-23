@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "27137746_2a247eac",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dafd92d6_feb56d33",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9acf6462_f5152060",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -33,6 +51,24 @@
       "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "040840f2_8f91021d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 336,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9acf6462_f5152060",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "0376babf_d620dbbe",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 337,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "18b32296_d47f6bfe",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "34a7fc34_9f2c0f4a",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -67,6 +121,24 @@
       "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2565ab71_9976b8cf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 719,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "34a7fc34_9f2c0f4a",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "b7890106_61f6e3ae",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 721,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "744a1506_26ec0a29",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2dc28e63_b4b74583",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -98,6 +188,24 @@
       "writtenOn": "2019-01-22T20:09:52Z",
       "side": 1,
       "message": "We should probably check that the default is greater than or equal to the MAX_WR_PER_QP for a single queue, because less than that and it wouldn\u0027t function correctly.",
+      "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d785466_23cf043d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2422,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-23T03:03:24Z",
+      "side": 1,
+      "message": "Eh, since the queue-depth for a single queue depends on several conditions like rdma config, rdma device limitation and host setting,  so queue-depth for each QP is not exactly same. And we don\u0027t know it here when we create the CQ.",
+      "parentUuid": "2dc28e63_b4b74583",
       "revId": "a6b4385c909bcc67136bf44a97297c349f540391",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
