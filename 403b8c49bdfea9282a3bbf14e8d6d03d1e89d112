@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6fbe568_a591ac73",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "So we have max_read_depth and current_read_depth already - why not use current_recv_depth and current_send_depth? I also think you need to store max_send_depth.",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab89be69_81758c64",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "Didn\u0027t you want to reverse the count on this, so getting a completion increments and posting a recv decrements?",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1579564f_a1236e85",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1514,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "This check doesn\u0027t make sense to me - the max_queue_depth is in units of NVMe commands, which don\u0027t have a 1:1 correspondence to RDMA work requests on the send side. I think you need need to store the \"max_send_depth\" like you store max_read_depth and compare to that.",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8c74eda_d32b7625",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2628,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "This one has the meaning reversed, but the others don\u0027t.",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c75279a_05079c31",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2702,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "This should be an assert, right?",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a6519af0_388ce43e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2817,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-23T21:56:26Z",
+      "side": 1,
+      "message": "Put a comment here, although I think if the meaning of this value reverse then the check is more obvious because you\u0027d be comparing to max_queue_depth.",
+      "revId": "403b8c49bdfea9282a3bbf14e8d6d03d1e89d112",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
