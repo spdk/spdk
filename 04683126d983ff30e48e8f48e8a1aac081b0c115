@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55afb60d_c882e3d0",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T10:31:31Z",
+      "side": 1,
+      "message": "UINvmeBdev should have it\u0027s own overload of this function.\nSmth like this should work for deleting all namespaces:\n\n```\nctrlrs \u003d [x.name for x in self._children] (gives you a list of all NvmeXnY bdevs)\nctrlrs \u003d [x.rsplit(\"n\",1) for x in ctrlrs] (get only controller names)\nctrlrs \u003d set(ctrlrs) (remove duplicates)\nfor c in ctrlrs:\n    self.delete(ctrlr)\n```",
+      "range": {
+        "startLine": 142,
+        "startChar": 0,
+        "endLine": 147,
+        "endChar": 22
+      },
+      "revId": "04683126d983ff30e48e8f48e8a1aac081b0c115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12af5d94_b2494f0b",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T10:31:31Z",
+      "side": 1,
+      "message": "Pawel, after re-thinking this fix is actually not good. Sorry about that. Here\u0027s why.\nYou change the \"delete\" argument from NVMe controller to NVMe bdev/namespace. Pretty sure that this will cause confusion in future and generate a new github issue - \"I deleted Nvme0n1, but all of my other namespaces disappeared!\"\n\nOriginal 581 issue was for delete_all, and that\u0027s where the fix should be.",
+      "range": {
+        "startLine": 312,
+        "startChar": 12,
+        "endLine": 313,
+        "endChar": 67
+      },
+      "revId": "04683126d983ff30e48e8f48e8a1aac081b0c115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b739f9f4_75273d81",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T10:31:31Z",
+      "side": 1,
+      "message": "That\u0027s inconsistent - \n\"Deletes NVMe controller from configuration.\" vs \"Nvme bdev to be deleted\"",
+      "range": {
+        "startLine": 337,
+        "startChar": 8,
+        "endLine": 340,
+        "endChar": 69
+      },
+      "revId": "04683126d983ff30e48e8f48e8a1aac081b0c115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bdc07506_1f8083c0",
+        "filename": "test/spdkcli/vhost.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-23T10:31:31Z",
+      "side": 1,
+      "message": "This was ok in the first place",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 88,
+        "endChar": 38
+      },
+      "revId": "04683126d983ff30e48e8f48e8a1aac081b0c115",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
