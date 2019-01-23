@@ -1072,6 +1072,8 @@ stop_device(int vid)
 	free(vsession->mem);
 	spdk_vhost_free_reactor(vdev->lcore);
 	vdev->lcore = -1;
+	assert(vdev->active_session_num > 0);
+	vdev->active_session_num--;
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -1152,8 +1154,11 @@ start_device(int vid)
 		free(vsession->mem);
 		spdk_vhost_free_reactor(vdev->lcore);
 		vdev->lcore = -1;
+		goto out;
 	}
 
+	assert(vdev->active_session_num < UINT32_MAX);
+	vdev->active_session_num++;
 out:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return rc;
