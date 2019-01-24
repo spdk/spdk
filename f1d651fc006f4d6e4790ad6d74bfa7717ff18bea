@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "dc4e6322_550effd9",
+        "filename": "configure",
+        "patchSetId": 15
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-24T20:37:50Z",
+      "side": 1,
+      "message": "Oh yeah, you mean CONFIG[IPSEC_MB]is correct though. thanks",
+      "parentUuid": "1c119cab_1c5c1ef5",
+      "revId": "f1d651fc006f4d6e4790ad6d74bfa7717ff18bea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8be54aab_99012f01",
         "filename": "configure",
         "patchSetId": 15
