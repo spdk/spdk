@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "08ddf7f6_575bb878",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T03:50:35Z",
+      "side": 1,
+      "message": "You can use the macro here by MAX_WR_PER_QP(rqpair-\u003emax_queue_depth) ?",
+      "range": {
+        "startLine": 672,
+        "startChar": 38,
+        "endLine": 672,
+        "endChar": 70
+      },
+      "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4afd2edd_10dbef58",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
@@ -13,6 +36,24 @@
       "writtenOn": "2019-01-23T21:39:34Z",
       "side": 1,
       "message": "I don\u0027t think you need this * 2 here.\nShouldn\u0027t it be num_cqe \u003d spdk_max(rpoller-\u003enum_cqe, required_num_wr). That way rpoller-\u003enum_cqe will stay the same unless required_num_wr is greater than it.",
+      "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2a4815aa_8e912cdf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T03:50:35Z",
+      "side": 1,
+      "message": "num_cqe \u003d rpoller-\u003enum_cqe;\nif (num_cqe \u003c required_num_wr) {\n  num_cqe \u003d spdk_max(num_cqe * 2, required_num_wr);\n  num_cqe \u003d spdk_min(num_cqe, device-\u003eattr.max_cqe);\n}\n\nsatisfies Seth\u0027s point?",
+      "parentUuid": "4afd2edd_10dbef58",
       "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
