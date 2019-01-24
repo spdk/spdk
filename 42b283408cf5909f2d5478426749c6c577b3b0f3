@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ce5b5ec7_db53aa32",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T16:22:53Z",
+      "side": 1,
+      "message": "There\u0027s no need to put such function in autotest_common.sh. It even assumes the SPDK app is listening on the default RPC socket. Please put it in create-destruct.sh",
+      "range": {
+        "startLine": 637,
+        "startChar": 9,
+        "endLine": 637,
+        "endChar": 27
+      },
+      "revId": "42b283408cf5909f2d5478426749c6c577b3b0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
