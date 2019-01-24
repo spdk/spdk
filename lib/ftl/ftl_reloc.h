@@ -34,8 +34,8 @@
 #ifndef FTL_RELOC_H
 #define FTL_RELOC_H
 
-#include <spdk/stdinc.h>
-#include <spdk/ftl.h>
+#include "spdk/stdinc.h"
+#include "spdk/ftl.h"
 
 struct ftl_reloc;
 struct ftl_band;

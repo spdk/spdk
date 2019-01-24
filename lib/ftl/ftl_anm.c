@@ -31,11 +31,11 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <spdk/stdinc.h>
-#include <spdk/nvme_spec.h>
-#include <spdk/nvme_ocssd_spec.h>
-#include <spdk/thread.h>
-#include <spdk/ftl.h>
+#include "spdk/stdinc.h"
+#include "spdk/nvme_spec.h"
+#include "spdk/nvme_ocssd_spec.h"
+#include "spdk/thread.h"
+#include "spdk/ftl.h"
 #include "ftl_anm.h"
 #include "ftl_core.h"
 

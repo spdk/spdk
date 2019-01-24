@@ -31,10 +31,10 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <spdk/rpc.h>
-#include <spdk/util.h>
-#include <spdk/bdev_module.h>
-#include <spdk_internal/log.h>
+#include "spdk/rpc.h"
+#include "spdk/util.h"
+#include "spdk/bdev_module.h"
+#include "spdk_internal/log.h"
 #include "bdev_ftl.h"
 
 struct rpc_construct_ftl {

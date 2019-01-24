@@ -47,7 +47,7 @@ extern "C" {
  *  Include a header with these additional features on Linux only.
  */
 #ifndef __FreeBSD__
-#include <spdk/queue_extras.h>
+#include "spdk/queue_extras.h"
 #endif
 
 #ifdef __cplusplus
