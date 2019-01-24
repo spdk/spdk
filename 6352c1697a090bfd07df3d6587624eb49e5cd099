@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc287676_25ed022e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T17:06:14Z",
+      "side": 1,
+      "message": "I\u0027m concerned this may impact performance. What we do in the fio plugin is spawn a new pthread that just polls the admin queues every few seconds for all of the controllers. That pthread can then run off on another core.",
+      "revId": "6352c1697a090bfd07df3d6587624eb49e5cd099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
