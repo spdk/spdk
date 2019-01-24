@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17b37d3_dfd65ddf",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-24T02:52:29Z",
+      "side": 1,
+      "message": "Do you think we could add a link for download and reference? like this (https://nasm.us/)\nAs SPDK users might not be familiar with ASM compiler.",
+      "range": {
+        "startLine": 19,
+        "startChar": 12,
+        "endLine": 19,
+        "endChar": 16
+      },
+      "revId": "1ba7f317cae774f154fa242868f780575d267ae1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
