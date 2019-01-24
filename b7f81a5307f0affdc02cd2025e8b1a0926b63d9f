@@ -22,6 +22,30 @@
       "revId": "b7f81a5307f0affdc02cd2025e8b1a0926b63d9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d2568e19_be935d56",
+        "filename": "doc/ftl.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-24T13:14:10Z",
+      "side": 1,
+      "message": "Correct, it\u0027s only possible to create one bdev with a single RPC call, so there\u0027s no point in returning an array. I\u0027ll fix it and update what\u0027s shown here.",
+      "parentUuid": "dcf58750_160338a3",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 263,
+        "endChar": 3
+      },
+      "revId": "b7f81a5307f0affdc02cd2025e8b1a0926b63d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
