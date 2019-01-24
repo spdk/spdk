@@ -49,6 +49,7 @@
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
+	enum spdk_nvme_transport_type		trtype;
 	struct spdk_nvme_intel_rw_latency_page	*latency_page;
 	struct ctrlr_entry			*next;
 	char					name[1024];
@@ -740,6 +741,7 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	entry->ctrlr = ctrlr;
+	entry->trtype = trid_entry->trid.trtype;
 	entry->next = g_controllers;
 	g_controllers = entry;
 
@@ -1759,12 +1761,41 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
+static void *
+nvme_poll_ctrlrs(void *arg)
+{
+	struct ctrlr_entry *entry;
+	int oldstate;
+
+	spdk_unaffinitize_thread();
+
+	while (true) {
+		pthread_setcancelstate(PTHREAD_CANCEL_DISABLE, &oldstate);
+
+		entry = g_controllers;
+		while (entry) {
+			if (entry->trtype != SPDK_NVME_TRANSPORT_PCIE) {
+				spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+			}
+			entry = entry->next;
+		}
+
+		pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, &oldstate);
+
+		/* This is a pthread cancellation point and cannot be removed. */
+		sleep(1);
+	}
+
+	return NULL;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
 	struct worker_thread *worker, *master_worker;
 	unsigned master_core;
 	struct spdk_env_opts opts;
+	pthread_t thread_id = 0;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -1818,6 +1849,12 @@ int main(int argc, char **argv)
 		return 0;
 	}
 
+	rc = pthread_create(&thread_id, NULL, &nvme_poll_ctrlrs, NULL);
+	if (rc != 0) {
+		fprintf(stderr, "Unable to spawn a thread to poll admin queues.\n");
+		goto cleanup;
+	}
+
 	if (associate_workers_with_ns() != 0) {
 		rc = -1;
 		goto cleanup;
@@ -1847,6 +1884,9 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
+	if (pthread_cancel(thread_id) == 0) {
+		pthread_join(thread_id, NULL);
+	}
 	unregister_trids();
 	unregister_namespaces();
 	unregister_controllers();
