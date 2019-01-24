@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2da95c94_784de0ee",
+        "filename": "lib/util/crc32c.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T13:00:35Z",
+      "side": 1,
+      "message": "*Neither ISA-L, SSE, nor ARM",
+      "revId": "fb4c8c9d0618869895569dbe6bef7326eec16f5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
