@@ -44,6 +44,7 @@
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/assert.h"
+#include "spdk/string.h"
 #include "spdk/thread.h"
 #include "spdk/trace.h"
 #include "spdk/util.h"
@@ -1640,6 +1641,7 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	int rc;
 	struct spdk_nvme_ctrlr *ctrlr;
 	int family;
+	long int port;
 
 	ctrlr = tqpair->qpair.ctrlr;
 
@@ -1675,10 +1677,16 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		}
 	}
 
-	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, atoi(ctrlr->trid.trsvcid));
+	port = spdk_strtol(ctrlr->trid.trsvcid, 10);
+	if (port <= 0 || port >= INT_MAX) {
+		SPDK_ERRLOG("Invalid port: %s\n", ctrlr->trid.trsvcid);
+		return -1;
+	}
+
+	tqpair->sock = spdk_sock_connect(ctrlr->trid.traddr, port);
 	if (!tqpair->sock) {
-		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%d\n",
-			    tqpair, ctrlr->trid.traddr, atoi(ctrlr->trid.trsvcid));
+		SPDK_ERRLOG("sock connection error of tqpair=%p with addr=%s, port=%ld\n",
+			    tqpair, ctrlr->trid.traddr, port);
 		return -1;
 	}
 
