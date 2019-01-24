@@ -1228,6 +1228,7 @@ spdk_nvmf_tcp_qpair_set_recv_state(struct spdk_nvmf_tcp_qpair *tqpair,
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv state=%d\n", tqpair, state);
 	tqpair->recv_state = state;
+
 	switch (state) {
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
@@ -1879,26 +1880,24 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv pdu entering state %d\n", tqpair, prev_state);
 
 		switch (tqpair->recv_state) {
-		/* If in a new state */
-		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
-			spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
-			break;
 		/* Wait for the common header  */
+		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 			pdu = &tqpair->pdu_in_progress;
-			/* common header */
-			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
-							(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
-				if (rc < 0) {
-					SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
-					return NVME_TCP_PDU_FATAL;
-				}
+
+			rc = nvme_tcp_read_data(tqpair->sock,
+						sizeof(struct spdk_nvme_tcp_common_pdu_hdr) - pdu->ch_valid_bytes,
+						(void *)&pdu->hdr.common + pdu->ch_valid_bytes);
+			if (rc < 0) {
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
+				return NVME_TCP_PDU_FATAL;
+			} else if (rc > 0) {
 				pdu->ch_valid_bytes += rc;
-				if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
+				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+			}
+
+			if (pdu->ch_valid_bytes < sizeof(struct spdk_nvme_tcp_common_pdu_hdr)) {
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* The command header of this PDU has now been read from the socket. */
