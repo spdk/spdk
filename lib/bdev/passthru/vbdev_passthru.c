@@ -662,6 +662,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 		/* This is not an error, we tracked the name above and it still
 		 * may show up later.
 		 */
+		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
 		return 0;
 	}
 
