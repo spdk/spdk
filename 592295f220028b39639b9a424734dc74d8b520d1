@@ -319,6 +319,30 @@
     },
     {
       "key": {
+        "uuid": "6f5a18f1_48f747c5",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:23:47Z",
+      "side": 1,
+      "message": "Scripts script/gen_*.sh are creating proper config file sections from scratch and printing them to stdout. See gen_crypto.sh for example. so you don\u0027t need templete file to sed.\n\nThis scheme is working well in SPDK tests. Pls follow it.",
+      "parentUuid": "b0917bae_54035f98",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 17
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb77f467_4f7512c4",
         "filename": "test/ftl/generate_configs.sh",
         "patchSetId": 76
