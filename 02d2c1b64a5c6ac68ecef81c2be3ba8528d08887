@@ -22,6 +22,30 @@
       "revId": "02d2c1b64a5c6ac68ecef81c2be3ba8528d08887",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bc17369_b89c3f2d",
+        "filename": "test/ocf/integrity/fio-mallocs.sh",
+        "patchSetId": 36
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-24T15:26:23Z",
+      "side": 1,
+      "message": "Consulted with Karol on that option. It seems quite useful and allows us to skip removing *.state files after FIO run.",
+      "parentUuid": "1ca6fb61_43960cc9",
+      "range": {
+        "startLine": 10,
+        "startChar": 68,
+        "endLine": 10,
+        "endChar": 84
+      },
+      "revId": "02d2c1b64a5c6ac68ecef81c2be3ba8528d08887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
