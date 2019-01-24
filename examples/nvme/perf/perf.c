@@ -1759,9 +1759,36 @@ associate_workers_with_ns(void)
 	return 0;
 }
 
+/* keep alive feature support in perf */
+void *
+poll_keep_alive(void *arg)
+{
+	uint64_t tsc_end;
+	struct ctrlr_entry	*ctrlr;
+
+	while (1) {
+		tsc_end = spdk_get_ticks() + g_time_in_sec * g_tsc_rate;
+
+		ctrlr = g_controllers;
+		while (ctrlr) {
+			/* keep alive command include in below function */
+			spdk_nvme_ctrlr_process_admin_completions(ctrlr->ctrlr);
+
+			ctrlr = ctrlr->next;
+		}
+
+		if (spdk_get_ticks() > tsc_end) {
+			break;
+		}
+	}
+
+	return NULL;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
+	pthread_t thread_id;
 	struct worker_thread *worker, *master_worker;
 	unsigned master_core;
 	struct spdk_env_opts opts;
@@ -1809,6 +1836,14 @@ int main(int argc, char **argv)
 		goto cleanup;
 	}
 
+	/* add keep alive feature support */
+	rc = pthread_create(&thread_id, NULL,
+			    poll_keep_alive, NULL);
+	if (rc != 0) {
+		fprintf(stderr, "Cannot create thread\n");
+		goto cleanup;
+	}
+
 	if (g_warn) {
 		printf("WARNING: Some requested NVMe devices were skipped\n");
 	}
@@ -1843,6 +1878,7 @@ int main(int argc, char **argv)
 	rc = work_fn(master_worker);
 
 	spdk_env_thread_wait_all();
+	pthread_join(thread_id, NULL);
 
 	print_stats();
 
