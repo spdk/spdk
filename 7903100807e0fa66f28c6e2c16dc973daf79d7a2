@@ -60,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "77abe25a_7fa0ad53",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T04:25:20Z",
+      "side": 1,
+      "message": "I did drop-in-replacement in this patch. Removing this is not related directly with the purpose.\n\nSo I want to take your these feedback after patch series.\n\nI hope it\u0027s OK for you.",
+      "parentUuid": "97d506d3_ea75a0eb",
+      "range": {
+        "startLine": 333,
+        "startChar": 15,
+        "endLine": 333,
+        "endChar": 21
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f8da0510_5e7a8f3f",
         "filename": "lib/conf/conf.c",
         "patchSetId": 5
