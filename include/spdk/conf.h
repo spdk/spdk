@@ -151,6 +151,26 @@ char *spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key,
 				  int idx1, int idx2);
 
 /**
+ * Get the value of the item with name 'key' in the section.
+ *
+ * If key appears multiple times, idx1 will control which version to retrieve.
+ * Indices will start from the top of the configuration file at 0 and increment
+ * by one for each new apperarance. If the configuration key contains multiple
+ * whitespace delimited values, idx2 controls which value is returned. The index
+ * begins at 0.
+ *
+ *
+ * \param sp The section of the configuration.
+ * \param key Name of item.
+ * \param idx1 The index into the item list for the key.
+ * \param idx2 The index into the value list for the item.
+ *
+ * \return the requested value on success or 0 otherwise.
+ */
+uint32_t spdk_conf_section_get_kaval(struct spdk_conf_section *sp, const char *key,
+				     int idx1, int idx2);
+
+/**
  * Get the first value of the item with name 'key' in the section.
  *
  * \param sp The section of the configuration.

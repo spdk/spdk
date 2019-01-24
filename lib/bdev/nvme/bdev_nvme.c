@@ -1303,6 +1303,7 @@ bdev_nvme_library_init(void)
 	int retry_count;
 	uint32_t local_nvme_num = 0;
 	int64_t hotplug_period;
+	uint32_t keep_alive_timeout_ms;
 	bool hotplug_enabled = g_nvme_hotplug_enabled;
 
 	g_bdev_nvme_init_thread = spdk_get_thread();
@@ -1410,6 +1411,8 @@ bdev_nvme_library_init(void)
 		probe_ctx->names[i] = val;
 		probe_ctx->count++;
 
+		keep_alive_timeout_ms = spdk_conf_section_get_kaval(sp, "TransportID", i, 2);
+
 		if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
 			struct spdk_nvme_ctrlr *ctrlr;
 			struct spdk_nvme_ctrlr_opts opts;
@@ -1440,6 +1443,9 @@ bdev_nvme_library_init(void)
 			if (probe_ctx->hostids[i].hostsvcid[0] != '\0') {
 				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->hostids[i].hostsvcid);
 			}
+
+			opts.keep_alive_timeout_ms = spdk_max(opts.keep_alive_timeout_ms,
+							      keep_alive_timeout_ms);
 
 			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
 			if (ctrlr == NULL) {

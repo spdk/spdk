@@ -383,6 +383,32 @@ spdk_conf_section_get_nmval(struct spdk_conf_section *sp, const char *key, int i
 	return NULL;
 }
 
+uint32_t
+spdk_conf_section_get_kaval(struct spdk_conf_section *sp, const char *key, int idx1, int idx2)
+{
+	struct spdk_conf_item *ip;
+	struct spdk_conf_value *vp;
+	int i;
+
+	ip = find_cf_nitem(sp, key, idx1);
+	if (ip == NULL) {
+		return 0;
+	}
+
+	vp = ip->val;
+	if (vp == NULL) {
+		return 0;
+	}
+
+	for (i = 0; vp != NULL; vp = vp->next, i++) {
+		if (i == idx2) {
+			return strtoul(vp->value, NULL, 0);
+		}
+	}
+
+	return 0;
+}
+
 char *
 spdk_conf_section_get_nval(struct spdk_conf_section *sp, const char *key, int idx)
 {
