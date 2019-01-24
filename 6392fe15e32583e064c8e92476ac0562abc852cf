@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f00310ec_02fd2bb4",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:59:44Z",
+      "side": 1,
+      "message": "Tabs -\u003e spaces all over this patch",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 1
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dab5c794_771d1f8a",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:59:44Z",
+      "side": 1,
+      "message": "Is this help available in QEMU help message?",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 28
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "822c1fd1_01e4fc2a",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:59:44Z",
+      "side": 1,
+      "message": "Are there any limitations for these parameters?",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 30
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92fa94f0_47cbdaff",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:59:44Z",
+      "side": 1,
+      "message": "New line reqired before opening ``` and closing ```.\nThe same all over this file.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
