@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "b56a52cf_384fe060",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Looks that it works fine. Thanks for that!",
+      "parentUuid": "0fd2d06b_fcead3ef",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 4
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "77b9cd9c_26a13820",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 76
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "what is this? Who create this?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 2
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44da8469_b16894ec",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "I will remove it.",
+      "parentUuid": "77b9cd9c_26a13820",
       "range": {
         "startLine": 48,
         "startChar": 0,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "42621941_538722df",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "48cf094d_8bcda265",
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "aecf0705_f955ec11",
         "filename": "test/ftl/generate_configs.sh",
         "patchSetId": 76
@@ -76,6 +142,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "Pls move this into usage()",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 1
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e05bd2_c2ca8b43",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "aecf0705_f955ec11",
       "range": {
         "startLine": 2,
         "startChar": 0,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "4f943988_38ab26a1",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5a0f9d0b_cd9f5ced",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 21
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9110e9ff_10e70c10",
         "filename": "test/ftl/generate_configs.sh",
         "patchSetId": 76
@@ -122,6 +236,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "\u0027/g\u0027? are out replacing every \u0027.in\u0027 in the fnmae?\n\n  ${1%.n}\n\nwill do the trick. See https://www.tldp.org/LDP/abs/html/string-manipulation.html for more usefull functions.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 24,
+        "endChar": 43
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27ae6a60_7faefca7",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9110e9ff_10e70c10",
       "range": {
         "startLine": 23,
         "startChar": 1,
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "b0917bae_54035f98",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "We are applying multiple sed operations to one file so this redirection won\u0027t work in such case? I tried to reduce this script (I think we don\u0027t support FreeBSD anyway). We have plan to remove this text_config and switch to json_config in near future so this script will be a subject to change.",
+      "parentUuid": "8a13d15a_3ff069ae",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 17
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fb77f467_4f7512c4",
         "filename": "test/ftl/generate_configs.sh",
         "patchSetId": 76
@@ -168,6 +330,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "h)\n    usage\n    exit 0 ;;\n   *)\n    usage\n    exit 1;;\n\nand delete exit from usage.",
+      "range": {
+        "startLine": 41,
+        "startChar": 2,
+        "endLine": 41,
+        "endChar": 5
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8d007c99_8131aa5f",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fb77f467_4f7512c4",
       "range": {
         "startLine": 41,
         "startChar": 2,
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "d3b82be7_238baa63",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fd9a95ab_e44a7c93",
+      "range": {
+        "startLine": 45,
+        "startChar": 3,
+        "endLine": 45,
+        "endChar": 55
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1992491d_aeaad9f9",
         "filename": "test/ftl/generate_configs.sh",
         "patchSetId": 76
@@ -214,6 +424,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "inline it.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 51
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4113b40_124a9a03",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1992491d_aeaad9f9",
       "range": {
         "startLine": 49,
         "startChar": 0,
@@ -243,6 +477,24 @@
     },
     {
       "key": {
+        "uuid": "f28fbe21_e792fb3f",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "57246cab_a99c8e2e",
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "494acbec_b97a95a7",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 76
@@ -254,6 +506,30 @@
       "writtenOn": "2019-01-24T11:53:59Z",
       "side": 1,
       "message": "this is buffered write. System might not send data to nbd device after dd exits and md5sum might use system cache so random failures might happen when you remount. I hit simmilar issue some time ago with lvols. either use `oflags\u003dsync` or add issue `sync` before umounting. Ideal solution would be to do \n 1. sync\n 2. remount\n 3. md5sum.\n 4. umount\n 5. kill\n 6. re-run bdev_svc \u0026\u0026 calc md5sum",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 58
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e4358b2_6e937855",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T15:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "494acbec_b97a95a7",
       "range": {
         "startLine": 46,
         "startChar": 0,
