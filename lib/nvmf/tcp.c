@@ -1321,7 +1321,13 @@ spdk_nvmf_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 	}
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "tqpair(%p) recv state=%d\n", tqpair, state);
-	tqpair->recv_state = state;
+
+	if (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+		tqpair->last_pdu_time = spdk_get_ticks();
+	} else if (state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY) {
+		tqpair->last_pdu_time = 0;
+	}
+
 	switch (state) {
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
 	case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PSH:
@@ -1336,6 +1342,8 @@ spdk_nvmf_tcp_qpair_set_recv_state(struct nvme_tcp_qpair *tqpair,
 		abort();
 		break;
 	}
+
+	tqpair->recv_state = state;
 }
 
 static void
@@ -1975,7 +1983,17 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 		switch (tqpair->recv_state) {
 		/* If in a new state */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY:
-			spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+			pdu = &tqpair->pdu_in_progress;
+			rc = nvme_tcp_read_data(tqpair->sock,
+						sizeof(struct spdk_nvme_tcp_common_pdu_hdr),
+						(void *)&pdu->hdr.common);
+			if (rc < 0) {
+				SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconnect tqpair=%p\n", tqpair);
+				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+			} else if (rc > 0) {
+				spdk_nvmf_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH);
+				pdu->ch_valid_bytes += rc;
+			}
 			break;
 		/* Wait for the common header  */
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_CH:
@@ -1996,7 +2014,6 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 				}
 			}
 
-			tqpair->last_pdu_time = spdk_get_ticks();
 			/* The command header of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_ch_handle(tqpair);
 			break;
@@ -2723,7 +2740,7 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	tqpair->ch->tgroup = tgroup;
 	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
 	tqpair->timeout = SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT;
-	tqpair->last_pdu_time = spdk_get_ticks();
+	tqpair->last_pdu_time = 0;
 	TAILQ_INSERT_TAIL(&tgroup->qpairs, tqpair, link);
 
 	return 0;
