@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "596f1d72_be0eb02d",
+        "filename": "scripts/perf/vhost/run_vhost_test.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T13:14:37Z",
+      "side": 1,
+      "message": "Can we add a comment here why this is disabled?",
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a1d97bf8_4a122e71",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T13:14:37Z",
+      "side": 1,
+      "message": "Should this trap also kill the vhost app?",
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "caa00559_73f43d66",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T13:14:37Z",
+      "side": 1,
+      "message": "it doesn\u0027t respect the --fio-bin parameter passed to this script",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 251,
+        "endChar": 17
+      },
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99f9df05_4284616b",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T13:14:37Z",
+      "side": 1,
+      "message": "This assumes the fio job will run for at least 30 seconds. Should we be prepared for less?",
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
