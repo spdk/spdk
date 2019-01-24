@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "f3e214b1_0af6ace3",
+        "filename": "doc/bdev.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-24T22:08:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5f3e7d70_844e9911",
+      "range": {
+        "startLine": 240,
+        "startChar": 64,
+        "endLine": 240,
+        "endChar": 82
+      },
+      "revId": "a07602857b9177eca7cdb757b9e0ad3430470b1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1acca3d1_72c95824",
         "filename": "doc/bdev.md",
         "patchSetId": 11
@@ -83,6 +107,30 @@
       "writtenOn": "2019-01-23T15:42:03Z",
       "side": 1,
       "message": "Please either describe in short the requirement or provide a source on this.",
+      "range": {
+        "startLine": 243,
+        "startChar": 70,
+        "endLine": 243,
+        "endChar": 130
+      },
+      "revId": "a07602857b9177eca7cdb757b9e0ad3430470b1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55abd84c_7af9d3ba",
+        "filename": "doc/bdev.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-24T22:08:31Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1acca3d1_72c95824",
       "range": {
         "startLine": 243,
         "startChar": 70,
