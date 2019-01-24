@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "2ffd0014_ab5cf568",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 38
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-24T04:54:14Z",
+      "side": 1,
+      "message": "The commit message in a line just too long, feel free to update it if you got chance.",
+      "range": {
+        "startLine": 11,
+        "startChar": 1,
+        "endLine": 12,
+        "endChar": 92
+      },
+      "revId": "55730547509760404a02fda181d76c9baceacfcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "271a8a41_bd4dd249",
         "filename": "lib/bdev/rpc/bdev_rpc.c",
         "patchSetId": 38
