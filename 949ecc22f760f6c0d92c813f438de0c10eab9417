@@ -70,6 +70,30 @@
       "revId": "949ecc22f760f6c0d92c813f438de0c10eab9417",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a71cc9ee_9a7f85a4",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-24T08:31:12Z",
+      "side": 1,
+      "message": "thanks Shuhei, this is what I would like to do for the issue, I will attach the NVMe controller only to master worker_thread.",
+      "parentUuid": "30df969b_ea76207d",
+      "range": {
+        "startLine": 515,
+        "startChar": 27,
+        "endLine": 516,
+        "endChar": 25
+      },
+      "revId": "949ecc22f760f6c0d92c813f438de0c10eab9417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
