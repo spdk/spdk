@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "f251efb7_7db49a2c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-24T04:59:04Z",
+      "side": 1,
+      "message": "Could you add test case that get histogram from histogram disabled bdev and parsed by histogram.py?",
+      "revId": "2b4342e50982a6571f349be097b62a621f78e620",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2c18e62e_4786f228",
         "filename": "test/bdev/bdevperf/Makefile",
         "patchSetId": 19
