@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4227269e_fc1547ca",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T07:56:56Z",
+      "side": 1,
+      "message": "you can say \"handle it in perf\" ?\n\nBesides, unconditional call of  spdk_nvme_ctrlr_process_admin_completions() will degrade performance.\nI think we have to reduce the frequency of calls as done in NVMe bdev.",
+      "range": {
+        "startLine": 515,
+        "startChar": 27,
+        "endLine": 516,
+        "endChar": 25
+      },
+      "revId": "949ecc22f760f6c0d92c813f438de0c10eab9417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
