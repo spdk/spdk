@@ -1,0 +1,268 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fd2d06b_fcead3ef",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "try\n\n  lspci -d VENDOR_ID:DEVICE_ID | cut -d\u0027 \u0027 -f 1",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 4
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "77b9cd9c_26a13820",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "what is this? Who create this?",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 51,
+        "endChar": 2
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48cf094d_8bcda265",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "we have scripts in\n\n  scripts/gen_{crypto|nvme|rbd}.sh\n\nto generete config sections. Can you consider inventing `gen_ftl.sh` ?",
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aecf0705_f955ec11",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "Pls move this into usage()",
+      "range": {
+        "startLine": 2,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 1
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a0f9d0b_cd9f5ced",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "genereta_config? replace_vars_in_file?",
+      "range": {
+        "startLine": 22,
+        "startChar": 9,
+        "endLine": 22,
+        "endChar": 21
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9110e9ff_10e70c10",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "\u0027/g\u0027? are out replacing every \u0027.in\u0027 in the fnmae?\n\n  ${1%.n}\n\nwill do the trick. See https://www.tldp.org/LDP/abs/html/string-manipulation.html for more usefull functions.",
+      "range": {
+        "startLine": 23,
+        "startChar": 1,
+        "endLine": 24,
+        "endChar": 43
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a13d15a_3ff069ae",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "Pls reduce number of lines in this script.\n\nyou can just remove \u0027-i\u0027 flag (it won\u0027t work this way on FreeBSD). Just do\n\n  for ...; do\n    sed ... $1 \u003e ${1%.in}\n  done",
+      "range": {
+        "startLine": 25,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 17
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb77f467_4f7512c4",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "h)\n    usage\n    exit 0 ;;\n   *)\n    usage\n    exit 1;;\n\nand delete exit from usage.",
+      "range": {
+        "startLine": 41,
+        "startChar": 2,
+        "endLine": 41,
+        "endChar": 5
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd9a95ab_e44a7c93",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "in bash you can do\n\n  if [[ -z .. || -z .. || -z ]];\n\npls do so",
+      "range": {
+        "startLine": 45,
+        "startChar": 3,
+        "endLine": 45,
+        "endChar": 55
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1992491d_aeaad9f9",
+        "filename": "test/ftl/generate_configs.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "inline it.",
+      "range": {
+        "startLine": 49,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 51
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "57246cab_a99c8e2e",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "pls use waitfornbd as nbd driver might create random test failures.",
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "494acbec_b97a95a7",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 76
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T11:53:59Z",
+      "side": 1,
+      "message": "this is buffered write. System might not send data to nbd device after dd exits and md5sum might use system cache so random failures might happen when you remount. I hit simmilar issue some time ago with lvols. either use `oflags\u003dsync` or add issue `sync` before umounting. Ideal solution would be to do \n 1. sync\n 2. remount\n 3. md5sum.\n 4. umount\n 5. kill\n 6. re-run bdev_svc \u0026\u0026 calc md5sum",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 46,
+        "endChar": 58
+      },
+      "revId": "592295f220028b39639b9a424734dc74d8b520d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
