@@ -49,6 +49,9 @@
 
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
+	enum spdk_nvme_transport_type		trtype;
+	uint64_t				keep_alive_interval_ticks;
+	uint64_t				last_keep_alive_ticks;
 	struct spdk_nvme_intel_rw_latency_page	*latency_page;
 	struct ctrlr_entry			*next;
 	char					name[1024];
@@ -153,6 +156,7 @@ struct worker_thread {
 	struct ns_worker_ctx	*ns_ctx;
 	struct worker_thread	*next;
 	unsigned		lcore;
+	struct ctrlr_entry	*entry;
 };
 
 struct ns_fn_table {
@@ -740,6 +744,8 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 	snprintf(entry->name, sizeof(entry->name), "%-20.20s (%-20.20s)", cdata->mn, cdata->sn);
 
 	entry->ctrlr = ctrlr;
+	entry->trtype = trid_entry->trid.trtype;
+	entry->keep_alive_interval_ticks = (cdata->kas * 100 * spdk_get_ticks_hz()) / UINT64_C(1000) / 2;
 	entry->next = g_controllers;
 	g_controllers = entry;
 
@@ -914,6 +920,7 @@ work_fn(void *arg)
 	uint64_t tsc_end;
 	struct worker_thread *worker = (struct worker_thread *)arg;
 	struct ns_worker_ctx *ns_ctx = NULL;
+	struct ctrlr_entry *entry;
 	uint32_t unfinished_ns_ctx;
 
 	printf("Starting thread on core %u\n", worker->lcore);
@@ -947,6 +954,18 @@ work_fn(void *arg)
 		while (ns_ctx != NULL) {
 			check_io(ns_ctx);
 			ns_ctx = ns_ctx->next;
+		}
+
+		entry = worker->entry;
+		while (entry != NULL) {
+			if (entry->trtype != SPDK_NVME_TRANSPORT_PCIE && entry->keep_alive_interval_ticks) {
+				uint64_t now = spdk_get_ticks();
+				if (now - entry->last_keep_alive_ticks > entry->keep_alive_interval_ticks) {
+					spdk_nvme_ctrlr_process_admin_completions(entry->ctrlr);
+					entry->last_keep_alive_ticks = spdk_get_ticks();
+				}
+			}
+			entry = entry->next;
 		}
 
 		if (spdk_get_ticks() > tsc_end) {
@@ -1840,6 +1859,7 @@ int main(int argc, char **argv)
 	}
 
 	assert(master_worker != NULL);
+	master_worker->entry = g_controllers;
 	rc = work_fn(master_worker);
 
 	spdk_env_thread_wait_all();
