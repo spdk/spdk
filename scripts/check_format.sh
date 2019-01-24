@@ -180,6 +180,17 @@ else
 fi
 rm -f scripts/posix.log
 
+echo -n "Checking #include style..."
+git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' > scripts/includes.log || true
+if [ -s scripts/includes.log ]; then
+	echo "Incorrect #include syntax. #includes of spdk/ files should use quotes."
+	cat scripts/includes.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f scripts/includes.log
+
 if hash pycodestyle 2>/dev/null; then
 	PEP8=pycodestyle
 elif hash pep8 2>/dev/null; then
