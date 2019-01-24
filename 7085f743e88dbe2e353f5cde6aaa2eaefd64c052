@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2e25f807_dd5d02a8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:48:02Z",
+      "side": 1,
+      "message": "Can you move this state to be between EXECUTED and READY_TO_COMPLETE? That\u0027s the order it actually occurs in. Before, because there was a common state on the read and the write path, the state machine didn\u0027t progress through these states linearly. Now it can again.",
+      "revId": "7085f743e88dbe2e353f5cde6aaa2eaefd64c052",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0a81ad6_19e91ccb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:48:02Z",
+      "side": 1,
+      "message": "Move this case between EXECUTED and READY_TO_COMPLETE",
+      "revId": "7085f743e88dbe2e353f5cde6aaa2eaefd64c052",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2293f7d_0333782d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1533,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:48:02Z",
+      "side": 1,
+      "message": "This isn\u0027t checking the recv queue - fix comment.",
+      "revId": "7085f743e88dbe2e353f5cde6aaa2eaefd64c052",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
