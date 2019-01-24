@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79fb521c_d0b80cf1",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1992,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-24T05:54:26Z",
+      "side": 1,
+      "message": "If read the socket error, we should directly return rec and terminate.",
+      "range": {
+        "startLine": 1992,
+        "startChar": 4,
+        "endLine": 1992,
+        "endChar": 78
+      },
+      "revId": "fbbcf6dbd88cdbc06d932de0b45af4dd56194986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
