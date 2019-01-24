@@ -1202,6 +1202,7 @@ create_crypto_disk(const char *bdev_name, const char *vbdev_name,
 	}
 
 	if (!bdev) {
+		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
 		return 0;
 	}
 
