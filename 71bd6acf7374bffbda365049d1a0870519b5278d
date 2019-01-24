@@ -395,6 +395,30 @@
     },
     {
       "key": {
+        "uuid": "68de279a_a3ff9f20",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T16:43:46Z",
+      "side": 1,
+      "message": "Please refer to: https://review.gerrithub.io/c/spdk/spdk/+/431329/69/lib/bdev/ftl/bdev_ftl.c#496",
+      "parentUuid": "a7259c0e_a604bc43",
+      "range": {
+        "startLine": 122,
+        "startChar": 14,
+        "endLine": 122,
+        "endChar": 58
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c0f45f5d_1fc88e49",
         "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
         "patchSetId": 73
