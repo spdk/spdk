@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "6893de03_5d19acb5",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T10:00:30Z",
+      "side": 1,
+      "message": "+1",
+      "parentUuid": "6cd82c01_ada36aa4",
+      "revId": "085e4af81c0d11164222f6c4536eabaf1ae1bd2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fb9d5d6e_c17bf343",
         "filename": "lib/vhost/vhost_internal.h",
         "patchSetId": 6
