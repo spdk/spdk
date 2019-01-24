@@ -36,6 +36,41 @@
     },
     {
       "key": {
+        "uuid": "1c119cab_1c5c1ef5",
+        "filename": "configure",
+        "patchSetId": 15
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-24T17:57:41Z",
+      "side": 1,
+      "message": "No - I think CONFIG[ISAL] is correct.",
+      "parentUuid": "e24ec70f_96ff2fa7",
+      "revId": "f1d651fc006f4d6e4790ad6d74bfa7717ff18bea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8be54aab_99012f01",
+        "filename": "configure",
+        "patchSetId": 15
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-24T17:57:41Z",
+      "side": 1,
+      "message": "Ziye - please look at the earlier comments on this patch.  Just exit 1.  Users should do the git submodule update, if they don\u0027t just exit instead of implicitly disabling config options.",
+      "revId": "f1d651fc006f4d6e4790ad6d74bfa7717ff18bea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "77fb5ac6_4901629c",
         "filename": "configure",
         "patchSetId": 15
