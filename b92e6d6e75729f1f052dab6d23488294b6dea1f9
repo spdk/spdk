@@ -52,6 +52,24 @@
       "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5e2c0987_62d8fd17",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2010,
+      "author": {
+        "id": 1012784
+      },
+      "writtenOn": "2019-01-24T20:47:56Z",
+      "side": 1,
+      "message": "In our frame work, for initializing hookctx, we need trid. Then in requesting rkey, we map pd passed in mem_map_transtale call to its corresponding hookctx, which then we can get keys using mr/sr related data stored in that hookctx. We need to setup different pd and hookctx per controller. Thats the reason that we cannot have global pd.",
+      "parentUuid": "3d313a2c_a6f4b912",
+      "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
