@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a99042a3_3bc82d28",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 167,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-24T02:59:58Z",
+      "side": 1,
+      "message": "vsessions_gen may be better.",
+      "revId": "0441430df0d105036865d33263c20cc8c2327798",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
