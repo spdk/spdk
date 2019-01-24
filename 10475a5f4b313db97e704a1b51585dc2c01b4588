@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e34cde74_5fe8c0eb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 672,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-24T09:05:41Z",
+      "side": 1,
+      "message": "Done\nGood catch",
+      "parentUuid": "08ddf7f6_575bb878",
+      "range": {
+        "startLine": 672,
+        "startChar": 38,
+        "endLine": 672,
+        "endChar": 70
+      },
+      "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4afd2edd_10dbef58",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
@@ -54,6 +78,24 @@
       "side": 1,
       "message": "num_cqe \u003d rpoller-\u003enum_cqe;\nif (num_cqe \u003c required_num_wr) {\n  num_cqe \u003d spdk_max(num_cqe * 2, required_num_wr);\n  num_cqe \u003d spdk_min(num_cqe, device-\u003eattr.max_cqe);\n}\n\nsatisfies Seth\u0027s point?",
       "parentUuid": "4afd2edd_10dbef58",
+      "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44eb965e_6c3d3362",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 722,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-24T09:05:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2a4815aa_8e912cdf",
       "revId": "10475a5f4b313db97e704a1b51585dc2c01b4588",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
