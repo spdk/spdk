@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "65e10048_6dd30de8",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 676,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T20:25:45Z",
+      "side": 1,
+      "message": "Darek flagged this earlier, but this calculation can be simplified to:\n\nremaining_length \u003d io_u-\u003exfer_buflen - fio_req-\u003eiov_offset;",
+      "revId": "dd293e024d55b1dd4d4e8daa46f8eff352df0526",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e867eb4c_8d23e01a",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T20:25:45Z",
+      "side": 1,
+      "message": "I think the default size here should be either very large, or make 0 mean infinite. This is nice to turn on for certain testing but shouldn\u0027t be the default.",
+      "revId": "dd293e024d55b1dd4d4e8daa46f8eff352df0526",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
