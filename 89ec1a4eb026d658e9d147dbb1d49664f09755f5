@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "892e87a5_de0b8632",
+        "filename": "scripts/histogram.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-24T14:13:40Z",
+      "side": 1,
+      "message": "+1, but this might bite you in future if you try to use something from json module, because after this line \"json\" will be referring to variable",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 32
+      },
+      "revId": "89ec1a4eb026d658e9d147dbb1d49664f09755f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
