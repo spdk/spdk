@@ -39,6 +39,24 @@
       "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52a93b14_c5299a1e",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T06:29:05Z",
+      "side": 1,
+      "message": "Please elaborate. There\u0027s an entire paragraph about this variable in the commit message.",
+      "parentUuid": "6d56a61f_46d163d5",
+      "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
