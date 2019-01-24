@@ -511,6 +511,11 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
+	/* Keep alive was enabled by default
+	 * for RDMA/TCP transport, enable it
+	 * with perf by default.
+	 */
+	spdk_nvme_ctrlr_process_admin_completions(ns_ctx->entry->u.nvme.ctrlr);
 	spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
 }
 
