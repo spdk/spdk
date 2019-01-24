@@ -52,6 +52,24 @@
       "revId": "626feb67f16c81c91531066c1615420a9abacdac",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fedad7d_4135982f",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 70
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-24T08:05:08Z",
+      "side": 1,
+      "message": "Ok, I will left only [Ftl] print.",
+      "parentUuid": "8af83062_d2df7714",
+      "revId": "626feb67f16c81c91531066c1615420a9abacdac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
