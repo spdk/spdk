@@ -54,7 +54,12 @@ $rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
 $rpc_py enable_bdev_histogram aio0 -d
 wait $bdev_perf_pid
 
-$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 1
+$rootdir/test/bdev/bdevperf/bdevperf -c $testdir/bdevperf.conf -q 128 -o 4096 -w unmap -t 5 -r /var/tmp/spdk.sock &
+bdev_perf_pid=$!
+waitforlisten $bdev_perf_pid
+# Histograms are not enabled, script should provide appropiate message
+$rpc_py get_bdev_histogram aio0 | $rootdir/scripts/histogram.py
+wait $bdev_perf_pid
 
 sync
 rm -rf $testdir/bdevperf.conf
