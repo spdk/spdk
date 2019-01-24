@@ -16,6 +16,24 @@
       "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "977a7687_1ee99592",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T01:36:05Z",
+      "side": 1,
+      "message": "Thank you Arshad, I\u0027ll surely do if I update this patch.",
+      "parentUuid": "29265f97_e78e148a",
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
