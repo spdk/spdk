@@ -403,9 +403,9 @@ out:
 static int
 ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts *opts)
 {
-	dev->ctrlr = opts->ctrlr;
+	uint32_t block_size;
 
-	assert(dev->ctrlr != NULL);
+	dev->ctrlr = opts->ctrlr;
 
 	if (spdk_nvme_ctrlr_get_num_ns(dev->ctrlr) != 1) {
 		SPDK_ERRLOG("Unsupported number of namespaces\n");
@@ -415,6 +415,13 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 	dev->ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, FTL_NSID);
 	dev->trid = opts->trid;
 	dev->md_size = spdk_nvme_ns_get_md_size(dev->ns);
+
+	block_size = spdk_nvme_ns_get_extended_sector_size(dev->ns);
+	if (block_size != FTL_BLOCK_SIZE) {
+		SPDK_ERRLOG("Unsupported block size (%"PRIu32")\n", block_size);
+		return -1;
+	}
+
 	if (dev->md_size % sizeof(uint32_t) != 0) {
 		/* Metadata pointer must be dword aligned */
 		SPDK_ERRLOG("Unsupported metadata size (%zu)\n", dev->md_size);
