@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f21496a_ac3f7f4f",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-24T02:38:21Z",
+      "side": 1,
+      "message": "same here, just remove it.",
+      "range": {
+        "startLine": 1180,
+        "startChar": 1,
+        "endLine": 1182,
+        "endChar": 2
+      },
+      "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d56a61f_46d163d5",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-24T02:38:21Z",
+      "side": 1,
+      "message": "you can remove this variable, it can\u0027t protect anything.",
+      "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
