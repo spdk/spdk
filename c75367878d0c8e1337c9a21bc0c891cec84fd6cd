@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bd851b2_4e67b874",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T07:46:01Z",
+      "side": 1,
+      "message": "comment should be updated? count direction was reversed.",
+      "range": {
+        "startLine": 269,
+        "startChar": 4,
+        "endLine": 271,
+        "endChar": 4
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22a74178_b15ef959",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T07:46:01Z",
+      "side": 1,
+      "message": "Ben\u0027s comment for PS15 is not addressed yet?\n\n\"send_wr is just a pointer to the chain of wr\u0027s to be sent. The comment should really be +1 for the rsp wr.\"",
+      "range": {
+        "startLine": 953,
+        "startChar": 1,
+        "endLine": 953,
+        "endChar": 25
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "183cdb1c_e71063bc",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 2707,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T07:46:01Z",
+      "side": 1,
+      "message": "I can understand\n if (c \u003e 0) { c--; }\n\nBut \n if (c \u003e 0) { c++; }\nis valid?",
+      "range": {
+        "startLine": 2707,
+        "startChar": 4,
+        "endLine": 2707,
+        "endChar": 41
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
