@@ -75,6 +75,24 @@
       "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "003c2f67_6fc88666",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-24T09:20:03Z",
+      "side": 1,
+      "message": "spdk_vhost_dev_remove() must be called under the global vhost mutex - the same one that protects all pending_async_op_num changes.",
+      "parentUuid": "d216ea59_11c4d643",
+      "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
