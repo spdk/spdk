@@ -184,7 +184,7 @@ test_rwb_worker(void *ctx)
 {
 #define ENTRIES_PER_WORKER (16 * RWB_ENTRY_COUNT)
 	struct ftl_rwb_entry *entry;
-	bool *done = ctx;
+	unsigned int *num_done = ctx;
 	size_t i;
 
 	for (i = 0; i < ENTRIES_PER_WORKER; ++i) {
@@ -201,7 +201,7 @@ test_rwb_worker(void *ctx)
 		}
 	}
 
-	__atomic_store_n(done, true, __ATOMIC_SEQ_CST);
+	__atomic_fetch_add(num_done, 1, __ATOMIC_SEQ_CST);
 	return NULL;
 }
 
@@ -212,14 +212,14 @@ test_rwb_parallel(void)
 	struct ftl_rwb_entry *entry;
 #define NUM_PARALLEL_WORKERS 4
 	pthread_t workers[NUM_PARALLEL_WORKERS];
-	bool done[NUM_PARALLEL_WORKERS];
+	unsigned int num_done = 0;
 	size_t i, num_entries = 0;
-	int rc, num_done;
+	bool all_done = false;
+	int rc;
 
 	setup_rwb();
 	for (i = 0; i < NUM_PARALLEL_WORKERS; ++i) {
-		done[i] = false;
-		rc = pthread_create(&workers[i], NULL, test_rwb_worker, (void *)&done[i]);
+		rc = pthread_create(&workers[i], NULL, test_rwb_worker, (void *)&num_done);
 		CU_ASSERT_TRUE(rc == 0);
 	}
 
@@ -232,15 +232,13 @@ test_rwb_parallel(void)
 
 			ftl_rwb_batch_release(batch);
 		} else {
-			num_done = 0;
-			for (i = 0; i < NUM_PARALLEL_WORKERS; ++i) {
-				if (__atomic_load_n(&done[i], __ATOMIC_SEQ_CST)) {
-					num_done++;
+			if (NUM_PARALLEL_WORKERS == __atomic_load_n(&num_done, __ATOMIC_SEQ_CST)) {
+				if (!all_done) {
+					/*  Pop all left entries from rwb */
+					all_done = true;
 					continue;
 				}
-			}
 
-			if (num_done == NUM_PARALLEL_WORKERS) {
 				for (i = 0; i < NUM_PARALLEL_WORKERS; ++i) {
 					pthread_join(workers[i], NULL);
 				}
