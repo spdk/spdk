@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2de9e274_228bbd7f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:21:47Z",
+      "side": 1,
+      "message": "I think this comment should say this should not exceed max_queue_depth.",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e942804_9bda9c43",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:21:47Z",
+      "side": 1,
+      "message": "The check against the send depth is actually common to both directions, so you can pull that out to a common check above.",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "324f940a_85473f4b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2819,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:21:47Z",
+      "side": 1,
+      "message": "You haven\u0027t incremented the recv depth to account for the new one coming in yet, so this should be \u003e\u003d. Or do the increment before the check.",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11061757_78ff8a96",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2820,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:21:47Z",
+      "side": 1,
+      "message": "I think, because the dummy drain recv is only ever completed in error, that you can actually be strictly checking against just max_queue_depth here instead of max_queue_depth + 1.",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
