@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "78b40ca3_4bf8c38a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T16:48:49Z",
+      "side": 1,
+      "message": "I changed the verbiage of the comment below to say number of posted WRs from this qpair\u0027s send queue.\nThat way outstanding WRs means the number of recv\u0027s for which we have received a completion, while posted sends means the number of sends for which we have executed ibv_post_send.",
+      "parentUuid": "2bd851b2_4e67b874",
+      "range": {
+        "startLine": 269,
+        "startChar": 4,
+        "endLine": 271,
+        "endChar": 4
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22a74178_b15ef959",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 19
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "109171d4_4aca7075",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 953,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T16:48:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22a74178_b15ef959",
+      "range": {
+        "startLine": 953,
+        "startChar": 1,
+        "endLine": 953,
+        "endChar": 25
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "183cdb1c_e71063bc",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 19
@@ -59,6 +107,30 @@
       "writtenOn": "2019-01-24T07:46:01Z",
       "side": 1,
       "message": "I can understand\n if (c \u003e 0) { c--; }\n\nBut \n if (c \u003e 0) { c++; }\nis valid?",
+      "range": {
+        "startLine": 2707,
+        "startChar": 4,
+        "endLine": 2707,
+        "endChar": 41
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4bbd57a_84978962",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 2707,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T16:48:49Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "183cdb1c_e71063bc",
       "range": {
         "startLine": 2707,
         "startChar": 4,
