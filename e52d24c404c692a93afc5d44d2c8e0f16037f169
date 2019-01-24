@@ -57,6 +57,24 @@
       "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d216ea59_11c4d643",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-24T06:38:09Z",
+      "side": 1,
+      "message": "spdk_vhost_dev_remove() can be called at any time and any core in rpc, so pending_async_op_num can\u0027t protect in practice, right?",
+      "parentUuid": "52a93b14_c5299a1e",
+      "revId": "e52d24c404c692a93afc5d44d2c8e0f16037f169",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
