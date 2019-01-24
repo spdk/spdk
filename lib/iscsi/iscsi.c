@@ -4344,7 +4344,6 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	int rc;
 	struct spdk_iscsi_pdu *rsp_pdu = NULL;
 	uint32_t ExpStatSN;
-	uint32_t QCmdSN;
 	int I_bit;
 	struct spdk_iscsi_sess *sess;
 	struct iscsi_bhs_scsi_req *reqh;
@@ -4428,16 +4427,6 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 
 	if (sess->ErrorRecoveryLevel >= 1) {
 		spdk_remove_acked_pdu(conn, ExpStatSN);
-	}
-
-	if (opcode == ISCSI_OP_NOPOUT || opcode == ISCSI_OP_SCSI) {
-		QCmdSN = sess->MaxCmdSN - sess->ExpCmdSN + 1;
-		QCmdSN += sess->queue_depth;
-		if (SN32_LT(ExpStatSN + QCmdSN, conn->StatSN)) {
-			SPDK_ERRLOG("StatSN(%u/%u) QCmdSN(%u) error\n",
-				    ExpStatSN, conn->StatSN, QCmdSN);
-			return SPDK_ISCSI_CONNECTION_FATAL;
-		}
 	}
 
 	if (!I_bit && opcode != ISCSI_OP_SCSI_DATAOUT) {
