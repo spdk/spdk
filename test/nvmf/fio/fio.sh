@@ -60,15 +60,15 @@ waitforblk "nvme0n1"
 waitforblk "nvme0n2"
 waitforblk "nvme0n3"
 
-$testdir/nvmf_fio.py 4096 1 write 1 verify
-$testdir/nvmf_fio.py 4096 1 randwrite 1 verify
-$testdir/nvmf_fio.py 4096 128 write 1 verify
-$testdir/nvmf_fio.py 4096 128 randwrite 1 verify
+$fio_py 4096 1 write 1 verify
+$fio_py 4096 1 randwrite 1 verify
+$fio_py 4096 128 write 1 verify
+$fio_py 4096 128 randwrite 1 verify
 
 sync
 
 #start hotplug test case
-$testdir/nvmf_fio.py 4096 1 read 10 &
+$fio_py 4096 1 read 10 &
 fio_pid=$!
 
 sleep 3
@@ -85,12 +85,12 @@ fio_status=$?
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
 
 if [ $fio_status -eq 0 ]; then
-        echo "nvmf hotplug test: fio successful - expected failure"
-        nvmfcleanup
-        killprocess $nvmfpid
-        exit 1
+	echo "nvmf hotplug test: fio successful - expected failure"
+	nvmfcleanup
+	killprocess $nvmfpid
+	exit 1
 else
-        echo "nvmf hotplug test: fio failed as expected"
+	echo "nvmf hotplug test: fio failed as expected"
 fi
 set -e
 

@@ -63,8 +63,8 @@ for i in `seq 1 $NVMF_SUBSYS`; do
 	waitforblk "nvme${k}n1"
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 read 10
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10
+$fio_py 262144 64 read 10
+$fio_py 262144 64 randwrite 10
 
 sync
 for i in `seq 1 $NVMF_SUBSYS`; do

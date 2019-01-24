@@ -99,7 +99,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 	done
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10 verify
+$fio_py 262144 64 randwrite 10 verify
 
 sync
 disconnect_nvmf
@@ -113,7 +113,7 @@ for lb_name in $lvol_bdevs; do
 done
 
 for lvs in $lvol_stores; do
-         $rpc_py destroy_lvol_store -l $lvs
+	$rpc_py destroy_lvol_store -l $lvs
 done
 
 rm -f ./local-job*

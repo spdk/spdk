@@ -7,6 +7,7 @@ NVMF_TCP_IP_ADDRESS="127.0.0.1"
 
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
 : ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
+fio_py="$rootdir/scripts/fio.py"
 
 function load_ib_rdma_modules()
 {
