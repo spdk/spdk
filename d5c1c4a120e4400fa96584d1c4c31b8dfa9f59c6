@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e65ec15b_5210cdfd",
+        "filename": "app/trace_porter/Makefile",
+        "patchSetId": 25
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-24T23:18:22Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nThis Makefile is duplicating some targets from spdk.app.mk.  It results in make warnings when trace_porter is built.\n\nYou should be able to remove a lot of this, and just use spdk.app.mk instead.  Normally spdk.app.mk is included at the end of the Makefile, so then remove spdk.deps.mk.  See app/iscsi_tgt/Makefile for example.\n\n-Jim",
+      "revId": "d5c1c4a120e4400fa96584d1c4c31b8dfa9f59c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
