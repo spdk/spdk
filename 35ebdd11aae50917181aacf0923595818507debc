@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "676d4461_d9b4fe92",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T21:02:25Z",
+      "side": 1,
+      "message": "It\u0027s actually a slightly different check (note the +1 in the second one for the rsp capsule), and they are going to end up in two different states in the next patch, so I don\u0027t think I can pull it out to common code without creating more problems.",
+      "parentUuid": "0e942804_9bda9c43",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "324f940a_85473f4b",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 20
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "9e331515_0e99e138",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2819,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T21:02:25Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "324f940a_85473f4b",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "11061757_78ff8a96",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 20
@@ -64,6 +100,24 @@
       "writtenOn": "2019-01-24T19:21:47Z",
       "side": 1,
       "message": "I think, because the dummy drain recv is only ever completed in error, that you can actually be strictly checking against just max_queue_depth here instead of max_queue_depth + 1.",
+      "revId": "35ebdd11aae50917181aacf0923595818507debc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95bb1451_cf52fdf4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2820,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-24T21:02:25Z",
+      "side": 1,
+      "message": "OK, that makes sense to me. I will have to change my initialization value as well though.",
+      "parentUuid": "11061757_78ff8a96",
       "revId": "35ebdd11aae50917181aacf0923595818507debc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
