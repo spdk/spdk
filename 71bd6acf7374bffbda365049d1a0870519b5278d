@@ -2,6 +2,190 @@
   "comments": [
     {
       "key": {
+        "uuid": "8dedb360_d061cc26",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "for sure",
+      "range": {
+        "startLine": 404,
+        "startChar": 1,
+        "endLine": 404,
+        "endChar": 26
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0ce1218_a3d7118e",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "Please return proper errno value from this function.",
+      "range": {
+        "startLine": 422,
+        "startChar": 1,
+        "endLine": 422,
+        "endChar": 13
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4fe9e75_075dabfa",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "DEBUG",
+      "range": {
+        "startLine": 430,
+        "startChar": 2,
+        "endLine": 430,
+        "endChar": 14
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6abc9df9_5d28f334",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 437,
+        "startChar": 2,
+        "endLine": 437,
+        "endChar": 14
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebdf8c92_37bace4a",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "this can be squashed",
+      "range": {
+        "startLine": 449,
+        "startChar": 0,
+        "endLine": 457,
+        "endChar": 2
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "af987126_0d57d3cc",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 793,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "return error code here and all over this function.",
+      "range": {
+        "startLine": 793,
+        "startChar": 2,
+        "endLine": 793,
+        "endChar": 12
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4539cad_03f45391",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 796,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "Wow! Heavy cannon!\n\nDon\u0027t know, don\u0027t care why you need recursive mutex but this most likely mean some implementation/design issue.",
+      "range": {
+        "startLine": 796,
+        "startChar": 38,
+        "endLine": 796,
+        "endChar": 61
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7117e9c8_181e9f0b",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T15:07:06Z",
+      "side": 1,
+      "message": "Not destroyed in fini path.",
+      "range": {
+        "startLine": 802,
+        "startChar": 5,
+        "endLine": 802,
+        "endChar": 23
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a30b2b9f_f0712910",
         "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
         "patchSetId": 73
