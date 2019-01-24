@@ -34,6 +34,75 @@
       "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97d506d3_ea75a0eb",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-24T04:07:13Z",
+      "side": 1,
+      "message": "int and long may vary on different platforms. Are we just omitting this?",
+      "range": {
+        "startLine": 333,
+        "startChar": 15,
+        "endLine": 333,
+        "endChar": 21
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f8da0510_5e7a8f3f",
+        "filename": "lib/conf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 422,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-24T04:07:13Z",
+      "side": 1,
+      "message": "Same here",
+      "range": {
+        "startLine": 422,
+        "startChar": 9,
+        "endLine": 422,
+        "endChar": 14
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ec4a097_7d4634e0",
+        "filename": "lib/conf/conf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 477,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-24T04:07:13Z",
+      "side": 1,
+      "message": "and here",
+      "range": {
+        "startLine": 477,
+        "startChar": 9,
+        "endLine": 477,
+        "endChar": 14
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
