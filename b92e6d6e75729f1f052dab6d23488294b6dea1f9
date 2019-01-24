@@ -34,6 +34,24 @@
       "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3d313a2c_a6f4b912",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2010,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T19:47:45Z",
+      "side": 1,
+      "message": "If you only need one PD per RDMA device, then why do you need the specific transport ID for each port when requesting the PD? Shouldn\u0027t something more global like the ibv_context be enough?\n\nOn the initiator side we request a PD per controller - is that still correct or do you only need one per RDMA device there as well?",
+      "parentUuid": "fd16e8c4_dba44e0c",
+      "revId": "b92e6d6e75729f1f052dab6d23488294b6dea1f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
