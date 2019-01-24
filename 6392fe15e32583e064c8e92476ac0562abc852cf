@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "774ee174_7200eab2",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-24T12:35:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f00310ec_02fd2bb4",
+      "range": {
+        "startLine": 152,
+        "startChar": 0,
+        "endLine": 152,
+        "endChar": 1
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dab5c794_771d1f8a",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-24T11:59:44Z",
       "side": 1,
       "message": "Is this help available in QEMU help message?",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 160,
+        "endChar": 28
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa90ef19_5325c797",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-24T12:35:16Z",
+      "side": 1,
+      "message": "Nope, it\u0027s just inside the .c file, this is why I\u0027ve put it here - to be able to set the necessary options without having to look at QEMU\u0027s source code.",
+      "parentUuid": "dab5c794_771d1f8a",
       "range": {
         "startLine": 153,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "3253333a_7d0e185f",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-24T12:35:16Z",
+      "side": 1,
+      "message": "For sure there are obvious ones like the metadata file being accessible, the parameters being greater than zero (for instance you can\u0027t have a device with 0 parallel units), but I don\u0027t think they\u0027re worth mentioning here.",
+      "parentUuid": "822c1fd1_01e4fc2a",
+      "range": {
+        "startLine": 161,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 30
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92fa94f0_47cbdaff",
         "filename": "doc/ftl.md",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2019-01-24T11:59:44Z",
       "side": 1,
       "message": "New line reqired before opening ``` and closing ```.\nThe same all over this file.",
+      "range": {
+        "startLine": 195,
+        "startChar": 0,
+        "endLine": 195,
+        "endChar": 3
+      },
+      "revId": "6392fe15e32583e064c8e92476ac0562abc852cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "139e9573_fbe938b7",
+        "filename": "doc/ftl.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-24T12:35:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "92fa94f0_47cbdaff",
       "range": {
         "startLine": 195,
         "startChar": 0,
