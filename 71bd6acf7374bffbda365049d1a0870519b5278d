@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a30b2b9f_f0712910",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "pls write the proper error message here like:\n\n\"Failed to create ftl bdev: %s\", spdk_strerror(-status)",
+      "range": {
+        "startLine": 77,
+        "startChar": 7,
+        "endLine": 77,
+        "endChar": 27
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a2c9c19_fca5cb1a",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "Just return if w \u003d\u003d NULL. This is not an error.\n\nBTW: I think we need to change the spdk_jsonrpc_begin_result(). People keep repeating this.",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 2
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "338bb878_2e060a8d",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "pls remove this. \n\nAlso note that SPDK_LOG_BDEV_FTL is declared in separate file.",
+      "range": {
+        "startLine": 108,
+        "startChar": 0,
+        "endLine": 108,
+        "endChar": 71
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ef05cf89_77352c8e",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "This message is useless for aministrator tunning SPDK target but usefull for RPC user. So make it part of error response along with spdk_strerror(-rc);",
+      "range": {
+        "startLine": 117,
+        "startChar": 14,
+        "endLine": 117,
+        "endChar": 56
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a7259c0e_a604bc43",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "^\n\nsecodn thing - if don\u0027t support device other than PCI why allowing the user to pass it in argument. If you ever support other transports you can add it later.",
+      "range": {
+        "startLine": 122,
+        "startChar": 14,
+        "endLine": 122,
+        "endChar": 58
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c0f45f5d_1fc88e49",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 131,
+        "startChar": 15,
+        "endLine": 131,
+        "endChar": 53
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd5c102b_3f2076a3",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 138,
+        "startChar": 15,
+        "endLine": 138,
+        "endChar": 43
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b899776c_0f94bfd9",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 144,
+        "startChar": 14,
+        "endLine": 144,
+        "endChar": 43
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bda2802b_d68a38f7",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 73
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T14:48:05Z",
+      "side": 1,
+      "message": "...\n    goto out;\n  }\n  ...\n  out:\n    free(attrs.name);\n  }",
+      "range": {
+        "startLine": 190,
+        "startChar": 2,
+        "endLine": 191,
+        "endChar": 29
+      },
+      "revId": "71bd6acf7374bffbda365049d1a0870519b5278d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
