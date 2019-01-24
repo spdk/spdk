@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "273d14fb_aff88494",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-24T17:19:44Z",
+      "side": 1,
+      "message": "There is a window where the recv_state gets set to NVME_TCP_PDU_RECV_STATE_ERROR at the end of spdk_nvmf_tcp_send_c2h_term_req where this timer poller could execute and check last_pdu_time. But last_pdu_time is not set until spdk_nvmf_tcp_send_c2h_term_req_complete is called, so the last_pdu_time checked here might be very old and cause an immediate disconnect.",
+      "revId": "09ab4efa473f8efcd5c9dc4a182690658336988e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
