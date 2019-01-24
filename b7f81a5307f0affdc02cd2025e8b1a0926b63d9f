@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dcf58750_160338a3",
+        "filename": "doc/ftl.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 263,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-24T13:02:20Z",
+      "side": 1,
+      "message": "Silly question, but can there be more than one ftl bdev from this construct_ftl_bdev?\n\nIf no can we modify this RPC call before release to return single JSON RPC object instead of array?",
+      "range": {
+        "startLine": 260,
+        "startChar": 0,
+        "endLine": 263,
+        "endChar": 3
+      },
+      "revId": "b7f81a5307f0affdc02cd2025e8b1a0926b63d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
