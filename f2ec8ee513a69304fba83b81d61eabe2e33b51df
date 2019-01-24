@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a5cee0e3_8afda3af",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-24T15:22:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6f29f38_5f02c5d6",
+      "range": {
+        "startLine": 9,
+        "startChar": 33,
+        "endLine": 9,
+        "endChar": 62
+      },
+      "revId": "f2ec8ee513a69304fba83b81d61eabe2e33b51df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7600877b_19fdd8b2",
         "filename": "test/ocf/management/create-destruct.sh",
         "patchSetId": 17
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "Ack",
       "parentUuid": "7600877b_19fdd8b2",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 7
+      },
+      "revId": "f2ec8ee513a69304fba83b81d61eabe2e33b51df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1fd8c8c5_54e9403a",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 17
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-24T15:22:11Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbea34a6_720ab504",
       "range": {
         "startLine": 14,
         "startChar": 0,
