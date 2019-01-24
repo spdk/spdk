@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "caa5e7a0_757cbe30",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-24T22:34:45Z",
+      "side": 1,
+      "message": "Thank you for kind explanation. I could understand the meaning with my learned knowledge.",
+      "parentUuid": "78b40ca3_4bf8c38a",
+      "range": {
+        "startLine": 269,
+        "startChar": 4,
+        "endLine": 271,
+        "endChar": 4
+      },
+      "revId": "c75367878d0c8e1337c9a21bc0c891cec84fd6cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22a74178_b15ef959",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 19
