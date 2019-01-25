@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "804fdcc1_3f00de98",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 26
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-25T16:11:39Z",
+      "side": 1,
+      "message": "let\u0027s update the commit message to reflect the new name",
+      "revId": "9f85ef2ef3ffc6f83240a669dca003ebee9783cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
