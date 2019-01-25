@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "76090c5c_33459e0f",
+        "filename": "autopackage.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-25T20:03:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "54926d97_cf5cb9d6",
+      "revId": "45bea27cf60e2424e3b5e17c97feb6a5994c0837",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0f7f65a1_f560de57",
         "filename": "autotest.sh",
         "patchSetId": 3
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "06972ff3_b92b90f4",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-25T20:03:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0f7f65a1_f560de57",
+      "revId": "45bea27cf60e2424e3b5e17c97feb6a5994c0837",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e4b18d3d_875946f6",
         "filename": "autotest.sh",
         "patchSetId": 3
@@ -47,6 +83,24 @@
       "writtenOn": "2019-01-25T19:55:57Z",
       "side": 1,
       "message": "I think you need to clear the trap first.  The trap does autotest_cleanup, so if autotest_cleanup fails for some reason, you don\u0027t want to do it a second time.\n\nThe trap also does process_core and then autotest_cleanup - I\u0027d suggest keeping the same order here.",
+      "revId": "45bea27cf60e2424e3b5e17c97feb6a5994c0837",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b15f01c_ea0fd35b",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-25T20:03:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e4b18d3d_875946f6",
       "revId": "45bea27cf60e2424e3b5e17c97feb6a5994c0837",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
