@@ -111,6 +111,10 @@ struct spdk_bdev_mgr {
 };
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
+	.bdev_io_pool = NULL,
+	.buf_small_pool = NULL,
+	.buf_large_pool = NULL,
+	.zero_buffer = NULL,
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
 	.bdevs = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdevs),
 	.init_complete = false,
@@ -851,6 +855,9 @@ spdk_bdev_modules_init(void)
 
 	TAILQ_FOREACH(module, &g_bdev_mgr.bdev_modules, internal.tailq) {
 		g_resume_bdev_module = module;
+		if (module->async_init) {
+			module->internal.action_in_progress = 1;
+		}
 		rc = module->module_init();
 		if (rc != 0) {
 			return rc;
@@ -1016,6 +1023,11 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
+
+	g_bdev_mgr.bdev_io_pool = NULL;
+	g_bdev_mgr.buf_small_pool = NULL;
+	g_bdev_mgr.buf_large_pool = NULL;
+	g_bdev_mgr.zero_buffer = NULL;
 
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
@@ -3904,10 +3916,6 @@ spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 	if (spdk_bdev_module_list_find(bdev_module->name)) {
 		SPDK_ERRLOG("ERROR: module '%s' already registered.\n", bdev_module->name);
 		assert(false);
-	}
-
-	if (bdev_module->async_init) {
-		bdev_module->internal.action_in_progress = 1;
 	}
 
 	/*

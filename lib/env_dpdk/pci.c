@@ -153,9 +153,10 @@ spdk_pci_init(void)
 	 * pci drivers here.
 	 */
 	TAILQ_FOREACH(driver, &g_pci_drivers, tailq) {
-		assert(!driver->is_registered);
-		driver->is_registered = true;
-		rte_pci_register(&driver->driver);
+		if (!driver->is_registered) {
+			driver->is_registered = true;
+			rte_pci_register(&driver->driver);
+		}
 	}
 #endif
 }
