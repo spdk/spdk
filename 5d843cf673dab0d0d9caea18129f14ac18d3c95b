@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "28aa3f5b_717cef7a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 17
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T00:52:47Z",
+      "side": 1,
+      "message": "Please add a note that it configure.sh can be used to override.",
+      "revId": "5d843cf673dab0d0d9caea18129f14ac18d3c95b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fe00fd6_b136196b",
+        "filename": "CONFIG",
+        "patchSetId": 17
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T00:52:47Z",
+      "side": 1,
+      "message": "I saw your comment but what we\u0027ve done before, and what I think is the right course now, is to set this to Y and either myself or Karol or Seth can update Jenkins so that test machines that don\u0027t have the right NASM won\u0027t run this.  You need to add the SPDK_TEST_ISAL patch first though and I believe it really needs to go with this patch.",
+      "revId": "5d843cf673dab0d0d9caea18129f14ac18d3c95b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a4c02c1_5909370c",
+        "filename": "configure",
+        "patchSetId": 17
+      },
+      "lineNbr": 401,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T00:52:47Z",
+      "side": 1,
+      "message": "delete line 401?",
+      "revId": "5d843cf673dab0d0d9caea18129f14ac18d3c95b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b69229e_e0ab4fba",
+        "filename": "configure",
+        "patchSetId": 17
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T00:52:47Z",
+      "side": 1,
+      "message": "Just English wording, please replace \"If you do want to support that\" with \"to install isa-l\"",
+      "revId": "5d843cf673dab0d0d9caea18129f14ac18d3c95b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
