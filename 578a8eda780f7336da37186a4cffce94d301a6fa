@@ -114,6 +114,30 @@
       "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c630d885_d5bb6c5b",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T03:53:05Z",
+      "side": 1,
+      "message": "Hi Zhouhui,\n\nAccording to the discussion with Xiadong, this means the IO which should return completion.\n\nPlease see https://review.gerrithub.io/#/c/spdk/spdk/+/441282/1/lib/bdev/raid/bdev_raid.c@499\n\nI hope this makes sense to you.\nIt will be fine if we can remove this variable, of course.",
+      "parentUuid": "7aeec509_aa23cbe2",
+      "range": {
+        "startLine": 143,
+        "startChar": 12,
+        "endLine": 143,
+        "endChar": 35
+      },
+      "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
