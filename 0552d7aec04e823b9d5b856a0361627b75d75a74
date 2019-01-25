@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ed953b3f_602f5906",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T11:27:13Z",
+      "side": 1,
+      "message": "The g_cmdline_options[] requires option NUM_TRACE_ENTRIES_OPT_IDX takes a argument, so is it possible that optarg \u003d\u003d NULL?",
+      "revId": "0552d7aec04e823b9d5b856a0361627b75d75a74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68104bbc_fa37992a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T11:27:13Z",
+      "side": 1,
+      "message": "The old code also requires tmp !\u003d 0, see line 974 (line number in old code).",
+      "revId": "0552d7aec04e823b9d5b856a0361627b75d75a74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
