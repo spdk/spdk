@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c647df30_b2cc49c8",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-25T03:00:43Z",
+      "side": 1,
+      "message": "Those common vector related APIs can be in a common SPDK library.",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 1
+      },
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cc1b857_f2f8562e",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-25T03:00:43Z",
+      "side": 1,
+      "message": "Is there any memory leak for the variable iovs, as I don\u0027t see where to store the iovs context ?",
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8078ef66_6891010c",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-25T03:00:43Z",
+      "side": 1,
+      "message": "iovcnt",
+      "range": {
+        "startLine": 329,
+        "startChar": 10,
+        "endLine": 329,
+        "endChar": 34
+      },
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
