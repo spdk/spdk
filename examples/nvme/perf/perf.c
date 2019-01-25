@@ -44,6 +44,7 @@
 #include "spdk/histogram_data.h"
 #include "spdk/endian.h"
 #include "spdk/dif.h"
+#include "spdk/util.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -205,6 +206,7 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
+static uint32_t g_keep_alive_timeout_in_ms = 0;
 
 static const char *g_core_mask;
 
@@ -1027,6 +1029,7 @@ static void usage(char *program_name)
 	printf("\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
 	printf("\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
 	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
+	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
@@ -1431,12 +1434,13 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:k:s:t:w:DHILM:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
 		case 'o':
 		case 'q':
+		case 'k':
 		case 's':
 		case 't':
 		case 'M':
@@ -1457,6 +1461,9 @@ parse_args(int argc, char **argv)
 				break;
 			case 'q':
 				g_queue_depth = val;
+				break;
+			case 'k':
+				g_keep_alive_timeout_in_ms = val;
 				break;
 			case 's':
 				g_dpdk_mem = val;
@@ -1670,6 +1677,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Set the header and data_digest */
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
+	opts->keep_alive_timeout_ms = spdk_max(opts->keep_alive_timeout_ms,
+					       g_keep_alive_timeout_in_ms);
 
 	return true;
 }
