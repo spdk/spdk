@@ -339,6 +339,30 @@
     },
     {
       "key": {
+        "uuid": "c74704d9_32ad59aa",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T07:37:57Z",
+      "side": 1,
+      "message": "I thought your comment\u0027s point is \"strtol() either returns 0, or LONG_MAX, or LONG_MIN, and nothing else.\" My fault, I misunderstood your comment.",
+      "parentUuid": "82b801aa_7d9e85d1",
+      "range": {
+        "startLine": 420,
+        "startChar": 1,
+        "endLine": 421,
+        "endChar": 32
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be2cccd9_2937e993",
         "filename": "lib/util/string.c",
         "patchSetId": 5
