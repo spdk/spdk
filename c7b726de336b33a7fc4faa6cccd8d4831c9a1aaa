@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "4258e3a7_8e9d4437",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T13:02:44Z",
+      "side": 1,
+      "message": "Yes, I would leave this for now. Although thanks for noticing",
+      "parentUuid": "80fc88db_af6396f9",
+      "range": {
+        "startLine": 138,
+        "startChar": 0,
+        "endLine": 165,
+        "endChar": 1
+      },
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7cc1b857_f2f8562e",
         "filename": "lib/bdev/ocf/dobj.c",
         "patchSetId": 64
@@ -66,6 +90,24 @@
     },
     {
       "key": {
+        "uuid": "95ef30e0_5c7f496c",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 320,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T13:02:44Z",
+      "side": 1,
+      "message": "Memory of iovs gets freed in callback of base device on line 210 (even if io submission failed)\nIs that OK?\nI am not sure to which iovs context you reffered",
+      "parentUuid": "7cc1b857_f2f8562e",
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8078ef66_6891010c",
         "filename": "lib/bdev/ocf/dobj.c",
         "patchSetId": 64
@@ -77,6 +119,30 @@
       "writtenOn": "2019-01-25T03:00:43Z",
       "side": 1,
       "message": "iovcnt",
+      "range": {
+        "startLine": 329,
+        "startChar": 10,
+        "endLine": 329,
+        "endChar": 34
+      },
+      "revId": "c7b726de336b33a7fc4faa6cccd8d4831c9a1aaa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3b05e2b0_e9d3e26c",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T13:02:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8078ef66_6891010c",
       "range": {
         "startLine": 329,
         "startChar": 10,
