@@ -91,6 +91,29 @@
       "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7aeec509_aa23cbe2",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T03:35:28Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\nCould you explain why we can\u0027t use base_bdev_reset_submitted to track how much reset we should wait, so we can remove base_bdev_reset_waited? It seems that the number of reset submitted and the number of reset we should waited is the same.",
+      "range": {
+        "startLine": 143,
+        "startChar": 12,
+        "endLine": 143,
+        "endChar": 35
+      },
+      "revId": "578a8eda780f7336da37186a4cffce94d301a6fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
