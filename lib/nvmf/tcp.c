@@ -249,12 +249,6 @@ struct nvme_tcp_qpair {
 	/** Specifies the maximum number of PDU-Data bytes per H2C Data Transfer PDU */
 	uint32_t				maxh2cdata;
 
-	/* Timer used to destroy qpair after detecting transport error issue if initiator does
-	 *  not close the connection.
-	 */
-	uint64_t				last_pdu_time;
-	int					timeout;
-
 	/* Mgmt channel */
 	struct spdk_io_channel			*mgmt_channel;
 	struct spdk_nvmf_tcp_mgmt_channel	*ch;
@@ -275,7 +269,6 @@ struct nvme_tcp_qpair {
 struct spdk_nvmf_tcp_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 	struct spdk_sock_group			*sock_group;
-	struct spdk_poller			*timeout_poller;
 	TAILQ_HEAD(, nvme_tcp_qpair)		qpairs;
 };
 
@@ -1231,47 +1224,6 @@ spdk_nvmf_tcp_discover(struct spdk_nvmf_transport *transport,
 	entry->tsas.tcp.sectype = SPDK_NVME_TCP_SECURITY_NONE;
 }
 
-static void
-spdk_nvmf_tcp_qpair_handle_timeout(struct nvme_tcp_qpair *tqpair, uint64_t tsc)
-{
-	if ((tqpair->state == NVME_TCP_QPAIR_STATE_EXITING) ||
-	    (tqpair->state == NVME_TCP_QPAIR_STATE_EXITED)) {
-		return;
-	}
-
-	/* Currently, we did not have keep alive support, so make sure that we should have the generic support later */
-	if ((tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR) ||
-	    (tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY)) {
-		return;
-	}
-
-	/* Check for interval expiration */
-	if ((tsc - tqpair->last_pdu_time) > (tqpair->timeout  * spdk_get_ticks_hz())) {
-		SPDK_ERRLOG("No pdu coming for tqpair=%p within %d seconds\n", tqpair, tqpair->timeout);
-		tqpair->state = NVME_TCP_QPAIR_STATE_EXITING;
-	}
-}
-
-static int
-spdk_nvmf_tcp_poll_group_handle_timeout(void *ctx)
-{
-	struct spdk_nvmf_tcp_poll_group *tgroup = ctx;
-	struct nvme_tcp_qpair *tqpair, *tmp;
-	uint64_t tsc = spdk_get_ticks();
-
-	TAILQ_FOREACH_SAFE(tqpair, &tgroup->qpairs, link, tmp) {
-		spdk_nvmf_tcp_qpair_handle_timeout(tqpair, tsc);
-		if (tqpair->state == NVME_TCP_QPAIR_STATE_EXITING) {
-			/* to prevent the state is set again */
-			tqpair->state = NVME_TCP_QPAIR_STATE_EXITED;
-			SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "will disconect the tqpair=%p\n", tqpair);
-			spdk_nvmf_qpair_disconnect(&tqpair->qpair, NULL, NULL);
-		}
-	}
-
-	return -1;
-}
-
 static struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 {
@@ -1289,8 +1241,6 @@ spdk_nvmf_tcp_poll_group_create(struct spdk_nvmf_transport *transport)
 
 	TAILQ_INIT(&tgroup->qpairs);
 
-	tgroup->timeout_poller = spdk_poller_register(spdk_nvmf_tcp_poll_group_handle_timeout, tgroup,
-				 1000000);
 	return &tgroup->group;
 
 cleanup:
@@ -1305,7 +1255,6 @@ spdk_nvmf_tcp_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 	tgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_tcp_poll_group, group);
 	spdk_sock_group_close(&tgroup->sock_group);
-	spdk_poller_unregister(&tgroup->timeout_poller);
 
 	free(tgroup);
 }
@@ -1996,7 +1945,6 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 				}
 			}
 
-			tqpair->last_pdu_time = spdk_get_ticks();
 			/* The command header of this PDU has now been read from the socket. */
 			spdk_nvmf_tcp_pdu_ch_handle(tqpair);
 			break;
@@ -2722,8 +2670,6 @@ spdk_nvmf_tcp_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 
 	tqpair->ch->tgroup = tgroup;
 	tqpair->state = NVME_TCP_QPAIR_STATE_INVALID;
-	tqpair->timeout = SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT;
-	tqpair->last_pdu_time = spdk_get_ticks();
 	TAILQ_INSERT_TAIL(&tgroup->qpairs, tqpair, link);
 
 	return 0;
