@@ -42,6 +42,48 @@
     },
     {
       "key": {
+        "uuid": "365d5d53_ee7dca33",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "62844f2d_31f12b8e",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4cc1fce5_4f1a3ad6",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1e6240ce_4bf388f3",
+      "range": {
+        "startLine": 240,
+        "startChar": 20,
+        "endLine": 240,
+        "endChar": 51
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "51d03f7e_9453a665",
         "filename": "doc/bdev.md",
         "patchSetId": 14
@@ -62,6 +104,30 @@
       "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92718ff0_ea6e0102",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "51d03f7e_9453a665",
+      "range": {
+        "startLine": 241,
+        "startChar": 78,
+        "endLine": 241,
+        "endChar": 81
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "73e93a9c_6b43d288",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "I meant configured because we pass devices as configure options.\nBut I understand now that this may be unclear, Ack",
+      "parentUuid": "a693a06c_c29b4176",
+      "range": {
+        "startLine": 242,
+        "startChar": 9,
+        "endLine": 242,
+        "endChar": 26
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e96aa15a_bc08043b",
         "filename": "doc/bdev.md",
         "patchSetId": 14
@@ -99,6 +189,24 @@
       "writtenOn": "2019-01-25T15:41:41Z",
       "side": 1,
       "message": "This could probably use an additional sentence describing what is \"cache device\" and \"core device\"",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a543cfa3_fca78103",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e96aa15a_bc08043b",
       "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -139,6 +247,24 @@
     },
     {
       "key": {
+        "uuid": "d11308d1_d3e68820",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "I think this would be useful for user who used OCF before, or for a user that read documentation that we provide below and wants to know what OCF defaults we use.\nI dont wan\u0027t to extend this guide to OCF, because there is a lot to know about OCF, so I just refer to their documentation. \nDo you agree?",
+      "parentUuid": "b26091b7_d50616cd",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ba4b8064_e8acdfb6",
         "filename": "doc/bdev.md",
         "patchSetId": 14
@@ -159,6 +285,30 @@
       "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f16037c0_239657e9",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ba4b8064_e8acdfb6",
+      "range": {
+        "startLine": 256,
+        "startChar": 78,
+        "endLine": 256,
+        "endChar": 82
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -185,6 +335,30 @@
     },
     {
       "key": {
+        "uuid": "5f0394ad_64f7baf7",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "xD, Ack",
+      "parentUuid": "38b47451_3a011298",
+      "range": {
+        "startLine": 258,
+        "startChar": 65,
+        "endLine": 258,
+        "endChar": 87
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52465588_c0a4f202",
         "filename": "doc/bdev.md",
         "patchSetId": 14
@@ -196,6 +370,30 @@
       "writtenOn": "2019-01-25T15:41:41Z",
       "side": 1,
       "message": "please see the [OCF ...]?",
+      "range": {
+        "startLine": 259,
+        "startChar": 31,
+        "endLine": 259,
+        "endChar": 43
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9925073d_a4b28d0f",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-25T15:56:14Z",
+      "side": 1,
+      "message": "Why? I like this more",
+      "parentUuid": "52465588_c0a4f202",
       "range": {
         "startLine": 259,
         "startChar": 31,
