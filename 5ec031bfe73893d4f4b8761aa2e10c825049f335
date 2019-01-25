@@ -34,6 +34,23 @@
       "revId": "5ec031bfe73893d4f4b8761aa2e10c825049f335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28603952_0c3d1b56",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 29
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-25T17:55:14Z",
+      "side": 1,
+      "message": "Let\u0027s add CC\u003dcc to end of this line.  It will override scan-build for the isa-l build.  See this patch where I\u0027m doing something similar for ipsec-mb:\n\nhttps://review.gerrithub.io/c/spdk/spdk/+/442115",
+      "revId": "5ec031bfe73893d4f4b8761aa2e10c825049f335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
