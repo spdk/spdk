@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c603601a_d4c0b7b8",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4427,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-01-25T23:55:53Z",
+      "side": 1,
+      "message": "It seems that we want to tolerant the bugs from old version iscsi initiator",
+      "revId": "21328d6206a0cf1182385ae7c0f0bd753521d926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
