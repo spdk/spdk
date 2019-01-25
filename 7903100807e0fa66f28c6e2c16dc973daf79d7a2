@@ -37,6 +37,121 @@
     },
     {
       "key": {
+        "uuid": "371ae407_78631047",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "So, the user should use spdk_strtol*() only for parsing positive numbers (include zero)?",
+      "range": {
+        "startLine": 18,
+        "startChar": 50,
+        "endLine": 19,
+        "endChar": 55
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f435adcf_a196eba2",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "Same with comment in commit message.",
+      "range": {
+        "startLine": 243,
+        "startChar": 12,
+        "endLine": 243,
+        "endChar": 77
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "880ec372_76b88a66",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "0 or positive number.",
+      "range": {
+        "startLine": 248,
+        "startChar": 11,
+        "endLine": 248,
+        "endChar": 12
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3688e13b_615bd60a",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "Same with comment in commit message.",
+      "range": {
+        "startLine": 256,
+        "startChar": 12,
+        "endLine": 256,
+        "endChar": 77
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6aecea56_3a87a100",
+        "filename": "include/spdk/string.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 261,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "0 or positive number.",
+      "range": {
+        "startLine": 261,
+        "startChar": 11,
+        "endLine": 261,
+        "endChar": 12
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "97d506d3_ea75a0eb",
         "filename": "lib/bdev/null/bdev_null.c",
         "patchSetId": 5
@@ -84,6 +199,29 @@
     },
     {
       "key": {
+        "uuid": "dacf92cc_cf1ba03e",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "\u003c\u003d, because we will use block_size as divisor in line 340",
+      "range": {
+        "startLine": 334,
+        "startChar": 18,
+        "endLine": 334,
+        "endChar": 19
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8da0510_5e7a8f3f",
         "filename": "lib/conf/conf.c",
         "patchSetId": 5
@@ -127,6 +265,46 @@
       "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92fb9670_ad26f7ac",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "I don\u0027t know what the manual that you are reading, but in my system, the manual of strtol says:\n\n\u003e The  strtol()  function returns the result of the conversion, unless the value would underflow\n\u003e or overflow. If an underflow occurs, strtol() returns LONG_MIN.  If an overflow occurs, \n\u003e strtol() returns  LONG_MAX.\n\nSo strtol will return numbers between LONG_MIN and LONG_MAX.",
+      "range": {
+        "startLine": 420,
+        "startChar": 1,
+        "endLine": 421,
+        "endChar": 32
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be2cccd9_2937e993",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T06:46:06Z",
+      "side": 1,
+      "message": "The strtol() may return negative number, so does spdk_strtol(). How do we distinguish spdk_strtol(\"-22\") and -EINVAL?",
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
