@@ -1220,6 +1220,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	int rc;
 
 	svsession = to_scsi_session(vsession);
+	assert(svsession != NULL);
 	svdev = svsession->svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
@@ -1273,6 +1274,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 	}
 
 	svdev = to_scsi_dev(vsession->vdev);
+	assert(svdev != NULL);
 	svsession->svdev = svdev;
 
 	if (svdev->vdev.active_session_num == 0) {
@@ -1336,11 +1338,7 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_scsi_session *svsession;
 
 	svsession = to_scsi_session(vsession);
-	if (svsession == NULL) {
-		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
-		goto err;
-	}
-
+	assert(svsession != NULL);
 	svsession->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&svsession->requestq_poller);
 	spdk_poller_unregister(&svsession->mgmt_poller);
@@ -1361,6 +1359,10 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 	int rc;
 
 	svsession = to_scsi_session(vsession);
+	if (svsession == NULL) {
+		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
+		return -1;
+	}
 	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
 					   3, "stop session");
 	if (rc != 0) {
