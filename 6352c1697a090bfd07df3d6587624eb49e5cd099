@@ -16,6 +16,24 @@
       "revId": "6352c1697a090bfd07df3d6587624eb49e5cd099",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "843cf470_96847105",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 958,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-25T01:57:02Z",
+      "side": 1,
+      "message": "The controller list is assigned to the master worker, what about enlarge this value e.g.: 120 seconds, or we just disable the keep alive feature when testing with perf tool?",
+      "parentUuid": "fc287676_25ed022e",
+      "revId": "6352c1697a090bfd07df3d6587624eb49e5cd099",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
