@@ -1,0 +1,210 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62844f2d_31f12b8e",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "Please split the line after 100 characters.",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e6240ce_4bf388f3",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "bdev isn\u0027t really a part of the SPDK OCF module, it is based on SPDK OCF module, but we don\u0027t have to mention this here.\n\nThe following would seem fine to me:\nOCF virtual bdev driver is based on [Open CAS ...]",
+      "range": {
+        "startLine": 240,
+        "startChar": 20,
+        "endLine": 240,
+        "endChar": 51
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51d03f7e_9453a665",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "to the configure script?\n\nIf you ask me, I\u0027d reword this to:\nTo enable the module (driver?), please configure SPDK with `--with-ocf\u003d/path/...\u0027.",
+      "range": {
+        "startLine": 241,
+        "startChar": 78,
+        "endLine": 241,
+        "endChar": 81
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a693a06c_c29b4176",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "this sounds like there is some additional ocf bdev configuration required. Did you mean \u0027can be used\u0027?",
+      "range": {
+        "startLine": 242,
+        "startChar": 9,
+        "endLine": 242,
+        "endChar": 26
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e96aa15a_bc08043b",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "This could probably use an additional sentence describing what is \"cache device\" and \"core device\"",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c686c52_7fe7b986",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "Please split the line after 100 characters or so.",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b26091b7_d50616cd",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "I have honestly no idea what this means and why should I care. Should it be explained a little bit more? Or maybe removed entirely?",
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba4b8064_e8acdfb6",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "the core device",
+      "range": {
+        "startLine": 256,
+        "startChar": 78,
+        "endLine": 256,
+        "endChar": 82
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38b47451_3a011298",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "my brain is having some integer rounding issues here. Could we change the order to\n_cache device size_ * 58 / _cache line size_",
+      "range": {
+        "startLine": 258,
+        "startChar": 65,
+        "endLine": 258,
+        "endChar": 87
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "52465588_c0a4f202",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-25T15:41:41Z",
+      "side": 1,
+      "message": "please see the [OCF ...]?",
+      "range": {
+        "startLine": 259,
+        "startChar": 31,
+        "endLine": 259,
+        "endChar": 43
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
