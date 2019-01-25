@@ -1,6 +1,7 @@
 import json
 import socket
 import time
+import os
 
 
 def print_dict(d):
@@ -18,7 +19,7 @@ class JSONRPCClient(object):
         self.timeout = timeout
         self.request_id = 0
         try:
-            if addr.startswith('/'):
+            if os.path.exists(addr):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.sock.connect(addr)
             elif ':' in addr:
