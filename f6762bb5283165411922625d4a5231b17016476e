@@ -16,6 +16,24 @@
       "revId": "f6762bb5283165411922625d4a5231b17016476e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "65db299b_50704559",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1689,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T14:16:26Z",
+      "side": 1,
+      "message": "Hi Zhouhui, as you suggest my earlier patch, if we check port \u003c\u003d0 || port \u003e\u003d INT_MAX, spdk_sock_connect() and SPDK_ERRLOG will see the same value?",
+      "parentUuid": "53dc8b27_4d8f84f8",
+      "revId": "f6762bb5283165411922625d4a5231b17016476e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
