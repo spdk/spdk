@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "14bdf8b6_844314e9",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 229,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-25T14:03:44Z",
+      "side": 1,
+      "message": "error_exit does that",
+      "parentUuid": "a1d97bf8_4a122e71",
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "caa00559_73f43d66",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 15
@@ -59,6 +77,30 @@
     },
     {
       "key": {
+        "uuid": "9afc1916_904eac5b",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-25T14:03:44Z",
+      "side": 1,
+      "message": "Because it shouldn\u0027t.\nfio_bin is a statically built binary which is copied over to VMs for server-client use (fio version on host and VMs must match).\n\n/usr/src/fio is the same which we use to compile \u0026 run fio plugin, so using the same binary as for client-server would fail.\nGave it a different option.",
+      "parentUuid": "caa00559_73f43d66",
+      "range": {
+        "startLine": 251,
+        "startChar": 1,
+        "endLine": 251,
+        "endChar": 17
+      },
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "99f9df05_4284616b",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 15
@@ -70,6 +112,24 @@
       "writtenOn": "2019-01-24T13:14:37Z",
       "side": 1,
       "message": "This assumes the fio job will run for at least 30 seconds. Should we be prepared for less?",
+      "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a635d254_07cac19e",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-25T14:03:44Z",
+      "side": 1,
+      "message": "Added args to better control SAR.",
+      "parentUuid": "99f9df05_4284616b",
       "revId": "f29941ed6f9cb5f1b2e82ee135fe7bbacf8088d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
