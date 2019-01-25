@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f949121c_9c903bea",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T01:33:07Z",
+      "side": 1,
+      "message": "oops, an extra \"\\\"?",
+      "revId": "4649434aa61d257381da47178c80c3d687874b4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c794a25d_3d8a0c1b",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 21
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T01:33:07Z",
+      "side": 1,
+      "message": "nice! I didn\u0027t see the subtle logic difference here",
+      "revId": "4649434aa61d257381da47178c80c3d687874b4a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
