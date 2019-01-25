@@ -37,7 +37,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 .PHONY: all clean install
 
 all:
-	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC
+	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/intel-ipsec-mb -j$(NPROC) all SHARED=n EXTRA_CFLAGS=-fPIC CC=cc
 
 install: all
 
