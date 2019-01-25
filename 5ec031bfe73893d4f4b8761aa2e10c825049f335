@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48dbfaba_58a06e0d",
+        "filename": "configure",
+        "patchSetId": 29
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-25T16:27:43Z",
+      "side": 1,
+      "message": "we need to have separate checks for ISAL and CRYPTO - IPSEC_MB is only needed for CRYPTO, but this here will turn IPSEC_MB build on even if user did not specify CRYPTO",
+      "revId": "5ec031bfe73893d4f4b8761aa2e10c825049f335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
