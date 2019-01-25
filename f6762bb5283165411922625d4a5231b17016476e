@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53dc8b27_4d8f84f8",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1689,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T11:37:24Z",
+      "side": 1,
+      "message": "The type of port is long int, but spdk_sock_connect() get the value of (int)port, so it maybe different from what spdk_sock_connect() get and what user see in SPDK_ERRLOG, and user feels confused.",
+      "revId": "f6762bb5283165411922625d4a5231b17016476e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
