@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "5bab5fe7_b2938ca5",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T14:49:22Z",
+      "side": 1,
+      "message": "I don\u0027t need to because I default it to 0 in the python code",
+      "parentUuid": "a76d592b_53576f5e",
+      "range": {
+        "startLine": 210,
+        "startChar": 99,
+        "endLine": 210,
+        "endChar": 101
+      },
+      "revId": "12f7736aa343892f69cf2b1e398dafc13fcbba03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bfecb729_2568923f",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 6
@@ -82,6 +106,24 @@
       "writtenOn": "2019-01-25T14:38:51Z",
       "side": 1,
       "message": "any comment like \"either one of strip_size or strip_size_kb should be specified\" should be added here ?",
+      "revId": "12f7736aa343892f69cf2b1e398dafc13fcbba03",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c9e6c1de_494fba04",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T14:49:22Z",
+      "side": 1,
+      "message": "yup, will do thanks",
+      "parentUuid": "bfecb729_2568923f",
       "revId": "12f7736aa343892f69cf2b1e398dafc13fcbba03",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
