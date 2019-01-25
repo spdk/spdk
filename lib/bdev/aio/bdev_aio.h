@@ -69,8 +69,6 @@ struct file_disk {
 	int			fd;
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
-	spdk_delete_aio_complete	delete_cb_fn;
-	void				*delete_cb_arg;
 };
 
 struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
