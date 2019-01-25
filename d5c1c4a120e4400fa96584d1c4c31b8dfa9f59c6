@@ -16,6 +16,24 @@
       "revId": "d5c1c4a120e4400fa96584d1c4c31b8dfa9f59c6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12d96f46_1cd2bb52",
+        "filename": "app/trace_porter/Makefile",
+        "patchSetId": 25
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-25T06:48:01Z",
+      "side": 1,
+      "message": "Got it, Jim.\nApplied the change you suggested.",
+      "parentUuid": "e65ec15b_5210cdfd",
+      "revId": "d5c1c4a120e4400fa96584d1c4c31b8dfa9f59c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
