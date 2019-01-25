@@ -350,9 +350,10 @@ int main(int argc, char **argv)
 			snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
 		}
 		fd = shm_open(shm_name, O_RDONLY, 0600);
+		file_name = shm_name;
 	}
 	if (fd < 0) {
-		fprintf(stderr, "Could not open %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not open %s.\n", file_name);
 		usage();
 		exit(-1);
 	}
@@ -360,7 +361,7 @@ int main(int argc, char **argv)
 	/* Map the header of trace file */
 	history_ptr = mmap(NULL, sizeof(*g_histories), PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name);
 		usage();
 		exit(-1);
 	}
@@ -383,7 +384,7 @@ int main(int argc, char **argv)
 	munmap(history_ptr, sizeof(*g_histories));
 	history_ptr = mmap(NULL, trace_histories_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name);
 		usage();
 		exit(-1);
 	}
