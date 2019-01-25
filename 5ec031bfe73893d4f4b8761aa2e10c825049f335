@@ -16,6 +16,24 @@
       "revId": "5ec031bfe73893d4f4b8761aa2e10c825049f335",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bbbb7ebc_d59dbf8a",
+        "filename": "configure",
+        "patchSetId": 29
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-25T16:30:45Z",
+      "side": 1,
+      "message": "yup, yuure right.  I\u0027d leave the outter if as it is though and just make the else clause check if CRYPTO then IPSEC.  good catch",
+      "parentUuid": "48dbfaba_58a06e0d",
+      "revId": "5ec031bfe73893d4f4b8761aa2e10c825049f335",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
