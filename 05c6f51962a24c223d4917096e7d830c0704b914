@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "16da2429_ef2250ad",
+        "filename": "doc/bdev.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-25T14:00:15Z",
+      "side": 1,
+      "message": "Per OCF device",
+      "range": {
+        "startLine": 258,
+        "startChar": 45,
+        "endLine": 258,
+        "endChar": 103
+      },
+      "revId": "05c6f51962a24c223d4917096e7d830c0704b914",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
