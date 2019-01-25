@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cc76bb5c_e86e26c6",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 832,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T09:02:52Z",
+      "side": 1,
+      "message": "tmp is assigned to block_size in line 838, and block_size used in spdk_bdev_rbd_create() in line 842. In spdk_bdev_rbd_create(), the block_size will be used as divisor. Since we are changing the code, how about fix it by the way:\n\n  } else if (tmp \u003d\u003d 0 || (tmp \u0026 0x1ff)) {\n\nOr we can add a check in spdk_bdev_rbd_create() in separate patch. It\u0027s up to you.",
+      "revId": "c637c6df7bc22088c6e1616571a6d0ff60a903e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92c1913b_77493744",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 835,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-25T09:02:52Z",
+      "side": 1,
+      "message": "The old code limit tmp is between INT_MIN and INT_MAX, but new code limit tmp is between 0 and LLONG_MAX. New code changes logic a bit, how about:\n\n  if (tmp \u003c 0 || tmp \u003e\u003d INT_MAX) {\n      fprintf();\n      return tmp \u003c 0 ? tmp : -ERANGE;",
+      "revId": "c637c6df7bc22088c6e1616571a6d0ff60a903e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
