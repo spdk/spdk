@@ -117,6 +117,30 @@
       "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b60e09ee_a7544743",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-25T10:36:20Z",
+      "side": 1,
+      "message": "We used the count field, not the function. Thanks for removing it.",
+      "parentUuid": "6b54ecb7_2288b3a2",
+      "range": {
+        "startLine": 132,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 24
+      },
+      "revId": "aea1cf3191e8c0df8892395a008aaa9d07286398",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
