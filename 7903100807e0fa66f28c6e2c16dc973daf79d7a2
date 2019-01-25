@@ -222,6 +222,30 @@
     },
     {
       "key": {
+        "uuid": "f6936f39_d2dc2491",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T07:28:49Z",
+      "side": 1,
+      "message": "Nice catch. should be \u003c\u003d 0",
+      "parentUuid": "dacf92cc_cf1ba03e",
+      "range": {
+        "startLine": 334,
+        "startChar": 18,
+        "endLine": 334,
+        "endChar": 19
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f8da0510_5e7a8f3f",
         "filename": "lib/conf/conf.c",
         "patchSetId": 5
@@ -291,6 +315,30 @@
     },
     {
       "key": {
+        "uuid": "82b801aa_7d9e85d1",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T07:28:49Z",
+      "side": 1,
+      "message": "This is derived from http://man7.org/linux/man-pages/man3/strtol.3.html.\n\nPlease see the NOTE section.\n\nSample code based on the NOTE section is also found as follows.\n \n           if ((errno \u003d\u003d ERANGE \u0026\u0026 (val \u003d\u003d LONG_MAX || val \u003d\u003d LONG_MIN))\n                   || (errno !\u003d 0 \u0026\u0026 val \u003d\u003d 0)) {\n               perror(\"strtol\");\n               exit(EXIT_FAILURE);\n           }",
+      "parentUuid": "92fb9670_ad26f7ac",
+      "range": {
+        "startLine": 420,
+        "startChar": 1,
+        "endLine": 421,
+        "endChar": 32
+      },
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "be2cccd9_2937e993",
         "filename": "lib/util/string.c",
         "patchSetId": 5
@@ -302,6 +350,24 @@
       "writtenOn": "2019-01-25T06:46:06Z",
       "side": 1,
       "message": "The strtol() may return negative number, so does spdk_strtol(). How do we distinguish spdk_strtol(\"-22\") and -EINVAL?",
+      "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "987c914b_e73ff512",
+        "filename": "lib/util/string.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 426,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T07:28:49Z",
+      "side": 1,
+      "message": "You are right.\n\nHow about the following?\n\nI haven\u0027t found any use case of negative number in SPDK but it will be better if we can handle negative number in spdk_strtol and spdk_strtoll.\n\nSo how about the following?\n\n- the caller passes the pointer to value in which the result of strtol is stored.\n- spdk_strtol returns 0 if success, negative errno otherwise.",
+      "parentUuid": "be2cccd9_2937e993",
       "revId": "7903100807e0fa66f28c6e2c16dc973daf79d7a2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
