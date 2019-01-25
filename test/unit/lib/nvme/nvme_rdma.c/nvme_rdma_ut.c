@@ -109,6 +109,7 @@ test_nvme_rdma_build_sgl_request(void)
 	struct nvme_rdma_ut_bdev_io bio;
 	struct spdk_nvme_rdma_mr_map rmap = {0};
 	struct spdk_mem_map *map = NULL;
+	struct ibv_send_wr send_wr = {0};
 	uint64_t i;
 	int rc;
 
@@ -123,6 +124,7 @@ test_nvme_rdma_build_sgl_request(void)
 	cmd.sgl[0].address = 0x1111;
 	rdma_req.id = 0;
 	rdma_req.req = &req;
+	rdma_req.send_wr = &send_wr;
 
 	req.payload.reset_sgl_fn = nvme_rdma_ut_reset_sgl;
 	req.payload.next_sge_fn = nvme_rdma_ut_next_sge;
