@@ -34,7 +34,9 @@
 #include "spdk/rpc.h"
 #include "spdk/util.h"
 #include "spdk/bdev_module.h"
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
+
 #include "bdev_ftl.h"
 
 struct rpc_construct_ftl {
@@ -73,16 +75,14 @@ _spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx
 	struct spdk_json_write_ctx *w;
 
 	if (status) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to create FTL bdev: %s",
+						     spdk_strerror(-status));
 		return;
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (!w) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "spdk_json_begin_result failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
 		return;
 	}
 
@@ -101,11 +101,13 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_ftl req = {};
 	struct ftl_bdev_init_opts opts = {};
 	char range[FTL_RANGE_MAX_LENGTH];
+	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_ftl_decoders,
 				    SPDK_COUNTOF(rpc_construct_ftl_decoders),
 				    &req)) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "spdk_json_decode_object failed\n");
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
 		goto invalid;
 	}
 
@@ -113,13 +115,18 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	opts.mode = SPDK_FTL_MODE_CREATE;
 
 	/* Parse trtype */
-	if (spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype) < 0) {
-		SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
+	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
+	if (rc) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to parse trtype: %s, rc: %s",
+						     req.trtype, spdk_strerror(-rc));
 		goto invalid;
 	}
 
 	if (opts.trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		SPDK_ERRLOG("Devices other than PCIe not supported %s\n", opts.trid.traddr);
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Invalid trtype: %s. Only PCIe is supported",
+						     req.trtype);
 		goto invalid;
 	}
 
@@ -128,28 +135,31 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	snprintf(range, sizeof(range), "%s", req.punits);
 
 	if (bdev_ftl_parse_punits(&opts.range, req.punits)) {
-		SPDK_ERRLOG("Failed to parse parallel unit range\n");
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "Failed to parse parallel unit range: %s",
+						     req.punits);
 		goto invalid;
 	}
 
 	if (req.uuid) {
 		opts.mode = 0;
 		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {
-			SPDK_ERRLOG("Failed to parse uuid: %s\n", req.uuid);
+			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+							     "Failed to parse uuid: %s",
+							     req.uuid);
 			goto invalid;
 		}
 	}
 
-	if (bdev_ftl_init_bdev(&opts, _spdk_rpc_construct_ftl_bdev_cb, request)) {
-		SPDK_ERRLOG("Failed to create FTL bdev\n");
+	rc = bdev_ftl_init_bdev(&opts, _spdk_rpc_construct_ftl_bdev_cb, request);
+	if (rc) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Failed to create FTL bdev: %s",
+						     spdk_strerror(-rc));
 		goto invalid;
 	}
 
-	goto free_rpc;
 invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 "Invalid parameters");
-free_rpc:
 	free_rpc_construct_ftl(&req);
 }
 
@@ -189,9 +199,11 @@ spdk_rpc_delete_ftl_bdev(struct spdk_jsonrpc_request *request,
 				    &attrs)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
+		goto invalid;
 	}
 
 	bdev_ftl_delete_bdev(attrs.name, _spdk_rpc_delete_ftl_bdev_cb, request);
+invalid:
 	free(attrs.name);
 }
 
