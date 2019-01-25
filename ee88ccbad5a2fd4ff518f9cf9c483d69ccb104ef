@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc6be4ee_0b637f54",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1850,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-25T18:52:32Z",
+      "side": 1,
+      "message": "this needs to be spawned unaffinitized - we\u0027ve already called spdk_env_init, so this pthread would be bound to the master lcore and hurt performance\n\nI think you can just call spdk_unaffinitize_thread() at the beginning of nvme_poll_ctrlrs",
+      "revId": "ee88ccbad5a2fd4ff518f9cf9c483d69ccb104ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
