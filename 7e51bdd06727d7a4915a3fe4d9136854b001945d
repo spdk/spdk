@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22319bde_0d4fedc2",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-25T04:49:17Z",
+      "side": 1,
+      "message": "Please remove this from lib/nvmf/ctrlr.c",
+      "range": {
+        "startLine": 138,
+        "startChar": 8,
+        "endLine": 138,
+        "endChar": 36
+      },
+      "revId": "7e51bdd06727d7a4915a3fe4d9136854b001945d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
