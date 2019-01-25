@@ -697,6 +697,7 @@ spdk_app_fini(void)
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
 	spdk_conf_free(g_spdk_app.config);
+	g_spdk_app.config = NULL;
 	spdk_log_close();
 	spdk_thread_lib_fini();
 }

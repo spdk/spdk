@@ -40,6 +40,7 @@
 
 #include <rte_config.h>
 #include <rte_eal.h>
+#include <rte_errno.h>
 
 #define SPDK_ENV_DPDK_DEFAULT_NAME		"spdk"
 #define SPDK_ENV_DPDK_DEFAULT_SHM_ID		-1
@@ -48,8 +49,8 @@
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
 
-static char **eal_cmdline;
-static int eal_cmdline_argcount;
+static char **eal_cmdline = NULL;
+static int eal_cmdline_argcount = 0;
 
 static char *
 _sprintf_alloc(const char *format, ...)
@@ -175,7 +176,11 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 static void
 spdk_destruct_eal_cmdline(void)
 {
-	spdk_free_args(eal_cmdline, eal_cmdline_argcount);
+	if (eal_cmdline) {
+		spdk_free_args(eal_cmdline, eal_cmdline_argcount);
+		eal_cmdline = NULL;
+		eal_cmdline_argcount = 0;
+	}
 }
 
 
@@ -334,11 +339,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	}
 #endif
 
+	if (!eal_cmdline && atexit(spdk_destruct_eal_cmdline) != 0) {
+ 		fprintf(stderr, "Failed to register cleanup handler\n");
+ 	}
+	else {
+		spdk_destruct_eal_cmdline();
+	}
 	eal_cmdline = args;
 	eal_cmdline_argcount = argcount;
-	if (atexit(spdk_destruct_eal_cmdline) != 0) {
-		fprintf(stderr, "Failed to register cleanup handler\n");
-	}
 
 	return argcount;
 }
@@ -399,7 +407,7 @@ spdk_env_init(const struct spdk_env_opts *opts)
 
 	free(dpdk_args);
 
-	if (rc < 0) {
+	if (rc < 0 && EALREADY != rte_errno) {
 		fprintf(stderr, "Failed to initialize DPDK\n");
 		return -1;
 	}
