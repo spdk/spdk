@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a81785c_98226fba",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 383,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T01:57:10Z",
+      "side": 1,
+      "message": "bdev_nvme_unmap are using offset_blocks and num_blocks as the input parameters.",
+      "revId": "e2452c7fe62b1d4fba44a78195526f3519143d87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
