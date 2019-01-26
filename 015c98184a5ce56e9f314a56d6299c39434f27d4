@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f08e6b46_7e47021f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:10:03Z",
+      "side": 1,
+      "message": "need an error response for if (w \u003d\u003d NULL) case.",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be21e649_b8f752cd",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:10:03Z",
+      "side": 1,
+      "message": "there need an error response for the error return.",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
