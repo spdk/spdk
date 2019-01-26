@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7c2253f8_b94e2ded",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:35:14Z",
+      "side": 1,
+      "message": "just say \"ocf_env_9999\" is fine, you don\u0027t need qualified_name, or just using qualified_name[128] for the case.",
+      "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
