@@ -16,6 +16,24 @@
       "revId": "21328d6206a0cf1182385ae7c0f0bd753521d926",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f092b248_b2a214ab",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 4427,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-26T00:52:28Z",
+      "side": 1,
+      "message": "Hi Ziye, \nI posted a fix to pass test before and that was not compliant to specification.\nhttps://github.com/spdk/spdk/commit/855633a5979805b78a880c90d8e4d68725a2e70a#diff-a51387bcf4a14095dce0764100be7023\n\nWorking with other components is critical and I hope you can accept.\nOr inserting ifdef and disabling the code is better?",
+      "parentUuid": "c603601a_d4c0b7b8",
+      "revId": "21328d6206a0cf1182385ae7c0f0bd753521d926",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
