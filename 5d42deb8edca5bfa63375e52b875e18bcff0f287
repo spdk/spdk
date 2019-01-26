@@ -36,6 +36,46 @@
     },
     {
       "key": {
+        "uuid": "e1ea8afb_e29f9162",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-26T03:57:48Z",
+      "side": 1,
+      "message": "We hope check_mbr passed.",
+      "range": {
+        "startLine": 242,
+        "startChar": 4,
+        "endLine": 242,
+        "endChar": 24
+      },
+      "revId": "5d42deb8edca5bfa63375e52b875e18bcff0f287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11bef019_d89363bd",
+        "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 247,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-26T03:57:48Z",
+      "side": 1,
+      "message": "Add\n\n  re \u003d spdk_gpt_parse_mbr(gpt);\n  CU_ASSERT(re \u003d\u003d 0);\n\nBecause we hope check_mbr passed (see inline comment in line 242) and we have ensure mbr is valid after we change it.",
+      "revId": "5d42deb8edca5bfa63375e52b875e18bcff0f287",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7bcca656_bbf8ac6a",
         "filename": "test/unit/lib/bdev/gpt/gpt.c/gpt_ut.c",
         "patchSetId": 2
