@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "369d2d0a_066f95ba",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:28:51Z",
+      "side": 1,
+      "message": "I think you should move the section to vbdev_ocf_rpc.c file.",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 1
+      },
+      "revId": "f1672c4015375ded37b2f81cd83647330951a910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1640b046_17b5de31",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:28:51Z",
+      "side": 1,
+      "message": "same here, there need an error response for w \u003d\u003d NULL case.",
+      "revId": "f1672c4015375ded37b2f81cd83647330951a910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
