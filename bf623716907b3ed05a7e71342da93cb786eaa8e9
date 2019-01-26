@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a80c8cfd_23a606dd",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-26T02:15:48Z",
+      "side": 1,
+      "message": "What\u0027s the purpose to start an iscsi target here?",
+      "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
