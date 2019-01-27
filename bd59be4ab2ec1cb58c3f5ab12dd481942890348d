@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d46ac53a_f9d37c1f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-27T11:12:12Z",
+      "side": 1,
+      "message": "Where is additional test cases?",
+      "range": {
+        "startLine": 7,
+        "startChar": 40,
+        "endLine": 7,
+        "endChar": 61
+      },
+      "revId": "bd59be4ab2ec1cb58c3f5ab12dd481942890348d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
