@@ -56,6 +56,10 @@ timing_enter integrity_lvol_blk
 run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
 timing_exit integrity_lvol_blk
 
+timing_enter vhost_nvme
+run_test suite ./test/vhost/spdk_vhost.sh --vhost-nvme
+timing_exit vhost_nvme
+
 timing_enter spdk_cli
 run_test suite ./test/spdkcli/vhost.sh
 timing_exit spdk_cli
