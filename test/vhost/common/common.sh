@@ -525,6 +525,7 @@ function vm_setup()
 	local guest_memory=1024
 	local queue_number=""
 	local vhost_dir="$(get_vhost_dir)"
+	local barmem=false
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -539,6 +540,7 @@ function vm_setup()
 				force=*) local force_vm=${OPTARG#*=} ;;
 				memory=*) local guest_memory=${OPTARG#*=} ;;
 				queue_num=*) local queue_number=${OPTARG#*=} ;;
+				barmem) local barmem=true ;;
 				incoming=*) local vm_incoming="${OPTARG#*=}" ;;
 				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
 				vhost-num=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
@@ -745,6 +747,21 @@ function vm_setup()
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-blk-pci,num-queues=$queue_number,chardev=char_$disk"
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				cmd+=" ${eol}"
+				;;
+			spdk_vhost_nvme)
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				local barmem_id=""
+				if $barmem; then
+					cmd+="-object memory-backend-file,id=mem${disk},size=${guest_memory}M,mem-path=/dev/hugepages,share=on "
+					barmem_id=",barmem=mem${disk}"
+				fi
+				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-nvme,num_io_queues=${queue_number}${barmem_id},chardev=char_$disk"
 				if [[ "$disk" == "$boot_from" ]]; then
 					cmd+=",bootindex=0"
 					boot_disk_present=true
@@ -1024,6 +1041,17 @@ function vm_check_blk_location()
 		error "no blk test disk found!"
 		return 1
 	fi
+}
+
+function vm_check_nvme_location()
+{
+        local script='shopt -s nullglob; cd /dev; echo nvme*n*'
+        SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+
+        if [[ -z "$SCSI_DISK" ]]; then
+                error "no nvme test disk found!"
+                return 1
+        fi
 }
 
 function run_fio()
