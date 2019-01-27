@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c953eb26_c6135ed2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-27T09:49:23Z",
+      "side": 1,
+      "message": "Hi Jim,\nI don\u0027t understand why _spdk_bdev_qos_io_submit() recursion will cause memory corruption, could you explain it for me?",
+      "range": {
+        "startLine": 15,
+        "startChar": 52,
+        "endLine": 16,
+        "endChar": 53
+      },
+      "revId": "6b8ce77637a1860a11a5699e0203499849461f33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
