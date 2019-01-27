@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18324766_2132046e",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-27T02:14:40Z",
+      "side": 1,
+      "message": "Put \"static struct spdk_gpt_header *\" in a separate line, instead of \"static struct\".",
+      "revId": "7df597ac39c351fc5c8d7da6988f813d7dcb0c8d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
