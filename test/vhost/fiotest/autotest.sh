@@ -13,6 +13,7 @@ test_type=spdk_vhost_scsi
 reuse_vms=false
 vms=()
 used_vms=""
+barmem=false
 x=""
 
 function usage()
@@ -39,6 +40,7 @@ function usage()
 	echo "                          NUM - VM number (mandatory)"
 	echo "                          OS - VM os disk path (optional)"
 	echo "                          DISKS - VM os test disks/devices path (virtio - optional, kernel_vhost - mandatory)"
+	echo "    --barmem              use memory-backend-file for vhost-user-nvme"
 	exit 0
 }
 
@@ -56,6 +58,7 @@ while getopts 'xh-:' optchar; do
 			no-shutdown) no_shutdown=true ;;
 			test-type=*) test_type="${OPTARG#*=}" ;;
 			vm=*) vms+=("${OPTARG#*=}") ;;
+			barmem) barmem=true ;;
 			*) usage $0 "Invalid argument '$OPTARG'" ;;
 		esac
 		;;
@@ -127,6 +130,9 @@ for vm_conf in ${vms[@]}; do
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
 					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
+				elif [[ "$test_type" == "spdk_vhost_nvme" ]]; then
+					$rpc_py construct_vhost_nvme_controller naa.$disk.${conf[0]} 2
+					$rpc_py add_vhost_nvme_ns naa.$disk.${conf[0]} $disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
@@ -143,6 +149,9 @@ for vm_conf in ${vms[@]}; do
 	setup_cmd="vm_setup --force=${conf[0]} --disk-type=$test_type"
 	[[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
 	[[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disks=${conf[2]}"
+	if $barmem; then
+		setup_cmd+=" --barmem"
+	fi
 
 	$setup_cmd
 done
@@ -202,6 +211,8 @@ for vm_num in $used_vms; do
 		#vm_reset_scsi_devices $vm_num $SCSI_DISK
 	elif [[ "$test_type" == "spdk_vhost_blk" ]]; then
 		vm_check_blk_location $vm_num
+	elif [[ "$test_type" == "spdk_vhost_nvme" ]]; then
+		vm_check_nvme_location $vm_num
 	fi
 
 	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
