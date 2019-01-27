@@ -750,6 +750,17 @@ function vm_setup()
 				fi
 				cmd+=" ${eol}"
 				;;
+			spdk_vhost_nvme)
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-object memory-backend-file,id=mem1,size=2M,mem-path=/dev/hugepages,share=on "
+				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-nvme,num-queues=$queue_number,chardev=char_$disk,barmem=mem1"
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				cmd+=" ${eol}"
+				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
 					error "need WWN for $disk_type"
