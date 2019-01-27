@@ -2,6 +2,7 @@ set -e
 
 : ${SPDK_VHOST_VERBOSE=false}
 : ${QEMU_PREFIX="/usr/local/qemu/spdk-2.12"}
+#: ${QEMU_PREFIX="/root/spdk_qemu/build"}
 
 BASE_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
 
@@ -750,6 +751,17 @@ function vm_setup()
 				fi
 				cmd+=" ${eol}"
 				;;
+			spdk_vhost_nvme)
+				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				cmd+="-object memory-backend-file,id=mem1,size=2M,mem-path=/dev/hugepages,share=on "
+				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
+				cmd+="-device vhost-user-nvme,num_io_queues=$queue_number,barmem=mem1,chardev=char_$disk"
+				if [[ "$disk" == "$boot_from" ]]; then
+					cmd+=",bootindex=0"
+					boot_disk_present=true
+				fi
+				cmd+=" ${eol}"
+				;;
 			kernel_vhost)
 				if [[ -z $disk ]]; then
 					error "need WWN for $disk_type"
@@ -1006,6 +1018,17 @@ function vm_check_blk_location()
 		error "no blk test disk found!"
 		return 1
 	fi
+}
+
+function vm_check_nvme_location()
+{
+        local script='shopt -s nullglob; cd /dev; echo nvme*n*'
+        SCSI_DISK="$(echo "$script" | vm_ssh $1 bash -s)"
+
+        if [[ -z "$SCSI_DISK" ]]; then
+                error "no nvme test disk found!"
+                return 1
+        fi
 }
 
 function run_fio()

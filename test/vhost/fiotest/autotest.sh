@@ -127,6 +127,9 @@ for vm_conf in ${vms[@]}; do
 					disk=${disk%%_*}
 					notice "Creating vhost block controller naa.$disk.${conf[0]} with device $disk"
 					$rpc_py construct_vhost_blk_controller naa.$disk.${conf[0]} $based_disk
+				elif [[ "$test_type" == "spdk_vhost_nvme" ]]; then
+					$rpc_py construct_vhost_nvme_controller naa.$disk.${conf[0]} 2
+					$rpc_py add_vhost_nvme_ns naa.$disk.${conf[0]} $disk
 				else
 					notice "Creating controller naa.$disk.${conf[0]}"
 					$rpc_py construct_vhost_scsi_controller naa.$disk.${conf[0]}
@@ -202,10 +205,13 @@ for vm_num in $used_vms; do
 		#vm_reset_scsi_devices $vm_num $SCSI_DISK
 	elif [[ "$test_type" == "spdk_vhost_blk" ]]; then
 		vm_check_blk_location $vm_num
+	elif [[ "$test_type" == "spdk_vhost_nvme" ]]; then
+		vm_check_nvme_location $vm_num
 	fi
 
 	fio_disks+=" --vm=${vm_num}$(printf ':/dev/%s' $SCSI_DISK)"
 done
+
 
 if $dry_run; then
 	read -p "Enter to kill evething" xx

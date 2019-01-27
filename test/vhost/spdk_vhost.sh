@@ -193,6 +193,13 @@ case $1 in
 			--blk-hotremove-test \
 			--fio-jobs=$WORKDIR/hotplug/fio_jobs/default_integrity.job
 	;;
+	-vn|---vhost-nvme)
+		run_test case $WORKDIR/fiotest/autotest.sh --fio-bin=$FIO_BIN \
+		--vm=0,$VM_IMAGE,Malloc0 \
+		--test-type=spdk_vhost_nvme \
+		--fio-job=$WORKDIR/common/fio_jobs/default_integrity.job
+		report_test_completion "vhost_nvme"
+		;;
 	-ro|--readonly)
 		echo 'Running readonly tests suite...'
 		run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
