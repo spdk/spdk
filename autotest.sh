@@ -131,155 +131,159 @@ fi
 
 timing_enter lib
 
-if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-	run_test suite test/bdev/blockdev.sh
-	if [ $(uname -s) = Linux ]; then
-		run_test suite test/bdev/bdevjson/json_config.sh
-		if modprobe -n nbd; then
-			run_test suite test/bdev/nbdjson/json_config.sh
+if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
+	timing_enter lib
+
+	run_test suite test/env/env.sh
+	run_test suite test/rpc_client/rpc_client.sh
+
+	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+		run_test suite test/bdev/blockdev.sh
+		if [ $(uname -s) = Linux ]; then
+			run_test suite test/bdev/bdevjson/json_config.sh
+			if modprobe -n nbd; then
+				run_test suite test/bdev/nbdjson/json_config.sh
+			fi
 		fi
 	fi
-fi
 
-if [ $SPDK_TEST_JSON -eq 1 ]; then
-	run_test suite test/config_converter/test_converter.sh
-fi
-
-if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test suite test/event/event.sh
-fi
-
-if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test suite test/nvme/nvme.sh
-	if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
-		run_test suite test/nvme/spdk_nvme_cli.sh
-	fi
-	# Only test hotplug without ASAN enabled. Since if it is
-	# enabled, it catches SEGV earlier than our handler which
-	# breaks the hotplug logic
-	if [ $SPDK_RUN_ASAN -eq 0 ]; then
-		run_test suite test/nvme/hotplug.sh intel
-	fi
-fi
-
-run_test suite test/env/env.sh
-run_test suite test/rpc_client/rpc_client.sh
-
-if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test suite test/ioat/ioat.sh
-fi
-
-timing_exit lib
-
-if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
-	run_test suite ./test/iscsi_tgt/iscsijson/json_config.sh
-	run_test suite ./test/spdkcli/iscsi.sh
-fi
-
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test suite ./test/blobfs/rocksdb/rocksdb.sh
-	run_test suite ./test/blobstore/blobstore.sh
-fi
-
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	run_test suite ./test/nvmf/nvmf.sh
-	run_test suite ./test/nvmf/nvmfjson/json_config.sh
-	run_test suite ./test/spdkcli/nvmf.sh
-fi
-
-if [ $SPDK_TEST_VHOST -eq 1 ]; then
-	timing_enter vhost
-	timing_enter negative
-	run_test suite ./test/vhost/spdk_vhost.sh --negative
-	timing_exit negative
-
-	timing_enter vhost_json_config
-	run_test suite ./test/vhost/json_config/json_config.sh
-	timing_exit vhost_json_config
-
-	timing_enter vhost_boot
-	run_test suite ./test/vhost/spdk_vhost.sh --boot
-	timing_exit vhost_boot
-
-	if [ $RUN_NIGHTLY -eq 1 ]; then
-		timing_enter integrity_blk
-		run_test suite ./test/vhost/spdk_vhost.sh --integrity-blk
-		timing_exit integrity_blk
-
-		timing_enter integrity
-		run_test suite ./test/vhost/spdk_vhost.sh --integrity
-		timing_exit integrity
-
-		timing_enter fs_integrity_scsi
-		run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
-		timing_exit fs_integrity_scsi
-
-		timing_enter fs_integrity_blk
-		run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-blk
-		timing_exit fs_integrity_blk
-
-		timing_enter integrity_lvol_scsi_nightly
-		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
-		timing_exit integrity_lvol_scsi_nightly
-
-		timing_enter integrity_lvol_blk_nightly
-		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
-		timing_exit integrity_lvol_blk_nightly
-
-		timing_enter vhost_migration
-		run_test suite ./test/vhost/spdk_vhost.sh --migration
-		timing_exit vhost_migration
-
-		# timing_enter readonly
-		# run_test suite ./test/vhost/spdk_vhost.sh --readonly
-		# timing_exit readonly
+	if [ $SPDK_TEST_JSON -eq 1 ]; then
+		run_test suite test/config_converter/test_converter.sh
 	fi
 
-	timing_enter integrity_lvol_scsi
-	run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
-	timing_exit integrity_lvol_scsi
+	if [ $SPDK_TEST_EVENT -eq 1 ]; then
+		run_test suite test/event/event.sh
+	fi
 
-	timing_enter integrity_lvol_blk
-	run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
-	timing_exit integrity_lvol_blk
+	if [ $SPDK_TEST_NVME -eq 1 ]; then
+		run_test suite test/nvme/nvme.sh
+		if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
+			run_test suite test/nvme/spdk_nvme_cli.sh
+		fi
+		# Only test hotplug without ASAN enabled. Since if it is
+		# enabled, it catches SEGV earlier than our handler which
+		# breaks the hotplug logic
+		if [ $SPDK_RUN_ASAN -eq 0 ]; then
+			run_test suite test/nvme/hotplug.sh intel
+		fi
+	fi
 
-	timing_enter spdk_cli
-	run_test suite ./test/spdkcli/vhost.sh
-	timing_exit spdk_cli
+	if [ $SPDK_TEST_IOAT -eq 1 ]; then
+		run_test suite test/ioat/ioat.sh
+	fi
 
-	timing_exit vhost
-fi
+	timing_exit lib
 
-if [ $SPDK_TEST_LVOL -eq 1 ]; then
-	timing_enter lvol
-	test_cases="1,50,51,52,53,100,101,102,150,200,201,250,251,252,253,254,255,"
-	test_cases+="300,301,450,451,452,550,551,552,553,"
-	test_cases+="600,601,650,651,652,654,655,"
-	test_cases+="700,701,702,750,751,752,753,754,755,756,757,758,759,"
-	test_cases+="800,801,802,803,804,10000"
-	run_test suite ./test/lvol/lvol.sh --test-cases=$test_cases
-	run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
-	report_test_completion "lvol"
-	timing_exit lvol
-fi
+	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
+		run_test suite ./test/iscsi_tgt/iscsijson/json_config.sh
+		run_test suite ./test/spdkcli/iscsi.sh
+	fi
 
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
-	run_test suite ./test/vhost/initiator/blockdev.sh
-	run_test suite ./test/vhost/initiator/json_config.sh
-	run_test suite ./test/spdkcli/virtio.sh
-	report_test_completion "vhost_initiator"
-fi
+	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+		run_test suite ./test/blobfs/rocksdb/rocksdb.sh
+		run_test suite ./test/blobstore/blobstore.sh
+	fi
 
-if [ $SPDK_TEST_PMDK -eq 1 ]; then
-	run_test suite ./test/pmem/pmem.sh -x
-	run_test suite ./test/pmem/json_config/json_config.sh
-	run_test suite ./test/spdkcli/pmem.sh
-fi
+	if [ $SPDK_TEST_NVMF -eq 1 ]; then
+		run_test suite ./test/nvmf/nvmf.sh
+		run_test suite ./test/nvmf/nvmfjson/json_config.sh
+		run_test suite ./test/spdkcli/nvmf.sh
+	fi
 
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test suite ./test/bdev/bdevjson/rbd_json_config.sh
-	run_test suite ./test/spdkcli/rbd.sh
+	if [ $SPDK_TEST_VHOST -eq 1 ]; then
+		timing_enter vhost
+		timing_enter negative
+		run_test suite ./test/vhost/spdk_vhost.sh --negative
+		timing_exit negative
+
+		timing_enter vhost_json_config
+		run_test suite ./test/vhost/json_config/json_config.sh
+		timing_exit vhost_json_config
+
+		timing_enter vhost_boot
+		run_test suite ./test/vhost/spdk_vhost.sh --boot
+		timing_exit vhost_boot
+
+		if [ $RUN_NIGHTLY -eq 1 ]; then
+			timing_enter integrity_blk
+			run_test suite ./test/vhost/spdk_vhost.sh --integrity-blk
+			timing_exit integrity_blk
+
+			timing_enter integrity
+			run_test suite ./test/vhost/spdk_vhost.sh --integrity
+			timing_exit integrity
+
+			timing_enter fs_integrity_scsi
+			run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-scsi
+			timing_exit fs_integrity_scsi
+
+			timing_enter fs_integrity_blk
+			run_test suite ./test/vhost/spdk_vhost.sh --fs-integrity-blk
+			timing_exit fs_integrity_blk
+
+			timing_enter integrity_lvol_scsi_nightly
+			run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi-nightly
+			timing_exit integrity_lvol_scsi_nightly
+
+			timing_enter integrity_lvol_blk_nightly
+			run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk-nightly
+			timing_exit integrity_lvol_blk_nightly
+
+			timing_enter vhost_migration
+			run_test suite ./test/vhost/spdk_vhost.sh --migration
+			timing_exit vhost_migration
+
+			# timing_enter readonly
+			# run_test suite ./test/vhost/spdk_vhost.sh --readonly
+			# timing_exit readonly
+		fi
+
+		timing_enter integrity_lvol_scsi
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-scsi
+		timing_exit integrity_lvol_scsi
+
+		timing_enter integrity_lvol_blk
+		run_test suite ./test/vhost/spdk_vhost.sh --integrity-lvol-blk
+		timing_exit integrity_lvol_blk
+
+		timing_enter spdk_cli
+		run_test suite ./test/spdkcli/vhost.sh
+		timing_exit spdk_cli
+
+		timing_exit vhost
+	fi
+
+	if [ $SPDK_TEST_LVOL -eq 1 ]; then
+		timing_enter lvol
+		test_cases="1,50,51,52,53,100,101,102,150,200,201,250,251,252,253,254,255,"
+		test_cases+="300,301,450,451,452,550,551,552,553,"
+		test_cases+="600,601,650,651,652,654,655,"
+		test_cases+="700,701,702,750,751,752,753,754,755,756,757,758,759,"
+		test_cases+="800,801,802,803,804,10000"
+		run_test suite ./test/lvol/lvol.sh --test-cases=$test_cases
+		run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
+		report_test_completion "lvol"
+		timing_exit lvol
+	fi
+
+	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+		run_test suite ./test/vhost/initiator/blockdev.sh
+		run_test suite ./test/vhost/initiator/json_config.sh
+		run_test suite ./test/spdkcli/virtio.sh
+		report_test_completion "vhost_initiator"
+	fi
+
+	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+		run_test suite ./test/pmem/pmem.sh -x
+		run_test suite ./test/pmem/json_config/json_config.sh
+		run_test suite ./test/spdkcli/pmem.sh
+	fi
+
+	if [ $SPDK_TEST_RBD -eq 1 ]; then
+		run_test suite ./test/bdev/bdevjson/rbd_json_config.sh
+		run_test suite ./test/spdkcli/rbd.sh
+	fi
 fi
 
 timing_enter cleanup
