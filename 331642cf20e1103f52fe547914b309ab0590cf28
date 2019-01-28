@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fab72926_217bd31a",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-28T17:24:30Z",
+      "side": 1,
+      "message": "this variable isn\u0027t used",
+      "revId": "331642cf20e1103f52fe547914b309ab0590cf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fe5cfd9_6768afc6",
+        "filename": "lib/util/crc32.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-28T17:24:30Z",
+      "side": 1,
+      "message": "does dword_buf need to be 8-byte aligned on ARM? or are unaligned accesses OK?",
+      "revId": "331642cf20e1103f52fe547914b309ab0590cf28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
