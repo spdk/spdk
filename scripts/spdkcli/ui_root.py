@@ -58,6 +58,7 @@ class UIRoot(UINode):
         # flooded.
         def w(self, **kwargs):
             self.client.verbose = self.verbose
+            #print("verb.name: %s" % f.__name__)
             r = f(self, **kwargs)
             self.client.verbose = False
             return r
@@ -67,6 +68,7 @@ class UIRoot(UINode):
         # Check if method f is available for given spdk target
         def w(self, **kwargs):
             if f.__name__ in self.methods:
+                #print("is_avail..name: %s" % f.__name__)
                 r = f(self, **kwargs)
                 return r
             # If given method is not avaialble return empty list
