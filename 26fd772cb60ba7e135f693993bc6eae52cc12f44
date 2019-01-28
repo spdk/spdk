@@ -1,0 +1,130 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbce28de_70512e23",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "Missing function description",
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "48557be5_20153af3",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "Duplicated - see line 45",
+      "range": {
+        "startLine": 73,
+        "startChar": 0,
+        "endLine": 73,
+        "endChar": 19
+      },
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26ae930f_00ae4b90",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 26
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "Missing param descritpion",
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e91f82e_c57ad3e3",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "This may happen also when name exists, so the error will be incorrect.",
+      "range": {
+        "startLine": 90,
+        "startChar": 2,
+        "endLine": 90,
+        "endChar": 83
+      },
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ac3c8ea_732b7c97",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "We could simplify this by using spdk_notify_type_next only and return TAILQ_FIRST only when *prev \u003d\u003d NULL.",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 1
+      },
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e203de6_6c91bab2",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T14:31:48Z",
+      "side": 1,
+      "message": "We probably should not assert here.",
+      "range": {
+        "startLine": 132,
+        "startChar": 3,
+        "endLine": 132,
+        "endChar": 17
+      },
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
