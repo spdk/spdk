@@ -34,6 +34,24 @@
       "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "584cd607_dc8a8fca",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-28T08:13:43Z",
+      "side": 1,
+      "message": "I think you can remove this part, or adding the OCF bdev to the iscsi target for the purpose to test it with some target.",
+      "parentUuid": "2905b204_70c4b99d",
+      "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
