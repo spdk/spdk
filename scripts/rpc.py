@@ -1755,23 +1755,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_dev)
 
-    def construct_virtio_user_scsi_bdev(args):
-        print_array(rpc.vhost.construct_virtio_user_scsi_bdev(args.client,
-                                                              path=args.path,
-                                                              name=args.name,
-                                                              vq_count=args.vq_count,
-                                                              vq_size=args.vq_size))
-
-    p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
-    This imply scan and add bdevs offered by remote side.
-    Result is array of added bdevs.""")
-    p.add_argument('path', help='Path to Virtio SCSI socket')
-    p.add_argument('name', help="""Use this name as base instead of 'VirtioScsiN'
-    Base will be used to construct new bdev's found on target by adding 't<TARGET_ID>' sufix.""")
-    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
-    p.add_argument('--vq-size', help='Size of each queue', type=int)
-    p.set_defaults(func=construct_virtio_user_scsi_bdev)
-
     def construct_virtio_pci_scsi_bdev(args):
         print_array(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
                                                              pci_address=args.pci_address,
