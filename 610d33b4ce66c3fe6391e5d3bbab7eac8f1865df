@@ -45,6 +45,30 @@
       "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb09afb1_9e26aab3",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T08:51:07Z",
+      "side": 1,
+      "message": "Or add NULL check (return -EINVAL before strtol call) to spdk_strtol.\n\nI\u0027ll try this option first.",
+      "parentUuid": "d7ba88e1_2aec3918",
+      "range": {
+        "startLine": 834,
+        "startChar": 21,
+        "endLine": 834,
+        "endChar": 27
+      },
+      "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
