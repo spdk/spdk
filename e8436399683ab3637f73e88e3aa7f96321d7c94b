@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0fb0f2ef_c6feac95",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-28T06:54:36Z",
+      "side": 1,
+      "message": "unplugged. \nI think this way is better: This function is called when base device gets unplugged. Just for your reference.",
+      "range": {
+        "startLine": 783,
+        "startChar": 25,
+        "endLine": 783,
+        "endChar": 33
+      },
+      "revId": "e8436399683ab3637f73e88e3aa7f96321d7c94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fc6b3b9_8757ee43",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 31
