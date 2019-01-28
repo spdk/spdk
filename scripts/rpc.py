@@ -1392,67 +1392,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                               help='Display nvmf subsystems')
     p.set_defaults(func=get_nvmf_subsystems)
 
-    def construct_nvmf_subsystem(args):
-        listen_addresses = None
-        hosts = None
-        namespaces = None
-        if args.listen:
-            listen_addresses = [
-                dict(
-                    u.split(
-                        ":",
-                        1) for u in a.split(" ")) for a in args.listen.split(",")]
-
-        if args.hosts:
-            hosts = []
-            for u in args.hosts.strip().split(" "):
-                hosts.append(u)
-
-        if args.namespaces:
-            namespaces = []
-            for u in args.namespaces.strip().split(" "):
-                bdev_name = u
-                nsid = 0
-                if ':' in u:
-                    (bdev_name, nsid) = u.split(":")
-
-                ns_params = {'bdev_name': bdev_name}
-
-                nsid = int(nsid)
-                if nsid != 0:
-                    ns_params['nsid'] = nsid
-
-                namespaces.append(ns_params)
-
-        rpc.nvmf.construct_nvmf_subsystem(args.client,
-                                          nqn=args.nqn,
-                                          listen_addresses=listen_addresses,
-                                          hosts=hosts,
-                                          allow_any_host=args.allow_any_host,
-                                          serial_number=args.serial_number,
-                                          namespaces=namespaces,
-                                          max_namespaces=args.max_namespaces)
-
-    p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
-    p.add_argument('nqn', help='Target nqn(ASCII)')
-    p.add_argument('listen', help="""comma-separated list of Listen <trtype:transport_name traddr:address trsvcid:port_id> pairs enclosed
-    in quotes.  Format:  'trtype:transport0 traddr:traddr0 trsvcid:trsvcid0,trtype:transport1 traddr:traddr1 trsvcid:trsvcid1' etc
-    Example: 'trtype:RDMA traddr:192.168.100.8 trsvcid:4420,trtype:RDMA traddr:192.168.100.9 trsvcid:4420'""")
-    p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
-    Format:  'nqn1 nqn2' etc
-    Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
-    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
-    p.add_argument("-s", "--serial-number", help="""
-    Format:  'sn' etc
-    Example: 'SPDK00000000000001'""", default='00000000000000000000')
-    p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
-    Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
-    Example: '1:Malloc0 2:Malloc1 3:Malloc2'
-    *** The devices must pre-exist ***""")
-    p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed to added during active connection",
-                   type=int, default=0)
-    p.set_defaults(func=construct_nvmf_subsystem)
-
     def nvmf_subsystem_create(args):
         rpc.nvmf.nvmf_subsystem_create(args.client,
                                        nqn=args.nqn,
