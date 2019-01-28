@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3003ce67_ed74cb06",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T22:32:27Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 1183,
+        "startChar": 87,
+        "endLine": 1183,
+        "endChar": 114
+      },
+      "revId": "8addca8e37fa30385df610f678ed3e7f3bcbc8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16bee108_dca723d4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 1184,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T22:32:27Z",
+      "side": 1,
+      "message": "remove",
+      "range": {
+        "startLine": 1184,
+        "startChar": 77,
+        "endLine": 1184,
+        "endChar": 104
+      },
+      "revId": "8addca8e37fa30385df610f678ed3e7f3bcbc8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6c76b02_92158f02",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T22:32:27Z",
+      "side": 1,
+      "message": "strip_size\u003dNone, strip_size_kb\u003dNone,",
+      "range": {
+        "startLine": 117,
+        "startChar": 38,
+        "endLine": 117,
+        "endChar": 63
+      },
+      "revId": "8addca8e37fa30385df610f678ed3e7f3bcbc8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9baae01c_aeb22940",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T22:32:27Z",
+      "side": 1,
+      "message": "params \u003d {\u0027name\u0027: name, \u0027raid_level\u0027: raid_level, \u0027base_bdevs\u0027: base_bdevs}\n\nif strip_size:\n    params[\u0027strip_size\u0027] \u003d strip_size\n\nif strip_size_kb:\n    params[\u0027strip_size_kb\u0027] \u003d strip_size_kb",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 130,
+        "endChar": 137
+      },
+      "revId": "8addca8e37fa30385df610f678ed3e7f3bcbc8d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
