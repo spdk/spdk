@@ -16,6 +16,40 @@
       "revId": "6e071aa8c64238c2b7a5e7df233618ace0d11e78",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b43f185a_421f0003",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc_deprecated.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-28T17:39:24Z",
+      "side": 1,
+      "message": "this RPC is deprecated and will be removed - let\u0027s not add the model number here, if users want to be able to set the model number, they should use the supported RPC instead of this deprecated one",
+      "revId": "6e071aa8c64238c2b7a5e7df233618ace0d11e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a09eae7_320ab338",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-28T17:39:24Z",
+      "side": 1,
+      "message": "I think we should move the existing default model number here - to make sure it always gets populated with a default value (similar to all 0\u0027s for serial number).",
+      "revId": "6e071aa8c64238c2b7a5e7df233618ace0d11e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
