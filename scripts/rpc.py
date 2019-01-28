@@ -1779,17 +1779,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_bdev)
 
-    def construct_virtio_pci_blk_bdev(args):
-        print(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
-                                                      pci_address=args.pci_address,
-                                                      name=args.name))
-
-    p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
-    p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
-    domain.bus.device.function format""")
-    p.add_argument('name', help='Name for the bdev')
-    p.set_defaults(func=construct_virtio_pci_blk_bdev)
-
     # ioat
     def scan_ioat_copy_engine(args):
         pci_whitelist = []
