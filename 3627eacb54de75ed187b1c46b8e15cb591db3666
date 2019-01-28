@@ -16,6 +16,24 @@
       "revId": "3627eacb54de75ed187b1c46b8e15cb591db3666",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f354673c_04638f7b",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T14:09:13Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "18f6a91d_c3d7675e",
+      "revId": "3627eacb54de75ed187b1c46b8e15cb591db3666",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
