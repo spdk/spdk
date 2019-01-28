@@ -22,6 +22,30 @@
       "revId": "014a42488ae9f454f346f4dccb434c5e34ef178c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7828a2ce_fd9e5494",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-28T02:22:45Z",
+      "side": 1,
+      "message": "Yes, previous \"waited\" is confusing, not a proper name.\n\"requested\" sounds similar with \"submitted\".\nHow about directly \"wait\" or \"waiting\"?",
+      "parentUuid": "070e4d48_86d438b8",
+      "range": {
+        "startLine": 531,
+        "startChar": 27,
+        "endLine": 531,
+        "endChar": 33
+      },
+      "revId": "014a42488ae9f454f346f4dccb434c5e34ef178c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
