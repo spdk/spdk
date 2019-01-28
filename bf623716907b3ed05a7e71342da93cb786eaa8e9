@@ -70,6 +70,24 @@
       "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c2f5db1_0caf4c97",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-28T08:29:47Z",
+      "side": 1,
+      "message": "I see, starting a iscsi target here is for the purpose to add a barrier that can let you call other rpcs successfully.",
+      "parentUuid": "a0191ce6_11607725",
+      "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
