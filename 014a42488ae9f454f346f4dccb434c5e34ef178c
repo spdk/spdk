@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "070e4d48_86d438b8",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T01:46:09Z",
+      "side": 1,
+      "message": "submitted and completed are used as past tense verb.\nwaited may be confusing to me.\n\nI don\u0027t have good idea but how about base_bdev_reset_requested ?",
+      "range": {
+        "startLine": 531,
+        "startChar": 27,
+        "endLine": 531,
+        "endChar": 33
+      },
+      "revId": "014a42488ae9f454f346f4dccb434c5e34ef178c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
