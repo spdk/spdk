@@ -349,6 +349,18 @@ parse_invalid_test(void)
 	CU_ASSERT(rc != 0);
 	EXPECT_VAL("B", "BB");
 
+	/* Test where data buffer has non-NULL characters past the end of
+	 * the valid data region.  This can happen with SPDK iSCSI target,
+	 * since data buffers are reused and we do not zero the data buffers
+	 * after they are freed since it would be too expensive.  Added as
+	 * part of fixing an intermittent Calsoft failure that triggered this
+	 * bug.
+	 */
+	data = "MaxRecvDataSegmentLength=81928";
+	len = strlen(data) - 1;
+	rc = spdk_iscsi_parse_params(&params, data, len, false, NULL);
+	EXPECT_VAL("MaxRecvDataSegmentLength", "8192");
+	CU_ASSERT(rc == 0);
 	spdk_iscsi_param_free(params);
 }
 

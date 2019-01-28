@@ -215,11 +215,11 @@ spdk_iscsi_param_set_int(struct iscsi_param *params, const char *key, uint32_t v
  * data = "KEY=VAL<NUL>"
  */
 static int
-spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
+spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data, uint32_t data_len)
 {
 	int rc;
-	uint8_t *key_copy;
-	const uint8_t *key_end, *val;
+	uint8_t *key_copy, *val_copy;
+	const uint8_t *key_end;
 	int key_len, val_len;
 	int max_len;
 
@@ -257,8 +257,7 @@ spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
 		return -1;
 	}
 
-	val = key_end + 1; /* +1 to skip over the '=' */
-	val_len = strlen(val);
+	val_len = strnlen(key_end + 1, data_len - key_len - 1);
 	/*
 	 * RFC 3720 5.1
 	 * If not otherwise specified, the maximum length of a simple-value
@@ -277,7 +276,17 @@ spdk_iscsi_parse_param(struct iscsi_param **params, const uint8_t *data)
 		return -1;
 	}
 
-	rc = spdk_iscsi_param_add(params, key_copy, val, NULL, 0);
+	val_copy = calloc(1, val_len + 1);
+	if (val_copy == NULL) {
+		SPDK_ERRLOG("Could not allocate value string\n");
+		free(key_copy);
+		return -1;
+	}
+
+	memcpy(val_copy, key_end + 1, val_len);
+
+	rc = spdk_iscsi_param_add(params, key_copy, val_copy, NULL, 0);
+	free(val_copy);
 	free(key_copy);
 	if (rc < 0) {
 		SPDK_ERRLOG("iscsi_param_add() failed\n");
@@ -313,7 +322,7 @@ spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 		if (!p) {
 			return -1;
 		}
-		rc = spdk_iscsi_parse_param(params, p);
+		rc = spdk_iscsi_parse_param(params, p, i + strlen(*partial_parameter));
 		free(p);
 		if (rc < 0) {
 			return -1;
@@ -344,7 +353,7 @@ spdk_iscsi_parse_params(struct iscsi_param **params, const uint8_t *data,
 	}
 
 	while (offset < len && data[offset] != '\0') {
-		rc = spdk_iscsi_parse_param(params, data + offset);
+		rc = spdk_iscsi_parse_param(params, data + offset, len - offset);
 		if (rc < 0) {
 			return -1;
 		}
