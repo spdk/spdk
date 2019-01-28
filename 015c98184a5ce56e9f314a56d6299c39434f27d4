@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3ea5641d_a9d99204",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 33
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:00:19Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1cfd2ac4_c695310e",
+      "range": {
+        "startLine": 716,
+        "startChar": 59,
+        "endLine": 716,
+        "endChar": 68
+      },
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f08e6b46_7e47021f",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 33
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "68d50cbf_bf4cd4b7",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:00:19Z",
+      "side": 1,
+      "message": "Are you sure? We don\u0027t usually treat NULL here as an error because \u0027spdk_jsonrpc_begin_result\u0027 returns NULL when it decides that responce is not required.",
+      "parentUuid": "f08e6b46_7e47021f",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be21e649_b8f752cd",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 33
@@ -53,6 +95,24 @@
       "writtenOn": "2019-01-26T02:10:03Z",
       "side": 1,
       "message": "there need an error response for the error return.",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9597ac7_efd5cf10",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:00:19Z",
+      "side": 1,
+      "message": "Same as at #89\n\nWe don\u0027t usually treat NULL here as an error because \u0027spdk_jsonrpc_begin_result\u0027 returns NULL when it decides that responce is not required.",
+      "parentUuid": "be21e649_b8f752cd",
       "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
