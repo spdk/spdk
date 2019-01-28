@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d25c305c_30d83676",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T18:52:56Z",
+      "side": 1,
+      "message": "Is there any particular reason why?\n\nGenerally speaking, a size of (2^n - 1) might give you better memory utilization in DPDK mempool.",
+      "range": {
+        "startLine": 41,
+        "startChar": 3,
+        "endLine": 41,
+        "endChar": 26
+      },
+      "revId": "0b3485c96871a39cc54489a5820889d2d2e1f7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4642cae2_9b018d83",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T18:52:56Z",
+      "side": 1,
+      "message": "don\u0027t we need that to be thread safe?",
+      "range": {
+        "startLine": 64,
+        "startChar": 45,
+        "endLine": 64,
+        "endChar": 66
+      },
+      "revId": "0b3485c96871a39cc54489a5820889d2d2e1f7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
