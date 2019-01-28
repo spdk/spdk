@@ -66,7 +66,6 @@
          ((*((uint8_t *)(B)+2)) = (uint8_t)((uint32_t)(D) >> 16)),              \
          ((*((uint8_t *)(B)+3)) = (uint8_t)((uint32_t)(D) >> 24)))
 
-struct nvme_tcp_qpair;
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
 struct nvme_tcp_pdu {
@@ -99,7 +98,6 @@ struct nvme_tcp_pdu {
 	int						ref;
 	void						*data;
 	uint32_t					data_len;
-	struct nvme_tcp_qpair				*tqpair;
 
 	uint32_t					writev_offset;
 	TAILQ_ENTRY(nvme_tcp_pdu)			tailq;
