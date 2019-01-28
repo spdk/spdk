@@ -3518,7 +3518,7 @@ max_io_size                 | Optional | number  | Max I/O size (bytes)
 io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
-buf_cache_size              | Optional | number  | The number of shared buffers to cache per poll group
+buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
 
 ### Example:
 

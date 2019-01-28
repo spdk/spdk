@@ -1393,7 +1393,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help='The number of pooled data buffers available to the transport', type=int)
-    p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to cache per poll group', type=int)
+    p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     def get_nvmf_transports(args):

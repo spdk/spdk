@@ -95,7 +95,7 @@ def nvmf_create_transport(client,
         io_unit_size: I/O unit size in bytes (optional)
         max_aq_depth: Max size admin quque per controller (optional)
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
-        buf_cache_size: The number of shared buffers to cache per poll group (optional)
+        buf_cache_size: The number of shared buffers to reserve for each poll group(optional)
 
     Returns:
         True or False
