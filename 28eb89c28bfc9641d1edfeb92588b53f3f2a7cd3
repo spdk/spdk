@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96399389_4f25f93a",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-01-28T09:43:11Z",
+      "side": 1,
+      "message": "I\u0027d add leave the goto invalid here, to be consistent with other conditions and to avoid stupid bugs when something is done after the initialization is completed.",
+      "revId": "28eb89c28bfc9641d1edfeb92588b53f3f2a7cd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
