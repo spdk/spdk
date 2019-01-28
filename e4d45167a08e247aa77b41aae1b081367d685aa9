@@ -34,6 +34,24 @@
       "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d288e88_1278b037",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-28T08:42:38Z",
+      "side": 1,
+      "message": "or just using qualified_name[128] for the case so that you don\u0027t need to call calloc.",
+      "parentUuid": "4efff467_0ecb4662",
+      "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
