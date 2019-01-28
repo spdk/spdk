@@ -275,7 +275,6 @@ Example response:
     "construct_virtio_dev",
     "get_virtio_scsi_devs",
     "remove_virtio_bdev",
-    "remove_virtio_scsi_bdev",
     "delete_aio_bdev",
     "construct_aio_bdev",
     "destruct_split_vbdev",

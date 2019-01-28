@@ -52,60 +52,6 @@ static const struct spdk_json_object_decoder rpc_remove_virtio_dev[] = {
 };
 
 static void
-spdk_rpc_remove_virtio_scsi_bdev_cb(void *ctx, int errnum)
-{
-	struct spdk_jsonrpc_request *request = ctx;
-	struct spdk_json_write_ctx *w;
-
-	if (errnum != 0) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 spdk_strerror(-errnum));
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
-}
-
-static void
-spdk_rpc_remove_virtio_scsi_bdev(struct spdk_jsonrpc_request *request,
-				 const struct spdk_json_val *params)
-{
-	struct rpc_remove_virtio_dev req = {NULL};
-	int rc;
-
-	SPDK_WARNLOG("remove_virtio_scsi_bdev command has been deprecated and will be removed "
-		     "in the subsequent release. Please use remove_virtio_bdev instead.\n");
-
-	if (spdk_json_decode_object(params, rpc_remove_virtio_dev,
-				    SPDK_COUNTOF(rpc_remove_virtio_dev),
-				    &req)) {
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	rc = bdev_virtio_scsi_dev_remove(req.name, spdk_rpc_remove_virtio_scsi_bdev_cb, request);
-	if (rc != 0) {
-		goto invalid;
-	}
-
-	free(req.name);
-
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
-	free(req.name);
-}
-SPDK_RPC_REGISTER("remove_virtio_scsi_bdev", spdk_rpc_remove_virtio_scsi_bdev, SPDK_RPC_RUNTIME);
-
-static void
 spdk_rpc_remove_virtio_bdev_cb(void *ctx, int errnum)
 {
 	struct spdk_jsonrpc_request *request = ctx;
