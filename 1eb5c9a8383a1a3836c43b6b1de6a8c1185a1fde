@@ -70,6 +70,30 @@
       "revId": "1eb5c9a8383a1a3836c43b6b1de6a8c1185a1fde",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6aba52d1_bbb0c614",
+        "filename": "examples/nvme/arbitration/arbitration.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T09:55:23Z",
+      "side": 1,
+      "message": "\u003e How about adding NULL check (return -EINVAL before strtol/strtoll call) to spdk_strtol and spdk_strtoll?\n\nThat would work.\n\n\u003e Will you add explanation to \"Handling the \u0027?\u0027 case\" ?\n\nAll getopt cases that require an argument - those that are followed by a semicolon in the getopt() string - are guaranteed to have an optarg !\u003d NULL. getopt will apparently filter out all other cases and will provide you with a single \u0027?\u0027 op instead. The \u0027?\u0027 is the only case for which optarg \u003d\u003d NULL and you could fix the bug here by adding a separate case for it.\n\n\u003e Or how about the following change?\n\u003e  if (optarg \u003d\u003d NULL) { [...]\n\nIf you ask me, I\u0027d say the other options are better. I don\u0027t have any explanations though.",
+      "parentUuid": "1de5c82b_70cd83a2",
+      "range": {
+        "startLine": 706,
+        "startChar": 21,
+        "endLine": 706,
+        "endChar": 27
+      },
+      "revId": "1eb5c9a8383a1a3836c43b6b1de6a8c1185a1fde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
