@@ -230,7 +230,6 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
 	/* case 2 */
@@ -254,7 +253,6 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
 	/* case 3 */
@@ -328,6 +326,7 @@ test_nvmf_tcp_poll_group_create(void)
 	SPDK_CU_ASSERT_FATAL(group);
 	group->transport = transport;
 	spdk_nvmf_tcp_poll_group_destroy(group);
+	spdk_nvmf_tcp_destroy(transport);
 
 	spdk_thread_exit(thread);
 }
