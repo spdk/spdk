@@ -4093,8 +4093,12 @@ In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bd
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
-scsi_target_num         | Required | number      | SCSI target ID between 0 and 7
+scsi_target_num         | Required | number      | SCSI target ID between 0 and 7 or -1 to use first free ID.
 bdev_name               | Required | string      | Name of bdev to expose as a LUN 0
+
+### Response
+
+SCSI target ID.
 
 ### Example
 
@@ -4120,7 +4124,7 @@ response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": true
+  "result": 1
 }
 ~~~
 

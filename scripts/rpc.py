@@ -1641,10 +1641,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=construct_vhost_scsi_controller)
 
     def add_vhost_scsi_lun(args):
-        rpc.vhost.add_vhost_scsi_lun(args.client,
-                                     ctrlr=args.ctrlr,
-                                     scsi_target_num=args.scsi_target_num,
-                                     bdev_name=args.bdev_name)
+        print(rpc.vhost.add_vhost_scsi_lun(args.client,
+                                           ctrlr=args.ctrlr,
+                                           scsi_target_num=args.scsi_target_num,
+                                           bdev_name=args.bdev_name))
 
     p = subparsers.add_parser('add_vhost_scsi_lun',
                               help='Add lun to vhost controller')

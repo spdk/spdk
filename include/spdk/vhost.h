@@ -207,12 +207,19 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
  * automatically detected by the other side.
  *
  * \param vdev vhost SCSI device.
- * \param scsi_tgt_num slot to attach to.
+ * \param scsi_tgt_num slot to attach to or negative value to use first free.
  * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0.
  *
- * \return 0 on success, negative errno on error.
+ * \return value >= 0 on success - the SCSI target ID, negative errno code:
+ * -EINVAL - one of the arguments is invalid:
+ *   - vdev is not vhost SCSI device
+ *   - SCSI target ID is out of range
+ *   - bdev name is NULL
+ *   - can't create SCSI LUN because of other errors e.g.: bdev does not exist
+ * -ENOSPC - scsi_tgt_num is -1 and maximum targets in vhost SCSI device reached
+ * -EEXIST - SCSI target ID already exists
  */
-int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 				const char *bdev_name);
 
 /**
