@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "22fc4727_14de87fb",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 1
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T10:31:52Z",
+      "side": 1,
+      "message": "Can we change this to \u0027set at least one\u0027? Current description may mislead that only one can be set.",
+      "range": {
+        "startLine": 69,
+        "startChar": 15,
+        "endLine": 69,
+        "endChar": 22
+      },
+      "revId": "3f129f76773d557eb71fd940d659e34efaf173c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
