@@ -67,7 +67,6 @@
          ((*((uint8_t *)(B)+3)) = (uint8_t)((uint32_t)(D) >> 24)))
 
 struct nvme_tcp_qpair;
-struct nvme_tcp_req;
 typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 
 struct nvme_tcp_pdu {
@@ -102,11 +101,12 @@ struct nvme_tcp_pdu {
 	uint32_t					data_len;
 	struct nvme_tcp_qpair				*tqpair;
 
-	struct nvme_tcp_req				*tcp_req; /* data tied to a tcp request */
 	uint32_t					writev_offset;
 	TAILQ_ENTRY(nvme_tcp_pdu)			tailq;
 	uint32_t					remaining;
 	uint32_t					padding_len;
+
+	void						*ctx; /* data tied to a tcp request */
 };
 
 enum nvme_tcp_pdu_recv_state {
