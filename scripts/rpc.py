@@ -1779,20 +1779,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_bdev)
 
-    def construct_virtio_user_blk_bdev(args):
-        print(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
-                                                       path=args.path,
-                                                       name=args.name,
-                                                       vq_count=args.vq_count,
-                                                       vq_size=args.vq_size))
-
-    p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
-    p.add_argument('path', help='Path to Virtio BLK socket')
-    p.add_argument('name', help='Name for the bdev')
-    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
-    p.add_argument('--vq-size', help='Size of each queue', type=int)
-    p.set_defaults(func=construct_virtio_user_blk_bdev)
-
     def construct_virtio_pci_blk_bdev(args):
         print(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
                                                       pci_address=args.pci_address,

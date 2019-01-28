@@ -180,25 +180,6 @@ def get_virtio_scsi_devs(client):
     return client.call('get_virtio_scsi_devs')
 
 
-def construct_virtio_user_blk_bdev(client, path, name, vq_count=None, vq_size=None):
-    """Connect to virtio user BLK device.
-    Args:
-        path: path to Virtio BLK socket
-        name: use this name as base instead of 'VirtioScsiN'
-        vq_count: number of virtual queues to be used
-        vq_size: size of each queue
-    """
-    params = {
-        'path': path,
-        'name': name,
-    }
-    if vq_count:
-        params['vq_count'] = vq_count
-    if vq_size:
-        params['vq_size'] = vq_size
-    return client.call('construct_virtio_user_blk_bdev', params)
-
-
 def construct_virtio_pci_blk_bdev(client, pci_address, name):
     """Create a Virtio Blk device from a virtio-pci device.
     Args:
