@@ -93,6 +93,30 @@
       "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0df7debb_ad5d7cb8",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T11:13:59Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nFYI: The bdevperf_parse_arg() is called by spdk_app_parse_args(), and spdk_app_parse_args() already catch the case \u0027?\u0027 (see lib/event/app.c:986), so optarg in bdevperf_parse_arg() wouldn\u0027t be null. But it\u0027s fine to add a check here.",
+      "parentUuid": "eb09afb1_9e26aab3",
+      "range": {
+        "startLine": 834,
+        "startChar": 21,
+        "endLine": 834,
+        "endChar": 27
+      },
+      "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
