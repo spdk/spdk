@@ -100,13 +100,10 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 }
 
 int
-nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-			  void *cb_ctx,
-			  spdk_nvme_probe_cb probe_cb,
-			  spdk_nvme_remove_cb remove_cb,
+nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 			  bool direct_connect)
 {
-	NVME_TRANSPORT_CALL(trid->trtype, ctrlr_scan, (trid, cb_ctx, probe_cb, remove_cb, direct_connect));
+	NVME_TRANSPORT_CALL(probe_ctx->trid.trtype, ctrlr_scan, (probe_ctx, direct_connect));
 }
 
 int
