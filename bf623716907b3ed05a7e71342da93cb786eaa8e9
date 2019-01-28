@@ -52,6 +52,24 @@
       "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a0191ce6_11607725",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:22:06Z",
+      "side": 1,
+      "message": "Do you mean to not use iscsi_tgt at all? If so this test would not be possible as I don\u0027t see a way to test creation and removal of OCF bdevs without running SPDK instance.\nDid I understand you correctly?",
+      "parentUuid": "584cd607_dc8a8fca",
+      "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
