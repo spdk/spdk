@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82351a14_688f97f8",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T18:41:42Z",
+      "side": 1,
+      "message": "I\u0027m not experienced with jq, but since you expect only a single bdev named PartCache, could you put the .[0] before the pipe here?\n\nmap(select(.name \u003d\u003d \"PartCache\")).[0] | [...]",
+      "range": {
+        "startLine": 31,
+        "startChar": 38,
+        "endLine": 31,
+        "endChar": 42
+      },
+      "revId": "a0c1e1c97a6a4d81f03b9241070f6dba4635e0ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
