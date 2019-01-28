@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a4b12a4_df0d4947",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T15:17:13Z",
+      "side": 1,
+      "message": "aren\u0027t we missing \u0027exit 1\u0027 here?",
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "938aaaed_2077e866",
+        "filename": "test/ftl/config/fio/randw-verify.fio.in",
+        "patchSetId": 82
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T15:17:13Z",
+      "side": 1,
+      "message": "norandommap is mutually exclusive with verify. I know it increases the performance, but it shouldn\u0027t be used here. You\u0027re using iodepth\u003d1 which is probably why you\u0027re not seeing any issues (as there\u0027s no way of having any read/write data races). This is walking on thin ice though. If you\u0027re confident this works, please add at least a comment here.\n\nReading from https://linux.die.net/man/1/fio :\n\n```\nnorandommap\nNormally fio will cover every block of the file when doing random I/O. If this parameter is given, a new offset will be chosen without looking at past I/O history. This parameter is mutually exclusive with verify.\n```",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 11
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "26e92f3e_b64abd39",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T15:17:13Z",
+      "side": 1,
+      "message": "We\u0027ve got a handy function for that in autotest_common.sh:\nwaitforlisten $svcpid\n\nCan you replace the sleep with it?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 6
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70250f68_c1d38955",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T15:17:13Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 6
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
