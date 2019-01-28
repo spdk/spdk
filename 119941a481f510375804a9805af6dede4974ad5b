@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "996ee616_f0913f48",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-28T10:02:35Z",
+      "side": 1,
+      "message": "ibv_pd is protection domain allocated for __device__ context. I think, it should stay in spdk_nvmf_rdma_device.",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7934bddf_dc8f8bf2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-28T10:02:35Z",
+      "side": 1,
+      "message": "What\u0027s a reason to change \"device\" to \"port\" ? Do you see any possibility that memory management capabilities will be different between ports on the same device?",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25970ed8_6c328737",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1942,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-28T10:02:35Z",
+      "side": 1,
+      "message": "spdk_nvmf_rdma_listen can be called more than once ( for example, target listens on two ports).\nI think, nvmf_rdma_map_ops as global variable makes more sense than an object on stack.",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
