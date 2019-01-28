@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "969f4309_8d156ed6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T19:50:28Z",
+      "side": 1,
+      "message": "It appears in OCF logs but even more relevant in environment where one Cache is having multiple Core devices to help identify the connections (don\u0027t support that yet).\nBut generally, you are right, Ack",
+      "parentUuid": "75fd115d_28174d20",
+      "range": {
+        "startLine": 404,
+        "startChar": 33,
+        "endLine": 404,
+        "endChar": 63
+      },
+      "revId": "b16168d2405119ee0ff68d1e7896dbf2de33fe5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "45b79ee8_b935ef64",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-28T19:17:53Z",
       "side": 1,
       "message": "same as above, do we need to print that here? It seems to be the total number of core devices backed by this cache. If there\u0027s a possibility to attach more (how and why? another caching mode that we don\u0027t support, perhaps?), then we\u0027ll need to print each one of those core devices anyway - probably in some array.",
+      "range": {
+        "startLine": 405,
+        "startChar": 34,
+        "endLine": 405,
+        "endChar": 44
+      },
+      "revId": "b16168d2405119ee0ff68d1e7896dbf2de33fe5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fb021a6_527884dc",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T19:50:28Z",
+      "side": 1,
+      "message": "I like the idea of printing all core devices here, but not sure how it is going to work in practice.\nI will remove this, Ack",
+      "parentUuid": "45b79ee8_b935ef64",
       "range": {
         "startLine": 405,
         "startChar": 34,
