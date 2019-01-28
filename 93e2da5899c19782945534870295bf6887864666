@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edb7697f_b7504cf7",
+        "filename": "scripts/gdb_python_macros_spdk.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-28T17:19:14Z",
+      "side": 1,
+      "message": "Can we just name this file \"gdb_macros.py\"? We know it\u0027s SPDK related because it\u0027s in the SPDK repository, and we know it\u0027s python from the file extension.",
+      "revId": "93e2da5899c19782945534870295bf6887864666",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
