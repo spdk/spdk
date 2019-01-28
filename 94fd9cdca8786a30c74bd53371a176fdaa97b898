@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "23cbc5e1_fa17475e",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T15:09:58Z",
+      "side": 1,
+      "message": "Why we need change submodule?",
+      "revId": "94fd9cdca8786a30c74bd53371a176fdaa97b898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
