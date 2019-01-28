@@ -1333,24 +1333,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=get_interfaces)
 
     # NVMe-oF
-    def set_nvmf_target_options(args):
-        rpc.nvmf.set_nvmf_target_options(args.client,
-                                         max_queue_depth=args.max_queue_depth,
-                                         max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
-                                         in_capsule_data_size=args.in_capsule_data_size,
-                                         max_io_size=args.max_io_size,
-                                         max_subsystems=args.max_subsystems,
-                                         io_unit_size=args.io_unit_size)
-
-    p = subparsers.add_parser('set_nvmf_target_options', help='Set NVMf target options')
-    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
-    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
-    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
-    p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
-    p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
-    p.set_defaults(func=set_nvmf_target_options)
-
     def set_nvmf_target_max_subsystems(args):
         rpc.nvmf.set_nvmf_target_max_subsystems(args.client,
                                                 max_subsystems=args.max_subsystems)
