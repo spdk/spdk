@@ -117,6 +117,30 @@
       "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0dfac861_34dcb6a1",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T22:49:44Z",
+      "side": 1,
+      "message": "Thank you, I saw the code. I don\u0027t add check code here but I added NULL check in spdk_strtol and spdk_strtoll because that will be no harm.",
+      "parentUuid": "0df7debb_ad5d7cb8",
+      "range": {
+        "startLine": 834,
+        "startChar": 21,
+        "endLine": 834,
+        "endChar": 27
+      },
+      "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
