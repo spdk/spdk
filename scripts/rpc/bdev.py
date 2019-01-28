@@ -308,6 +308,20 @@ def delete_rbd_bdev(client, name):
     return client.call('delete_rbd_bdev', params)
 
 
+def resize_rbd_bdev(client, name, size):
+    """Resize rbd bdev
+
+    Args:
+       name: name of rbd bdev to resize
+       size: the size of rbd bdev
+    """
+    params = {
+        'name': name,
+        'size': size,
+    }
+    return client.call('resize_rbd_bdev', params)
+
+
 def construct_error_bdev(client, base_name):
     """Construct an error injection block device.
 

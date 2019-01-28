@@ -329,6 +329,16 @@ if __name__ == "__main__":
     p.add_argument('name', help='rbd bdev name')
     p.set_defaults(func=delete_rbd_bdev)
 
+    def resize_rbd_bdev(args):
+        rpc.bdev.resize_rbd_bdev(args.client,
+                                 name=args.name, size=args.size * 1024 * 1024)
+
+    p = subparsers.add_parser('resize_rbd_bdev',
+                              help='Resize a bdev with ceph rbd backend')
+    p.add_argument('name', help='rbd bdev name')
+    p.add_argument('size', help='new size in MiB for this bdev', type=int)
+    p.set_defaults(func=resize_rbd_bdev)
+
     def construct_error_bdev(args):
         print(rpc.bdev.construct_error_bdev(args.client,
                                             base_name=args.base_name))
