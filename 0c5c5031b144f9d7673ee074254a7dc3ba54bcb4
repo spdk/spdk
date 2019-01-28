@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "6d83d87f_a149fbe5",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-28T17:36:09Z",
+      "side": 1,
+      "message": "I can\u0027t see where this variable is used, also is this meant to be vm_sar_delay?",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 12
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac02f18e_6d8ee860",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-28T17:36:09Z",
+      "side": 1,
+      "message": "This triggers trap and exit on error on my setup when max_disk\u003evm_count. You may consider changing it to (( splits[$i]\u003d${splits[$i]}+1 ))",
+      "range": {
+        "startLine": 173,
+        "startChar": 1,
+        "endLine": 173,
+        "endChar": 18
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b3e4e781_830f3358",
         "filename": "test/vhost/perf_bench/vhost_perf.sh",
         "patchSetId": 18
@@ -59,6 +105,29 @@
       "writtenOn": "2019-01-28T15:19:32Z",
       "side": 1,
       "message": "If this one is not used, can it be removed ?",
+      "range": {
+        "startLine": 304,
+        "startChar": 1,
+        "endLine": 304,
+        "endChar": 72
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "16bc4f51_522da4d2",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-28T17:36:09Z",
+      "side": 1,
+      "message": "Is this necessary? If yes, why it is disabled?",
       "range": {
         "startLine": 304,
         "startChar": 1,
