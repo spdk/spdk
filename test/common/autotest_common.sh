@@ -370,7 +370,7 @@ function waitforlisten() {
 			# On FreeBSD netstat output 'State' column is missing for Unix sockets.
 			# To workaround this issue just try to use provided address.
 			# XXX: This solution could be used for other distros.
-			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods 1>&2 2>/dev/null; then
+			if $rootdir/scripts/rpc.py -t 1 -s "$rpc_addr" get_rpc_methods &>/dev/null; then
 				break
 			fi
 		fi
