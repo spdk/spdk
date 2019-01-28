@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "80be7a22_c9148016",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 986,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T09:05:02Z",
+      "side": 1,
+      "message": "I just followed the manner at MASTER_CORE_OPT_IDX and SHM_ID_OPT_IDX. We should remove them too?",
+      "parentUuid": "ed953b3f_602f5906",
+      "revId": "0552d7aec04e823b9d5b856a0361627b75d75a74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "68104bbc_fa37992a",
         "filename": "lib/event/app.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-25T11:27:13Z",
       "side": 1,
       "message": "The old code also requires tmp !\u003d 0, see line 974 (line number in old code).",
+      "revId": "0552d7aec04e823b9d5b856a0361627b75d75a74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fb39c6f_21419e9d",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 990,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T09:05:02Z",
+      "side": 1,
+      "message": "I\u0027ll change this to tmp \u003c\u003d 0. Thank you.",
+      "parentUuid": "68104bbc_fa37992a",
       "revId": "0552d7aec04e823b9d5b856a0361627b75d75a74",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
