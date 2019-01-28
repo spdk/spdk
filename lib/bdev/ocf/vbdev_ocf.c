@@ -151,18 +151,12 @@ close_spdk_dev:
 	return rc;
 }
 
-/* Free OCF resources, close base bdevs, unregister io device
- * This function is called during spdk_bdev_unregister */
-static int
-vbdev_ocf_destruct(void *opaque)
+/* Free OCF resources, close base bdevs */
+static void
+unregister_cb(void *opaque)
 {
 	struct vbdev_ocf *vbdev = opaque;
 	int status = 0;
-
-	if (vbdev->state.doing_finish) {
-		return -EALREADY;
-	}
-	vbdev->state.doing_finish = true;
 
 	if (vbdev->state.started) {
 		status = stop_vbdev(vbdev);
@@ -175,11 +169,35 @@ vbdev_ocf_destruct(void *opaque)
 		remove_base(&vbdev->cache);
 	}
 
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+}
+
+/* Unregister io device with callback to unregister_cb
+ * This function is called during spdk_bdev_unregister */
+static int
+vbdev_ocf_destruct(void *opaque)
+{
+	struct vbdev_ocf *vbdev = opaque;
+
+	if (vbdev->state.doing_finish) {
+		return -EALREADY;
+	}
+	vbdev->state.doing_finish = true;
+
 	if (vbdev->state.started) {
-		spdk_io_device_unregister(vbdev, NULL);
+		spdk_io_device_unregister(vbdev, unregister_cb);
+		/* Return 1 because unregister is delayed */
+		return 1;
 	}
 
-	return status;
+	if (vbdev->core.attached) {
+		remove_base(&vbdev->core);
+	}
+	if (vbdev->cache.attached) {
+		remove_base(&vbdev->cache);
+	}
+
+	return 0;
 }
 
 /* Stop OCF cache and unregister SPDK bdev */
