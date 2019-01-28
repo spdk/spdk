@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18f6a91d_c3d7675e",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-28T13:37:49Z",
+      "side": 1,
+      "message": "at least you should check whether the returned result contains valid OCF bdev device or not.  Or you don\u0027t need to call get_ocf_bdevs here.",
+      "revId": "3627eacb54de75ed187b1c46b8e15cb591db3666",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
