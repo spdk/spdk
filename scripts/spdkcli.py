@@ -3,7 +3,7 @@ import sys
 import argparse
 import configshell_fb
 from os import getuid
-from configshell_fb import ConfigShell, shell
+from configshell_fb import ConfigShell, shell, ExecutionError
 from spdkcli import UIRoot
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
                        removeQuotes, dblQuotedString, OneOrMore)
@@ -49,8 +49,12 @@ def main():
         pass
 
     if len(args.commands) > 0:
-        spdk_shell.run_cmdline(" ".join(args.commands))
-        sys.exit(0)
+        try:
+            spdk_shell.run_cmdline(" ".join(args.commands))
+            sys.exit(0)
+        except Exception as e:
+            sys.stderr.write("%s\n" % e)
+            sys.exit(1)
 
     spdk_shell.con.display("SPDK CLI v0.1")
     spdk_shell.con.display("")
