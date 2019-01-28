@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "de3c22dd_0a65dfda",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:45:33Z",
+      "side": 1,
+      "message": "My goal was to make RPC handle communications while the main logic is somewhere else.\nThis way encapsulation is preserved, and it is important because RPC for OCF is going to be complex in future (OCF has a lot of options).\nTherefore, do you mind leaving this separated?",
+      "parentUuid": "369d2d0a_066f95ba",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 126,
+        "endChar": 1
+      },
+      "revId": "f1672c4015375ded37b2f81cd83647330951a910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1640b046_17b5de31",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 14
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-26T02:28:51Z",
       "side": 1,
       "message": "same here, there need an error response for w \u003d\u003d NULL case.",
+      "revId": "f1672c4015375ded37b2f81cd83647330951a910",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f66d5f8e_7461b606",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:45:33Z",
+      "side": 1,
+      "message": "Are you sure? Because we don\u0027t usually treat NULL here as an error because \u0027spdk_jsonrpc_begin_result\u0027 returns NULL when it decides that responce is not required.",
+      "parentUuid": "1640b046_17b5de31",
       "revId": "f1672c4015375ded37b2f81cd83647330951a910",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
