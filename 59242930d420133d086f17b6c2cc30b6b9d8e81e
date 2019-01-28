@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96834630_a71468fc",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T12:10:55Z",
+      "side": 1,
+      "message": "Modes aren\u0027t described anywhere - not in bdev.md nor here. Please at least described it here with full names, something like:\n\u0027wt\u0027 for XXXXX, \u0027pt\u0027 for YYYYY",
+      "range": {
+        "startLine": 802,
+        "startChar": 66,
+        "endLine": 802,
+        "endChar": 80
+      },
+      "revId": "59242930d420133d086f17b6c2cc30b6b9d8e81e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
