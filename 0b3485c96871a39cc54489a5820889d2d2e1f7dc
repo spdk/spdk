@@ -45,6 +45,30 @@
       "revId": "0b3485c96871a39cc54489a5820889d2d2e1f7dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f38be65e_eadbbc7f",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T18:55:11Z",
+      "side": 1,
+      "message": "We can actually fix that later - the worst case is that the spdk_mempool_create() below will fail.",
+      "parentUuid": "4642cae2_9b018d83",
+      "range": {
+        "startLine": 64,
+        "startChar": 45,
+        "endLine": 64,
+        "endChar": 66
+      },
+      "revId": "0b3485c96871a39cc54489a5820889d2d2e1f7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
