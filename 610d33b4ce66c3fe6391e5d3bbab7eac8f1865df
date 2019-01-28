@@ -22,6 +22,29 @@
       "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7ba88e1_2aec3918",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T08:44:19Z",
+      "side": 1,
+      "message": "this may be NULL if default case. So, I\u0027ll update the patch by adding the following before calling spdk_strtoll, together with Darek\u0027s feedback.\n\nif (optarg \u003d\u003d NULL) {\n  fprintf(stderr, \"optarg should not be NULL\\n\");\n  return -EINVAL;\n}",
+      "range": {
+        "startLine": 834,
+        "startChar": 21,
+        "endLine": 834,
+        "endChar": 27
+      },
+      "revId": "610d33b4ce66c3fe6391e5d3bbab7eac8f1865df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
