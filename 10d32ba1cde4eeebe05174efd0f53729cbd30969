@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7ae2d45_59fd9bfd",
+        "filename": "test/nvme/reset/reset.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 397,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T23:58:42Z",
+      "side": 1,
+      "message": "I added \u0027?\u0027 check here.",
+      "range": {
+        "startLine": 397,
+        "startChar": 2,
+        "endLine": 397,
+        "endChar": 10
+      },
+      "revId": "10d32ba1cde4eeebe05174efd0f53729cbd30969",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
