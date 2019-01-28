@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5efe2acd_1c19e985",
+        "filename": "test/vhost/shared/shared.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-28T13:53:49Z",
+      "side": 1,
+      "message": "How do you assert that in this patch?",
+      "range": {
+        "startLine": 30,
+        "startChar": 0,
+        "endLine": 30,
+        "endChar": 57
+      },
+      "revId": "a09909321f15d8981b3bab0fadbbd26d99477aa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
