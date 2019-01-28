@@ -46,6 +46,30 @@
       "revId": "1eb5c9a8383a1a3836c43b6b1de6a8c1185a1fde",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1de5c82b_70cd83a2",
+        "filename": "examples/nvme/arbitration/arbitration.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-28T08:49:44Z",
+      "side": 1,
+      "message": "Hi Darek,\n\nThanks for critical feedback.\n\nWill you add explanation to \"Handling the \u0027?\u0027 case\" ?\n\nHow about adding NULL check (return -EINVAL before strtol/strtoll call) to spdk_strtol and spdk_strtoll?\n\nOr how about the following change?\n\n  if (optarg \u003d\u003d NULL) {\n    fprintf(stderr, \"optarg should not be NULL\\n\");\n    return -EINVAL;\n  } else {\n    val \u003d spdk_strtol(optarg, 10);\n    if (val \u003c 0) {\n      return val;\n    }\n  }\n\nThe former looks reasonable to me.",
+      "parentUuid": "21fd2c07_42fbb3e8",
+      "range": {
+        "startLine": 706,
+        "startChar": 21,
+        "endLine": 706,
+        "endChar": 27
+      },
+      "revId": "1eb5c9a8383a1a3836c43b6b1de6a8c1185a1fde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
