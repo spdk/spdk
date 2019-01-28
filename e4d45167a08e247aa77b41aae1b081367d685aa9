@@ -52,6 +52,24 @@
       "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be19725_6a55db99",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:46:49Z",
+      "side": 1,
+      "message": "Ack, thanks",
+      "parentUuid": "3d288e88_1278b037",
+      "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
