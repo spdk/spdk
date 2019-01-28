@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "1cfd2ac4_c695310e",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 33
+      },
+      "lineNbr": 716,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-01-28T06:32:55Z",
+      "side": 1,
+      "message": "typo",
+      "range": {
+        "startLine": 716,
+        "startChar": 59,
+        "endLine": 716,
+        "endChar": 68
+      },
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f08e6b46_7e47021f",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 33
