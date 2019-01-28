@@ -3,6 +3,7 @@ import sys
 import argparse
 import configshell_fb
 from os import getuid
+from rpc.client import JSONRPCException
 from configshell_fb import ConfigShell, shell, ExecutionError
 from spdkcli import UIRoot
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
