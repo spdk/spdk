@@ -1303,16 +1303,6 @@ static const struct spdk_json_object_decoder nvmf_rpc_subsystem_tgt_opts_decoder
 };
 
 static void
-nvmf_rpc_subsystem_set_tgt_opts(struct spdk_jsonrpc_request *request,
-				const struct spdk_json_val *params)
-{
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST,
-					 "This function has been deprecated in favor of set_nvmf_target_max_subsystems and create_nvmf_transport");
-}
-SPDK_RPC_REGISTER("set_nvmf_target_options", nvmf_rpc_subsystem_set_tgt_opts,
-		  SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
-
-static void
 nvmf_rpc_subsystem_set_tgt_max_subsystems(struct spdk_jsonrpc_request *request,
 		const struct spdk_json_val *params)
 {
