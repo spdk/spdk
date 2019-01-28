@@ -1291,8 +1291,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
 							     (uint64_t)buf, &translation_len))->lkey;
 		} else {
-			rdma_req->data.wr.sg_list[i].lkey = *((uint64_t *)spdk_mem_map_translate(device->map,
-							      (uint64_t)buf, &translation_len));
+			rdma_req->data.wr.sg_list[i].lkey = spdk_mem_map_translate(device->map,
+							    (uint64_t)buf, &translation_len);
 		}
 
 		length -= rdma_req->req.iov[i].iov_len;
