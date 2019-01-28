@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c9d7d244_62861b41",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 783,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:06:53Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0fb0f2ef_c6feac95",
+      "range": {
+        "startLine": 783,
+        "startChar": 25,
+        "endLine": 783,
+        "endChar": 33
+      },
+      "revId": "e8436399683ab3637f73e88e3aa7f96321d7c94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7fc6b3b9_8757ee43",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 31
@@ -36,6 +60,24 @@
       "writtenOn": "2019-01-26T02:21:37Z",
       "side": 1,
       "message": "if the remove callback returned at line 792, then you don\u0027t have a chance to call vbdev_ocf_delete(), is this the purpose here?",
+      "revId": "e8436399683ab3637f73e88e3aa7f96321d7c94b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d40a1b2_e4e517a6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 31
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:06:53Z",
+      "side": 1,
+      "message": "Yes, this is intended since we don\u0027t want to free resources twice.",
+      "parentUuid": "7fc6b3b9_8757ee43",
       "revId": "e8436399683ab3637f73e88e3aa7f96321d7c94b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
