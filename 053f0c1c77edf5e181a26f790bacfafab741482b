@@ -399,6 +399,30 @@
     },
     {
       "key": {
+        "uuid": "57377e97_344ae539",
+        "filename": "doc/bdev.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:14:00Z",
+      "side": 1,
+      "message": "But not all of them are in MiB and the result for instance is in bytes.\nTo be 100% consistant I would need to write it like 56000 + _cache device size_ * 58 / _cache line size_ (in bytes).\nDo you have suggestions to make it more clear?",
+      "parentUuid": "64b69c6d_85fca144",
+      "range": {
+        "startLine": 258,
+        "startChar": 56,
+        "endLine": 258,
+        "endChar": 111
+      },
+      "revId": "053f0c1c77edf5e181a26f790bacfafab741482b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52465588_c0a4f202",
         "filename": "doc/bdev.md",
         "patchSetId": 14
