@@ -205,6 +205,7 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 	group->transport = transport;
 
 	STAILQ_INIT(&group->buf_cache);
+	TAILQ_INIT(&group->pending_data_buf_queue);
 
 	if (transport->opts.buf_cache_size) {
 		group->buf_cache_count = 0;
@@ -231,6 +232,11 @@ spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *gr
 		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
 		spdk_mempool_put(group->transport->data_buf_pool, buf);
 	}
+
+	if (!TAILQ_EMPTY(&group->pending_data_buf_queue)) {
+		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
+	}
+
 	group->transport->ops->poll_group_destroy(group);
 }
 
@@ -340,4 +346,30 @@ spdk_nvmf_transport_qpair_set_sqsize(struct spdk_nvmf_qpair *qpair)
 	}
 
 	return 0;
+}
+
+void
+spdk_nvmf_transport_data_buf_queue_push(struct spdk_nvmf_transport_poll_group *group,
+					struct spdk_nvmf_request *req)
+{
+	TAILQ_INSERT_TAIL(&group->pending_data_buf_queue, req, link);
+}
+
+struct spdk_nvmf_request *
+spdk_nvmf_transport_data_buf_queue_pop(struct spdk_nvmf_transport_poll_group *group)
+{
+	struct spdk_nvmf_request *req;
+
+	req = TAILQ_FIRST(&group->pending_data_buf_queue);
+	if (req) {
+		TAILQ_REMOVE(&group->pending_data_buf_queue, req, link);
+	}
+
+	return req;
+}
+
+struct spdk_nvmf_request *
+spdk_nvmf_transport_data_buf_queue_peek(struct spdk_nvmf_transport_poll_group *group)
+{
+	return TAILQ_FIRST(&group->pending_data_buf_queue);
 }

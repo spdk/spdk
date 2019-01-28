@@ -76,6 +76,14 @@ DEFINE_STUB(spdk_nvme_transport_id_compare, int, (const struct spdk_nvme_transpo
 		const struct spdk_nvme_transport_id *trid2), 0);
 DEFINE_STUB_V(spdk_nvmf_ctrlr_abort_aer, (struct spdk_nvmf_ctrlr *ctrlr));
 
+DEFINE_STUB_V(spdk_nvmf_transport_data_buf_queue_push,
+	      (struct spdk_nvmf_transport_poll_group *group,
+	       struct spdk_nvmf_request *req));
+DEFINE_STUB(spdk_nvmf_transport_data_buf_queue_pop, struct spdk_nvmf_request *,
+	    (struct spdk_nvmf_transport_poll_group *group), NULL);
+DEFINE_STUB(spdk_nvmf_transport_data_buf_queue_peek, struct spdk_nvmf_request *,
+	    (struct spdk_nvmf_transport_poll_group *group), NULL);
+
 uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
