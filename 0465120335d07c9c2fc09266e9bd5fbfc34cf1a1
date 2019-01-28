@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc6c5de8_b1e262f9",
+        "filename": "autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T12:57:36Z",
+      "side": 1,
+      "message": "Me and Tomek have been discussing a similar feature a while ago. Considering this needs the test machines to be updated anyway, we would like to propose a slightly different solution.\n\nPlease see the patch here: https://review.gerrithub.io/c/spdk/spdk/+/442327\n\nI\u0027m sorry to push a different patch which deals with the same problem, but I found it much easier to just *do* the changes rather than explain them here.",
+      "range": {
+        "startLine": 108,
+        "startChar": 6,
+        "endLine": 108,
+        "endChar": 29
+      },
+      "revId": "0465120335d07c9c2fc09266e9bd5fbfc34cf1a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
