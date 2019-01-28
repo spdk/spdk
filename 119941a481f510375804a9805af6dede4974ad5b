@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "c43ae083_d1861d8e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-28T17:35:55Z",
+      "side": 1,
+      "message": "In Zahra\u0027s use case, there can potentially be different protection domains for different listen addresses. The protection domains and memory registrations are also done up front by their application for other reasons, hence this hook mechanism.\n\nThe \"hook\" API in the NVMe driver we defined wants the listen address passed as an argument to get the protection domain. In practice on the target side it will return the same protection domain for each listen address on the same ibv_context, but the initiator will use different ones for different addresses.\n\nTo allow for maximum flexibility, I suggested she move the pd/map to the port because technically that\u0027s allowed. I\u0027d consider moving it back to the device and just asserting that the hook always returns the same pd for a given ibv_context on the target side if there was a technical advantage for doing so. What do you think?",
+      "parentUuid": "7934bddf_dc8f8bf2",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "25970ed8_6c328737",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
