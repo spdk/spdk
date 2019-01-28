@@ -168,7 +168,7 @@ SPDK_TRACE_REGISTER_FN(nvmf_tcp_trace, "nvmf_tcp", TRACE_GROUP_NVMF_TCP)
 					OWNER_NONE, OBJECT_NONE, 0, 0, "");
 }
 
-struct nvme_tcp_req  {
+struct spdk_nvmf_tcp_req  {
 	struct spdk_nvmf_request		req;
 	struct spdk_nvme_cpl			rsp;
 	struct spdk_nvme_cmd			cmd;
@@ -197,8 +197,8 @@ struct nvme_tcp_req  {
 	enum spdk_nvmf_tcp_req_state		state;
 	bool					has_incapsule_data;
 
-	TAILQ_ENTRY(nvme_tcp_req)		link;
-	TAILQ_ENTRY(nvme_tcp_req)		state_link;
+	TAILQ_ENTRY(spdk_nvmf_tcp_req)		link;
+	TAILQ_ENTRY(spdk_nvmf_tcp_req)		state_link;
 };
 
 struct nvme_tcp_qpair {
@@ -220,13 +220,13 @@ struct nvme_tcp_qpair {
 	uint16_t				free_pdu_num;
 
 	/* Queues to track the requests in all states */
-	TAILQ_HEAD(, nvme_tcp_req)		state_queue[TCP_REQUEST_NUM_STATES];
+	TAILQ_HEAD(, spdk_nvmf_tcp_req)		state_queue[TCP_REQUEST_NUM_STATES];
 	/* Number of requests in each state */
 	int32_t					state_cntr[TCP_REQUEST_NUM_STATES];
 
 	uint32_t				maxr2t;
 	uint32_t				pending_r2t;
-	TAILQ_HEAD(, nvme_tcp_req)		queued_c2h_data_tcp_req;
+	TAILQ_HEAD(, spdk_nvmf_tcp_req)		queued_c2h_data_tcp_req;
 
 	uint8_t					cpda;
 
@@ -235,8 +235,8 @@ struct nvme_tcp_qpair {
 	 */
 	void					*buf;
 	void					*bufs;
-	struct nvme_tcp_req			*req;
-	struct nvme_tcp_req			*reqs;
+	struct spdk_nvmf_tcp_req			*req;
+	struct spdk_nvmf_tcp_req			*reqs;
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
@@ -289,7 +289,7 @@ struct spdk_nvmf_tcp_transport {
 
 struct spdk_nvmf_tcp_mgmt_channel {
 	/* Requests that are waiting to obtain a data buffer */
-	TAILQ_HEAD(, nvme_tcp_req)	pending_data_buf_queue;
+	TAILQ_HEAD(, spdk_nvmf_tcp_req)	pending_data_buf_queue;
 
 	/* Point to the transport polling group */
 	struct spdk_nvmf_tcp_poll_group	*tgroup;
@@ -299,11 +299,11 @@ struct spdk_nvmf_tcp_mgmt_channel {
 static void spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
 		struct nvme_tcp_qpair *tqpair);
 static bool spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
-				      struct nvme_tcp_req *tcp_req);
+				      struct spdk_nvmf_tcp_req *tcp_req);
 static void spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct nvme_tcp_qpair *tqpair);
 
 static void
-spdk_nvmf_tcp_req_set_state(struct nvme_tcp_req *tcp_req,
+spdk_nvmf_tcp_req_set_state(struct spdk_nvmf_tcp_req *tcp_req,
 			    enum spdk_nvmf_tcp_req_state state)
 {
 	struct spdk_nvmf_qpair *qpair;
@@ -362,10 +362,10 @@ spdk_nvmf_tcp_pdu_put(struct nvme_tcp_pdu *pdu)
 	}
 }
 
-static struct nvme_tcp_req *
+static struct spdk_nvmf_tcp_req *
 spdk_nvmf_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	tcp_req = TAILQ_FIRST(&tqpair->state_queue[TCP_REQUEST_STATE_FREE]);
 	if (!tcp_req) {
@@ -385,7 +385,7 @@ spdk_nvmf_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 }
 
 static void
-nvmf_tcp_request_free(struct nvme_tcp_req *tcp_req)
+nvmf_tcp_request_free(struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
 
@@ -403,7 +403,7 @@ nvmf_tcp_request_free(struct nvme_tcp_req *tcp_req)
 static int
 spdk_nvmf_tcp_req_free(struct spdk_nvmf_request *req)
 {
-	struct nvme_tcp_req *tcp_req = SPDK_CONTAINEROF(req, struct nvme_tcp_req, req);
+	struct spdk_nvmf_tcp_req *tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 
 	nvmf_tcp_request_free(tcp_req);
 
@@ -433,7 +433,7 @@ static void
 spdk_nvmf_tcp_drain_state_queue(struct nvme_tcp_qpair *tqpair,
 				enum spdk_nvmf_tcp_req_state state)
 {
-	struct nvme_tcp_req *tcp_req, *req_tmp;
+	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[state], state_link, req_tmp) {
 		nvmf_tcp_request_free(tcp_req);
@@ -443,7 +443,7 @@ spdk_nvmf_tcp_drain_state_queue(struct nvme_tcp_qpair *tqpair,
 static void
 spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 {
-	struct nvme_tcp_req *tcp_req, *req_tmp;
+	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 	struct nvme_tcp_pdu *pdu, *tmp_pdu;
 
 	/* Free the pdus in the send_queue */
@@ -481,7 +481,7 @@ static void
 nvmf_tcp_dump_qpair_req_contents(struct nvme_tcp_qpair *tqpair)
 {
 	int i;
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", tqpair->qpair.qid);
 	for (i = 1; i < TCP_REQUEST_NUM_STATES; i++) {
@@ -980,7 +980,7 @@ static int
 spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t size)
 {
 	int i;
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvmf_transport *transport = tqpair->qpair.transport;
 	struct spdk_nvmf_tcp_transport *ttransport;
 	ttransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_tcp_transport, transport);
@@ -1044,7 +1044,7 @@ spdk_nvmf_tcp_qpair_init_mem_resource(struct nvme_tcp_qpair *tqpair, uint16_t si
 		}
 
 		for (i = 0; i < size; i++) {
-			struct nvme_tcp_req *tcp_req = &tqpair->reqs[i];
+			struct spdk_nvmf_tcp_req *tcp_req = &tqpair->reqs[i];
 
 			tcp_req->ttag = i + 1;
 			tcp_req->req.qpair = &tqpair->qpair;
@@ -1338,7 +1338,7 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 				     struct nvme_tcp_qpair *tqpair,
 				     struct nvme_tcp_pdu *pdu)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	tcp_req = spdk_nvmf_tcp_req_get(tqpair);
 	if (!tcp_req) {
@@ -1359,7 +1359,7 @@ spdk_nvmf_tcp_capsule_cmd_payload_handle(struct spdk_nvmf_tcp_transport *ttransp
 		struct nvme_tcp_qpair *tqpair,
 		struct nvme_tcp_pdu *pdu)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 	struct spdk_nvme_tcp_cmd *capsule_cmd;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes;
@@ -1389,7 +1389,7 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 				  struct nvme_tcp_qpair *tqpair,
 				  struct nvme_tcp_pdu *pdu)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 	uint32_t error_offset = 0;
 	enum spdk_nvme_tcp_term_req_fes fes = 0;
 	struct spdk_nvme_tcp_h2c_data_hdr *h2c_data;
@@ -1462,12 +1462,12 @@ err:
 static void
 spdk_nvmf_tcp_pdu_cmd_complete(void *cb_arg)
 {
-	struct nvme_tcp_req *tcp_req = cb_arg;
+	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
 	nvmf_tcp_request_free(tcp_req);
 }
 
 static void
-spdk_nvmf_tcp_send_capsule_resp_pdu(struct nvme_tcp_req *tcp_req,
+spdk_nvmf_tcp_send_capsule_resp_pdu(struct spdk_nvmf_tcp_req *tcp_req,
 				    struct nvme_tcp_qpair *tqpair)
 {
 	struct nvme_tcp_pdu *rsp_pdu;
@@ -1496,7 +1496,7 @@ spdk_nvmf_tcp_send_capsule_resp_pdu(struct nvme_tcp_req *tcp_req,
 static void
 spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 {
-	struct nvme_tcp_req *tcp_req = cb_arg;
+	struct spdk_nvmf_tcp_req *tcp_req = cb_arg;
 	struct nvme_tcp_qpair *tqpair = SPDK_CONTAINEROF(tcp_req->req.qpair,
 					struct nvme_tcp_qpair, qpair);
 
@@ -1517,7 +1517,7 @@ spdk_nvmf_tcp_pdu_c2h_data_complete(void *cb_arg)
 
 static void
 spdk_nvmf_tcp_send_r2t_pdu(struct nvme_tcp_qpair *tqpair,
-			   struct nvme_tcp_req *tcp_req)
+			   struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_r2t_hdr *r2t;
@@ -1553,7 +1553,7 @@ spdk_nvmf_tcp_send_r2t_pdu(struct nvme_tcp_qpair *tqpair,
 static void
 spdk_nvmf_tcp_handle_queued_r2t_req(struct nvme_tcp_qpair *tqpair)
 {
-	struct nvme_tcp_req *tcp_req, *req_tmp;
+	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->state_queue[TCP_REQUEST_STATE_DATA_PENDING_FOR_R2T],
 			   state_link, req_tmp) {
@@ -1572,7 +1572,7 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 				      struct nvme_tcp_qpair *tqpair,
 				      struct nvme_tcp_pdu *pdu)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	tcp_req = pdu->ctx;
 	assert(tcp_req != NULL);
@@ -2048,7 +2048,7 @@ spdk_nvmf_tcp_sock_process(struct nvme_tcp_qpair *tqpair)
 }
 
 static enum spdk_nvme_data_transfer
-spdk_nvmf_tcp_req_get_xfer(struct nvme_tcp_req *tcp_req) {
+spdk_nvmf_tcp_req_get_xfer(struct spdk_nvmf_tcp_req *tcp_req) {
 	enum spdk_nvme_data_transfer xfer;
 	struct spdk_nvme_cmd *cmd = &tcp_req->req.cmd->nvme_cmd;
 	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
@@ -2106,7 +2106,7 @@ spdk_nvmf_tcp_req_get_xfer(struct nvme_tcp_req *tcp_req) {
 }
 
 static void
-spdk_nvmf_tcp_request_free_buffers(struct nvme_tcp_req *tcp_req,
+spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 				   struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport)
 {
 	for (uint32_t i = 0; i < tcp_req->req.iovcnt; i++) {
@@ -2127,7 +2127,7 @@ spdk_nvmf_tcp_request_free_buffers(struct nvme_tcp_req *tcp_req,
 
 static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
-			    struct nvme_tcp_req *tcp_req)
+			    struct spdk_nvmf_tcp_req *tcp_req)
 {
 	void		*buf = NULL;
 	uint32_t	length = tcp_req->req.length;
@@ -2168,7 +2168,7 @@ nomem:
 
 static int
 spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
-			    struct nvme_tcp_req *tcp_req)
+			    struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct spdk_nvme_cmd			*cmd;
 	struct spdk_nvme_cpl			*rsp;
@@ -2250,7 +2250,7 @@ spdk_nvmf_tcp_req_parse_sgl(struct spdk_nvmf_tcp_transport *ttransport,
 
 static void
 spdk_nvmf_tcp_send_c2h_data(struct nvme_tcp_qpair *tqpair,
-			    struct nvme_tcp_req *tcp_req)
+			    struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *rsp_pdu;
 	struct spdk_nvme_tcp_c2h_data_hdr *c2h_data;
@@ -2319,7 +2319,7 @@ spdk_nvmf_tcp_send_c2h_data(struct nvme_tcp_qpair *tqpair,
 }
 
 static int
-spdk_nvmf_tcp_calc_c2h_data_pdu_num(struct nvme_tcp_req *tcp_req)
+spdk_nvmf_tcp_calc_c2h_data_pdu_num(struct spdk_nvmf_tcp_req *tcp_req)
 {
 	uint32_t i, iov_cnt, pdu_num = 0;
 
@@ -2335,7 +2335,7 @@ spdk_nvmf_tcp_calc_c2h_data_pdu_num(struct nvme_tcp_req *tcp_req)
 static void
 spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct nvme_tcp_qpair *tqpair)
 {
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	while (!TAILQ_EMPTY(&tqpair->queued_c2h_data_tcp_req) &&
 	       (tqpair->c2h_data_pdu_cnt < NVMF_TCP_QPAIR_MAX_C2H_PDU_NUM)) {
@@ -2345,7 +2345,7 @@ spdk_nvmf_tcp_handle_pending_c2h_data_queue(struct nvme_tcp_qpair *tqpair)
 }
 
 static void
-spdk_nvmf_tcp_queue_c2h_data(struct nvme_tcp_req *tcp_req,
+spdk_nvmf_tcp_queue_c2h_data(struct spdk_nvmf_tcp_req *tcp_req,
 			     struct nvme_tcp_qpair *tqpair)
 {
 	tcp_req->c2h_data_pdu_num = spdk_nvmf_tcp_calc_c2h_data_pdu_num(tcp_req);
@@ -2359,7 +2359,7 @@ spdk_nvmf_tcp_queue_c2h_data(struct nvme_tcp_req *tcp_req,
 static int
 request_transfer_out(struct spdk_nvmf_request *req)
 {
-	struct nvme_tcp_req	*tcp_req;
+	struct spdk_nvmf_tcp_req	*tcp_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct nvme_tcp_qpair	*tqpair;
 	struct spdk_nvme_cpl		*rsp;
@@ -2368,7 +2368,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 	qpair = req->qpair;
 	rsp = &req->rsp->nvme_cpl;
-	tcp_req = SPDK_CONTAINEROF(req, struct nvme_tcp_req, req);
+	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 
 	/* Advance our sq_head pointer */
 	if (qpair->sq_head == qpair->sq_head_max) {
@@ -2392,7 +2392,7 @@ request_transfer_out(struct spdk_nvmf_request *req)
 
 static void
 spdk_nvmf_tcp_pdu_set_buf_from_req(struct nvme_tcp_qpair *tqpair,
-				   struct nvme_tcp_req *tcp_req)
+				   struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *pdu;
 
@@ -2415,7 +2415,7 @@ spdk_nvmf_tcp_pdu_set_buf_from_req(struct nvme_tcp_qpair *tqpair,
 
 static void
 spdk_nvmf_tcp_set_incapsule_data(struct nvme_tcp_qpair *tqpair,
-				 struct nvme_tcp_req *tcp_req)
+				 struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_pdu *pdu;
 	uint32_t plen = 0;
@@ -2434,7 +2434,7 @@ spdk_nvmf_tcp_set_incapsule_data(struct nvme_tcp_qpair *tqpair,
 
 static bool
 spdk_nvmf_tcp_req_process(struct spdk_nvmf_tcp_transport *ttransport,
-			  struct nvme_tcp_req *tcp_req)
+			  struct spdk_nvmf_tcp_req *tcp_req)
 {
 	struct nvme_tcp_qpair	*tqpair;
 	struct spdk_nvme_cpl		*rsp = &tcp_req->req.rsp->nvme_cpl;
@@ -2593,7 +2593,7 @@ static void
 spdk_nvmf_tcp_qpair_process_pending(struct spdk_nvmf_tcp_transport *ttransport,
 				    struct nvme_tcp_qpair *tqpair)
 {
-	struct nvme_tcp_req *tcp_req, *req_tmp;
+	struct spdk_nvmf_tcp_req *tcp_req, *req_tmp;
 
 	/* Tqpair is not in a good state, so return it */
 	if (spdk_unlikely(tqpair->recv_state == NVME_TCP_PDU_RECV_STATE_ERROR)) {
@@ -2708,10 +2708,10 @@ static int
 spdk_nvmf_tcp_req_complete(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_tcp_transport *ttransport;
-	struct nvme_tcp_req *tcp_req;
+	struct spdk_nvmf_tcp_req *tcp_req;
 
 	ttransport = SPDK_CONTAINEROF(req->qpair->transport, struct spdk_nvmf_tcp_transport, transport);
-	tcp_req = SPDK_CONTAINEROF(req, struct nvme_tcp_req, req);
+	tcp_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_tcp_req, req);
 
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_EXECUTED);
 	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
