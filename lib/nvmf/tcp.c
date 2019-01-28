@@ -1348,7 +1348,7 @@ spdk_nvmf_tcp_capsule_cmd_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		return;
 	}
 
-	pdu->tcp_req = tcp_req;
+	pdu->ctx = tcp_req;
 	spdk_nvmf_tcp_req_set_state(tcp_req, TCP_REQUEST_STATE_NEW);
 	spdk_nvmf_tcp_req_process(ttransport, tcp_req);
 	return;
@@ -1365,7 +1365,7 @@ spdk_nvmf_tcp_capsule_cmd_payload_handle(struct spdk_nvmf_tcp_transport *ttransp
 	enum spdk_nvme_tcp_term_req_fes fes;
 
 	capsule_cmd = &pdu->hdr.capsule_cmd;
-	tcp_req = pdu->tcp_req;
+	tcp_req = pdu->ctx;
 	assert(tcp_req != NULL);
 	if (capsule_cmd->common.pdo > SPDK_NVME_TCP_PDU_PDO_MAX_OFFSET) {
 		SPDK_ERRLOG("Expected ICReq capsule_cmd pdu offset <= %d, got %c\n",
@@ -1447,7 +1447,7 @@ spdk_nvmf_tcp_h2c_data_hdr_handle(struct spdk_nvmf_tcp_transport *ttransport,
 		goto err;
 	}
 
-	pdu->tcp_req = tcp_req;
+	pdu->ctx = tcp_req;
 	pdu->data_len = h2c_data->datal;
 	iov_index = pdu->hdr.h2c_data.datao / ttransport->transport.opts.io_unit_size;
 	pdu->data = tcp_req->req.iov[iov_index].iov_base + (pdu->hdr.h2c_data.datao %
@@ -1574,7 +1574,7 @@ spdk_nvmf_tcp_h2c_data_payload_handle(struct spdk_nvmf_tcp_transport *ttransport
 {
 	struct nvme_tcp_req *tcp_req;
 
-	tcp_req = pdu->tcp_req;
+	tcp_req = pdu->ctx;
 	assert(tcp_req != NULL);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
