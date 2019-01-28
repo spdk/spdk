@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e949347_54f2f882",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-28T15:19:32Z",
+      "side": 1,
+      "message": "vm_sar_delat -\u003e vm_sar_delay",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 12
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3e4e781_830f3358",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-28T15:19:32Z",
+      "side": 1,
+      "message": "Fdisk is not actually used here anymore. Can you please update the description here and cleanup function name ?",
+      "range": {
+        "startLine": 184,
+        "startChar": 21,
+        "endLine": 184,
+        "endChar": 26
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "118b48f3_6a0c4b28",
+        "filename": "test/vhost/perf_bench/vhost_perf.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-28T15:19:32Z",
+      "side": 1,
+      "message": "If this one is not used, can it be removed ?",
+      "range": {
+        "startLine": 304,
+        "startChar": 1,
+        "endLine": 304,
+        "endChar": 72
+      },
+      "revId": "0c5c5031b144f9d7673ee074254a7dc3ba54bcb4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
