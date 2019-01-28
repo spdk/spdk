@@ -102,6 +102,24 @@
     },
     {
       "key": {
+        "uuid": "903be354_6f2ee617",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T09:20:12Z",
+      "side": 1,
+      "message": "I looked at cases where we return error on NULL and they are different from this and we never return error in rpc calls for bdevs.\nSo I don\u0027t think this is a place where NULL needs to be treated as an error.\nIs it fine to you to leave this as is?",
+      "parentUuid": "4f670547_0f65489f",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "be21e649_b8f752cd",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 33
