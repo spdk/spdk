@@ -4,22 +4,38 @@ set -e
 
 testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
+plugindir=$rootdir/examples/bdev/fio_plugin
 
 source $rootdir/test/common/autotest_common.sh
 
-tests=(randw-verify randw-verify-j2 randw-verify-depth128)
-plugindir=$rootdir/examples/bdev/fio_plugin
+declare -A suite
+suite['basic']='randw-verify randw-verify-j2 randw-verify-depth128'
+suite['extended']='drive-prep randw-verify-qd128-ext randw-qd128-j4'
+suite['extended']+=' randr-qd32-j4 randrw-qd32-j4-70'
+
 device=$1
+tests=${suite[$2]}
+uuid=$3
 
 if [ ! -d /usr/src/fio ]; then
 	echo "FIO not available"
 	exit 1
 fi
 
-$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3
+if [ -z "$tests" ]; then
+	echo "Invalid test suite '$2'"
+	exit 1
+fi
+
+if [ -z "$uuid" ]; then
+	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3
+else
+	$rootdir/scripts/gen_ftl.sh -a $device -n nvme0 -l 0-3 -u $uuid
+fi
 
 for test in ${tests[@]}; do
 	timing_enter $test
+
 	LD_PRELOAD=$plugindir/fio_plugin /usr/src/fio/fio $testdir/config/fio/$test.fio
 	timing_exit $test
 done
