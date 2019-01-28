@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75fd115d_28174d20",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T19:17:53Z",
+      "side": 1,
+      "message": "do we need to print that id anywhere? From what I see it\u0027s only used internally, so why should the user care about it?",
+      "range": {
+        "startLine": 404,
+        "startChar": 33,
+        "endLine": 404,
+        "endChar": 63
+      },
+      "revId": "b16168d2405119ee0ff68d1e7896dbf2de33fe5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45b79ee8_b935ef64",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 405,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T19:17:53Z",
+      "side": 1,
+      "message": "same as above, do we need to print that here? It seems to be the total number of core devices backed by this cache. If there\u0027s a possibility to attach more (how and why? another caching mode that we don\u0027t support, perhaps?), then we\u0027ll need to print each one of those core devices anyway - probably in some array.",
+      "range": {
+        "startLine": 405,
+        "startChar": 34,
+        "endLine": 405,
+        "endChar": 44
+      },
+      "revId": "b16168d2405119ee0ff68d1e7896dbf2de33fe5c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
