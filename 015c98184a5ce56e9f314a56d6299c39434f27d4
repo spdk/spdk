@@ -84,6 +84,24 @@
     },
     {
       "key": {
+        "uuid": "4f670547_0f65489f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-01-28T08:10:10Z",
+      "side": 1,
+      "message": "that\u0027s fine to me, there are some other places calling this API which will return an error response.",
+      "parentUuid": "68d50cbf_bf4cd4b7",
+      "revId": "015c98184a5ce56e9f314a56d6299c39434f27d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be21e649_b8f752cd",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 33
