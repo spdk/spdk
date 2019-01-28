@@ -155,25 +155,6 @@ def construct_virtio_dev(client, name, trtype, traddr, dev_type, vq_count=None, 
     return client.call('construct_virtio_dev', params)
 
 
-def construct_virtio_user_scsi_bdev(client, path, name, vq_count=None, vq_size=None):
-    """Connect to virtio user scsi device.
-    Args:
-        path: path to Virtio SCSI socket
-        name: use this name as base instead of 'VirtioScsiN'
-        vq_count: number of virtual queues to be used
-        vq_size: size of each queue
-    """
-    params = {
-        'path': path,
-        'name': name,
-    }
-    if vq_count:
-        params['vq_count'] = vq_count
-    if vq_size:
-        params['vq_size'] = vq_size
-    return client.call('construct_virtio_user_scsi_bdev', params)
-
-
 def construct_virtio_pci_scsi_bdev(client, pci_address, name):
     """Create a Virtio SCSI device from a virtio-pci device.
     Args:
