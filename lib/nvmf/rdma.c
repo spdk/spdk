@@ -273,7 +273,7 @@ struct spdk_nvmf_rdma_qpair {
 	/* The maximum number of active RDMA READ and ATOMIC operations at one time */
 	uint16_t				max_read_depth;
 
-	/* The maximum number of RDMA send operations at one time */
+	/* The maximum number of RDMA SEND operations at one time */
 	uint32_t				max_send_depth;
 
 	/* The current number of outstanding WRs from this qpair's
