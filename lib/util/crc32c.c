@@ -33,6 +33,23 @@
 
 #include "spdk/crc32.h"
 
+#if defined(__aarch64__) || defined(__AARCH64__)
+#ifdef __ARM_FEATURE_CRC32
+#define SPDK_HAVE_ARM_CRC
+#include <arm_acle.h>
+#endif
+#endif
+
+#if defined(__x86_64__) && defined(__SSE4_2__)
+#ifdef SPDK_CONFIG_ISAL
+#define SPDK_HAVE_ISAL
+#include <isa-l/include/crc.h>
+#else
+#define SPDK_HAVE_SSE4_2
+#include <x86intrin.h>
+#endif
+#endif
+
 #ifdef SPDK_HAVE_ISAL
 
 uint32_t
