@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0f180e81_00ed5015",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T12:38:53Z",
+      "side": 1,
+      "message": "param",
+      "range": {
+        "startLine": 7,
+        "startChar": 33,
+        "endLine": 7,
+        "endChar": 37
+      },
+      "revId": "a3f2fbb9d89f4dc102b9ebc16f5971d711bf64b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c12e2fb_7b29d48f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T12:38:53Z",
+      "side": 1,
+      "message": "param",
+      "range": {
+        "startLine": 9,
+        "startChar": 21,
+        "endLine": 9,
+        "endChar": 25
+      },
+      "revId": "a3f2fbb9d89f4dc102b9ebc16f5971d711bf64b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e975856_688ac281",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T12:38:53Z",
+      "side": 1,
+      "message": "param",
+      "range": {
+        "startLine": 88,
+        "startChar": 4,
+        "endLine": 88,
+        "endChar": 8
+      },
+      "revId": "a3f2fbb9d89f4dc102b9ebc16f5971d711bf64b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8551eed2_0e4c7eb6",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-28T12:38:53Z",
+      "side": 1,
+      "message": "Two extra space (left side of \u003d and ;)",
+      "revId": "a3f2fbb9d89f4dc102b9ebc16f5971d711bf64b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
