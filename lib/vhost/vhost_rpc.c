@@ -103,7 +103,7 @@ SPDK_RPC_REGISTER("construct_vhost_scsi_controller", spdk_rpc_construct_vhost_sc
 
 struct rpc_add_vhost_scsi_ctrlr_lun {
 	char *ctrlr;
-	uint32_t scsi_target_num;
+	int32_t scsi_target_num;
 	char *bdev_name;
 
 	struct spdk_jsonrpc_request *request;
@@ -119,7 +119,7 @@ free_rpc_add_vhost_scsi_ctrlr_lun(struct rpc_add_vhost_scsi_ctrlr_lun *req)
 
 static const struct spdk_json_object_decoder rpc_vhost_add_lun[] = {
 	{"ctrlr", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, ctrlr), spdk_json_decode_string },
-	{"scsi_target_num", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, scsi_target_num), spdk_json_decode_uint32},
+	{"scsi_target_num", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, scsi_target_num), spdk_json_decode_int32},
 	{"bdev_name", offsetof(struct rpc_add_vhost_scsi_ctrlr_lun, bdev_name), spdk_json_decode_string },
 };
 
@@ -148,7 +148,7 @@ spdk_rpc_add_vhost_scsi_lun_cb(struct spdk_vhost_dev *vdev, void *arg)
 		return -1;
 	}
 
-	spdk_json_write_bool(w, true);
+	spdk_json_write_int32(w, rc);
 	spdk_jsonrpc_end_result(request, w);
 	return 0;
 

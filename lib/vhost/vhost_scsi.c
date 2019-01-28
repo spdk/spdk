@@ -938,7 +938,7 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 }
 
 int
-spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 			    const char *bdev_name)
 {
 	struct spdk_vhost_scsi_dev *svdev;
@@ -952,10 +952,23 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 		return -EINVAL;
 	}
 
-	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
-		SPDK_ERRLOG("Controller %d target number too big (max %d)\n", scsi_tgt_num,
-			    SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
-		return -EINVAL;
+	if (scsi_tgt_num < 0) {
+		for (scsi_tgt_num = 0; scsi_tgt_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_tgt_num++) {
+			if (svdev->scsi_dev_state[scsi_tgt_num].dev == NULL) {
+				break;
+			}
+		}
+
+		if (scsi_tgt_num == SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+			SPDK_ERRLOG("Controller %s - all targets already in use.\n", vdev->name);
+			return -ENOSPC;
+		}
+	} else {
+		if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
+			SPDK_ERRLOG("Controller %s target %d number too big (max %d)\n", vdev->name, scsi_tgt_num,
+				    SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
+			return -EINVAL;
+		}
 	}
 
 	if (bdev_name == NULL) {
@@ -993,7 +1006,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
 
 	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_add_tgt,
 				       (void *)(uintptr_t)scsi_tgt_num);
-	return 0;
+	return scsi_tgt_num;
 }
 
 static int
