@@ -1755,19 +1755,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_dev)
 
-    def construct_virtio_pci_scsi_bdev(args):
-        print_array(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
-                                                             pci_address=args.pci_address,
-                                                             name=args.name))
-
-    p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio
-    SCSI device from a virtio-pci device.""")
-    p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
-    domain.bus.device.function format""")
-    p.add_argument('name', help="""Name for the virtio device.
-    It will be inhereted by all created bdevs, which are named n the following format: <name>t<target_id>""")
-    p.set_defaults(func=construct_virtio_pci_scsi_bdev)
-
     def get_virtio_scsi_devs(args):
         print_dict(rpc.vhost.get_virtio_scsi_devs(args.client))
 

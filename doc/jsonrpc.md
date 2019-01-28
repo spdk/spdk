@@ -278,7 +278,6 @@ Example response:
     "get_virtio_scsi_devs",
     "remove_virtio_bdev",
     "remove_virtio_scsi_bdev",
-    "construct_virtio_pci_scsi_bdev",
     "delete_aio_bdev",
     "construct_aio_bdev",
     "destruct_split_vbdev",
@@ -2275,13 +2274,6 @@ Example response:
   "result": ["VirtioScsi0t2", "VirtioScsi0t4"]
 }
 ~~~
-
-
-## construct_virtio_pci_scsi_bdev {#rpc_construct_virtio_pci_scsi_bdev}
-
-This is legacy RPC method. It is equivalent of @ref rpc_construct_virtio_dev with `trtype` set to `pci` and `dev_type` set to `scsi`.
-
-Because it will be deprecated soon it is intentionally undocumented.
 
 ## construct_virtio_user_blk_bdev {#rpc_construct_virtio_user_blk_bdev}
 

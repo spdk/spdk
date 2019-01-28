@@ -155,22 +155,6 @@ def construct_virtio_dev(client, name, trtype, traddr, dev_type, vq_count=None, 
     return client.call('construct_virtio_dev', params)
 
 
-def construct_virtio_pci_scsi_bdev(client, pci_address, name):
-    """Create a Virtio SCSI device from a virtio-pci device.
-    Args:
-        pci_address: PCI address in domain:bus:device.function format or
-               domain.bus.device.function format
-        name: Name for the virtio device. It will be inhereted by all created
-               bdevs, which are named n the following format:
-               <name>t<target_id>
-    """
-    params = {
-        'pci_address': pci_address,
-        'name': name,
-    }
-    return client.call('construct_virtio_pci_scsi_bdev', params)
-
-
 def remove_virtio_scsi_bdev(client, name):
     """Remove a Virtio-SCSI device
     This will delete all bdevs exposed by this device.
