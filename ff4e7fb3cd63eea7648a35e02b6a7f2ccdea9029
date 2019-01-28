@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3b12bbb9_003464dd",
+        "filename": "doc/bdev.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T10:41:35Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 243,
+        "startChar": 20,
+        "endLine": 243,
+        "endChar": 21
+      },
+      "revId": "ff4e7fb3cd63eea7648a35e02b6a7f2ccdea9029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "175ad1c9_f4047bda",
+        "filename": "doc/bdev.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T10:41:35Z",
+      "side": 1,
+      "message": "bdev",
+      "range": {
+        "startLine": 249,
+        "startChar": 54,
+        "endLine": 249,
+        "endChar": 59
+      },
+      "revId": "ff4e7fb3cd63eea7648a35e02b6a7f2ccdea9029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cb9b89e_5d7e7842",
+        "filename": "doc/bdev.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 260,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-01-28T10:41:35Z",
+      "side": 1,
+      "message": "Maybe \u0027cached\u0027 would be better word here.",
+      "range": {
+        "startLine": 260,
+        "startChar": 49,
+        "endLine": 260,
+        "endChar": 53
+      },
+      "revId": "ff4e7fb3cd63eea7648a35e02b6a7f2ccdea9029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
