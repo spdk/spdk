@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "764f465f_ca36c700",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-28T15:46:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1a4b12a4_df0d4947",
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "938aaaed_2077e866",
         "filename": "test/ftl/config/fio/randw-verify.fio.in",
         "patchSetId": 82
@@ -30,6 +48,30 @@
       "writtenOn": "2019-01-28T15:17:13Z",
       "side": 1,
       "message": "norandommap is mutually exclusive with verify. I know it increases the performance, but it shouldn\u0027t be used here. You\u0027re using iodepth\u003d1 which is probably why you\u0027re not seeing any issues (as there\u0027s no way of having any read/write data races). This is walking on thin ice though. If you\u0027re confident this works, please add at least a comment here.\n\nReading from https://linux.die.net/man/1/fio :\n\n```\nnorandommap\nNormally fio will cover every block of the file when doing random I/O. If this parameter is given, a new offset will be chosen without looking at past I/O history. This parameter is mutually exclusive with verify.\n```",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 11
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "478672f5_24bd9e73",
+        "filename": "test/ftl/config/fio/randw-verify.fio.in",
+        "patchSetId": 82
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-28T15:46:37Z",
+      "side": 1,
+      "message": "I will remove it - this is not needed in this test.",
+      "parentUuid": "938aaaed_2077e866",
       "range": {
         "startLine": 17,
         "startChar": 0,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "1bd945c1_4e4e5374",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-28T15:46:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "26e92f3e_b64abd39",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 31,
+        "endChar": 6
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "70250f68_c1d38955",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 82
@@ -85,6 +151,30 @@
       "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f20e0f37_eb0086fb",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 82
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-01-28T15:46:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70250f68_c1d38955",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 6
+      },
+      "revId": "e0f6718770b8d303410eb0e7410a78f5928f9645",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
