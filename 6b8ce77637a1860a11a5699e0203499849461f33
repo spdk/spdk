@@ -22,6 +22,29 @@
       "revId": "6b8ce77637a1860a11a5699e0203499849461f33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "586a6667_2c216047",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1413,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-01-28T05:06:17Z",
+      "side": 1,
+      "message": "Thanks for the fixing. There are two paths coming here. We did not properly setup for the qos_poll() case which running periodically.",
+      "range": {
+        "startLine": 1413,
+        "startChar": 2,
+        "endLine": 1413,
+        "endChar": 45
+      },
+      "revId": "6b8ce77637a1860a11a5699e0203499849461f33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
