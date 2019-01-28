@@ -42,6 +42,7 @@ void spdk_bdev_rbd_free_config(char **config);
 char **spdk_bdev_rbd_dup_config(const char *const *config);
 
 typedef void (*spdk_delete_rbd_complete)(void *cb_arg, int bdeverrno);
+typedef void (*spdk_resize_rbd_complete)(void *cb_arg, int bdeverrno);
 
 struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *user_id, const char *pool_name,
 				       const char *const *config,
@@ -55,5 +56,9 @@ struct spdk_bdev *spdk_bdev_rbd_create(const char *name, const char *user_id, co
  */
 void spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn,
 			  void *cb_arg);
+
+void
+spdk_bdev_rbd_resize(struct spdk_bdev *bdev, uint64_t size,
+		     spdk_resize_rbd_complete cb_fn, void *cb_arg);
 
 #endif /* SPDK_BDEV_RBD_H */

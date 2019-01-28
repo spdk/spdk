@@ -206,3 +206,74 @@ invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
 }
 SPDK_RPC_REGISTER("delete_rbd_bdev", spdk_rpc_delete_rbd_bdev, SPDK_RPC_RUNTIME)
+
+struct rpc_resize_rbd {
+	char *name;
+	uint64_t size;
+};
+
+static void
+free_rpc_resize_rbd(struct rpc_resize_rbd *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_resize_rbd_decoders[] = {
+	{"name", offsetof(struct rpc_resize_rbd, name), spdk_json_decode_string, true},
+	{"size", offsetof(struct rpc_resize_rbd, size), spdk_json_decode_uint64},
+};
+
+static void
+_spdk_rpc_resize_rbd_bdev_cb(void *cb_arg, int rbderrno)
+{
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = cb_arg;
+
+	if (rbderrno != 0) {
+		goto invalid;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rbderrno));
+}
+
+static void
+spdk_rpc_resize_rbd_bdev(struct spdk_jsonrpc_request *request,
+			 const struct spdk_json_val *params)
+{
+	struct rpc_resize_rbd req = {NULL};
+	struct spdk_bdev *bdev;
+	int rc;
+
+	if (spdk_json_decode_object(params, rpc_resize_rbd_decoders,
+				    SPDK_COUNTOF(rpc_resize_rbd_decoders),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	bdev = spdk_bdev_get_by_name(req.name);
+	if (bdev == NULL) {
+		rc = -ENODEV;
+		goto invalid;
+	}
+
+	spdk_bdev_rbd_resize(bdev, req.size, _spdk_rpc_resize_rbd_bdev_cb, request);
+	free_rpc_resize_rbd(&req);
+	return;
+
+invalid:
+	free_rpc_resize_rbd(&req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, spdk_strerror(-rc));
+}
+SPDK_RPC_REGISTER("resize_rbd_bdev", spdk_rpc_resize_rbd_bdev, SPDK_RPC_RUNTIME)

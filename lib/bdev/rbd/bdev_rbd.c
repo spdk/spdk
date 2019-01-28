@@ -227,6 +227,43 @@ bdev_rbd_exit(rbd_image_t image)
 	rbd_close(image);
 }
 
+static int
+bdev_rbd_resize(void *arg, uint64_t offset)
+{
+	int ret;
+	rados_t cluster = NULL;
+	rados_ioctx_t io_ctx = NULL;
+	rbd_image_t image = NULL;
+	struct bdev_rbd *rbd = arg;
+	ret = bdev_rados_context_init(rbd->user_id, rbd->pool_name, (const char *const *)rbd->config,
+				      &cluster, &io_ctx);
+	if (ret < 0) {
+		SPDK_ERRLOG("Failed to create rados context for rbd_pool=%s\n",
+			    rbd->pool_name);
+		return -1;
+	}
+	ret = rbd_open(io_ctx, rbd->rbd_name, &image, NULL);
+	if (ret < 0) {
+		SPDK_ERRLOG("Failed to open specified rbd device %s\n", rbd->rbd_name);
+		goto err;
+	}
+	ret = rbd_resize(image, offset);
+	if (ret < 0) {
+		SPDK_ERRLOG("Failed to resize specified rbd device %s\n", rbd->rbd_name);
+		goto err;
+	}
+
+	rbd_close(image);
+	rados_ioctx_destroy(io_ctx);
+	rados_shutdown(cluster);
+	return 0;
+err:
+	rbd_close(image);
+	rados_ioctx_destroy(io_ctx);
+	rados_shutdown(cluster);
+	return -1;
+}
+
 static void
 bdev_rbd_finish_aiocb(rbd_completion_t cb, void *arg)
 {
@@ -776,6 +813,31 @@ spdk_bdev_rbd_delete(struct spdk_bdev *bdev, spdk_delete_rbd_complete cb_fn, voi
 	}
 
 	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+}
+
+void
+spdk_bdev_rbd_resize(struct spdk_bdev *bdev, uint64_t size, spdk_resize_rbd_complete cb_fn,
+		     void *cb_arg)
+{
+	int rbderrno = 0;
+	rbderrno = bdev_rbd_resize(bdev->ctxt, size);
+	if (rbderrno != 0) {
+		SPDK_ERRLOG("Could not resize rbd with error no: %d.\n",
+			    rbderrno);
+		cb_fn(cb_arg, rbderrno);
+		return;
+	}
+
+	rbderrno = spdk_bdev_notify_blockcnt_change(bdev, size / bdev->blocklen);
+	if (rbderrno != 0) {
+		SPDK_ERRLOG("Could not change num blocks for bdev rbd with error no: %d.\n",
+			    rbderrno);
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+	((struct bdev_rbd *)bdev)->info.size = size;
+	cb_fn(cb_arg, 0);
+	return;
 }
 
 static int
