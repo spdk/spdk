@@ -101,51 +101,6 @@ def get_nvmf_subsystems(client):
     return client.call('get_nvmf_subsystems')
 
 
-def construct_nvmf_subsystem(client,
-                             nqn,
-                             serial_number,
-                             listen_addresses=None,
-                             hosts=None,
-                             allow_any_host=False,
-                             namespaces=None,
-                             max_namespaces=0):
-    """Construct an NVMe over Fabrics target subsystem.
-
-    Args:
-        nqn: Subsystem NQN.
-        serial_number: Serial number of virtual controller.
-        listen_addresses: Array of listen_address objects (optional).
-        hosts: Array of strings containing allowed host NQNs (optional). Default: No hosts allowed.
-        allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
-        namespaces: Array of namespace objects (optional). Default: No namespaces.
-        max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
-
-    Returns:
-        True or False
-    """
-    params = {
-        'nqn': nqn,
-        'serial_number': serial_number,
-    }
-
-    if max_namespaces:
-        params['max_namespaces'] = max_namespaces
-
-    if listen_addresses:
-        params['listen_addresses'] = listen_addresses
-
-    if hosts:
-        params['hosts'] = hosts
-
-    if allow_any_host:
-        params['allow_any_host'] = True
-
-    if namespaces:
-        params['namespaces'] = namespaces
-
-    return client.call('construct_nvmf_subsystem', params)
-
-
 def nvmf_subsystem_create(client,
                           nqn,
                           serial_number,
