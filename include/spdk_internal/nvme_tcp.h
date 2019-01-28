@@ -73,40 +73,40 @@ typedef void (*nvme_tcp_qpair_xfer_complete_cb)(void *cb_arg);
 struct nvme_tcp_pdu {
 	union {
 		/* to hold error pdu data */
-		uint8_t                                 raw[SPDK_NVME_TCP_TERM_REQ_PDU_MAX_SIZE];
-		struct spdk_nvme_tcp_common_pdu_hdr     common;
-		struct spdk_nvme_tcp_ic_req             ic_req;
-		struct spdk_nvme_tcp_term_req_hdr       term_req;
-		struct spdk_nvme_tcp_cmd                capsule_cmd;
-		struct spdk_nvme_tcp_h2c_data_hdr       h2c_data;
-		struct spdk_nvme_tcp_ic_resp            ic_resp;
-		struct spdk_nvme_tcp_rsp                capsule_resp;
-		struct spdk_nvme_tcp_c2h_data_hdr       c2h_data;
-		struct spdk_nvme_tcp_r2t_hdr            r2t;
+		uint8_t					raw[SPDK_NVME_TCP_TERM_REQ_PDU_MAX_SIZE];
+		struct spdk_nvme_tcp_common_pdu_hdr	common;
+		struct spdk_nvme_tcp_ic_req		ic_req;
+		struct spdk_nvme_tcp_term_req_hdr	term_req;
+		struct spdk_nvme_tcp_cmd		capsule_cmd;
+		struct spdk_nvme_tcp_h2c_data_hdr	h2c_data;
+		struct spdk_nvme_tcp_ic_resp		ic_resp;
+		struct spdk_nvme_tcp_rsp		capsule_resp;
+		struct spdk_nvme_tcp_c2h_data_hdr	c2h_data;
+		struct spdk_nvme_tcp_r2t_hdr		r2t;
 
 	} hdr;
 
-	bool                                            has_hdgst;
-	uint8_t                                         data_digest[SPDK_NVME_TCP_DIGEST_LEN];
-	int32_t                                         padding_valid_bytes;
-	uint32_t                                        ddigest_valid_bytes;
+	bool						has_hdgst;
+	uint8_t						data_digest[SPDK_NVME_TCP_DIGEST_LEN];
+	int32_t						padding_valid_bytes;
+	uint32_t					ddigest_valid_bytes;
 
-	uint32_t                                        ch_valid_bytes;
-	uint32_t                                        psh_valid_bytes;
-	uint32_t                                        data_valid_bytes;
+	uint32_t					ch_valid_bytes;
+	uint32_t					psh_valid_bytes;
+	uint32_t					data_valid_bytes;
 
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
-	void                                            *cb_arg;
-	int                                             ref;
-	void                                            *data;
-	uint32_t                                        data_len;
+	void						*cb_arg;
+	int						ref;
+	void						*data;
+	uint32_t					data_len;
 	struct nvme_tcp_qpair				*tqpair;
 
 	struct nvme_tcp_req				*tcp_req; /* data tied to a tcp request */
-	uint32_t                                        writev_offset;
+	uint32_t					writev_offset;
 	TAILQ_ENTRY(nvme_tcp_pdu)			tailq;
-	uint32_t                                        remaining;
-	uint32_t                                        padding_len;
+	uint32_t					remaining;
+	uint32_t					padding_len;
 };
 
 enum nvme_tcp_pdu_recv_state {
