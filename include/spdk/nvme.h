@@ -545,6 +545,40 @@ struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *t
 		const struct spdk_nvme_ctrlr_opts *opts,
 		size_t opts_size);
 
+struct spdk_nvme_probe_ctx {
+	const struct spdk_nvme_transport_id	*trid;
+	void					*cb_ctx;
+	spdk_nvme_probe_cb			probe_cb;
+	spdk_nvme_attach_cb			attach_cb;
+	spdk_nvme_remove_cb			remove_cb;
+	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
+};
+
+/**
+ * Initialize a context to track the probe result based on transport ID.
+ *
+ * \param probe_ctx Context used to track probe actions.
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype
+ * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
+ * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
+ * service.
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true
+ * once that NVMe controller has been attached to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous
+ * spdk_nvme_probe() call but are no longer attached to the system. Optional;
+ * specify NULL if removal notices are not desired.
+ *
+ */
+void spdk_nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
+			      const struct spdk_nvme_transport_id *trid,
+			      void *cb_ctx,
+			      spdk_nvme_probe_cb probe_cb,
+			      spdk_nvme_attach_cb attach_cb,
+			      spdk_nvme_remove_cb remove_cb);
+
 /**
  * Detach specified device returned by spdk_nvme_probe()'s attach_cb from the
  * NVMe driver.

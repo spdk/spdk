@@ -1328,10 +1328,7 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
-nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
-		     void *cb_ctx,
-		     spdk_nvme_probe_cb probe_cb,
-		     spdk_nvme_remove_cb remove_cb,
+nvme_rdma_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		     bool direct_connect)
 {
 	struct spdk_nvme_ctrlr_opts discovery_opts;
@@ -1340,9 +1337,9 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	int rc;
 	struct nvme_completion_poll_status status;
 
-	if (strcmp(discovery_trid->subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
+	if (strcmp(probe_ctx->trid->subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
 		/* It is not a discovery_ctrlr info and try to directly connect it */
-		rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
+		rc = nvme_ctrlr_probe(probe_ctx->trid, probe_ctx, NULL);
 		return rc;
 	}
 
@@ -1350,7 +1347,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
-	discovery_ctrlr = nvme_rdma_ctrlr_construct(discovery_trid, &discovery_opts, NULL);
+	discovery_ctrlr = nvme_rdma_ctrlr_construct(probe_ctx->trid, &discovery_opts, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1386,12 +1383,12 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	if (direct_connect == true) {
 		/* Set the ready state to skip the normal init process */
 		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
-		nvme_ctrlr_connected(discovery_ctrlr);
+		nvme_ctrlr_connected(probe_ctx, discovery_ctrlr);
 		nvme_ctrlr_add_process(discovery_ctrlr, 0);
 		return 0;
 	}
 
-	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, cb_ctx, probe_cb);
+	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, probe_ctx);
 	nvme_ctrlr_destruct(discovery_ctrlr);
 	return rc;
 }
