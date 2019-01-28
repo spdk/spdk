@@ -98,7 +98,7 @@ enum spdk_nvmf_tcp_req_state {
 	TCP_REQUEST_NUM_STATES,
 };
 
-static const char *spdk_nvme_tcp_term_req_fes_str[] = {
+static const char *spdk_nvmf_tcp_term_req_fes_str[] = {
 	"Invalid PDU Header Field",
 	"PDU Sequence Error",
 	"Header Digiest Error",
@@ -1603,7 +1603,7 @@ static void
 spdk_nvmf_tcp_h2c_term_req_dump(struct spdk_nvme_tcp_term_req_hdr *h2c_term_req)
 {
 	SPDK_ERRLOG("Error info of pdu(%p): %s\n", h2c_term_req,
-		    spdk_nvme_tcp_term_req_fes_str[h2c_term_req->fes]);
+		    spdk_nvmf_tcp_term_req_fes_str[h2c_term_req->fes]);
 	if ((h2c_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_HEADER_FIELD) ||
 	    (h2c_term_req->fes == SPDK_NVME_TCP_TERM_REQ_FES_INVALID_DATA_UNSUPPORTED_PARAMETER)) {
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "The offset from the start of the PDU header is %u\n",
