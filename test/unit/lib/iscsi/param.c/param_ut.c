@@ -188,7 +188,7 @@ list_negotiation_test(void)
 
 #define PARSE(strconst, partial_enabled, partial_text) \
 	data = strconst; \
-	len = sizeof(strconst); \
+	len = sizeof(strconst) - 1; \
 	rc = spdk_iscsi_parse_params(&params, data, len, partial_enabled, partial_text)
 
 #define EXPECT_VAL(key, expected_value) \
@@ -272,6 +272,18 @@ parse_valid_test(void)
 	PARSE("LL=MMMM", false, &partial_parameter);
 	CU_ASSERT(rc == 0);
 	EXPECT_VAL("OOOOLL", "MMMM");
+	CU_ASSERT_PTR_NULL(partial_parameter);
+
+	partial_parameter = NULL;
+	data = "PartialKey=";
+	len = 7;
+	rc = spdk_iscsi_parse_params(&params, data, len, true, &partial_parameter);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_STRING_EQUAL(partial_parameter, "Partial");
+	EXPECT_NULL("PartialKey");
+	PARSE("Key=Value", false, &partial_parameter);
+	CU_ASSERT(rc == 0);
+	EXPECT_VAL("PartialKey", "Value");
 	CU_ASSERT_PTR_NULL(partial_parameter);
 
 	spdk_iscsi_param_free(params);
