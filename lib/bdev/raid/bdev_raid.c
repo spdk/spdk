@@ -707,11 +707,11 @@ _raid_bdev_submit_unmap_request_next(void *_bdev_io)
 		nblocks_in_disk = n_strips_in_disk * strip_size
 				  + end_offset_in_disk - start_offset_in_disk;
 
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID,
-			      "raid_bdev (strip_size 0x%lx, num_base_bdevs %lu) unmap (0x%lx, 0x%lx) "
-			      "split to unmap base_bdev (%lx) at (0x%lx, 0x%lx).\n",
-			      strip_size, n_disks, offset_blocks, num_blocks,
-			      disk_idx, offset_in_disk, nblocks_in_disk);
+		SPDK_ERRLOG(
+			"raid_bdev (strip_size 0x%lx, num_base_bdevs %lu) unmap (0x%lx, 0x%lx) "
+			"split to unmap base_bdev (%lx) at (0x%lx, 0x%lx).\n",
+			strip_size, n_disks, offset_blocks, num_blocks,
+			disk_idx, offset_in_disk, nblocks_in_disk);
 
 		ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
 					     raid_ch->base_channel[disk_idx],
