@@ -178,17 +178,3 @@ def remove_virtio_bdev(client, name):
 def get_virtio_scsi_devs(client):
     """Get list of virtio scsi devices."""
     return client.call('get_virtio_scsi_devs')
-
-
-def construct_virtio_pci_blk_bdev(client, pci_address, name):
-    """Create a Virtio Blk device from a virtio-pci device.
-    Args:
-        pci_address: PCI address in domain:bus:device.function format or
-               domain.bus.device.function format
-        name: name for the blk device
-    """
-    params = {
-        'pci_address': pci_address,
-        'name': name,
-    }
-    return client.call('construct_virtio_pci_blk_bdev', params)
