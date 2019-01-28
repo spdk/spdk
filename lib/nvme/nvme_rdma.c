@@ -914,14 +914,22 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
-			(uint64_t)payload, &requested_size);
 
-	if (mr == NULL || requested_size < req->payload_size) {
-		if (mr) {
-			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+	if (!g_nvme_hooks.get_rkey) {
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
+				(uint64_t)payload, &requested_size);
+
+		if (mr == NULL || requested_size < req->payload_size) {
+			if (mr) {
+				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+			}
+			return -EINVAL;
 		}
-		return -EINVAL;
+
+		rdma_req->send_sgl[1].lkey = mr->lkey;
+	} else {
+		rdma_req->send_sgl[1].lkey = spdk_mem_map_translate(rqpair->mr_map->map,
+					     (uint64_t)payload, &requested_size);
 	}
 
 	/* The first element of this SGL is pointing at an
@@ -932,7 +940,6 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 
 	rdma_req->send_sgl[1].addr = (uint64_t)payload;
 	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
-	rdma_req->send_sgl[1].lkey = mr->lkey;
 
 	/* The RDMA SGL contains two elements. The first describes
 	 * the NVMe command and the second describes the data
