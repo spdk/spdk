@@ -338,22 +338,18 @@ spdk_nvmf_tcp_pdu_get(struct nvme_tcp_qpair *tqpair)
 	TAILQ_REMOVE(&tqpair->free_queue, pdu, tailq);
 	memset(pdu, 0, sizeof(*pdu));
 	pdu->ref = 1;
-	pdu->tqpair = tqpair;
 
 	return pdu;
 }
 
 static void
-spdk_nvmf_tcp_pdu_put(struct nvme_tcp_pdu *pdu)
+spdk_nvmf_tcp_pdu_put(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu *pdu)
 {
-	struct nvme_tcp_qpair *tqpair;
 	if (!pdu) {
 		return;
 	}
 
 	assert(pdu->ref > 0);
-	assert(pdu->tqpair != NULL);
-	tqpair = pdu->tqpair;
 
 	pdu->ref--;
 	if (pdu->ref == 0) {
@@ -454,7 +450,7 @@ spdk_nvmf_tcp_cleanup_all_states(struct nvme_tcp_qpair *tqpair)
 			assert(tqpair->c2h_data_pdu_cnt > 0);
 			tqpair->c2h_data_pdu_cnt--;
 		}
-		spdk_nvmf_tcp_pdu_put(pdu);
+		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 	}
 
 	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->queued_c2h_data_tcp_req, link, req_tmp) {
@@ -893,7 +889,7 @@ spdk_nvmf_tcp_qpair_flush_pdus_internal(struct nvme_tcp_qpair *tqpair)
 		TAILQ_REMOVE(&completed_pdus_list, pdu, tailq);
 		assert(pdu->cb_fn != NULL);
 		pdu->cb_fn(pdu->cb_arg);
-		spdk_nvmf_tcp_pdu_put(pdu);
+		spdk_nvmf_tcp_pdu_put(tqpair, pdu);
 	}
 
 	ttransport = SPDK_CONTAINEROF(tqpair->qpair.transport, struct spdk_nvmf_tcp_transport, transport);
