@@ -335,7 +335,7 @@ test_nvmf_tcp_poll_group_create(void)
 static void
 test_nvmf_tcp_qpair_is_idle(void)
 {
-	struct nvme_tcp_qpair tqpair;
+	struct spdk_nvmf_tcp_qpair tqpair;
 
 	memset(&tqpair, 0, sizeof(tqpair));
 
