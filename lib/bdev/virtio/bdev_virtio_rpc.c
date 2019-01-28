@@ -198,60 +198,6 @@ free_rpc_construct_virtio_blk_dev(struct rpc_construct_virtio_blk_dev *req)
 	free(req->name);
 }
 
-static const struct spdk_json_object_decoder rpc_construct_virtio_user_blk_dev[] = {
-	{"path", offsetof(struct rpc_construct_virtio_blk_dev, path), spdk_json_decode_string },
-	{"name", offsetof(struct rpc_construct_virtio_blk_dev, name), spdk_json_decode_string },
-	{"vq_count", offsetof(struct rpc_construct_virtio_blk_dev, vq_count), spdk_json_decode_uint32, true },
-	{"vq_size", offsetof(struct rpc_construct_virtio_blk_dev, vq_size), spdk_json_decode_uint32, true },
-};
-
-static void
-spdk_rpc_create_virtio_user_blk_bdev(struct spdk_jsonrpc_request *request,
-				     const struct spdk_json_val *params)
-{
-	struct rpc_construct_virtio_blk_dev req = {0};
-	struct spdk_json_write_ctx *w;
-	struct spdk_bdev *bdev;
-	int rc;
-
-	req.pci_address = NULL;
-	req.vq_count = SPDK_VIRTIO_USER_DEFAULT_VQ_COUNT;
-	req.vq_size = SPDK_VIRTIO_USER_DEFAULT_QUEUE_SIZE;
-
-	SPDK_WARNLOG("construct_virtio_user_blk_bdev command has been deprecated and will be removed "
-		     "in the subsequent release. Please use construct_virtio_dev instead.\n");
-
-	if (spdk_json_decode_object(params, rpc_construct_virtio_user_blk_dev,
-				    SPDK_COUNTOF(rpc_construct_virtio_user_blk_dev),
-				    &req)) {
-		free_rpc_construct_virtio_blk_dev(&req);
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	bdev = bdev_virtio_user_blk_dev_create(req.name, req.path, req.vq_count, req.vq_size);
-	free_rpc_construct_virtio_blk_dev(&req);
-	if (bdev == NULL) {
-		rc = -EINVAL;
-		goto invalid;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
-	spdk_jsonrpc_end_result(request, w);
-	return;
-
-invalid:
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-					 spdk_strerror(-rc));
-}
-SPDK_RPC_REGISTER("construct_virtio_user_blk_bdev", spdk_rpc_create_virtio_user_blk_bdev,
-		  SPDK_RPC_RUNTIME);
-
 static const struct spdk_json_object_decoder rpc_construct_virtio_pci_blk_dev[] = {
 	{"pci_address", offsetof(struct rpc_construct_virtio_blk_dev, pci_address), spdk_json_decode_string },
 	{"name", offsetof(struct rpc_construct_virtio_blk_dev, name), spdk_json_decode_string },
