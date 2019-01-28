@@ -16,6 +16,24 @@
       "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2905b204_70c4b99d",
+        "filename": "test/ocf/management/create-destruct.sh",
+        "patchSetId": 20
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:04:07Z",
+      "side": 1,
+      "message": "We need to tests with some target and iscsi is OK for that.\nspdk_tgt would be more straightforward but it requires additional setup.\nAre you OK with such reason?",
+      "parentUuid": "a80c8cfd_23a606dd",
+      "revId": "bf623716907b3ed05a7e71342da93cb786eaa8e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
