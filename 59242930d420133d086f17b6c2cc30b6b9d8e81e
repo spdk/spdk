@@ -22,6 +22,30 @@
       "revId": "59242930d420133d086f17b6c2cc30b6b9d8e81e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d65858cb_6550df70",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 34
+      },
+      "lineNbr": 802,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T15:25:56Z",
+      "side": 1,
+      "message": "Would that be ok if I add just the full names?\nBecause their description is part of OCF documentation which we reffer to in our docs.",
+      "parentUuid": "96834630_a71468fc",
+      "range": {
+        "startLine": 802,
+        "startChar": 66,
+        "endLine": 802,
+        "endChar": 80
+      },
+      "revId": "59242930d420133d086f17b6c2cc30b6b9d8e81e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
