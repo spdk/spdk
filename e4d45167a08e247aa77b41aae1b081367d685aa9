@@ -16,6 +16,24 @@
       "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4efff467_0ecb4662",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-28T08:36:32Z",
+      "side": 1,
+      "message": "DPDK mempool requires unique name for it because it uses DPDK memzone to allocate pool.\n\"ocf_env_9999\" would not be unique forever, so that will not work.\n\nEven though documentation for rte_mempool does not mention that name has to be unique, it still fails when it is not becase description for rte_memzone_reserve says:\n * @param name\n *   The name of the memzone. If it already exists, the function will\n *   fail and return NULL.\n\nSo qualified_name is qualified for mempool because it is unique.\n\nDo you have other suggestions?",
+      "parentUuid": "7c2253f8_b94e2ded",
+      "revId": "e4d45167a08e247aa77b41aae1b081367d685aa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
