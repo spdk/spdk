@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c77f0b21_2c8c83c6",
+        "filename": "examples/nvme/arbitration/arbitration.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-28T08:32:24Z",
+      "side": 1,
+      "message": "The underlying strtol will potentially crash due to optarg \u003d\u003d NULL. The params specified in getops() do require a parameter and getops will fail straight away if they don\u0027t, but you\u0027re handling the default case here.\n\n$ ./arbitration -x -y",
+      "range": {
+        "startLine": 706,
+        "startChar": 21,
+        "endLine": 706,
+        "endChar": 27
+      },
+      "revId": "1eb5c9a8383a1a3836c43b6b1de6a8c1185a1fde",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
