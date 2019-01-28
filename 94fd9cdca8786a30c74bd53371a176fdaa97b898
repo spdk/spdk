@@ -16,6 +16,24 @@
       "revId": "94fd9cdca8786a30c74bd53371a176fdaa97b898",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bc603e5_6dbdc7d2",
+        "filename": "dpdk",
+        "patchSetId": 1
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2019-01-28T15:23:29Z",
+      "side": 1,
+      "message": "My mistake, I checked out the file instead of resetting the directory.",
+      "parentUuid": "23cbc5e1_fa17475e",
+      "revId": "94fd9cdca8786a30c74bd53371a176fdaa97b898",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
