@@ -107,7 +107,6 @@ static pthread_mutex_t			g_ftl_bdev_lock;
 
 static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
-static void bdev_ftl_get_spdk_running_config(FILE *fp);
 
 static int
 bdev_ftl_get_ctx_size(void)
@@ -121,8 +120,6 @@ static struct spdk_bdev_module g_ftl_if = {
 	.async_fini	= true,
 	.module_init	= bdev_ftl_initialize,
 	.module_fini	= bdev_ftl_finish,
-	/*  TODO: Replace config_text with config_json */
-	.config_text	= bdev_ftl_get_spdk_running_config,
 	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
 
@@ -401,7 +398,34 @@ bdev_ftl_get_io_channel(void *ctx)
 static void
 bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w)
 {
-	/* TODO: implement me! */
+	struct ftl_bdev *ftl_bdev = bdev->ctxt;
+	struct spdk_ftl_attrs attrs;
+	const char *trtype_str;
+	char uuid[SPDK_UUID_STRING_LEN];
+
+	spdk_ftl_dev_get_attrs(ftl_bdev->dev, &attrs);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string(w, "method", "construct_ftl_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", ftl_bdev->bdev.name);
+
+	trtype_str = spdk_nvme_transport_id_trtype_str(ftl_bdev->ctrlr->trid.trtype);
+	if (trtype_str) {
+		spdk_json_write_named_string(w, "trtype", trtype_str);
+	}
+	spdk_json_write_named_string(w, "traddr", ftl_bdev->ctrlr->trid.traddr);
+
+	spdk_json_write_named_string_fmt(w, "punits", "%d-%d", attrs.range.begin, attrs.range.end);
+
+	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
+	spdk_json_write_named_string(w, "uuid", uuid);
+
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
 }
 
 static const struct spdk_bdev_fn_table ftl_fn_table = {
@@ -917,12 +941,6 @@ bdev_ftl_finish(void)
 
 	g_finish_cb = bdev_ftl_finish_cb;
 	pthread_mutex_unlock(&g_ftl_bdev_lock);
-}
-
-static void
-bdev_ftl_get_spdk_running_config(FILE *fp)
-{
-	fprintf(fp, "\n[Ftl]\n");
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev_ftl", SPDK_LOG_BDEV_FTL)
