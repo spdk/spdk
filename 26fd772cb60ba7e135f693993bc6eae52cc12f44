@@ -105,6 +105,30 @@
     },
     {
       "key": {
+        "uuid": "87452364_69775b69",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-01-29T08:57:17Z",
+      "side": 1,
+      "message": "We are following same rule that is used in TAILQ, bdev, blobstore...",
+      "parentUuid": "7ac3c8ea_732b7c97",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 111,
+        "endChar": 1
+      },
+      "revId": "26fd772cb60ba7e135f693993bc6eae52cc12f44",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6e203de6_6c91bab2",
         "filename": "lib/notify/notify.c",
         "patchSetId": 26
