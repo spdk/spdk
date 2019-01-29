@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "75cc8cac_7a926c40",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 1,
+      "message": "BASE_DIR is defined in test/vhost/common/common.sh.\nI want to avoid overriding variables.",
+      "parentUuid": "cd0ea662_8adc7fe6",
+      "range": {
+        "startLine": 4,
+        "startChar": 11,
+        "endLine": 4,
+        "endChar": 22
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c074bbd0_1f49a548",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 2
@@ -59,6 +83,30 @@
       "writtenOn": "2019-01-23T11:51:16Z",
       "side": 1,
       "message": "Function is \"run vhost\", so putting any configuration calls here is misleading. I think these construct_* calls belong somehere else.\nBTW, do we even need this as a function? I think I only saw run_vhost() used once, so for any future fixes you might want to clean this up...",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 1
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2c0bb4f7_76118b9c",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c074bbd0_1f49a548",
       "range": {
         "startLine": 79,
         "startChar": 0,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "3206d677_bf0aa2ff",
+        "filename": "test/vhost/hotplug/scsi_hotattach.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 1,
+      "message": "Answer in common.sh.",
+      "parentUuid": "ee11462c_9ed1ec1b",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 40
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8bb594de_8fbd9607",
         "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
         "patchSetId": 2
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "9a2a9161_49d05942",
+        "filename": "test/vhost/hotplug/scsi_hotdetach.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 1,
+      "message": "Answer in common.sh",
+      "parentUuid": "8bb594de_8fbd9607",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 40
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2774cf3b_45629af0",
         "filename": "test/vhost/hotplug/scsi_hotplug.sh",
         "patchSetId": 2
@@ -128,6 +224,30 @@
       "writtenOn": "2019-01-23T11:51:16Z",
       "side": 1,
       "message": "Same comment as in common.sh @ line 4",
+      "range": {
+        "startLine": 3,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 40
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d8d57ed_61eeac7c",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 1,
+      "message": "Answer in common.sh",
+      "parentUuid": "2774cf3b_45629af0",
       "range": {
         "startLine": 3,
         "startChar": 0,

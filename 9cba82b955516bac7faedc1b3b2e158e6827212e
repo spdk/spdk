@@ -22,6 +22,30 @@
       "revId": "9cba82b955516bac7faedc1b3b2e158e6827212e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f6ae3708_eaa045db",
+        "filename": "test/vhost/hotplug/scsi_hotattach.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T13:47:15Z",
+      "side": 0,
+      "message": "We use attach/detach tests concurrently. We should delete nvme controller after these both tests not after attach tests.",
+      "parentUuid": "4c669af5_33f7059f",
+      "range": {
+        "startLine": 97,
+        "startChar": 4,
+        "endLine": 97,
+        "endChar": 40
+      },
+      "revId": "9cba82b955516bac7faedc1b3b2e158e6827212e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
