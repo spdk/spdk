@@ -10,6 +10,34 @@ values from user input.
 
 ### environment
 
+spdk_vtophys() has been refactored to accept length of the translated region as a new
+parameter. The function will now update that parameter with the smallest possible value
+for which the memory is contiguous in the physical memory address space.
+
+The following functions were removed:
+ - spdk_pci_nvme_device_attach()
+ - spdk_pci_nvme_enumerate()
+ - spdk_pci_ioat_device_attach()
+ - spdk_pci_ioat_enumerate()
+ - spdk_pci_virtio_device_attach()
+ - spdk_pci_virtio_enumerate()
+
+They were replaced with generic spdk_pci_device_attach() and spdk_pci_enumerate() which
+require a new spdk_pci_driver object to be provided. It can be one of the following:
+ - spdk_pci_nvme_get_driver()
+ - spdk_pci_ioat_get_driver()
+ - spdk_pci_virtio_get_driver()
+
+spdk_pci_hook_device() and spdk_pci_unhook_device() were added. Those allow adding a virtual
+spdk_pci_device into the SPDK PCI subsystem. A virtual device calls provided callbacks for
+each BAR mapping request or PCI config access. It's attachable with spdk_pci_device_attach()
+or spdk_pci_enumerate() like any other device.
+
+A new spdk_pause() function was added to pause CPU execution for an implementation specific
+amount of time. Quoting from DPDK function this is based on: "This call is intended for
+tight loops which poll a shared resource or wait for an event. A short pause within the loop
+may reduce the power consumption."
+
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init
 is added into it. If user is using DPDK, and already called rte_eal_init, then include
 include/spdk/env_dpdk.h, and call spdk_env_dpdk_post_init() instead of spdk_env_init.
