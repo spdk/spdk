@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04756faf_2d3c651f",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T17:52:39Z",
+      "side": 1,
+      "message": "can we drop that single word entirely? I think that\u0027s what PawelW originally suggested on my patch.\n\n\"ISA-L not found. Please run: [...]\"",
+      "range": {
+        "startLine": 420,
+        "startChar": 14,
+        "endLine": 420,
+        "endChar": 23
+      },
+      "revId": "767ce30aae73857d6ee289112e5c73a1da322003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
