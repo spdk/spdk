@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3a315122_874abd37",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c5cfe9d9_4bb5ed74",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "92bcf9fe_a7445e19",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -30,6 +48,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "enable",
+      "range": {
+        "startLine": 94,
+        "startChar": 9,
+        "endLine": 94,
+        "endChar": 16
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d563f26e_ce1ace4a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "92bcf9fe_a7445e19",
       "range": {
         "startLine": 94,
         "startChar": 9,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "5e136d24_b72e14aa",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "they\u0027re removed in a later patch",
+      "parentUuid": "e61bdfa2_69f9d672",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7fa31827_930b0da8",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -82,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "e80d3580_1ce4e637",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "I just grep\u0027d the codebase and don\u0027t see this used anywhere else. If you think its too short I can rename to compress_bdev of course",
+      "parentUuid": "7fa31827_930b0da8",
+      "range": {
+        "startLine": 113,
+        "startChar": 19,
+        "endLine": 113,
+        "endChar": 28
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12d55be6_a099ae11",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -93,6 +177,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "devices up to i-1 should be freed by parsing g_vbdev_devs?",
+      "range": {
+        "startLine": 325,
+        "startChar": 0,
+        "endLine": 325,
+        "endChar": 19
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41cb9222_7556edca",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12d55be6_a099ae11",
       "range": {
         "startLine": 325,
         "startChar": 0,
@@ -299,6 +407,24 @@
     },
     {
       "key": {
+        "uuid": "9c37a4fa_3d9b67b4",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6eee8930_e3aa8792",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b23a480e_00d3cf6d",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 16
@@ -313,6 +439,24 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88d160d4_dc1d50b9",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b23a480e_00d3cf6d",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -333,6 +477,24 @@
     },
     {
       "key": {
+        "uuid": "c8ae6403_ac85a7da",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "599005ff_dcaf61f0",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60667b3e_d695e90d",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 16
@@ -344,6 +506,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "comment for this is missing.",
+      "range": {
+        "startLine": 50,
+        "startChar": 72,
+        "endLine": 50,
+        "endChar": 92
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66f3fc42_2874689d",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "60667b3e_d695e90d",
       "range": {
         "startLine": 50,
         "startChar": 72,
@@ -373,6 +559,24 @@
     },
     {
       "key": {
+        "uuid": "657b7850_31b432af",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eee985dc_56781ff3",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f69007f3_9982a86f",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 16
@@ -387,6 +591,24 @@
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62883dcd_af6d35ce",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:10:26Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f69007f3_9982a86f",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
