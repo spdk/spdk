@@ -78,6 +78,13 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 					      cc->raw);
 }
 
+int
+nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz)
+{
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+					      &cmbsz->raw);
+}
+
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
@@ -2352,6 +2359,17 @@ union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr
 union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr)
 {
 	return ctrlr->vs;
+}
+
+union spdk_nvme_cmbsz_register
+	spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cmbsz_register cmbsz;
+
+	if (nvme_ctrlr_get_cmbsz(ctrlr, &cmbsz)) {
+		cmbsz.raw = 0xFFFFFFFFu;
+	}
+	return cmbsz;
 }
 
 uint32_t
