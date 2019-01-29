@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e723e5ed_d22d4faf",
+        "filename": "test/nvme/spdk_nvme_cli.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-01-29T13:56:35Z",
+      "side": 1,
+      "message": "I think it would be better to fix this directly in nvme-cli.",
+      "revId": "d23104cd5f6fc647d78ecc5c291533c28de44ae0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
