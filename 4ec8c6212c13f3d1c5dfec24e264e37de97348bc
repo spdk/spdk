@@ -22,6 +22,30 @@
       "revId": "4ec8c6212c13f3d1c5dfec24e264e37de97348bc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bd267e2_007e7285",
+        "filename": "test/app/stub/stub.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T00:14:04Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "eaf8b20f_77507cee",
+      "range": {
+        "startLine": 116,
+        "startChar": 21,
+        "endLine": 116,
+        "endChar": 27
+      },
+      "revId": "4ec8c6212c13f3d1c5dfec24e264e37de97348bc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
