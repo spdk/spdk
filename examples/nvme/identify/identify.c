@@ -865,6 +865,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
 	union spdk_nvme_vs_register		vs;
+	union spdk_nvme_cmbsz_register		cmbsz;
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
@@ -875,6 +876,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
+	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
 
 	if (!spdk_nvme_ctrlr_is_discovery(ctrlr)) {
 		/*
@@ -994,6 +996,30 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	printf("128-bit Host Identifier:               %s\n",
 	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");
+	printf("\n");
+
+	printf("Controller Memory Buffer Support\n");
+	printf("============================\n");
+	if (cmbsz.raw != 0 && cmbsz.raw != 0xFFFFFFFFu) {
+		uint64_t size = cmbsz.bits.sz;
+
+		/* Convert the size to bytes by multiplying by the granularity.
+		   By spec, szu is at most 6 so this won't overflow. */
+		size *= (0x1000 << (cmbsz.bits.szu * 4));
+
+		printf("Supported:                             Yes\n");
+		printf("Total Size:                            %lu bytes\n", size);
+		printf("Submission Queues in CMB:              %s\n",
+		       cmbsz.bits.sqs ? "Supported" : "Not Supported");
+		printf("Completion Queues in CMB:              %s\n",
+		       cmbsz.bits.cqs ? "Supported" : "Not Supported");
+		printf("Read data and metadata in CMB          %s\n",
+		       cmbsz.bits.sqs ? "Supported" : "Not Supported");
+		printf("Write data and metadata in CMB:        %s\n",
+		       cmbsz.bits.sqs ? "Supported" : "Not Supported");
+	} else {
+		printf("Supported:                             No\n");
+	}
 	printf("\n");
 
 	printf("Admin Command Set Attributes\n");
