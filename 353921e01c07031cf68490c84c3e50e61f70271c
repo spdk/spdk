@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f6a0a2b_e84816f6",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T16:42:54Z",
+      "side": 1,
+      "message": "Too long line. Could we split it.",
+      "range": {
+        "startLine": 233,
+        "startChar": 14,
+        "endLine": 233,
+        "endChar": 24
+      },
+      "revId": "353921e01c07031cf68490c84c3e50e61f70271c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
