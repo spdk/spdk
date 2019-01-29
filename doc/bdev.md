@@ -250,7 +250,7 @@ To delete an aio bdev use the delete_aio_bdev command.
 
 # OCF Virtual bdev {#bdev_config_cas}
 
-OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/) - a
+OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/ocf) - a
 high performance block storage caching meta-library.
 To enable the module, configure SPDK with `--with-ocf=/path/to/ocf/library`.
 OCF bdev can be used to enable caching for any underlying bdev.
@@ -275,7 +275,7 @@ During removal OCF-cache will be stopped and all cached data will be written to 
 Note that OCF has a per-device RAM requirement
 of about 56000 + _cache device size_ * 58 / _cache line size_ (in bytes).
 To get more information on OCF
-please visit [OCF documentation](https://open-cas.github.io/doxygen/ocf/).
+please visit [OCF documentation](https://open-cas.github.io/).
 
 # Malloc bdev {#bdev_config_malloc}
 
