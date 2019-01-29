@@ -329,7 +329,6 @@ bdev_null_initialize(void)
 		if (val == NULL) {
 			block_size = 512;
 		} else {
-			errno = 0;
 			block_size = (int)spdk_strtol(val, 10);
 			if (block_size <= 0) {
 				SPDK_ERRLOG("Null entry %d: Invalid block size %s\n", i, val);
