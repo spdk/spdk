@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.01: (Upcoming Release)
+## v19.01:
 
 ### ocf bdev
 
