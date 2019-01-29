@@ -213,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "82667590_6d85b9d4",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Holy cow you are right! I need to fix this in Crypto as well...",
+      "parentUuid": "41cb9222_7556edca",
+      "range": {
+        "startLine": 325,
+        "startChar": 0,
+        "endLine": 325,
+        "endChar": 19
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e61f4ac_64649028",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -230,6 +254,24 @@
     },
     {
       "key": {
+        "uuid": "92f37765_71a536a7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4e61f4ac_64649028",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "58fd87d0_0812d2cc",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -241,6 +283,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "enable",
+      "range": {
+        "startLine": 334,
+        "startChar": 9,
+        "endLine": 334,
+        "endChar": 16
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "87b6bd6d_5046338d",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "58fd87d0_0812d2cc",
       "range": {
         "startLine": 334,
         "startChar": 9,
@@ -276,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "2bc0ab4e_f9993b38",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 353,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "e4b85f65_53be9845",
+      "range": {
+        "startLine": 353,
+        "startChar": 30,
+        "endLine": 353,
+        "endChar": 38
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3988e3bb_d605dd3f",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -287,6 +377,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "complete",
+      "range": {
+        "startLine": 366,
+        "startChar": 28,
+        "endLine": 366,
+        "endChar": 36
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9aef86ea_a1064a9f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3988e3bb_d605dd3f",
       "range": {
         "startLine": 366,
         "startChar": 28,
@@ -316,6 +430,24 @@
     },
     {
       "key": {
+        "uuid": "a5c9d84d_3795e044",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e0a8d338_d572a9aa",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f96103c6_d40283e1",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -327,6 +459,30 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "this should be initialized to any value explicitly in case that g_bdev_names is empty.",
+      "range": {
+        "startLine": 1020,
+        "startChar": 5,
+        "endLine": 1020,
+        "endChar": 8
+      },
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8ec4cba8_643a1bb3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1020,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f96103c6_d40283e1",
       "range": {
         "startLine": 1020,
         "startChar": 5,
@@ -356,6 +512,24 @@
     },
     {
       "key": {
+        "uuid": "1bfe68ba_e3ad496e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1025,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "all this is gone in a later patch.",
+      "parentUuid": "d0afe580_05ce1f30",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6b021e27_ee0d3da3",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -373,6 +547,24 @@
     },
     {
       "key": {
+        "uuid": "9a784546_c5275fc4",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "Oh, cool.  OK, I\u0027ll get that in a later patch series",
+      "parentUuid": "6b021e27_ee0d3da3",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e4293d78_d8bbdc7c",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -384,6 +576,24 @@
       "writtenOn": "2019-01-08T04:29:38Z",
       "side": 1,
       "message": "should be removed.",
+      "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25dfbdb8_fefb4a41",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1164,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-01-29T23:25:37Z",
+      "side": 1,
+      "message": "why exactly? I have debug prints in the rpc C file",
+      "parentUuid": "e4293d78_d8bbdc7c",
       "revId": "e84c5118a550c12f24c5321172da60de8822dccc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
