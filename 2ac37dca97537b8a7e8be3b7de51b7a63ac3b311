@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a63565b_012befd0",
+        "filename": "test/unit/lib/iscsi/param.c/param_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T04:57:16Z",
+      "side": 1,
+      "message": "7 \u003d strlen(\"Partial\")",
+      "range": {
+        "startLine": 279,
+        "startChar": 7,
+        "endLine": 279,
+        "endChar": 8
+      },
+      "revId": "2ac37dca97537b8a7e8be3b7de51b7a63ac3b311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb776f99_64a891a5",
+        "filename": "test/unit/lib/iscsi/param.c/param_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T04:57:16Z",
+      "side": 1,
+      "message": "this emulates start from K in PartialKey\u003dValue.",
+      "range": {
+        "startLine": 284,
+        "startChar": 1,
+        "endLine": 284,
+        "endChar": 6
+      },
+      "revId": "2ac37dca97537b8a7e8be3b7de51b7a63ac3b311",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
