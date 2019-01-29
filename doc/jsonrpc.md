@@ -713,7 +713,9 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 ## delete_bdev {#rpc_delete_bdev}
 
-Unregister a block device.
+Unregister a block device.  This RPC is deprecated.  Users should instead use
+the specific deletion RPC for the bdev type to be removed (i.e.
+delete_malloc_bdev).
 
 ### Parameters
 

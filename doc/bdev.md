@@ -102,14 +102,6 @@ the data and show table containing IO count for latency ranges.
 
 The command will disable histogram on Nvme0n1 device.
 
-## delete_bdev {#bdev_ug_delete_bdev}
-
-To remove previously created bdev user can use `delete_bdev` RPC command.
-Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name. This RPC command
-should be used only for debugging purpose. To remove a particular bdev please
-use the delete command specific to its bdev module.
-
 # Ceph RBD {#bdev_config_rbd}
 
 The SPDK RBD bdev driver provides SPDK block layer access to Ceph RADOS block
