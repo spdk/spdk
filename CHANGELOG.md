@@ -90,6 +90,9 @@ planned shutdown.
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
 This allows for basing clones on top of lvol_bdev without first creating a snapshot.
 
+Added option to change method for data erasure when deleting lvol or resizing down.
+Default of unmapping clusters can now be changed to writing zeroes or no operation.
+
 ### log
 
 "trace flags" are now referred to as "log flags" in the SPDK log API.  The
