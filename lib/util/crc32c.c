@@ -35,7 +35,7 @@
 
 #ifdef SPDK_HAVE_ISAL
 
-uint32_t
+uint32_t __attribute__ ((weak))
 spdk_crc32c_update(const void *buf, size_t len, uint32_t crc)
 {
 	return crc32_iscsi((unsigned char *)buf, len, crc);
