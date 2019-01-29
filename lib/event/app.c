@@ -782,6 +782,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 	struct option *cmdline_options;
 	char *cmdline_short_opts = NULL;
 	enum spdk_app_parse_args_rvals retval = SPDK_APP_PARSE_ARGS_FAIL;
+	long int tmp;
 
 	memcpy(&g_default_opts, opts, sizeof(g_default_opts));
 
@@ -856,25 +857,28 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			retval = SPDK_APP_PARSE_ARGS_HELP;
 			goto out;
 		case SHM_ID_OPT_IDX:
-			if (optarg == NULL) {
+			opts->shm_id = spdk_strtol(optarg, 10);
+			if (opts->shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
 				goto out;
 			}
-			opts->shm_id = atoi(optarg);
 			break;
 		case CPUMASK_OPT_IDX:
 			opts->reactor_mask = optarg;
 			break;
 		case MEM_CHANNELS_OPT_IDX:
-			if (optarg == NULL) {
+			opts->mem_channel = spdk_strtol(optarg, 10);
+			if (opts->mem_channel < 0) {
+				fprintf(stderr, "Invalid memory channel %s\n", optarg);
 				goto out;
 			}
-			opts->mem_channel = atoi(optarg);
 			break;
 		case MASTER_CORE_OPT_IDX:
-			if (optarg == NULL) {
+			opts->master_core = spdk_strtol(optarg, 10);
+			if (opts->master_core < 0) {
+				fprintf(stderr, "Invalid master core %s\n", optarg);
 				goto out;
 			}
-			opts->master_core = atoi(optarg);
 			break;
 		case SILENCE_NOTICELOG_OPT_IDX:
 			opts->print_level = SPDK_LOG_WARN;
@@ -970,18 +974,21 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->hugedir = optarg;
 			break;
 		case NUM_TRACE_ENTRIES_OPT_IDX:
-			opts->num_entries = strtoull(optarg, NULL, 0);
-			if (opts->num_entries == ULLONG_MAX || opts->num_entries == 0) {
+			tmp = spdk_strtoll(optarg, 0);
+			if (tmp <= 0) {
 				fprintf(stderr, "Invalid num_entries %s\n", optarg);
 				usage(app_usage);
 				goto out;
 			}
+			opts->num_entries = (uint64_t)tmp;
 			break;
 		case MAX_REACTOR_DELAY_OPT_IDX:
-			if (optarg == NULL) {
+			tmp = spdk_strtol(optarg, 10);
+			if (tmp < 0) {
+				fprintf(stderr, "Invalid maximum latency %s\n", optarg);
 				goto out;
 			}
-			opts->max_delay_us = atoi(optarg);
+			opts->max_delay_us = (uint64_t)tmp;
 			break;
 		case '?':
 			/*
