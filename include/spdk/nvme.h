@@ -616,6 +616,15 @@ union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr
 union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
+ * Get the NVMe controller CMBSZ (Controller Memory Buffer Size) register
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller CMBSZ (Controller Memory Buffer Size) register.
+ */
+union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Get the number of namespaces for the given NVMe controller.
  *
  * This function is thread safe and can be called at any point while the
