@@ -81,6 +81,27 @@ specified.  When both rate limits are enabled, the first met limit will
 take effect.  The value 0 may be specified to disable the corresponding rate
 limit. Users can run this command with `-h` or `--help` for more information.
 
+## Histograms {#rpc_bdev_histogram}
+
+The `enable_bdev_histogram` RPC command allows to enable or disable gathering
+latency data for specified bdev. Histogram can be downloaded by the user by
+calling `get_bdev_histogram` and parsed using scripts/histogram.py script.
+
+Example command
+
+`rpc.py enable_bdev_histogram Nvme0n1 --enable`
+
+The command will enable gathering data for histogram on Nvme0n1 device.
+
+`rpc.py get_bdev_histogram Nvme0n1 | histogram.py`
+
+The command will download gathered histogram data. The script will parse
+the data and show table containing IO count for latency ranges.
+
+`rpc.py enable_bdev_histogram Nvme0n1 --disable`
+
+The command will disable histogram on Nvme0n1 device.
+
 ## delete_bdev {#bdev_ug_delete_bdev}
 
 To remove previously created bdev user can use `delete_bdev` RPC command.
