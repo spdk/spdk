@@ -146,7 +146,7 @@ IPSEC_MB_DIR=$(SPDK_ROOT_DIR)/intel-ipsec-mb
 
 ISAL_DIR=$(SPDK_ROOT_DIR)/isa-l
 ifeq ($(CONFIG_ISAL), y)
-SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal
+SYS_LIBS += -L$(ISAL_DIR)/.libs -lisal -Wl,-rpath=$(ISAL_DIR)/.libs
 COMMON_CFLAGS += -I$(ISAL_DIR)/..
 endif
 
