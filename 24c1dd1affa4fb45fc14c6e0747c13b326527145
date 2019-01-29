@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c3fd5543_be4abd93",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-01-29T07:37:21Z",
+      "side": 1,
+      "message": "I prefer to return directly from here. Since I expect the code only runs in case SPDK_GPT_PARSE_PHASE_PRIMARY and case SPDK_GPT_PARSE_PHASE_SECONDARY, other invalid cases fall through to default case and cause panic due to \u0027assert(false)\u0027. So the line 103 \u0027return NULL\u0027 is just added for passing build.",
+      "parentUuid": "0e57c951_f3600945",
+      "range": {
+        "startLine": 88,
+        "startChar": 3,
+        "endLine": 88,
+        "endChar": 15
+      },
+      "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e965b57f_32a1f9ec",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 4
@@ -140,6 +164,30 @@
       "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "56f20f3b_46060b20",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-01-29T07:37:21Z",
+      "side": 1,
+      "message": "In this spdk_gpt_bdev_complete function, only the primary partition table is parsed. And in function spdk_gpt_read_secondary_table_complete, added by another patch in this patch set, the secondary partition table is parsed.\n\nThe vbdev_gpt module controls whether to parse the pramiry or the secondary by setting gpt-\u003eparse_phase. The module knows which area is currently being handled and knows parsing the primary fails here. So I think it\u0027s ok to log \u0027the pramiry partition table\u0027 explicitly here.",
+      "parentUuid": "706b601b_993bfc3f",
+      "range": {
+        "startLine": 367,
+        "startChar": 53,
+        "endLine": 367,
+        "endChar": 60
+      },
+      "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
