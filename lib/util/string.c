@@ -425,7 +425,7 @@ spdk_strtol(const char *nptr, int base)
 
 	val = strtol(nptr, &endptr, base);
 
-	if (*endptr != '\0') {
+	if (!errno && *endptr != '\0') {
 		/* Non integer character was found. */
 		return -EINVAL;
 	} else if (errno == ERANGE && (val == LONG_MAX || val == LONG_MIN)) {
@@ -456,7 +456,7 @@ spdk_strtoll(const char *nptr, int base)
 
 	val = strtoll(nptr, &endptr, base);
 
-	if (*endptr != '\0') {
+	if (!errno && *endptr != '\0') {
 		/* Non integer character was found. */
 		return -EINVAL;
 	} else if (errno == ERANGE && (val == LLONG_MAX || val == LLONG_MIN)) {
