@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e0e63645_97df0dc6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 369,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-29T20:35:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "996ee616_f0913f48",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7934bddf_dc8f8bf2",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 8
@@ -51,6 +69,24 @@
       "revId": "119941a481f510375804a9805af6dede4974ad5b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3272f23b_dbde824a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1322,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-01-29T20:35:52Z",
+      "side": 1,
+      "message": "That\u0027s fine. Having PD per port needs some changes in SRQ feature (SRQ should be created per PD) But we will deal with that.",
+      "parentUuid": "c43ae083_d1861d8e",
+      "revId": "119941a481f510375804a9805af6dede4974ad5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
