@@ -63,6 +63,7 @@ fi
 : ${SPDK_TEST_FTL=0}; export SPDK_TEST_FTL
 : ${SPDK_TEST_BDEV_FTL=0}; export SPDK_TEST_BDEV_FTL
 : ${SPDK_TEST_OCF=1}; export SPDK_TEST_OCF
+: ${SPDK_TEST_FTL_EXTENDED=0}; export SPDK_TEST_FTL_EXTENDED
 
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
