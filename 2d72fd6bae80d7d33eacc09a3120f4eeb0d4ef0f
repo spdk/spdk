@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac70c6c8_0a969b82",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 150,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T21:12:01Z",
+      "side": 1,
+      "message": "note to self: we should also say we dropped support for DPDK 16.07 and earlier, which SPDK won\u0027t even compile with right now.",
+      "revId": "2d72fd6bae80d7d33eacc09a3120f4eeb0d4ef0f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
