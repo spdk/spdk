@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f997133e_157ea564",
+        "filename": "scripts/check_format.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T00:24:31Z",
+      "side": 1,
+      "message": "atoll had used in SPDK. So atol and atoll should be banned too.",
+      "range": {
+        "startLine": 138,
+        "startChar": 29,
+        "endLine": 138,
+        "endChar": 33
+      },
+      "revId": "8b8e7a1818d93450ab8a746736bbe4db0665cd61",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
