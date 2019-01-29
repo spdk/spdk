@@ -126,10 +126,6 @@ class UIRoot(UINode):
         rpc.bdev.destruct_split_vbdev(self.client, **kwargs)
 
     @verbose
-    def delete_bdev(self, name):
-        rpc.bdev.delete_bdev(self.client, bdev_name=name)
-
-    @verbose
     def create_malloc_bdev(self, **kwargs):
         response = rpc.bdev.construct_malloc_bdev(self.client, **kwargs)
         return response
