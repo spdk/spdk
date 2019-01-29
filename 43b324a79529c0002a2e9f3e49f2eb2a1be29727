@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7359d33_ba3d709a",
+        "filename": "test/json_config/json_config.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-29T12:03:59Z",
+      "side": 1,
+      "message": "No need to grep for the name.\nYou can do jq -e \".[] | select(.name\u003d\u003d\\\"AIO1\\\")\" instead of piping to grep. If specified name is not in JSON then JQ exits with non-zero value. Downside is that there\u0027s no \"quiet\" option.",
+      "range": {
+        "startLine": 121,
+        "startChar": 2,
+        "endLine": 121,
+        "endChar": 81
+      },
+      "revId": "43b324a79529c0002a2e9f3e49f2eb2a1be29727",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
