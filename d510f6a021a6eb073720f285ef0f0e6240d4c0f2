@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "437a048e_6015830a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T16:42:58Z",
+      "side": 1,
+      "message": "This module allows for the use of one bdev to act as a high performance cache in front of another bdev. Please see ... for more details. Only write through mode is currently supported and this feature is considered experimental.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07ede5be_29e2965c",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T16:42:58Z",
+      "side": 1,
+      "message": "specified via spdk_app_opts.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5e06ec4_7467b3a5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T16:42:58Z",
+      "side": 1,
+      "message": "This can be used to configure hugepages with different sizes, a different size limit, or different access permissions than the system\u0027s default hugepage pool.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e893ca6d_e0e3db89",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T16:42:58Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this one - the note on line 104-106 is enough.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31cbb2e6_cbc39966",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T16:42:58Z",
+      "side": 1,
+      "message": "Json -\u003e JSON\n\nRequests are sent and received...",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
