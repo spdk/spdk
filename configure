@@ -416,7 +416,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
-	if [ ! -d "$rootdir"/isa-l ]; then
+	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
 		echo "isa-l folder is not found; If you do want to install isa-l, run:"
 		echo "  git submodule update --init"
 		exit 1
