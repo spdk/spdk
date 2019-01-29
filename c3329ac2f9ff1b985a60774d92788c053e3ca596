@@ -46,6 +46,30 @@
       "revId": "c3329ac2f9ff1b985a60774d92788c053e3ca596",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f6f9c696_c573011c",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T22:25:46Z",
+      "side": 1,
+      "message": "Hi Lorne,\n\nI don\u0027t think two level nesting is not deep and the following looks simple enough to me. But I understand your concern. I set me neutral and please get review from others.\n\nstatic int\nvbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)\n{\n\tstruct spdk_gpt *gpt;\n\tstruct spdk_bdev_desc *part_base_desc;\n\tuint64_t secondary_offset;\n\n\tgpt \u003d \u0026gpt_base-\u003egpt;\n\tgpt-\u003eparse_phase \u003d SPDK_GPT_PARSE_PHASE_SECONDARY;\n\tgpt-\u003eheader \u003d NULL;\n\tgpt-\u003epartitions \u003d NULL;\n\n\tpart_base_desc \u003d spdk_bdev_part_base_get_desc(gpt_base-\u003epart_base);\n\n\tsecondary_offset \u003d gpt-\u003etotal_sectors * gpt-\u003esector_size - gpt-\u003ebuf_size;\n\n\treturn spdk_bdev_read(part_base_desc, gpt_base-\u003ech, gpt_base-\u003egpt.buf,\n\t\t\t      secondary_offset, gpt_base-\u003egpt.buf_size,\n\t\t\t      spdk_gpt_read_secondary_table_complete, gpt_base);\n}\n\nspdk_gpt_bdev_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)\n{\n\t(snip)\n\n\tif (rc) {\n\t\trc \u003d vbdev_gpt_read_secondary_table(gpt_base);\n\t\tif (rc !\u003d 0) {\n\t\t\tSPDK_ERRLOG(\"Failed to send bdev_io command\\n\");\n\t\t\tgoto end;\n\t\t}\n\t}\n\n\t(snip)\n\nend:\n\t(snip)\n}",
+      "parentUuid": "3c9b7b87_3bc14501",
+      "range": {
+        "startLine": 402,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 48
+      },
+      "revId": "c3329ac2f9ff1b985a60774d92788c053e3ca596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
