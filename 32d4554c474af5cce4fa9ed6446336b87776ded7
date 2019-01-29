@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13407e15_a6aa9b74",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-29T13:08:17Z",
+      "side": 1,
+      "message": "Love this bit every time.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 18
+      },
+      "revId": "32d4554c474af5cce4fa9ed6446336b87776ded7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
