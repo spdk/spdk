@@ -894,10 +894,15 @@ static struct spdk_vhost_nvme_dev *
 spdk_vhost_nvme_get_by_name(int vid)
 {
 	struct spdk_vhost_nvme_dev *nvme;
+	struct spdk_vhost_dev *vdev;
+	struct spdk_vhost_session *vsession;
 
 	TAILQ_FOREACH(nvme, &g_nvme_ctrlrs, tailq) {
-		if (nvme->vsession != NULL && nvme->vsession->vid == vid) {
-			return nvme;
+		vdev = &nvme->vdev;
+		TAILQ_FOREACH(vsession, &vdev->vsessions, tailq) {
+			if (vsession->vid == vid) {
+				return nvme;
+			}
 		}
 	}
 
@@ -1096,6 +1101,7 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 
+	nvme->vsession = vsession;
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
