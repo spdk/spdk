@@ -39,6 +39,24 @@
       "revId": "c3f9c727f3fc66e934e6cc17eb1fc870d6b271b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98b7f173_b0ddee52",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T07:57:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0d54d01a_7d514c76",
+      "revId": "c3f9c727f3fc66e934e6cc17eb1fc870d6b271b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
