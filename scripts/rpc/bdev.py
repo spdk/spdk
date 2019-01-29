@@ -559,16 +559,6 @@ def get_bdevs_iostat(client, name=None):
     return client.call('get_bdevs_iostat', params)
 
 
-def delete_bdev(client, bdev_name):
-    """Remove a bdev from the system.
-
-    Args:
-        bdev_name: name of bdev to delete
-    """
-    params = {'name': bdev_name}
-    return client.call('delete_bdev', params)
-
-
 def enable_bdev_histogram(client, name, enable):
     """Control whether histogram is enabled for specified bdev.
 

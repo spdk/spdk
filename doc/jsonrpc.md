@@ -264,7 +264,6 @@ Example response:
     "set_bdev_options",
     "set_bdev_qos_limit_iops",
     "set_bdev_qos_limit",
-    "delete_bdev",
     "get_bdevs",
     "get_bdevs_iostat",
     "get_subsystem_config",
@@ -708,41 +707,6 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
     "tsc_rate": 2300000000,
     "bucket_shift": 7
   }
-}
-~~~
-
-## delete_bdev {#rpc_delete_bdev}
-
-Unregister a block device.  This RPC is deprecated.  Users should instead use
-the specific deletion RPC for the bdev type to be removed (i.e.
-delete_malloc_bdev).
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Block device name
-
-### Example
-
-Example request:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "delete_bdev",
-  "params": {
-    "name": "Malloc0"
-  }
-}
-~~~
-
-Example response:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
 }
 ~~~
 
