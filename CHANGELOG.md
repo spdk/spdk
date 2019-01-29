@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.01: (Upcoming Release)
+## v19.01:
 
 ### ocf bdev
 New virtual bdev module based on [Open CAS Framework](https://github.com/Open-CAS/ocf) has been added.
