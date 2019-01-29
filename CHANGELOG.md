@@ -2,11 +2,19 @@
 
 ## v19.01: (Upcoming Release)
 
+### ocf bdev
+New virtual bdev module based on [Open CAS Framework](https://open-cas.github.io/) has been added.
+This provides a high performance block storage caching on top of any underlying bdev.
+Please see [documentation](https://spdk.io/doc/bdev.html#bdev_config_cas) for more details.
+
 ### event framework
 
 For `spdk_app_parse_args`, add return value to the callback which parses application
 specific command line parameters to protect SPDK applications from crashing by invalid
 values from user input.
+
+A custom hugetlbfs directory can now be specified by spdk_app_opts.
+This is used for hugepages with fixed size, different size limit, or different access permissions.
 
 ### environment
 
@@ -30,7 +38,13 @@ New DIF APIs were added to generate and verify DIF by byte granularity for both 
 formats. Among them, DIF with copy APIs will be usable to emulate DIF operations such as DIF
 insert and strip.
 
-### nvme
+Added `spdk_strtol` and `spdk_strtoll` to provide additional error checking around `strtol`
+and `strtoll`.
+
+Added `spdk_sprintf_append_realloc` and `spdk_vsprintf_append_realloc` for appending a string
+with automatic buffer re-allocation.
+
+### NVMe
 
 Wrapper functions spdk_nvme_ctrlr_security_send() and spdk_nvme_ctrlr_security_receive() are
 introduced to support further security protocol development.
@@ -65,18 +79,30 @@ prior to calling `spdk_nvmf_tgt_listen`.
 Related to the previous change, the rpc `set_nvmf_target_options` has been renamed to
 `set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
 
-Add an field `num_shared_buffers` in struct spdk_nvmf_transport_opts,
-and also update the related rpc function nvmf_create_transport, to make this
+Added fields `num_shared_buffers` and `buf_cache_size` in struct spdk_nvmf_transport_opts,
+and also updated the related rpc function nvmf_create_transport, to make this
 configurable parameter available to users. The `num_shared_buffers` is used to
 configure the shared buffer numbers of the transport used by RDMA or TCP transport.
-
-### nvmf
+`buf_cache_size` configures number of shared buffers to cache per poll group.
 
 Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
 the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
 protocol via TCP/IP from the host.
 
+Added optional mechanism to modify the RDMA transport's behavior when creating protection domains and registering memory.
+By default, the RDMA transport will use the ibverbs library to create protection domains and register memory.
+Using `spdk_nvme_rdma_init_hooks` will subvert that and use an existing registration.
+
 ### bdev
+
+Added `enable_bdev_histogram` and `get_bdev_histogram` RPC commands to allow gathering latency data for specified bdev.
+Please see [documentation](https://spdk.io/doc/bdev.html#rpc_bdev_histogram) for more details.
+
+Added possibility to double buffer using _spdk_bdev_io_get_buf by storing original buffer
+and replacing it by aligned one for the duration of IO submission.
+
+Added `required_alignment` field to `spdk_bdev`, that specifies an alignment requirement for data buffers associated with an spdk_bdev_io.
+Bdev layer will automatically double buffer any spdk_bdev_io that violates this alignment, before the spdk_bdev_io is submitted to the bdev module.
 
 On shutdown, bdev unregister now proceeds in top-down fashion, with
 claimed bdevs skipped (these will be unregistered later, when virtual
@@ -85,10 +111,17 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+Added support for separate bandwidth rate limits for read and write to QoS in bdev layer.
+
+Bdev I/O statistics now track unmap opertations.
+
 ### logical volumes
 
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
 This allows for basing clones on top of lvol_bdev without first creating a snapshot.
+
+Added option to change method for data erasure when deleting lvol or resizing down.
+Default of unmapping clusters can now be changed to writing zeroes or no operation.
 
 ### log
 
@@ -103,11 +136,39 @@ each tpoint group status.
 New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
 disable a specific tpoint group.
 
+Number of trace entries in circular buffer per lcore can now be assigned by starting SPDK app
+with argument "--num-trace-entries <NUM>" provided.
+
 ### ftl
 
 EXPERIMENTAL: Added basic flash translation layer module allowing for using Open Channel SSDs as
 block devices. The module is split into the library (located in lib/ftl) and bdev_ftl
 (lib/bdev/ftl). See the [documentation](https://spdk.io/doc/ftl.html) for more details.
+
+### nbd
+
+Starting nbd using `spdk_nbd_start` is now performed asynchronously.
+
+### net framework
+
+Net framework initialization and finish is now done asynchronously.
+
+### rpc
+
+Added `spdk_rpc_is_method_allowed` function for checking whether method is permitted in a given state.
+Added `spdk_rpc_get_state` to check current state of RPC server.
+RPC `wait_subsystem_init` has been added to allow clients to block untill all subsystems are initialized.
+
+### vhost scsi
+
+SCSI target hotremove can now be performed even without F_HOTPLUG feature.
+Regardless of VIRTIO_SCSI_F_HOTPLUG support, the hotremoval will be still reported through SCSI sense codes.
+
+### json rpc
+
+Json RPC client is now running in non-blocking mode. Requests are send and received during spdk_jsonrpc_client_poll.
+Json RPC server can now recieve a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
+and `spdk_jsonrpc_conn_del_close_cb`.
 
 ## v18.10:
 
