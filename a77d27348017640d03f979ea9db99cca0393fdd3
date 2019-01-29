@@ -22,6 +22,30 @@
       "revId": "a77d27348017640d03f979ea9db99cca0393fdd3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "397d34e0_97a6cf32",
+        "filename": "lib/event/app.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 862,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T05:50:48Z",
+      "side": 1,
+      "message": "Done. Thank you.",
+      "parentUuid": "13227a01_f6c3161b",
+      "range": {
+        "startLine": 862,
+        "startChar": 20,
+        "endLine": 862,
+        "endChar": 48
+      },
+      "revId": "a77d27348017640d03f979ea9db99cca0393fdd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
