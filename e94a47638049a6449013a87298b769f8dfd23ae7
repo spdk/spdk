@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3edce792_f387001d",
+        "filename": "test/unit/lib/iscsi/param.c/param_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T04:57:05Z",
+      "side": 1,
+      "message": "got it.",
+      "range": {
+        "startLine": 359,
+        "startChar": 38,
+        "endLine": 359,
+        "endChar": 39
+      },
+      "revId": "e94a47638049a6449013a87298b769f8dfd23ae7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a8501d1_67539191",
+        "filename": "test/unit/lib/iscsi/param.c/param_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T04:57:05Z",
+      "side": 1,
+      "message": "I added CU_ASSERT(rc \u003d\u003d 0) here.",
+      "revId": "e94a47638049a6449013a87298b769f8dfd23ae7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
