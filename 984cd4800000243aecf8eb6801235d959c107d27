@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "619d7da1_451be25b",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-29T10:40:42Z",
+      "side": 1,
+      "message": "On line 6 there are imports from configshell_fb.\nPlease import ExecutionError",
+      "range": {
+        "startLine": 64,
+        "startChar": 15,
+        "endLine": 64,
+        "endChar": 44
+      },
+      "revId": "984cd4800000243aecf8eb6801235d959c107d27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
