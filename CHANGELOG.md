@@ -140,6 +140,12 @@ EXPERIMENTAL: Added basic flash translation layer module allowing for using Open
 block devices. The module is split into the library (located in lib/ftl) and bdev_ftl
 (lib/bdev/ftl). See the [documentation](https://spdk.io/doc/ftl.html) for more details.
 
+### vhost
+
+Vhost SCSI and Vhost Block devices can now accept multiple connections on the same socket file.
+Each connection (internally called a vhost session) will have access to the same storage, but
+will use different virtqueues, different features and possibly different memory.
+
 ## v18.10:
 
 ### nvme
