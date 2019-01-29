@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "0e57c951_f3600945",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T05:16:48Z",
+      "side": 1,
+      "message": "this may depend on personal preference but returning here sits well on me.",
+      "parentUuid": "ee2ecf41_45a83df8",
+      "range": {
+        "startLine": 88,
+        "startChar": 3,
+        "endLine": 88,
+        "endChar": 15
+      },
+      "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e965b57f_32a1f9ec",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 4
@@ -83,6 +107,30 @@
       "side": 1,
       "message": "maybe just partition tables as this function is both for primary and secondary?",
       "parentUuid": "fc8fa152_1b42ef6f",
+      "range": {
+        "startLine": 367,
+        "startChar": 53,
+        "endLine": 367,
+        "endChar": 60
+      },
+      "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "706b601b_993bfc3f",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T05:16:48Z",
+      "side": 1,
+      "message": "we will be able to \n\n\"%s\" gpt_base-\u003egpt-\u003eparse_phase \u003d\u003d SPDK_GPT_PARSE_PHASE_PRIMARY ? \"primary\" : \"secondary\"",
+      "parentUuid": "1210244a_061a97ea",
       "range": {
         "startLine": 367,
         "startChar": 53,
