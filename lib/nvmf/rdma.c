@@ -869,6 +869,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 		rdma_recv->wr.sg_list = rdma_recv->sgl;
 
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_recv->wr, &bad_wr);
+		assert(rqpair->current_recv_depth > 0);
 		rqpair->current_recv_depth--;
 		if (rc) {
 			SPDK_ERRLOG("Unable to post capsule for RDMA RECV\n");
@@ -876,6 +877,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 			return -1;
 		}
 	}
+	assert(rqpair->current_recv_depth == 0);
 
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
 		rdma_req = &rqpair->reqs[i];
@@ -978,6 +980,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 		return rc;
 	}
 	rdma_req->recv = NULL;
+	assert(rqpair->current_recv_depth > 0);
 	rqpair->current_recv_depth--;
 
 	/* Build the response which consists of an optional
@@ -2692,7 +2695,6 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		assert(false);
 		return;
 	}
-	rqpair->current_recv_depth--;
 
 	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
 	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
@@ -2794,7 +2796,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
 				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
 				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
-				rqpair->current_recv_depth++;
+				assert(rqpair->current_recv_depth == rqpair->max_queue_depth);
 				/* Don't worry about responding to recv overflow, we are disconnecting anyways */
 				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
 					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
