@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "37845226_27b4f860",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 420,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-29T10:13:45Z",
+      "side": 1,
+      "message": "- folder",
+      "range": {
+        "startLine": 420,
+        "startChar": 14,
+        "endLine": 420,
+        "endChar": 20
+      },
+      "revId": "ef8a0a249cc2bed990a520e87ed271432af0ea27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
