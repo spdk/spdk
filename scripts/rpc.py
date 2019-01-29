@@ -459,15 +459,6 @@ if __name__ == "__main__":
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs_iostat)
 
-    def delete_bdev(args):
-        rpc.bdev.delete_bdev(args.client,
-                             bdev_name=args.bdev_name)
-
-    p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
-    p.add_argument(
-        'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
-    p.set_defaults(func=delete_bdev)
-
     def enable_bdev_histogram(args):
         rpc.bdev.enable_bdev_histogram(args.client, name=args.name, enable=args.enable)
 
