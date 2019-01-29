@@ -16,6 +16,24 @@
       "revId": "d3e0ab1dd28e61d6f66a320709d4d10ea60f6b65",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d24a86f4_eee3d396",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-29T00:02:32Z",
+      "side": 1,
+      "message": "Ugh - yeah, totally missed that.",
+      "parentUuid": "d6c05f76_a4fb77ca",
+      "revId": "d3e0ab1dd28e61d6f66a320709d4d10ea60f6b65",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
