@@ -808,6 +808,7 @@ INPUT                  += \
                          blob.md \
                          blobfs.md \
                          changelog.md \
+                         compression.md \
                          concurrency.md \
                          directory_structure.md \
                          event.md \
