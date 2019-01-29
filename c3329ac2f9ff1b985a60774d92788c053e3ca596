@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f2aa35e_d005a486",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-01-29T05:25:16Z",
+      "side": 1,
+      "message": "this looks duplicated to the part after the line 443.\n\nso you may be able to return rc and if rc \u003c 0 in the caller, goto the line 443.",
+      "range": {
+        "startLine": 402,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 48
+      },
+      "revId": "c3329ac2f9ff1b985a60774d92788c053e3ca596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
