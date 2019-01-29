@@ -53,6 +53,23 @@
     },
     {
       "key": {
+        "uuid": "15fd1240_e43fc823",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T20:22:43Z",
+      "side": 1,
+      "message": "+ SPDK applications can specify a custom hugetlbfs mount with the `--huge-dir` option",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e893ca6d_e0e3db89",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -64,6 +81,29 @@
       "writtenOn": "2019-01-29T16:42:58Z",
       "side": 1,
       "message": "I don\u0027t think you need this one - the note on line 104-106 is enough.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2359ba68_b04bd2a3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T20:22:43Z",
+      "side": 1,
+      "message": "without the VIRTIO_SCSI_F_HOTPLUG feature negotiated.",
+      "range": {
+        "startLine": 164,
+        "startChar": 56,
+        "endLine": 164,
+        "endChar": 65
+      },
       "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
