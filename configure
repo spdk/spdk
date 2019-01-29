@@ -396,7 +396,7 @@ fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
         if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo "Notice: ISAL, compression & crypto auto-disabled due to nasm dependency."
+		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.12.02 or newer.  Please install"
 		echo "or upgrade then re-run this script."
 		CONFIG[ISAL]=n
@@ -417,7 +417,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	fi
 
 	if [[ "${CONFIG[RBD]}" = "y" ]]; then
-		echo "ISAL and RBD cannot co-exist currently so disabling ISAL."
+		echo "ISA-L and RBD cannot co-exist currently so disabling ISA-L."
 		CONFIG[ISAL]=n
 	else
 		cd $rootdir/isa-l
