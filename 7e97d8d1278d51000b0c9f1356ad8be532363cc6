@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d044a84_90262ba0",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-29T21:14:12Z",
+      "side": 1,
+      "message": "note to self: mention that spdk apps will now try to reserve all hugepages at runtime, as the default pre-reserved memory size was shrinked down to 0. It can be still set with -s or --mem-size option.",
+      "revId": "7e97d8d1278d51000b0c9f1356ad8be532363cc6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
