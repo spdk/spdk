@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "630a5c6b_959d4831",
+        "filename": "app/trace_record/trace_record.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-29T08:36:05Z",
+      "side": 1,
+      "message": "yes, Darek, it\u0027s true that read-barrier is necessary here.",
+      "parentUuid": "79fc8410_4490e1ec",
+      "revId": "c6fb6a5349891fc22460b59b7b7fcca509cd59b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6661603c_fad72ff5",
         "filename": "lib/trace/trace.c",
         "patchSetId": 28
@@ -39,6 +57,30 @@
       "revId": "c6fb6a5349891fc22460b59b7b7fcca509cd59b5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3e109ad7_e3779ea1",
+        "filename": "lib/trace/trace.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-01-29T08:36:05Z",
+      "side": 1,
+      "message": "Great comment, Darek.\nDone.",
+      "parentUuid": "6661603c_fad72ff5",
+      "range": {
+        "startLine": 79,
+        "startChar": 1,
+        "endLine": 79,
+        "endChar": 9
+      },
+      "revId": "c6fb6a5349891fc22460b59b7b7fcca509cd59b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
