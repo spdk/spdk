@@ -189,69 +189,117 @@
         {
           "params": {
             "max_namespaces": 20,
-            "listen_addresses": [
-              {
-                "trtype": "RDMA",
-                "adrfam": "IPv4",
-                "trsvcid": "4420",
-                "traddr": "10.0.2.15"
-              }
-            ],
-            "hosts": [
-              "nqn.2016-06.io.spdk:init"
-            ],
-            "namespaces": [
-              {
-                "bdev_name": "Nvme0n1p5",
-                "nsid": 1
-              },
-              {
-                "bdev_name": "Nvme0n1p6",
-                "nsid": 2
-              }
-            ],
             "allow_any_host": false,
             "serial_number": "SPDK00000000000001",
             "nqn": "nqn.2016-06.io.spdk:cnode1"
           },
-          "method": "construct_nvmf_subsystem"
+          "method": "nvmf_subsystem_create"
         },
         {
           "params": {
-            "listen_addresses": [
-              {
-                "trtype": "RDMA",
-                "adrfam": "IPv4",
-                "trsvcid": "4421",
-                "traddr": "10.0.2.15"
-              }
-            ],
-            "hosts": [
-              "nqn.2016-06.io.spdk:init"
-            ],
-            "namespaces": [
-              {
-                "bdev_name": "Malloc1",
-                "nsid": 1
-              },
-              {
-                "bdev_name": "Malloc2",
-                "nsid": 2
-              },
-              {
-                "bdev_name": "AIO0",
-                "nsid": 3
-              },
-              {
-                "bdev_name": "AIO1",
-                "nsid": 4
-              }
-            ],
+            "listen_address": {
+              "adrfam": "IPv4",
+              "traddr": "10.0.2.15",
+              "trsvcid": "4420",
+              "trtype": "RDMA"
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode1"
+          },
+          "method": "nvmf_subsystem_add_listener"
+        },
+        {
+          "params": {
+            "host": "nqn.2016-06.io.spdk:init",
+            "nqn": "nqn.2016-06.io.spdk:cnode1"
+          },
+          "method": "nvmf_subsystem_add_host"
+        },
+        {
+          "params": {
+            "namespace": {
+              "bdev_name": "Nvme0n1p5",
+              "nsid": 1
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode1"
+          },
+          "method": "nvmf_subsystem_add_ns"
+        },
+        {
+          "params": {
+            "namespace": {
+              "bdev_name": "Nvme0n1p6",
+              "nsid": 2
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode1"
+          },
+          "method": "nvmf_subsystem_add_ns"
+        },
+        {
+          "params": {
             "allow_any_host": false,
             "serial_number": "SPDK00000000000002",
             "nqn": "nqn.2016-06.io.spdk:cnode2"
           },
-          "method": "construct_nvmf_subsystem"
+          "method": "nvmf_subsystem_create"
+        },
+        {
+          "method": "nvmf_subsystem_add_listener",
+          "params": {
+            "listen_address": {
+              "adrfam": "IPv4",
+              "traddr": "10.0.2.15",
+              "trsvcid": "4421",
+              "trtype": "RDMA"
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
+        },
+        {
+          "method": "nvmf_subsystem_add_host",
+          "params": {
+            "host": "nqn.2016-06.io.spdk:init",
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
+        },
+        {
+          "method": "nvmf_subsystem_add_ns",
+          "params": {
+            "namespace": {
+              "bdev_name": "Malloc1",
+              "nsid": 1
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
+        },
+        {
+          "method": "nvmf_subsystem_add_ns",
+          "params": {
+            "namespace": {
+              "bdev_name": "Malloc2",
+              "nsid": 2
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
+        },
+        {
+          "method": "nvmf_subsystem_add_ns",
+          "params": {
+            "namespace": {
+              "bdev_name": "AIO0",
+              "nsid": 3
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
+        },
+        {
+          "method": "nvmf_subsystem_add_ns",
+          "params": {
+            "namespace": {
+              "bdev_name": "AIO1",
+              "nsid": 4
+            },
+            "nqn": "nqn.2016-06.io.spdk:cnode2"
+          }
         }
       ]
     },

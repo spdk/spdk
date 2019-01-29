@@ -31,7 +31,7 @@ iscsi_dict["construct_target_node"] = []
 nvmf_dict = OrderedDict()
 nvmf_dict["set_nvmf_target_config"] = []
 nvmf_dict["set_nvmf_target_max_subsystems"] = []
-nvmf_dict["construct_nvmf_subsystem"] = []
+nvmf_dict["subsystems"] = []
 
 
 # dictionary with new config that will be written to new json config file
@@ -311,11 +311,13 @@ def get_nvmf_options_json(config, section):
 
 
 def get_nvmf_subsystem_json(config, section):
+    nvmf_subsystem_methods = []
     params = [
-        ["NQN", "nqn", str, ""],
+        # Last items are default values if given entry is not set
         ["Host", "hosts", list, []],
-        ["AllowAnyHost", "allow_any_host", bool, True],
-        ["SN", "serial_number", str, ""],
+        ["NQN", "nqn", str, ""],
+        ["AllowAnyHost", "allow_any_host", bool, False],
+        ["SN", "serial_number", str, "00000000000000000000"],
         ["MaxNamespaces", "max_namespaces", str, ""],
     ]
     listen_address = []
@@ -350,18 +352,43 @@ def get_nvmf_subsystem_json(config, section):
                     "nsid": int(nsid),
                     "bdev_name": items[0],
                 })
-    parameters = to_json_params(params[0:4])
-    parameters['listen_addresses'] = listen_address
-    parameters['namespaces'] = namespaces
-    nvmf_subsystem = {
+    # Get parameters: nqn, allow_any_host, serial_number
+    # for nvmf_subsystem_create rpc method
+    parameters = to_json_params(params[1:4])
+    nvmf_subsystem_methods.append({
         "params": parameters,
-        "method": "construct_nvmf_subsystem"
-    }
+        "method": "nvmf_subsystem_create"
+    })
+    for listen in listen_address:
+        nvmf_subsystem_methods.append({
+            "params": {
+                "listen_address": listen,
+                "nqn": parameters['nqn']
+            },
+            "method": "nvmf_subsystem_add_listener"
+        })
+    for host in to_json_params([params[0]])['hosts']:
+        nvmf_subsystem_methods.append({
+            "params": {
+                "host": host,
+                "nqn": parameters['nqn']
+            },
+            "method": "nvmf_subsystem_add_host"
+        })
+    for namespace in namespaces:
+        nvmf_subsystem_methods.append({
+            "params": {
+                 "namespace": namespace,
+                 "nqn": parameters['nqn']
+            },
+            "method": "nvmf_subsystem_add_ns"
+        })
 
+    # Define max_namespaces if it is set in old config
     if params[4][3]:
-        nvmf_subsystem['params']['max_namespaces'] = int(params[4][3])
+        nvmf_subsystem_methods[0]['params']['max_namespaces'] = int(params[4][3])
 
-    return [nvmf_subsystem]
+    return nvmf_subsystem_methods
 
 
 def get_vhost_scsi_json(config, section):
@@ -677,11 +704,11 @@ if __name__ == "__main__":
                 items = get_iscsi_target_node_json(config, section)
             for item in items:
                 if match_section == "VhostScsi":
-                    section_to_subsystem[match_section][
-                        "construct_vhost_scsi_controller"].append(item)
+                    section_to_subsystem[match_section]["construct_vhost_scsi_controller"].append(item)
                 elif match_section == "VhostNvme":
-                    section_to_subsystem[match_section][
-                        "construct_vhost_nvme_controller"].append(item)
+                    section_to_subsystem[match_section]["construct_vhost_nvme_controller"].append(item)
+                elif match_section == "Subsystem":
+                    section_to_subsystem[match_section]["subsystems"].append(item)
                 else:
                     section_to_subsystem[match_section][
                         item['method']].append(item)
