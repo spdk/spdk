@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3d3578a_7b4ae55a",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-29T20:57:08Z",
+      "side": 1,
+      "message": "largest possible value?",
+      "revId": "1a269063564bcaddb739e7f104aa0a9185bc320c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
