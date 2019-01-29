@@ -22,6 +22,30 @@
       "revId": "353921e01c07031cf68490c84c3e50e61f70271c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "016867ac_5fa190d6",
+        "filename": "scripts/vagrant/README.md",
+        "patchSetId": 19
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-29T16:51:57Z",
+      "side": 1,
+      "message": "Actually I applied to the original file which has no line splitting.",
+      "parentUuid": "8f6a0a2b_e84816f6",
+      "range": {
+        "startLine": 233,
+        "startChar": 14,
+        "endLine": 233,
+        "endChar": 24
+      },
+      "revId": "353921e01c07031cf68490c84c3e50e61f70271c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
