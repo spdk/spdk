@@ -31,6 +31,16 @@ Key Functions                               | Description
 ------------------------------------------- | -----------
 spdk_nvme_ctrlr_alloc_cmb_io_buffer()       | @copybrief spdk_nvme_ctrlr_alloc_cmb_io_buffer()
 spdk_nvme_ctrlr_free_cmb_io_buffer()        | @copybrief spdk_nvme_ctrlr_free_cmb_io_buffer()
+spdk_nvme_ctrlr_get_regs_cmbsz()            | @copybrief spdk_nvme_ctrlr_get_regs_cmbsz()
+
+# Determining device support {#p2p_support}
+
+SPDK's identify example application displays whether a device has a controller
+memory buffer and which operations it supports. Run it as follows:
+
+~~~{.sh}
+./examples/nvme/identify/identify
+~~~
 
 # cmb_copy: An example P2P Application {#p2p_cmb_copy}
 
