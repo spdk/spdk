@@ -145,11 +145,6 @@ class Commands_Rpc(object):
         output, rc = self.rpc.destroy_lvol_store(name_opt, uuid)
         return rc
 
-    def delete_bdev(self, base_name):
-        print("INFO: RPC COMMAND delete_bdev")
-        output, rc = self.rpc.delete_bdev(base_name)
-        return rc
-
     def delete_malloc_bdev(self, base_name):
         print("INFO: RPC COMMAND delete_malloc_bdev")
         output, rc = self.rpc.delete_malloc_bdev(base_name)
