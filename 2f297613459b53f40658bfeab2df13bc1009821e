@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "9a61afc3_34c8e543",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T11:21:22Z",
+      "side": 1,
+      "message": "Yes, it is intentional. For easy use in to_json_params function",
+      "parentUuid": "4f9dd560_f638fc9d",
+      "range": {
+        "startLine": 316,
+        "startChar": 8,
+        "endLine": 316,
+        "endChar": 32
+      },
+      "revId": "2f297613459b53f40658bfeab2df13bc1009821e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a97347c_9ae3f590",
         "filename": "scripts/config_converter.py",
         "patchSetId": 1
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "a3ff934f_5a2ccbf8",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T11:21:22Z",
+      "side": 1,
+      "message": "Pep8",
+      "parentUuid": "c5d9b294_dfe6e5e4",
+      "range": {
+        "startLine": 384,
+        "startChar": 0,
+        "endLine": 385,
+        "endChar": 49
+      },
+      "revId": "2f297613459b53f40658bfeab2df13bc1009821e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "16ba93b9_fd41bced",
         "filename": "scripts/config_converter.py",
         "patchSetId": 1
@@ -82,6 +130,30 @@
       "writtenOn": "2019-01-29T10:01:50Z",
       "side": 1,
       "message": "Unintentional new line?",
+      "range": {
+        "startLine": 709,
+        "startChar": 0,
+        "endLine": 710,
+        "endChar": 50
+      },
+      "revId": "2f297613459b53f40658bfeab2df13bc1009821e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05993155_dd2134fe",
+        "filename": "scripts/config_converter.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-01-29T11:21:22Z",
+      "side": 1,
+      "message": "pep8",
+      "parentUuid": "16ba93b9_fd41bced",
       "range": {
         "startLine": 709,
         "startChar": 0,
