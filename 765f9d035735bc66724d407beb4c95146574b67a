@@ -22,6 +22,30 @@
       "revId": "765f9d035735bc66724d407beb4c95146574b67a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "700aaee7_741bac17",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-01-30T14:53:28Z",
+      "side": 1,
+      "message": "I changed it to uint32_t",
+      "parentUuid": "24a036aa_486652b3",
+      "range": {
+        "startLine": 50,
+        "startChar": 7,
+        "endLine": 50,
+        "endChar": 11
+      },
+      "revId": "765f9d035735bc66724d407beb4c95146574b67a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
