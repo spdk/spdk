@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2493700c_ba1479cf",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T11:01:41Z",
+      "side": 1,
+      "message": "Print \\n at the end.",
+      "revId": "0c648f8a61970aaca7dfaee14b83fd36c32fbe66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a587b0b0_7b2bd8e5",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T11:01:41Z",
+      "side": 1,
+      "message": "Just\n\n  return rc;\n\nis fine.",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 10
+      },
+      "revId": "0c648f8a61970aaca7dfaee14b83fd36c32fbe66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
