@@ -128,6 +128,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	group.group.buf_cache_count = 0;
 	poller.group = &group;
 	rqpair.poller = &poller;
+	rqpair.max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 
 	sgl = &cmd.nvme_cmd.dptr.sgl1;
 	rdma_req.recv = &recv;

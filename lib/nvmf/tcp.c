@@ -2154,6 +2154,7 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 		i++;
 	}
 
+	assert(tcp_req->req.iovcnt < SPDK_NVMF_MAX_SGL_ENTRIES);
 	tcp_req->data_from_pool = true;
 	return 0;
 
