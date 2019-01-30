@@ -77,8 +77,11 @@ static TAILQ_HEAD(, io_device) g_io_devices = TAILQ_HEAD_INITIALIZER(g_io_device
 struct spdk_msg {
 	spdk_msg_fn		fn;
 	void			*arg;
+
+	TAILQ_ENTRY(spdk_msg)	tailq;
 };
 
+#define SPDK_MSG_MEMPOOL_CACHE_SIZE	1024
 static struct spdk_mempool *g_spdk_msg_mempool = NULL;
 
 enum spdk_poller_state {
@@ -123,6 +126,9 @@ struct spdk_thread {
 	TAILQ_HEAD(timer_pollers_head, spdk_poller) timer_pollers;
 
 	struct spdk_ring		*messages;
+
+	TAILQ_HEAD(, spdk_msg)		msg_cache;
+	size_t				msg_cache_count;
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -160,7 +166,7 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn)
 	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
 			     262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
 			     sizeof(struct spdk_msg),
-			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			     0, /* No cache. We do our own. */
 			     SPDK_ENV_SOCKET_ID_ANY);
 
 	if (!g_spdk_msg_mempool) {
@@ -188,6 +194,8 @@ struct spdk_thread *
 spdk_thread_create(const char *name)
 {
 	struct spdk_thread *thread;
+	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
+	int rc, i;
 
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
@@ -198,12 +206,25 @@ spdk_thread_create(const char *name)
 	TAILQ_INIT(&thread->io_channels);
 	TAILQ_INIT(&thread->active_pollers);
 	TAILQ_INIT(&thread->timer_pollers);
+	TAILQ_INIT(&thread->msg_cache);
+	thread->msg_cache_count = 0;
 
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
 		SPDK_ERRLOG("Unable to allocate memory for message ring\n");
 		free(thread);
 		return NULL;
+	}
+
+	/* Fill the local message pool cache. */
+	rc = spdk_mempool_get_bulk(g_spdk_msg_mempool, (void **)msgs, SPDK_MSG_MEMPOOL_CACHE_SIZE);
+	if (rc == 0) {
+		/* If we can't populate the cache it's ok. The cache will get filled
+		 * up organically as messages are passed to the thread. */
+		for (i = 0; i < SPDK_MSG_MEMPOOL_CACHE_SIZE; i++) {
+			TAILQ_INSERT_TAIL(&thread->msg_cache, msgs[i], tailq);
+			thread->msg_cache_count++;
+		}
 	}
 
 	if (name) {
@@ -237,6 +258,7 @@ void
 spdk_thread_exit(struct spdk_thread *thread)
 {
 	struct spdk_io_channel *ch;
+	struct spdk_msg *msg, *tmsg;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Freeing thread %s\n", thread->name);
 
@@ -256,6 +278,21 @@ spdk_thread_exit(struct spdk_thread *thread)
 	pthread_mutex_unlock(&g_devlist_mutex);
 
 	free(thread->name);
+
+	SPDK_NOTICELOG("Freeing thread cache with %lu items\n", thread->msg_cache_count);
+
+	size_t count = 0;
+	TAILQ_FOREACH_SAFE(msg, &thread->msg_cache, tailq, tmsg) {
+		TAILQ_REMOVE(&thread->msg_cache, msg, tailq);
+		count++;
+		spdk_mempool_put(g_spdk_msg_mempool, msg);
+	}
+	if (count != thread->msg_cache_count) {
+		SPDK_NOTICELOG("Message cache size was %lu but count in msg cache list was %lu\n", thread->msg_cache_count, count);
+	}
+	thread->msg_cache_count = 0;
+
+	assert(thread->msg_cache_count == 0);
 
 	if (thread->messages) {
 		spdk_ring_free(thread->messages);
@@ -295,9 +332,14 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 
 		assert(msg != NULL);
 		msg->fn(msg->arg);
-	}
 
-	spdk_mempool_put_bulk(g_spdk_msg_mempool, messages, count);
+		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
+			TAILQ_INSERT_TAIL(&thread->msg_cache, msg, tailq);
+			thread->msg_cache_count++;
+		} else {
+			spdk_mempool_put(g_spdk_msg_mempool, msg);
+		}
+	}
 
 	return count;
 }
@@ -450,8 +492,9 @@ spdk_thread_get_name(const struct spdk_thread *thread)
 }
 
 void
-spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
+spdk_thread_send_msg(struct spdk_thread *thread, spdk_msg_fn fn, void *ctx)
 {
+	struct spdk_thread *local_thread;
 	struct spdk_msg *msg;
 	int rc;
 
@@ -460,10 +503,24 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 		return;
 	}
 
-	msg = spdk_mempool_get(g_spdk_msg_mempool);
-	if (!msg) {
-		assert(false);
-		return;
+	local_thread = _get_thread();
+
+	msg = NULL;
+	if (local_thread != NULL) {
+		if (local_thread->msg_cache_count > 0) {
+			msg = TAILQ_FIRST(&local_thread->msg_cache);
+			assert(msg != NULL);
+			TAILQ_REMOVE(&local_thread->msg_cache, msg, tailq);
+			local_thread->msg_cache_count--;
+		}
+	}
+
+	if (msg == NULL) {
+		msg = spdk_mempool_get(g_spdk_msg_mempool);
+		if (!msg) {
+			assert(false);
+			return;
+		}
 	}
 
 	msg->fn = fn;
