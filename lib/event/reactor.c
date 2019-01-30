@@ -60,11 +60,6 @@ struct spdk_reactor {
 	/* Poller for get the rusage for the reactor. */
 	struct spdk_poller				*rusage_poller;
 
-	/* Reactor tsc stats */
-	struct spdk_reactor_tsc_stats			tsc_stats;
-
-	uint64_t					tsc_last;
-
 	/* The last known rusage values */
 	struct rusage					rusage;
 
@@ -239,45 +234,6 @@ spdk_reactor_context_switch_monitor_enabled(void)
 	return g_context_switch_monitor_enabled;
 }
 
-static void
-spdk_reactor_add_tsc_stats(void *arg, int rc, uint64_t now)
-{
-	struct spdk_reactor *reactor = arg;
-	struct spdk_reactor_tsc_stats *tsc_stats = &reactor->tsc_stats;
-
-	if (rc == 0) {
-		/* Poller status idle */
-		tsc_stats->idle_tsc += now - reactor->tsc_last;
-	} else if (rc > 0) {
-		/* Poller status busy */
-		tsc_stats->busy_tsc += now - reactor->tsc_last;
-	} else {
-		/* Poller status unknown */
-		tsc_stats->unknown_tsc += now - reactor->tsc_last;
-	}
-
-	reactor->tsc_last = now;
-}
-
-int
-spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t core)
-{
-	struct spdk_reactor *reactor;
-
-	if (!spdk_cpuset_get_cpu(g_spdk_app_core_mask, core)) {
-		return -1;
-	}
-
-	reactor = spdk_reactor_get(core);
-	if (!reactor) {
-		SPDK_ERRLOG("Unable to get reactor for core %u\n", core);
-		return -1;
-	}
-	*tsc_stats = reactor->tsc_stats;
-
-	return 0;
-}
-
 static int
 _spdk_reactor_run(void *arg)
 {
@@ -303,8 +259,6 @@ _spdk_reactor_run(void *arg)
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
 		spdk_set_thread(NULL);
 	}
-	now = spdk_get_ticks();
-	reactor->tsc_last = now;
 
 	while (1) {
 		bool took_action = false;
@@ -312,15 +266,11 @@ _spdk_reactor_run(void *arg)
 		event_count = _spdk_event_queue_run_batch(reactor, thread);
 		if (event_count > 0) {
 			rc = 1;
-			now = spdk_get_ticks();
-			spdk_reactor_add_tsc_stats(reactor, rc, now);
 			took_action = true;
 		}
 
 		rc = spdk_thread_poll(thread, 0);
 		if (rc != 0) {
-			now = spdk_get_ticks();
-			spdk_reactor_add_tsc_stats(reactor, rc, now);
 			took_action = true;
 		}
 
