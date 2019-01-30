@@ -1704,6 +1704,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	int				flag;
 	uint32_t			sge_count;
 	uint32_t			min_shared_buffers;
+	int				max_device_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 
 	rtransport = calloc(1, sizeof(*rtransport));
 	if (!rtransport) {
@@ -1815,6 +1816,8 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 		}
 
+		max_device_sge = spdk_min(SPDK_NVMF_MAX_SGL_ENTRIES, device->attr.max_sge);
+
 #ifdef SPDK_CONFIG_RDMA_SEND_WITH_INVAL
 		if ((device->attr.device_cap_flags & IBV_DEVICE_MEM_MGT_EXTENSIONS) == 0) {
 			SPDK_WARNLOG("The libibverbs on this system supports SEND_WITH_INVALIDATE,");
@@ -1848,6 +1851,17 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 		i++;
 	}
 	rdma_free_devices(contexts);
+
+	if (opts->io_unit_size * max_device_sge < opts->max_io_size) {
+		opts->io_unit_size = (opts->max_io_size + max_device_sge - 1) / max_device_sge;
+
+		/* round up to the nearest 4k. */
+		opts->io_unit_size = (opts->io_unit_size & ~NVMF_DATA_BUFFER_MASK) + NVMF_DATA_BUFFER_ALIGNMENT;
+
+		opts->io_unit_size = spdk_max(opts->io_unit_size, SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE);
+		SPDK_NOTICELOG("Adjusting the io unit size to fit the device's maximum I/O size. New I/O unit size %u\n",
+			       opts->io_unit_size);
+	}
 
 	if (rc < 0) {
 		spdk_nvmf_rdma_destroy(&rtransport->transport);
