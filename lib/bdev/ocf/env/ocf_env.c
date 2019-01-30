@@ -38,16 +38,16 @@
 #include "spdk_internal/log.h"
 
 /* Number of buffers for mempool
- * Need to be power of two
+ * Need to be power of two - 1 for better memory utilization
  * It depends on memory usage of OCF which
  * in itself depends on the workload
  * It is a big number because OCF uses allocators
  * for every request it sends and recieves
  */
-#define ENV_ALLOCATOR_NBUFS 32768
+#define ENV_ALLOCATOR_NBUFS 32767
 
 /* Use unique index for env allocators */
-static int g_env_allocator_index = 0;
+static env_atomic g_env_allocator_index = 0;
 
 void *
 env_allocator_new(env_allocator *allocator)
@@ -61,7 +61,7 @@ env_allocator_create(uint32_t size, const char *name)
 	env_allocator *allocator;
 	char qualified_name[128] = {0};
 
-	snprintf(qualified_name, 128, "ocf_env_%d", g_env_allocator_index++);
+	snprintf(qualified_name, 128, "ocf_env_%d", env_atomic_inc_return(&g_env_allocator_index));
 
 	allocator = spdk_mempool_create(qualified_name,
 					ENV_ALLOCATOR_NBUFS, size,
