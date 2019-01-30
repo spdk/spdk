@@ -210,6 +210,7 @@ struct trid_entry {
 	struct spdk_nvme_transport_id	trid;
 	uint16_t			nsid;
 	TAILQ_ENTRY(trid_entry)		tailq;
+	struct spdk_nvme_probe_ctx	probe_ctx;
 };
 
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
@@ -1707,10 +1708,14 @@ register_controllers(void)
 	printf("Initializing NVMe Controllers\n");
 
 	TAILQ_FOREACH(trid_entry, &g_trid_list, tailq) {
-		if (spdk_nvme_probe(&trid_entry->trid, trid_entry, probe_cb, attach_cb, NULL) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed for transport address '%s'\n",
+		spdk_nvme_probe_ctx_init(&trid_entry->probe_ctx, &trid_entry->trid,
+					 trid_entry, probe_cb, attach_cb, NULL);
+		if (spdk_nvme_probe_async(&trid_entry->probe_ctx) != 0) {
+			fprintf(stderr, "spdk_nvme_probe_async() failed for transport address '%s'\n",
 				trid_entry->trid.traddr);
 			return -1;
+		}
+		while (!spdk_nvme_poll_async(&trid_entry->probe_ctx)) {
 		}
 	}
 
