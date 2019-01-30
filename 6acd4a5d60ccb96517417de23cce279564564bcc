@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "484cad62_b5d491a0",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-30T09:13:11Z",
+      "side": 1,
+      "message": "There\u0027s no need to use locks, atomics are the way to go - that\u0027s what they were made for.\n\n__sync_fetch_and_add is a good candidate, although you might want to use its ocf-specific wrappers.",
+      "range": {
+        "startLine": 66,
+        "startChar": 0,
+        "endLine": 66,
+        "endChar": 34
+      },
+      "revId": "6acd4a5d60ccb96517417de23cce279564564bcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
