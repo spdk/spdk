@@ -117,6 +117,9 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+The `delete_bdev` RPC is now deprecated. Users should instead use the specific deletion RPC
+for the bdev type to be removed (i.e. delete_malloc_bdev).
+
 ### logical volumes
 
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
@@ -156,6 +159,16 @@ DPDK submodule was updated to DPDK 18.11. Note that SPDK does not fully leverage
 multi-process device hotplug yet and continues to work the same way it always did.
 
 Dropped support for DPDK 16.07 and earlier, which SPDK won't even compile with right now.
+
+### RPC
+
+The following RPC commands deprecated in the previous release are now removed:
+ - construct_virtio_user_scsi_bdev
+ - construct_virtio_pci_scsi_bdev
+ - construct_virtio_user_blk_bdev
+ - construct_virtio_pci_blk_bdev
+ - remove_virtio_scsi_bdev
+ - construct_nvmf_subsystem
 
 ## v18.10:
 
