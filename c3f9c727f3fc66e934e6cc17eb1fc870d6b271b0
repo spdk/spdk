@@ -93,6 +93,24 @@
       "revId": "c3f9c727f3fc66e934e6cc17eb1fc870d6b271b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "814d34f4_5553871c",
+        "filename": "scripts/vagrant/autorun-spdk.conf",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-01-30T08:34:12Z",
+      "side": 1,
+      "message": "IN PS2 you have SPDK_TEST_UNITTEST and SPDK_RUN_FUNCTIONAL_TEST.\nI guess having \"similar\" names with common keyword RUN (or lack of it) makes more sense for me.\nSo in PS1 I\u0027d stick with SPDK_UNITTEST / SPDK_FUNCTIONAL_TEST\nand in PS2 - SPDK_RUN_UNITTEST / SPDK_RUN_FUNCTIONAL_TEST.\n\nBut hey that\u0027s just me ranting. I guess it\u0027s nothing that important so I\u0027m ok either way as long as we separate functional from unittests.",
+      "parentUuid": "4123f011_c88a6e99",
+      "revId": "c3f9c727f3fc66e934e6cc17eb1fc870d6b271b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
