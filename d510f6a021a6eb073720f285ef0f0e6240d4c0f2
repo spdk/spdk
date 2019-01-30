@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "35888a9a_3176f94b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 6,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "437a048e_6015830a",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07ede5be_29e2965c",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-01-29T16:42:58Z",
       "side": 1,
       "message": "specified via spdk_app_opts.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8048117e_d98a7b1b",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07ede5be_29e2965c",
       "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "85a47c6e_33310f3d",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e5e06ec4_7467b3a5",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15fd1240_e43fc823",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "ee6ad296_70e40093",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "15fd1240_e43fc823",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e893ca6d_e0e3db89",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -81,6 +153,24 @@
       "writtenOn": "2019-01-29T16:42:58Z",
       "side": 1,
       "message": "I don\u0027t think you need this one - the note on line 104-106 is enough.",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd75c849_390442c4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e893ca6d_e0e3db89",
       "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -110,6 +200,30 @@
     },
     {
       "key": {
+        "uuid": "0f4a8835_b3cd3c13",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 164,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2359ba68_b04bd2a3",
+      "range": {
+        "startLine": 164,
+        "startChar": 56,
+        "endLine": 164,
+        "endChar": 65
+      },
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "31cbb2e6_cbc39966",
         "filename": "CHANGELOG.md",
         "patchSetId": 5
@@ -121,6 +235,24 @@
       "writtenOn": "2019-01-29T16:42:58Z",
       "side": 1,
       "message": "Json -\u003e JSON\n\nRequests are sent and received...",
+      "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "77083226_2a61af38",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-01-30T08:24:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "31cbb2e6_cbc39966",
       "revId": "d510f6a021a6eb073720f285ef0f0e6240d4c0f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
