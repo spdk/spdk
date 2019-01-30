@@ -146,10 +146,12 @@ Vhost SCSI and Vhost Block devices can now accept multiple connections on the sa
 Each connection (internally called a vhost session) will have access to the same storage, but
 will use different virtqueues, different features and possibly different memory.
 
-### DPDK 18.11
+### DPDK
 
 DPDK submodule was updated to DPDK 18.11. Note that SPDK does not fully leverage the new
 multi-process device hotplug yet and continues to work the same way it always did.
+
+Dropped support for DPDK 16.07 and earlier, which SPDK won't even compile with right now.
 
 ## v18.10:
 
