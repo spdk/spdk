@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9d2ea9b4_f7ea27be",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T05:23:41Z",
+      "side": 1,
+      "message": "Should we determine the unit size of buffer by cmbsz.bits.szu?",
+      "range": {
+        "startLine": 1011,
+        "startChar": 53,
+        "endLine": 1011,
+        "endChar": 58
+      },
+      "revId": "0234f0176fd53f8628b0ce13862f5a9deac4d52d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a4ba9f2_217831fd",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1017,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T05:23:41Z",
+      "side": 1,
+      "message": "rds",
+      "range": {
+        "startLine": 1017,
+        "startChar": 20,
+        "endLine": 1017,
+        "endChar": 23
+      },
+      "revId": "0234f0176fd53f8628b0ce13862f5a9deac4d52d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d477c0d_56a61a19",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1019,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T05:23:41Z",
+      "side": 1,
+      "message": "wds",
+      "range": {
+        "startLine": 1019,
+        "startChar": 20,
+        "endLine": 1019,
+        "endChar": 23
+      },
+      "revId": "0234f0176fd53f8628b0ce13862f5a9deac4d52d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
