@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fd6fd304_628c50ac",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T16:52:32Z",
+      "side": 1,
+      "message": "Why new object?\n  \"cache_device\" : \"\u003cbdev name\u003e\"\n\nis not enough?",
+      "range": {
+        "startLine": 402,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 31
+      },
+      "revId": "10782ac3b53de0aeef5d71afa6c181c14669c3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
