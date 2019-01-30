@@ -378,8 +378,8 @@ def get_nvmf_subsystem_json(config, section):
     for namespace in namespaces:
         nvmf_subsystem_methods.append({
             "params": {
-                 "namespace": namespace,
-                 "nqn": parameters['nqn']
+                "namespace": namespace,
+                "nqn": parameters['nqn']
             },
             "method": "nvmf_subsystem_add_ns"
         })
