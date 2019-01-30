@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dc8bfcc_1f97aaaa",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-30T13:56:23Z",
+      "side": 1,
+      "message": "perhaps SPDK_JSONRPC_ERROR_INTERNAL_ERROR?",
+      "range": {
+        "startLine": 78,
+        "startChar": 48,
+        "endLine": 78,
+        "endChar": 81
+      },
+      "revId": "8d6de7bba0e1897c486483ec6fe32a81fbb55490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc3b18e8_b5712591",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 156,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-01-30T13:56:23Z",
+      "side": 1,
+      "message": "perhaps SPDK_JSONRPC_ERROR_INTERNAL_ERROR?",
+      "range": {
+        "startLine": 156,
+        "startChar": 48,
+        "endLine": 156,
+        "endChar": 81
+      },
+      "revId": "8d6de7bba0e1897c486483ec6fe32a81fbb55490",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
