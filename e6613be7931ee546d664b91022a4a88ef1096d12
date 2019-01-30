@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "558c2fe2_71d4796f",
+        "filename": "scripts/perf/nvmf/__init__.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-30T14:42:30Z",
+      "side": 1,
+      "message": "Empty file",
+      "revId": "e6613be7931ee546d664b91022a4a88ef1096d12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
