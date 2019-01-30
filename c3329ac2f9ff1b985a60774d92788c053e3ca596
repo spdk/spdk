@@ -70,6 +70,30 @@
       "revId": "c3329ac2f9ff1b985a60774d92788c053e3ca596",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4e9a87da_94c39409",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-01-30T02:59:09Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThe above code you showed looks easy to understand indeed. I\u0027ll change the code to reuse error handling and avoid the duplicated part later.",
+      "parentUuid": "f6f9c696_c573011c",
+      "range": {
+        "startLine": 402,
+        "startChar": 0,
+        "endLine": 404,
+        "endChar": 48
+      },
+      "revId": "c3329ac2f9ff1b985a60774d92788c053e3ca596",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
