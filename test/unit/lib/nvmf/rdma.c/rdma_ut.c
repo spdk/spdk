@@ -45,8 +45,8 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_queue_depth = SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH,
 	.max_qpairs_per_ctrlr = SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR,
 	.in_capsule_data_size = SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE,
-	.max_io_size = (SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
-	.io_unit_size = SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE,
+	.max_io_size = (SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
+	.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE,
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
 	.num_shared_buffers = SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS,
 };
