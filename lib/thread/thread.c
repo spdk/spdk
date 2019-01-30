@@ -112,6 +112,9 @@ struct spdk_thread {
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
 
+	uint64_t			tsc_last;
+	struct spdk_thread_stats	stats;
+
 	/*
 	 * Contains pollers actively running on this thread.  Pollers
 	 *  are run round-robin. The thread takes one poller from the head
@@ -208,6 +211,8 @@ spdk_thread_create(const char *name)
 	TAILQ_INIT(&thread->timer_pollers);
 	SLIST_INIT(&thread->msg_cache);
 	thread->msg_cache_count = 0;
+
+	thread->tsc_last = spdk_get_ticks();
 
 	thread->messages = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	if (!thread->messages) {
@@ -373,6 +378,7 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller;
 	int rc = 0;
+	uint64_t now;
 
 	orig_thread = _get_thread();
 	tls_thread = thread;
@@ -437,6 +443,19 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		}
 	}
 
+	now = spdk_get_ticks();
+	if (rc == 0) {
+		/* Poller status idle */
+		thread->stats.idle_tsc += now - thread->tsc_last;
+	} else if (rc > 0) {
+		/* Poller status busy */
+		thread->stats.busy_tsc += now - thread->tsc_last;
+	} else {
+		/* Poller status unknown */
+		thread->stats.unknown_tsc += now - thread->tsc_last;
+	}
+	thread->tsc_last = now;
+
 	tls_thread = orig_thread;
 
 	return rc;
@@ -489,6 +508,26 @@ const char *
 spdk_thread_get_name(const struct spdk_thread *thread)
 {
 	return thread->name;
+}
+
+int
+spdk_thread_get_stats(struct spdk_thread_stats *stats)
+{
+	struct spdk_thread *thread;
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		return -EINVAL;
+	}
+
+	if (stats == NULL) {
+		return -EINVAL;
+	}
+
+	*stats = thread->stats;
+
+	return 0;
 }
 
 void

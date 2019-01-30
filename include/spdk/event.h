@@ -128,12 +128,6 @@ struct spdk_app_opts {
 	uint64_t		num_entries;
 };
 
-struct spdk_reactor_tsc_stats {
-	uint64_t busy_tsc;
-	uint64_t idle_tsc;
-	uint64_t unknown_tsc;
-};
-
 /**
  * Initialize the default value of opts
  *
@@ -290,15 +284,6 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  * \return true if enabled or false otherwise.
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
-
-/**
- * Get tsc stats from a given reactor
- * Copy cumulative reactor tsc values to user's tsc_stats structure.
- *
- * \param tsc_stats User's tsc_stats structure.
- * \param core_id Get tsc data on this Reactor core id.
- */
-int spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t core_id);
 
 #ifdef __cplusplus
 }

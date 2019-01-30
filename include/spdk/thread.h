@@ -268,6 +268,21 @@ struct spdk_thread *spdk_get_thread(void);
  */
 const char *spdk_thread_get_name(const struct spdk_thread *thread);
 
+struct spdk_thread_stats {
+	uint64_t busy_tsc;
+	uint64_t idle_tsc;
+	uint64_t unknown_tsc;
+};
+
+/**
+ * Get statistics about the current thread.
+ *
+ * Copy cumulative thread stats values to the provided thread stats structure.
+ *
+ * \param stats User's thread_stats structure.
+ */
+int spdk_thread_get_stats(struct spdk_thread_stats *stats);
+
 /**
  * Send a message to the given thread.
  *
