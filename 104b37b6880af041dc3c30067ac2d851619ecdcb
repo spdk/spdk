@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3e8b7aa8_9459a5e6",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "+ new line after variables declaration block.",
+      "range": {
+        "startLine": 237,
+        "startChar": 1,
+        "endLine": 238,
+        "endChar": 2
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "289bd6ec_b81534a3",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "I know not all parts of this file are doing this but can you return proper error code here ant there in this function?",
+      "range": {
+        "startLine": 243,
+        "startChar": 2,
+        "endLine": 243,
+        "endChar": 12
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b41873d_5c278002",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "It is open during bdev construction. Why you need to open it again?",
+      "range": {
+        "startLine": 245,
+        "startChar": 0,
+        "endLine": 249,
+        "endChar": 2
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4f90cb3_cc2f3bbb",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "Pls go int non-blocking mode.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 254,
+        "endChar": 2
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eff20466_5d7cdeba",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 259,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "No need for copy-paste.",
+      "range": {
+        "startLine": 256,
+        "startChar": 0,
+        "endLine": 259,
+        "endChar": 10
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ee2c299_5c2177e6",
+        "filename": "lib/bdev/rbd/bdev_rbd.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 823,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-01-30T15:28:48Z",
+      "side": 1,
+      "message": "+ new line",
+      "range": {
+        "startLine": 822,
+        "startChar": 1,
+        "endLine": 823,
+        "endChar": 1
+      },
+      "revId": "104b37b6880af041dc3c30067ac2d851619ecdcb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
