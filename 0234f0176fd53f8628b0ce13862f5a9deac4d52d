@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ee6327ca_4d3c9abf",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1006,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-01-30T16:53:17Z",
+      "side": 1,
+      "message": "I should have written more here, but size is 20 bits so it has a maximum value of 0xFFFFF. szu has a maximum value of 4, so we end up multiplying 0xFFFFF * 0x1000000000 which is 56 bits.",
+      "revId": "0234f0176fd53f8628b0ce13862f5a9deac4d52d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9d2ea9b4_f7ea27be",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 2
