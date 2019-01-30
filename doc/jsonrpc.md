@@ -262,7 +262,6 @@ Example response:
     "get_initiator_groups",
     "set_iscsi_options",
     "set_bdev_options",
-    "set_bdev_qos_limit_iops",
     "set_bdev_qos_limit",
     "delete_bdev",
     "get_bdevs",
