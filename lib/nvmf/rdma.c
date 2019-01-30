@@ -1305,6 +1305,8 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 		i++;
 	}
 
+	assert(rdma_req->req.iovcnt <= rqpair->max_send_sge);
+
 	rdma_req->data_from_pool = true;
 
 	return rc;
