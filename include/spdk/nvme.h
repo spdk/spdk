@@ -601,6 +601,32 @@ void spdk_nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
 			      spdk_nvme_remove_cb remove_cb);
 
 /**
+ * Probe and add controllers to the probe context list.
+ *
+ * Users must call spdk_nvme_probe_poll_async() to initialize
+ * controllers in the probe context list to the READY state.
+ *
+ * \param probe_ctx Context used to track probe actions.
+ *
+ * \return 0 on success, -1 on failure.
+ */
+int spdk_nvme_probe_async(struct spdk_nvme_probe_ctx *probe_ctx);
+
+/**
+ * Start controllers in the context list.
+ *
+ * Users may call the function util it returns True.
+ *
+ * \param probe_ctx Context used to track probe actions.
+ *
+ * \return true if all probe operations are complete; the probe_ctx may be
+ *              discarded at this point.
+ * \return false if there are still pending probe operations; user must call
+ *               spdk_nvme_probe_poll_async again to continue progress.
+ */
+bool spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
+
+/**
  * Detach specified device returned by spdk_nvme_probe()'s attach_cb from the
  * NVMe driver.
  *
