@@ -170,6 +170,11 @@ The following RPC commands deprecated in the previous release are now removed:
  - remove_virtio_scsi_bdev
  - construct_nvmf_subsystem
 
+### Miscellaneous
+
+The configure options `--with-raid` and `--without-raid` that were deprecated in the previous
+release are now removed.
+
 ## v18.10:
 
 ### nvme

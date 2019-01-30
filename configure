@@ -167,12 +167,6 @@ for i in "$@"; do
 		--without-rbd)
 			CONFIG[RBD]=n
 			;;
-		--with-raid)
-			echo "--with-raid option ignored and is now deprecated.  RAID module is always enabled."
-			;;
-		--without-raid)
-			echo "--without-raid option ignored and is now deprecated.  RAID module is always enabled."
-			;;
 		--with-rdma)
 			CONFIG[RDMA]=y
 			;;
