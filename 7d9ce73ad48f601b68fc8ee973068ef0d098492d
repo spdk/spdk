@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eba5b230_712a1989",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2370,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T05:25:43Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI\u0027m might misunderstand nvme spec, but spec says:\n\n\u003e If the controller does not support the Controller Memory Buffer feature then this register\n\u003e shall be cleared to 0h.\n\nSo why we need to set cmbsz to ~0 if nvme_ctrlr_get_cmbsz() returns nonzero?\n\nThanks.",
+      "revId": "7d9ce73ad48f601b68fc8ee973068ef0d098492d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
