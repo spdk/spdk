@@ -278,7 +278,7 @@ const char *spdk_thread_get_name(const struct spdk_thread *thread);
  * \param fn This function will be called on the given thread.
  * \param ctx This context will be passed to fn when called.
  */
-void spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
+void spdk_thread_send_msg(struct spdk_thread *thread, spdk_msg_fn fn, void *ctx);
 
 /**
  * Send a message to each thread, serially.
