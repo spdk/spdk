@@ -22,6 +22,30 @@
       "revId": "8a044855e7e9e8a41c484d96b5d2a34014571f4c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f24ee44c_583747af",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-01-30T04:35:23Z",
+      "side": 1,
+      "message": "Sorry, my bad. Please ignore my comment.",
+      "parentUuid": "7b5ed727_14f877fb",
+      "range": {
+        "startLine": 10,
+        "startChar": 27,
+        "endLine": 10,
+        "endChar": 53
+      },
+      "revId": "8a044855e7e9e8a41c484d96b5d2a34014571f4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
