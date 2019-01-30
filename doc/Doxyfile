@@ -812,6 +812,7 @@ INPUT                  += \
                          directory_structure.md \
                          event.md \
                          ftl.md \
+                         gdb_macros.md \
                          getting_started.md \
                          ioat.md \
                          iscsi.md \
