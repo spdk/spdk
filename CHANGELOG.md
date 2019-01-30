@@ -8,6 +8,10 @@ For `spdk_app_parse_args`, add return value to the callback which parses applica
 specific command line parameters to protect SPDK applications from crashing by invalid
 values from user input.
 
+By default, all SPDK applications will now reserve all hugepages at runtime. The pre-reserved
+memory size can be still set with `-s` or `--mem-size` option, although the default value
+was reduced down to 0.
+
 ### environment
 
 spdk_vtophys() has been refactored to accept length of the translated region as a new
