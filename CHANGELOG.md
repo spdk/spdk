@@ -2,6 +2,12 @@
 
 ## v19.04: (Upcoming Release)
 
+### nvme
+
+Introduced the probe context to enable asynchronous probe in parallel, new APIs
+spdk_nvme_probe_ctx_init(),spdk_nvme_probe_async(),spdk_nvme_poll_async() were
+added to enable this feature.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
