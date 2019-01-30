@@ -92,7 +92,7 @@ else
 	# Dynamic memory management is not supported on BSD
 	PRE_RESERVED_MEM=2048
 fi
-$testdir/bdevio/bdevio -s $PRE_RESERVED_MEM -c $testdir/bdev.conf
+$testdir/bdevio/bdevio -s $PRE_RESERVED_MEM -c $testdir/bdev.conf -L thread
 timing_exit bounds
 
 timing_enter nbd_gpt
