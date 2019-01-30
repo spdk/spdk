@@ -136,6 +136,12 @@ and set_log_flag, clear_log_flag and get_log_flags RPCs have been added.
 
 ### trace
 
+New `trace_record` application was added. It can be used to poll spdk trace shm file and
+append any new trace entries into another specified file. This can help retain those entries
+that would otherwise be overwritten in the shm file. See
+[Capturing sufficient trace events](https://spdk.io/doc/nvmf_tgt_tracepoints.html#capture_trace_events)
+for more details.
+
 New `get_tpoint_group_mask` RPC was added to get current tpoint_group_mask, and
 each tpoint group status.
 New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
