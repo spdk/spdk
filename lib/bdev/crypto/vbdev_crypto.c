@@ -203,8 +203,8 @@ vbdev_crypto_init_crypto_drivers(void)
 	uint8_t cdev_count;
 	uint8_t cdrv_id, cdev_id, i, j;
 	int rc = 0;
-	struct vbdev_dev *device = NULL;
-	struct device_qp *dev_qp = NULL;
+	struct vbdev_dev *device[RTE_CRYPTO_MAX_DEVS];
+	struct device_qp *dev_qp;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
 
@@ -224,6 +224,11 @@ vbdev_crypto_init_crypto_drivers(void)
 	cdev_count = rte_cryptodev_count();
 	if (cdev_count == 0) {
 		return 0;
+	}
+
+	if (cdev_count > RTE_CRYPTO_MAX_DEVS) {
+		SPDK_ERRLOG("illegal value returned from rte_cryptodev_count()\n");
+		return -EINVAL;
 	}
 
 	/*
@@ -273,25 +278,25 @@ vbdev_crypto_init_crypto_drivers(void)
 	 * Now lets configure each device.
 	 */
 	for (i = 0; i < cdev_count; i++) {
-		device = calloc(1, sizeof(struct vbdev_dev));
-		if (!device) {
+		device[i] = calloc(1, sizeof(struct vbdev_dev));
+		if (!device[i]) {
 			rc = -ENOMEM;
 			goto error_create_device;
 		}
 
 		/* Get details about this device. */
-		rte_cryptodev_info_get(i, &device->cdev_info);
-		cdrv_id = device->cdev_info.driver_id;
-		cdev_id = device->cdev_id = i;
+		rte_cryptodev_info_get(i, &device[i]->cdev_info);
+		cdrv_id = device[i]->cdev_info.driver_id;
+		cdev_id = device[i]->cdev_id = i;
 
 		/* Before going any further, make sure we have enough resources for this
 		 * device type to function.  We need a unique queue pair per core accross each
 		 * device type to remain lockless....
 		 */
 		if ((rte_cryptodev_device_count_by_driver(cdrv_id) *
-		     device->cdev_info.max_nb_queue_pairs) < num_lcores) {
+		     device[i]->cdev_info.max_nb_queue_pairs) < num_lcores) {
 			SPDK_ERRLOG("Insufficient unique queue pairs available for %s\n",
-				    device->cdev_info.driver_name);
+				    device[i]->cdev_info.driver_name);
 			SPDK_ERRLOG("Either add more crypto devices or decrease core count\n");
 			rc = -EINVAL;
 			goto error_qp;
@@ -299,7 +304,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 		/* Setup queue pairs. */
 		struct rte_cryptodev_config conf = {
-			.nb_queue_pairs = device->cdev_info.max_nb_queue_pairs,
+			.nb_queue_pairs = device[i]->cdev_info.max_nb_queue_pairs,
 			.socket_id = SPDK_ENV_SOCKET_ID_ANY
 		};
 
@@ -319,7 +324,7 @@ vbdev_crypto_init_crypto_drivers(void)
 		 * entire device affecting all other threads that might be using it
 		 * even on other queue pairs.
 		 */
-		for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
+		for (j = 0; j < device[i]->cdev_info.max_nb_queue_pairs; j++) {
 			rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY,
 							    (struct rte_mempool *)g_session_mp);
 
@@ -340,16 +345,16 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 
 		/* Add to our list of available crypto devices. */
-		TAILQ_INSERT_TAIL(&g_vbdev_devs, device, link);
+		TAILQ_INSERT_TAIL(&g_vbdev_devs, device[i], link);
 
 		/* Build up list of device/qp combinations */
-		for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
+		for (j = 0; j < device[i]->cdev_info.max_nb_queue_pairs; j++) {
 			dev_qp = calloc(1, sizeof(struct device_qp));
 			if (!dev_qp) {
 				rc = -ENOMEM;
 				goto error_create_devqp;
 			}
-			dev_qp->device = device;
+			dev_qp->device = device[i];
 			dev_qp->qp = j;
 			dev_qp->in_use = false;
 			TAILQ_INSERT_TAIL(&g_device_qp, dev_qp, link);
@@ -367,8 +372,10 @@ error_device_start:
 error_qp_setup:
 error_dev_config:
 error_qp:
-	free(device);
 error_create_device:
+	for (j = 0; j <= i; j++) {
+		free(device[j]);
+	}
 	rte_mempool_free(g_crypto_op_mp);
 	g_crypto_op_mp = NULL;
 error_create_op:
