@@ -1408,6 +1408,11 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 
+	if (spdk_unlikely(device == NULL)) {
+		SPDK_ERRLOG("rdma_device %p is invalid\n", device);
+		return -1;
+	}
+
 	cmd = &rdma_req->req.cmd->nvme_cmd;
 	rsp = &rdma_req->req.rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
@@ -1540,7 +1545,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	int				data_posted;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
 	rgroup = rqpair->poller->group;
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
@@ -1607,6 +1611,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			/* Try to get a data buffer */
+			device = rqpair->port->device;
 			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
 				TAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, link);
