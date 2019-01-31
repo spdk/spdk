@@ -161,6 +161,9 @@ This allows for basing clones on top of lvol_bdev without first creating a snaps
 Added option to change method for data erasure when deleting lvol or resizing down.
 Default of unmapping clusters can now be changed to writing zeroes or no operation.
 
+Added option to change method for erasing data region on lvol store creation.
+Default of unmapping can now be changed to writing zeroes or no operation.
+
 ### log
 
 "trace flags" are now referred to as "log flags" in the SPDK log API.  The

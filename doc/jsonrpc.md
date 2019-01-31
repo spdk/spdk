@@ -4499,6 +4499,7 @@ Name                    | Optional | Type        | Description
 bdev_name               | Required | string      | Bdev on which to construct logical volume store
 lvs_name                | Required | string      | Name of the logical volume store to create
 cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
+clear_method            | Optional | string      | Change clear method for data region. Available: none, unmap, write_zeroes
 
 ### Response
 
@@ -4515,6 +4516,7 @@ Example request:
   "params": {
     "lvs_name": "LVS0",
     "bdev_name": "Malloc0"
+    "clear_method": "write_zeroes"
   }
 }
 ~~~
