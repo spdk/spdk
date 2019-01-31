@@ -48,17 +48,6 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
-static struct spdk_notify_type notify_construct_malloc_bdev = {
-	.name = "notify_construct_malloc_bdev",
-};
-
-
-static struct spdk_notify_type notify_delete_malloc_bdev = {
-	.name = "notify_delete_malloc_bdev",
-};
-
-
-
 struct malloc_disk {
 	struct spdk_bdev		disk;
 	void				*malloc_buf;
@@ -103,6 +92,54 @@ malloc_done(void *ref, int status)
 static TAILQ_HEAD(, malloc_disk) g_malloc_disks = TAILQ_HEAD_INITIALIZER(g_malloc_disks);
 
 int malloc_disk_count = 0;
+
+static void bdev_malloc_write_json_config(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w);
+
+static void
+notify_construct_malloc_bdev_info(struct spdk_json_write_ctx *w,
+				  struct spdk_notify *notify, void *ctx)
+{
+	struct malloc_disk	*mdisk = (struct malloc_disk *)ctx;
+	bdev_malloc_write_json_config(&mdisk->disk, w);
+}
+
+static void
+notify_construct_malloc_bdev_type(struct spdk_json_write_ctx *w,
+				  struct spdk_notify_type *type, void *ctx)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", type->name);
+	spdk_json_write_object_end(w);
+}
+
+static void
+notify_delete_malloc_bdev_info(struct spdk_json_write_ctx *w,
+			       struct spdk_notify *notify, void *ctx)
+{
+	struct spdk_bdev *bdev = (struct spdk_bdev *)ctx;
+	bdev_malloc_write_json_config(bdev, w);
+}
+
+static void
+notify_delete_malloc_bdev_type(struct spdk_json_write_ctx *w,
+			       struct spdk_notify_type *type, void *ctx)
+{
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", type->name);
+	spdk_json_write_object_end(w);
+}
+
+static struct spdk_notify_type notify_construct_malloc_bdev = {
+	.name = "construct_malloc_bdev",
+	.write_info_cb = notify_construct_malloc_bdev_info,
+	.write_type_cb = notify_construct_malloc_bdev_type,
+};
+
+static struct spdk_notify_type notify_delete_malloc_bdev = {
+	.name = "delete_malloc_bdev",
+	.write_info_cb = notify_delete_malloc_bdev_info,
+	.write_type_cb = notify_delete_malloc_bdev_type,
+};
 
 static int bdev_malloc_initialize(void);
 static void bdev_malloc_get_spdk_running_config(FILE *fp);
