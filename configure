@@ -421,7 +421,7 @@ if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 		CONFIG[ISAL]=n
 	else
 		cd $rootdir/isa-l
-		ISAL_LOG=/tmp/spdk-isal.log
+		ISAL_LOG=$rootdir/spdk-isal.log
 		echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
 		./autogen.sh &> $ISAL_LOG
 		./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $ISAL_LOG 2>&1
