@@ -1408,6 +1408,11 @@ spdk_nvmf_rdma_request_parse_sgl(struct spdk_nvmf_rdma_transport *rtransport,
 	struct spdk_nvme_cpl			*rsp;
 	struct spdk_nvme_sgl_descriptor		*sgl;
 
+	if (spdk_unlikely(device == NULL)) {
+		SPDK_ERROLOG("rdma_device %p is invalid\n", device);
+		return -1;
+	}
+
 	cmd = &rdma_req->req.cmd->nvme_cmd;
 	rsp = &rdma_req->req.rsp->nvme_cpl;
 	sgl = &cmd->dptr.sgl1;
@@ -1540,7 +1545,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	int				data_posted;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
 	rgroup = rqpair->poller->group;
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
@@ -1557,6 +1561,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	}
+
+	device = rqpair->port->device;
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
