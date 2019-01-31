@@ -55,6 +55,11 @@ enum lvol_clear_method {
 	LVOL_CLEAR_WITH_WRITE_ZEROES,
 };
 
+enum lvs_clear_method {
+	LVS_CLEAR_WITH_UNMAP,
+	LVS_CLEAR_WITH_WRITE_ZEROES,
+	LVS_CLEAR_WITH_NONE,
+};
 
 /* Must include null terminator. */
 #define SPDK_LVS_NAME_MAX	64
@@ -64,8 +69,9 @@ enum lvol_clear_method {
  * Parameters for lvolstore initialization.
  */
 struct spdk_lvs_opts {
-	uint32_t	cluster_sz;
-	char		name[SPDK_LVS_NAME_MAX];
+	uint32_t		cluster_sz;
+	enum lvs_clear_method	clear_method;
+	char			name[SPDK_LVS_NAME_MAX];
 };
 
 /**
