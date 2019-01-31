@@ -75,16 +75,15 @@ function check_for_driver {
 function pci_can_bind() {
 	if [[ ${#PCI_WHITELIST[@]} == 0 ]]; then
 		#no whitelist specified, bind all devices
-		return 1
+		return 0
 	fi
 
-	for i in ${PCI_WHITELIST[@]}
-	do
+	for i in ${PCI_WHITELIST[@]}; do
 		if [ "$i" == "$1" ] ; then
-			 return 1
+			 return 0
 		fi
 	done
-	return 0
+	return 1
 }
 
 function linux_bind_driver() {
@@ -182,7 +181,7 @@ function configure_linux_pci {
 	for bdf in $(iter_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
-		if pci_can_bind $bdf == "0" ; then
+		if ! pci_can_bind $bdf; then
 			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
 			continue
 		fi
@@ -206,7 +205,7 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
-			if pci_can_bind $bdf == "0" ; then
+			if ! pci_can_bind $bdf; then
 				echo "Skipping un-whitelisted I/OAT device at $bdf"
 				continue
 			fi
@@ -224,7 +223,7 @@ function configure_linux_pci {
 
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
-			if pci_can_bind $bdf == "0" ; then
+			if ! pci_can_bind $bdf; then
 				echo "Skipping un-whitelisted Virtio device at $bdf"
 				continue
 			fi
@@ -362,7 +361,7 @@ function reset_linux_pci {
 	driver_loaded=$?
 	set -e
 	for bdf in $(iter_pci_class_code 01 08 02); do
-		if pci_can_bind $bdf == "0" ; then
+		if ! pci_can_bind $bdf; then
 			echo "Skipping un-whitelisted NVMe controller $blkname ($bdf)"
 			continue
 		fi
@@ -385,7 +384,7 @@ function reset_linux_pci {
 	set -e
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
-			if pci_can_bind $bdf == "0" ; then
+			if ! pci_can_bind $bdf; then
 				echo "Skipping un-whitelisted I/OAT device at $bdf"
 				continue
 			fi
@@ -411,7 +410,7 @@ function reset_linux_pci {
 	modprobe virtio-pci || true
 	for dev_id in `cat $TMP`; do
 		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
-			if pci_can_bind $bdf == "0" ; then
+			if ! pci_can_bind $bdf; then
 				echo "Skipping un-whitelisted Virtio device at $bdf"
 				continue
 			fi
