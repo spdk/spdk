@@ -1,10 +1,11 @@
-def construct_lvol_store(client, bdev_name, lvs_name, cluster_sz=None):
+def construct_lvol_store(client, bdev_name, lvs_name, cluster_sz=None, clear_method=None):
     """Construct a logical volume store.
 
     Args:
         bdev_name: bdev on which to construct logical volume store
         lvs_name: name of the logical volume store to create
         cluster_sz: cluster size of the logical volume store in bytes (optional)
+        clear_method: Change clear method for data region. Available: none, unmap, write_zeroes (optional)
 
     Returns:
         UUID of created logical volume store.
@@ -12,6 +13,8 @@ def construct_lvol_store(client, bdev_name, lvs_name, cluster_sz=None):
     params = {'bdev_name': bdev_name, 'lvs_name': lvs_name}
     if cluster_sz:
         params['cluster_sz'] = cluster_sz
+    if clear_method:
+        params['clear_method'] = clear_method
     return client.call('construct_lvol_store', params)
 
 
