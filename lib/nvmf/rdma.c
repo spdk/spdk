@@ -1540,7 +1540,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	int				data_posted;
 
 	rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	device = rqpair->port->device;
 	rgroup = rqpair->poller->group;
 
 	assert(rdma_req->state != RDMA_REQUEST_STATE_FREE);
@@ -1557,6 +1556,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	}
+
+	device = rqpair->port->device;
 
 	/* The loop here is to allow for several back-to-back state changes. */
 	do {
