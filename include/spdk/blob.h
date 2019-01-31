@@ -77,6 +77,12 @@ enum blob_clear_method {
 	BLOB_CLEAR_WITH_WRITE_ZEROES,
 };
 
+enum bs_clear_method {
+	BS_CLEAR_WITH_UNMAP,
+	BS_CLEAR_WITH_WRITE_ZEROES,
+	BS_CLEAR_WITH_NONE,
+};
+
 struct spdk_blob_store;
 struct spdk_io_channel;
 struct spdk_blob;
@@ -205,6 +211,9 @@ struct spdk_bs_opts {
 
 	/** Maximum simultaneous operations per channel */
 	uint32_t max_channel_ops;
+
+	/** Clear method */
+	enum bs_clear_method  clear_method;
 
 	/** Blobstore type */
 	struct spdk_bs_type bstype;

@@ -2421,6 +2421,7 @@ spdk_bs_opts_init(struct spdk_bs_opts *opts)
 	opts->num_md_pages = SPDK_BLOB_OPTS_NUM_MD_PAGES;
 	opts->max_md_ops = SPDK_BLOB_OPTS_MAX_MD_OPS;
 	opts->max_channel_ops = SPDK_BLOB_OPTS_DEFAULT_CHANNEL_OPS;
+	opts->clear_method = BS_CLEAR_WITH_UNMAP;
 	memset(&opts->bstype, 0, sizeof(opts->bstype));
 	opts->iter_cb_fn = NULL;
 	opts->iter_cb_arg = NULL;
@@ -3694,8 +3695,14 @@ spdk_bs_init(struct spdk_bs_dev *dev, struct spdk_bs_opts *o,
 
 	/* Clear metadata space */
 	spdk_bs_batch_write_zeroes_dev(batch, 0, num_md_lba);
-	/* Trim data clusters */
-	spdk_bs_batch_unmap_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+
+	if (opts.clear_method == BS_CLEAR_WITH_UNMAP) {
+		/* Trim data clusters */
+		spdk_bs_batch_unmap_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	} else if (opts.clear_method == BS_CLEAR_WITH_WRITE_ZEROES) {
+		/* Write_zeroes to data clusters */
+		spdk_bs_batch_write_zeroes_dev(batch, num_md_lba, ctx->bs->dev->blockcnt - num_md_lba);
+	}
 
 	spdk_bs_batch_close(batch);
 }

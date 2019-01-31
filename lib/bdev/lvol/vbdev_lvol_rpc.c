@@ -44,6 +44,7 @@ struct rpc_construct_lvol_store {
 	char *lvs_name;
 	char *bdev_name;
 	uint32_t cluster_sz;
+	char *clear_method;
 };
 
 static int
@@ -81,12 +82,14 @@ free_rpc_construct_lvol_store(struct rpc_construct_lvol_store *req)
 {
 	free(req->bdev_name);
 	free(req->lvs_name);
+	free(req->clear_method);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_lvol_store_decoders[] = {
 	{"bdev_name", offsetof(struct rpc_construct_lvol_store, bdev_name), spdk_json_decode_string},
 	{"cluster_sz", offsetof(struct rpc_construct_lvol_store, cluster_sz), spdk_json_decode_uint32, true},
 	{"lvs_name", offsetof(struct rpc_construct_lvol_store, lvs_name), spdk_json_decode_string},
+	{"clear_method", offsetof(struct rpc_construct_lvol_store, clear_method), spdk_json_decode_string, true},
 };
 
 static void
@@ -123,6 +126,7 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 	struct rpc_construct_lvol_store req = {};
 	struct spdk_bdev *bdev;
 	int rc;
+	enum lvs_clear_method clear_method;
 
 	if (spdk_json_decode_object(params, rpc_construct_lvol_store_decoders,
 				    SPDK_COUNTOF(rpc_construct_lvol_store_decoders),
@@ -150,8 +154,23 @@ spdk_rpc_construct_lvol_store(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, _spdk_rpc_lvol_store_construct_cb,
-			      request);
+	if (req.clear_method != NULL) {
+		if (!strcasecmp(req.clear_method, "none")) {
+			clear_method = LVS_CLEAR_WITH_NONE;
+		} else if (!strcasecmp(req.clear_method, "unmap")) {
+			clear_method = LVS_CLEAR_WITH_UNMAP;
+		} else if (!strcasecmp(req.clear_method, "write_zeroes")) {
+			clear_method = LVS_CLEAR_WITH_WRITE_ZEROES;
+		} else {
+			rc = -EINVAL;
+			goto invalid;
+		}
+	} else {
+		clear_method = LVS_CLEAR_WITH_UNMAP;
+	}
+
+	rc = vbdev_lvs_create(bdev, req.lvs_name, req.cluster_sz, clear_method,
+			      _spdk_rpc_lvol_store_construct_cb, request);
 	if (rc < 0) {
 		goto invalid;
 	}
