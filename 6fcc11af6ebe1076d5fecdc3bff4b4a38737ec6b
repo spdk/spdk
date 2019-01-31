@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "410bc481_c082754a",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-01-31T12:07:53Z",
+      "side": 1,
+      "message": "Would be nice if you mention here that results are stored in /tmp/results/",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 80
+      },
+      "revId": "6fcc11af6ebe1076d5fecdc3bff4b4a38737ec6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
