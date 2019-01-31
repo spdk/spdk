@@ -731,7 +731,7 @@ test_initdrivers(void)
 	CU_ASSERT(g_session_mp == NULL);
 	MOCK_SET(rte_crypto_op_pool_create, (struct rte_mempool *)1);
 
-	/* Check resources are sufficient failure. */
+	/* Check resources are not sufficient */
 	MOCK_CLEARED_ASSERT(spdk_mempool_create);
 	rc = vbdev_crypto_init_crypto_drivers();
 	CU_ASSERT(rc == -EINVAL);
