@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52d805dc_92b11dd5",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-31T17:57:59Z",
+      "side": 1,
+      "message": "declaration should move to beginning of function",
+      "revId": "0559309c6b189aa368cec40ae7201905f05ebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efbd5fad_cceb6d2a",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-01-31T17:57:59Z",
+      "side": 1,
+      "message": "this assert can be remove since you just set msg_cache_count to 0",
+      "revId": "0559309c6b189aa368cec40ae7201905f05ebf49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
