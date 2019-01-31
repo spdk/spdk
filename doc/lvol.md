@@ -64,7 +64,8 @@ Blobs can be inflated to copy data from backing devices (e.g. snapshots) and all
 
 ## Decoupling {#lvol_decoupling}
 
-Blobs can be decoupled from all dependencies by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remaining unallocated clusters are kept thin provisioned.
+Blobs can be decoupled from their parent blob by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remaining unallocated clusters are kept thin provisioned.
+Note: When decouple is performed, only single dependency is removed. To remove all dependencies in a chain of blobs depending on eachother, multiple calls need to be issued.
 
 # Configuring Logical Volumes
 
