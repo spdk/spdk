@@ -122,9 +122,8 @@ pci_dump_json_info(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 		spdk_json_write_string(w, "pci-legacy");
 	}
 
-	spdk_json_write_name(w, "pci_address");
 	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
-	spdk_json_write_string(w, addr);
+	spdk_json_write_named_string(w, "pci_address", addr);
 }
 
 static void
