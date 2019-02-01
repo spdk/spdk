@@ -154,14 +154,11 @@ spdk_rpc_get_interfaces(struct spdk_jsonrpc_request *request,
 	TAILQ_FOREACH(ifc, interface_head, tailq) {
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, ifc->name);
+		spdk_json_write_named_string(w, "name", ifc->name);
 
-		spdk_json_write_name(w, "ifc_index");
-		spdk_json_write_int32(w, ifc->index);
+		spdk_json_write_named_int32(w, "ifc_index", ifc->index);
 
-		spdk_json_write_name(w, "ip_addr");
-		spdk_json_write_array_begin(w);
+		spdk_json_write_named_array_begin(w, "ip_addr");
 		for (i = 0; i < ifc->num_ip_addresses; i++) {
 			memcpy(&inaddr, &ifc->ip_address[i], sizeof(uint32_t));
 			ip_address = inet_ntoa(inaddr);
