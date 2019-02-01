@@ -22,6 +22,30 @@
       "revId": "125c78638a6d19c0e52ce1faec0950b71a4ffbe6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1f0cd2c3_d7339e76",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-02-01T07:55:35Z",
+      "side": 1,
+      "message": "Hi Gang,\n\nI have updated this log message.\n\nThanks for your review and Happy Lunar New Year.\n\nLorne",
+      "parentUuid": "2ebe9aee_fe57db3b",
+      "range": {
+        "startLine": 428,
+        "startChar": 16,
+        "endLine": 428,
+        "endChar": 46
+      },
+      "revId": "125c78638a6d19c0e52ce1faec0950b71a4ffbe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
