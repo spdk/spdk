@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "843275f0_685eb4d8",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-01T11:31:36Z",
+      "side": 1,
+      "message": "This is not true anymore. You\u0027re using atomics now.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 10,
+        "endChar": 35
+      },
+      "revId": "a571cb8e96d2853f83d88038d6af78e92c94282b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
