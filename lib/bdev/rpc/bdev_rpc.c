@@ -63,48 +63,36 @@ spdk_rpc_get_bdevs_iostat_cb(struct spdk_bdev *bdev,
 	if (bdev_name != NULL) {
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, bdev_name);
+		spdk_json_write_named_string(w, "name", bdev_name);
 
-		spdk_json_write_name(w, "bytes_read");
-		spdk_json_write_uint64(w, stat->bytes_read);
+		spdk_json_write_named_uint64(w, "bytes_read", stat->bytes_read);
 
-		spdk_json_write_name(w, "num_read_ops");
-		spdk_json_write_uint64(w, stat->num_read_ops);
+		spdk_json_write_named_uint64(w, "num_read_ops", stat->num_read_ops);
 
-		spdk_json_write_name(w, "bytes_written");
-		spdk_json_write_uint64(w, stat->bytes_written);
+		spdk_json_write_named_uint64(w, "bytes_written", stat->bytes_written);
 
-		spdk_json_write_name(w, "num_write_ops");
-		spdk_json_write_uint64(w, stat->num_write_ops);
+		spdk_json_write_named_uint64(w, "num_write_ops", stat->num_write_ops);
 
-		spdk_json_write_name(w, "bytes_unmapped");
-		spdk_json_write_uint64(w, stat->bytes_unmapped);
+		spdk_json_write_named_uint64(w, "bytes_unmapped", stat->bytes_unmapped);
 
-		spdk_json_write_name(w, "num_unmap_ops");
-		spdk_json_write_uint64(w, stat->num_unmap_ops);
+		spdk_json_write_named_uint64(w, "num_unmap_ops", stat->num_unmap_ops);
 
-		spdk_json_write_name(w, "read_latency_ticks");
-		spdk_json_write_uint64(w, stat->read_latency_ticks);
+		spdk_json_write_named_uint64(w, "read_latency_ticks", stat->read_latency_ticks);
 
-		spdk_json_write_name(w, "write_latency_ticks");
-		spdk_json_write_uint64(w, stat->write_latency_ticks);
+		spdk_json_write_named_uint64(w, "write_latency_ticks", stat->write_latency_ticks);
 
-		spdk_json_write_name(w, "unmap_latency_ticks");
-		spdk_json_write_uint64(w, stat->unmap_latency_ticks);
+		spdk_json_write_named_uint64(w, "unmap_latency_ticks", stat->unmap_latency_ticks);
 
 		if (spdk_bdev_get_qd_sampling_period(bdev)) {
-			spdk_json_write_name(w, "queue_depth_polling_period");
-			spdk_json_write_uint64(w, spdk_bdev_get_qd_sampling_period(bdev));
+			spdk_json_write_named_uint64(w, "queue_depth_polling_period",
+						     spdk_bdev_get_qd_sampling_period(bdev));
 
-			spdk_json_write_name(w, "queue_depth");
-			spdk_json_write_uint64(w, spdk_bdev_get_qd(bdev));
+			spdk_json_write_named_uint64(w, "queue_depth", spdk_bdev_get_qd(bdev));
 
-			spdk_json_write_name(w, "io_time");
-			spdk_json_write_uint64(w, spdk_bdev_get_io_time(bdev));
+			spdk_json_write_named_uint64(w, "io_time", spdk_bdev_get_io_time(bdev));
 
-			spdk_json_write_name(w, "weighted_io_time");
-			spdk_json_write_uint64(w, spdk_bdev_get_weighted_io_time(bdev));
+			spdk_json_write_named_uint64(w, "weighted_io_time",
+						     spdk_bdev_get_weighted_io_time(bdev));
 		}
 
 		spdk_json_write_object_end(w);
@@ -186,8 +174,7 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	spdk_json_write_array_begin(w);
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "tick_rate");
-	spdk_json_write_uint64(w, spdk_get_ticks_hz());
+	spdk_json_write_named_uint64(w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_object_end(w);
 
 	if (bdev != NULL) {
@@ -235,11 +222,9 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "name");
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_named_string(w, "name", spdk_bdev_get_name(bdev));
 
-	spdk_json_write_name(w, "aliases");
-	spdk_json_write_array_begin(w);
+	spdk_json_write_named_array_begin(w, "aliases");
 
 	TAILQ_FOREACH(tmp, spdk_bdev_get_aliases(bdev), tailq) {
 		spdk_json_write_string(w, tmp->alias);
@@ -247,14 +232,11 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 
 	spdk_json_write_array_end(w);
 
-	spdk_json_write_name(w, "product_name");
-	spdk_json_write_string(w, spdk_bdev_get_product_name(bdev));
+	spdk_json_write_named_string(w, "product_name", spdk_bdev_get_product_name(bdev));
 
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint32(w, spdk_bdev_get_block_size(bdev));
+	spdk_json_write_named_uint32(w, "block_size", spdk_bdev_get_block_size(bdev));
 
-	spdk_json_write_name(w, "num_blocks");
-	spdk_json_write_uint64(w, spdk_bdev_get_num_blocks(bdev));
+	spdk_json_write_named_uint64(w, "num_blocks", spdk_bdev_get_num_blocks(bdev));
 
 	if (!spdk_mem_all_zero(&bdev->uuid, sizeof(bdev->uuid))) {
 		char uuid_str[SPDK_UUID_STRING_LEN];
@@ -263,40 +245,35 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "uuid", uuid_str);
 	}
 
-	spdk_json_write_name(w, "assigned_rate_limits");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "assigned_rate_limits");
 	spdk_bdev_get_qos_rate_limits(bdev, qos_limits);
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
-		spdk_json_write_name(w, spdk_bdev_get_qos_rpc_type(i));
-		spdk_json_write_uint64(w, qos_limits[i]);
+		spdk_json_write_named_uint64(w, spdk_bdev_get_qos_rpc_type(i), qos_limits[i]);
 	}
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "claimed");
-	spdk_json_write_bool(w, (bdev->internal.claim_module != NULL));
+	spdk_json_write_named_bool(w, "claimed", (bdev->internal.claim_module != NULL));
 
-	spdk_json_write_name(w, "supported_io_types");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "read");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
-	spdk_json_write_name(w, "write");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
-	spdk_json_write_name(w, "unmap");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
-	spdk_json_write_name(w, "write_zeroes");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
-	spdk_json_write_name(w, "flush");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
-	spdk_json_write_name(w, "reset");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
-	spdk_json_write_name(w, "nvme_admin");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
-	spdk_json_write_name(w, "nvme_io");
-	spdk_json_write_bool(w, spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
+	spdk_json_write_named_object_begin(w, "supported_io_types");
+	spdk_json_write_named_bool(w, "read",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ));
+	spdk_json_write_named_bool(w, "write",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE));
+	spdk_json_write_named_bool(w, "unmap",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP));
+	spdk_json_write_named_bool(w, "write_zeroes",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE_ZEROES));
+	spdk_json_write_named_bool(w, "flush",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_FLUSH));
+	spdk_json_write_named_bool(w, "reset",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_RESET));
+	spdk_json_write_named_bool(w, "nvme_admin",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_ADMIN));
+	spdk_json_write_named_bool(w, "nvme_io",
+				   spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_NVME_IO));
 	spdk_json_write_object_end(w);
 
-	spdk_json_write_name(w, "driver_specific");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "driver_specific");
 	spdk_bdev_dump_info_json(bdev, w);
 	spdk_json_write_object_end(w);
 

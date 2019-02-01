@@ -1109,26 +1109,19 @@ spdk_rpc_dump_lvol_store_info(struct spdk_json_write_ctx *w, struct lvol_store_b
 	spdk_json_write_object_begin(w);
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &lvs_bdev->lvs->uuid);
-	spdk_json_write_name(w, "uuid");
-	spdk_json_write_string(w, uuid);
+	spdk_json_write_named_string(w, "uuid", uuid);
 
-	spdk_json_write_name(w, "name");
-	spdk_json_write_string(w, lvs_bdev->lvs->name);
+	spdk_json_write_named_string(w, "name", lvs_bdev->lvs->name);
 
-	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(lvs_bdev->bdev));
+	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(lvs_bdev->bdev));
 
-	spdk_json_write_name(w, "total_data_clusters");
-	spdk_json_write_uint64(w, spdk_bs_total_data_cluster_count(bs));
+	spdk_json_write_named_uint64(w, "total_data_clusters", spdk_bs_total_data_cluster_count(bs));
 
-	spdk_json_write_name(w, "free_clusters");
-	spdk_json_write_uint64(w, spdk_bs_free_cluster_count(bs));
+	spdk_json_write_named_uint64(w, "free_clusters", spdk_bs_free_cluster_count(bs));
 
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint64(w, block_size);
+	spdk_json_write_named_uint64(w, "block_size", block_size);
 
-	spdk_json_write_name(w, "cluster_size");
-	spdk_json_write_uint64(w, cluster_size);
+	spdk_json_write_named_uint64(w, "cluster_size", cluster_size);
 
 	spdk_json_write_object_end(w);
 }
