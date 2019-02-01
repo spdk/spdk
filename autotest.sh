@@ -57,14 +57,51 @@ timing_enter cleanup
 # Remove old domain socket pathname just in case
 rm -f /var/tmp/spdk*.sock
 
+# OCSSD devices drivers don't support IO issues by kernel.
+# Detect OCSSD devices and blacklist them (unbind from any driver).
+# If test scripts want to use this device it needs to do this explicitly.
+# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
+if [ $(uname -s) = Linux ]; then
+	for dev in $(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+'); do
+		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
+			PCI_BLACKLIST+=" $(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+		fi
+	done
+	
+	# Now, bind blacklistened devices to pci-stub module. This will prevent
+	# automatic grabbing these devices when we add device/vendor ID to
+	# proper driver.
+	pci_whitelist="$PCI_WHITELIST"
+	pci_blacklist="$PCI_BLACKLIST"
+	driver_override="$DRIVER_OVERRIDE"
+
+	export PCI_WHITELIST="$PCI_BLACKLIST"
+	export PCI_BLACKLIST=""
+	export DRIVER_OVERRIDE="pci-stub"
+	dmesg -c > /dev/null
+	modprobe -v pci-stub
+	dmesg
+	./scripts/setup.sh reset
+
+	export PCI_WHITELIST="$pci_whitelist"
+	export PCI_BLACKLIST="$pci_blacklist"
+	export DRIVER_OVERRIDE="$driver_override"
+	unset pci_whitelist pci_blacklist driver_override
+fi
+
 # Load the kernel driver
 ./scripts/setup.sh reset
 
 # Let the kernel discover any filesystems or partitions
 sleep 10
 
+./scripts/setup.sh status
+
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+# Filter out nvme with partitions - the "p*" suffix
 for dev in $(ls /dev/nvme*n* | grep -v p || true); do
 	dd if=/dev/zero of="$dev" bs=1M count=1
 done
@@ -82,6 +119,8 @@ timing_enter afterboot
 ./scripts/setup.sh
 timing_exit afterboot
 
+./scripts/setup.sh status
+
 timing_enter nvmf_setup
 rdma_device_init
 timing_exit nvmf_setup
@@ -94,6 +133,8 @@ if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 	fi
 fi
 
+./scripts/setup.sh status
+
 #####################
 # Unit Tests
 #####################
@@ -105,6 +146,7 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_exit unittest
 fi
 
+./scripts/setup.sh status
 
 if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	timing_enter lib
@@ -113,17 +155,25 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 	run_test suite test/rpc_client/rpc_client.sh
 	run_test suite ./test/json_config/json_config.sh
 
+	./scripts/setup.sh status
+
 	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
 		run_test suite test/bdev/blockdev.sh
 	fi
+
+	./scripts/setup.sh status
 
 	if [ $SPDK_TEST_JSON -eq 1 ]; then
 		run_test suite test/config_converter/test_converter.sh
 	fi
 
+	./scripts/setup.sh status
+
 	if [ $SPDK_TEST_EVENT -eq 1 ]; then
 		run_test suite test/event/event.sh
 	fi
+
+	./scripts/setup.sh status
 
 	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test suite test/nvme/nvme.sh
