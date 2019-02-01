@@ -62,6 +62,12 @@ function usage()
 	echo "                           No path required."
 	echo " vtune                     Required to profile I/O under Intel VTune Amplifier XE."
 	echo "                           example: /opt/intel/vtune_amplifier_xe_version"
+	echo " ocf                       Required to build OCF module."
+	echo "                           If argument is directory, interpret it as root of OCF repo"
+	echo "                           If argument is file, interpret it as compiled OCF lib"
+	echo "                           example: /usr/src/ocf/"
+	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -160,12 +166,6 @@ for i in "$@"; do
 			;;
 		--without-rbd)
 			CONFIG[RBD]=n
-			;;
-		--with-raid)
-			echo "--with-raid option ignored and is now deprecated.  RAID module is always enabled."
-			;;
-		--without-raid)
-			echo "--without-raid option ignored and is now deprecated.  RAID module is always enabled."
 			;;
 		--with-rdma)
 			CONFIG[RDMA]=y
@@ -269,6 +269,20 @@ for i in "$@"; do
 		--without-ftl)
 			CONFIG[FTL]=n
 			;;
+		--with-ocf=*)
+			CONFIG[OCF]=y
+			CONFIG[OCF_PATH]=$(readlink -f ${i#*=})
+			;;
+		--without-ocf)
+			CONFIG[OCF]=n
+			CONFIG[OCF_PATH]=
+			;;
+		--with-isal)
+                        CONFIG[ISAL]=y
+                        ;;
+                --without-isal)
+                        CONFIG[ISAL]=n
+                        ;;
 		--)
 			break
 			;;
@@ -278,6 +292,13 @@ for i in "$@"; do
 			exit 1
 	esac
 done
+
+# Detect architecture and force no isal if non x86 archtecture
+arch=$(uname -i)
+if [[ $arch != x86_64* ]]; then
+	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
+	CONFIG[ISAL]=n
+fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
 	rootdir=$(readlink -f $(dirname $0))
@@ -373,13 +394,40 @@ than or equal to 4.14 will see significantly reduced performance.
 	fi
 fi
 
-if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo Crypto requires NASM version 2.12.02 or newer.  Please install
-		echo or upgrade then re-run this script.
+if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+		echo "Notice: ISAL, compression & crypto auto-disabled due to nasm dependency."
+		echo "These features require NASM version 2.12.02 or newer.  Please install"
+		echo "or upgrade then re-run this script."
+		CONFIG[ISAL]=n
+		CONFIG[CRYPTO]=n
+		CONFIG[IPSEC_MB]=n
+	else
+		if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+			CONFIG[IPSEC_MB]=y
+		fi
+	fi
+fi
+
+if [[ "${CONFIG[ISAL]}" = "y" ]]; then
+	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
+		echo "isa-l folder is not found; If you do want to install isa-l, run:"
+		echo "  git submodule update --init"
 		exit 1
 	fi
-	CONFIG[IPSEC_MB]=y
+
+	if [[ "${CONFIG[RBD]}" = "y" ]]; then
+		echo "ISAL and RBD cannot co-exist currently so disabling ISAL."
+		CONFIG[ISAL]=n
+	else
+		cd $rootdir/isa-l
+		ISAL_LOG=/tmp/spdk-isal.log
+		echo -n "Configuring ISA-L (logfile: $ISAL_LOG)..."
+		./autogen.sh &> $ISAL_LOG
+		./configure CFLAGS="-fPIC -g -O2" --enable-shared=no >> $ISAL_LOG 2>&1
+		echo "done."
+		cd $rootdir
+	fi
 fi
 
 if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
@@ -387,6 +435,38 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 		echo --with-reduce requires libpmem.
 		echo Please install then re-run this script.
 		exit 1
+	fi
+fi
+
+if [[ "${CONFIG[OCF]}" = "y" ]]; then
+	if [ -z "${CONFIG[OCF_PATH]}" ]; then
+		echo "When OCF module is enabled, you must specify"
+		echo "the OCF directory or path to OCF library using --with-ocf=path"
+		exit 1
+	fi
+
+	# If OCF_PATH is a file, assume it is a library and use it to compile with
+	if [ -f ${CONFIG[OCF_PATH]} ]; then
+		CONFIG[CUSTOMOCF]=y
+	else
+		CONFIG[CUSTOMOCF]=n
+	fi
+
+	# If OCF_PATH is not a library, we need to do sources export procedure using OCF Makefile
+	if [[ ${CONFIG[CUSTOMOCF]} = "n" ]]; then
+		echo "configuring OCF..."
+		rootdir=$(readlink -f $(dirname $0))
+
+		if pushd "${CONFIG[OCF_PATH]}" > /dev/null && \
+		   make inc O="$rootdir/lib/bdev/ocf/env/" && \
+		   make src O="$rootdir/lib/bdev/ocf/env/" CMD=cp 1>/dev/null && \
+		   popd > /dev/null
+		then
+			echo "done configuring OCF"
+		else
+			echo "Could not configure OCF"
+			exit 1
+		fi
 	fi
 fi
 

@@ -240,15 +240,17 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	struct fio_file		*f = fio_thread->current_f;
 	uint32_t		ns_id;
 	char			*p;
+	long int		tmp;
 
 	p = strstr(f->file_name, "ns=");
 	assert(p != NULL);
-	ns_id = atoi(p + 3);
-	if (!ns_id) {
-		SPDK_ERRLOG("namespace id should be >=1, but current value=0\n");
+	tmp = spdk_strtol(p + 3, 10);
+	if (tmp <= 0) {
+		SPDK_ERRLOG("namespace id should be >=1, but was invalid: %ld\n", tmp);
 		g_error = true;
 		return;
 	}
+	ns_id = (uint32_t)tmp;
 
 	fio_ctrlr = get_fio_ctrlr(trid);
 	/* it is a new ctrlr and needs to be added */

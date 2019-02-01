@@ -468,7 +468,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *
 	uintptr_t payload = desc->addr;
 	uintptr_t vva;
 
-	while (remaining) {
+	do {
 		if (*iov_index >= SPDK_VHOST_IOVS_MAX) {
 			SPDK_ERRLOG("SPDK_VHOST_IOVS_MAX(%d) reached\n", SPDK_VHOST_IOVS_MAX);
 			return -1;
@@ -503,7 +503,7 @@ spdk_vhost_vring_desc_to_iov(struct spdk_vhost_session *vsession, struct iovec *
 		remaining -= len;
 		payload += len;
 		(*iov_index)++;
-	}
+	} while (remaining);
 
 	return 0;
 }
@@ -591,7 +591,7 @@ spdk_vhost_session_mem_unregister(struct spdk_vhost_session *vsession)
 
 }
 
-static void
+void
 spdk_vhost_free_reactor(uint32_t lcore)
 {
 	g_num_ctrlrs[lcore]--;
@@ -821,7 +821,7 @@ spdk_vhost_dev_get_cpumask(struct spdk_vhost_dev *vdev)
 	return vdev->cpumask;
 }
 
-static uint32_t
+uint32_t
 spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 {
 	uint32_t i, selected_core;
@@ -1025,7 +1025,6 @@ stop_device(int vid)
 
 	spdk_vhost_session_mem_unregister(vsession);
 	free(vsession->mem);
-	spdk_vhost_free_reactor(vsession->lcore);
 	vsession->lcore = -1;
 	assert(vdev->active_session_num > 0);
 	vdev->active_session_num--;
@@ -1085,6 +1084,14 @@ start_device(int vid)
 		goto out;
 	}
 
+	for (i = 0; i < vsession->mem->nregions; i++) {
+		if (vsession->mem->regions[i].size & MASK_2MB) {
+			SPDK_ERRLOG("vhost device %d: Guest memory size is not a 2MB multiple\n", vid);
+			free(vsession->mem);
+			goto out;
+		}
+	}
+
 	/*
 	 * Not sure right now but this look like some kind of QEMU bug and guest IO
 	 * might be frozed without kicking all queues after live-migration. This look like
@@ -1101,14 +1108,11 @@ start_device(int vid)
 	}
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
-	vsession->lcore = spdk_vhost_allocate_reactor(vdev->cpumask);
 	spdk_vhost_session_mem_register(vsession);
 	rc = vdev->backend->start_session(vsession);
 	if (rc != 0) {
 		spdk_vhost_session_mem_unregister(vsession);
 		free(vsession->mem);
-		spdk_vhost_free_reactor(vsession->lcore);
-		vsession->lcore = -1;
 		goto out;
 	}
 

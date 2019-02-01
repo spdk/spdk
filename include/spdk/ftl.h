@@ -34,11 +34,11 @@
 #ifndef SPDK_FTL_H
 #define SPDK_FTL_H
 
-#include <spdk/stdinc.h>
-#include <spdk/nvme.h>
-#include <spdk/nvme_ocssd.h>
-#include <spdk/uuid.h>
-#include <spdk/thread.h>
+#include "spdk/stdinc.h"
+#include "spdk/nvme.h"
+#include "spdk/nvme_ocssd.h"
+#include "spdk/uuid.h"
+#include "spdk/thread.h"
 
 struct spdk_ftl_dev;
 

@@ -286,7 +286,7 @@ int main(int argc, char **argv)
 	void			*history_ptr;
 	struct spdk_trace_history *history;
 	struct spdk_trace_histories *histories;
-	int			fd, i;
+	int			fd, i, rc;
 	int			lcore = SPDK_TRACE_MAX_LCORE;
 	uint64_t		tsc_offset;
 	const char		*app_name = NULL;
@@ -295,6 +295,7 @@ int main(int argc, char **argv)
 	char			shm_name[64];
 	int			shm_id = -1, shm_pid = -1;
 	uint64_t		trace_histories_size;
+	struct stat		_stat;
 
 	g_exe_name = argv[0];
 	while ((op = getopt(argc, argv, "c:f:i:p:qs:")) != -1) {
@@ -350,9 +351,22 @@ int main(int argc, char **argv)
 			snprintf(shm_name, sizeof(shm_name), "/%s_trace.pid%d", app_name, shm_pid);
 		}
 		fd = shm_open(shm_name, O_RDONLY, 0600);
+		file_name = shm_name;
 	}
 	if (fd < 0) {
-		fprintf(stderr, "Could not open %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not open %s.\n", file_name);
+		usage();
+		exit(-1);
+	}
+
+	rc = fstat(fd, &_stat);
+	if (rc < 0) {
+		fprintf(stderr, "Could not get size of %s.\n", file_name);
+		usage();
+		exit(-1);
+	}
+	if ((size_t)_stat.st_size < sizeof(*g_histories)) {
+		fprintf(stderr, "%s is not a valid trace file\n", file_name);
 		usage();
 		exit(-1);
 	}
@@ -360,7 +374,7 @@ int main(int argc, char **argv)
 	/* Map the header of trace file */
 	history_ptr = mmap(NULL, sizeof(*g_histories), PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name);
 		usage();
 		exit(-1);
 	}
@@ -381,9 +395,14 @@ int main(int argc, char **argv)
 	/* Remap the entire trace file */
 	trace_histories_size = spdk_get_trace_histories_size(g_histories);
 	munmap(history_ptr, sizeof(*g_histories));
+	if ((size_t)_stat.st_size < trace_histories_size) {
+		fprintf(stderr, "%s is not a valid trace file\n", file_name);
+		usage();
+		exit(-1);
+	}
 	history_ptr = mmap(NULL, trace_histories_size, PROT_READ, MAP_SHARED, fd, 0);
 	if (history_ptr == MAP_FAILED) {
-		fprintf(stderr, "Could not mmap %s.\n", file_name ? file_name : shm_name);
+		fprintf(stderr, "Could not mmap %s.\n", file_name);
 		usage();
 		exit(-1);
 	}

@@ -644,7 +644,6 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 
 		case SPDK_SPC_VPD_BLOCK_THIN_PROVISION: {
 			if (!spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-				SPDK_ERRLOG("unsupported INQUIRY VPD page 0x%x\n", pc);
 				goto inq_error;
 			}
 

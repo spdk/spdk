@@ -35,6 +35,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/queue.h"
+#include "spdk/string.h"
 
 struct dev_ctx {
 	TAILQ_ENTRY(dev_ctx)	tailq;
@@ -397,23 +398,34 @@ static int
 parse_args(int argc, char **argv)
 {
 	int op;
+	long int val;
 
 	/* default value */
 	g_time_in_sec = 0;
 
 	while ((op = getopt(argc, argv, "i:n:r:t:")) != -1) {
+		if (op == '?') {
+			usage(argv[0]);
+			return 1;
+		}
+
+		val = spdk_strtol(optarg, 10);
+		if (val < 0) {
+			fprintf(stderr, "Converting a string to integer failed\n");
+			return val;
+		}
 		switch (op) {
 		case 'i':
-			g_shm_id = atoi(optarg);
+			g_shm_id = val;
 			break;
 		case 'n':
-			g_expected_insert_times = atoi(optarg);
+			g_expected_insert_times = val;
 			break;
 		case 'r':
-			g_expected_removal_times = atoi(optarg);
+			g_expected_removal_times = val;
 			break;
 		case 't':
-			g_time_in_sec = atoi(optarg);
+			g_time_in_sec = val;
 			break;
 		default:
 			usage(argv[0]);

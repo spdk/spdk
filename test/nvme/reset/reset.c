@@ -382,6 +382,7 @@ parse_args(int argc, char **argv)
 	const char *workload_type;
 	int op;
 	bool mix_specified = false;
+	long int val;
 
 	/* default value */
 	g_queue_depth = 0;
@@ -391,26 +392,35 @@ parse_args(int argc, char **argv)
 	g_rw_percentage = -1;
 
 	while ((op = getopt(argc, argv, "m:q:s:t:w:M:")) != -1) {
-		switch (op) {
-		case 'q':
-			g_queue_depth = atoi(optarg);
-			break;
-		case 's':
-			g_io_size_bytes = atoi(optarg);
-			break;
-		case 't':
-			g_time_in_sec = atoi(optarg);
-			break;
-		case 'w':
+		if (op == 'w') {
 			workload_type = optarg;
-			break;
-		case 'M':
-			g_rw_percentage = atoi(optarg);
-			mix_specified = true;
-			break;
-		default:
+		} else if (op == '?') {
 			usage(argv[0]);
-			return 1;
+			return -EINVAL;
+		} else {
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'q':
+				g_queue_depth = val;
+				break;
+			case 's':
+				g_io_size_bytes = val;
+				break;
+			case 't':
+				g_time_in_sec = val;
+				break;
+			case 'M':
+				g_rw_percentage = val;
+				mix_specified = true;
+				break;
+			default:
+				usage(argv[0]);
+				return -EINVAL;
+			}
 		}
 	}
 

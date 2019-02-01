@@ -236,6 +236,34 @@ int spdk_parse_capacity(const char *cap_str, uint64_t *cap, bool *has_prefix);
  */
 bool spdk_mem_all_zero(const void *data, size_t size);
 
+/**
+ * Convert the string in nptr to a long integer value according to the given base.
+ *
+ * spdk_strtol() does the additional error checking and allows only strings that
+ * contains only numbers and is positive number or zero. The caller only has to check
+ * if the return value is not negative.
+ *
+ * \param nptr String containing numbers.
+ * \param base Base which must be between 2 and 32 inclusive, or be the special value 0.
+ *
+ * \return positive number or zero on success, or negative errno on failure.
+ */
+long int spdk_strtol(const char *nptr, int base);
+
+/**
+ * Convert the string in nptr to a long long integer value according to the given base.
+ *
+ * spdk_strtoll() does the additional error checking and allows only strings that
+ * contains only numbers and is positive number or zero. The caller only has to check
+ * if the return value is not negative.
+ *
+ * \param nptr String containing numbers.
+ * \param base Base which must be between 2 and 32 inclusive, or be the special value 0.
+ *
+ * \return positive number or zero on success, or negative errno on failure.
+ */
+long long int spdk_strtoll(const char *nptr, int base);
+
 #ifdef __cplusplus
 }
 #endif

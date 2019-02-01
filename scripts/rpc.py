@@ -144,6 +144,43 @@ if __name__ == "__main__":
     p.add_argument('name', help='crypto bdev name')
     p.set_defaults(func=delete_crypto_bdev)
 
+    def construct_ocf_bdev(args):
+        print(rpc.bdev.construct_ocf_bdev(args.client,
+                                          name=args.name,
+                                          mode=args.mode,
+                                          cache_bdev_name=args.cache_bdev_name,
+                                          core_bdev_name=args.core_bdev_name))
+    p = subparsers.add_parser('construct_ocf_bdev',
+                              help='Add an OCF block device')
+    p.add_argument('name', help='Name of resulting OCF bdev')
+    p.add_argument('mode', help='OCF cache mode', choices=['wt', 'pt'])
+    p.add_argument('cache_bdev_name', help='Name of underlying cache bdev')
+    p.add_argument('core_bdev_name', help='Name of unerlying core bdev')
+    p.set_defaults(func=construct_ocf_bdev)
+
+    def delete_ocf_bdev(args):
+        rpc.bdev.delete_ocf_bdev(args.client,
+                                 name=args.name)
+
+    p = subparsers.add_parser('delete_ocf_bdev',
+                              help='Delete an OCF block device')
+    p.add_argument('name', help='Name of OCF bdev')
+    p.set_defaults(func=delete_ocf_bdev)
+
+    def get_ocf_stats(args):
+        print_dict(rpc.bdev.get_ocf_stats(args.client,
+                                          name=args.name))
+    p = subparsers.add_parser('get_ocf_stats',
+                              help='Get statistics of chosen OCF block device')
+    p.add_argument('name', help='Name of OCF bdev')
+    p.set_defaults(func=get_ocf_stats)
+
+    def get_ocf_bdevs(args):
+        print_dict(rpc.bdev.get_ocf_bdevs(args.client))
+    p = subparsers.add_parser('get_ocf_bdevs',
+                              help='Get list of OCF devices including unregistered ones')
+    p.set_defaults(func=get_ocf_bdevs)
+
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
@@ -1296,24 +1333,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=get_interfaces)
 
     # NVMe-oF
-    def set_nvmf_target_options(args):
-        rpc.nvmf.set_nvmf_target_options(args.client,
-                                         max_queue_depth=args.max_queue_depth,
-                                         max_qpairs_per_ctrlr=args.max_qpairs_per_ctrlr,
-                                         in_capsule_data_size=args.in_capsule_data_size,
-                                         max_io_size=args.max_io_size,
-                                         max_subsystems=args.max_subsystems,
-                                         io_unit_size=args.io_unit_size)
-
-    p = subparsers.add_parser('set_nvmf_target_options', help='Set NVMf target options')
-    p.add_argument('-q', '--max-queue-depth', help='Max number of outstanding I/O per queue', type=int)
-    p.add_argument('-p', '--max-qpairs-per-ctrlr', help='Max number of SQ and CQ per controller', type=int)
-    p.add_argument('-c', '--in-capsule-data-size', help='Max number of in-capsule data size', type=int)
-    p.add_argument('-i', '--max-io-size', help='Max I/O size (bytes)', type=int)
-    p.add_argument('-x', '--max-subsystems', help='Max number of NVMf subsystems', type=int)
-    p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
-    p.set_defaults(func=set_nvmf_target_options)
-
     def set_nvmf_target_max_subsystems(args):
         rpc.nvmf.set_nvmf_target_max_subsystems(args.client,
                                                 max_subsystems=args.max_subsystems)
@@ -1372,67 +1391,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('get_nvmf_subsystems',
                               help='Display nvmf subsystems')
     p.set_defaults(func=get_nvmf_subsystems)
-
-    def construct_nvmf_subsystem(args):
-        listen_addresses = None
-        hosts = None
-        namespaces = None
-        if args.listen:
-            listen_addresses = [
-                dict(
-                    u.split(
-                        ":",
-                        1) for u in a.split(" ")) for a in args.listen.split(",")]
-
-        if args.hosts:
-            hosts = []
-            for u in args.hosts.strip().split(" "):
-                hosts.append(u)
-
-        if args.namespaces:
-            namespaces = []
-            for u in args.namespaces.strip().split(" "):
-                bdev_name = u
-                nsid = 0
-                if ':' in u:
-                    (bdev_name, nsid) = u.split(":")
-
-                ns_params = {'bdev_name': bdev_name}
-
-                nsid = int(nsid)
-                if nsid != 0:
-                    ns_params['nsid'] = nsid
-
-                namespaces.append(ns_params)
-
-        rpc.nvmf.construct_nvmf_subsystem(args.client,
-                                          nqn=args.nqn,
-                                          listen_addresses=listen_addresses,
-                                          hosts=hosts,
-                                          allow_any_host=args.allow_any_host,
-                                          serial_number=args.serial_number,
-                                          namespaces=namespaces,
-                                          max_namespaces=args.max_namespaces)
-
-    p = subparsers.add_parser('construct_nvmf_subsystem', help='Add a nvmf subsystem')
-    p.add_argument('nqn', help='Target nqn(ASCII)')
-    p.add_argument('listen', help="""comma-separated list of Listen <trtype:transport_name traddr:address trsvcid:port_id> pairs enclosed
-    in quotes.  Format:  'trtype:transport0 traddr:traddr0 trsvcid:trsvcid0,trtype:transport1 traddr:traddr1 trsvcid:trsvcid1' etc
-    Example: 'trtype:RDMA traddr:192.168.100.8 trsvcid:4420,trtype:RDMA traddr:192.168.100.9 trsvcid:4420'""")
-    p.add_argument('hosts', help="""Whitespace-separated list of host nqn list.
-    Format:  'nqn1 nqn2' etc
-    Example: 'nqn.2016-06.io.spdk:init nqn.2016-07.io.spdk:init'""")
-    p.add_argument("-a", "--allow-any-host", action='store_true', help="Allow any host to connect (don't enforce host NQN whitelist)")
-    p.add_argument("-s", "--serial-number", help="""
-    Format:  'sn' etc
-    Example: 'SPDK00000000000001'""", default='00000000000000000000')
-    p.add_argument("-n", "--namespaces", help="""Whitespace-separated list of namespaces
-    Format:  'bdev_name1[:nsid1] bdev_name2[:nsid2] bdev_name3[:nsid3]' etc
-    Example: '1:Malloc0 2:Malloc1 3:Malloc2'
-    *** The devices must pre-exist ***""")
-    p.add_argument("-m", "--max-namespaces", help="Maximum number of namespaces allowed to added during active connection",
-                   type=int, default=0)
-    p.set_defaults(func=construct_nvmf_subsystem)
 
     def nvmf_subsystem_create(args):
         rpc.nvmf.nvmf_subsystem_create(args.client,
@@ -1718,50 +1676,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('--vq-size', help='Size of each queue', type=int)
     p.set_defaults(func=construct_virtio_dev)
 
-    def construct_virtio_user_scsi_bdev(args):
-        print_array(rpc.vhost.construct_virtio_user_scsi_bdev(args.client,
-                                                              path=args.path,
-                                                              name=args.name,
-                                                              vq_count=args.vq_count,
-                                                              vq_size=args.vq_size))
-
-    p = subparsers.add_parser('construct_virtio_user_scsi_bdev', help="""Connect to virtio user scsi device.
-    This imply scan and add bdevs offered by remote side.
-    Result is array of added bdevs.""")
-    p.add_argument('path', help='Path to Virtio SCSI socket')
-    p.add_argument('name', help="""Use this name as base instead of 'VirtioScsiN'
-    Base will be used to construct new bdev's found on target by adding 't<TARGET_ID>' sufix.""")
-    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
-    p.add_argument('--vq-size', help='Size of each queue', type=int)
-    p.set_defaults(func=construct_virtio_user_scsi_bdev)
-
-    def construct_virtio_pci_scsi_bdev(args):
-        print_array(rpc.vhost.construct_virtio_pci_scsi_bdev(args.client,
-                                                             pci_address=args.pci_address,
-                                                             name=args.name))
-
-    p = subparsers.add_parser('construct_virtio_pci_scsi_bdev', help="""Create a Virtio
-    SCSI device from a virtio-pci device.""")
-    p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
-    domain.bus.device.function format""")
-    p.add_argument('name', help="""Name for the virtio device.
-    It will be inhereted by all created bdevs, which are named n the following format: <name>t<target_id>""")
-    p.set_defaults(func=construct_virtio_pci_scsi_bdev)
-
     def get_virtio_scsi_devs(args):
         print_dict(rpc.vhost.get_virtio_scsi_devs(args.client))
 
     p = subparsers.add_parser('get_virtio_scsi_devs', help='List all Virtio-SCSI devices.')
     p.set_defaults(func=get_virtio_scsi_devs)
-
-    def remove_virtio_scsi_bdev(args):
-        rpc.vhost.remove_virtio_scsi_bdev(args.client,
-                                          name=args.name)
-
-    p = subparsers.add_parser('remove_virtio_scsi_bdev', help="""Remove a Virtio-SCSI device
-    This will delete all bdevs exposed by this device (this call is deprecated - please use remove_virtio_bdev call instead).""")
-    p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
-    p.set_defaults(func=remove_virtio_scsi_bdev)
 
     def remove_virtio_bdev(args):
         rpc.vhost.remove_virtio_bdev(args.client,
@@ -1771,31 +1690,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     This will delete all bdevs exposed by this device""")
     p.add_argument('name', help='Virtio device name. E.g. VirtioUser0')
     p.set_defaults(func=remove_virtio_bdev)
-
-    def construct_virtio_user_blk_bdev(args):
-        print(rpc.vhost.construct_virtio_user_blk_bdev(args.client,
-                                                       path=args.path,
-                                                       name=args.name,
-                                                       vq_count=args.vq_count,
-                                                       vq_size=args.vq_size))
-
-    p = subparsers.add_parser('construct_virtio_user_blk_bdev', help='Connect to a virtio user blk device.')
-    p.add_argument('path', help='Path to Virtio BLK socket')
-    p.add_argument('name', help='Name for the bdev')
-    p.add_argument('--vq-count', help='Number of virtual queues to be used.', type=int)
-    p.add_argument('--vq-size', help='Size of each queue', type=int)
-    p.set_defaults(func=construct_virtio_user_blk_bdev)
-
-    def construct_virtio_pci_blk_bdev(args):
-        print(rpc.vhost.construct_virtio_pci_blk_bdev(args.client,
-                                                      pci_address=args.pci_address,
-                                                      name=args.name))
-
-    p = subparsers.add_parser('construct_virtio_pci_blk_bdev', help='Create a Virtio Blk device from a virtio-pci device.')
-    p.add_argument('pci_address', help="""PCI address in domain:bus:device.function format or
-    domain.bus.device.function format""")
-    p.add_argument('name', help='Name for the bdev')
-    p.set_defaults(func=construct_virtio_pci_blk_bdev)
 
     # ioat
     def scan_ioat_copy_engine(args):

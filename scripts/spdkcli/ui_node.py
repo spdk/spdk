@@ -331,6 +331,15 @@ class UINvmeBdev(UIBdev):
         self.get_root().refresh()
         self.refresh()
 
+    def ui_command_delete_all(self):
+        ctrlrs = [x.name for x in self._children]
+        ctrlrs = [x.rsplit("n", 1)[0] for x in ctrlrs]
+        ctrlrs = set(ctrlrs)
+        for ctrlr in ctrlrs:
+            self.delete(ctrlr)
+        self.get_root().refresh()
+        self.refresh()
+
     def ui_command_delete(self, name):
         """
         Deletes NVMe controller from configuration.

@@ -423,5 +423,8 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		spdk_env_unlink_shared_files();
 	}
 
+	/* Print only the significant EAL messages */
+	rte_log_set_level(RTE_LOGTYPE_EAL, RTE_LOG_NOTICE);
+
 	return spdk_env_dpdk_post_init();
 }

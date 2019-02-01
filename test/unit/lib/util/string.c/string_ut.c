@@ -248,6 +248,135 @@ test_sprintf_append_realloc(void)
 	free(str3);
 	free(str4);
 }
+static void
+test_strtol(void)
+{
+	long int val;
+
+	const char *val1 = "no_digits";
+	/* LLONG_MIN - 1 */
+	const char *val2 = "-9223372036854775809";
+	/* LONG_MIN */
+	const char *val3 = "-9223372036854775808";
+	/* LONG_MIN + 1 */
+	const char *val4 = "-9223372036854775807";
+	/* LONG_MAX - 1 */
+	const char *val5 = "9223372036854775806";
+	/* LONG_MAX */
+	const char *val6 = "9223372036854775807";
+	/* LONG_MAX + 1 */
+	const char *val7 = "9223372036854775808";
+	/* digits + chars */
+	const char *val8 = "10_is_ten";
+	/* chars + digits */
+	const char *val9 = "ten_is_10";
+	/* all zeroes */
+	const char *val10 = "00000000";
+	/* leading minus sign, but not negative */
+	const char *val11 = "-0";
+
+	val = spdk_strtol(val1, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtol(val2, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtol(val3, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtol(val4, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtol(val5, 10);
+	CU_ASSERT(val == LONG_MAX - 1);
+
+	val = spdk_strtol(val6, 10);
+	CU_ASSERT(val == LONG_MAX);
+
+	val = spdk_strtol(val7, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtol(val8, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtol(val9, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtol(val10, 10);
+	CU_ASSERT(val == 0);
+
+	/* Invalid base */
+	val = spdk_strtol(val10, 1);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtol(val11, 10);
+	CU_ASSERT(val == 0);
+}
+
+static void
+test_strtoll(void)
+{
+	long long int val;
+
+	const char *val1 = "no_digits";
+	/* LLONG_MIN - 1 */
+	const char *val2 = "-9223372036854775809";
+	/* LLONG_MIN */
+	const char *val3 = "-9223372036854775808";
+	/* LLONG_MIN + 1 */
+	const char *val4 = "-9223372036854775807";
+	/* LLONG_MAX - 1 */
+	const char *val5 = "9223372036854775806";
+	/* LLONG_MAX */
+	const char *val6 = "9223372036854775807";
+	/* LLONG_MAX + 1 */
+	const char *val7 = "9223372036854775808";
+	/* digits + chars */
+	const char *val8 = "10_is_ten";
+	/* chars + digits */
+	const char *val9 = "ten_is_10";
+	/* all zeroes */
+	const char *val10 = "00000000";
+	/* leading minus sign, but not negative */
+	const char *val11 = "-0";
+
+	val = spdk_strtoll(val1, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtoll(val2, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtoll(val3, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtoll(val4, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtoll(val5, 10);
+	CU_ASSERT(val == LLONG_MAX - 1);
+
+	val = spdk_strtoll(val6, 10);
+	CU_ASSERT(val == LLONG_MAX);
+
+	val = spdk_strtoll(val7, 10);
+	CU_ASSERT(val == -ERANGE);
+
+	val = spdk_strtoll(val8, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtoll(val9, 10);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtoll(val10, 10);
+	CU_ASSERT(val == 0);
+
+	/* Invalid base */
+	val = spdk_strtoll(val10, 1);
+	CU_ASSERT(val == -EINVAL);
+
+	val = spdk_strtoll(val11, 10);
+	CU_ASSERT(val == 0);
+}
 
 int
 main(int argc, char **argv)
@@ -269,7 +398,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "test_parse_ip_addr", test_parse_ip_addr) == NULL ||
 		CU_add_test(suite, "test_str_chomp", test_str_chomp) == NULL ||
 		CU_add_test(suite, "test_parse_capacity", test_parse_capacity) == NULL ||
-		CU_add_test(suite, "test_sprintf_append_realloc", test_sprintf_append_realloc) == NULL) {
+		CU_add_test(suite, "test_sprintf_append_realloc", test_sprintf_append_realloc) == NULL ||
+		CU_add_test(suite, "test_strtol", test_strtol) == NULL ||
+		CU_add_test(suite, "test_strtoll", test_strtoll) == NULL) {
 		CU_cleanup_registry();
 		return CU_get_error();
 	}

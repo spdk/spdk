@@ -36,7 +36,7 @@ bdf=$(echo $bdfs|awk '{ print $1 }')
 cd $spdk_nvme_cli
 make clean && make -j$(nproc) LDFLAGS="$(make -s -C $spdk_nvme_cli/spdk ldflags)"
 sed -i 's/spdk=0/spdk=1/g' spdk.conf
-sed -i 's/shm_id=1/shm_id=0/g' spdk.conf
+sed -i 's/shm_id=.*/shm_id=0/g' spdk.conf
 ./nvme list
 ./nvme id-ctrl $bdf
 ./nvme list-ctrl $bdf

@@ -126,6 +126,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 	struct vring_desc *desc, *desc_table;
 	uint16_t out_cnt = 0, cnt = 0;
 	uint32_t desc_table_size, len = 0;
+	uint32_t desc_handled_cnt;
 	int rc;
 
 	rc = spdk_vhost_vq_get_desc(vsession, vq, req_idx, &desc, &desc_table, &desc_table_size);
@@ -134,6 +135,7 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 		return -1;
 	}
 
+	desc_handled_cnt = 0;
 	while (1) {
 		/*
 		 * Maximum cnt reached?
@@ -162,6 +164,14 @@ blk_iovs_setup(struct spdk_vhost_blk_session *bvsession, struct spdk_vhost_virtq
 			return -1;
 		} else if (desc == NULL) {
 			break;
+		}
+
+		desc_handled_cnt++;
+		if (spdk_unlikely(desc_handled_cnt > desc_table_size)) {
+			/* Break a cycle and report an error, if any. */
+			SPDK_ERRLOG("%s: found a cycle in the descriptor chain: desc_table_size = %d, desc_handled_cnt = %d.\n",
+				    vdev->name, desc_table_size, desc_handled_cnt);
+			return -1;
 		}
 	}
 
@@ -285,7 +295,7 @@ process_blk_request(struct spdk_vhost_blk_task *task,
 	switch (type) {
 	case VIRTIO_BLK_T_IN:
 	case VIRTIO_BLK_T_OUT:
-		if (spdk_unlikely((payload_len & (512 - 1)) != 0)) {
+		if (spdk_unlikely(payload_len == 0 || (payload_len & (512 - 1)) != 0)) {
 			SPDK_ERRLOG("%s - passed IO buffer is not multiple of 512b (req_idx = %"PRIu16").\n",
 				    type ? "WRITE" : "READ", task->req_idx);
 			invalid_blk_request(task, VIRTIO_BLK_S_UNSUPP);
@@ -569,6 +579,8 @@ _spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhos
 		/* All sessions have been notified, time to close the bdev */
 		struct spdk_vhost_blk_dev *bvdev = to_blk_dev(vdev);
 
+		assert(bvdev != NULL);
+
 		spdk_bdev_close(bvdev->bdev_desc);
 		bvdev->bdev_desc = NULL;
 		bvdev->bdev = NULL;
@@ -680,6 +692,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	}
 
 	bvdev = to_blk_dev(vdev);
+	assert(bvdev != NULL);
 	bvsession->bvdev = bvdev;
 
 	/* validate all I/O queues are in a contiguous index range */
@@ -719,8 +732,18 @@ out:
 static int
 spdk_vhost_blk_start(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_blk_start_cb,
-					     3, "start session");
+	int rc;
+
+	vsession->lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_blk_start_cb,
+					   3, "start session");
+
+	if (rc != 0) {
+		spdk_vhost_free_reactor(vsession->lcore);
+		vsession->lcore = -1;
+	}
+
+	return rc;
 }
 
 static int
@@ -779,8 +802,17 @@ err:
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_blk_stop_cb,
-					     3, "stop session");
+	int rc;
+
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_blk_stop_cb,
+					   3, "stop session");
+	if (rc != 0) {
+		return rc;
+	}
+
+	spdk_vhost_free_reactor(vsession->lcore);
+	vsession->lcore = -1;
+	return 0;
 }
 
 static void

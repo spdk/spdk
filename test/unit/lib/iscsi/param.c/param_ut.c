@@ -188,7 +188,7 @@ list_negotiation_test(void)
 
 #define PARSE(strconst, partial_enabled, partial_text) \
 	data = strconst; \
-	len = sizeof(strconst); \
+	len = sizeof(strconst) - 1; \
 	rc = spdk_iscsi_parse_params(&params, data, len, partial_enabled, partial_text)
 
 #define EXPECT_VAL(key, expected_value) \
@@ -274,6 +274,18 @@ parse_valid_test(void)
 	EXPECT_VAL("OOOOLL", "MMMM");
 	CU_ASSERT_PTR_NULL(partial_parameter);
 
+	partial_parameter = NULL;
+	data = "PartialKey=";
+	len = 7;
+	rc = spdk_iscsi_parse_params(&params, data, len, true, &partial_parameter);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT_STRING_EQUAL(partial_parameter, "Partial");
+	EXPECT_NULL("PartialKey");
+	PARSE("Key=Value", false, &partial_parameter);
+	CU_ASSERT(rc == 0);
+	EXPECT_VAL("PartialKey", "Value");
+	CU_ASSERT_PTR_NULL(partial_parameter);
+
 	spdk_iscsi_param_free(params);
 }
 
@@ -349,6 +361,18 @@ parse_invalid_test(void)
 	CU_ASSERT(rc != 0);
 	EXPECT_VAL("B", "BB");
 
+	/* Test where data buffer has non-NULL characters past the end of
+	 * the valid data region.  This can happen with SPDK iSCSI target,
+	 * since data buffers are reused and we do not zero the data buffers
+	 * after they are freed since it would be too expensive.  Added as
+	 * part of fixing an intermittent Calsoft failure that triggered this
+	 * bug.
+	 */
+	data = "MaxRecvDataSegmentLength=81928";
+	len = strlen(data) - 1;
+	rc = spdk_iscsi_parse_params(&params, data, len, false, NULL);
+	EXPECT_VAL("MaxRecvDataSegmentLength", "8192");
+	CU_ASSERT(rc == 0);
 	spdk_iscsi_param_free(params);
 }
 

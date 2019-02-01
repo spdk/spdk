@@ -1626,16 +1626,24 @@ parse_args(int argc, char **argv)
 	while ((op = getopt(argc, argv, "d:i:p:r:xHL:")) != -1) {
 		switch (op) {
 		case 'd':
-			g_dpdk_mem = atoi(optarg);
+			g_dpdk_mem = spdk_strtol(optarg, 10);
+			if (g_dpdk_mem < 0) {
+				fprintf(stderr, "Invalid DPDK memory size\n");
+				return g_dpdk_mem;
+			}
 			break;
 		case 'i':
-			g_shm_id = atoi(optarg);
+			g_shm_id = spdk_strtol(optarg, 10);
+			if (g_shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
+				return g_shm_id;
+			}
 			break;
 		case 'p':
-			g_master_core = atoi(optarg);
+			g_master_core = spdk_strtol(optarg, 10);
 			if (g_master_core < 0) {
 				fprintf(stderr, "Invalid core number\n");
-				return 1;
+				return g_master_core;
 			}
 			snprintf(g_core_mask, sizeof(g_core_mask), "0x%llx", 1ULL << g_master_core);
 			break;

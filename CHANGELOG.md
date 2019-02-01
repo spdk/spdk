@@ -2,17 +2,65 @@
 
 ## v19.01: (Upcoming Release)
 
+### ocf bdev
+
+New virtual bdev module based on [Open CAS Framework](https://open-cas.github.io/) has been added.
+This module allows for the use of one bdev to act as a high performance cache in front of another bdev.
+Please see [documentation](https://spdk.io/doc/bdev.html#bdev_config_cas) for more details.
+Only write through mode is currently supported and this feature is considered experimental.
+
 ### event framework
 
 For `spdk_app_parse_args`, add return value to the callback which parses application
 specific command line parameters to protect SPDK applications from crashing by invalid
 values from user input.
 
+By default, all SPDK applications will now reserve all hugepages at runtime. The pre-reserved
+memory size can be still set with `-s` or `--mem-size` option, although the default value
+was reduced down to 0.
+
+A custom hugetlbfs directory can now be specified via spdk_app_opts.
+This can be used to configure hugepages with different sizes, a different size limit,
+or different access permissions than the system's default hugepage pool.
+SPDK applications can specify a custom hugetlbfs mount with the `--huge-dir` option.
+
 ### environment
+
+spdk_vtophys() has been refactored to accept length of the translated region as a new
+parameter. The function will now update that parameter with the largest possible value
+for which the memory is contiguous in the physical memory address space.
+
+The following functions were removed:
+ - spdk_pci_nvme_device_attach()
+ - spdk_pci_nvme_enumerate()
+ - spdk_pci_ioat_device_attach()
+ - spdk_pci_ioat_enumerate()
+ - spdk_pci_virtio_device_attach()
+ - spdk_pci_virtio_enumerate()
+
+They were replaced with generic spdk_pci_device_attach() and spdk_pci_enumerate() which
+require a new spdk_pci_driver object to be provided. It can be one of the following:
+ - spdk_pci_nvme_get_driver()
+ - spdk_pci_ioat_get_driver()
+ - spdk_pci_virtio_get_driver()
+
+spdk_pci_hook_device() and spdk_pci_unhook_device() were added. Those allow adding a virtual
+spdk_pci_device into the SPDK PCI subsystem. A virtual device calls provided callbacks for
+each BAR mapping request or PCI config access. It's attachable with spdk_pci_device_attach()
+or spdk_pci_enumerate() like any other device.
+
+A new spdk_pause() function was added to pause CPU execution for an implementation specific
+amount of time. Quoting from DPDK function this is based on: "This call is intended for
+tight loops which poll a shared resource or wait for an event. A short pause within the loop
+may reduce the power consumption."
 
 A new public header file env_dpdk.h has been introduced, and function spdk_env_dpdk_post_init
 is added into it. If user is using DPDK, and already called rte_eal_init, then include
 include/spdk/env_dpdk.h, and call spdk_env_dpdk_post_init() instead of spdk_env_init.
+
+ISA-L has been added as an SPDK submodule.  ISA-L is enabled by default on x86 architecture
+to accelerate algorithms such as CRC for iSCSI and NVMe-oF.  Users may still disable ISA-L
+by explicitly passing --without-isal to the configure script.
 
 ### util
 
@@ -25,6 +73,12 @@ multiple separate buffers.
 New DIF APIs were added to generate and verify DIF by byte granularity for both DIF and DIX
 formats. Among them, DIF with copy APIs will be usable to emulate DIF operations such as DIF
 insert and strip.
+
+Added `spdk_strtol` and `spdk_strtoll` to provide additional error checking around `strtol`
+and `strtoll`.
+
+Added `spdk_sprintf_append_realloc` and `spdk_vsprintf_append_realloc` for appending a string
+with automatic buffer re-allocation.
 
 ### nvme
 
@@ -61,10 +115,11 @@ prior to calling `spdk_nvmf_tgt_listen`.
 Related to the previous change, the rpc `set_nvmf_target_options` has been renamed to
 `set_nvmf_target_max_subsystems` to indicate that this is the only target option available for the user to edit.
 
-Add an field `num_shared_buffers` in struct spdk_nvmf_transport_opts,
-and also update the related rpc function nvmf_create_transport, to make this
+Added fields `num_shared_buffers` and `buf_cache_size` in struct spdk_nvmf_transport_opts,
+and also updated the related rpc function nvmf_create_transport, to make this
 configurable parameter available to users. The `num_shared_buffers` is used to
 configure the shared buffer numbers of the transport used by RDMA or TCP transport.
+`buf_cache_size` configures number of shared buffers to cache per poll group.
 
 ### nvmf
 
@@ -72,7 +127,17 @@ Add a new TCP/IP transport (located in lib/nvmf/tcp.c). With this tranport,
 the SPDK NVMe-oF target can have a new transport, and can serve the NVMe-oF
 protocol via TCP/IP from the host.
 
+Added optional mechanism to modify the RDMA transport's behavior when creating protection domains and registering memory.
+By default, the RDMA transport will use the ibverbs library to create protection domains and register memory.
+Using `spdk_nvme_rdma_init_hooks` will subvert that and use an existing registration.
+
 ### bdev
+
+Added `enable_bdev_histogram` and `get_bdev_histogram` RPC commands to allow gathering latency data for specified bdev.
+Please see [documentation](https://spdk.io/doc/bdev.html#rpc_bdev_histogram) for more details.
+
+Added `required_alignment` field to `spdk_bdev`, that specifies an alignment requirement for data buffers associated with an spdk_bdev_io.
+Bdev layer will automatically double buffer any spdk_bdev_io that violates this alignment, before the spdk_bdev_io is submitted to the bdev module.
 
 On shutdown, bdev unregister now proceeds in top-down fashion, with
 claimed bdevs skipped (these will be unregistered later, when virtual
@@ -81,10 +146,20 @@ allows virtual bdevs to be shut down cleanly as opposed to the
 previous behavior that didn't differentiate between hotremove and
 planned shutdown.
 
+The `delete_bdev` RPC is now deprecated. Users should instead use the specific deletion RPC
+for the bdev type to be removed (i.e. delete_malloc_bdev).
+
+Added support for separate bandwidth rate limits for read and write to QoS in bdev layer.
+
+Bdev I/O statistics now track unmap opertations.
+
 ### logical volumes
 
 Logical volume bdev can now be marked as read only using `set_read_only_lvol_bdev` RPC.
 This allows for basing clones on top of lvol_bdev without first creating a snapshot.
+
+Added option to change method for data erasure when deleting lvol or resizing down.
+Default of unmapping clusters can now be changed to writing zeroes or no operation.
 
 ### log
 
@@ -94,10 +169,78 @@ and set_log_flag, clear_log_flag and get_log_flags RPCs have been added.
 
 ### trace
 
+New `trace_record` application was added. It can be used to poll spdk trace shm file and
+append any new trace entries into another specified file. This can help retain those entries
+that would otherwise be overwritten in the shm file. See
+[Capturing sufficient trace events](https://spdk.io/doc/nvmf_tgt_tracepoints.html#capture_trace_events)
+for more details.
+
+Number of trace entries in circular buffer per lcore can now be assigned by starting SPDK app
+with argument "--num-trace-entries <NUM>" provided.
+
 New `get_tpoint_group_mask` RPC was added to get current tpoint_group_mask, and
 each tpoint group status.
 New `enable_tpoint_group` and `disable_tpoint_group` RPC were added to enable or
 disable a specific tpoint group.
+
+### ftl
+
+EXPERIMENTAL: Added basic flash translation layer module allowing for using Open Channel SSDs as
+block devices. The module is split into the library (located in lib/ftl) and bdev_ftl
+(lib/bdev/ftl). See the [documentation](https://spdk.io/doc/ftl.html) for more details.
+
+### vhost
+
+Vhost SCSI and Vhost Block devices can now accept multiple connections on the same socket file.
+Each connection (internally called a vhost session) will have access to the same storage, but
+will use different virtqueues, different features and possibly different memory.
+
+### vhost scsi
+
+SCSI target hotremove can now be performed even without the VIRTIO_SCSI_F_HOTPLUG feature negotiated.
+Regardless of VIRTIO_SCSI_F_HOTPLUG support, the hotremoval will be still reported through SCSI sense codes.
+
+### DPDK
+
+DPDK submodule was updated to DPDK 18.11. Note that SPDK does not fully leverage the new
+multi-process device hotplug yet and continues to work the same way it always did.
+
+Dropped support for DPDK 16.07 and earlier, which SPDK won't even compile with right now.
+
+### RPC
+
+The following RPC commands deprecated in the previous release are now removed:
+ - construct_virtio_user_scsi_bdev
+ - construct_virtio_pci_scsi_bdev
+ - construct_virtio_user_blk_bdev
+ - construct_virtio_pci_blk_bdev
+ - remove_virtio_scsi_bdev
+ - construct_nvmf_subsystem
+
+### Miscellaneous
+
+The configure options `--with-raid` and `--without-raid` that were deprecated in the previous
+release are now removed.
+
+### nbd
+
+Starting nbd using `spdk_nbd_start` is now performed asynchronously.
+
+### net framework
+
+Net framework initialization and finish is now done asynchronously.
+
+### rpc
+
+Added `spdk_rpc_is_method_allowed` function for checking whether method is permitted in a given state.
+Added `spdk_rpc_get_state` to check current state of RPC server.
+RPC `wait_subsystem_init` has been added to allow clients to block untill all subsystems are initialized.
+
+### json rpc
+
+JSON RPC client is now running in non-blocking mode. Requests are sent and received during spdk_jsonrpc_client_poll.
+JSON RPC server can now recieve a callback on connection termination or server shutdown using `spdk_jsonrpc_conn_add_close_cb`
+and `spdk_jsonrpc_conn_del_close_cb`.
 
 ## v18.10:
 

@@ -98,7 +98,11 @@ static int hello_sock_parse_arg(int ch, char *arg)
 		g_host = arg;
 		break;
 	case 'P':
-		g_port = atoi(arg);
+		g_port = spdk_strtol(arg, 10);
+		if (g_port < 0) {
+			fprintf(stderr, "Invalid port ID\n");
+			return g_port;
+		}
 		break;
 	case 'S':
 		g_is_server = 1;

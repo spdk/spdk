@@ -241,6 +241,8 @@ Example: identical shm_id and non-overlapping core masks
 2. If a primary process exits while secondary processes are still running, those processes
 will continue to run. However, a new primary process cannot be created.
 3. Applications are responsible for coordinating access to logical blocks.
+4. If a process exits unexpectedly, the allocated memory will be released when the last
+process exits.
 
 @sa spdk_nvme_probe, spdk_nvme_ctrlr_process_admin_completions
 
