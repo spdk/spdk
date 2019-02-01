@@ -22,6 +22,29 @@
       "revId": "10782ac3b53de0aeef5d71afa6c181c14669c3f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd3defb3_40506873",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1015303
+      },
+      "writtenOn": "2019-02-01T21:35:35Z",
+      "side": 1,
+      "message": "You may want to create here array of cores instead. For now it would contain a single item, but it could be easily extendable in future, when we enable multi-core.",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 0
+      },
+      "revId": "10782ac3b53de0aeef5d71afa6c181c14669c3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
