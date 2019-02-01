@@ -282,12 +282,21 @@ struct spdk_bdev_iostat_ctx {
 	void *cb_arg;
 };
 
+struct set_qos_limit_ctx {
+	void (*cb_fn)(void *cb_arg, int status);
+	void *cb_arg;
+	struct spdk_bdev *bdev;
+};
+
 #define __bdev_to_io_dev(bdev)		(((char *)bdev) + 1)
 #define __bdev_from_io_dev(io_dev)	((struct spdk_bdev *)(((char *)io_dev) - 1))
 
 static void _spdk_bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success,
 		void *cb_arg);
 static void _spdk_bdev_write_zero_buffer_next(void *_bdev_io);
+
+static void _spdk_bdev_enable_qos_msg(struct spdk_io_channel_iter *i);
+static void _spdk_bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status);
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
@@ -3744,6 +3753,7 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 {
 	struct spdk_bdev_desc *desc;
 	struct spdk_thread *thread;
+	struct set_qos_limit_ctx *ctx;
 
 	thread = spdk_get_thread();
 	if (!thread) {
@@ -3781,6 +3791,19 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	TAILQ_INSERT_TAIL(&bdev->internal.open_descs, desc, link);
 
 	pthread_mutex_unlock(&bdev->internal.mutex);
+
+	/* Enable QoS */
+	if (bdev->internal.qos && bdev->internal.qos->thread == NULL) {
+		ctx = calloc(1, sizeof(*ctx));
+		if (ctx == NULL) {
+			SPDK_ERRLOG("Failed to allocate memory for QoS context\n");
+			return -ENOMEM;
+		}
+		ctx->bdev = bdev;
+		spdk_for_each_channel(__bdev_to_io_dev(bdev),
+				      _spdk_bdev_enable_qos_msg, ctx,
+				      _spdk_bdev_enable_qos_done);
+	}
 
 	return 0;
 }
@@ -3984,12 +4007,6 @@ _spdk_bdev_write_zero_buffer_done(struct spdk_bdev_io *bdev_io, bool success, vo
 	_spdk_bdev_write_zero_buffer_next(parent_io);
 }
 
-struct set_qos_limit_ctx {
-	void (*cb_fn)(void *cb_arg, int status);
-	void *cb_arg;
-	struct spdk_bdev *bdev;
-};
-
 static void
 _spdk_bdev_set_qos_limit_done(struct set_qos_limit_ctx *ctx, int status)
 {
@@ -3997,7 +4014,9 @@ _spdk_bdev_set_qos_limit_done(struct set_qos_limit_ctx *ctx, int status)
 	ctx->bdev->internal.qos_mod_in_progress = false;
 	pthread_mutex_unlock(&ctx->bdev->internal.mutex);
 
-	ctx->cb_fn(ctx->cb_arg, status);
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, status);
+	}
 	free(ctx);
 }
 

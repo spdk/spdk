@@ -35,7 +35,7 @@
 CONFIG_PREFIX="/usr/local"
 
 # Build with debug logging. Turn off for performance testing and normal usage
-CONFIG_DEBUG=n
+CONFIG_DEBUG=y
 
 # Build with support of backtrace printing in log messages. Requires libunwind.
 CONFIG_LOG_BACKTRACE=n
