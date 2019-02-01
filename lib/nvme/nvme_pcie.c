@@ -2084,7 +2084,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (cpl->status.p != pqpair->phase) {
 			break;
 		}
-#ifdef __PPC64__
+#if defined(__PPC64__)||defined(__aarch64__)
 		/*
 		 * This memory barrier prevents reordering of:
 		 * - load after store from/to tr
