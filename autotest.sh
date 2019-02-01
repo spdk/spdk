@@ -59,10 +59,41 @@ if [ $(uname -s) = Linux ]; then
 	# Let the kernel discover any filesystems or partitions
 	sleep 10
 
-	# Delete all partitions on NVMe devices
-	devs=`lsblk -l -o NAME | grep nvme | grep -v p` || true
-	for dev in $devs; do
-		parted -s /dev/$dev mklabel msdos
+	# OCSSD devices drivers don't support IO issues by kernel so
+	# detect OCSSD devices and blacklist them (unbind from any driver).
+	# If test scripts want to use this device it needs to do this explicitly.
+	#
+	# If some OCSSD device is bound to other driver than nvme we won't be able to
+	# discover if it is OCSSD or not so load the kernel driver first.
+
+
+	for dev in $(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+'); do
+		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
+		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
+			PCI_BLACKLIST+=" $bdf"
+		fi
+	done
+
+	# Now, bind blacklisted devices to pci-stub module. This will prevent
+	# automatic grabbing these devices when we add device/vendor ID to
+	# proper driver.
+	if [[ -n "$PCI_BLACKLIST" ]]; then
+		PCI_WHITELIST="$PCI_BLACKLIST" \
+		PCI_BLACKLIST="" \
+		DRIVER_OVERRIDE="pci-stub" \
+			./scripts/setup.sh
+
+		# Export our blacklist so it will take effect during next setup.sh
+		export PCI_BLACKLIST
+	fi
+
+	# Delete all leftover lvols and gpt partitions
+	# Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+	# Filter out nvme with partitions - the "p*" suffix
+	for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+		dd if=/dev/zero of="$dev" bs=1M count=1
 	done
 
 	# Load RAM disk driver if available
