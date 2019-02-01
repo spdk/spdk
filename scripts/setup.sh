@@ -60,20 +60,26 @@ function usage()
 }
 
 # In monolithic kernels the lsmod won't work. So
-# back that with a /sys/modules check. Return a different code for
-# built-in vs module just in case we want that down the road.
+# back that with a /sys/modules. We also check
+# /sys/bus/pci/drivers/ as neither lsmod nor /sys/modules might
+# contain needed info (like in Fedora-like OS).
 function check_for_driver {
-	$(lsmod | grep $1 > /dev/null)
-	if [ $? -eq 0 ]; then
-		return 1
-	else
-		if [[ -d /sys/module/$1 ]]; then
-			return 2
-		else
-			return 0
-		fi
+	lsmod
+	cat /proc/modules
+	ls /sys/module/
+	ls /sys/bus/pci/drivers/
+	if lsmod | grep -q ${1//-/_}; then
+		return 0
 	fi
-	return 0
+
+	if [[ -d /sys/module/${1} || \
+			-d /sys/module/${1//-/_} || \
+			-d /sys/bus/pci/drivers/${1} || \
+			-d /sys/bus/pci/drivers/${1//-/_} ]]; then
+		return 0
+	fi
+
+	return 1
 }
 
 function pci_can_bind() {
@@ -140,6 +146,7 @@ function linux_unbind_driver() {
 	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
 
 	if ! [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
+		pci_dev_echo "$bdf" "Can't unbind device as it is not using any driver."
 		return 0
 	fi
 
@@ -375,8 +382,9 @@ function configure_linux {
 
 function reset_linux_pci {
 	# NVMe
+	set -x
 	set +e
-	check_for_driver nvme
+	check_for_driver ${DRIVER_OVERRIDE:-nvme}
 	driver_loaded=$?
 	set -e
 	for bdf in $(iter_pci_class_code 01 08 02); do
@@ -385,12 +393,12 @@ function reset_linux_pci {
 			continue
 		fi
 		if [ $driver_loaded -ne 0 ]; then
-			linux_bind_driver "$bdf" nvme
+			linux_bind_driver "$bdf" ${DRIVER_OVERRIDE:-nvme}
 		else
 			linux_unbind_driver "$bdf"
 		fi
 	done
-
+	set +x
 	# IOAT
 	TMP=`mktemp`
 	#collect all the device_id info of ioat devices.
@@ -398,7 +406,7 @@ function reset_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	set +e
-	check_for_driver ioatdma
+	check_for_driver ${DRIVER_OVERRIDE:-ioatdma}
 	driver_loaded=$?
 	set -e
 	for dev_id in `cat $TMP`; do
@@ -408,7 +416,7 @@ function reset_linux_pci {
 				continue
 			fi
 			if [ $driver_loaded -ne 0 ]; then
-				linux_bind_driver "$bdf" ioatdma
+				linux_bind_driver "$bdf" ${DRIVER_OVERRIDE:-ioatdma}
 			else
 				linux_unbind_driver "$bdf"
 			fi
@@ -433,7 +441,7 @@ function reset_linux_pci {
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at"
 				continue
 			fi
-			linux_bind_driver "$bdf" virtio-pci
+			linux_bind_driver "$bdf" ${DRIVER_OVERRIDE:-virtio-pci}
 		done
 	done
 	rm $TMP
@@ -493,7 +501,7 @@ function status_linux {
 		else
 			name="-";
 		fi
-		echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t$driver\t\t$name";
+		echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}\t\t$name";
 	done
 
 	echo ""
@@ -509,7 +517,7 @@ function status_linux {
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
-			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t$driver"
+			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}"
 		done
 	done
 
@@ -528,7 +536,7 @@ function status_linux {
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 			blknames=''
 			get_virtio_names_from_bdf "$bdf" blknames
-			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t$driver\t\t$blknames"
+			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t$blknames"
 		done
 	done
 }
