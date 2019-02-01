@@ -88,19 +88,6 @@ ppa_from_punit(uint64_t punit)
 	return ppa;
 }
 
-static uint64_t
-offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
-{
-	struct spdk_ftl_dev *dev = band->dev;
-	unsigned int punit;
-
-	/* TODO: ftl_ppa_flatten_punit should return uint32_t */
-	punit = ftl_ppa_flatten_punit(dev, ppa);
-	CU_ASSERT_EQUAL(ppa.chk, band->id);
-
-	return punit * ftl_dev_lbks_in_chunk(dev) + ppa.lbk;
-}
-
 static void
 test_band_lbkoff_from_ppa_base(void)
 {
