@@ -247,8 +247,7 @@ begin_response(struct spdk_jsonrpc_request *request)
 	}
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "jsonrpc");
-	spdk_json_write_string(w, "2.0");
+	spdk_json_write_named_string(w, "jsonrpc", "2.0");
 
 	spdk_json_write_name(w, "id");
 	if (request->id) {
@@ -332,12 +331,9 @@ spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
-	spdk_json_write_string(w, msg);
+	spdk_json_write_named_object_begin(w, "error");
+	spdk_json_write_named_int32(w, "code", error_code);
+	spdk_json_write_named_string(w, "message", msg);
 	spdk_json_write_object_end(w);
 
 	end_response(request, w);
@@ -356,13 +352,10 @@ spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 		return;
 	}
 
-	spdk_json_write_name(w, "error");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "code");
-	spdk_json_write_int32(w, error_code);
-	spdk_json_write_name(w, "message");
+	spdk_json_write_named_object_begin(w, "error");
+	spdk_json_write_named_int32(w, "code", error_code);
 	va_start(args, fmt);
-	spdk_json_write_string_fmt_v(w, fmt, args);
+	spdk_json_write_named_string_fmt_v(w, "message", fmt, args);
 	va_end(args);
 	spdk_json_write_object_end(w);
 
