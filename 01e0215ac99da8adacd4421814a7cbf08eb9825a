@@ -107,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "c76cc6cf_8427805f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T21:10:05Z",
+      "side": 1,
+      "message": "I just thought that if do this you may not have to dequeue in error path. Thanks for taking this.",
+      "parentUuid": "86dc6992_8c8cecf9",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 285,
+        "endChar": 52
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "947dc671_ba03659c",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 25
@@ -142,6 +166,30 @@
       "side": 1,
       "message": "I\u0027m going to leave it for now but make a note.  The driver isn\u0027t done yet and we\u0027ll be in functions later where I believe all I\u0027ll have access to is the io_ctx.  Most of this is modeled after crypto which has a similar interface and required this",
       "parentUuid": "947dc671_ba03659c",
+      "range": {
+        "startLine": 423,
+        "startChar": 1,
+        "endLine": 423,
+        "endChar": 16
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "443113e3_07145b7a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T21:10:05Z",
+      "side": 1,
+      "message": "Thanks for kind explanation.",
+      "parentUuid": "42e3a656_c2f85bc2",
       "range": {
         "startLine": 423,
         "startChar": 1,
@@ -236,6 +284,30 @@
       "side": 1,
       "message": "I wasn\u0027t sure whether line 32 might trigger something where we\u0027d expect this vbdev to be on the list, like an examine.  I\u0027ll ask one of the other guys and see what they think, if not I\u0027m totally cool moving it",
       "parentUuid": "78a7efc5_077c0b5e",
+      "range": {
+        "startLine": 819,
+        "startChar": 1,
+        "endLine": 819,
+        "endChar": 51
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eeb74c25_c985375e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T21:10:05Z",
+      "side": 1,
+      "message": "I\u0027m wrong and you will be correct. Please keep current code. I\u0027ll learn more later",
+      "parentUuid": "8d87236c_b7cf2a98",
       "range": {
         "startLine": 819,
         "startChar": 1,
