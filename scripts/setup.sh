@@ -46,7 +46,12 @@ function usage()
 	echo "                  E.g. PCI_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
 	echo "                  To blacklist all PCI devices use a non-valid address."
 	echo "                  E.g. PCI_WHITELIST=\"none\""
-	echo "                  If empty or unset, all PCI devices will be bound."
+	echo "VENDOR_DEVICE_BLACKLIST"
+	echo "                  Whitespace separated list of PCI device:vendor numbers to NOT bind."
+	echo "                  Blacklist have precedence over whitelist."
+	echo "                  If empty or unset, no PCI devices are filtered."
+	echo "                  Each vendor:device type must be specified as vendor:device number pair as"
+	echo "                  shown in sysfs files. E.g VENDOR_DEVICE_BLACKLIST=\"8086:0953 8086:0111\""
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
 	echo "DRIVER_OVERRIDE   Disable automatic vfio-pci/uio_pci_generic selection and forcefully"
@@ -73,6 +78,16 @@ function check_for_driver {
 }
 
 function pci_can_bind() {
+	if [[ -n "$VENDOR_DEVICE_BLACKLIST" && -d /sys/bus/pci/devices/${1} ]]; then
+		local vendor_device="$(cat /sys/bus/pci/devices/${1}/vendor):$(cat /sys/bus/pci/devices/${1}/device)"
+		vendor_device=${vendor_device//0x/}
+
+		# '\ ' in pattern part is important!
+		if [[ " $VENDOR_DEVICE_BLACKLIST " =~ \ $vendor_device\  ]]; then
+			return 1
+		fi
+	fi
+
 	if [[ ${#PCI_WHITELIST[@]} == 0 ]]; then
 		#no whitelist specified, bind all devices
 		return 0
@@ -558,6 +573,7 @@ fi
 
 : ${HUGEMEM:=2048}
 : ${PCI_WHITELIST:=""}
+: ${VENDOR_DEVICE_BLACKLIST:=""}
 
 if [ -n "$NVME_WHITELIST" ]; then
 	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
