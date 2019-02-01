@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "84be97d0_ad0242d0",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-01T15:29:27Z",
+      "side": 1,
+      "message": "Despite the comment above, this still looks confusing. Could we possibly set raid_bdev-\u003estrip_size to 0 here? Then it would be straightforward that the variable is unused.",
+      "range": {
+        "startLine": 1263,
+        "startChar": 1,
+        "endLine": 1263,
+        "endChar": 22
+      },
+      "revId": "e40222b0bb3b7ca7718c3c6f81655f4bf7917c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
