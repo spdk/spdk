@@ -502,14 +502,14 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 	vol->backing_lba_per_io_unit = params->backing_io_unit_size / backing_dev->blocklen;
 	memcpy(&vol->params, params, sizeof(*params));
 
+	vol->backing_dev = backing_dev;
+
 	rc = _allocate_bit_arrays(vol);
 	if (rc != 0) {
 		cb_fn(cb_arg, NULL, rc);
 		_init_load_cleanup(vol, init_ctx);
 		return;
 	}
-
-	vol->backing_dev = backing_dev;
 
 	memcpy(vol->backing_super->signature, SPDK_REDUCE_SIGNATURE,
 	       sizeof(vol->backing_super->signature));
