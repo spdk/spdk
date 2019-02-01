@@ -57,6 +57,48 @@ timing_enter cleanup
 # Remove old domain socket pathname just in case
 rm -f /var/tmp/spdk*.sock
 
+# OCSSD devices drivers don't support IO issues by kernel.
+# Detect OCSSD devices and blacklist them (unbind from any driver).
+# If test scripts want to use this device it needs to do this explicitly.
+# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
+if [ $(uname -s) = Linux ]; then
+	# If some OCSSD device is bound to other driver than nvme we won't be able to
+	# discover if it is OCSSD or not so load the kernel driver first.
+	./scripts/setup.sh reset
+	sleep 10
+
+	for dev in $(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+'); do
+		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
+			PCI_BLACKLIST+=" $(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+		fi
+	done
+
+	# Now, bind blacklistened devices to pci-stub module. This will prevent
+	# automatic grabbing these devices when we add device/vendor ID to
+	# proper driver.
+
+	if [[ -n "$PCI_BLACKLIST" ]]; then
+		pci_whitelist="$PCI_WHITELIST"
+		pci_blacklist="$PCI_BLACKLIST"
+		driver_override="$DRIVER_OVERRIDE"
+
+		export PCI_WHITELIST="$PCI_BLACKLIST"
+		export PCI_BLACKLIST=""
+		export DRIVER_OVERRIDE="pci-stub"
+		dmesg -c > /dev/null
+		modprobe -v pci-stub
+		dmesg
+		./scripts/setup.sh
+
+		export PCI_WHITELIST="$pci_whitelist"
+		export PCI_BLACKLIST="$pci_blacklist"
+		export DRIVER_OVERRIDE="$driver_override"
+		unset pci_whitelist pci_blacklist driver_override
+	fi
+fi
+
 # Load the kernel driver
 ./scripts/setup.sh reset
 
@@ -65,6 +107,7 @@ sleep 10
 
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+# Filter out nvme with partitions - the "p*" suffix
 for dev in $(ls /dev/nvme*n* | grep -v p || true); do
 	dd if=/dev/zero of="$dev" bs=1M count=1
 done
