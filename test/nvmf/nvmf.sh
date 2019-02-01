@@ -15,6 +15,7 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh
+run_test suite test/nvmf/connect_disconnect/connect_disconnect.sh
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
 	run_test suite test/nvmf/nvme_cli/nvme_cli.sh
 fi
