@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bdf5fd3_c4d59cf7",
+        "filename": "test/vagrant/autorun-spdk.conf",
+        "patchSetId": 21
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-01T15:12:16Z",
+      "side": 1,
+      "message": "It\u0027s already missing FTL, OCF and probably something else.\n\nIs there any way we could specify only a few SPDK_TEST_ options rather than all of them? We are having more and more of those full autorun configs and soon they will be getting out of hand.\n\nsomething like:\n\nSPDK_TEST_*\u003d0\nSPDK_NVME\u003d1",
+      "revId": "5902ad3c6deb985b0bc3f431a35dc1ecaf4d2341",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
