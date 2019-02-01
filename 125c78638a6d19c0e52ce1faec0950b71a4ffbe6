@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ebe9aee_fe57db3b",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-02-01T07:42:33Z",
+      "side": 1,
+      "message": "Maybe:\n\nFailed to read secondary table",
+      "range": {
+        "startLine": 428,
+        "startChar": 16,
+        "endLine": 428,
+        "endChar": 46
+      },
+      "revId": "125c78638a6d19c0e52ce1faec0950b71a4ffbe6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
