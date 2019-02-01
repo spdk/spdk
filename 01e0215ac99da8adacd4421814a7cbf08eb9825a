@@ -62,6 +62,75 @@
       "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "947dc671_ba03659c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:57:35Z",
+      "side": 1,
+      "message": "this may not be necessary because you can use spdk_bdev_io_from_ctx() instead?",
+      "range": {
+        "startLine": 423,
+        "startChar": 1,
+        "endLine": 423,
+        "endChar": 16
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d12a0516_6fa2f8e0",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 579,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:57:35Z",
+      "side": 1,
+      "message": "return spdk_get_io_channel(comp_bdev) will be enough.",
+      "range": {
+        "startLine": 579,
+        "startChar": 1,
+        "endLine": 579,
+        "endChar": 10
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78a7efc5_077c0b5e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 819,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:57:35Z",
+      "side": 1,
+      "message": "Ca we move this to the line 838? We don\u0027t have to dequeue in error path.",
+      "range": {
+        "startLine": 819,
+        "startChar": 1,
+        "endLine": 819,
+        "endChar": 51
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
