@@ -191,6 +191,13 @@ block devices. The module is split into the library (located in lib/ftl) and bde
 
 ### vhost
 
+A security vulnerability has been identified and fixed in the SPDK vhost target.  A malicious
+vhost client (i.e. virtual machine) could carefully construct a circular descriptor chain which
+would result in a partial denial of service in the SPDK vhost target.  These types of descriptor
+chains are now properly detected by the vhost target.  All SPDK vhost users serving untrusted
+vhost clients are strongly recommended to upgrade. (Reported by Dima Stepanov and Evgeny
+Yakovlev.)
+
 Vhost SCSI and Vhost Block devices can now accept multiple connections on the same socket file.
 Each connection (internally called a vhost session) will have access to the same storage, but
 will use different virtqueues, different features and possibly different memory.
