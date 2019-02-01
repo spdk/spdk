@@ -376,7 +376,7 @@ function configure_linux {
 function reset_linux_pci {
 	# NVMe
 	set +e
-	check_for_driver nvme
+	check_for_driver ${DRIVER_OVERRIDE:-nvme}
 	driver_loaded=$?
 	set -e
 	for bdf in $(iter_pci_class_code 01 08 02); do
@@ -398,7 +398,7 @@ function reset_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	set +e
-	check_for_driver ioatdma
+	check_for_driver ${DRIVER_OVERRIDE:-ioatdma}
 	driver_loaded=$?
 	set -e
 	for dev_id in `cat $TMP`; do
