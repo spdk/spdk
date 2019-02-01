@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13e0a8f5_8d8fd4c7",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-01T11:30:48Z",
+      "side": 1,
+      "message": "Try to use meaningful names.\nJust looking at it and I know it\u0027s a decorator, but I had to look into function body to see what it actually does, and the name should try to be self explanatory.",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 17
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d308be8_e7e9bf3e",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-01T11:30:48Z",
+      "side": 1,
+      "message": "I see no point in this. Why not just add return 1 to ui_commands?\n\nI think that\u0027s not the way to go.\nCheck UINode/execute_command(), I gave a suggested solution there.\nAlso returning \"1\" causes configshell to generate \"Unexpected result\u003d1\" message.",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 31,
+        "endChar": 16
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfde7663_30710f05",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-01T11:30:48Z",
+      "side": 1,
+      "message": "On example of constructing nvme bdev.\n\nUsing current master code (without your patch) I changed these lines to raise(msg). I also added a \"raise(e)\" to UINvmeBdev/ui_command_create(). This raises another exception in chain and makes failed oneliner spdkcli commands to print exception message and exit with rc\u003d1.\nexample oneliner:\nsudo ./scripts/spdkcli.py /bdevs/nvme create nvme0 pcie 1:1:1.1; echo $?\n\nThe downside is that when using interactive mode and doing the same command - spdkcli will crash; most likely because in this chain JSONRPCException is nowhere caught.\nPossible solutions:\na) further modify execute_command() here to catch JSONRPCException as well (ConfigNode.execute_command does not do that)\nb) find some other place to catch this exception\n\nI can prepare a RFC for this if you want to.",
+      "range": {
+        "startLine": 47,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
