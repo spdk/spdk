@@ -544,11 +544,8 @@ virtio_user_dump_json_info(struct virtio_dev *vdev, struct spdk_json_write_ctx *
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
-	spdk_json_write_name(w, "type");
-	spdk_json_write_string(w, "user");
-
-	spdk_json_write_name(w, "socket");
-	spdk_json_write_string(w, dev->path);
+	spdk_json_write_named_string(w, "type", "user");
+	spdk_json_write_named_string(w, "socket", dev->path);
 }
 
 static void
