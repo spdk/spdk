@@ -827,11 +827,9 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_writ
 	}
 
 	assert(bvdev != NULL);
-	spdk_json_write_name(w, "block");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "block");
 
-	spdk_json_write_name(w, "readonly");
-	spdk_json_write_bool(w, bvdev->readonly);
+	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
 
 	spdk_json_write_name(w, "bdev");
 	if (bdev) {
