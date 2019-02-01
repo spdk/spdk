@@ -36,6 +36,8 @@
 
 #include "bdev/lvol/vbdev_lvol.c"
 
+#include "unit/lib/json_mock.c"
+
 #define SPDK_BS_PAGE_SIZE 0x1000
 
 int g_lvolerrno;
@@ -539,48 +541,6 @@ spdk_blob_io_readv(struct spdk_blob *blob, struct spdk_io_channel *channel,
 void
 spdk_bdev_module_list_add(struct spdk_bdev_module *bdev_module)
 {
-}
-
-int
-spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
-{
-	return 0;
-}
-
-int
-spdk_json_write_array_begin(struct spdk_json_write_ctx *w)
-{
-	return 0;
-}
-
-int
-spdk_json_write_array_end(struct spdk_json_write_ctx *w)
-{
-	return 0;
-}
-
-int
-spdk_json_write_string(struct spdk_json_write_ctx *w, const char *val)
-{
-	return 0;
-}
-
-int
-spdk_json_write_bool(struct spdk_json_write_ctx *w, bool val)
-{
-	return 0;
-}
-
-int
-spdk_json_write_object_begin(struct spdk_json_write_ctx *w)
-{
-	return 0;
-}
-
-int
-spdk_json_write_object_end(struct spdk_json_write_ctx *w)
-{
-	return 0;
 }
 
 const char *
