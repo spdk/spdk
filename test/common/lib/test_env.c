@@ -293,6 +293,7 @@ struct spdk_ring_ele {
 struct spdk_ring {
 	TAILQ_HEAD(, spdk_ring_ele) elements;
 	pthread_mutex_t lock;
+	size_t size;
 };
 
 DEFINE_RETURN_MOCK(spdk_ring_create, struct spdk_ring *);
@@ -353,6 +354,7 @@ spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 
 		ele->ele = objs[i];
 		TAILQ_INSERT_TAIL(&ring->elements, ele, link);
+		ring->size++;
 	}
 
 	pthread_mutex_unlock(&ring->lock);
@@ -376,6 +378,7 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 
 	TAILQ_FOREACH_SAFE(ele, &ring->elements, link, tmp) {
 		TAILQ_REMOVE(&ring->elements, ele, link);
+		ring->size--;
 		objs[i] = ele->ele;
 		free(ele);
 		i++;
@@ -387,6 +390,15 @@ spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 	pthread_mutex_unlock(&ring->lock);
 	return i;
 
+}
+
+
+DEFINE_RETURN_MOCK(spdk_ring_count, size_t);
+size_t
+spdk_ring_count(struct spdk_ring *ring)
+{
+	HANDLE_RETURN_MOCK(spdk_ring_count);
+	return ring->size;
 }
 
 DEFINE_RETURN_MOCK(spdk_get_ticks, uint64_t);
