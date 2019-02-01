@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c6be20d_4227ee36",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 183,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:00:18Z",
+      "side": 1,
+      "message": "Hi Paul,\n\nI want to recommend highly to factor out from the line 184 to 298 and make hierarchical error path as follows.\n\ninlining all operations in a function looks complicated and error handling doesn\u0027t look working.\n\nstatic int\ncreate_vbdev_dev(uint8_t index)\n{\n\tstruct vbdev_dev *device;\n\n\tdevice \u003d calloc();\n\tif (!device) {\n\t\treturn -ENOMEM;\n\t}\n\n\trte_compressdev_info_get(index, \u0026device-\u003ecdev_info);\n\n\tcdev_id \u003d device-\u003ecdev_id \u003d index;\n\n\t/* Configure the compression device. */\n\tstruct rte_compressdev_config config \u003d {\n\t\t(snip)\n\t};\n\trc \u003d rte_compress_dev_configure(cdev_id, \u0026config);\n\tif (rc \u003c 0) {\n\t\tgoto err;\n\t}\n\n\trc \u003d rte_compressdev_start(cdev_id);\n\tif (rc \u003c 0) {\n\t\tgoto err;\n\t}\n\n\tcomp_xform \u003d (struct rte_comp_xform) {\n\t\t(snip)\n\t};\n\trc \u003d rte_compressdev_private_xform_create(cdev_id, \u0026comp_xform,\n\t\t\t\u0026device-\u003ecomp_xform);\n\tif (rc \u003c 0) {\n\t\tgoto err;\n\t}\n\n\tdecomp_xform \u003d (struct rte_comp_xform) {\n\t\t(snip)\n\t};\n\n\trc \u003d rte_compressdev_private_xform_create(cdev_id, \u0026decomp_xform,\n\t\t\t\u0026device-\u003edecomp_xform);\n\tif (rc) {\n\t\tgoto err;\n\t}\n\n\tfor (j \u003d 0; j \u003c q_pairs; j++) {\n\t\tdev_qp \u003d calloc();\n\t\tif (!dev_qp) {\n\t\t\tgoto err;\n\t\t}\n\t\tdev_qp-\u003edevice \u003d device;\n\t\tdev_qp-\u003eqp \u003d j;\n\t\tdev_qp-\u003ein_use \u003d false;\n\t\tTAILQ_INSERT_TAIL(\u0026g_device_qp, dev_qp, link);\n\t}\n\n\tTAILQ_INSERT_TAIL(\u0026g_vbdev_devs, device, link);\n\n\treturn 0;\n\nerr:\n\tTAILQ_FOREACH_SAFE(dev_qp, \u0026g_vbdev_devs, link, tmp) {\n\t\tif (dev_qp-\u003edevice \u003d\u003d device) {\n\t\t\tTAILQ_REMOVE(\u0026g_device_qp, dev_qp, link);\n\t\t\tfree(dev_qp);\n\t\t}\n\t}\n\n\tfree(device);\n\treturn rc;\n}\n\nstatic int\nvbdev_init_compress_drivers(void)\n{\n\t(snip)\n\n\tfor (i \u003d 0; i \u003c cdev_count; i++) {\n\t\trc \u003d create_vbdev_dev(i);\n\t\tif (rc !\u003d 0) {\n\t\t\tgoto error_create_vbdev_devs;\n\t\t}\n\t}\n\n\t(snip)\n\nerror_create_vbdev_devs:\n\tTAILQ_FOREACH_SAFE(dev_qp, \u0026g_device_qp, link, tmp_qp) {\n\t\tTAILQ_REMOVE(\u0026g_device_qp, dev_qp, link);\n\t\tfree(dev_qp);\n\t}\n\n\tTAILQ_FOREACH_SAFE(device, \u0026g_vbdev_devs, link, tmp_dev) {\n\t\tTAILQ_REMOVE(\u0026g_vbdev_devs, device, link);\n\t\tfree(device);\n\t}\n\n\t(snip)\n}",
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fc368464_617718ab",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:00:18Z",
+      "side": 1,
+      "message": "For example, if this failure occurs at the non-zero index, the already created device/qp combinations should be freed. However it is not done.",
+      "range": {
+        "startLine": 187,
+        "startChar": 3,
+        "endLine": 187,
+        "endChar": 28
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e8ffe35_47c1b704",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 285,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-01T00:00:18Z",
+      "side": 1,
+      "message": "This should be located after \"build up list of device/qp compbinations.\"",
+      "range": {
+        "startLine": 284,
+        "startChar": 0,
+        "endLine": 285,
+        "endChar": 52
+      },
+      "revId": "01e0215ac99da8adacd4421814a7cbf08eb9825a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
