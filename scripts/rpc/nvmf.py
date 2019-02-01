@@ -1,42 +1,3 @@
-
-
-def set_nvmf_target_options(client,
-                            max_queue_depth=None,
-                            max_qpairs_per_ctrlr=None,
-                            in_capsule_data_size=None,
-                            max_io_size=None,
-                            max_subsystems=None,
-                            io_unit_size=None):
-    """Set NVMe-oF target options.
-
-    Args:
-        max_queue_depth: Max number of outstanding I/O per queue (optional)
-        max_qpairs_per_ctrlr: Max number of SQ and CQ per controller (optional)
-        in_capsule_data_size: Maximum in-capsule data size in bytes (optional)
-        max_io_size: Maximum I/O data size in bytes (optional)
-        max_subsystems: Maximum number of NVMe-oF subsystems (optional)
-        io_unit_size: I/O unit size in bytes (optional)
-
-    Returns:
-        True or False
-    """
-    params = {}
-
-    if max_queue_depth:
-        params['max_queue_depth'] = max_queue_depth
-    if max_qpairs_per_ctrlr:
-        params['max_qpairs_per_ctrlr'] = max_qpairs_per_ctrlr
-    if in_capsule_data_size:
-        params['in_capsule_data_size'] = in_capsule_data_size
-    if max_io_size:
-        params['max_io_size'] = max_io_size
-    if max_subsystems:
-        params['max_subsystems'] = max_subsystems
-    if io_unit_size:
-        params['io_unit_size'] = io_unit_size
-    return client.call('set_nvmf_target_options', params)
-
-
 def set_nvmf_target_max_subsystems(client,
                                    max_subsystems=None):
     """Set NVMe-oF target options.
@@ -138,51 +99,6 @@ def get_nvmf_subsystems(client):
         List of NVMe-oF subsystem objects.
     """
     return client.call('get_nvmf_subsystems')
-
-
-def construct_nvmf_subsystem(client,
-                             nqn,
-                             serial_number,
-                             listen_addresses=None,
-                             hosts=None,
-                             allow_any_host=False,
-                             namespaces=None,
-                             max_namespaces=0):
-    """Construct an NVMe over Fabrics target subsystem.
-
-    Args:
-        nqn: Subsystem NQN.
-        serial_number: Serial number of virtual controller.
-        listen_addresses: Array of listen_address objects (optional).
-        hosts: Array of strings containing allowed host NQNs (optional). Default: No hosts allowed.
-        allow_any_host: Allow any host (True) or enforce allowed host whitelist (False). Default: False.
-        namespaces: Array of namespace objects (optional). Default: No namespaces.
-        max_namespaces: Maximum number of namespaces that can be attached to the subsystem (optional). Default: 0 (Unlimited).
-
-    Returns:
-        True or False
-    """
-    params = {
-        'nqn': nqn,
-        'serial_number': serial_number,
-    }
-
-    if max_namespaces:
-        params['max_namespaces'] = max_namespaces
-
-    if listen_addresses:
-        params['listen_addresses'] = listen_addresses
-
-    if hosts:
-        params['hosts'] = hosts
-
-    if allow_any_host:
-        params['allow_any_host'] = True
-
-    if namespaces:
-        params['namespaces'] = namespaces
-
-    return client.call('construct_nvmf_subsystem', params)
 
 
 def nvmf_subsystem_create(client,

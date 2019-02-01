@@ -81,13 +81,26 @@ specified.  When both rate limits are enabled, the first met limit will
 take effect.  The value 0 may be specified to disable the corresponding rate
 limit. Users can run this command with `-h` or `--help` for more information.
 
-## delete_bdev {#bdev_ug_delete_bdev}
+## Histograms {#rpc_bdev_histogram}
 
-To remove previously created bdev user can use `delete_bdev` RPC command.
-Bdev can be deleted at any time and this will be fully handled by any upper
-layers. As an argument user should provide bdev name. This RPC command
-should be used only for debugging purpose. To remove a particular bdev please
-use the delete command specific to its bdev module.
+The `enable_bdev_histogram` RPC command allows to enable or disable gathering
+latency data for specified bdev. Histogram can be downloaded by the user by
+calling `get_bdev_histogram` and parsed using scripts/histogram.py script.
+
+Example command
+
+`rpc.py enable_bdev_histogram Nvme0n1 --enable`
+
+The command will enable gathering data for histogram on Nvme0n1 device.
+
+`rpc.py get_bdev_histogram Nvme0n1 | histogram.py`
+
+The command will download gathered histogram data. The script will parse
+the data and show table containing IO count for latency ranges.
+
+`rpc.py enable_bdev_histogram Nvme0n1 --disable`
+
+The command will disable histogram on Nvme0n1 device.
 
 # Ceph RBD {#bdev_config_rbd}
 
@@ -234,6 +247,35 @@ This command will create `file` device with block size 8192 from /tmp/file.
 To delete an aio bdev use the delete_aio_bdev command.
 
 `rpc.py delete_aio_bdev aio0`
+
+# OCF Virtual bdev {#bdev_config_cas}
+
+OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/ocf) - a
+high performance block storage caching meta-library.
+To enable the module, configure SPDK with `--with-ocf=/path/to/ocf/library`.
+OCF bdev can be used to enable caching for any underlying bdev.
+
+Below is an example command for creating OCF bdev:
+
+`rpc.py construct_ocf_bdev Cache1 wt Malloc0 Nvme0n1`
+
+This command will create new OCF bdev `Cache1` having bdev `Malloc0` as caching-device
+and `Nvme0n1` as core-device and initial cache mode `Write-Through`.
+`Malloc0` will be used as cache for `Nvme0n1`, so  data written to `Cache1` will be present
+on `Nvme0n1` eventually.
+By default, OCF will be configured with cache line size equal 4KiB
+and non-volatile metadata will be disabled.
+
+To remove `Cache1`:
+
+`rpc.py delete_ocf_bdev Cache1`
+
+During removal OCF-cache will be stopped and all cached data will be written to the core device.
+
+Note that OCF has a per-device RAM requirement
+of about 56000 + _cache device size_ * 58 / _cache line size_ (in bytes).
+To get more information on OCF
+please visit [OCF documentation](https://open-cas.github.io/).
 
 # Malloc bdev {#bdev_config_malloc}
 

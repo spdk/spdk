@@ -124,3 +124,11 @@ CONFIG_FTL=n
 
 # Build Intel IPSEC_MB library
 CONFIG_IPSEC_MB=n
+
+# Enable OCF module
+CONFIG_OCF=n
+CONFIG_OCF_PATH=
+CONFIG_CUSTOMOCF=n
+
+# Build ISA-L library
+CONFIG_ISAL=y

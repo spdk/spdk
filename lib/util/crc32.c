@@ -52,6 +52,32 @@ spdk_crc32_table_init(struct spdk_crc32_table *table, uint32_t polynomial_reflec
 	}
 }
 
+#ifdef SPDK_HAVE_ARM_CRC
+
+uint32_t
+spdk_crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, uint32_t crc)
+{
+	size_t count;
+	const uint64_t *dword_buf;
+
+	count = len & 7;
+	while (count--) {
+		crc = __crc32b(crc, *(const uint8_t *)buf);
+		buf++;
+	}
+	dword_buf = (const uint64_t *)buf;
+
+	count = len / 8;
+	while (count--) {
+		crc = __crc32d(crc, *dword_buf);
+		dword_buf++;
+	}
+
+	return crc;
+}
+
+#else
+
 uint32_t
 spdk_crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t len, uint32_t crc)
 {
@@ -64,3 +90,5 @@ spdk_crc32_update(const struct spdk_crc32_table *table, const void *buf, size_t 
 
 	return crc;
 }
+
+#endif

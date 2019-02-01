@@ -39,6 +39,11 @@ ifeq ($(CONFIG_CRYPTO),y)
 BLOCKDEV_MODULES_LIST += bdev_crypto
 endif
 
+ifeq ($(CONFIG_OCF),y)
+BLOCKDEV_MODULES_LIST += bdev_ocf
+BLOCKDEV_MODULES_LIST += ocfenv
+endif
+
 ifeq ($(CONFIG_RDMA),y)
 SYS_LIBS += -libverbs -lrdmacm
 endif

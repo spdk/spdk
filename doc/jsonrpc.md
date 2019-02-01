@@ -262,7 +262,6 @@ Example response:
     "get_initiator_groups",
     "set_iscsi_options",
     "set_bdev_options",
-    "set_bdev_qos_limit_iops",
     "set_bdev_qos_limit",
     "delete_bdev",
     "get_bdevs",
@@ -273,13 +272,8 @@ Example response:
     "kill_instance",
     "scan_ioat_copy_engine",
     "construct_virtio_dev",
-    "construct_virtio_pci_blk_bdev",
-    "construct_virtio_user_blk_bdev",
     "get_virtio_scsi_devs",
     "remove_virtio_bdev",
-    "remove_virtio_scsi_bdev",
-    "construct_virtio_pci_scsi_bdev",
-    "construct_virtio_user_scsi_bdev",
     "delete_aio_bdev",
     "construct_aio_bdev",
     "destruct_split_vbdev",
@@ -718,7 +712,9 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
 
 ## delete_bdev {#rpc_delete_bdev}
 
-Unregister a block device.
+Unregister a block device.  This RPC is deprecated.  Users should instead use
+the specific deletion RPC for the bdev type to be removed (i.e.
+delete_malloc_bdev).
 
 ### Parameters
 
@@ -787,6 +783,339 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": true
+}
+~~~
+
+## construct_ocf_bdev {#rpc_construct_ocf_bdev}
+
+Construct new OCF bdev.
+Command accepts cache mode that is going to be used.
+Currently, we support Write-Through and Pass-Through OCF cache modes.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name to use
+mode                    | Required | string      | OCF cache mode ('wt' or 'pt')
+cache_bdev_name         | Required | string      | Name of underlying cache bdev
+core_bdev_name          | Required | string      | Name of underlying core bdev
+
+### Result
+
+Name of newly created bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "ocf0",
+    "mode": "wt",
+    "cache_bdev_name": "Nvme0n1"
+    "core_bdev_name": "aio0"
+  },
+  "jsonrpc": "2.0",
+  "method": "construct_ocf_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "ocf0"
+}
+~~~
+
+## delete_ocf_bdev {#rpc_delete_ocf_bdev}
+
+Delete the OCF bdev
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Bdev name
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "name": "ocf0"
+  },
+  "jsonrpc": "2.0",
+  "method": "delete_ocf_bdev",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": true
+}
+~~~
+
+## get_ocf_stats {#rpc_get_ocf_stats}
+
+Get statistics of chosen OCF block device.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Required | string      | Block device name
+
+### Response
+
+Statistics as json object.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_ocf_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+  "usage": {
+    "clean": {
+      "count": 76033,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "free": {
+      "count": 767,
+      "units": "4KiB blocks",
+      "percentage": "0.9"
+    },
+    "occupancy": {
+      "count": 76033,
+      "units": "4KiB blocks",
+      "percentage": "99.0"
+    },
+    "dirty": {
+      "count": 0,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    }
+  },
+  "requests": {
+    "rd_total": {
+      "count": 2,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_full_misses": {
+      "count": 76280,
+      "units": "Requests",
+      "percentage": "35.6"
+    },
+    "rd_full_misses": {
+      "count": 1,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "rd_partial_misses": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_total": {
+      "count": 212416,
+      "units": "Requests",
+      "percentage": "99.2"
+    },
+    "wr_pt": {
+      "count": 1535,
+      "units": "Requests",
+      "percentage": "0.7"
+    },
+    "wr_partial_misses": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "serviced": {
+      "count": 212418,
+      "units": "Requests",
+      "percentage": "99.2"
+    },
+    "rd_pt": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "total": {
+      "count": 213953,
+      "units": "Requests",
+      "percentage": "100.0"
+    },
+    "rd_hits": {
+      "count": 1,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "wr_hits": {
+      "count": 136136,
+      "units": "Requests",
+      "percentage": "63.6"
+    }
+  },
+  "errors": {
+    "total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_total": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_rd": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_wr": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "core_obj_rd": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    },
+    "cache_obj_wr": {
+      "count": 0,
+      "units": "Requests",
+      "percentage": "0.0"
+    }
+  },
+  "blocks": {
+    "volume_rd": {
+      "count": 9,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "volume_wr": {
+      "count": 213951,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    },
+    "cache_obj_total": {
+      "count": 212425,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "core_obj_total": {
+      "count": 213959,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "cache_obj_rd": {
+      "count": 1,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "core_obj_wr": {
+      "count": 213951,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    },
+    "volume_total": {
+      "count": 213960,
+      "units": "4KiB blocks",
+      "percentage": "100.0"
+    },
+    "core_obj_rd": {
+      "count": 8,
+      "units": "4KiB blocks",
+      "percentage": "0.0"
+    },
+    "cache_obj_wr": {
+      "count": 212424,
+      "units": "4KiB blocks",
+      "percentage": "99.9"
+    }
+  ]
+}
+~~~
+
+## get_ocf_bdevs {#rpc_get_ocf_bdevs}
+
+Get list of OCF devices including unregistered ones.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+Array of OCF devices with their current status, along with core and cache bdevs.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_ocf_bdevs",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "PartCache",
+      "started": false,
+      "cache": {
+        "name": "Malloc0",
+        "attached": true
+      },
+      "core": {
+        "name": "Malloc1",
+        "attached": false
+      }
+    }
+  ]
 }
 ~~~
 
@@ -1943,32 +2272,6 @@ Example response:
   "result": ["VirtioScsi0t2", "VirtioScsi0t4"]
 }
 ~~~
-
-## construct_virtio_user_scsi_bdev {#rpc_construct_virtio_user_scsi_bdev}
-
-This is legacy RPC method. It is equivalent of @ref rpc_construct_virtio_dev with `trtype` set to `user` and `dev_type` set to `scsi`.
-
-Because it will be deprecated soon it is intentionally undocumented.
-
-
-## construct_virtio_pci_scsi_bdev {#rpc_construct_virtio_pci_scsi_bdev}
-
-This is legacy RPC method. It is equivalent of @ref rpc_construct_virtio_dev with `trtype` set to `pci` and `dev_type` set to `scsi`.
-
-Because it will be deprecated soon it is intentionally undocumented.
-
-## construct_virtio_user_blk_bdev {#rpc_construct_virtio_user_blk_bdev}
-
-This is legacy RPC method. It is equivalent of @ref rpc_construct_virtio_dev with `trtype` set to `user` and `dev_type` set to `blk`.
-
-Because it will be deprecated soon it is intentionally undocumented.
-
-
-## construct_virtio_pci_blk_bdev {#rpc_construct_virtio_pci_blk_bdev}
-
-This is legacy RPC method. It is equivalent of @ref rpc_construct_virtio_dev with `trtype` set to `pci` and `dev_type` set to `blk`.
-
-Because it will be deprecated soon it is intentionally undocumented.
 
 ## get_virtio_scsi_devs {#rpc_get_virtio_scsi_devs}
 

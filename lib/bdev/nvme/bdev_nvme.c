@@ -1332,13 +1332,11 @@ bdev_nvme_library_init(void)
 
 	val = spdk_conf_section_get_val(sp, "TimeoutUsec");
 	if (val != NULL) {
-		intval = strtoll(val, NULL, 10);
-		if (intval == LLONG_MIN || intval == LLONG_MAX) {
+		intval = spdk_strtoll(val, 10);
+		if (intval < 0) {
 			SPDK_ERRLOG("Invalid TimeoutUsec value\n");
 			rc = -1;
 			goto end;
-		} else if (intval < 0) {
-			intval = 0;
 		}
 	}
 

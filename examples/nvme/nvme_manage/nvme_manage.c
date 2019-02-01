@@ -35,6 +35,7 @@
 
 #include "spdk/nvme.h"
 #include "spdk/env.h"
+#include "spdk/string.h"
 #include "spdk/util.h"
 
 #define MAX_DEVS 64
@@ -870,7 +871,11 @@ parse_args(int argc, char **argv)
 	while ((op = getopt(argc, argv, "i:")) != -1) {
 		switch (op) {
 		case 'i':
-			g_shm_id = atoi(optarg);
+			g_shm_id = spdk_strtol(optarg, 10);
+			if (g_shm_id < 0) {
+				fprintf(stderr, "Invalid shared memory ID\n");
+				return g_shm_id;
+			}
 			break;
 		default:
 			args_usage(argv[0]);

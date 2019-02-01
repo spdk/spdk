@@ -58,6 +58,7 @@ DEFINE_STUB(spdk_bdev_io_type_supported, bool, (struct spdk_bdev *bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev, (struct spdk_bdev *bdev));
 DEFINE_STUB_V(spdk_bdev_close, (struct spdk_bdev_desc *desc));
 DEFINE_STUB(spdk_bdev_get_name, const char *, (const struct spdk_bdev *bdev), 0);
+DEFINE_STUB(spdk_bdev_get_buf_align, size_t, (const struct spdk_bdev *bdev), 0);
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *, (struct spdk_bdev_desc *desc), 0);
 DEFINE_STUB_V(spdk_bdev_unregister, (struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 				     void *cb_arg));
@@ -820,7 +821,10 @@ test_crypto_op_complete(void)
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, -1);
 	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_dma_malloc(16, 0x10, NULL);
+	g_io_ctx->cry_iov.iov_base = spdk_dma_malloc(16, 0x40, NULL);
+	/* To Do: remove this garbage assert as soon as scan-build stops throwing a
+	 * heap use after free error.
+	 */
 	SPDK_CU_ASSERT_FATAL(old_iov_base != orig_ctx->cry_iov.iov_base);
 	_crypto_operation_complete(g_bdev_io);
 	CU_ASSERT(g_bdev_io->internal.status == SPDK_BDEV_IO_STATUS_FAILED);

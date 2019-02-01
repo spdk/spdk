@@ -689,50 +689,62 @@ parse_args(int argc, char **argv)
 	const char *workload_type	= NULL;
 	int op				= 0;
 	bool mix_specified		= false;
+	long int val;
 
 	while ((op = getopt(argc, argv, "c:l:i:m:q:s:t:w:M:a:b:n:h")) != -1) {
 		switch (op) {
 		case 'c':
 			g_arbitration.core_mask = optarg;
 			break;
-		case 'i':
-			g_arbitration.shm_id = atoi(optarg);
-			break;
-		case 'l':
-			g_arbitration.latency_tracking_enable = atoi(optarg);
-			break;
-		case 'm':
-			g_arbitration.max_completions = atoi(optarg);
-			break;
-		case 'q':
-			g_arbitration.queue_depth = atoi(optarg);
-			break;
-		case 's':
-			g_arbitration.io_size_bytes = atoi(optarg);
-			break;
-		case 't':
-			g_arbitration.time_in_sec = atoi(optarg);
-			break;
 		case 'w':
 			g_arbitration.workload_type = optarg;
 			break;
-		case 'M':
-			g_arbitration.rw_percentage = atoi(optarg);
-			mix_specified = true;
-			break;
-		case 'a':
-			g_arbitration.arbitration_mechanism = atoi(optarg);
-			break;
-		case 'b':
-			g_arbitration.arbitration_config = atoi(optarg);
-			break;
-		case 'n':
-			g_arbitration.io_count = atoi(optarg);
-			break;
 		case 'h':
-		default:
+		case '?':
 			usage(argv[0]);
 			return 1;
+		default:
+			val = spdk_strtol(optarg, 10);
+			if (val < 0) {
+				fprintf(stderr, "Converting a string to integer failed\n");
+				return val;
+			}
+			switch (op) {
+			case 'i':
+				g_arbitration.shm_id = val;
+				break;
+			case 'l':
+				g_arbitration.latency_tracking_enable = val;
+				break;
+			case 'm':
+				g_arbitration.max_completions = val;
+				break;
+			case 'q':
+				g_arbitration.queue_depth = val;
+				break;
+			case 's':
+				g_arbitration.io_size_bytes = val;
+				break;
+			case 't':
+				g_arbitration.time_in_sec = val;
+				break;
+			case 'M':
+				g_arbitration.rw_percentage = val;
+				mix_specified = true;
+				break;
+			case 'a':
+				g_arbitration.arbitration_mechanism = val;
+				break;
+			case 'b':
+				g_arbitration.arbitration_config = val;
+				break;
+			case 'n':
+				g_arbitration.io_count = val;
+				break;
+			default:
+				usage(argv[0]);
+				return -EINVAL;
+			}
 		}
 	}
 

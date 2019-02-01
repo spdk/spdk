@@ -34,7 +34,7 @@
 #ifndef FTL_ANM_H
 #define FTL_ANM_H
 
-#include <spdk/thread.h>
+#include "spdk/thread.h"
 #include "ftl_ppa.h"
 
 struct ftl_nvme_ctrlr;

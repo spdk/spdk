@@ -135,7 +135,7 @@ rm -f whitespace.log
 
 echo -n "Checking for use of forbidden library functions..."
 
-git grep --line-number -w '\(strncpy\|strcpy\|strcat\|sprintf\|vsprintf\)' -- './*.c' ':!lib/vhost/rte_vhost*/**' > badfunc.log || true
+git grep --line-number -w '\(atoi\|atol\|atoll\|strncpy\|strcpy\|strcat\|sprintf\|vsprintf\)' -- './*.c' ':!lib/vhost/rte_vhost*/**' > badfunc.log || true
 if [ -s badfunc.log ]; then
 	echo " Forbidden library functions detected"
 	cat badfunc.log
@@ -179,6 +179,17 @@ else
 	echo " OK"
 fi
 rm -f scripts/posix.log
+
+echo -n "Checking #include style..."
+git grep -I -i --line-number "#include <spdk/" -- '*.[ch]' > scripts/includes.log || true
+if [ -s scripts/includes.log ]; then
+	echo "Incorrect #include syntax. #includes of spdk/ files should use quotes."
+	cat scripts/includes.log
+	rc=1
+else
+	echo " OK"
+fi
+rm -f scripts/includes.log
 
 if hash pycodestyle 2>/dev/null; then
 	PEP8=pycodestyle

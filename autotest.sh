@@ -179,6 +179,7 @@ if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 	timing_enter vhost_initiator
 	run_test suite ./test/vhost/initiator/blockdev.sh
 	run_test suite ./test/spdkcli/virtio.sh
+	run_test suite ./test/vhost/shared/shared.sh
 	report_test_completion "vhost_initiator"
 	timing_exit vhost_initiator
 fi
@@ -190,6 +191,14 @@ fi
 
 if [ $SPDK_TEST_RBD -eq 1 ]; then
 	run_test suite ./test/spdkcli/rbd.sh
+fi
+
+if [ $SPDK_TEST_OCF -eq 1 ]; then
+	run_test suite ./test/ocf/ocf.sh
+fi
+
+if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
+	run_test suite ./test/ftl/ftl.sh
 fi
 
 run_test suite ./test/json_config/json_config.sh

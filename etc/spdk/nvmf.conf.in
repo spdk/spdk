@@ -66,8 +66,11 @@
   AcceptorPollRate 10000
 
 [Transport]
-  # Set a transport type, this is mandatory
+  # Users must set at least one transport type.
+  # Set RDMA transport type.
   Type RDMA
+  # Set TCP transport type.
+  Type TCP
 
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
@@ -110,6 +113,7 @@
   TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme2
   TransportID "trtype:PCIe traddr:0000:03:00.0" Nvme3
   TransportID "trtype:RDMA traddr:192.168.100.8 trsvcid:4420 hostaddr:192.168.100.9" Nvme4
+  TransportID "trtype:TCP adrfam:IPv4 traddr:192.168.100.3 trsvcid:4420" Nvme5
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
@@ -177,7 +181,7 @@
 # Namespaces backed by physical NVMe devices
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
-  Listen RDMA 15.15.15.2:4420
+  Listen TCP 15.15.15.2:4420
   AllowAnyHost No
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001

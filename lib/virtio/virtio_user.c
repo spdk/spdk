@@ -67,11 +67,9 @@ virtio_user_create_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 }
 
 static int
-virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
+virtio_user_set_vring_addr(struct virtio_dev *vdev, uint32_t queue_sel)
 {
 	struct virtio_user_dev *dev = vdev->ctx;
-	struct vhost_vring_file file;
-	struct vhost_vring_state state;
 	struct vring *vring = &dev->vrings[queue_sel];
 	struct vhost_vring_addr addr = {
 		.index = queue_sel,
@@ -81,6 +79,17 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 		.log_guest_addr = 0,
 		.flags = 0, /* disable log */
 	};
+
+	return dev->ops->send_request(dev, VHOST_USER_SET_VRING_ADDR, &addr);
+}
+
+static int
+virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
+{
+	struct virtio_user_dev *dev = vdev->ctx;
+	struct vhost_vring_file file;
+	struct vhost_vring_state state;
+	struct vring *vring = &dev->vrings[queue_sel];
 	int rc;
 
 	state.index = queue_sel;
@@ -97,10 +106,7 @@ virtio_user_kick_queue(struct virtio_dev *vdev, uint32_t queue_sel)
 		return rc;
 	}
 
-	rc = dev->ops->send_request(dev, VHOST_USER_SET_VRING_ADDR, &addr);
-	if (rc < 0) {
-		return rc;
-	}
+	virtio_user_set_vring_addr(vdev, queue_sel);
 
 	/* Of all per virtqueue MSGs, make sure VHOST_USER_SET_VRING_KICK comes
 	 * lastly because vhost depends on this msg to judge if
@@ -162,7 +168,7 @@ virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 	/* We have to send SET_VRING_ADDR to make rte_vhost flush a pending
 	 * SET_MEM_TABLE...
 	 */
-	ret = virtio_user_queue_setup(vdev, virtio_user_kick_queue);
+	ret = virtio_user_queue_setup(vdev, virtio_user_set_vring_addr);
 	if (ret < 0) {
 		return ret;
 	}
@@ -243,7 +249,7 @@ virtio_user_start_device(struct virtio_dev *vdev)
 		return ret;
 	}
 
-	return 0;
+	return virtio_user_queue_setup(vdev, virtio_user_kick_queue);
 }
 
 static int

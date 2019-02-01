@@ -786,6 +786,7 @@ bdev_rbd_library_init(void)
 	const char *pool_name;
 	const char *rbd_name;
 	uint32_t block_size;
+	long int tmp;
 
 	struct spdk_conf_section *sp = spdk_conf_find_section(NULL, "Ceph");
 
@@ -823,13 +824,18 @@ bdev_rbd_library_init(void)
 		if (val == NULL) {
 			block_size = 512; /* default value */
 		} else {
-			block_size = (int)strtol(val, NULL, 10);
-			if (block_size & 0x1ff) {
-				SPDK_ERRLOG("current block_size = %d, it should be multiple of 512\n",
-					    block_size);
+			tmp = spdk_strtol(val, 10);
+			if (tmp <= 0) {
+				SPDK_ERRLOG("Invalid block size\n");
+				rc = -1;
+				goto end;
+			} else if (tmp & 0x1ff) {
+				SPDK_ERRLOG("current block_size = %ld, it should be multiple of 512\n",
+					    tmp);
 				rc = -1;
 				goto end;
 			}
+			block_size = (uint32_t)tmp;
 		}
 
 		/* TODO(?): user_id and rbd config values */

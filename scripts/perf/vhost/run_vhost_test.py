@@ -139,7 +139,7 @@ parser.add_argument('-R', '--ramptime', default="10", type=str,
                     help="Ramp time param for FIO (in seconds). Default: 10")
 parser.add_argument('-c', '--ctrl-type', default="spdk_vhost_scsi", type=str,
                     help="Type of vhost controller to use in test.\
-                    Possible options: spdk_vhost_scsi, spdk_vhost_blk.\
+                    Possible options: spdk_vhost_scsi, spdk_vhost_blk\
                     Default: spdk_vhost_scsi")
 parser.add_argument('-s', '--split', default=False, type=bool,
                     help="Use split vbdevs instead of logical volumes. Default: false")
@@ -203,6 +203,15 @@ command = " ".join(["test/vhost/perf_bench/vhost_perf.sh",
                     "%s" % disk_arg,
                     "--fio-job=%s" % fio_cfg_path,
                     "%s" % cpu_cfg_arg])
-print("INFO: Running perf test with command:")
-print(command)
-pr = check_output(command, shell=True)
+# TODO: Disabled for now.
+# Reason: initially this script was supposed to be a wrapper for .sh script and would
+# - generate FIO config
+# - generate SPDK/QEMU CPU mask configuration file
+# - run test script
+# Auto-generating CPU masks configuration needs some more work to be done
+# and increasing number of params makes .py script hard to use.
+# Will cleanup here soon.
+
+# print("INFO: Running perf test with command:")
+# print(command)
+# pr = check_output(command, shell=True)

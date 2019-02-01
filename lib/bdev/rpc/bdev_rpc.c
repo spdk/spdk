@@ -405,6 +405,9 @@ spdk_rpc_delete_bdev(struct spdk_jsonrpc_request *request,
 	struct rpc_delete_bdev req = {};
 	struct spdk_bdev *bdev;
 
+	SPDK_ERRLOG("The delete_bdev RPC is deprecated.  Please use the RPC specific\n");
+	SPDK_ERRLOG("to the bdev type being deleted.\n");
+
 	if (spdk_json_decode_object(params, rpc_delete_bdev_decoders,
 				    SPDK_COUNTOF(rpc_delete_bdev_decoders),
 				    &req)) {

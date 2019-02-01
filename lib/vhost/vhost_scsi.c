@@ -77,6 +77,9 @@ struct spdk_scsi_dev_vhost_state {
 struct spdk_vhost_scsi_dev {
 	struct spdk_vhost_dev vdev;
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+
+	/* The CPU chosen to poll I/O of all active vhost sessions */
+	int32_t lcore;
 } __rte_cache_aligned;
 
 struct spdk_vhost_scsi_session {
@@ -1217,14 +1220,8 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	int rc;
 
 	svsession = to_scsi_session(vsession);
-	if (svsession == NULL) {
-		SPDK_ERRLOG("Trying to start non-scsi controller as a scsi one.\n");
-		rc = -1;
-		goto out;
-	}
-
-	svdev = to_scsi_dev(vdev);
-	svsession->svdev = svdev;
+	assert(svsession != NULL);
+	svdev = svsession->svdev;
 
 	/* validate all I/O queues are in a contiguous index range */
 	for (i = VIRTIO_SCSI_REQUESTQ; i < vsession->max_queues; i++) {
@@ -1266,14 +1263,37 @@ out:
 static int
 spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 {
-	if (vsession->vdev->active_session_num > 0) {
-		/* We're trying to start a second session */
-		SPDK_ERRLOG("Vhost-SCSI devices can support only one simultaneous connection.\n");
+	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_vhost_scsi_dev *svdev;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	if (svsession == NULL) {
+		SPDK_ERRLOG("Trying to start non-scsi session as a scsi one.\n");
 		return -1;
 	}
 
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
-					     3, "start session");
+	svdev = to_scsi_dev(vsession->vdev);
+	assert(svdev != NULL);
+	svsession->svdev = svdev;
+
+	if (svdev->vdev.active_session_num == 0) {
+		svdev->lcore = spdk_vhost_allocate_reactor(svdev->vdev.cpumask);
+	}
+
+	vsession->lcore = svdev->lcore;
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
+					   3, "start session");
+	if (rc != 0) {
+		vsession->lcore = -1;
+
+		if (svdev->vdev.active_session_num == 0) {
+			spdk_vhost_free_reactor(svdev->lcore);
+			svdev->lcore = -1;
+		}
+	}
+
+	return rc;
 }
 
 static int
@@ -1318,11 +1338,7 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_scsi_session *svsession;
 
 	svsession = to_scsi_session(vsession);
-	if (svsession == NULL) {
-		SPDK_ERRLOG("Trying to stop non-scsi controller as a scsi one.\n");
-		goto err;
-	}
-
+	assert(svsession != NULL);
 	svsession->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&svsession->requestq_poller);
 	spdk_poller_unregister(&svsession->mgmt_poller);
@@ -1330,17 +1346,31 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 					svsession, 1000);
 
 	return 0;
-
-err:
-	spdk_vhost_session_event_done(event_ctx, -1);
-	return -1;
 }
 
 static int
 spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 {
-	return spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
-					     3, "stop session");
+	struct spdk_vhost_scsi_session *svsession;
+	int rc;
+
+	svsession = to_scsi_session(vsession);
+	if (svsession == NULL) {
+		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
+		return -1;
+	}
+	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
+					   3, "stop session");
+	if (rc != 0) {
+		return rc;
+	}
+
+	vsession->lcore = -1;
+	if (vsession->vdev->active_session_num == 1) {
+		spdk_vhost_free_reactor(svsession->svdev->lcore);
+		svsession->svdev->lcore = -1;
+	}
+	return 0;
 }
 
 static void

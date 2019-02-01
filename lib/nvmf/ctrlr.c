@@ -49,8 +49,8 @@
 
 #define MIN_KEEP_ALIVE_TIMEOUT_IN_MS 10000
 #define NVMF_DISC_KATO_IN_MS 120000
-#define KAS_DEFAULT_VALUE 10
 #define KAS_TIME_UNIT_IN_MS 100
+#define KAS_DEFAULT_VALUE (MIN_KEEP_ALIVE_TIMEOUT_IN_MS / KAS_TIME_UNIT_IN_MS)
 
 #define MODEL_NUMBER "SPDK bdev Controller"
 
@@ -281,7 +281,6 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 	}
 
 	/*
-	 * Because Identify Controller data KAS default is 10
 	 * KAS: this field indicates the granularity of the Keep Alive Timer in 100ms units
 	 * keep-alive timeout in milliseconds
 	 */
