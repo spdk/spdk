@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "9fe23571_e7c9fc76",
+        "filename": "lib/bdev/gpt/gpt.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-02-01T07:12:07Z",
+      "side": 1,
+      "message": "Thanks it\u0027s ok for me.",
+      "parentUuid": "c3fd5543_be4abd93",
+      "range": {
+        "startLine": 88,
+        "startChar": 3,
+        "endLine": 88,
+        "endChar": 15
+      },
+      "revId": "24c1dd1affa4fb45fc14c6e0747c13b326527145",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e965b57f_32a1f9ec",
         "filename": "lib/bdev/gpt/gpt.c",
         "patchSetId": 4
