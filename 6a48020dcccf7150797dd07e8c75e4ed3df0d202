@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74114a97_a0f66a34",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1234,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-01T21:20:02Z",
+      "side": 1,
+      "message": "If we need to handle all different types of timeouts, then I agree that this is the most efficient solution. But if we only need to do a timeout on C2H Termination Requests, I think we can change the approach a little bit because those only occur on errors.\n\nWhat if you add a poller pointer to each qpair that does the termination timer, and in spdk_nvmf_tcp_send_c2h_term_req you register the poller and in spdk_nvmf_tcp_send_c2h_term_req_complete you unregister it? If the poller ever fires, you can immediately disconnect. This is a more efficient approach because these C2H Termination Requests are rare - so in the case where everything is happening as expect there is no cost incurring for looping over every qpair (even rarely).",
+      "revId": "6a48020dcccf7150797dd07e8c75e4ed3df0d202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba254c8e_00fda235",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 2718,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-01T21:20:02Z",
+      "side": 1,
+      "message": "This isn\u0027t configurable, and I\u0027m not sure it ever needs to be. Maybe just use the #define everywhere instead of storing it on the tqpair?",
+      "revId": "6a48020dcccf7150797dd07e8c75e4ed3df0d202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
