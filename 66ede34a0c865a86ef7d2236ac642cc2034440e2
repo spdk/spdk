@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "10d5ddc3_8c1925dc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-01T13:32:30Z",
+      "side": 1,
+      "message": "I guess this should rather say that we just change conditional values rather than fix, because at the moment it works just fine",
+      "range": {
+        "startLine": 7,
+        "startChar": 10,
+        "endLine": 7,
+        "endChar": 49
+      },
+      "revId": "66ede34a0c865a86ef7d2236ac642cc2034440e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6ce7d62c_1fd5f319",
         "filename": "scripts/setup.sh",
         "patchSetId": 1
