@@ -252,14 +252,11 @@ vbdev_gpt_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_gpt_partition_entry *gpt_entry = &gpt->partitions[gpt_disk->partition_index];
 	uint64_t offset_blocks = spdk_bdev_part_get_offset_blocks(&gpt_disk->part);
 
-	spdk_json_write_name(w, "gpt");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "gpt");
 
-	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(part_base_bdev));
+	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(part_base_bdev));
 
-	spdk_json_write_name(w, "offset_blocks");
-	spdk_json_write_uint64(w, offset_blocks);
+	spdk_json_write_named_uint64(w, "offset_blocks", offset_blocks);
 
 	spdk_json_write_name(w, "partition_type_guid");
 	write_guid(w, &gpt_entry->part_type_guid);

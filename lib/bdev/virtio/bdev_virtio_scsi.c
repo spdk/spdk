@@ -2002,8 +2002,7 @@ bdev_virtio_scsi_dev_list(struct spdk_json_write_ctx *w)
 	TAILQ_FOREACH(svdev, &g_virtio_scsi_devs, tailq) {
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "name");
-		spdk_json_write_string(w, svdev->vdev.name);
+		spdk_json_write_named_string(w, "name", svdev->vdev.name);
 
 		virtio_dev_dump_json_info(&svdev->vdev, w);
 

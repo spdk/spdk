@@ -454,11 +454,9 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct file_disk *fdisk = ctx;
 
-	spdk_json_write_name(w, "aio");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "aio");
 
-	spdk_json_write_name(w, "filename");
-	spdk_json_write_string(w, fdisk->filename);
+	spdk_json_write_named_string(w, "filename", fdisk->filename);
 
 	spdk_json_write_object_end(w);
 

@@ -259,10 +259,8 @@ bdev_pmem_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct pmem_disk *pdisk = ctx;
 
-	spdk_json_write_name(w, "pmem");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "pmem_file");
-	spdk_json_write_string(w, pdisk->pmem_file);
+	spdk_json_write_named_object_begin(w, "pmem");
+	spdk_json_write_named_string(w, "pmem_file", pdisk->pmem_file);
 	spdk_json_write_object_end(w);
 
 	return 0;
