@@ -65,6 +65,9 @@ fi
 : ${SPDK_TEST_BDEV_FTL=0}; export SPDK_TEST_BDEV_FTL
 : ${SPDK_TEST_OCF=1}; export SPDK_TEST_OCF
 
+# Filter out QEMU FTL devices
+export VENDOR_ID_BLACKLIST="1d1d:1f1f"
+
 if [ -z "$DEPENDENCY_DIR" ]; then
 	export DEPENDENCY_DIR=/home/sys_sgsw
 else
