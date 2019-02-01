@@ -22,6 +22,30 @@
       "revId": "7dc186e8095e9e01e5b3e052e6999dc3540000bb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ebba7df_cb8e265e",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-01T13:33:54Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "341ddca5_12c74758",
+      "range": {
+        "startLine": 422,
+        "startChar": 1,
+        "endLine": 423,
+        "endChar": 51
+      },
+      "revId": "7dc186e8095e9e01e5b3e052e6999dc3540000bb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
