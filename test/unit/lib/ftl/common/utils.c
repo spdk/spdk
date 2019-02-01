@@ -32,6 +32,7 @@
  */
 
 #include "spdk/ftl.h"
+#include "ftl/ftl_core.h"
 
 static struct spdk_ftl_dev *
 test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
@@ -114,4 +115,17 @@ test_free_ftl_band(struct ftl_band *band)
 	spdk_bit_array_free(&band->md.vld_map);
 	free(band->chunk_buf);
 	free(band->md.lba_map);
+}
+
+static uint64_t
+test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
+{
+	struct spdk_ftl_dev *dev = band->dev;
+	unsigned int punit;
+
+	/* TODO: ftl_ppa_flatten_punit should return uint32_t */
+	punit = ftl_ppa_flatten_punit(dev, ppa);
+	CU_ASSERT_EQUAL(ppa.chk, band->id);
+
+	return punit * ftl_dev_lbks_in_chunk(dev) + ppa.lbk;
 }
