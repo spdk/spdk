@@ -41,12 +41,16 @@ function usage()
 	echo "HUGENODE          Specific NUMA node to allocate hugepages on. To allocate"
 	echo "                  hugepages on multiple nodes run this script multiple times -"
 	echo "                  once for each node."
-	echo "PCI_WHITELIST     Whitespace separated list of PCI devices (NVMe, I/OAT, Virtio) to bind."
+	echo "PCI_WHITELIST"
+	echo "PCI_BLACKLIST     Whitespace separated list of PCI devices (NVMe, I/OAT, Virtio)."
 	echo "                  Each device must be specified as a full PCI address."
 	echo "                  E.g. PCI_WHITELIST=\"0000:01:00.0 0000:02:00.0\""
 	echo "                  To blacklist all PCI devices use a non-valid address."
 	echo "                  E.g. PCI_WHITELIST=\"none\""
-	echo "                  If empty or unset, all PCI devices will be bound."
+	echo "                  If PCI_WHITELIST and PCI_BLACKLIST are empty or unset, all PCI devices"
+	echo "                  will be bound."
+	echo "                  Each device in PCI_BLACKLIST will be ignored (driver won't be changed)."
+	echo "                  PCI_BLACKLIST has precedence over PCI_WHITELIST."
 	echo "TARGET_USER       User that will own hugepage mountpoint directory and vfio groups."
 	echo "                  By default the current user will be used."
 	exit 0
@@ -70,16 +74,22 @@ function check_for_driver {
 }
 
 function pci_can_bind() {
-	if [[ ${#PCI_WHITELIST[@]} == 0 ]]; then
+	# The '\ ' part is important
+	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]] ; then
+		return 1
+	fi
+
+	if [[ -z "$PCI_WHITELIST" ]]; then
 		#no whitelist specified, bind all devices
 		return 0
 	fi
 
-	for i in ${PCI_WHITELIST[@]}; do
+	for i in $PCI_WHITELIST; do
 		if [ "$i" == "$1" ] ; then
-			 return 0
+			return 0
 		fi
 	done
+
 	return 1
 }
 
@@ -568,6 +578,7 @@ fi
 
 : ${HUGEMEM:=2048}
 : ${PCI_WHITELIST:=""}
+: ${PCI_BLACKLIST:=""}
 
 if [ -n "$NVME_WHITELIST" ]; then
 	PCI_WHITELIST="$PCI_WHITELIST $NVME_WHITELIST"
@@ -576,8 +587,6 @@ fi
 if [ -n "$SKIP_PCI" ]; then
 	PCI_WHITELIST="none"
 fi
-
-declare -a PCI_WHITELIST=(${PCI_WHITELIST})
 
 if [ -z "$TARGET_USER" ]; then
 	TARGET_USER="$SUDO_USER"
