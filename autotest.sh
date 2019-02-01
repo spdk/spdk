@@ -65,11 +65,36 @@ sleep 10
 
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+# Filter out nvme with partitions - the "p*" suffix
 for dev in $(ls /dev/nvme*n* | grep -v p || true); do
+	# FTL devices don't support IO issues by kernel.
+	# Detect FTL devices and blacklist them (unbind from any driver).
+	# If test scripts want to use this device it needs to do this explicitly.
+	# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
+	if [ $(uname -s) = Linux ] && nvme admin-passthru $dev -o "0xe2"; then
+		[[ "$dev" =~ /dev/(nvme[0-9]+)n* ]]
+		PCI_BLACKLIST+=" $(basename $(readlink -e /sys/class/nvme/${BASH_REMATCH[1]}/device))"
+	fi
+
 	dd if=/dev/zero of="$dev" bs=1M count=1
 done
 
 sync
+
+# Now, unbind drivers from blacklistened devices.
+pci_whitelist="$PCI_WHITELIST"
+pci_blacklist="$PCI_BLACKLIST"
+driver_override="$DRIVER_OVERRIDE"
+
+export PCI_WHITELIST="$PCI_BLACKLIST"
+export PCI_BLACKLIST=""
+export DRIVER_OVERRIDE="none"
+./scripts/setup.sh reset
+
+export PCI_WHITELIST="$pci_whitelist"
+export PCI_BLACKLIST="$pci_blacklist"
+export DRIVER_OVERRIDE="$driver_override"
+unset pci_whitelist pci_blacklist driver_override
 
 if [ $(uname -s) = Linux ]; then
 	# Load RAM disk driver if available
