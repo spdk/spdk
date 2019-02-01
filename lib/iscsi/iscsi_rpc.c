@@ -929,11 +929,9 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "id");
-		spdk_json_write_int32(w, c->id);
+		spdk_json_write_named_int32(w, "id", c->id);
 
-		spdk_json_write_name(w, "cid");
-		spdk_json_write_int32(w, c->cid);
+		spdk_json_write_named_int32(w, "cid", c->cid);
 
 		/*
 		 * If we try to return data for a connection that has not
@@ -946,20 +944,15 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 		} else {
 			tsih = c->sess->tsih;
 		}
-		spdk_json_write_name(w, "tsih");
-		spdk_json_write_int32(w, tsih);
+		spdk_json_write_named_int32(w, "tsih", tsih);
 
-		spdk_json_write_name(w, "lcore_id");
-		spdk_json_write_int32(w, c->lcore);
+		spdk_json_write_named_int32(w, "lcore_id", c->lcore);
 
-		spdk_json_write_name(w, "initiator_addr");
-		spdk_json_write_string(w, c->initiator_addr);
+		spdk_json_write_named_string(w, "initiator_addr", c->initiator_addr);
 
-		spdk_json_write_name(w, "target_addr");
-		spdk_json_write_string(w, c->target_addr);
+		spdk_json_write_named_string(w, "target_addr", c->target_addr);
 
-		spdk_json_write_name(w, "target_node_name");
-		spdk_json_write_string(w, c->target_short_name);
+		spdk_json_write_named_string(w, "target_node_name", c->target_short_name);
 
 		spdk_json_write_object_end(w);
 	}
