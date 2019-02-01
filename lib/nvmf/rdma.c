@@ -64,6 +64,9 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 #define DEFAULT_NVMF_RDMA_CQ_SIZE	4096
 #define MAX_WR_PER_QP(queue_depth)	(queue_depth * 3 + 2)
 
+/* Timeout for destroying defunct rqpairs */
+#define NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US 1000000
+
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -342,6 +345,12 @@ struct spdk_nvmf_rdma_qpair {
 	uint32_t				disconnect_flags;
 	struct spdk_nvmf_rdma_wr		drain_send_wr;
 	struct spdk_nvmf_rdma_wr		drain_recv_wr;
+
+	/* Poller registered in case the qpair doesn't properly
+	 * complete the qpair destruct process and becomes defunct.
+	 */
+
+	struct spdk_poller			*destruct_poller;
 
 	/* There are several ways a disconnect can start on a qpair
 	 * and they are not all mutually exclusive. It is important
@@ -2658,6 +2667,19 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	return 0;
 }
 
+static int
+spdk_nvmf_rdma_destroy_defunct_qpair(void *ctx)
+{
+	struct spdk_nvmf_rdma_qpair	*rqpair = ctx;
+	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+			struct spdk_nvmf_rdma_transport, transport);
+
+	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+
+	return 0;
+}
+
 static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
@@ -2707,6 +2729,9 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 	rqpair->current_send_depth++;
+
+	rqpair->destruct_poller = spdk_poller_register(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
+				  NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US);
 }
 
 #ifdef DEBUG
