@@ -347,20 +347,12 @@ static int
 ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 {
 	volatile struct ftl_admin_cmpl cmpl = {};
-	struct spdk_ocssd_geometry_data *buf;
 	uint32_t nsid = spdk_nvme_ns_get_id(dev->ns);
-	int rc = -1;
 
-	buf = malloc(PAGE_SIZE);
-	if (!buf) {
-		SPDK_ERRLOG("Memory allocation failure\n");
-		return -1;
-	}
-
-	if (spdk_nvme_ocssd_ctrlr_cmd_geometry(dev->ctrlr, nsid, buf, PAGE_SIZE,
+	if (spdk_nvme_ocssd_ctrlr_cmd_geometry(dev->ctrlr, nsid, &dev->geo, sizeof(dev->geo),
 					       ftl_admin_cb, (void *)&cmpl)) {
 		SPDK_ERRLOG("Unable to retrieve geometry\n");
-		goto out;
+		return -1;
 	}
 
 	/* TODO: add a timeout */
@@ -371,10 +363,8 @@ ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 	if (spdk_nvme_cpl_is_error(&cmpl.status)) {
 		SPDK_ERRLOG("Unexpected status code: [%d], status code type: [%d]\n",
 			    cmpl.status.status.sc, cmpl.status.status.sct);
-		goto out;
+		return -1;
 	}
-
-	dev->geo = *buf;
 
 	/* TODO: add sanity checks for the geo */
 	dev->ppa_len = dev->geo.lbaf.grp_len +
@@ -394,10 +384,7 @@ ftl_dev_retrieve_geo(struct spdk_ftl_dev *dev)
 	/* We're using optimal write size as our xfer size */
 	dev->xfer_size = dev->geo.ws_opt;
 
-	rc = 0;
-out:
-	free(buf);
-	return rc;
+	return 0;
 }
 
 static int
