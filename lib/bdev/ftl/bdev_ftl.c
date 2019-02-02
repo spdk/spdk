@@ -833,10 +833,9 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 	/* Check already attached controllers first */
 	LIST_FOREACH(ftl_ctrlr, &g_ftl_bdev_ctrlrs, list_entry) {
 		if (!spdk_nvme_transport_id_compare(&ftl_ctrlr->trid, &opts->trid)) {
-			rc = bdev_ftl_create(ftl_ctrlr->ctrlr, &ftl_ctrlr->trid, opts->name,
-					     &opts->range, opts->mode, &opts->uuid, cb, cb_arg);
 			pthread_mutex_unlock(&g_ftl_bdev_lock);
-			return rc;
+			return bdev_ftl_create(ftl_ctrlr->ctrlr, &ftl_ctrlr->trid, opts->name,
+					       &opts->range, opts->mode, &opts->uuid, cb, cb_arg);
 		}
 	}
 
