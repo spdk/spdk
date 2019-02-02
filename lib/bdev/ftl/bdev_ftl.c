@@ -823,7 +823,6 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 {
 	struct ftl_bdev_ctrlr *ftl_ctrlr;
 	struct spdk_nvme_ctrlr *ctrlr;
-	int rc = 0;
 
 	assert(opts != NULL);
 	assert(cb != NULL);
@@ -843,24 +842,16 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 
 	ctrlr = spdk_nvme_connect(&opts->trid, NULL, 0);
 	if (!ctrlr) {
-		rc = -ENODEV;
-		goto error;
-
+		return -ENODEV;
 	}
 
 	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
 		spdk_nvme_detach(ctrlr);
-		rc = -EPERM;
-		goto error;
+		return -EPERM;
 	}
 
-	rc = bdev_ftl_create(ctrlr, &opts->trid, opts->name, &opts->range,
-			     opts->mode, &opts->uuid, cb, cb_arg);
-
-	return rc;
-error:
-	cb(NULL, cb_arg, rc);
-	return rc;
+	return bdev_ftl_create(ctrlr, &opts->trid, opts->name, &opts->range,
+			       opts->mode, &opts->uuid, cb, cb_arg);
 }
 
 void
