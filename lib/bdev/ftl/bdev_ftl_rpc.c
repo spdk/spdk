@@ -80,9 +80,6 @@ _spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (!w) {
-		SPDK_DEBUGLOG(SPDK_LOG_BDEV_FTL, "spdk_json_begin_result failed\n");
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						 "Internal error");
 		return;
 	}
 
