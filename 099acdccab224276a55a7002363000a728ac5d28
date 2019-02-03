@@ -25,6 +25,52 @@
     },
     {
       "key": {
+        "uuid": "44d94d21_e6564557",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-03T22:57:27Z",
+      "side": 1,
+      "message": "this doesn\u0027t look necessary too.",
+      "range": {
+        "startLine": 402,
+        "startChar": 1,
+        "endLine": 402,
+        "endChar": 51
+      },
+      "revId": "099acdccab224276a55a7002363000a728ac5d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8ed2d37_ee818742",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-03T22:57:27Z",
+      "side": 1,
+      "message": "g_spdk_nvme_driver-\u003elock should guard only these? (I saw spdk_nvme_detach() as a reference.)",
+      "range": {
+        "startLine": 419,
+        "startChar": 0,
+        "endLine": 429,
+        "endChar": 33
+      },
+      "revId": "099acdccab224276a55a7002363000a728ac5d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a159b66d_e9265fbc",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 5
