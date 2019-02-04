@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "90bbe081_28f10aca",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-04T15:23:13Z",
+      "side": 1,
+      "message": "There are still some kernel versions with VFIO that doesn\u0027t support no-IOMMU. Can we check the enable_unsafe_noiommu_mode file directly? Otherwise we\u0027ll have a regression on those kernels.",
+      "range": {
+        "startLine": 174,
+        "startChar": 13,
+        "endLine": 174,
+        "endChar": 29
+      },
+      "revId": "ae2a913a7441a0435d6fb75efed0cae7f133462d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
