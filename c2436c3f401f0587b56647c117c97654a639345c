@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b55ff9e3_08f033a4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T18:41:10Z",
+      "side": 1,
+      "message": "Will we remove strip_size in a future release?  If so, we should just say it\u0027s deprecated, and not suggest that users use either (strip_size or strip_size_in_kb).",
+      "revId": "c2436c3f401f0587b56647c117c97654a639345c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
