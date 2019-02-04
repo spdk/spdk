@@ -16,6 +16,24 @@
       "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a457b88_fc3e44d8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-04T19:35:55Z",
+      "side": 1,
+      "message": "You\u0027re right Jim. It would probably be best to split this into two different conditionals and put the cmd and req portions under the two different conditionals.",
+      "parentUuid": "c04a61bd_778f6d7e",
+      "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
