@@ -1,0 +1,136 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3c9a781a_5c414117",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "This is not true anymore.",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 66
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a7db47f3_544fbbaf",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "Don\u0027t use globals.\n\nWhy is addr in a different notation than other variables?",
+      "range": {
+        "startLine": 22,
+        "startChar": 42,
+        "endLine": 22,
+        "endChar": 71
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff6aa95b_463f33ed",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "We should probably add a switch to chose config type (text, json) and error out for json saying that it\u0027s not supported yet.",
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0595283a_162bc4a1",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "Why do you pass $file? It\u0027s not needed anymore (you\u0027re printing to stdout). Also pass $addr, $name, $punits and $uuid.",
+      "range": {
+        "startLine": 43,
+        "startChar": 16,
+        "endLine": 43,
+        "endChar": 21
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c27e3d3_6b1db6f9",
+        "filename": "test/ftl/config/fio/randr.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "Why are these settable here, but not in other scripts? I think we need to have several different config files (e.g. one for random reads, one for 1 thread random writes, one for multithreaded random writes, etc.) that all have size, bs, io_size, etc. configurable from the script.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9d863b4_3a37103c",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T08:42:08Z",
+      "side": 1,
+      "message": "This cannot be hardcoded for all tests like that. We certainly don\u0027t want the par-patch (\u0027basic\u0027 suite) to run for 3200s. The way I see it is to have a section here or have a config file (e.g. in json) containing a list of test descriptions each consisting of: name of the test, base config file and a list of variables to be exported:\n\n[\n{ \"name\" : \"randw-verify\",\n  \"config\" : \"randw-j1.fio\",\n  \"vars\" : [ \n  \"FTL_TEST_IODEPTH\" : 1,\n  \"FTL_TEST_RUNTIME\" : 60\n   ]\n},\n...\n]",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 28
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
