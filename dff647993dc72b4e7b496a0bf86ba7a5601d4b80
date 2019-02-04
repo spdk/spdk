@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5b31dc30_d9962b2d",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 24,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-04T13:34:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "13e0a8f5_8d8fd4c7",
+      "range": {
+        "startLine": 24,
+        "startChar": 8,
+        "endLine": 24,
+        "endChar": 17
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3d308be8_e7e9bf3e",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 3
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "7b2a58af_f2caa8ce",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-04T13:34:15Z",
+      "side": 1,
+      "message": "I wanted to take into account spdk rpc exceptions.\nThese exceptions are marked with exit_status !\u003d 0.",
+      "parentUuid": "3d308be8_e7e9bf3e",
+      "range": {
+        "startLine": 25,
+        "startChar": 8,
+        "endLine": 31,
+        "endChar": 16
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cfde7663_30710f05",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 3
@@ -59,6 +107,30 @@
       "writtenOn": "2019-02-01T11:30:48Z",
       "side": 1,
       "message": "On example of constructing nvme bdev.\n\nUsing current master code (without your patch) I changed these lines to raise(msg). I also added a \"raise(e)\" to UINvmeBdev/ui_command_create(). This raises another exception in chain and makes failed oneliner spdkcli commands to print exception message and exit with rc\u003d1.\nexample oneliner:\nsudo ./scripts/spdkcli.py /bdevs/nvme create nvme0 pcie 1:1:1.1; echo $?\n\nThe downside is that when using interactive mode and doing the same command - spdkcli will crash; most likely because in this chain JSONRPCException is nowhere caught.\nPossible solutions:\na) further modify execute_command() here to catch JSONRPCException as well (ConfigNode.execute_command does not do that)\nb) find some other place to catch this exception\n\nI can prepare a RFC for this if you want to.",
+      "range": {
+        "startLine": 47,
+        "startChar": 12,
+        "endLine": 48,
+        "endChar": 20
+      },
+      "revId": "dff647993dc72b4e7b496a0bf86ba7a5601d4b80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "70400ef2_f1c14bb2",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-04T13:34:15Z",
+      "side": 1,
+      "message": "Should be correct now. I check if spdk rpc fails (exit status code equals to 100).",
+      "parentUuid": "cfde7663_30710f05",
       "range": {
         "startLine": 47,
         "startChar": 12,
