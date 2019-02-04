@@ -406,6 +406,27 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
 const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device metadata size.
+ *
+ * \param bdev Block device to query.
+ * \return Size of metadata for this bdev in bytes.
+ */
+uint32_t spdk_bdev_get_md_size(const struct spdk_bdev *bdev);
+
+/**
+ * Query whether metadata is interleaved with block data or semarated
+ * with block data.
+ *
+ * \param bdev Block device to query.
+ * \return true if metadata is interleaved with block data or separated
+ * with block data.
+ *
+ * Note that this function returns only true if there is metadata and
+ * is not valid if there is no metadata.
+ */
+bool spdk_bdev_get_md_setting(const struct spdk_bdev *bdev);
+
+/**
  * Get the most recently measured queue depth from a bdev.
  *
  * The reported queue depth is the aggregate of outstanding I/O

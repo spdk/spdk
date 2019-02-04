@@ -245,6 +245,11 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_string(w, "uuid", uuid_str);
 	}
 
+	if (spdk_bdev_get_md_size(bdev) != 0) {
+		spdk_json_write_named_uint32(w, "md_size", spdk_bdev_get_md_size(bdev));
+		spdk_json_write_named_bool(w, "md_setting", spdk_bdev_get_md_setting(bdev));
+	}
+
 	spdk_json_write_named_object_begin(w, "assigned_rate_limits");
 	spdk_bdev_get_qos_rate_limits(bdev, qos_limits);
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
