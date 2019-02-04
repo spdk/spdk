@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3f9d570_1f7e1277",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-04T17:41:18Z",
+      "side": 1,
+      "message": "semarated-\u003eseparated",
+      "revId": "1956e4c91e58925ef79bbcf3dbb88dc0b9cd980f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
