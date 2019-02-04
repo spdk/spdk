@@ -131,7 +131,7 @@ _dif_type_is_valid(enum spdk_dif_type dif_type, uint32_t dif_flags)
 	case SPDK_DIF_DISABLE:
 		break;
 	case SPDK_DIF_TYPE3:
-		if (dif_flags & SPDK_DIF_REFTAG_CHECK) {
+		if (dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
 			SPDK_ERRLOG("Reference Tag should not be checked for Type 3\n");
 			return false;
 		}
@@ -227,15 +227,15 @@ _dif_generate(void *_dif, uint16_t guard, uint32_t offset_blocks,
 	struct spdk_dif *dif = _dif;
 	uint32_t ref_tag;
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		to_be16(&dif->guard, guard);
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_APPTAG_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK) {
 		to_be16(&dif->app_tag, ctx->app_tag);
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_REFTAG_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
 		/* For type 1 and 2, the reference tag is incremented for each
 		 * subsequent logical block. For type 3, the reference tag
 		 * remains the same as the initial reference tag.
@@ -265,7 +265,7 @@ dif_generate(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	while (offset_blocks < num_blocks) {
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, ctx->guard_interval);
 		}
 
@@ -294,7 +294,7 @@ _dif_generate_split(struct _iov_iter *iter, uint32_t offset_blocks,
 		if (offset_in_block < ctx->guard_interval) {
 			buf_len = spdk_min(buf_len, ctx->guard_interval - offset_in_block);
 
-			if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 				/* Compute CRC over split logical block data. */
 				guard = spdk_crc16_t10dif(guard, buf, buf_len);
 			}
@@ -412,7 +412,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		ref_tag = ctx->init_ref_tag;
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		/* Compare the DIF Guard field to the CRC computed over the logical
 		 * block data.
 		 */
@@ -427,7 +427,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		}
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_APPTAG_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_APPTAG_CHECK) {
 		/* Compare unmasked bits in the DIF Application Tag field to the
 		 * passed Application Tag.
 		 */
@@ -442,7 +442,7 @@ _dif_verify(void *_dif, uint16_t guard, uint32_t offset_blocks,
 		}
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_REFTAG_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_REFTAG_CHECK) {
 		switch (ctx->dif_type) {
 		case SPDK_DIF_TYPE1:
 		case SPDK_DIF_TYPE2:
@@ -490,7 +490,7 @@ dif_verify(struct iovec *iovs, int iovcnt, uint32_t num_blocks,
 	while (offset_blocks < num_blocks) {
 		_iov_iter_get_buf(&iter, &buf, NULL);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, buf, ctx->guard_interval);
 		}
 
@@ -524,7 +524,7 @@ _dif_verify_split(struct _iov_iter *iter, uint32_t offset_blocks,
 		if (offset_in_block < ctx->guard_interval) {
 			buf_len = spdk_min(buf_len, ctx->guard_interval - offset_in_block);
 
-			if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+			if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 				/* Compute CRC over split logical block data. */
 				guard = spdk_crc16_t10dif(guard, buf, buf_len);
 			}
@@ -609,7 +609,7 @@ dif_generate_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		_iov_iter_get_buf(&dst_iter, &dst, NULL);
 
 		guard = 0;
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif_copy(0, dst, src, data_block_size);
 			guard = spdk_crc16_t10dif(guard, dst + data_block_size,
 						  ctx->guard_interval - data_block_size);
@@ -647,7 +647,7 @@ _dif_generate_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 		_iov_iter_get_buf(src_iter, &src, &src_len);
 		src_len = spdk_min(src_len, data_block_size - offset_in_block);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif_copy(guard, dst + offset_in_block,
 						       src, src_len);
 		} else {
@@ -658,7 +658,7 @@ _dif_generate_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 		offset_in_block += src_len;
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		guard = spdk_crc16_t10dif(guard, dst + data_block_size,
 					  ctx->guard_interval - data_block_size);
 	}
@@ -735,7 +735,7 @@ dif_verify_copy(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov,
 		_iov_iter_get_buf(&dst_iter, &dst, NULL);
 
 		guard = 0;
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif_copy(0, dst, src, data_block_size);
 			guard = spdk_crc16_t10dif(guard, src + data_block_size,
 						  ctx->guard_interval - data_block_size);
@@ -779,7 +779,7 @@ _dif_verify_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 		_iov_iter_get_buf(dst_iter, &dst, &dst_len);
 		dst_len = spdk_min(dst_len, data_block_size - offset_in_block);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif_copy(guard, dst,
 						       src + offset_in_block, dst_len);
 		} else {
@@ -790,7 +790,7 @@ _dif_verify_copy_split(struct _iov_iter *src_iter, struct _iov_iter *dst_iter,
 		offset_in_block += dst_len;
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		guard = spdk_crc16_t10dif(guard, src + data_block_size,
 					  ctx->guard_interval - data_block_size);
 	}
@@ -1014,7 +1014,7 @@ dix_generate(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
 
 		guard = 0;
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, data_buf, ctx->block_size);
 			guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 		}
@@ -1044,7 +1044,7 @@ _dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
 		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(guard, data_buf, data_buf_len);
 		}
 
@@ -1052,7 +1052,7 @@ _dix_generate_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 		offset_in_block += data_buf_len;
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 	}
 
@@ -1122,7 +1122,7 @@ dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 		_iov_iter_get_buf(&md_iter, &md_buf, NULL);
 
 		guard = 0;
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(0, data_buf, ctx->block_size);
 			guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 		}
@@ -1158,7 +1158,7 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 		_iov_iter_get_buf(data_iter, &data_buf, &data_buf_len);
 		data_buf_len = spdk_min(data_buf_len, ctx->block_size - offset_in_block);
 
-		if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 			guard = spdk_crc16_t10dif(guard, data_buf, data_buf_len);
 		}
 
@@ -1166,7 +1166,7 @@ _dix_verify_split(struct _iov_iter *data_iter, struct _iov_iter *md_iter,
 		offset_in_block += data_buf_len;
 	}
 
-	if (ctx->dif_flags & SPDK_DIF_GUARD_CHECK) {
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
 		guard = spdk_crc16_t10dif(guard, md_buf, ctx->guard_interval);
 	}
 

@@ -37,9 +37,9 @@
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 
-#define SPDK_DIF_REFTAG_CHECK	(1U << 26)
-#define SPDK_DIF_APPTAG_CHECK	(1U << 27)
-#define SPDK_DIF_GUARD_CHECK	(1U << 28)
+#define SPDK_DIF_FLAGS_REFTAG_CHECK	(1U << 26)
+#define SPDK_DIF_FLAGS_APPTAG_CHECK	(1U << 27)
+#define SPDK_DIF_FLAGS_GUARD_CHECK	(1U << 28)
 
 #define SPDK_DIF_REFTAG_ERROR	0x1
 #define SPDK_DIF_APPTAG_ERROR	0x2
