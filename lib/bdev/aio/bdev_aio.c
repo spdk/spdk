@@ -48,12 +48,6 @@
 
 #include <libaio.h>
 
-struct bdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	TAILQ_ENTRY(bdev_aio_task)	link;
-};
-
 struct bdev_aio_io_channel {
 	io_context_t				io_ctx;
 	uint64_t				io_inflight;
@@ -65,6 +59,13 @@ struct bdev_aio_group_channel {
 	struct spdk_poller			*poller;
 
 	TAILQ_HEAD(, bdev_aio_io_channel)	channels;
+};
+
+struct bdev_aio_task {
+	struct iocb			iocb;
+	uint64_t			len;
+	struct bdev_aio_io_channel	*ch;
+	TAILQ_ENTRY(bdev_aio_task)	link;
 };
 
 struct file_disk {
@@ -157,6 +158,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
+	aio_task->ch = aio_ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
@@ -187,6 +189,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = len;
+	aio_task->ch = aio_ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
