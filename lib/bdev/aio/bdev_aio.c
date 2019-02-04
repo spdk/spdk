@@ -210,24 +210,6 @@ bdev_aio_destruct(void *ctx)
 }
 
 static int
-bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
-{
-	ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-	if (ch->efd == -1) {
-		SPDK_ERRLOG("Cannot create efd\n");
-		return -1;
-	}
-
-	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
-		close(ch->efd);
-		SPDK_ERRLOG("async I/O context setup failure\n");
-		return -1;
-	}
-
-	return 0;
-}
-
-static int
 bdev_aio_group_poll(void *arg)
 {
 	struct bdev_aio_group_channel *group_ch = arg;
@@ -409,7 +391,15 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 	struct bdev_aio_group_channel *group_ch_ctx;
 	struct epoll_event epevent;
 
-	if (bdev_aio_initialize_io_channel(ch) != 0) {
+	ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
+	if (ch->efd == -1) {
+		SPDK_ERRLOG("Cannot create efd\n");
+		return -1;
+	}
+
+	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
+		close(ch->efd);
+		SPDK_ERRLOG("async I/O context setup failure\n");
 		return -1;
 	}
 
