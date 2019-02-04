@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2ca1779e_c341b391",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-04T17:55:50Z",
+      "side": 1,
+      "message": "OK with that but have in mind that UNIX socket path is only 108 chars long and we have already hit this path-to-long-that-gives-wrong-error message issue.",
+      "range": {
+        "startLine": 22,
+        "startChar": 15,
+        "endLine": 22,
+        "endChar": 36
+      },
+      "revId": "cb9d759251512a9df397b9ca4d75692717e45fa8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
