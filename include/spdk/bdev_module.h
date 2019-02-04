@@ -292,6 +292,17 @@ struct spdk_bdev {
 	 */
 	struct spdk_uuid uuid;
 
+	/** Size in bytes of a metadata for the backend */
+	uint32_t md_len;
+
+	/**
+	 * Specify metadata location and set to true if metadata is interleaved
+	 * with block data or false if metadata is separated with block data.
+	 *
+	 * Note that this field is valid only if there is metadata.
+	 */
+	bool md_interleave;
+
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
