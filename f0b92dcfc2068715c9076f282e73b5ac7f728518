@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6dadac1_039c0b3e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T22:54:22Z",
+      "side": 1,
+      "message": "I\u0027m not following this commit message.  I don\u0027t see where _nvmf_rdma_qpair_disconnect \"sees that qpair-\u003egroup \u003d\u003d NULL\".  I see where _nvmf_rdma_qpair_disconnect calls spdk_nvmf_qpair_disconnect, and that spdk_nvmf_qpair_disconnect has an assert that deferences the qpair-\u003egroup.  But I don\u0027t see the other group checks.  Am I missing something?\n\nIn general though, this change seems non intuitive.  If we\u0027ve removed the qpair from the group\u0027s qpairs list, why should the qpair still point to the group?  I understand there may be a reason to do it to get the code to work, but I\u0027m concerned that this nuance will be lost on future readers of the code.",
+      "revId": "f0b92dcfc2068715c9076f282e73b5ac7f728518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
