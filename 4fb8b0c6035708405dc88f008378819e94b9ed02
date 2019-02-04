@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3a39114_fc064fb5",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T18:53:57Z",
+      "side": 1,
+      "message": "I\u0027m OK with this, but we should probably then add spdk-isal.log to the .gitignore file.\n\n/tmp permissions are normally 1777 though.  Do you have a system where /tmp is not writable by all?",
+      "revId": "4fb8b0c6035708405dc88f008378819e94b9ed02",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
