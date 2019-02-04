@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "63daac98_0dac05e8",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:48:18Z",
+      "side": 1,
+      "message": "could we return enum spdk_dif_type here, or do you think it\u0027s best to just return uint32_t?",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59807d6b_43c0e8e0",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 453,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:48:18Z",
+      "side": 1,
+      "message": "I\u0027m wondering if we should make an enum out of the SPDK_DIF_*_CHECK flags, so that we could just refer to that enum here instead?",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5fea6c89_5c5b38ca",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -16,6 +50,41 @@
       "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "132d2bad_833582d5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2347,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:48:18Z",
+      "side": 1,
+      "message": "maybe something like spdk_bdev_is_dif_before_md?",
+      "parentUuid": "5fea6c89_5c5b38ca",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "995b4d02_1d6f7d78",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2355,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:48:18Z",
+      "side": 1,
+      "message": "get_dif_check_flags (lines 2354 and 2355)",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
