@@ -66,8 +66,11 @@ struct bdev_aio_io_channel {
 };
 
 struct bdev_aio_group_channel {
-	struct spdk_poller	*poller;
-	int			epfd;
+	struct spdk_poller			*poller;
+
+	TAILQ_HEAD(, bdev_aio_io_channel)	channels;
+
+	int					epfd;
 };
 
 struct file_disk {
@@ -432,6 +435,8 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 	ch->group_ch = spdk_get_io_channel(&aio_if);
 	group_ch_ctx = spdk_io_channel_get_ctx(ch->group_ch);
 
+	TAILQ_INSERT_TAIL(&group_ch_ctx->channels, ch, link);
+
 	epevent.events = EPOLLIN | EPOLLET;
 	epevent.data.ptr = ch;
 	if (epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_ADD, ch->efd, &epevent)) {
@@ -453,6 +458,7 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 
 	group_ch_ctx = spdk_io_channel_get_ctx(io_channel->group_ch);
 	epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_DEL, io_channel->efd, &event);
+	TAILQ_REMOVE(&group_ch_ctx->channels, io_channel, link);
 	spdk_put_io_channel(io_channel->group_ch);
 	close(io_channel->efd);
 	io_destroy(io_channel->io_ctx);
@@ -525,6 +531,8 @@ static int
 bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
+
+	TAILQ_INIT(&ch->channels);
 
 	ch->epfd = epoll_create1(0);
 	if (ch->epfd == -1) {
