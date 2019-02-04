@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "50da044e_3eeabff1",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T23:02:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d3f9d570_1f7e1277",
+      "revId": "1956e4c91e58925ef79bbcf3dbb88dc0b9cd980f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ace3bc87_79af7f02",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-04T21:41:45Z",
       "side": 1,
       "message": "I think overloading the return value here might be confusing.  For example, \u0027false\u0027 could mean separate metadata buffer *or* no metadata at all.\n\nMaybe just:  spdk_bdev_is_md_interleaved?\n\nI think this makes the API nicer - user can first check of get_md_size \u003e 0, and then just call is_md_interleaved().",
+      "revId": "1956e4c91e58925ef79bbcf3dbb88dc0b9cd980f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28ef983a_d89cf2d5",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 427,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T23:02:10Z",
+      "side": 1,
+      "message": "Thank you Jim. I was trapped in nvme-format command of NVMe CLI. I knew that it have used metadata setting for the same purpose yesterday. I\u0027m fine if we can take your suggestion.",
+      "parentUuid": "ace3bc87_79af7f02",
       "revId": "1956e4c91e58925ef79bbcf3dbb88dc0b9cd980f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
