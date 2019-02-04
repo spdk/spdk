@@ -37,8 +37,6 @@
 #include "spdk/stdinc.h"
 
 #include <libaio.h>
-#include <sys/epoll.h>
-#include <sys/eventfd.h>
 
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
