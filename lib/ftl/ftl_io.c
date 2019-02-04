@@ -200,7 +200,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->lbk_cnt = opts->iov_cnt * opts->req_size;
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
-	io->md = io->md;
+	io->md = opts->md;
 
 	if (ftl_io_init_iovec(io, opts->data, opts->iov_cnt, opts->req_size)) {
 		if (!opts->io) {
