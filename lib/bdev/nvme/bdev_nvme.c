@@ -75,11 +75,14 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** Saved status for admin passthru completion event. */
+	/** Saved status for admin passthru completion event or PI error verification. */
 	struct spdk_nvme_cpl cpl;
 
 	/** Originating thread */
 	struct spdk_thread *orig_thread;
+
+	/** Originating channel (used in checked read) */
+	struct spdk_io_channel *orig_ch;
 };
 
 struct nvme_probe_ctx {
@@ -114,9 +117,11 @@ static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ct
 static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
 static void bdev_nvme_library_fini(void);
+static void bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl);
 static int bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			   struct nvme_bdev_io *bio,
-			   struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba);
+			   struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba,
+			   spdk_nvme_cmd_cb cmd_cb, uint32_t io_flags);
 static int bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba);
@@ -366,15 +371,18 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 static void
 bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
+	struct nvme_bdev *nbdev = bdev_io->bdev->ctxt;
 	int ret;
 
-	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
+	ret = bdev_nvme_readv(nbdev,
 			      ch,
 			      (struct nvme_bdev_io *)bdev_io->driver_ctx,
 			      bdev_io->u.bdev.iovs,
 			      bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.num_blocks,
-			      bdev_io->u.bdev.offset_blocks);
+			      bdev_io->u.bdev.offset_blocks,
+			      bdev_nvme_readv_done,
+			      nbdev->io_flags);
 
 	if (spdk_likely(ret == 0)) {
 		return;
@@ -1594,9 +1602,47 @@ bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+bdev_nvme_checked_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	if (spdk_nvme_cpl_is_success(cpl)) {
+		SPDK_ERRLOG("checked writev completed successfully\n");
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
+
+	spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.status.sct,
+					  bio->cpl.status.sc);
+}
+
+static void
 bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	int ret;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_ERRLOG("readv completed with error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+
+		/* Execute checked read regardless of error type. */
+		bio->cpl = *cpl;
+
+		ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
+				      bio->orig_ch,
+				      bio,
+				      bdev_io->u.bdev.iovs,
+				      bdev_io->u.bdev.iovcnt,
+				      bdev_io->u.bdev.num_blocks,
+				      bdev_io->u.bdev.offset_blocks,
+				      bdev_nvme_checked_readv_done,
+				      0);
+		if (ret == 0) {
+			return;
+		}
+	}
 
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
 }
@@ -1683,7 +1729,8 @@ bdev_nvme_queued_next_sge(void *ref, void **address, uint32_t *length)
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		struct nvme_bdev_io *bio,
-		struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba)
+		struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba,
+		spdk_nvme_cmd_cb cmd_cb, uint32_t io_flags)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 
@@ -1694,9 +1741,10 @@ bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	bio->iovcnt = iovcnt;
 	bio->iovpos = 0;
 	bio->iov_offset = 0;
+	bio->orig_ch = ch;
 
 	return spdk_nvme_ns_cmd_readv(nbdev->ns, nvme_ch->qpair, lba, lba_count,
-				      bdev_nvme_readv_done, bio, 0,
+				      cmd_cb, bio, io_flags,
 				      bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge);
 }
 
