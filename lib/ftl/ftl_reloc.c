@@ -173,6 +173,7 @@ ftl_reloc_read_lba_map_cb(void *arg, int status)
 
 	assert(status == 0);
 	spdk_dma_free(breloc->md_buf);
+	ftl_io_free(io);
 	_ftl_reloc_prep(breloc);
 }
 
