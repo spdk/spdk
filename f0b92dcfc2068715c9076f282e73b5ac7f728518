@@ -16,6 +16,24 @@
       "revId": "f0b92dcfc2068715c9076f282e73b5ac7f728518",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a576fc7b_3cf4aed4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-04T23:47:52Z",
+      "side": 1,
+      "message": "Sorry. I was trying to be brief and I think that it just made everything confusing. Also I did mix up two of the function names here. I have updated the commit message to fully detail the issue that I ran into while testing x722 NICs.",
+      "parentUuid": "c6dadac1_039c0b3e",
+      "revId": "f0b92dcfc2068715c9076f282e73b5ac7f728518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
