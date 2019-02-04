@@ -46,6 +46,9 @@
 
 #include "spdk_internal/log.h"
 
+#include <sys/epoll.h>
+#include <sys/eventfd.h>
+
 static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
 static void aio_free_disk(struct file_disk *fdisk);
