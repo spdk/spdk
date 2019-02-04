@@ -74,6 +74,9 @@ struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
+/* "nvmf" affinity group */
+static struct spdk_cpuset *g_tgt_affinity;
+
 /* Round-Robin/IP-based tracking of cores for qpair assignment */
 static uint32_t g_tgt_core;
 
@@ -126,12 +129,25 @@ spdk_nvmf_get_core_rr(void)
 	uint32_t core;
 
 	core = g_tgt_core;
-	g_tgt_core = spdk_env_get_next_core(core);
-	if (g_tgt_core == UINT32_MAX) {
-		g_tgt_core = spdk_env_get_first_core();
-	}
+	do {
+		g_tgt_core = spdk_env_get_next_core(g_tgt_core);
+		if (g_tgt_core == UINT32_MAX) {
+			g_tgt_core = spdk_env_get_first_core();
+		}
+	} while (!spdk_cpuset_get_cpu(g_tgt_affinity, g_tgt_core));
 
 	return core;
+}
+
+static uint32_t
+spdk_nvmf_get_first_core_rr(void)
+{
+	g_tgt_core = spdk_env_get_first_core();
+	while (!spdk_cpuset_get_cpu(g_tgt_affinity, g_tgt_core)) {
+		g_tgt_core = spdk_env_get_next_core(g_tgt_core);
+	}
+
+	return g_tgt_core;
 }
 
 static void
@@ -355,6 +371,66 @@ nvmf_tgt_parse_conf_start(void *ctx)
 	}
 }
 
+struct call_thread {
+	struct spdk_thread *orig_thread;
+	struct spdk_cpuset *affinity;
+	uint32_t cpu;
+	void *ctx;
+};
+
+static void
+_create_poll_group_on_thread(void *ctx)
+{
+	struct call_thread *ct = ctx;
+	struct spdk_thread *thread;
+
+	nvmf_tgt_create_poll_group(ct->ctx);
+
+	for (ct->cpu++; ct->cpu < SPDK_CPUSET_SIZE &&
+	     spdk_cpuset_get_cpu(g_tgt_affinity, ct->cpu); ct->cpu++);
+
+	if (ct->cpu < SPDK_CPUSET_SIZE) {
+		struct spdk_cpuset *cpuset = spdk_cpuset_alloc();
+		spdk_cpuset_set_cpu(cpuset, ct->cpu, true);
+		thread = spdk_thread_create("nvmf_thread", cpuset);
+		spdk_thread_send_msg(thread, _create_poll_group_on_thread, ct);
+	} else {
+		spdk_thread_send_msg(ct->orig_thread, nvmf_tgt_create_poll_group_done, ct->ctx);
+		free(ctx);
+	}
+}
+
+static void
+_create_poll_group_on_all_threads(void)
+{
+	struct call_thread *ct;
+	struct spdk_thread *thread;
+
+	ct = calloc(1, sizeof(*ct));
+	if (!ct) {
+		SPDK_ERRLOG("Unable to perform thread iteration\n");
+		return;
+	}
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		free(ct);
+		return;
+	}
+	ct->orig_thread = thread;
+
+	for (ct->cpu = 0; ct->cpu < SPDK_CPUSET_SIZE &&
+	     spdk_cpuset_get_cpu(g_tgt_affinity, ct->cpu); ct->cpu++);
+
+	if (ct->cpu < SPDK_CPUSET_SIZE) {
+		struct spdk_cpuset *cpuset = spdk_cpuset_alloc();
+		spdk_cpuset_set_cpu(cpuset, ct->cpu, true);
+		thread = spdk_thread_create("nvmf_thread", cpuset);
+		spdk_thread_send_msg(thread, _create_poll_group_on_thread, ct);
+	}
+}
+
 static void
 nvmf_tgt_advance_state(void)
 {
@@ -379,7 +455,8 @@ nvmf_tgt_advance_state(void)
 				break;
 			}
 
-			g_tgt_core = spdk_env_get_first_core();
+			/* Find first available core */
+			spdk_nvmf_get_first_core_rr();
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:
@@ -390,9 +467,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		case NVMF_TGT_INIT_CREATE_POLL_GROUPS:
 			/* Send a message to each thread and create a poll group */
-			spdk_for_each_thread(nvmf_tgt_create_poll_group,
-					     NULL,
-					     nvmf_tgt_create_poll_group_done);
+			_create_poll_group_on_all_threads();
 			break;
 		case NVMF_TGT_INIT_START_SUBSYSTEMS: {
 			struct spdk_nvmf_subsystem *subsystem;
@@ -428,7 +503,7 @@ nvmf_tgt_advance_state(void)
 			break;
 		}
 		case NVMF_TGT_FINI_DESTROY_POLL_GROUPS:
-			/* Send a message to each thread and destroy the poll group */
+			/* We may use here for each poll group instead */
 			spdk_for_each_thread(nvmf_tgt_destroy_poll_group,
 					     NULL,
 					     nvmf_tgt_destroy_poll_group_done);
@@ -455,6 +530,7 @@ static void
 spdk_nvmf_subsystem_init(void)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
+	g_tgt_affinity = spdk_app_get_affinity_group("nvmf");
 	nvmf_tgt_advance_state();
 }
 
