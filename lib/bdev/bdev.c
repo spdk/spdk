@@ -1638,7 +1638,7 @@ _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	_spdk_bdev_io_split_with_payload(bdev_io);
 }
 
-static void
+static inline void
 _spdk_bdev_io_submit(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
