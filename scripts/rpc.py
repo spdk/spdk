@@ -268,6 +268,8 @@ if __name__ == "__main__":
                    help='the number of attempts per I/O when an I/O fails', type=int)
     p.add_argument('-p', '--nvme-adminq-poll-period-us',
                    help='How often the admin queue is polled for asynchronous events', type=int)
+    p.add_argument('-c', '--enable-prchk',
+                   help='Enable checking of PI fields in I/O processing.', action='store_true')
     p.set_defaults(func=set_bdev_nvme_options)
 
     def set_bdev_nvme_hotplug(args):

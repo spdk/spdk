@@ -100,6 +100,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.timeout_us = 0,
 	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
 	.nvme_adminq_poll_period_us = 1000000ULL,
+	.enable_prchk = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -760,13 +761,11 @@ bdev_nvme_get_dif_check_flags(void *ctx)
 		dif_check_flags |= SPDK_DIF_REFTAG_CHECK;
 	}
 
-	if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
-		dif_check_flags |= SPDK_DIF_APPTAG_CHECK;
-	}
-
 	if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
 		dif_check_flags |= SPDK_DIF_GUARD_CHECK;
 	}
+
+	/* TODO: Support application tag */
 
 	return dif_check_flags;
 }
@@ -832,6 +831,11 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	}
 
 	bdev->io_flags = 0;
+	if (g_opts.enable_prchk) {
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+		/* TODO: App. tag check */
+	}
 
 	bdev->disk.ctxt = bdev;
 	bdev->disk.fn_table = &nvmelib_fn_table;
