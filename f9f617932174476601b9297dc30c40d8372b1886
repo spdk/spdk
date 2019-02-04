@@ -16,6 +16,24 @@
       "revId": "f9f617932174476601b9297dc30c40d8372b1886",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0df3e955_96e33322",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T22:41:43Z",
+      "side": 1,
+      "message": "base_bdev_reset_waiting didn\u0027t sit well on me and I considered if we can follow the implementation in bdev.c by using outstanding.\n\nHowever current Xiaodong\u0027s logic is nicer when I read again, and changing the name to base_bdev_reset_expected as Jim says will make me clear.\n\nPlease don\u0027t care my last comment.",
+      "parentUuid": "09f0baf9_26c63c02",
+      "revId": "f9f617932174476601b9297dc30c40d8372b1886",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
