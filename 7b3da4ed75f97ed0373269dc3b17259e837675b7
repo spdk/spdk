@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cebee58_ef632855",
+        "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-04T20:24:35Z",
+      "side": 1,
+      "message": "I think you likely need to wait for nvme0n1 to go away here before proceeding. Or you can write this test using nvme/perf and just run for 1 second each time.",
+      "revId": "7b3da4ed75f97ed0373269dc3b17259e837675b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
