@@ -16,6 +16,24 @@
       "revId": "deea5a5e59d4fdd0848b40e0d771ff57fe8a4b3e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d88745af_db998105",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-04T16:50:17Z",
+      "side": 1,
+      "message": "I\u0027m 1000% sure uploaded version with changed comment. I don\u0027t know what is wrong with gerrithub...",
+      "parentUuid": "294572d8_3940c852",
+      "revId": "deea5a5e59d4fdd0848b40e0d771ff57fe8a4b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
