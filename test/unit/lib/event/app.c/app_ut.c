@@ -62,6 +62,25 @@ unittest_parse_args(int ch, char *arg)
 	return 0;
 }
 
+static int
+clean_affinity_groups(void)
+{
+	struct spdk_app_affinity_group *affinity_group;
+	struct spdk_app_affinity_group *tmp;
+
+	TAILQ_FOREACH_SAFE(affinity_group, &g_app_affinity_groups, link, tmp) {
+		TAILQ_REMOVE(&g_app_affinity_groups, affinity_group, link);
+		spdk_cpuset_free(affinity_group->cpuset);
+		free(affinity_group->name);
+		free(affinity_group);
+	}
+
+	spdk_cpuset_free(g_app_free_core_mask);
+	g_app_free_core_mask = NULL;
+
+	return 0;
+}
+
 static void
 clean_opts(struct spdk_app_opts *opts)
 {
@@ -120,6 +139,7 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Test invalid short option Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "", NULL, unittest_parse_args,
@@ -127,6 +147,7 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Test valid global and local options. Expected result: PASS */
 	rc = spdk_app_parse_args(test_argc, argv_added_short_opt, &opts, "z", NULL, unittest_parse_args,
@@ -134,6 +155,7 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Test invalid long option Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, argv_added_long_opt, &opts, "", NULL, unittest_parse_args,
@@ -141,6 +163,7 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Test valid global and local options. Expected result: PASS */
 	my_options[0].name = "test-long-opt";
@@ -149,6 +172,7 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Test overlapping global and local options. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, valid_argv, &opts, SPDK_APP_GETOPT_STRING, NULL,
@@ -156,12 +180,14 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Specify -B and -W options at the same time. Expected result: FAIL */
 	rc = spdk_app_parse_args(test_argc, invalid_argv_BW, &opts, "", NULL, unittest_parse_args, NULL);
 	SPDK_CU_ASSERT_FATAL(rc == SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
 
 	/* Omit necessary argument to option */
 	rc = spdk_app_parse_args(test_argc, invalid_argv_missing_option, &opts, "", NULL,
@@ -169,6 +195,70 @@ test_spdk_app_parse_args(void)
 	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_FAIL);
 	optind = 1;
 	clean_opts(&opts);
+	clean_affinity_groups();
+}
+
+static int
+cpuset_check_range(struct spdk_cpuset *core_mask, uint32_t min, uint32_t max, bool isset)
+{
+	uint32_t core;
+	for (core = min; core <= max; core++) {
+		if (isset != spdk_cpuset_get_cpu(core_mask, core)) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+static void
+test_spdk_app_affinity_groups(void)
+{
+	struct spdk_cpuset *group;
+	spdk_app_parse_args_rvals_t rc;
+	struct spdk_app_opts opts = {};
+	char *valid_argv[2] = {"app_ut",
+			       "--cpu-affinity-groups=group1@1;group2@[1-3];group3@0xF0"
+			      };
+
+	/* Test valid arguments. Expected result: PASS */
+	rc = spdk_app_parse_args(2, valid_argv, &opts, "", NULL, unittest_parse_args, NULL);
+	CU_ASSERT_EQUAL(rc, SPDK_APP_PARSE_ARGS_SUCCESS);
+	optind = 1;
+
+	/* group1 - core 0 set */
+	group = spdk_app_get_affinity_group("group1");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 0, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 1, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group2 - core 1-3 set */
+	group = spdk_app_get_affinity_group("group2");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 0, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 1, 3, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 4, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group3 - core 4-7 set */
+	group = spdk_app_get_affinity_group("group3");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 3, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 4, 7, true) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, false) == 0);
+
+	/* group_not_defined */
+	group = spdk_app_get_affinity_group("group_not_defined");
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 7, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, true) == 0);
+
+	/* get free cores */
+	group = spdk_app_get_free_core_mask();
+	SPDK_CU_ASSERT_FATAL(group != NULL);
+	CU_ASSERT(cpuset_check_range(group, 0, 7, false) == 0);
+	CU_ASSERT(cpuset_check_range(group, 8, SPDK_CPUSET_SIZE - 1, true) == 0);
+
+	clean_opts(&opts);
+	clean_affinity_groups();
 }
 
 int
@@ -189,7 +279,9 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "test_spdk_app_parse_args",
-			    test_spdk_app_parse_args) == NULL
+			    test_spdk_app_parse_args) == NULL ||
+		CU_add_test(suite, "test_spdk_app_affinity_groups",
+			    test_spdk_app_affinity_groups) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
