@@ -49,7 +49,6 @@
 #include <libaio.h>
 
 struct bdev_aio_io_channel {
-	io_context_t				io_ctx;
 	uint64_t				io_inflight;
 	struct bdev_aio_group_channel		*group_ch;
 	TAILQ_ENTRY(bdev_aio_io_channel)	link;
@@ -57,6 +56,8 @@ struct bdev_aio_io_channel {
 
 struct bdev_aio_group_channel {
 	struct spdk_poller			*poller;
+
+	io_context_t				io_ctx;
 
 	TAILQ_HEAD(, bdev_aio_io_channel)	channels;
 };
@@ -163,7 +164,7 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
 
-	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->group_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
@@ -194,7 +195,7 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
 
-	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->group_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
@@ -237,8 +238,7 @@ static int
 bdev_aio_group_poll(void *arg)
 {
 	struct bdev_aio_group_channel *group_ch = arg;
-	struct bdev_aio_io_channel *ch, *tch;
-	int nr, i, total_nr = 0;
+	int nr, i = 0;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
 	struct timespec timeout;
@@ -247,30 +247,26 @@ bdev_aio_group_poll(void *arg)
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	TAILQ_FOREACH_SAFE(ch, &group_ch->channels, link, tch) {
-		nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
-				  events, &timeout);
+	nr = io_getevents(group_ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
+			  events, &timeout);
 
-		if (nr < 0) {
-			SPDK_ERRLOG("Returned %d on bdev_aio_io_channel %p\n", nr, ch);
-			continue;
-		}
-
-		total_nr += nr;
-		for (i = 0; i < nr; i++) {
-			aio_task = events[i].data;
-			if (events[i].res != aio_task->len) {
-				status = SPDK_BDEV_IO_STATUS_FAILED;
-			} else {
-				status = SPDK_BDEV_IO_STATUS_SUCCESS;
-			}
-
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
-			ch->io_inflight--;
-		}
+	if (nr < 0) {
+		return -1;
 	}
 
-	return total_nr;
+	for (i = 0; i < nr; i++) {
+		aio_task = events[i].data;
+		if (events[i].res != aio_task->len) {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+		} else {
+			status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		}
+
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+		aio_task->ch->io_inflight--;
+	}
+
+	return nr;
 }
 
 static void
@@ -406,12 +402,8 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *ch = ctx_buf;
 
-	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
-		SPDK_ERRLOG("async I/O context setup failure\n");
-		return -1;
-	}
-
 	ch->group_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(&aio_if));
+
 	TAILQ_INSERT_TAIL(&ch->group_ch->channels, ch, link);
 
 	return 0;
@@ -424,7 +416,6 @@ bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 
 	TAILQ_REMOVE(&ch->group_ch->channels, ch, link);
 	spdk_put_io_channel(spdk_io_channel_from_ctx(ch->group_ch));
-	io_destroy(ch->io_ctx);
 }
 
 static struct spdk_io_channel *
@@ -496,6 +487,11 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 
 	TAILQ_INIT(&ch->channels);
 
+	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
+		SPDK_ERRLOG("async I/O context setup failure\n");
+		return -1;
+	}
+
 	ch->poller = spdk_poller_register(bdev_aio_group_poll, ch, 0);
 	return 0;
 }
@@ -504,6 +500,8 @@ static void
 bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
+
+	io_destroy(ch->io_ctx);
 
 	spdk_poller_unregister(&ch->poller);
 }
