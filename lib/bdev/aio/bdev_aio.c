@@ -65,6 +65,11 @@ struct bdev_aio_io_channel {
 	int					efd;
 };
 
+struct bdev_aio_group_channel {
+	struct spdk_poller	*poller;
+	int			epfd;
+};
+
 struct file_disk {
 	struct bdev_aio_task	*reset_task;
 	struct spdk_poller	*reset_retry_timer;
@@ -96,11 +101,6 @@ static struct spdk_bdev_module aio_if = {
 	.module_fini	= bdev_aio_fini,
 	.config_text	= bdev_aio_get_spdk_running_config,
 	.get_ctx_size	= bdev_aio_get_ctx_size,
-};
-
-struct bdev_aio_group_channel {
-	struct spdk_poller	*poller;
-	int			epfd;
 };
 
 SPDK_BDEV_MODULE_REGISTER(&aio_if)
