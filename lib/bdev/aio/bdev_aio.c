@@ -51,7 +51,7 @@
 struct bdev_aio_io_channel {
 	io_context_t				io_ctx;
 	uint64_t				io_inflight;
-	struct spdk_io_channel			*group_ch;
+	struct bdev_aio_group_channel		*group_ch;
 	TAILQ_ENTRY(bdev_aio_io_channel)	link;
 };
 
@@ -405,17 +405,14 @@ static int
 bdev_aio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *ch = ctx_buf;
-	struct bdev_aio_group_channel *group_ch_ctx;
 
 	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
 		SPDK_ERRLOG("async I/O context setup failure\n");
 		return -1;
 	}
 
-	ch->group_ch = spdk_get_io_channel(&aio_if);
-	group_ch_ctx = spdk_io_channel_get_ctx(ch->group_ch);
-
-	TAILQ_INSERT_TAIL(&group_ch_ctx->channels, ch, link);
+	ch->group_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(&aio_if));
+	TAILQ_INSERT_TAIL(&ch->group_ch->channels, ch, link);
 
 	return 0;
 }
@@ -423,14 +420,11 @@ bdev_aio_create_cb(void *io_device, void *ctx_buf)
 static void
 bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_aio_io_channel *io_channel = ctx_buf;
-	struct bdev_aio_group_channel *group_ch_ctx;
+	struct bdev_aio_io_channel *ch = ctx_buf;
 
-	group_ch_ctx = spdk_io_channel_get_ctx(io_channel->group_ch);
-	TAILQ_REMOVE(&group_ch_ctx->channels, io_channel, link);
-	spdk_put_io_channel(io_channel->group_ch);
-	io_destroy(io_channel->io_ctx);
-
+	TAILQ_REMOVE(&ch->group_ch->channels, ch, link);
+	spdk_put_io_channel(spdk_io_channel_from_ctx(ch->group_ch));
+	io_destroy(ch->io_ctx);
 }
 
 static struct spdk_io_channel *
