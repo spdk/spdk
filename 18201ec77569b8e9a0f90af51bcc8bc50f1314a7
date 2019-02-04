@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c079856b_bcf35eae",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 161,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-04T17:22:58Z",
+      "side": 1,
+      "message": "For now I can\u0027t point any weakness here so OK but I have bad feelings about this. There are many many callbacks in this path (and other that are used in other operations). If one of them takes the lock we will be cooked.",
+      "range": {
+        "startLine": 161,
+        "startChar": 6,
+        "endLine": 161,
+        "endChar": 33
+      },
+      "revId": "18201ec77569b8e9a0f90af51bcc8bc50f1314a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
