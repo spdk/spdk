@@ -36,38 +36,12 @@
 
 #include "spdk/stdinc.h"
 
-#include <libaio.h>
-
 #include "spdk/queue.h"
 #include "spdk/bdev.h"
 
 #include "spdk/bdev_module.h"
 
-struct bdev_aio_task {
-	struct iocb			iocb;
-	uint64_t			len;
-	TAILQ_ENTRY(bdev_aio_task)	link;
-};
-
-struct bdev_aio_io_channel {
-	io_context_t				io_ctx;
-	uint64_t				io_inflight;
-	struct spdk_io_channel			*group_ch;
-	TAILQ_ENTRY(bdev_aio_io_channel)	link;
-	int					efd;
-};
-
 typedef void (*spdk_delete_aio_complete)(void *cb_arg, int bdeverrno);
-
-struct file_disk {
-	struct bdev_aio_task	*reset_task;
-	struct spdk_poller	*reset_retry_timer;
-	struct spdk_bdev	disk;
-	char			*filename;
-	int			fd;
-	TAILQ_ENTRY(file_disk)  link;
-	bool			block_size_override;
-};
 
 struct spdk_bdev *create_aio_disk(const char *name, const char *filename, uint32_t block_size);
 
