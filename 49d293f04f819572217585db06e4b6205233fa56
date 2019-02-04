@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5696b019_d2118549",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:13:53Z",
+      "side": 1,
+      "message": "for consistency this sequence of \u0027\u003d\u0027 should be the same length as the printf before it",
+      "revId": "49d293f04f819572217585db06e4b6205233fa56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
