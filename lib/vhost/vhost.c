@@ -699,6 +699,15 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
+	/* Mask affinity group "vhost" */
+	spdk_cpuset_and(cpumask, spdk_app_get_affinity_group("vhost"));
+	if (spdk_cpuset_count(cpumask) == 0) {
+		SPDK_ERRLOG("no cpu is selected among affinity group (vhost@%s)\n",
+			    spdk_cpuset_fmt(spdk_app_get_affinity_group("vhost")));
+		rc = -EINVAL;
+		goto out;
+	}
+
 	if (spdk_vhost_dev_find(name)) {
 		SPDK_ERRLOG("vhost controller %s already exists.\n", name);
 		rc = -EEXIST;

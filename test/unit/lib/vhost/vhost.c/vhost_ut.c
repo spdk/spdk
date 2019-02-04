@@ -66,6 +66,12 @@ struct spdk_cpuset *spdk_app_get_core_mask(void)
 	return g_app_core_mask;
 }
 
+struct spdk_cpuset *
+spdk_app_get_affinity_group(const char *name)
+{
+	return spdk_app_get_core_mask();
+}
+
 int
 spdk_app_parse_core_mask(const char *mask, struct spdk_cpuset *cpumask)
 {
