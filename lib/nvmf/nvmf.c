@@ -739,7 +739,6 @@ _spdk_nvmf_qpair_destroy(void *ctx, int status)
 	}
 
 	TAILQ_REMOVE(&qpair->group->qpairs, qpair, link);
-	qpair->group = NULL;
 
 	spdk_nvmf_transport_qpair_fini(qpair);
 
