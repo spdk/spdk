@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "163e7b0f_524320b8",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T16:04:11Z",
+      "side": 1,
+      "message": "This API should be changed. Checking if we are not passing NULL pointers is probably pointless here.",
+      "parentUuid": "4ae8d9c6_0d99684d",
+      "range": {
+        "startLine": 405,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 47
+      },
+      "revId": "197f976b134269f069b5d9f4c464afd35c02a97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07b7242c_8777f86c",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 2
