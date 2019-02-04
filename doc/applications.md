@@ -28,6 +28,7 @@ applications that use it. Specific applications may implement additional flags.
 Param    | Long Param             | Type     | Default                | Description
 -------- | ---------------------- | -------- | ---------------------- | -----------
 -c       | --config               | string   |                        | @ref cmd_arg_config_file
+|        | --cpu-affinity-groups  | string   |                        | @ref cmd_arg_cpu_affinity_groups
 -d       | --limit-coredump       | flag     | false                  | @ref cmd_arg_limit_coredump
 -e       | --tpoint-group-mask    | integer  | 0x0                    | @ref cmd_arg_limit_tpoint_group_mask
 -g       | --single-file-segments | flag     |                        | @ref cmd_arg_single_file_segments
@@ -161,4 +162,38 @@ The following CPU masks are equal and correspond to CPUs 0, 1, 2, 8, 9, 10, 11 a
 1f07
 [0,1,2,8-12]
 [0, 1, 2, 8, 9, 10, 11, 12]
+~~~
+
+## CPU affinity groups {#cmd_arg_cpu_affinity_groups}
+
+Affinity groups allows to delegate a group of cores to perform specific or expensive
+operations and isolate them from the rest of system.
+
+Groups are defined with followed format:
+
+~~~
+<name>@<cpu mask>[;<name>@<cpu mask>[...]]
+~~~
+
+where name is affinity group name and 'cpu mask' is the mask of cores in this group.
+
+Affinity groups must follow the rules:
+
+- Each defined affinity group is exclusive.
+- Each not defined group is non-exclusive and contains all free (not assigned) cores.
+- Master core cannot be assigned to any affinity group.
+
+Curently 3 groups are implemented:
+
+- 'iscsi' - for iscsi pollers,
+- 'nvmf' - for nvmf pollers,
+- 'vhost' - for vhost pollers.
+
+### Example
+
+The following list of affinity groups defines tree groups: 'vhost' with delegated CPUs 1 to 7,
+'iscsi' group with CPU 4.
+
+~~~
+vhost@0xfe;iscsi@[4]
 ~~~
