@@ -1638,7 +1638,10 @@ _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	_spdk_bdev_io_split_with_payload(bdev_io);
 }
 
-static void
+/* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
+ *  be inlined, at least on some compilers.
+ */
+static inline void
 _spdk_bdev_io_submit(void *ctx)
 {
 	struct spdk_bdev_io *bdev_io = ctx;
