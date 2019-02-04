@@ -16,6 +16,24 @@
       "revId": "7b3da4ed75f97ed0373269dc3b17259e837675b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b82bc6ad_5306c585",
+        "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-04T22:19:50Z",
+      "side": 1,
+      "message": "Yeah you\u0027re probably right. I will add a function that waits for complete disconnect.",
+      "parentUuid": "3cebee58_ef632855",
+      "revId": "7b3da4ed75f97ed0373269dc3b17259e837675b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
