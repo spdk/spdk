@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bd19a70_a8a1fb5d",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:28:48Z",
+      "side": 1,
+      "message": "alignment has to be a power of 2, and it is valid to create mempools with non-power-of-2 element sizes\n\nI think you need to use spdk_align32pow2(ele_size).",
+      "revId": "ed9145d34ea52f934fc28a55fd3b6ba275cba2ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
