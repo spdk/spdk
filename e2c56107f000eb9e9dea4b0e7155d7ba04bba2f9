@@ -22,6 +22,30 @@
       "revId": "e2c56107f000eb9e9dea4b0e7155d7ba04bba2f9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a6d77f3_01ad149f",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-02-04T23:42:32Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2cc32449_1faad7df",
+      "range": {
+        "startLine": 470,
+        "startChar": 8,
+        "endLine": 470,
+        "endChar": 35
+      },
+      "revId": "e2c56107f000eb9e9dea4b0e7155d7ba04bba2f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
