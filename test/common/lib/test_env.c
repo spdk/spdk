@@ -37,6 +37,7 @@
 
 #include "spdk/env.h"
 #include "spdk/queue.h"
+#include "spdk/util.h"
 
 DEFINE_STUB(spdk_process_is_primary, bool, (void), true)
 DEFINE_STUB(spdk_memzone_lookup, void *, (const char *name), NULL)
@@ -187,6 +188,7 @@ spdk_memzone_free(const char *name)
 
 struct test_mempool {
 	size_t	count;
+	size_t	ele_size;
 };
 
 DEFINE_RETURN_MOCK(spdk_mempool_create, struct spdk_mempool *);
@@ -204,6 +206,7 @@ spdk_mempool_create(const char *name, size_t count,
 	}
 
 	mp->count = count;
+	mp->ele_size = ele_size;
 
 	return (struct spdk_mempool *)mp;
 }
@@ -221,6 +224,7 @@ void *
 spdk_mempool_get(struct spdk_mempool *_mp)
 {
 	struct test_mempool *mp = (struct test_mempool *)_mp;
+	size_t ele_size = 0x10000;
 	void *buf;
 
 	HANDLE_RETURN_MOCK(spdk_mempool_get);
@@ -229,7 +233,11 @@ spdk_mempool_get(struct spdk_mempool *_mp)
 		return NULL;
 	}
 
-	if (posix_memalign(&buf, 64, 0x10000)) {
+	if (mp) {
+		ele_size = mp->ele_size;
+	}
+
+	if (posix_memalign(&buf, 64, spdk_align32pow2(ele_size))) {
 		return NULL;
 	} else {
 		if (mp) {
