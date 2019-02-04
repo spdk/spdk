@@ -2452,6 +2452,10 @@ struct spdk_nvme_fw_commit {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 
+#define spdk_nvme_cpl_is_success(cpl)					\
+	((cpl)->status.sct == SPDK_NVME_SCT_GENERIC &&			\
+	 (cpl)->status.sc == SPDK_NVME_SC_SUCCESS)
+
 #define spdk_nvme_cpl_is_error(cpl)					\
 	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
 
