@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8fce2892_f4d1d7ac",
+        "filename": "doc/peer_2_peer.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:16:49Z",
+      "side": 1,
+      "message": "this should be ./examples/nvme/cmb_copy/cmb_copy - might as well fix this while you\u0027re here",
+      "revId": "77e9e5e3bba204fcfff4b447f9942d25cf833a30",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
