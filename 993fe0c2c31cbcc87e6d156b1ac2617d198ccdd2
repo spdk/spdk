@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "edc44b5c_488976df",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-04T15:53:40Z",
+      "side": 1,
+      "message": "Wouldn\u0027t \u0027count\u0027 make more sense?",
+      "range": {
+        "startLine": 296,
+        "startChar": 8,
+        "endLine": 296,
+        "endChar": 12
+      },
+      "revId": "993fe0c2c31cbcc87e6d156b1ac2617d198ccdd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
