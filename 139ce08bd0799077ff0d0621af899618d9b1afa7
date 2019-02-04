@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62498cbf_8fc9abae",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:32:15Z",
+      "side": 1,
+      "message": "you should change this to \"add module unit tests for relocate\"\n\nThen it doesn\u0027t sounds like you are actually relocating the unit tests themselves.  :-)\n\nI\u0027d normally let this slide but you\u0027ll need to rebase this anyways since there are some fixes needed on earlier patches.",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
