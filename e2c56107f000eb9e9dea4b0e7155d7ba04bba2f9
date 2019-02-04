@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cc32449_1faad7df",
+        "filename": "lib/env_dpdk/vtophys.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 470,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-04T15:16:50Z",
+      "side": 1,
+      "message": "In the email I mentioned SPDK still supports DPDK versions without rte_vfio, but actually the latest DPDK without it was v16.11, which already reached its EOL in November 2018.\n\nThis patch is fine then. Can you rebase it directly on master?",
+      "range": {
+        "startLine": 470,
+        "startChar": 8,
+        "endLine": 470,
+        "endChar": 35
+      },
+      "revId": "e2c56107f000eb9e9dea4b0e7155d7ba04bba2f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
