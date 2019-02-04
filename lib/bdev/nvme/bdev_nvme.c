@@ -732,6 +732,45 @@ bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 	return spin_time;
 }
 
+static enum spdk_dif_type
+bdev_nvme_get_dif_type(void *ctx) {
+	struct nvme_bdev *nvme_bdev = ctx;
+
+	return (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(nvme_bdev->ns);
+}
+
+static bool
+bdev_nvme_get_dif_location(void *ctx)
+{
+	struct nvme_bdev *nvme_bdev = ctx;
+	const struct spdk_nvme_ns_data *nsdata;
+
+	nsdata = spdk_nvme_ns_get_data(nvme_bdev->ns);
+
+	return nsdata->dps.md_start != 0;
+}
+
+static uint32_t
+bdev_nvme_get_dif_check_flags(void *ctx)
+{
+	struct nvme_bdev *nvme_bdev = ctx;
+	uint32_t dif_check_flags = 0;
+
+	if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+		dif_check_flags |= SPDK_DIF_REFTAG_CHECK;
+	}
+
+	if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+		dif_check_flags |= SPDK_DIF_APPTAG_CHECK;
+	}
+
+	if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+		dif_check_flags |= SPDK_DIF_GUARD_CHECK;
+	}
+
+	return dif_check_flags;
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= bdev_nvme_destruct,
 	.submit_request		= bdev_nvme_submit_request,
@@ -740,6 +779,9 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.dump_info_json		= bdev_nvme_dump_info_json,
 	.write_config_json	= bdev_nvme_write_config_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
+	.get_dif_type		= bdev_nvme_get_dif_type,
+	.get_dif_location	= bdev_nvme_get_dif_location,
+	.get_dif_check_flags	= bdev_nvme_get_dif_check_flags,
 };
 
 static int
@@ -788,6 +830,8 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	if (uuid != NULL) {
 		bdev->disk.uuid = *uuid;
 	}
+
+	bdev->io_flags = 0;
 
 	bdev->disk.ctxt = bdev;
 	bdev->disk.fn_table = &nvmelib_fn_table;
