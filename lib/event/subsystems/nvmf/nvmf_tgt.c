@@ -74,6 +74,9 @@ struct spdk_nvmf_tgt *g_spdk_nvmf_tgt = NULL;
 
 static enum nvmf_tgt_state g_tgt_state;
 
+/* "nvmf" affinity group */
+static struct spdk_cpuset *g_tgt_affinity;
+
 /* Round-Robin/IP-based tracking of cores for qpair assignment */
 static uint32_t g_tgt_core;
 
@@ -125,12 +128,25 @@ spdk_nvmf_get_core_rr(void)
 	uint32_t core;
 
 	core = g_tgt_core;
-	g_tgt_core = spdk_env_get_next_core(core);
-	if (g_tgt_core == UINT32_MAX) {
-		g_tgt_core = spdk_env_get_first_core();
-	}
+	do {
+		g_tgt_core = spdk_env_get_next_core(g_tgt_core);
+		if (g_tgt_core == UINT32_MAX) {
+			g_tgt_core = spdk_env_get_first_core();
+		}
+	} while (!spdk_cpuset_get_cpu(g_tgt_affinity, g_tgt_core));
 
 	return core;
+}
+
+static uint32_t
+spdk_nvmf_get_first_core_rr(void)
+{
+	g_tgt_core = spdk_env_get_first_core();
+	while (!spdk_cpuset_get_cpu(g_tgt_affinity, g_tgt_core)) {
+		g_tgt_core = spdk_env_get_next_core(g_tgt_core);
+	}
+
+	return g_tgt_core;
 }
 
 static void
@@ -378,7 +394,8 @@ nvmf_tgt_advance_state(void)
 				break;
 			}
 
-			g_tgt_core = spdk_env_get_first_core();
+			/* Find first available core */
+			spdk_nvmf_get_first_core_rr();
 			break;
 		}
 		case NVMF_TGT_INIT_PARSE_CONFIG:
@@ -454,6 +471,7 @@ static void
 spdk_nvmf_subsystem_init(void)
 {
 	g_tgt_state = NVMF_TGT_INIT_NONE;
+	g_tgt_affinity = spdk_app_get_affinity_group("nvmf");
 	nvmf_tgt_advance_state();
 }
 
