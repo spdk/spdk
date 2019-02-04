@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "73005c09_5302c00f",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c9a781a_5c414117",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 66
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a7db47f3_544fbbaf",
         "filename": "scripts/gen_ftl.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-04T08:42:08Z",
       "side": 1,
       "message": "Don\u0027t use globals.\n\nWhy is addr in a different notation than other variables?",
+      "range": {
+        "startLine": 22,
+        "startChar": 42,
+        "endLine": 22,
+        "endChar": 71
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28452207_193d39bf",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "This is safer when variable is concatenated with another string.",
+      "parentUuid": "a7db47f3_544fbbaf",
       "range": {
         "startLine": 22,
         "startChar": 42,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "3f6beed8_b9dceb67",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "I\u0027ve plan to add json config soon.",
+      "parentUuid": "ff6aa95b_463f33ed",
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0595283a_162bc4a1",
         "filename": "scripts/gen_ftl.sh",
         "patchSetId": 3
@@ -85,6 +151,30 @@
       "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8bedf2a_a4b128a4",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0595283a_162bc4a1",
+      "range": {
+        "startLine": 43,
+        "startChar": 16,
+        "endLine": 43,
+        "endChar": 21
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "f6557f2e_e03153aa",
+        "filename": "test/ftl/config/fio/randr.fio",
+        "patchSetId": 3
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "This solution requires that we need to have separate files/scripts/maps with configs to fio scripts.",
+      "parentUuid": "6c27e3d3_6b1db6f9",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 0
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b9d863b4_3a37103c",
         "filename": "test/ftl/fio.sh",
         "patchSetId": 3
@@ -122,6 +236,30 @@
       "writtenOn": "2019-02-04T08:42:08Z",
       "side": 1,
       "message": "This cannot be hardcoded for all tests like that. We certainly don\u0027t want the par-patch (\u0027basic\u0027 suite) to run for 3200s. The way I see it is to have a section here or have a config file (e.g. in json) containing a list of test descriptions each consisting of: name of the test, base config file and a list of variables to be exported:\n\n[\n{ \"name\" : \"randw-verify\",\n  \"config\" : \"randw-j1.fio\",\n  \"vars\" : [ \n  \"FTL_TEST_IODEPTH\" : 1,\n  \"FTL_TEST_RUNTIME\" : 60\n   ]\n},\n...\n]",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 28
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1fd6730_ea9d337a",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T15:01:36Z",
+      "side": 1,
+      "message": "Agree, but I think this is good start point to have enabled nightly tests on current enviroment.",
+      "parentUuid": "b9d863b4_3a37103c",
       "range": {
         "startLine": 28,
         "startChar": 0,
