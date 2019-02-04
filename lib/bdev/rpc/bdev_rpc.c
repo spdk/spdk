@@ -248,6 +248,12 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 	if (spdk_bdev_get_md_size(bdev) != 0) {
 		spdk_json_write_named_uint32(w, "md_size", spdk_bdev_get_md_size(bdev));
 		spdk_json_write_named_bool(w, "md_setting", spdk_bdev_get_md_setting(bdev));
+		spdk_json_write_named_uint32(w, "dif_type", spdk_bdev_get_dif_type(bdev));
+		if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
+			spdk_json_write_named_bool(w, "dif_location", spdk_bdev_get_dif_location(bdev));
+			spdk_json_write_named_uint32(w, "dif_check_flags",
+						     spdk_bdev_get_dif_check_flags(bdev));
+		}
 	}
 
 	spdk_json_write_named_object_begin(w, "assigned_rate_limits");

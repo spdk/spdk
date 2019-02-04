@@ -45,6 +45,7 @@
 #include "spdk/json.h"
 #include "spdk/queue.h"
 #include "spdk/histogram_data.h"
+#include "spdk/dif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -425,6 +426,33 @@ uint32_t spdk_bdev_get_md_size(const struct spdk_bdev *bdev);
  * is not valid if there is no metadata.
  */
 bool spdk_bdev_get_md_setting(const struct spdk_bdev *bdev);
+
+/**
+ * Get DIF type of the block device.
+ *
+ * \param bdev Block device to query.
+ * \return DIF type of the block device.
+ */
+uint32_t spdk_bdev_get_dif_type(const struct spdk_bdev *bdev);
+
+/**
+ * Get DIF location of the block device.
+ *
+ * \param bdev Block device to query.
+ * \return true if DIF is set in the first 8 bytes of metadata, or false
+ * if DIF is set in the last 8 bytes of metadata.
+ */
+bool spdk_bdev_get_dif_location(const struct spdk_bdev *bdev);
+
+/**
+ * Get flags that indicates DIF fields checked in I/O processing.
+ *
+ * \param bdev Block device to query.
+ * \return Flags that indicates DIF fields checked in I/O processing.
+ *
+ * See `include/spdk/dif.h` for the definition of the flags.
+ */
+uint32_t spdk_bdev_get_dif_check_flags(const struct spdk_bdev *bdev);
 
 /**
  * Get the most recently measured queue depth from a bdev.
