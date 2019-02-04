@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5fea6c89_5c5b38ca",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2347,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-04T18:02:22Z",
+      "side": 1,
+      "message": "Since false also means that the dif location is at the end of the metadata, couldn\u0027t returning false here send a bad signal to the caller?\nI guess any sane bdev module would always implement spdk_bdev_get_dif_location if it implemented spdk_bdev_get_dif_type, but it may be good to just take the bool as a second argument and use the return value to indicate if protection information is even supported. I think that for the other two functions this isn\u0027t a problem since returning 0 from them disables checking and is always safe.\nJust a thought. I don\u0027t think it would ever in practice be a problem, so you can take this comment or leave it.",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
