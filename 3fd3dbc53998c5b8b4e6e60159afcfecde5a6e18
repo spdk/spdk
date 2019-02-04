@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c04a61bd_778f6d7e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T19:27:32Z",
+      "side": 1,
+      "message": "req cannot be NULL - I think that part of the check should be removed.\n\nAre there cases where req.cmd *or* recv are valid?  In that case, I think we want to print out the parts that are valid.",
+      "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
