@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "294572d8_3940c852",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-04T15:25:18Z",
+      "side": 1,
+      "message": "Please describe what exactly is broken.",
+      "revId": "deea5a5e59d4fdd0848b40e0d771ff57fe8a4b3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
