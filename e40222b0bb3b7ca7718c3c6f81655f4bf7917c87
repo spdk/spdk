@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "0a980ebe_a544d9ff",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 160,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T18:39:40Z",
+      "side": 1,
+      "message": "Need to go in new 19.04 CHANGELOG section.\n\nWill we remove strip_size in a future release?  If so, we should just say it\u0027s deprecated, and not suggest that users use either (strip_size or strip_size_in_kb).",
+      "revId": "e40222b0bb3b7ca7718c3c6f81655f4bf7917c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "84be97d0_ad0242d0",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 10
@@ -19,6 +36,47 @@
         "endLine": 1263,
         "endChar": 22
       },
+      "revId": "e40222b0bb3b7ca7718c3c6f81655f4bf7917c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e9afdab_6c9b33cb",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T18:39:40Z",
+      "side": 1,
+      "message": "strip_size still gets used after this patch - it\u0027s specified in blocks and is used in the I/O path.\n\nBut I agree - this code is a bit confusing.  We should only set strip_size_kb here.  Then set strip_size in raid_bdev_configure, once we actually have all of the base bdevs and can convert the strip_size_kb into blocks.",
+      "parentUuid": "84be97d0_ad0242d0",
+      "range": {
+        "startLine": 1263,
+        "startChar": 1,
+        "endLine": 1263,
+        "endChar": 22
+      },
+      "revId": "e40222b0bb3b7ca7718c3c6f81655f4bf7917c87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6820c20c_7777fdf4",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T18:39:40Z",
+      "side": 1,
+      "message": "If we\u0027re marking strip_size as deprecated, let\u0027s print an ERRLOG if the user specifies it.  That way they\u0027ll get a nice reminder to use strip_size_in_kb instead.",
       "revId": "e40222b0bb3b7ca7718c3c6f81655f4bf7917c87",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
