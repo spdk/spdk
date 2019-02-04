@@ -16,6 +16,24 @@
       "revId": "9465f3b203811017e29bfe7d7ac248190af98921",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0f792978_ad964621",
+        "filename": "lib/bdev/ftl/bdev_ftl_rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 159,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-04T07:34:35Z",
+      "side": 1,
+      "message": "I think this goto should stay to be consistent with other conditions and to avoid bugs when something is done after the initialization is completed.",
+      "parentUuid": "b419ee12_05d10abe",
+      "revId": "9465f3b203811017e29bfe7d7ac248190af98921",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
