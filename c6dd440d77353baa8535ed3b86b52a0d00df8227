@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48d8e05f_82a6b9e3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T07:31:14Z",
+      "side": 1,
+      "message": "Calling spdk_poller_unregister(\u0026rqpair-\u003edestruct_poller) simply before calling spdk_nvmf_rdma_qpair_destroy() in spdk_nvmf_rdma_destoy_defunct_qpair() looks clear to me.",
+      "range": {
+        "startLine": 672,
+        "startChar": 0,
+        "endLine": 674,
+        "endChar": 2
+      },
+      "revId": "c6dd440d77353baa8535ed3b86b52a0d00df8227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0de03fc9_3f34176a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2747,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T07:31:14Z",
+      "side": 1,
+      "message": "If you have any plan to use this function in other places, please ignore the above comment.",
+      "range": {
+        "startLine": 2747,
+        "startChar": 0,
+        "endLine": 2747,
+        "endChar": 35
+      },
+      "revId": "c6dd440d77353baa8535ed3b86b52a0d00df8227",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
