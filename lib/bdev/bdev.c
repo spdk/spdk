@@ -2330,6 +2330,36 @@ spdk_bdev_get_md_setting(const struct spdk_bdev *bdev)
 	return bdev->md_setting;
 }
 
+uint32_t
+spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
+{
+	if (bdev->fn_table->get_dif_type) {
+		return bdev->fn_table->get_dif_type(bdev->ctxt);
+	} else {
+		return 0;
+	}
+}
+
+bool
+spdk_bdev_get_dif_location(const struct spdk_bdev *bdev)
+{
+	if (bdev->fn_table->get_dif_location) {
+		return bdev->fn_table->get_dif_location(bdev->ctxt);
+	} else {
+		return false;
+	}
+}
+
+uint32_t
+spdk_bdev_get_dif_check_flags(const struct spdk_bdev *bdev)
+{
+	if (bdev->fn_table->get_dif_location) {
+		return bdev->fn_table->get_dif_location(bdev->ctxt);
+	} else {
+		return 0;
+	}
+}
+
 uint64_t
 spdk_bdev_get_qd(const struct spdk_bdev *bdev)
 {

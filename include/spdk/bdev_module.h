@@ -212,6 +212,18 @@ struct spdk_bdev_fn_table {
 	 *  Optional - may be NULL.
 	 */
 	uint64_t (*get_spin_time)(struct spdk_io_channel *ch);
+
+	/** Get DIF type of the block device. */
+	uint32_t (*get_dif_type)(void *ctx);
+
+	/** Get DIF location of the block device. */
+	bool (*get_dif_location)(void *ctx);
+
+	/**
+	 * Get Flags that indicates DIF fields checked in I/O processing.
+	 * See `include/spdk/dif.h` for the definition of the flags.
+	 */
+	uint32_t (*get_dif_check_flags)(void *ctx);
 };
 
 /** bdev I/O completion status */
