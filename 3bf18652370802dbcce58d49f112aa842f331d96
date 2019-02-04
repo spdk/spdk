@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8dff58d7_a98d0c7b",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1428,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-04T17:36:22Z",
+      "side": 1,
+      "message": "vdev - Memory use after free :/",
+      "range": {
+        "startLine": 1428,
+        "startChar": 9,
+        "endLine": 1428,
+        "endChar": 35
+      },
+      "revId": "3bf18652370802dbcce58d49f112aa842f331d96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
