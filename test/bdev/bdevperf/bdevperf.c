@@ -602,7 +602,7 @@ bdevperf_usage(void)
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
-	printf(" -S                        show performance result in real time in seconds\n");
+	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 }
 
 /*
