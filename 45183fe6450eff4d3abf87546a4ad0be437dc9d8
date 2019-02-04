@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "67f980b5_0759d359",
+        "filename": "configure",
+        "patchSetId": 78
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:01:18Z",
+      "side": 1,
+      "message": "don\u0027t need to add these - they\u0027re already included below (line 231)",
+      "revId": "45183fe6450eff4d3abf87546a4ad0be437dc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "912ef333_39cda912",
+        "filename": "dpdkbuild/Makefile",
+        "patchSetId": 78
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-04T21:01:18Z",
+      "side": 1,
+      "message": "I think you should add the ISAL_DIR include directory DPDK_CFLAGS here too.  That makes sure that we\u0027ll build the DPDK with our submodule\u0027s ISA-L header files and not the header files of whatever might be installed on the system.",
+      "revId": "45183fe6450eff4d3abf87546a4ad0be437dc9d8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
