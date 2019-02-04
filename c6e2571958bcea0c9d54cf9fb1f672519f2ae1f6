@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e1427fd4_91ff9c71",
+        "filename": "scripts/gdb_macros.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-04T18:51:19Z",
+      "side": 1,
+      "message": "Can you convert this file to be Python3 ready?",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 39
+      },
+      "revId": "c6e2571958bcea0c9d54cf9fb1f672519f2ae1f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
