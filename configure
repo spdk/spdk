@@ -294,7 +294,7 @@ for i in "$@"; do
 done
 
 # Detect architecture and force no isal if non x86 archtecture
-arch=$(uname -i)
+arch=$(uname -m)
 if [[ $arch != x86_64* ]]; then
 	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
 	CONFIG[ISAL]=n
