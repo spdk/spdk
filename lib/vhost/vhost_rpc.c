@@ -137,12 +137,6 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (req.ctrlr == NULL) {
-		SPDK_ERRLOG("No controller name\n");
-		rc = -EINVAL;
-		goto invalid;
-	}
-
 	spdk_vhost_lock();
 	vdev = spdk_vhost_dev_find(req.ctrlr);
 	if (vdev == NULL) {
