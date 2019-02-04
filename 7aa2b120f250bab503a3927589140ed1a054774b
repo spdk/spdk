@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "506deb7a_7066c88c",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-04T07:23:52Z",
+      "side": 1,
+      "message": "For example, if this error occurs after some device/qp combinations are built, built device/qp combinations will be leaked.\n\nI think this is the same as discussion with you in compress bdev.",
+      "range": {
+        "startLine": 335,
+        "startChar": 9,
+        "endLine": 335,
+        "endChar": 23
+      },
+      "revId": "7aa2b120f250bab503a3927589140ed1a054774b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
