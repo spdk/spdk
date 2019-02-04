@@ -22,6 +22,30 @@
       "revId": "a1da5c37ccbdc9bbc64caad66f0072123a5a1bf8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdadaef3_10eaad97",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1015163
+      },
+      "writtenOn": "2019-02-04T23:05:12Z",
+      "side": 1,
+      "message": "Yes, we can detect the transport in rte_vhost_driver_register() based on the `path` format, but I don\u0027t see any reason for doing this. Given that we know the vhost-user transport here, why should we re-find it in rte_vhost? Besides, it is trivial to pass this info through the second argument. rte_vhost_driver_register() already has this second \"flags\" argument. All we have to do is to define a new flag for the virtio-vhost-user transport.",
+      "parentUuid": "6584068e_786e379c",
+      "range": {
+        "startLine": 738,
+        "startChar": 37,
+        "endLine": 738,
+        "endChar": 46
+      },
+      "revId": "a1da5c37ccbdc9bbc64caad66f0072123a5a1bf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
