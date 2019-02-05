@@ -141,6 +141,8 @@ struct spdk_nvme_rdma_req {
 	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
+
+	bool					request_ready_to_put;
 };
 
 static const char *rdma_cm_event_str[] = {
@@ -198,6 +200,7 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 static void
 nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
+	rdma_req->request_ready_to_put = false;
 	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
@@ -491,7 +494,12 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	req = rdma_req->req;
 	nvme_rdma_req_complete(req, rsp);
 
-	nvme_rdma_req_put(rqpair, rdma_req);
+	if (rdma_req->request_ready_to_put) {
+		nvme_rdma_req_put(rqpair, rdma_req);
+	} else {
+		rdma_req->request_ready_to_put = true;
+	}
+
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
@@ -1644,11 +1652,12 @@ int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
-	struct nvme_rdma_qpair	*rqpair = nvme_rdma_qpair(qpair);
-	struct ibv_wc		wc[MAX_COMPLETIONS_PER_POLL];
-	int			i, rc, batch_size;
-	uint32_t		reaped;
-	struct ibv_cq		*cq;
+	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_wc			wc[MAX_COMPLETIONS_PER_POLL];
+	int				i, rc, batch_size;
+	uint32_t			reaped;
+	struct ibv_cq			*cq;
+	struct spdk_nvme_rdma_req	*rdma_req;
 
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
@@ -1697,6 +1706,13 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				break;
 
 			case IBV_WC_SEND:
+				rdma_req = (struct spdk_nvme_rdma_req *)wc[i].wr_id;
+
+				if (rdma_req->request_ready_to_put) {
+					nvme_rdma_req_put(rqpair, rdma_req);
+				} else {
+					rdma_req->request_ready_to_put = true;
+				}
 				break;
 
 			default:
