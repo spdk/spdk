@@ -74,7 +74,7 @@ struct bdev_aio_group_channel {
 	int			epfd;
 };
 
-SPDK_BDEV_MODULE_REGISTER(&aio_if)
+SPDK_BDEV_MODULE_REGISTER(aio_if)
 
 static int
 bdev_aio_open(struct file_disk *disk)

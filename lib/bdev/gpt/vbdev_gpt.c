@@ -60,7 +60,7 @@ static struct spdk_bdev_module gpt_if = {
 	.examine_disk = vbdev_gpt_examine,
 
 };
-SPDK_BDEV_MODULE_REGISTER(&gpt_if)
+SPDK_BDEV_MODULE_REGISTER(gpt_if)
 
 /* Base block device gpt context */
 struct gpt_base {

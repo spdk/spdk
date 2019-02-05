@@ -70,7 +70,7 @@ static struct spdk_bdev_module null_if = {
 	.async_fini = true,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&null_if)
+SPDK_BDEV_MODULE_REGISTER(null_if)
 
 static int
 bdev_null_destruct(void *ctx)

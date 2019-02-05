@@ -68,7 +68,7 @@ static struct spdk_bdev_module passthru_if = {
 	.config_json = vbdev_passthru_config_json
 };
 
-SPDK_BDEV_MODULE_REGISTER(&passthru_if)
+SPDK_BDEV_MODULE_REGISTER(passthru_if)
 
 /* List of pt_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().

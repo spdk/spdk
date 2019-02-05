@@ -975,20 +975,20 @@ uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
  */
 #define SPDK_BDEV_MODULE_REGISTER(_module)							\
 	__attribute__((constructor)) static void						\
-	SPDK_BDEV_MODULE_REGISTER_FN_NAME(__LINE__)  (void)					\
-	{											\
-	    spdk_bdev_module_list_add(_module);							\
+	SPDK_BDEV_MODULE_REGISTER_FN_NAME(_module)  (void)				\
+	{												\
+		spdk_bdev_module_list_add(&_module);						\
 	}
 
 /*
  * This is helper macro for automatic function generation.
  *
  */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME(line) SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line)
+#define SPDK_BDEV_MODULE_REGISTER_FN_NAME(_module) SPDK_BDEV_MODULE_REGISTER_FN_NAME_(_module)
 
 /*
  *  Second helper macro for "stringize" trick to work.
  */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
+#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(_module) spdk_bdev_module_register_ ## _module
 
 #endif /* SPDK_BDEV_MODULE_H */

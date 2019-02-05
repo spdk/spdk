@@ -96,7 +96,7 @@ static struct spdk_bdev_module virtio_blk_if = {
 	.get_ctx_size = bdev_virtio_blk_get_ctx_size,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&virtio_blk_if)
+SPDK_BDEV_MODULE_REGISTER(virtio_blk_if)
 
 static int bdev_virtio_blk_ch_create_cb(void *io_device, void *ctx_buf);
 static void bdev_virtio_blk_ch_destroy_cb(void *io_device, void *ctx_buf);

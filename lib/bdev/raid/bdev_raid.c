@@ -1189,7 +1189,7 @@ static struct spdk_bdev_module g_raid_if = {
 	.async_init = false,
 	.async_fini = false,
 };
-SPDK_BDEV_MODULE_REGISTER(&g_raid_if)
+SPDK_BDEV_MODULE_REGISTER(g_raid_if)
 
 /*
  * brief:

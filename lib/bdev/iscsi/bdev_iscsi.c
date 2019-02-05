@@ -167,7 +167,7 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.async_init	= true,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&g_iscsi_bdev_module);
+SPDK_BDEV_MODULE_REGISTER(g_iscsi_bdev_module);
 
 static void
 _bdev_iscsi_io_complete(void *_iscsi_io)
