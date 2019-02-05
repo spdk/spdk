@@ -53,6 +53,8 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
+	bool enable_prchk_reftag;
+	bool enable_prchk_guard;
 };
 
 struct nvme_ctrlr {

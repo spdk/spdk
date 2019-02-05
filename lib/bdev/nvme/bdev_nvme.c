@@ -100,6 +100,8 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.timeout_us = 0,
 	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
 	.nvme_adminq_poll_period_us = 1000000ULL,
+	.enable_prchk_reftag = false,
+	.enable_prchk_guard = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -850,6 +852,12 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	bdev->disk.md_interleave = nsdata->flbas.extended;
 
 	bdev->io_flags = 0;
+	if (g_opts.enable_prchk_reftag) {
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+	if (g_opts.enable_prchk_guard) {
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
 
 	bdev->disk.ctxt = bdev;
 	bdev->disk.fn_table = &nvmelib_fn_table;
@@ -1437,6 +1445,9 @@ bdev_nvme_library_init(void)
 
 	hotplug_period = spdk_conf_section_get_intval(sp, "HotplugPollRate");
 
+	g_opts.enable_prchk_reftag = spdk_conf_section_get_boolval(sp, "PrchkRefTagEnable", false);
+	g_opts.enable_prchk_guard = spdk_conf_section_get_boolval(sp, "PrchkGuardEnable", false);
+
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
 
@@ -1911,6 +1922,15 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
 
+	fprintf(fp, "\n"
+		"# Enable PI checking of the Reference Tag field.\n"
+		"# Default: No\n");
+	fprintf(fp, "PrchkRefTagEnable %s\n", g_opts.enable_prchk_reftag ? "Yes" : "No");
+	fprintf(fp, "\n"
+		"# Enable PI checking of the Guard field.\n"
+		"# Default: No\n");
+	fprintf(fp, "PrchkGuardEnable %s\n", g_opts.enable_prchk_guard ? "Yes" : "No");
+
 	fprintf(fp, "\n");
 }
 
@@ -1938,6 +1958,8 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
 	spdk_json_write_named_uint64(w, "nvme_adminq_poll_period_us", g_opts.nvme_adminq_poll_period_us);
+	spdk_json_write_named_bool(w, "enable_prchk_reftag", g_opts.enable_prchk_reftag);
+	spdk_json_write_named_bool(w, "enable_prchk_guard", g_opts.enable_prchk_guard);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
