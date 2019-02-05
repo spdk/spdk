@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ca103a5_60954d6c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 645,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-05T07:41:51Z",
+      "side": 1,
+      "message": "This is already checked in spdk_poller_unregister().\n\nMaybe spdk_poller_unregister() doc update would be good to document this.",
+      "range": {
+        "startLine": 645,
+        "startChar": 0,
+        "endLine": 645,
+        "endChar": 31
+      },
+      "revId": "1199df5735c918dd8afb6d72112b7873ffa35ed3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
