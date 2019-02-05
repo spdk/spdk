@@ -54,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "944fc9a6_9ae40cd8",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b6216d2e_d644332f",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "17e4a3d0_6ec97426",
         "filename": "test/unit/lib/ftl/common/utils.c",
         "patchSetId": 4
@@ -77,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "041f028f_13c053ca",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "17e4a3d0_6ec97426",
+      "range": {
+        "startLine": 126,
+        "startChar": 9,
+        "endLine": 126,
+        "endChar": 30
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "18cde19d_eaaedae6",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -88,6 +130,30 @@
       "writtenOn": "2019-02-05T10:34:19Z",
       "side": 1,
       "message": "Since we\u0027re directly calling setup/cleanup now (as opposed to passing it to a CU_add_suite_*), I think it\u0027s better not to use the global variables and just make setup/cleanup to take device and reloc as parameters.",
+      "range": {
+        "startLine": 190,
+        "startChar": 1,
+        "endLine": 190,
+        "endChar": 6
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bc46aac_12aedc63",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "I have a hope that we will add cu_add_suite_with_setup_and_teardown support in Centos. Leaving this setup/cleanup in such from  will be easier to put it back to setup_teardown. Rest of our test have similar pattern now...",
+      "parentUuid": "18cde19d_eaaedae6",
       "range": {
         "startLine": 190,
         "startChar": 1,
@@ -123,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "addae3a8_ea752cab",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b773449_784b2c68",
+      "range": {
+        "startLine": 238,
+        "startChar": 1,
+        "endLine": 238,
+        "endChar": 12
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f5b43db0_c5bd0503",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -146,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "4bb3634e_f5a68f54",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 253,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f5b43db0_c5bd0503",
+      "range": {
+        "startLine": 253,
+        "startChar": 2,
+        "endLine": 253,
+        "endChar": 48
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "803be77f_08447357",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -157,6 +271,24 @@
       "writtenOn": "2019-02-05T10:34:19Z",
       "side": 1,
       "message": "I dislike the fact that we\u0027re relying on the global geo to have (ftl_dev_lbks_in_chunk(g_dev) % g_reloc-\u003exfer_size) !\u003d 0. I propose to change the setup_reloc() to be passed geo structure (along with device and reloc), copy the global geo, but change clba/xfer_size to be expected here.",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7eb9901b_43766605",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "I\u0027m not sure if I understand your idea. I can modify g_geo before I call setup_reloc, but clba is set to such value for all the tests.",
+      "parentUuid": "803be77f_08447357",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -180,6 +312,24 @@
     },
     {
       "key": {
+        "uuid": "0fe14ef2_9195196d",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "This test shouldn\u0027t change value of breloc-\u003enum_lbks so I checking it. ftl_reloc_next_lbks could change this value but this is not case here.",
+      "parentUuid": "15857d7b_d484a064",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b10f3af4_f7ab62b6",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -191,6 +341,24 @@
       "writtenOn": "2019-02-05T10:34:19Z",
       "side": 1,
       "message": "Do we really need to check that it\u0027s exactly num_iters? Perhaps it\u0027d be better to iterate through [0, num_band_lbks] (which is the maximum possible iterations) and break once num_lbks \u003d\u003d 0. That way we don\u0027t expose unnecessary constraints on the implementation (that don\u0027t really need to be there).",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8121d47_90518a58",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "My intention here is to check also if we really relocating with given qdepth * xfer_size and this is true only for specific data layout that we setup in this test - this allow us to know how many iterations with qdepth * xfer_size we could expect.",
+      "parentUuid": "b10f3af4_f7ab62b6",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -220,6 +388,30 @@
     },
     {
       "key": {
+        "uuid": "c47eb7e2_f43a2b56",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0e5f5ab5_66324077",
+      "range": {
+        "startLine": 310,
+        "startChar": 26,
+        "endLine": 310,
+        "endChar": 27
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1fce085_925f0e39",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -243,6 +435,30 @@
     },
     {
       "key": {
+        "uuid": "ce27fe02_452703cc",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1fce085_925f0e39",
+      "range": {
+        "startLine": 315,
+        "startChar": 0,
+        "endLine": 317,
+        "endChar": 0
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7aceb20_c5a131a0",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -254,6 +470,30 @@
       "writtenOn": "2019-02-05T10:34:19Z",
       "side": 1,
       "message": "You should #define it and verify it\u0027s within the g_range.",
+      "range": {
+        "startLine": 367,
+        "startChar": 61,
+        "endLine": 367,
+        "endChar": 62
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32a8bb63_2110a95e",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "It is used only once, and assert below will fire up if we will have wrong range.",
+      "parentUuid": "d7aceb20_c5a131a0",
       "range": {
         "startLine": 367,
         "startChar": 61,
@@ -283,6 +523,24 @@
     },
     {
       "key": {
+        "uuid": "988c798d_a3ddb0bd",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "This was needed becouse ftl_reloc was processing write_queue before read_queue. I\u0027ve changed this order - it is clearer in that way.",
+      "parentUuid": "517d39bb_0c44bf72",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "65b9b515_6aa8cc04",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -306,6 +564,30 @@
     },
     {
       "key": {
+        "uuid": "d0b3f22a_a1d323a5",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "65b9b515_6aa8cc04",
+      "range": {
+        "startLine": 394,
+        "startChar": 26,
+        "endLine": 394,
+        "endChar": 27
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47511b07_b6e0f8cf",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -317,6 +599,30 @@
       "writtenOn": "2019-02-05T10:34:19Z",
       "side": 1,
       "message": "Why do we need to iterations to move a single block? It seems unnecessary...",
+      "range": {
+        "startLine": 401,
+        "startChar": 0,
+        "endLine": 403,
+        "endChar": 20
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f236b4b_822d9baf",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 403,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:19:34Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "47511b07_b6e0f8cf",
       "range": {
         "startLine": 401,
         "startChar": 0,
