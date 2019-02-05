@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "72ab953c_535e7bee",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T20:47:00Z",
+      "side": 1,
+      "message": "Done. I was actually just able to use the generic NVMe-oF data buffer alignment defines.",
+      "parentUuid": "a3976c53_725fe358",
+      "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "073395eb_9812a9ae",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-05T18:08:38Z",
       "side": 1,
       "message": "spdk_min(device-\u003eattr.max_sge, SPDK_NVMF_MAX_SGL_ENTRIES)?",
+      "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b51e9f7_dfcbc5f9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1841,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T20:47:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "073395eb_9812a9ae",
       "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "893e062a_f02a817a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1896,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T20:47:00Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbe55417_b82c97f9",
+      "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e890d2e7_d1a77b90",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 2
@@ -64,6 +118,24 @@
       "writtenOn": "2019-02-05T18:08:38Z",
       "side": 1,
       "message": "I think you can use spdk_align32pow2 here.",
+      "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8e395345_ab78de7a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1903,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T20:47:00Z",
+      "side": 1,
+      "message": "I think that function raises it to the next power of 2 as opposed to the nearest 4k. So if our buffer size was a little over 64k which is slightly larger than 2^16, calling that function would return an IO unit size of 2^17 or 128k instead of 68k which is what we would want.\nI did find a fancy trick in that file though that I was able to implement inline on my rounded up division.",
+      "parentUuid": "e890d2e7_d1a77b90",
       "revId": "1069f81463c8253bc38bf1166df324ee07f1e4d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
