@@ -128,6 +128,9 @@ struct spdk_app_opts {
 
 	/* Number of trace entries allocated for each core */
 	uint64_t		num_entries;
+
+	/** Opaque context for use of the env implementation. */
+	void			*env_context;
 };
 
 /**
