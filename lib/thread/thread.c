@@ -81,8 +81,12 @@ struct spdk_msg {
 	SLIST_ENTRY(spdk_msg)	link;
 };
 
-#define SPDK_MSG_MEMPOOL_CACHE_SIZE	1024
-static struct spdk_mempool *g_spdk_msg_mempool = NULL;
+#define SPDK_MSG_POOL_CACHE_SIZE	1024
+#define SPDK_MSG_POOL_SIZE			262144
+
+static struct spdk_msg *g_spdk_msgs;
+static struct spdk_ring *g_spdk_msg_pool;
+
 
 enum spdk_poller_state {
 	/* The poller is registered with a thread but not currently executing its fn. */
@@ -157,20 +161,32 @@ _set_thread_name(const char *thread_name)
 int
 spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn)
 {
-	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
+	size_t rc, i;
 
 	assert(g_new_thread_fn == NULL);
 	g_new_thread_fn = new_thread_fn;
 
-	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
-	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
-			     262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
-			     sizeof(struct spdk_msg),
-			     0, /* No cache. We do our own. */
-			     SPDK_ENV_SOCKET_ID_ANY);
-
-	if (!g_spdk_msg_mempool) {
+	g_spdk_msgs = calloc(1, sizeof(*g_spdk_msgs) * (SPDK_MSG_POOL_SIZE - 1));
+	if (g_spdk_msgs == NULL) {
 		return -1;
+	}
+
+	g_spdk_msg_pool = spdk_ring_create(SPDK_RING_TYPE_MP_MC,
+					   SPDK_MSG_POOL_SIZE,
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (g_spdk_msg_pool == NULL) {
+		free(g_spdk_msgs);
+		g_spdk_msgs = NULL;
+		return -1;
+	}
+
+	for (i = 0; i < SPDK_MSG_POOL_SIZE - 1; i++) {
+		struct spdk_msg *msg = &g_spdk_msgs[i];
+		rc = spdk_ring_enqueue(g_spdk_msg_pool, (void **)&msg, 1);
+		if (rc != 1) {
+			assert(false);
+			abort();
+		}
 	}
 
 	return 0;
@@ -185,17 +201,16 @@ spdk_thread_lib_fini(void)
 		SPDK_ERRLOG("io_device %s not unregistered\n", dev->name);
 	}
 
-	if (g_spdk_msg_mempool) {
-		spdk_mempool_free(g_spdk_msg_mempool);
-	}
+	spdk_ring_free(g_spdk_msg_pool);
+	free(g_spdk_msgs);
 }
 
 struct spdk_thread *
 spdk_thread_create(const char *name)
 {
 	struct spdk_thread *thread;
-	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
-	int rc, i;
+	void *messages[SPDK_MSG_POOL_CACHE_SIZE];
+	size_t rc, i;
 
 	thread = calloc(1, sizeof(*thread));
 	if (!thread) {
@@ -217,14 +232,11 @@ spdk_thread_create(const char *name)
 	}
 
 	/* Fill the local message pool cache. */
-	rc = spdk_mempool_get_bulk(g_spdk_msg_mempool, (void **)msgs, SPDK_MSG_MEMPOOL_CACHE_SIZE);
-	if (rc == 0) {
-		/* If we can't populate the cache it's ok. The cache will get filled
-		 * up organically as messages are passed to the thread. */
-		for (i = 0; i < SPDK_MSG_MEMPOOL_CACHE_SIZE; i++) {
-			SLIST_INSERT_HEAD(&thread->msg_cache, msgs[i], link);
-			thread->msg_cache_count++;
-		}
+	rc = spdk_ring_dequeue(g_spdk_msg_pool, messages, SPDK_MSG_POOL_CACHE_SIZE);
+	for (i = 0; i < rc; i++) {
+		struct spdk_msg *msg = messages[i];
+		SLIST_INSERT_HEAD(&thread->msg_cache, msg, link);
+		thread->msg_cache_count++;
 	}
 
 	if (name) {
@@ -285,8 +297,8 @@ spdk_thread_exit(struct spdk_thread *thread)
 
 		assert(thread->msg_cache_count > 0);
 		thread->msg_cache_count--;
-		spdk_mempool_put(g_spdk_msg_mempool, msg);
 
+		spdk_ring_enqueue(g_spdk_msg_pool, (void **)&msg, 1);
 		msg = SLIST_FIRST(&thread->msg_cache);
 	}
 
@@ -331,13 +343,13 @@ _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 		assert(msg != NULL);
 		msg->fn(msg->arg);
 
-		if (thread->msg_cache_count < SPDK_MSG_MEMPOOL_CACHE_SIZE) {
+		if (thread->msg_cache_count < SPDK_MSG_POOL_CACHE_SIZE) {
 			/* Insert the messages at the head. We want to re-use the hot
 			 * ones. */
 			SLIST_INSERT_HEAD(&thread->msg_cache, msg, link);
 			thread->msg_cache_count++;
 		} else {
-			spdk_mempool_put(g_spdk_msg_mempool, msg);
+			spdk_ring_enqueue(g_spdk_msg_pool, (void **)&msg, 1);
 		}
 	}
 
@@ -516,8 +528,8 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	}
 
 	if (msg == NULL) {
-		msg = spdk_mempool_get(g_spdk_msg_mempool);
-		if (!msg) {
+		rc = spdk_ring_dequeue(g_spdk_msg_pool, (void **)&msg, 1);
+		if (rc != 1) {
 			assert(false);
 			return;
 		}
@@ -529,7 +541,7 @@ spdk_thread_send_msg(const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx
 	rc = spdk_ring_enqueue(thread->messages, (void **)&msg, 1);
 	if (rc != 1) {
 		assert(false);
-		spdk_mempool_put(g_spdk_msg_mempool, msg);
+		spdk_ring_enqueue(g_spdk_msg_pool, (void **)&msg, 1);
 		return;
 	}
 }
