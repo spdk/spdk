@@ -16,6 +16,24 @@
       "revId": "7dbff32d99a69b7bdc3928bf235c0b2d7af59a7a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "805e3559_12ec99c5",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T23:29:09Z",
+      "side": 1,
+      "message": "Thank you Paul. I like SPDK_ISAL_ENABLED. I followed CRC32 but we will be able to change CRC32 if better.",
+      "parentUuid": "e5731ff4_014a59e4",
+      "revId": "7dbff32d99a69b7bdc3928bf235c0b2d7af59a7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
