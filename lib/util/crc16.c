@@ -33,6 +33,30 @@
 
 #include "spdk/crc16.h"
 
+#if defined(__x86_64__)
+#ifdef SPDK_CONFIG_ISAL
+#define SPDK_HAVE_ISAL
+#include <isa-l/include/crc.h>
+#endif
+#endif
+
+#ifdef SPDK_HAVE_ISAL
+
+uint16_t
+spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
+{
+	return crc16_t10dif(init_crc, buf, len);
+}
+
+uint16_t
+spdk_crc16_t10dif_copy(uint16_t init_crc, uint8_t *dst, uint8_t *src,
+		       size_t len)
+{
+	return crc16_t10dif_copy(init_crc, dst, src, len);
+}
+
+#else
+
 uint16_t
 spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
 {
@@ -75,3 +99,4 @@ spdk_crc16_t10dif_copy(uint16_t init_crc, uint8_t *dst, uint8_t *src,
 	}
 	return (uint16_t)rem;
 }
+#endif
