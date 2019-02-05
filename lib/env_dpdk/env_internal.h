@@ -43,7 +43,6 @@
 #include <rte_eal.h>
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 0)
 #include <rte_bus.h>
-extern struct rte_pci_bus rte_pci_bus;
 #endif
 #include <rte_pci.h>
 #if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 1)
