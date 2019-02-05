@@ -130,21 +130,11 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	       void *_m, __attribute__((unused)) unsigned i)
 {
 	struct spdk_mobj *m = _m;
-	uint64_t *phys_addr;
-	ptrdiff_t off;
 
 	m->mp = mp;
 	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
 	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + ISCSI_DATA_BUFFER_ALIGNMENT) &
 			  ~ISCSI_DATA_BUFFER_MASK);
-	off = (uint64_t)(uint8_t *)m->buf - (uint64_t)(uint8_t *)m;
-
-	/*
-	 * we store the physical address in a 64bit unsigned integer
-	 * right before the 512B aligned buffer area.
-	 */
-	phys_addr = (uint64_t *)m->buf - 1;
-	*phys_addr = spdk_vtophys(m, NULL) + off;
 }
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
