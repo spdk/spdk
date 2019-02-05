@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d183f95d_3754eb02",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T02:27:59Z",
+      "side": 1,
+      "message": "Yes. uint32_t was my fault.",
+      "parentUuid": "63daac98_0dac05e8",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59807d6b_43c0e8e0",
         "filename": "include/spdk/bdev.h",
         "patchSetId": 2
@@ -71,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6560745b_970efd94",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2347,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T02:27:59Z",
+      "side": 1,
+      "message": "Thank you Seth, Jim.\n\nHow about spdk_bdev_is_dif_head_of_md ? I felt head and tail may be clear, but I\u0027m not confident in this.",
+      "parentUuid": "132d2bad_833582d5",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "995b4d02_1d6f7d78",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -82,6 +118,24 @@
       "writtenOn": "2019-02-04T21:48:18Z",
       "side": 1,
       "message": "get_dif_check_flags (lines 2354 and 2355)",
+      "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "841f5666_2e1e7996",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2355,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T02:27:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "995b4d02_1d6f7d78",
       "revId": "520d3a3186e6f0c038279c180e7600c5a3359e5e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
