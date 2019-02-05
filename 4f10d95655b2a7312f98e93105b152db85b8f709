@@ -16,6 +16,24 @@
       "revId": "4f10d95655b2a7312f98e93105b152db85b8f709",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "882074e9_b6b44d9f",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T18:18:10Z",
+      "side": 1,
+      "message": "the leak is fixed in the refactor, it\u0027s no longer exposed as it was in the look that allocated the device stuct.  All that\u0027s done here is movement of the per device \u0027stuff\u0027 into the create_vbdev_dev() function and then in the driver_init function I call it in a loop.\n\nDoes that help? I\u0027ll update the commit msg too",
+      "parentUuid": "fcd98a82_cc0f23cb",
+      "revId": "4f10d95655b2a7312f98e93105b152db85b8f709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
