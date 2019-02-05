@@ -572,9 +572,9 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 static void
 ftl_process_reloc(struct ftl_band_reloc *breloc)
 {
-	ftl_reloc_process_write_queue(breloc);
-
 	ftl_reloc_process_free_queue(breloc);
+
+	ftl_reloc_process_write_queue(breloc);
 
 	if (ftl_reloc_done(breloc)) {
 		ftl_reloc_release(breloc);
