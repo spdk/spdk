@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "386c4ce1_2d16ee33",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1611,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T02:27:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d34eea3_63cb643f",
+      "revId": "2bd72b5f09492c3da7660c6f788a250c1a0582a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b8de991d_a8bc08d6",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-04T18:14:50Z",
       "side": 1,
       "message": "Could this create potential extra overhead on I/O that don\u0027t have prchk enabled? Since we have to do the I/O twice, if the failure wasn\u0027t related to protection information and we send it down again, we\u0027ll just get another failure. If we can check that here, we could avoid doing the extra work I think.",
+      "revId": "2bd72b5f09492c3da7660c6f788a250c1a0582a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d1d61b2_7ad35c71",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1633,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T02:27:32Z",
+      "side": 1,
+      "message": "Thanks for nice suggestion. I changed to do checked read only when PI error is detected. This will save us from unnecessary extra load, and PI error will not occur if we don\u0027t enable any PRCHK.",
+      "parentUuid": "b8de991d_a8bc08d6",
       "revId": "2bd72b5f09492c3da7660c6f788a250c1a0582a7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
