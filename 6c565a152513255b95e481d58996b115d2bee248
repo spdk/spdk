@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "016b2601_5910fe2c",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1201,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-05T19:38:45Z",
+      "side": 1,
+      "message": "I doubt that this will make any difference as most likely  the\n\n  if () pqpair-\u003esq_tail \u003d 0;\n\nwill be translated into `cmov` ASM instruction.",
+      "range": {
+        "startLine": 1199,
+        "startChar": 0,
+        "endLine": 1201,
+        "endChar": 2
+      },
+      "revId": "6c565a152513255b95e481d58996b115d2bee248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ae179eb_c8cbf43b",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1945,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-05T19:38:45Z",
+      "side": 1,
+      "message": "I\u0027m dying to see what difference this is making in ASM output and on which GCC version :)\n\nDo you have any performance measurements here?",
+      "range": {
+        "startLine": 1943,
+        "startChar": 0,
+        "endLine": 1945,
+        "endChar": 2
+      },
+      "revId": "6c565a152513255b95e481d58996b115d2bee248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
