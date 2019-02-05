@@ -22,6 +22,30 @@
       "revId": "9be41d0659f83fed45c76ff7c28e4183725daa1a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47ca111c_931d4059",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T13:42:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2003d102_69d0e20f",
+      "range": {
+        "startLine": 224,
+        "startChar": 49,
+        "endLine": 224,
+        "endChar": 56
+      },
+      "revId": "9be41d0659f83fed45c76ff7c28e4183725daa1a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
