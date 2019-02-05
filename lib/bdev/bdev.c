@@ -2349,6 +2349,17 @@ spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev)
 	}
 }
 
+bool
+spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
+			       enum spdk_dif_check_type check_type)
+{
+	if (bdev->fn_table->is_dif_check_enabled) {
+		return bdev->fn_table->is_dif_check_enabled(bdev->ctxt, check_type);
+	} else {
+		return false;
+	}
+}
+
 uint64_t
 spdk_bdev_get_qd(const struct spdk_bdev *bdev)
 {

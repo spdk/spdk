@@ -218,6 +218,9 @@ struct spdk_bdev_fn_table {
 
 	/** Check whether DIF is set in the first 8 bytes or the last 8 bytes of metadata. */
 	bool (*is_dif_head_of_md)(void *ctx);
+
+	/** Check whether the DIF check type is enabled. */
+	bool (*is_dif_check_enabled)(void *ctx, enum spdk_dif_check_type check_type);
 };
 
 /** bdev I/O completion status */

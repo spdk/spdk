@@ -251,6 +251,14 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 		spdk_json_write_named_uint32(w, "dif_type", spdk_bdev_get_dif_type(bdev));
 		if (spdk_bdev_get_dif_type(bdev) != SPDK_DIF_DISABLE) {
 			spdk_json_write_named_bool(w, "is_dif_head_of_md", spdk_bdev_is_dif_head_of_md(bdev));
+			spdk_json_write_named_object_begin(w, "enabled_dif_check_types");
+			spdk_json_write_named_bool(w, "reftag",
+						   spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG));
+			spdk_json_write_named_bool(w, "apptag",
+						   spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_APPTAG));
+			spdk_json_write_named_bool(w, "guard",
+						   spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD));
+			spdk_json_write_object_end(w);
 		}
 	}
 
