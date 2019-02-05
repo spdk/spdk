@@ -1282,19 +1282,13 @@ ftl_current_limit(const struct spdk_ftl_dev *dev)
 	return dev->limit;
 }
 
-int
+void
 spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
 {
-	if (!dev || !attrs) {
-		return -EINVAL;
-	}
-
 	attrs->uuid = dev->uuid;
 	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
-
-	return 0;
 }
 
 static void
@@ -1357,10 +1351,6 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 {
 	struct ftl_io *io;
 
-	if (!iov || !cb_fn || !dev) {
-		return -EINVAL;
-	}
-
 	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
 		return -EINVAL;
 	}
@@ -1417,10 +1407,6 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 	      struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	struct ftl_io *io;
-
-	if (!iov || !cb_fn || !dev) {
-		return -EINVAL;
-	}
 
 	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
 		return -EINVAL;
@@ -1501,10 +1487,6 @@ int
 spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	struct ftl_flush *flush;
-
-	if (!dev || !cb_fn) {
-		return -EINVAL;
-	}
 
 	if (!dev->initialized) {
 		return -EBUSY;
