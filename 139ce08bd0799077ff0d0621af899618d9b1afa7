@@ -166,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "ed42fa3c_5c6acd0b",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T16:05:28Z",
+      "side": 1,
+      "message": "I\u0027m afraid we\u0027ll have to stick with what we have in the near future. As such I\u0027d avoid global variables as much as possible - it\u0027s easier to grasp the code when the variables are declared in one scope. It\u0027ll also make things like changing geometry for one specific test easeir.",
+      "parentUuid": "3bc46aac_12aedc63",
+      "range": {
+        "startLine": 190,
+        "startChar": 1,
+        "endLine": 190,
+        "endChar": 6
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5b773449_784b2c68",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -295,6 +319,24 @@
     },
     {
       "key": {
+        "uuid": "9cd65743_f3ac1958",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T16:05:28Z",
+      "side": 1,
+      "message": "I would like to set it explicitly in this test, so that this path is always tested (even if the global geo is changed).",
+      "parentUuid": "7eb9901b_43766605",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15857d7b_d484a064",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -330,6 +372,24 @@
     },
     {
       "key": {
+        "uuid": "42417e5d_f2456b64",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T16:05:28Z",
+      "side": 1,
+      "message": "OK, I\u0027ve check the code and you\u0027re right it does make sense to check it, because ftl_reloc_next_lbks *can* change the value of breloc-\u003enum_lbks (in case there are invalid blocks), but in this case it doesn\u0027t do so. Please add a comment explaining that.\n\nAlso I think it\u0027d make sense to have a test verifying that if you start relocating a band that is full, but after the that some of the blocks become invalid, the code still works correctly.",
+      "parentUuid": "0fe14ef2_9195196d",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b10f3af4_f7ab62b6",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -359,6 +419,24 @@
       "side": 1,
       "message": "My intention here is to check also if we really relocating with given qdepth * xfer_size and this is true only for specific data layout that we setup in this test - this allow us to know how many iterations with qdepth * xfer_size we could expect.",
       "parentUuid": "b10f3af4_f7ab62b6",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b85ffc8_97f9db4d",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T16:05:28Z",
+      "side": 1,
+      "message": "I think this makes the test unnecessarily tied to the current implementation - if it\u0027s ever changed, you\u0027ll have to change the test too. I just think we should test that the reloc clears a band in a finite number of iterations, not necessarily specify the exact number.",
+      "parentUuid": "d8121d47_90518a58",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -535,6 +613,24 @@
       "side": 1,
       "message": "This was needed becouse ftl_reloc was processing write_queue before read_queue. I\u0027ve changed this order - it is clearer in that way.",
       "parentUuid": "517d39bb_0c44bf72",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770f7751_becdfb3e",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T16:05:28Z",
+      "side": 1,
+      "message": "So if you\u0027ve changed it, why do we still need the additional ftl_reloc call?",
+      "parentUuid": "988c798d_a3ddb0bd",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
