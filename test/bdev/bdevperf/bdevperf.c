@@ -103,6 +103,7 @@ struct io_target {
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
 	enum bdev_dif_mode		dif_mode;
+	uint32_t			dif_flags;
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
@@ -307,6 +308,16 @@ bdevperf_construct_target(struct spdk_bdev *bdev)
 	 */
 	g_min_alignment = spdk_max(g_min_alignment, align);
 
+	target->dif_flags = 0;
+	if (target->dif_mode == DIF_MODE_DIF) {
+		if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+			target->dif_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+		}
+		if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+			target->dif_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+		}
+	}
+
 	target->is_draining = false;
 	target->run_timer = NULL;
 	target->reset_timer = NULL;
@@ -499,6 +510,42 @@ bdevperf_prep_task(struct bdevperf_task *task)
 	}
 }
 
+static int
+bdevperf_submit_write(struct bdevperf_task *task)
+{
+	struct io_target		*target = task->target;
+	struct spdk_bdev		*bdev = target->bdev;
+	spdk_bdev_io_completion_cb	cb_fn;
+	struct spdk_dif_ctx		dif_ctx;
+	int				rc;
+
+	cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
+
+	if (target->dif_mode == DIF_MODE_DIF) {
+		rc = spdk_dif_ctx_init(&dif_ctx,
+				       spdk_bdev_get_block_size(bdev),
+				       spdk_bdev_get_md_size(bdev),
+				       true,
+				       spdk_bdev_is_dif_head_of_md(bdev),
+				       spdk_bdev_get_dif_type(bdev),
+				       target->dif_flags,
+				       task->offset_blocks, 0, 0);
+		if (rc != 0) {
+			fprintf(stderr, "Initialization of DIF context failed\n");
+			return rc;
+		}
+
+		rc = spdk_dif_generate(&task->iov, 1, target->io_size_blocks, &dif_ctx);
+		if (rc != 0) {
+			fprintf(stderr, "Generation of DIF failed\n");
+			return rc;
+		}
+	}
+
+	return spdk_bdev_writev_blocks(target->bdev_desc, target->ch, &task->iov, 1,
+				       task->offset_blocks, target->io_size_blocks, cb_fn, task);
+}
+
 static void
 bdevperf_submit_task(void *arg)
 {
@@ -506,7 +553,6 @@ bdevperf_submit_task(void *arg)
 	struct io_target	*target = task->target;
 	struct spdk_bdev_desc	*desc;
 	struct spdk_io_channel	*ch;
-	spdk_bdev_io_completion_cb cb_fn;
 	void			*rbuf;
 	int			rc;
 
@@ -515,9 +561,7 @@ bdevperf_submit_task(void *arg)
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
-		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, cb_fn, task);
+		rc = bdevperf_submit_write(task);
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
