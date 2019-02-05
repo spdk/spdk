@@ -1196,11 +1196,11 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	/* Copy the command from the tracker to the submission queue. */
 	nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
 
-	if (++pqpair->sq_tail == pqpair->num_entries) {
+	if (spdk_unlikely(++pqpair->sq_tail == pqpair->num_entries)) {
 		pqpair->sq_tail = 0;
 	}
 
-	if (pqpair->sq_tail == pqpair->sq_head) {
+	if (spdk_unlikely(pqpair->sq_tail == pqpair->sq_head)) {
 		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
 	}
 
@@ -1940,7 +1940,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 
 	nvme_pcie_qpair_check_enabled(qpair);
 
-	if (nvme_qpair_is_admin_queue(qpair)) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_lock(&ctrlr->ctrlr_lock);
 	}
 
@@ -1999,7 +1999,7 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	nvme_pcie_qpair_submit_tracker(qpair, tr);
 
 exit:
-	if (nvme_qpair_is_admin_queue(qpair)) {
+	if (spdk_unlikely(nvme_qpair_is_admin_queue(qpair))) {
 		nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);
 	}
 
