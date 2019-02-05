@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "504df51e_0da8aefa",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-05T07:51:28Z",
+      "side": 1,
+      "message": "Duh.",
+      "range": {
+        "startLine": 96,
+        "startChar": 13,
+        "endLine": 96,
+        "endChar": 57
+      },
+      "revId": "0900fe56e9545a86a1e118a7e788fab4b555ea01",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
