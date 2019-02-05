@@ -2328,6 +2328,27 @@ spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
 	return bdev->md_interleave;
 }
 
+enum spdk_dif_type
+spdk_bdev_get_dif_type(const struct spdk_bdev *bdev) {
+	if (bdev->fn_table->get_dif_type)
+	{
+		return bdev->fn_table->get_dif_type(bdev->ctxt);
+	} else
+	{
+		return SPDK_DIF_DISABLE;
+	}
+}
+
+bool
+spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev)
+{
+	if (bdev->fn_table->is_dif_head_of_md) {
+		return bdev->fn_table->is_dif_head_of_md(bdev->ctxt);
+	} else {
+		return false;
+	}
+}
+
 uint64_t
 spdk_bdev_get_qd(const struct spdk_bdev *bdev)
 {

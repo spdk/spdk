@@ -212,6 +212,12 @@ struct spdk_bdev_fn_table {
 	 *  Optional - may be NULL.
 	 */
 	uint64_t (*get_spin_time)(struct spdk_io_channel *ch);
+
+	/** Get DIF type of the block device. */
+	enum spdk_dif_type(*get_dif_type)(void *ctx);
+
+	/** Check whether DIF is set in the first 8 bytes or the last 8 bytes of metadata. */
+	bool (*is_dif_head_of_md)(void *ctx);
 };
 
 /** bdev I/O completion status */
