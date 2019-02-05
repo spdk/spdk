@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c58347a0_be79c66d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1707,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T22:16:47Z",
+      "side": 1,
+      "message": "tab this over to match prev declarations?",
+      "revId": "1f6bb4749148eed0e6313c8184f884a6b4eee801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64a7be20_463901b5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1862,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T22:16:47Z",
+      "side": 1,
+      "message": "maybe add the word \"device\" between fit and maximum",
+      "revId": "1f6bb4749148eed0e6313c8184f884a6b4eee801",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
