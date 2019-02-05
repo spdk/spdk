@@ -44,7 +44,6 @@
 #include "spdk_internal/log.h"
 
 #include "bdev_ftl.h"
-#include "common.h"
 
 #define FTL_COMPLETION_RING_SIZE 4096
 
@@ -55,7 +54,7 @@ struct ftl_bdev {
 
 	struct spdk_ftl_dev		*dev;
 
-	ftl_bdev_init_fn		init_cb;
+	spdk_rpc_construct_bdev_cb_fn	init_cb;
 
 	void				*init_arg;
 
@@ -389,7 +388,7 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_named_string(w, "method", "construct_ftl_bdev");
+	spdk_json_write_named_string(w, "method", "construct_nvme_bdev");
 
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_string(w, "name", ftl_bdev->bdev.name);
@@ -404,6 +403,8 @@ bdev_ftl_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 
 	spdk_uuid_fmt_lower(uuid, sizeof(uuid), &attrs.uuid);
 	spdk_json_write_named_string(w, "uuid", uuid);
+
+	spdk_json_write_named_string(w, "mode", "ftl");
 
 	spdk_json_write_object_end(w);
 
@@ -598,12 +599,12 @@ bdev_ftl_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 static void
 bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
-	struct ftl_bdev		*ftl_bdev = ctx;
-	struct ftl_bdev_info	info = {};
-	struct spdk_ftl_attrs	attrs;
-	ftl_bdev_init_fn	init_cb = ftl_bdev->init_cb;
-	void			*init_arg = ftl_bdev->init_arg;
-	int			rc = -ENODEV;
+	struct ftl_bdev			*ftl_bdev = ctx;
+	struct nvme_bdev_info		info = {};
+	struct spdk_ftl_attrs		attrs;
+	spdk_rpc_construct_bdev_cb_fn	init_cb = ftl_bdev->init_cb;
+	void				*init_arg = ftl_bdev->init_arg;
+	int				rc = -ENODEV;
 
 	if (status) {
 		SPDK_ERRLOG("Failed to create FTL device (%d)\n", status);
@@ -641,8 +642,8 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 		goto error_unregister;
 	}
 
-	info.name = ftl_bdev->bdev.name;
-	info.uuid = ftl_bdev->bdev.uuid;
+	info.names[0] = ftl_bdev->bdev.name;
+	info.count = 1;
 
 	pthread_mutex_lock(&g_ftl_bdev_lock);
 	LIST_INSERT_HEAD(&g_ftl_bdevs, ftl_bdev, list_entry);
@@ -665,7 +666,7 @@ error_dev:
 static int
 bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
 		const char *name, struct spdk_ftl_punit_range *range, unsigned int mode,
-		const struct spdk_uuid *uuid, ftl_bdev_init_fn cb, void *cb_arg)
+		const struct spdk_uuid *uuid, spdk_rpc_construct_bdev_cb_fn cb, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev = NULL;
 	struct nvme_bdev_ctrlr *ftl_ctrlr;
@@ -737,7 +738,7 @@ bdev_ftl_bdev_init_done(void)
 }
 
 static void
-bdev_ftl_init_cb(const struct ftl_bdev_info *info, void *ctx, int status)
+bdev_ftl_init_cb(struct nvme_bdev_info *info, void *ctx, int status)
 {
 	if (status) {
 		SPDK_ERRLOG("Failed to initialize FTL bdev\n");
@@ -825,7 +826,7 @@ error:
 }
 
 int
-bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *cb_arg)
+bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, spdk_rpc_construct_bdev_cb_fn cb, void *cb_arg)
 {
 	struct nvme_bdev_ctrlr *ftl_ctrlr;
 	struct spdk_nvme_ctrlr *ctrlr;

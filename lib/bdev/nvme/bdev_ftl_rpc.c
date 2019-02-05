@@ -38,139 +38,58 @@
 #include "spdk_internal/log.h"
 
 #include "bdev_ftl.h"
-
-struct rpc_construct_ftl {
-	char *name;
-	char *trtype;
-	char *traddr;
-	char *punits;
-	char *uuid;
-};
+#include "common.h"
 
 static void
-free_rpc_construct_ftl(struct rpc_construct_ftl *req)
+spdk_rpc_construct_ftl_bdev(struct spdk_bdev_nvme_construct_opts *opts,
+			    spdk_rpc_construct_bdev_cb_fn cb_fn, void *cb_arg)
 {
-	free(req->name);
-	free(req->trtype);
-	free(req->traddr);
-	free(req->punits);
-	free(req->uuid);
-}
-
-static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
-	{"name", offsetof(struct rpc_construct_ftl, name), spdk_json_decode_string},
-	{"trtype", offsetof(struct rpc_construct_ftl, trtype), spdk_json_decode_string},
-	{"traddr", offsetof(struct rpc_construct_ftl, traddr), spdk_json_decode_string},
-	{"punits", offsetof(struct rpc_construct_ftl, punits), spdk_json_decode_string},
-	{"uuid", offsetof(struct rpc_construct_ftl, uuid), spdk_json_decode_string, true},
-};
-
-#define FTL_RANGE_MAX_LENGTH 32
-
-static void
-_spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx, int status)
-{
-	struct spdk_jsonrpc_request *request = ctx;
-	char bdev_uuid[SPDK_UUID_STRING_LEN];
-	struct spdk_json_write_ctx *w;
-
-	if (status) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to create FTL bdev: %s",
-						     spdk_strerror(-status));
-		return;
-	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (!w) {
-		return;
-	}
-
-	spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), &bdev_info->uuid);
-	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", bdev_info->name);
-	spdk_json_write_named_string(w, "uuid", bdev_uuid);
-	spdk_json_write_object_end(w);
-	spdk_jsonrpc_end_result(request, w);
-}
-
-static void
-spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
-			    const struct spdk_json_val *params)
-{
-	struct rpc_construct_ftl req = {};
-	struct ftl_bdev_init_opts opts = {};
-	char range[FTL_RANGE_MAX_LENGTH];
+	struct ftl_bdev_init_opts ftl_opts = {};
 	int rc;
 
-	if (spdk_json_decode_object(params, rpc_construct_ftl_decoders,
-				    SPDK_COUNTOF(rpc_construct_ftl_decoders),
-				    &req)) {
-		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						 "Invalid parameters");
-		goto invalid;
+	ftl_opts.name = opts->name;
+	ftl_opts.mode = SPDK_FTL_MODE_CREATE;
+	ftl_opts.trid = opts->trid;
+	ftl_opts.range = opts->range;
+
+	if (opts->uuid) {
+		ftl_opts.mode = 0;
+		ftl_opts.uuid = *opts->uuid;
 	}
 
-	opts.name = req.name;
-	opts.mode = SPDK_FTL_MODE_CREATE;
-
-	/* Parse trtype */
-	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
+	rc = bdev_ftl_init_bdev(&ftl_opts, cb_fn, cb_arg);
 	if (rc) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Failed to parse trtype: %s, rc: %s",
-						     req.trtype, spdk_strerror(-rc));
-		goto invalid;
+		cb_fn(NULL, cb_arg, rc);
+	}
+	free(opts->uuid);
+}
+
+static int
+spdk_rpc_parse_ftl_bdev_args(struct rpc_construct_nvme *req,
+			     struct spdk_bdev_nvme_construct_opts *opts)
+{
+	if (bdev_ftl_parse_punits(&opts->range, req->punits)) {
+		return -EINVAL;
 	}
 
-	if (opts.trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Invalid trtype: %s. Only PCIe is supported",
-						     req.trtype);
-		goto invalid;
-	}
-
-	/* Parse traddr */
-	snprintf(opts.trid.traddr, sizeof(opts.trid.traddr), "%s", req.traddr);
-	snprintf(range, sizeof(range), "%s", req.punits);
-
-	if (bdev_ftl_parse_punits(&opts.range, req.punits)) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-						     "Failed to parse parallel unit range: %s",
-						     req.punits);
-		goto invalid;
-	}
-
-	if (req.uuid) {
-		opts.mode = 0;
-		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {
-			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
-							     "Failed to parse uuid: %s",
-							     req.uuid);
-			goto invalid;
+	if (req->uuid) {
+		opts->uuid = calloc(1, sizeof(struct spdk_uuid));
+		if (spdk_uuid_parse(opts->uuid, req->uuid) < 0) {
+			return -EINVAL;
 		}
 	}
 
-	rc = bdev_ftl_init_bdev(&opts, _spdk_rpc_construct_ftl_bdev_cb, request);
-	if (rc) {
-		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
-						     "Failed to create FTL bdev: %s",
-						     spdk_strerror(-rc));
-		goto invalid;
-	}
-
-invalid:
-	free_rpc_construct_ftl(&req);
+	return 0;
 }
 
-SPDK_RPC_REGISTER("construct_ftl_bdev", spdk_rpc_construct_ftl_bdev, SPDK_RPC_RUNTIME)
+SPDK_RPC_REGISTER_CONSTRUCT_FNS("ftl", spdk_rpc_construct_ftl_bdev, spdk_rpc_parse_ftl_bdev_args)
 
 struct rpc_delete_ftl {
 	char *name;
 };
 
 static const struct spdk_json_object_decoder rpc_delete_ftl_decoders[] = {
-	{"name", offsetof(struct rpc_construct_ftl, name), spdk_json_decode_string},
+	{"name", offsetof(struct rpc_delete_ftl, name), spdk_json_decode_string},
 };
 
 static void
