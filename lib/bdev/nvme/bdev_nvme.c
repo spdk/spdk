@@ -732,6 +732,58 @@ bdev_nvme_get_spin_time(struct spdk_io_channel *ch)
 	return spin_time;
 }
 
+static enum spdk_dif_type
+bdev_nvme_get_dif_type(void *ctx) {
+	struct nvme_bdev *nvme_bdev = ctx;
+
+	return (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(nvme_bdev->ns);
+}
+
+static bool
+bdev_nvme_is_dif_head_of_md(void *ctx)
+{
+	struct nvme_bdev *nvme_bdev = ctx;
+	const struct spdk_nvme_ns_data *nsdata;
+
+	nsdata = spdk_nvme_ns_get_data(nvme_bdev->ns);
+
+	return nsdata->dps.md_start != 0;
+}
+
+static bool
+bdev_nvme_is_dif_check_enabled(void *ctx, enum spdk_dif_check_type check_type)
+{
+	struct nvme_bdev *nvme_bdev = ctx;
+
+	switch (check_type) {
+	case SPDK_DIF_CHECK_TYPE_REFTAG:
+		if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+			return true;
+		} else {
+			return false;
+		}
+		break;
+	case SPDK_DIF_CHECK_TYPE_APPTAG:
+		if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_APPTAG) {
+			return true;
+		} else {
+			return false;
+		}
+		break;
+	case SPDK_DIF_CHECK_TYPE_GUARD:
+		if (nvme_bdev->io_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+			return true;
+		} else {
+			return false;
+		}
+		break;
+	default:
+		return false;
+	}
+
+	return false;
+}
+
 static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.destruct		= bdev_nvme_destruct,
 	.submit_request		= bdev_nvme_submit_request,
@@ -740,6 +792,9 @@ static const struct spdk_bdev_fn_table nvmelib_fn_table = {
 	.dump_info_json		= bdev_nvme_dump_info_json,
 	.write_config_json	= bdev_nvme_write_config_json,
 	.get_spin_time		= bdev_nvme_get_spin_time,
+	.get_dif_type		= bdev_nvme_get_dif_type,
+	.is_dif_head_of_md	= bdev_nvme_is_dif_head_of_md,
+	.is_dif_check_enabled	= bdev_nvme_is_dif_check_enabled,
 };
 
 static int
@@ -793,6 +848,8 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	bdev->disk.md_len = spdk_nvme_ns_get_md_size(ns);
 	nsdata = spdk_nvme_ns_get_data(ns);
 	bdev->disk.md_interleave = nsdata->flbas.extended;
+
+	bdev->io_flags = 0;
 
 	bdev->disk.ctxt = bdev;
 	bdev->disk.fn_table = &nvmelib_fn_table;
