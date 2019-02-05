@@ -109,7 +109,7 @@ static struct spdk_bdev_module malloc_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&malloc_if)
+SPDK_BDEV_MODULE_REGISTER(malloc, &malloc_if)
 
 static void
 malloc_disk_free(struct malloc_disk *malloc_disk)

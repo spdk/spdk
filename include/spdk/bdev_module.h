@@ -971,24 +971,12 @@ struct spdk_bdev *spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part);
 uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
 
 /*
- * Macro used to register module for later initialization.
+ *  Macro used to register module for later initialization.
  */
-#define SPDK_BDEV_MODULE_REGISTER(_module)							\
-	__attribute__((constructor)) static void						\
-	SPDK_BDEV_MODULE_REGISTER_FN_NAME(__LINE__)  (void)					\
-	{											\
-	    spdk_bdev_module_list_add(_module);							\
-	}
-
-/*
- * This is helper macro for automatic function generation.
- *
- */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME(line) SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line)
-
-/*
- *  Second helper macro for "stringize" trick to work.
- */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
+#define SPDK_BDEV_MODULE_REGISTER(name, module) \
+static void __attribute__((constructor)) spdk_bdev_module_register_##name(void) \
+{ \
+	spdk_bdev_module_list_add(module); \
+} \
 
 #endif /* SPDK_BDEV_MODULE_H */

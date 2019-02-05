@@ -278,7 +278,7 @@ static struct spdk_bdev_module rbd_if = {
 	.get_ctx_size = bdev_rbd_get_ctx_size,
 
 };
-SPDK_BDEV_MODULE_REGISTER(&rbd_if)
+SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
 
 static int64_t
 bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,

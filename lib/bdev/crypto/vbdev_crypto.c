@@ -1380,7 +1380,7 @@ static struct spdk_bdev_module crypto_if = {
 	.config_json = vbdev_crypto_config_json
 };
 
-SPDK_BDEV_MODULE_REGISTER(&crypto_if)
+SPDK_BDEV_MODULE_REGISTER(crypto, &crypto_if)
 
 static int
 vbdev_crypto_claim(struct spdk_bdev *bdev)

@@ -966,6 +966,6 @@ static struct spdk_bdev_module ocf_if = {
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
 	.examine_config = vbdev_ocf_examine,
 };
-SPDK_BDEV_MODULE_REGISTER(&ocf_if);
+SPDK_BDEV_MODULE_REGISTER(ocf, &ocf_if);
 
 SPDK_LOG_REGISTER_COMPONENT("vbdev_ocf", SPDK_TRACE_VBDEV_OCF)
