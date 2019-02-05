@@ -180,84 +180,92 @@ blockdev_heads_destroy(void)
 	free(coremap);
 }
 
-static void
-bdevperf_construct_targets(void)
+static int
+bdevperf_construct_target(struct spdk_bdev *bdev)
 {
 	int index = 0;
-	struct spdk_bdev *bdev;
 	struct io_target *target;
 	size_t align;
 	int rc;
 
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		return 0;
+	}
+
+	target = malloc(sizeof(struct io_target));
+	if (!target) {
+		fprintf(stderr, "Unable to allocate memory for new target.\n");
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	target->name = strdup(spdk_bdev_get_name(bdev));
+	if (!target->name) {
+		fprintf(stderr, "Unable to allocate memory for target name.\n");
+		free(target);
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	target->bdev = bdev;
+	/* Mapping each target to lcore */
+	index = g_target_count % spdk_env_get_core_count();
+	target->next = g_head[index];
+	target->lcore = coremap[index];
+	target->io_completed = 0;
+	target->current_queue_depth = 0;
+	target->offset_in_ios = 0;
+	target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
+	if (target->io_size_blocks == 0 ||
+	    (g_io_size % spdk_bdev_get_block_size(bdev)) != 0) {
+		SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32") or not a blocksize multiple\n",
+			    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
+		spdk_bdev_close(target->bdev_desc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
+	align = spdk_bdev_get_buf_align(bdev);
+	/*
+	 * TODO: This should actually use the LCM of align and g_min_alignment, but
+	 * it is fairly safe to assume all alignments are powers of two for now.
+	 */
+	g_min_alignment = spdk_max(g_min_alignment, align);
+
+	target->is_draining = false;
+	target->run_timer = NULL;
+	target->reset_timer = NULL;
+	TAILQ_INIT(&target->task_list);
+
+	g_head[index] = target;
+	g_target_count++;
+
+	return 0;
+}
+
+static void
+bdevperf_construct_targets(void)
+{
+	struct spdk_bdev *bdev;
+	int rc;
+
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
-
-		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-			printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
-		}
-
-		target = malloc(sizeof(struct io_target));
-		if (!target) {
-			fprintf(stderr, "Unable to allocate memory for new target.\n");
-			/* Return immediately because all mallocs will presumably fail after this */
-			return;
-		}
-
-		target->name = strdup(spdk_bdev_get_name(bdev));
-		if (!target->name) {
-			fprintf(stderr, "Unable to allocate memory for target name.\n");
-			free(target);
-			/* Return immediately because all mallocs will presumably fail after this */
-			return;
-		}
-
-		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+		rc = bdevperf_construct_target(bdev);
 		if (rc != 0) {
-			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-			free(target->name);
-			free(target);
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
+			return;
 		}
-
-		target->bdev = bdev;
-		/* Mapping each target to lcore */
-		index = g_target_count % spdk_env_get_core_count();
-		target->next = g_head[index];
-		target->lcore = coremap[index];
-		target->io_completed = 0;
-		target->current_queue_depth = 0;
-		target->offset_in_ios = 0;
-		target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
-		if (target->io_size_blocks == 0 ||
-		    (g_io_size % spdk_bdev_get_block_size(bdev)) != 0) {
-			SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32") or not a blocksize multiple\n",
-				    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
-			spdk_bdev_close(target->bdev_desc);
-			free(target->name);
-			free(target);
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
-		}
-
-		target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
-		align = spdk_bdev_get_buf_align(bdev);
-		/*
-		 * TODO: This should actually use the LCM of align and g_min_alignment, but
-		 * it is fairly safe to assume all alignments are powers of two for now.
-		 */
-		g_min_alignment = spdk_max(g_min_alignment, align);
-
-		target->is_draining = false;
-		target->run_timer = NULL;
-		target->reset_timer = NULL;
-		TAILQ_INIT(&target->task_list);
-
-		g_head[index] = target;
-		g_target_count++;
-
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
 }
