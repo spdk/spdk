@@ -32,9 +32,9 @@ $rootdir/test/app/bdev_svc/bdev_svc --max-delay=0 & svcpid=$!
 waitforlisten $svcpid
 
 if [ -n "$uuid" ]; then
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 -u $uuid
+	$rpc_py construct_nvme_bdev -b nvme0 -t PCIe -a $device -m ftl -p 0-3 -u $uuid
 else
-	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3
+	$rpc_py construct_nvme_bdev -b nvme0 -t PCIe -a $device -m ftl -p 0-3
 fi
 
 # Load the nbd driver
