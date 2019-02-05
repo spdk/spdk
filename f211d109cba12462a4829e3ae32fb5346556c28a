@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0ac8cd7_7a317ff2",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-02-05T10:06:26Z",
+      "side": 1,
+      "message": "Is double use of shift is necessary? Why not shift 2?",
+      "range": {
+        "startLine": 67,
+        "startChar": 1,
+        "endLine": 68,
+        "endChar": 6
+      },
+      "revId": "f211d109cba12462a4829e3ae32fb5346556c28a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
