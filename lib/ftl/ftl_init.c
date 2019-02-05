@@ -833,10 +833,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 {
 	struct spdk_ftl_dev *dev;
 
-	if (!opts || !opts->ctrlr) {
-		return -EINVAL;
-	}
-
 	dev = calloc(1, sizeof(*dev));
 	if (!dev) {
 		return -ENOMEM;
@@ -1029,10 +1025,6 @@ ftl_add_halt_poller(void *ctx)
 int
 spdk_ftl_dev_free(struct spdk_ftl_dev *dev, spdk_ftl_fn cb, void *cb_arg)
 {
-	if (!dev || !cb) {
-		return -EINVAL;
-	}
-
 	if (dev->halt_cb) {
 		return -EBUSY;
 	}
