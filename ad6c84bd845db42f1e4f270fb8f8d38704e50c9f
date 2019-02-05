@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "cce285b9_516daddf",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-05T14:57:31Z",
+      "side": 1,
+      "message": "If so, then mention that in commit message.",
+      "parentUuid": "75cc8cac_7a926c40",
+      "range": {
+        "startLine": 4,
+        "startChar": 11,
+        "endLine": 4,
+        "endChar": 22
+      },
+      "revId": "ad6c84bd845db42f1e4f270fb8f8d38704e50c9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c074bbd0_1f49a548",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 2

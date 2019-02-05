@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "808529e3_017cd7a9",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-05T14:57:31Z",
+      "side": 1,
+      "message": "I will be explicit this time:\n- I think there\u0027s even no need for this function as it is used only once. You can use spdk_vhost_run directly.\n- If youy want to keep run_vhost() then rpc_py steps should be removed from here and moved into a separate place.",
+      "range": {
+        "startLine": 79,
+        "startChar": 0,
+        "endLine": 93,
+        "endChar": 1
+      },
+      "revId": "e00a82c84dd90c53a3b05d4fd42084b79c411cce",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
