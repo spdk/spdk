@@ -929,7 +929,11 @@ function vm_wait_for_boot()
 		echo ""
 		notice "VM$vm_num ready"
 		#Change Timeout for stopping services to prevent lengthy powerdowns
-		vm_ssh $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
+		#Check that remote system is not Cygwin in case of Windows VMs
+		local vm_os=$(vm_ssh $vm_num "uname -o")
+		if [[ "$vm_os" != "Cygwin" ]]; then
+			vm_ssh $vm_num "echo 'DefaultTimeoutStopSec=10' >> /etc/systemd/system.conf; systemctl daemon-reexec"
+		fi
 	done
 
 	notice "all VMs ready"
