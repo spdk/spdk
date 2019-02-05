@@ -304,6 +304,23 @@ struct spdk_bdev {
 	bool md_interleave;
 
 	/**
+	 * DIF type for this bdev.
+	 *
+	 * Note that this field is valid only if there is metadata.
+	 */
+	enum spdk_dif_type dif_type;
+
+	/*
+	 * DIF location.
+	 *
+	 * Set to true if DIF is set in the first 8 bytes of metadata or false
+	 * if DIF is set in the last 8 bytes of metadata.
+	 *
+	 * Note that this field is valid only if DIF is enabled.
+	 */
+	bool dif_is_head_of_md;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
