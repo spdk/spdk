@@ -16,6 +16,24 @@
       "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e6e50f27_ddac0c7f",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T14:01:10Z",
+      "side": 1,
+      "message": "We need to set both until strip_size is deprecated and I believe this is where to do it. the internal element strip_size is used throughout and later converted, the _kb one needs to be set before that conversion to LBA happens.  Am I missing something?",
+      "parentUuid": "664785e2_05ddc28e",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
