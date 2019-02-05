@@ -34,6 +34,24 @@
       "revId": "ed9145d34ea52f934fc28a55fd3b6ba275cba2ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "08d7145a_fc9fac74",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T10:12:23Z",
+      "side": 1,
+      "message": "I\u0027ve added alignment for elem size, but I\u0027m not sure if this really needed? Documentation says only about alignment restrictions: \"The address of the allocated memory will be a multiple of alignment, which must be a power of two and a multiple of sizeof(void *).\"",
+      "parentUuid": "0a196f9b_a33bb47b",
+      "revId": "ed9145d34ea52f934fc28a55fd3b6ba275cba2ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
