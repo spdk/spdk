@@ -52,6 +52,24 @@
       "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a65e497_deaaab3b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T20:12:53Z",
+      "side": 1,
+      "message": "There are cases where these can be NULL.\nreq.cmd is NULL in spdk_nvmf_rdma_qpair_initialize and is not set until the first time that request passes through spdk__nvmf_rdma_request_process.\nrdma_req-\u003erecv is NULL after the state RDMA_REQUEST_STATE_READY_TO_COMPLETE until right before it enters the state RDMA_REQUEST_STATE_NEW.",
+      "parentUuid": "4f747be7_95065c47",
+      "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
