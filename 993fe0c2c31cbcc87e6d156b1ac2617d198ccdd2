@@ -46,6 +46,30 @@
       "revId": "993fe0c2c31cbcc87e6d156b1ac2617d198ccdd2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d535064a_861dbf45",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T09:26:50Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bdd1c5b8_bbb7cbd3",
+      "range": {
+        "startLine": 296,
+        "startChar": 8,
+        "endLine": 296,
+        "endChar": 12
+      },
+      "revId": "993fe0c2c31cbcc87e6d156b1ac2617d198ccdd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
