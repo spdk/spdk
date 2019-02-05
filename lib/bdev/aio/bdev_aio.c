@@ -35,10 +35,12 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/barrier.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
+#include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
@@ -74,6 +76,23 @@ struct file_disk {
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 };
+
+/* For user space reaping of completions */
+struct aio_ring {
+	uint32_t id;
+	uint32_t nr;
+	uint32_t head;
+	uint32_t tail;
+
+	uint32_t magic;
+	uint32_t compat_features;
+	uint32_t incompat_features;
+	uint32_t header_length;
+
+	struct io_event events[0];
+};
+
+#define AIO_RING_MAGIC	0xa10a10a1
 
 static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
@@ -231,20 +250,46 @@ bdev_aio_destruct(void *ctx)
 }
 
 static int
+bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *events)
+{
+	uint64_t i = 0;
+	uint32_t head;
+	struct aio_ring *ring = (struct aio_ring *)io_ctx;
+	struct timespec timeout;
+
+	if (spdk_unlikely(ring->magic != AIO_RING_MAGIC)) {
+		timeout.tv_sec = 0;
+		timeout.tv_nsec = 0;
+
+		return io_getevents(io_ctx, 0, SPDK_AIO_QUEUE_DEPTH, events, &timeout);
+	}
+
+	while (i < max) {
+		head = ring->head;
+
+		if (head == ring->tail) {
+			break;
+		}
+
+		events[i] = ring->events[head];
+		spdk_smp_rmb();
+		ring->head = (head + 1) % ring->nr;
+		i++;
+	}
+
+	return i;
+}
+
+static int
 bdev_aio_group_poll(void *arg)
 {
 	struct bdev_aio_group_channel *group_ch = arg;
 	int nr, i = 0;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
-	struct timespec timeout;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 
-	timeout.tv_sec = 0;
-	timeout.tv_nsec = 0;
-
-	nr = io_getevents(group_ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
-			  events, &timeout);
+	nr = bdev_user_io_getevents(group_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 
 	if (nr < 0) {
 		return -1;
