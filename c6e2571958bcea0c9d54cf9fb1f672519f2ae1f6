@@ -22,6 +22,30 @@
       "revId": "c6e2571958bcea0c9d54cf9fb1f672519f2ae1f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67632aec_9c42e8a1",
+        "filename": "scripts/gdb_macros.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2019-02-05T07:09:13Z",
+      "side": 1,
+      "message": "What do you mean python 3 ready?\nWe have python 2.7 on our production setups, so I would prefer that this be backward compatible.",
+      "parentUuid": "e1427fd4_91ff9c71",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 39
+      },
+      "revId": "c6e2571958bcea0c9d54cf9fb1f672519f2ae1f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
