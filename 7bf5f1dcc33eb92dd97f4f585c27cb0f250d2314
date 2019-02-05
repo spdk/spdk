@@ -293,6 +293,30 @@
       "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d98de1e_eb1906be",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T14:49:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "14a8d156_87f4430b",
+      "range": {
+        "startLine": 28,
+        "startChar": 0,
+        "endLine": 32,
+        "endChar": 28
+      },
+      "revId": "7bf5f1dcc33eb92dd97f4f585c27cb0f250d2314",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
