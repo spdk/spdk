@@ -1282,19 +1282,13 @@ ftl_current_limit(const struct spdk_ftl_dev *dev)
 	return dev->limit;
 }
 
-int
+void
 spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
 {
-	if (!dev || !attrs) {
-		return -EINVAL;
-	}
-
 	attrs->uuid = dev->uuid;
 	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
-
-	return 0;
 }
 
 static void

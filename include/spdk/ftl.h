@@ -206,10 +206,8 @@ void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
  *
  * \param dev device
  * \param attr Attribute structure to fill
- *
- * \return 0 if successfully initialized, negated EINVAL otherwise.
  */
-int spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void  spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
 /**
  * Submits a read to the specified device.
