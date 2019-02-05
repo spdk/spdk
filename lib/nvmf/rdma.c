@@ -2237,7 +2237,6 @@ spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 }
 
-
 static int
 nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 {
@@ -2583,6 +2582,13 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	free(rgroup);
 }
 
+static void
+spdk_nvmf_rdma_qpair_reject_connection(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+}
+
 static int
 spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
@@ -2621,8 +2627,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rc = spdk_nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
 	if (rc) {
 		/* Try to reject, but we probably can't */
-		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		spdk_nvmf_rdma_qpair_reject_connection(rqpair);
 		return -1;
 	}
 
@@ -2680,6 +2685,17 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	}
 
 	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
+
+	/* This happens only when the qpair is disconnected before
+	 * it is added to the poll group. SInce there is no poll group,
+	 * we will never reap the I/O for this connection. This also
+	 * means that we have not accepted the connection request yet,
+	 * so we need to reject it.
+	 */
+	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
+		spdk_nvmf_rdma_qpair_reject_connection(rqpair);
+		return;
+	}
 
 	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
