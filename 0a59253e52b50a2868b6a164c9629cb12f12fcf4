@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c360f16_1d266f03",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 363,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-05T20:11:35Z",
+      "side": 1,
+      "message": "Use \u0027cc\u0027 instead of \u0027gcc\u0027 - we want to support systems using clang (not that there are any linux distros using clang just yet).",
+      "revId": "0a59253e52b50a2868b6a164c9629cb12f12fcf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a99ecdaa_f9a56f6c",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 364,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-05T20:11:35Z",
+      "side": 1,
+      "message": "/dev/null",
+      "revId": "0a59253e52b50a2868b6a164c9629cb12f12fcf4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
