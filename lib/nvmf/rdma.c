@@ -404,12 +404,6 @@ struct spdk_nvmf_rdma_transport {
 	TAILQ_HEAD(, spdk_nvmf_rdma_port)	ports;
 };
 
-static inline bool
-spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
-{
-	return __sync_bool_compare_and_swap(&rqpair->disconnect_started, false, true);
-}
-
 static inline int
 spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
 {
@@ -2213,7 +2207,7 @@ _nvmf_rdma_qpair_disconnect(void *ctx)
 }
 
 static void
-_nvmf_rdma_attempt_disconnect(void *ctx)
+_nvmf_rdma_try_disconnect(void *ctx)
 {
 	struct spdk_nvmf_qpair *qpair = ctx;
 	struct spdk_nvmf_poll_group *group;
@@ -2228,11 +2222,19 @@ _nvmf_rdma_attempt_disconnect(void *ctx)
 	if (group == NULL) {
 		/* The qpair hasn't been assigned to a group yet, so we can't
 		 * process a disconnect. Send a message to ourself and try again. */
-		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_attempt_disconnect, qpair);
+		spdk_thread_send_msg(spdk_get_thread(), _nvmf_rdma_try_disconnect, qpair);
 		return;
 	}
 
 	spdk_thread_send_msg(group->thread, _nvmf_rdma_qpair_disconnect, qpair);
+}
+
+static inline void
+spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	if (__sync_bool_compare_and_swap(&rqpair->disconnect_started, false, true)) {
+		_nvmf_rdma_try_disconnect(&rqpair->qpair);
+	}
 }
 
 static int
@@ -2258,9 +2260,7 @@ nvmf_rdma_disconnect(struct rdma_cm_event *evt)
 
 	spdk_nvmf_rdma_update_ibv_state(rqpair);
 
-	if (spdk_nvmf_rdma_start_disconnect(rqpair)) {
-		_nvmf_rdma_attempt_disconnect(qpair);
-	}
+	spdk_nvmf_rdma_start_disconnect(rqpair);
 
 	return 0;
 }
@@ -2391,10 +2391,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0,
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		spdk_nvmf_rdma_update_ibv_state(rqpair);
-		if (spdk_nvmf_rdma_start_disconnect(rqpair)) {
-			_nvmf_rdma_attempt_disconnect(&rqpair->qpair);
-		}
-		break;
+		spdk_nvmf_rdma_start_disconnect(rqpair);
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
 		/* This event only occurs for shared receive queues, which are not currently supported. */
 		break;
@@ -2409,9 +2406,7 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 				  (uintptr_t)rqpair->cm_id, event.event_type);
 		state = spdk_nvmf_rdma_update_ibv_state(rqpair);
 		if (state == IBV_QPS_ERR) {
-			if (spdk_nvmf_rdma_start_disconnect(rqpair)) {
-				_nvmf_rdma_attempt_disconnect(&rqpair->qpair);
-			}
+			spdk_nvmf_rdma_start_disconnect(rqpair);
 		}
 		break;
 	case IBV_EVENT_QP_REQ_ERR:
@@ -2586,6 +2581,13 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	free(rgroup);
 }
 
+static void
+spdk_nvmf_rdma_qpair_reject_connection(struct spdk_nvmf_rdma_qpair *rqpair)
+{
+	spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+}
+
 static int
 spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 			      struct spdk_nvmf_qpair *qpair)
@@ -2624,8 +2626,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 	rc = spdk_nvmf_rdma_event_accept(rqpair->cm_id, rqpair);
 	if (rc) {
 		/* Try to reject, but we probably can't */
-		spdk_nvmf_rdma_event_reject(rqpair->cm_id, SPDK_NVMF_RDMA_ERROR_NO_RESOURCES);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		spdk_nvmf_rdma_qpair_reject_connection(rqpair);
 		return -1;
 	}
 
@@ -2683,6 +2684,17 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	}
 
 	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
+
+	/* This happens only when the qpair is disconnected before
+	 * it is added to the poll group. SInce there is no poll group,
+	 * we will never reap the I/O for this connection. This also
+	 * means that we have not accepted the connection request yet,
+	 * so we need to reject it.
+	 */
+	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
+		spdk_nvmf_rdma_qpair_reject_connection(rqpair);
+		return;
+	}
 
 	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
@@ -2824,9 +2836,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
-				if (spdk_nvmf_rdma_start_disconnect(rqpair)) {
-					_nvmf_rdma_attempt_disconnect(&rqpair->qpair);
-				}
+				spdk_nvmf_rdma_start_disconnect(rqpair);
 			}
 			continue;
 		}
@@ -2885,9 +2895,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = rdma_recv->qpair;
 			/* The qpair should not send more requests than are allowed per qpair. */
 			if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
-				if (spdk_nvmf_rdma_start_disconnect(rqpair)) {
-					_nvmf_rdma_attempt_disconnect(&rqpair->qpair);
-				}
+				spdk_nvmf_rdma_start_disconnect(rqpair);
 			} else {
 				rqpair->current_recv_depth++;
 			}
