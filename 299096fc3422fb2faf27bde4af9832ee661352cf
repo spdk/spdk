@@ -34,6 +34,24 @@
       "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7e955a72_5531be34",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T22:57:16Z",
+      "side": 1,
+      "message": "If I understand correctly, raid_bdev-\u003estrip_size will started to be accessed after raid_bdev_configure(), i.e. being inserted into the configured list.\n\nHence it will be OK even if raid_bdev-\u003estrip_size is 0 here.\n\nLet\u0027s get Jim and Darek\u0027s comment again.",
+      "parentUuid": "e6e50f27_ddac0c7f",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
