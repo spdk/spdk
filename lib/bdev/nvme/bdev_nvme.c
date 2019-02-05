@@ -750,6 +750,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	struct spdk_nvme_ns	*ns;
 	const struct spdk_uuid	*uuid;
 	const struct spdk_nvme_ctrlr_data *cdata;
+	const struct spdk_nvme_ns_data *nsdata;
 	int			rc;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -787,6 +788,16 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	uuid = spdk_nvme_ns_get_uuid(ns);
 	if (uuid != NULL) {
 		bdev->disk.uuid = *uuid;
+	}
+
+	bdev->disk.md_len = spdk_nvme_ns_get_md_size(ns);
+	if (bdev->disk.md_len != 0) {
+		nsdata = spdk_nvme_ns_get_data(ns);
+		bdev->disk.md_interleave = nsdata->flbas.extended;
+		bdev->disk.dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
+		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
+			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
+		}	
 	}
 
 	bdev->disk.ctxt = bdev;
