@@ -35,10 +35,12 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/barrier.h"
 #include "spdk/bdev.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
+#include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
@@ -74,6 +76,23 @@ struct file_disk {
 	TAILQ_ENTRY(file_disk)  link;
 	bool			block_size_override;
 };
+
+/* For user space reaping of completions */
+struct spdk_aio_ring {
+	uint32_t id;
+	uint32_t size;
+	uint32_t head;
+	uint32_t tail;
+
+	uint32_t version;
+	uint32_t compat_features;
+	uint32_t incompat_features;
+	uint32_t header_length;
+
+	struct io_event events[0];
+};
+
+#define SPDK_AIO_RING_VERSION	0xa10a10a1
 
 static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
@@ -230,6 +249,66 @@ bdev_aio_destruct(void *ctx)
 	return rc;
 }
 
+#if defined(__i386__) || defined(__x86_64__)
+#define aio_barrier()	spdk_compiler_barrier()
+#else
+#define aio_barrier()	spdk_mb()
+#endif
+
+static int
+bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *events)
+{
+	uint32_t head, tail, count;
+	struct spdk_aio_ring *ring;
+	struct timespec timeout;
+
+	ring = (struct spdk_aio_ring *)io_ctx;
+
+	if (spdk_unlikely(ring->version != SPDK_AIO_RING_VERSION || ring->incompat_features != 0)) {
+		timeout.tv_sec = 0;
+		timeout.tv_nsec = 0;
+
+		return io_getevents(io_ctx, 0, max, events, &timeout);
+	}
+
+	/* Read the current state out of the ring */
+	head = ring->head;
+	tail = ring->tail;
+
+	/* This memory barrier is required to prevent the loads above
+	 * from being re-ordered with stores to the events array
+	 * potentially occurring on other threads. */
+	spdk_smp_rmb();
+
+	/* Calculate how many items are in the circular ring */
+	count = tail - head;
+	if (tail < head) {
+		count += ring->size;
+	}
+
+	/* Reduce the count to the limit provided by the user */
+	count = spdk_min(max, count);
+
+	/* Copy the events out of the ring. */
+	if ((head + count) < ring->size) {
+		/* Only one copy is required */
+		memcpy(events, &ring->events[head], count);
+	} else {
+		/* Two copies are required */
+		memcpy(events, &ring->events[head], ring->size - head);
+		memcpy(&events[ring->size - head], &ring->events[0], count - (ring->size - head));
+	}
+
+	/* Update the head pointer. On x86, stores will not be reordered with older loads,
+	 * so the copies out of the event array will always be complete prior to this
+	 * update becoming visible. On other architectures this is not guaranteed, so
+	 * add a barrier. */
+	aio_barrier();
+	ring->head = (head + count) % ring->size;
+
+	return count;
+}
+
 static int
 bdev_aio_group_poll(void *arg)
 {
@@ -237,14 +316,9 @@ bdev_aio_group_poll(void *arg)
 	int nr, i = 0;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
-	struct timespec timeout;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
 
-	timeout.tv_sec = 0;
-	timeout.tv_nsec = 0;
-
-	nr = io_getevents(group_ch->io_ctx, 0, SPDK_AIO_QUEUE_DEPTH,
-			  events, &timeout);
+	nr = bdev_user_io_getevents(group_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
 
 	if (nr < 0) {
 		return -1;
