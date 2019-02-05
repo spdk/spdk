@@ -1553,6 +1553,33 @@ nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr)
 }
 
 static void
+bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
+{
+	struct spdk_bdev *bdev = bdev_io->bdev;
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk = {};
+	int rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
+			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
+			       bdev_io->u.bdev.offset_blocks, 0, 0);
+	if (rc != 0) {
+		SPDK_ERRLOG("Initialization of DIF context failed\n");
+		return;
+	}
+
+	rc = spdk_dif_verify(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+			     bdev_io->u.bdev.num_blocks, &dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	} else {
+		SPDK_ERRLOG("Hardware reported PI error but SPDK could not find any.\n");
+	}
+}
+
+static void
 bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
@@ -1564,6 +1591,13 @@ static void
 bdev_nvme_writev_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+
+	if (spdk_nvme_cpl_is_pi_error(cpl)) {
+		SPDK_ERRLOG("writev completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+		/* Run PI verification for write data buffer if PI error is detected. */
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
 
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
 }
@@ -1683,7 +1717,7 @@ bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 	bio->iov_offset = 0;
 
 	rc = spdk_nvme_ns_cmd_writev(nbdev->ns, nvme_ch->qpair, lba, lba_count,
-				     bdev_nvme_writev_done, bio, 0,
+				     bdev_nvme_writev_done, bio, nbdev->disk.dif_check_flags,
 				     bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge);
 
 	if (rc != 0 && rc != -ENOMEM) {
