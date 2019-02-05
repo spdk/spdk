@@ -286,6 +286,7 @@ if __name__ == "__main__":
                                                  name=args.name,
                                                  trtype=args.trtype,
                                                  traddr=args.traddr,
+                                                 mode=args.mode,
                                                  adrfam=args.adrfam,
                                                  trsvcid=args.trsvcid,
                                                  subnqn=args.subnqn,
@@ -295,6 +296,7 @@ if __name__ == "__main__":
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
+    p.add_argument('-m', '--mode', help="NVMe working mode: e.g., generic, ftl. Default: generic")
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
