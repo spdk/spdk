@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "664785e2_05ddc28e",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-05T13:15:28Z",
+      "side": 1,
+      "message": "I think Darek and Jim say only strip_size_kb should be written here.",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
