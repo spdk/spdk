@@ -184,7 +184,7 @@ static struct spdk_bdev_module nvme_if = {
 	.get_ctx_size = bdev_nvme_get_ctx_size,
 
 };
-SPDK_BDEV_MODULE_REGISTER(&nvme_if)
+SPDK_BDEV_MODULE_REGISTER(nvme_if)
 
 static int
 bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,

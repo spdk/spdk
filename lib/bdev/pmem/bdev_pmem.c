@@ -63,7 +63,7 @@ static struct spdk_bdev_module pmem_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&pmem_if)
+SPDK_BDEV_MODULE_REGISTER(pmem_if)
 
 typedef int(*spdk_bdev_pmem_io_request)(PMEMblkpool *pbp, void *buf, long long blockno);
 

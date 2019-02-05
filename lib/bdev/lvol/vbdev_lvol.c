@@ -55,7 +55,7 @@ static struct spdk_bdev_module g_lvol_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&g_lvol_if)
+SPDK_BDEV_MODULE_REGISTER(g_lvol_if)
 
 struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)

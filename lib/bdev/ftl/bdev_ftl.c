@@ -126,7 +126,7 @@ static struct spdk_bdev_module g_ftl_if = {
 	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&g_ftl_if)
+SPDK_BDEV_MODULE_REGISTER(g_ftl_if)
 
 static struct ftl_bdev_ctrlr *
 bdev_ftl_ctrlr_find(const struct spdk_nvme_transport_id *trid)

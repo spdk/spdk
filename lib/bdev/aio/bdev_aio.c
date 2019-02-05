@@ -98,7 +98,7 @@ static struct spdk_bdev_module aio_if = {
 	.get_ctx_size	= bdev_aio_get_ctx_size,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&aio_if)
+SPDK_BDEV_MODULE_REGISTER(aio_if)
 
 static int
 bdev_aio_open(struct file_disk *disk)
