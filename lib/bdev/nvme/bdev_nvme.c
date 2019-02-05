@@ -100,6 +100,8 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.timeout_us = 0,
 	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
 	.nvme_adminq_poll_period_us = 1000000ULL,
+	.enable_prchk_reftag = false,
+	.enable_prchk_guard = false,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -845,6 +847,12 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	}
 
 	bdev->io_flags = 0;
+	if (g_opts.enable_prchk_reftag) {
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+	if (g_opts.enable_prchk_guard) {
+		bdev->io_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
 
 	bdev->disk.ctxt = bdev;
 	bdev->disk.fn_table = &nvmelib_fn_table;

@@ -236,6 +236,8 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
         retry_count: The number of attempts per I/O when an I/O fails (optional)
         nvme_adminq_poll_period_us: how often the admin queue is polled for asynchronous events in microsecon (optional)
+        enable_prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
+        enable_prchk_guard: Enable checking of PI guard for I/O processing (optional)
     """
     params = {}
 
@@ -250,6 +252,12 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if nvme_adminq_poll_period_us:
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
+
+    if enable_prchk_reftag:
+        params['enable_prchk_reftag'] = enable_prchk_reftag
+
+    if enable_prchk_guard:
+        params['enable_prchk_guard'] = enable_prchk_guard
 
     return client.call('set_bdev_nvme_options', params)
 
