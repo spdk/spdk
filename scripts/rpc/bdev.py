@@ -269,10 +269,22 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     return client.call('set_bdev_nvme_hotplug', params)
 
 
-def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None):
+def construct_nvme_bdev(
+        client,
+        name,
+        trtype,
+        traddr,
+        mode=None,
+        adrfam=None,
+        trsvcid=None,
+        subnqn=None,
+        hostnqn=None,
+        hostaddr=None,
+        hostsvcid=None):
     """Construct NVMe namespace block devices.
 
     Args:
+        mode: NVMe working mode ("generic", "ftl")
         name: bdev name prefix; "n" + namespace ID will be appended to create unique names
         trtype: transport type ("PCIe", "RDMA")
         traddr: transport address (PCI BDF or IP address)
@@ -307,6 +319,9 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
 
     if subnqn:
         params['subnqn'] = subnqn
+
+    if mode:
+        params['mode'] = mode
 
     return client.call('construct_nvme_bdev', params)
 
