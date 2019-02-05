@@ -456,7 +456,7 @@ static struct spdk_bdev_module virtio_scsi_if = {
 	.async_fini = true,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&virtio_scsi_if)
+SPDK_BDEV_MODULE_REGISTER(virtio_scsi, &virtio_scsi_if)
 
 static struct virtio_scsi_io_ctx *
 bdev_virtio_init_io_vreq(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)

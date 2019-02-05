@@ -93,7 +93,7 @@ static struct spdk_bdev_module error_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&error_if)
+SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
 int
 spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)

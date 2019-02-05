@@ -216,7 +216,7 @@ struct spdk_bdev_module bdev_ut_if = {
 	.fini_start = fini_start,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
 
 static void
 register_bdev(struct ut_bdev *ut_bdev, char *name, void *io_target)
