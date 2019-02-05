@@ -159,8 +159,6 @@
 struct spdk_mobj {
 	struct spdk_mempool *mp;
 	void *buf;
-	size_t len;
-	uint64_t reserved; /* do not use */
 };
 
 struct spdk_iscsi_pdu {
