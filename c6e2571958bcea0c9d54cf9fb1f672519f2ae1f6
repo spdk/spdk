@@ -70,6 +70,30 @@
       "revId": "c6e2571958bcea0c9d54cf9fb1f672519f2ae1f6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fcc0bdb_a28a5022",
+        "filename": "scripts/gdb_macros.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2019-02-05T08:33:06Z",
+      "side": 1,
+      "message": "I changed the prints to use print_function imported from __future__, this works on my python 2.6 production machines",
+      "parentUuid": "7e94e1a8_f4a46a84",
+      "range": {
+        "startLine": 58,
+        "startChar": 16,
+        "endLine": 58,
+        "endChar": 39
+      },
+      "revId": "c6e2571958bcea0c9d54cf9fb1f672519f2ae1f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
