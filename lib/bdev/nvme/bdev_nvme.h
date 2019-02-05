@@ -80,6 +80,10 @@ struct nvme_bdev {
 	struct spdk_bdev	disk;
 	struct nvme_ctrlr	*nvme_ctrlr;
 	uint32_t		id;
+
+	/** Value set to PRACT and PRCHK fields of NVMe commands. */
+	uint32_t		io_flags;
+
 	bool			active;
 	struct spdk_nvme_ns	*ns;
 };
