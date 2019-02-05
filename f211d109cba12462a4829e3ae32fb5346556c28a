@@ -39,6 +39,24 @@
       "revId": "f211d109cba12462a4829e3ae32fb5346556c28a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "473c5d15_0e441f13",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-05T12:34:37Z",
+      "side": 1,
+      "message": "... do you want a Github issue with that?;)",
+      "parentUuid": "50e0b3b8_ebc8c25b",
+      "revId": "f211d109cba12462a4829e3ae32fb5346556c28a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
