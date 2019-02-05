@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3456e7fe_107ea2b1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2227,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-05T17:15:15Z",
+      "side": 1,
+      "message": "What about the scenario where the target is notified of a new qpair, but without ever assigning it to a poll group, it disconnects it? That may generate an RDMA_CM_EVENT which will enter this function and spin forever because group will always be NULL.",
+      "revId": "2fee30c49c4bf1efc83fbc589550601b3dad5587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
