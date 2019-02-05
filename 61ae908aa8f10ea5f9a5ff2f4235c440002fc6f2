@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56584fb2_89234b3b",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-05T17:57:44Z",
+      "side": 1,
+      "message": "Are you sure you want to do it here? After send you have any information if notify object is still valid and you cannot use it, so these cases will unexpectedly fail:\n\nallocate -\u003e send -\u003e put -\u003e ... segfault\nallocate -\u003e send -\u003e get -\u003e ... segfault\nallocate -\u003e send -\u003e send -\u003e ... segfault\n\nIs that intentional? API for spdk_notify_alloc() description notices only that \"When notification object is no longer need it is required to call spdk_notify_put to free used resources.\" It will not work right.\n\nPossible schemes are:\n\n1) allocate(refcnt++) -\u003e send(refcnt--)(notify freed)\n2) allocate(refcnt++) -\u003e send[-\u003esend[...]] -\u003e put(refcnt--) (notify freed)\n3) allocate(refcnt++) -\u003e get(refcnt++) -\u003e send [-\u003esend[...]] -\u003e put(refcnt--) -\u003e put(refcnt--) (notify freed)\n4) allocate -\u003e get(refcnt++) -\u003e send [-\u003esend[...]] -\u003e put(refcnt--) -\u003e free (notify freed)",
+      "range": {
+        "startLine": 212,
+        "startChar": 1,
+        "endLine": 212,
+        "endChar": 25
+      },
+      "revId": "61ae908aa8f10ea5f9a5ff2f4235c440002fc6f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
