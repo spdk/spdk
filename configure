@@ -359,20 +359,9 @@ fi
 
 if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if [ "$OSTYPE" != "FreeBSD"* ]; then
-		ibv_lib_file="$(ldconfig -p | grep 'libibverbs.so ' || true)"
-		if [ ! -z "$ibv_lib_file" ]; then
-			ibv_lib_file="${ibv_lib_file##*=> }"
-			ibv_lib_file="$(readlink -f $ibv_lib_file)" || true
-		fi
-
-		if [ -z $ibv_lib_file ]; then
-			ibv_lib_file="libibverbs.so.0.0.0"
-		fi
-
-		ibv_ver_str="$(basename $ibv_lib_file)"
-		ibv_maj_ver=`echo $ibv_ver_str | cut -d. -f3`
-		ibv_min_ver=`echo $ibv_ver_str | cut -d. -f4`
-		if [[ "$ibv_maj_var" -gt 1 || ("$ibv_maj_ver" -eq 1 && "$ibv_min_ver" -ge 1) ]]; then
+		if echo -e '#include <infiniband/verbs.h>\n \
+			int main(void){ return !!IBV_WR_SEND_WITH_INV; }\n' \
+			| gcc -x c -c -o /dev/nul - 2>/dev/null; then
 			CONFIG[RDMA_SEND_WITH_INVAL]="y"
 		else
 			CONFIG[RDMA_SEND_WITH_INVAL]="n"
