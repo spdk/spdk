@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85450bf9_deb87f89",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-05T18:19:11Z",
+      "side": 1,
+      "message": "Separating these is the strategy we took in the target, and I think it works here. However now that I look at this I think the initiator might be a bit simpler. What if we left the wr embedded in the request, but we put two flags on the request - one that gets set when the RECV completes (i.e. the completion arrives) and one that gets set when the SEND completes (i.e. when we get acknowledgement that our command was received by the target). Then, when either a SEND or a RECV complete, we check that both of these flags are set before doing nvme_rdma_req_complete/nvme_rdma_req_put/etc.",
+      "revId": "ae2f8c36839e2028b849afdbb5e6380d8c41d974",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
