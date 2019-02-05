@@ -16,6 +16,24 @@
       "revId": "2fee30c49c4bf1efc83fbc589550601b3dad5587",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e65f7792_bc5ecfb5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2227,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-05T19:44:34Z",
+      "side": 1,
+      "message": "I agree that we are handling this wrong. I see the places in nvmf_tgt.c:new_qpair where we call spdk_nvmf_qpair_disconnect. However we haven\u0027t acked the connect request at that point so I don\u0027t think we can get a CM event. However we aren\u0027t registered with a poller yet, so we end up posting the dummies and never reaping them. I will address these in the next couple of patches.",
+      "parentUuid": "3456e7fe_107ea2b1",
+      "revId": "2fee30c49c4bf1efc83fbc589550601b3dad5587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
