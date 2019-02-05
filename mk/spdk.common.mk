@@ -194,6 +194,10 @@ LDFLAGS += --coverage
 endif
 endif
 
+ifeq ($(CONFIG_FTL),y)
+COMMON_CFLAGS += -DFTL
+endif
+
 include $(CONFIG_ENV)/env.mk
 
 ifeq ($(CONFIG_ASAN),y)

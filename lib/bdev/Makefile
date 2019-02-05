@@ -42,7 +42,7 @@ C_SRCS = bdev.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
 
-DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
+DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split common_nvme
 
 ifeq ($(CONFIG_CRYPTO),y)
 DIRS-y += crypto
