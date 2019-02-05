@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1787862_ae1b2919",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-05T16:50:05Z",
+      "side": 1,
+      "message": "Should be \"type2\".",
+      "range": {
+        "startLine": 75,
+        "startChar": 10,
+        "endLine": 75,
+        "endChar": 17
+      },
+      "revId": "5fc35bc5946aa2658cb058be76995eb845fd7dae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e434fe48_0f8b1f80",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-05T16:50:05Z",
+      "side": 1,
+      "message": "1) You shouldn\u0027t expect here any particular order of registered types.\n2) Check if type2 is registered properly (you\u0027re using it later, so it may have an impact on further tests).\n3) It also will be nice to test SPDK_NOTIFY_TYPE_REGISTER(_type) to check if spdk_notify_type_register() will not blow in the constructor.",
+      "range": {
+        "startLine": 88,
+        "startChar": 0,
+        "endLine": 91,
+        "endChar": 0
+      },
+      "revId": "5fc35bc5946aa2658cb058be76995eb845fd7dae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4b5c1347_bd1c03e2",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-05T16:50:05Z",
+      "side": 1,
+      "message": "SPDK_CU_ASSERT_FATAL(notify-\u003erefcnt \u003d\u003d 0)? You\u0027re doing spdk_notify_put() in spdk_notify_send(). Is that correct behavior?",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 43
+      },
+      "revId": "5fc35bc5946aa2658cb058be76995eb845fd7dae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ad59d5a_11662330",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-05T16:50:05Z",
+      "side": 1,
+      "message": "You\u0027re putting back notify object in spdk_notify_send() and probably it\u0027s freed here.",
+      "range": {
+        "startLine": 109,
+        "startChar": 1,
+        "endLine": 109,
+        "endChar": 25
+      },
+      "revId": "5fc35bc5946aa2658cb058be76995eb845fd7dae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
