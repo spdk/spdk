@@ -2686,10 +2686,9 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	rqpair->disconnect_flags |= RDMA_QP_DISCONNECTING;
 
 	/* This happens only when the qpair is disconnected before
-	 * it is added to the poll group. SInce there is no poll group,
-	 * we will never reap the I/O for this connection. This also
-	 * means that we have not accepted the connection request yet,
-	 * so we need to reject it.
+	 * it is added to the poll group. Since there is no poll group,
+	 * the RDMA qp has not been initialized yet and the RDMA CM
+	 * event has not yet been acknowledged, so we need to reject it.
 	 */
 	if (rqpair->qpair.state == SPDK_NVMF_QPAIR_UNINITIALIZED) {
 		spdk_nvmf_rdma_qpair_reject_connection(rqpair);
