@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f67b6fab_d2a66c74",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 949,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T22:12:53Z",
+      "side": 1,
+      "message": "just a nit, since the prev line sets to vals to 0, might as well just put this on that line too.",
+      "revId": "d678a2a0f45c7f0db6839cfcd198d89ba0627f4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01efcf1c_4c7c220a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-05T22:12:53Z",
+      "side": 1,
+      "message": "Can you explain a bit more about the use case and how you found this? I\u0027ve not looked into it in much detail but it seems like something this fundamental couldn\u0027t have been missing this long",
+      "revId": "d678a2a0f45c7f0db6839cfcd198d89ba0627f4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
