@@ -286,15 +286,19 @@ if __name__ == "__main__":
                                                  name=args.name,
                                                  trtype=args.trtype,
                                                  traddr=args.traddr,
+                                                 mode=args.mode,
                                                  adrfam=args.adrfam,
                                                  trsvcid=args.trsvcid,
                                                  subnqn=args.subnqn,
                                                  hostnqn=args.hostnqn,
                                                  hostaddr=args.hostaddr,
-                                                 hostsvcid=args.hostsvcid))
+                                                 hostsvcid=args.hostsvcid,
+                                                 punits=args.punits,
+                                                 uuid=args.uuid))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
+    p.add_argument('-m', '--mode', help="NVMe working mode: e.g., generic, ftl. Default: generic")
     p.add_argument('-b', '--name', help="Name of the NVMe controller, prefix for each bdev name", required=True)
     p.add_argument('-t', '--trtype',
                    help='NVMe-oF target trtype: e.g., rdma, pcie', required=True)
@@ -310,6 +314,9 @@ if __name__ == "__main__":
                    help='NVMe-oF host address: e.g., an ip address')
     p.add_argument('-c', '--hostsvcid',
                    help='NVMe-oF host svcid: e.g., a port number')
+    p.add_argument('-p', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8')
+    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
+                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d')
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):
@@ -1253,27 +1260,6 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=destruct_split_vbdev)
 
     # ftl
-    def construct_ftl_bdev(args):
-        print_dict(rpc.bdev.construct_ftl_bdev(args.client,
-                                               name=args.name,
-                                               trtype=args.trtype,
-                                               traddr=args.traddr,
-                                               punits=args.punits,
-                                               uuid=args.uuid))
-
-    p = subparsers.add_parser('construct_ftl_bdev',
-                              help='Add FTL bdev')
-    p.add_argument('-b', '--name', help="Name of the bdev", required=True)
-    p.add_argument('-t', '--trtype',
-                   help='NVMe target trtype: e.g., pcie', default='pcie')
-    p.add_argument('-a', '--traddr',
-                   help='NVMe target address: e.g., an ip address or BDF', required=True)
-    p.add_argument('-l', '--punits', help='Parallel unit range in the form of start-end: e.g. 4-8',
-                   required=True)
-    p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
-                   'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
-    p.set_defaults(func=construct_ftl_bdev)
-
     def delete_ftl_bdev(args):
         print_dict(rpc.bdev.delete_ftl_bdev(args.client, name=args.name))
 

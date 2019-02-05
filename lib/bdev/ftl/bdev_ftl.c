@@ -511,7 +511,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			break;
 		}
 
-		if (bdev_ftl_parse_punits(&opts->range, val)) {
+		if (spdk_bdev_ftl_parse_punits(&opts->range, val)) {
 			SPDK_ERRLOG("Invalid punit range\n");
 			rc = -1;
 			break;
