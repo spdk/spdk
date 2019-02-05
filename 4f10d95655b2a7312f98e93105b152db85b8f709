@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fcd98a82_cc0f23cb",
+        "filename": "lib/bdev/crypto/vbdev_crypto.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 197,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-05T14:59:20Z",
+      "side": 1,
+      "message": "Could you create one patch that just adds this create_vbdev_dev() function?  With no functionality changes.  Then a second patch that fixes the leak.\n\nIt makes it way easier to review.  With the patch like this I have to scroll up and down to check what was changed as the code was moved.\n\nIn general, please always do separate patches that move code, and then a follow up patch that changes the code.",
+      "revId": "4f10d95655b2a7312f98e93105b152db85b8f709",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
