@@ -63,6 +63,24 @@
       "revId": "197f976b134269f069b5d9f4c464afd35c02a97b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72615aaf_11e1ebc5",
+        "filename": "test/ftl/restore.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-05T11:00:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "07b7242c_8777f86c",
+      "revId": "197f976b134269f069b5d9f4c464afd35c02a97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
