@@ -2452,8 +2452,17 @@ struct spdk_nvme_fw_commit {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 
-#define spdk_nvme_cpl_is_error(cpl)					\
-	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
+#define spdk_nvme_cpl_is_error(cpl)			\
+	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\
+	 (cpl)->status.sct != SPDK_NVME_SCT_GENERIC)
+
+#define spdk_nvme_cpl_is_success(cpl)	(!spdk_nvme_cpl_is_error(cpl))
+
+#define spdk_nvme_cpl_is_pi_error(cpl)						\
+	((cpl)->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&			\
+	 ((cpl)->status.sc == SPDK_NVME_SC_GUARD_CHECK_ERROR ||			\
+	  (cpl)->status.sc == SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR ||	\
+	  (cpl)->status.sc == SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR))
 
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)
