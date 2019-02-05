@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "5b46342c_baafa278",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-05T11:12:14Z",
+      "side": 1,
+      "message": "You\u0027re right, since we don\u0027t want to check for NULLs I\u0027m OK to leave it. I think I even have a commit laying around getting rid of all the NULL checks from our external APIs, I\u0027ll push it.",
+      "parentUuid": "163e7b0f_524320b8",
+      "range": {
+        "startLine": 405,
+        "startChar": 0,
+        "endLine": 406,
+        "endChar": 47
+      },
+      "revId": "197f976b134269f069b5d9f4c464afd35c02a97b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07b7242c_8777f86c",
         "filename": "test/ftl/restore.sh",
         "patchSetId": 2
