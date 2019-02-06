@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f62a9da8_88a6ef3f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1861,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T19:26:05Z",
+      "side": 1,
+      "message": "Seems like we need to reconcile SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE and SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE.\n\nCurrently MIN_IO_BUFFER_SIZE is 4096.  But that value actually doesn\u0027t get used - spdk_nvme_rdma_opts_init() initializes io_unit_size to max(DEFAULT_IO_BUFFER_SIZE, MIN_IO_BUFFER_SIZE) and DEFAULT_IO_BUFFER_SIZE works out to 8K (128K MAX_IO_SIZE / 16 MAX_SGL_ENTRIES).\n\nNow that we\u0027re actually figuring out the max_sge, I think we get rid of DEFAULT_IO_BUFFER_SIZE and just change MIN_IO_BUFFER_SIZE to 8192.  Then use MIN_IO_BUFFER_SIZE here.",
+      "revId": "0f2b49b2a61d159c0d175d7af82594d1aebfada3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
