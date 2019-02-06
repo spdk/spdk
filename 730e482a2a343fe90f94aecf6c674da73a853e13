@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b3d7758_02c24f82",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T20:47:51Z",
+      "side": 1,
+      "message": "This is unfortunate.  But bdev layer currently doesn\u0027t have a helper function to get the channel from a bdev_io.  We should probably add something - similar to spdk_bdev_io_get_thread.  Then you would not need to save the channel like this.\n\nI\u0027m OK with this as it is now, but if you\u0027d like to add a small bdev patch to add spdk_bdev_io_get_channel before this one, then you could use it here (and you\u0027ll need to rebase this patch anyways).",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "770e4ef9_f695a3e5",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1625,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T20:47:51Z",
+      "side": 1,
+      "message": "is this ERRLOG needed?  or does ERRLOG in bdev_nvme_readv_done plus ERRLOG from bdev_nvme_verify_pi_error suffice?",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbcd7d76_4f65ff3b",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1753,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T20:47:51Z",
+      "side": 1,
+      "message": "this name confused me a bit - from the perspective of the SSD, this is actually an unchecked readv since the SSD is not doing a check\n\nmaybe bdev_nvme_no_pi_readv?  I am open to alternate names.",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
