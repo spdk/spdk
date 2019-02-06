@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6f1a77d7_cd459b31",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:42:05Z",
+      "side": 1,
+      "message": "Can we just move the _nvmf_rdma_attempt_disconnect into spdk_nvmf_rdma_start_disconnect?  All of the code below has this same if (start) { attempt() } paradigm.  I think it\u0027s just clearer - otherwise reader has to understand what the start() return value means and what the difference is between start and attempt.\n\nI\u0027d also suggest \"try\" instead of \"attempt\" - just because it\u0027s fewer characters.  :)",
+      "revId": "abc84ca914fd538044f9eea7dcacc2c3464c21ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
