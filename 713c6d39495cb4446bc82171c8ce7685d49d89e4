@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34094d21_1ccfe72e",
+        "filename": "test/unit/lib/bdev/crypto.c/crypto_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-06T18:00:23Z",
+      "side": 1,
+      "message": "self-review: this should be removed as well",
+      "range": {
+        "startLine": 193,
+        "startChar": 0,
+        "endLine": 199,
+        "endChar": 42
+      },
+      "revId": "713c6d39495cb4446bc82171c8ce7685d49d89e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
