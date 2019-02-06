@@ -1,0 +1,157 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8273f378_9483bb2b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "to/from",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e7620b25_462c10c5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "\"write function\" - this is used by read, write and unmap",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8157573e_dbdc6db9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "you\u0027ll need to explicitly call the cb_args-\u003ecb_fn in this path, since the comp_reduce_io_cb won\u0027t get called",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b13f9c3f_482287f7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f7be5c7_68bec0b3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d00ff8d1_d7446e8e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "populate",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d03f68c_c63ba3ba",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "you shouldn\u0027t need to request write access when loading (only when initializing)",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2bbdab95_04bcaee1",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "you can remove one of these lines - the second one completely undoes the first one (and neither will be correct in the final patch)",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ccc28e10_45e4f06a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T18:35:58Z",
+      "side": 1,
+      "message": "you have to wait to call examine_done until after the spdk_reduce_vol_load callback",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
