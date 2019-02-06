@@ -37,20 +37,13 @@
 #include "spdk_internal/mock.h"
 #include "unit/lib/json_mock.c"
 
-/* these rte_ headers are our local copies of the DPDK headers hacked to mock some functions
- * included in them that can't be done with our mock library.
- */
-#include "rte_crypto.h"
-#include "rte_cryptodev.h"
-#include "bdev/crypto/vbdev_crypto.c"
+#include <rte_crypto.h>
+#include <rte_cryptodev.h>
 
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
 struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
 
-/* These globals are externs in our local rte_ header files so we can control
- * specific functions for mocking.
- */
 uint16_t g_dequeue_mock;
 uint16_t g_enqueue_mock;
 unsigned ut_rte_crypto_op_bulk_alloc;
@@ -58,10 +51,14 @@ int ut_rte_crypto_op_attach_sym_session = 0;
 int ut_rte_cryptodev_info_get = 0;
 bool ut_rte_cryptodev_info_get_mocked = false;
 
-/* Used in testing device full condition */
+/* Those functions are defined as static inline in DPDK, so we can't
+ * mock them straight away. We use defines to redirect them into
+ * our custom functions.
+ */
+#define rte_cryptodev_enqueue_burst mock_rte_cryptodev_enqueue_burst
 static inline uint16_t
-rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
-			    struct rte_crypto_op **ops, uint16_t nb_ops)
+mock_rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
+				 struct rte_crypto_op **ops, uint16_t nb_ops)
 {
 	int i;
 
@@ -84,9 +81,10 @@ rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
  * no more IOs to drain.
  */
 int g_test_overflow = 0;
+#define rte_cryptodev_dequeue_burst mock_rte_cryptodev_dequeue_burst
 static inline uint16_t
-rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
-			    struct rte_crypto_op **ops, uint16_t nb_ops)
+mock_rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
+				 struct rte_crypto_op **ops, uint16_t nb_ops)
 {
 	CU_ASSERT(nb_ops > 0);
 
@@ -108,10 +106,11 @@ rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
 /* Instead of allocating real memory, assign the allocations to our
  * test array for assertion in tests.
  */
+#define rte_crypto_op_bulk_alloc mock_rte_crypto_op_bulk_alloc
 static inline unsigned
-rte_crypto_op_bulk_alloc(struct rte_mempool *mempool,
-			 enum rte_crypto_op_type type,
-			 struct rte_crypto_op **ops, uint16_t nb_ops)
+mock_rte_crypto_op_bulk_alloc(struct rte_mempool *mempool,
+			      enum rte_crypto_op_type type,
+			      struct rte_crypto_op **ops, uint16_t nb_ops)
 {
 	int i;
 
@@ -121,19 +120,23 @@ rte_crypto_op_bulk_alloc(struct rte_mempool *mempool,
 	return ut_rte_crypto_op_bulk_alloc;
 }
 
+#define rte_mempool_put_bulk mock_rte_mempool_put_bulk
 static __rte_always_inline void
-rte_mempool_put_bulk(struct rte_mempool *mp, void *const *obj_table,
-		     unsigned int n)
+mock_rte_mempool_put_bulk(struct rte_mempool *mp, void *const *obj_table,
+			  unsigned int n)
 {
 	return;
 }
 
+#define rte_crypto_op_attach_sym_session mock_rte_crypto_op_attach_sym_session
 static inline int
-rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
-				 struct rte_cryptodev_sym_session *sess)
+mock_rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
+				      struct rte_cryptodev_sym_session *sess)
 {
 	return ut_rte_crypto_op_attach_sym_session;
 }
+
+#include "bdev/crypto/vbdev_crypto.c"
 
 /* SPDK stubs */
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *,
@@ -186,13 +189,7 @@ DEFINE_STUB(rte_cryptodev_sym_session_init, int, (uint8_t dev_id,
 DEFINE_STUB(rte_vdev_init, int, (const char *name, const char *args), 0);
 DEFINE_STUB(rte_cryptodev_sym_session_free, int, (struct rte_cryptodev_sym_session *sess), 0);
 
-void __attribute__((noreturn)) __rte_panic(const char *funcname, const char *format, ...)
-{
-	abort();
-}
-struct rte_mempool_ops_table rte_mempool_ops_table;
 struct rte_cryptodev *rte_cryptodevs;
-__thread unsigned per_lcore__lcore_id = 0;
 
 /* global vars and setup/cleanup functions used for all test functions */
 struct spdk_bdev_io *g_bdev_io;
