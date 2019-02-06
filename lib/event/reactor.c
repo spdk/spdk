@@ -173,10 +173,11 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor, struct spdk_thread *th
 	return count;
 }
 
+#define CONTEXT_SWITCH_MONITOR_PERIOD 1000000
+
 static int
-get_rusage(void *arg)
+get_rusage(struct spdk_reactor *reactor)
 {
-	struct spdk_reactor	*reactor = arg;
 	struct rusage		rusage;
 
 	if (getrusage(RUSAGE_THREAD, &rusage) != 0) {
@@ -194,46 +195,14 @@ get_rusage(void *arg)
 	return -1;
 }
 
-static void
-_spdk_reactor_context_switch_monitor_start(void *arg1, void *arg2)
-{
-	struct spdk_reactor *reactor = arg1;
-
-	if (reactor->rusage_poller == NULL) {
-		getrusage(RUSAGE_THREAD, &reactor->rusage);
-		reactor->rusage_poller = spdk_poller_register(get_rusage, reactor, 1000000);
-	}
-}
-
-static void
-_spdk_reactor_context_switch_monitor_stop(void *arg1, void *arg2)
-{
-	struct spdk_reactor *reactor = arg1;
-
-	if (reactor->rusage_poller != NULL) {
-		spdk_poller_unregister(&reactor->rusage_poller);
-	}
-}
-
 void
 spdk_reactor_enable_context_switch_monitor(bool enable)
 {
-	struct spdk_reactor *reactor;
-	spdk_event_fn fn;
-	uint32_t core;
-
-	if (enable != g_context_switch_monitor_enabled) {
-		g_context_switch_monitor_enabled = enable;
-		if (enable) {
-			fn = _spdk_reactor_context_switch_monitor_start;
-		} else {
-			fn = _spdk_reactor_context_switch_monitor_stop;
-		}
-		SPDK_ENV_FOREACH_CORE(core) {
-			reactor = spdk_reactor_get(core);
-			spdk_event_call(spdk_event_allocate(core, fn, reactor, NULL));
-		}
-	}
+	/* This global is being read by multiple threads, so this isn't
+	 * strictly thread safe. However, we're toggling between true and
+	 * false here, and if a thread sees the value update later than it
+	 * should, it's no big deal. */
+	g_context_switch_monitor_enabled = enable;
 }
 
 bool
@@ -249,6 +218,7 @@ _spdk_reactor_run(void *arg)
 	struct spdk_thread	*thread;
 	struct spdk_lw_thread	*lw_thread, *tmp;
 	uint64_t		sleep_cycles;
+	uint64_t		last_rusage = 0;
 	uint32_t		sleep_us;
 	int			rc;
 	char			thread_name[32];
@@ -272,11 +242,6 @@ _spdk_reactor_run(void *arg)
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
 	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
-	if (g_context_switch_monitor_enabled) {
-		spdk_set_thread(thread);
-		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
-		spdk_set_thread(NULL);
-	}
 
 	while (1) {
 		uint64_t now;
@@ -330,11 +295,14 @@ _spdk_reactor_run(void *arg)
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
 		}
-	}
 
-	spdk_set_thread(thread);
-	_spdk_reactor_context_switch_monitor_stop(reactor, NULL);
-	spdk_set_thread(NULL);
+		if (g_context_switch_monitor_enabled) {
+			if ((last_rusage + CONTEXT_SWITCH_MONITOR_PERIOD) < now) {
+				get_rusage(reactor);
+				last_rusage = now;
+			}
+		}
+	}
 
 	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
