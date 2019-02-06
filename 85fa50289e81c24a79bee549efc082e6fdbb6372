@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f81ed256_54b3a8de",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T19:13:56Z",
+      "side": 1,
+      "message": "These changes will work, but I\u0027m wondering if a cleaner way would be to add a parameter with the name, and leave the _module parameter untouched.\n\nThat way we can use nice short, consistent names like \"nvme\", \"iscsi\", \"lvol\", etc.  Right now, each of the modules uses their own weird naming for the module pointer - g_iscsi_bdev_module, g_lvol_if, malloc_if.  That means that you\u0027re explicitly calling functions that are fairly inconsistent.\n\nSo then modules do:\n\nSPDK_BDEV_MODULE_REGISTER(iscsi, \u0026g_iscsi_bdev_module)\n\nor \n\nSPDK_BDEV_MODULE_REGISTER(lvol, \u0026g_lvol_if)\n\nAnd then you\u0027re calling these functions from rust:\n\nspdk_bdev_module_register_iscsi\nspdk_bdev_module_register_lvol\nspdk_bdev_module_register_malloc\n\ninstead of\n\nspdk_bdev_module_register_g_iscsi_bdev_module\nspdk_bdev_module_register_g_lvol_if\nspdk_bdev_module_register_malloc_if",
+      "revId": "85fa50289e81c24a79bee549efc082e6fdbb6372",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
