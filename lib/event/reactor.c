@@ -269,7 +269,7 @@ _spdk_reactor_run(void *arg)
 			took_action = true;
 		}
 
-		rc = spdk_thread_poll(thread, 0);
+		rc = spdk_thread_poll(thread, 0, 0);
 		if (rc != 0) {
 			took_action = true;
 		}
