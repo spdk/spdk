@@ -138,3 +138,6 @@ CONFIG_CUSTOMOCF=n
 
 # Build ISA-L library
 CONFIG_ISAL=y
+
+# Use table-driven T10 CRC-16
+CONFIG_CRCTABLE=n
