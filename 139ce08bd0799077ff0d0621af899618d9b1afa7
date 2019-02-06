@@ -190,6 +190,30 @@
     },
     {
       "key": {
+        "uuid": "046ccc34_68eca322",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T08:24:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ed42fa3c_5c6acd0b",
+      "range": {
+        "startLine": 190,
+        "startChar": 1,
+        "endLine": 190,
+        "endChar": 6
+      },
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b773449_784b2c68",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -337,6 +361,24 @@
     },
     {
       "key": {
+        "uuid": "15955d29_5c009d82",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T08:24:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9cd65743_f3ac1958",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "15857d7b_d484a064",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -390,6 +432,24 @@
     },
     {
       "key": {
+        "uuid": "9684f7ad_03ab94c6",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T08:24:33Z",
+      "side": 1,
+      "message": "I will add comment on this.",
+      "parentUuid": "42417e5d_f2456b64",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b10f3af4_f7ab62b6",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -437,6 +497,24 @@
       "side": 1,
       "message": "I think this makes the test unnecessarily tied to the current implementation - if it\u0027s ever changed, you\u0027ll have to change the test too. I just think we should test that the reloc clears a band in a finite number of iterations, not necessarily specify the exact number.",
       "parentUuid": "d8121d47_90518a58",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b797c984_539e1102",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T08:24:33Z",
+      "side": 1,
+      "message": "I think that reloc ability to process some set of IO in one iteration is one of core functionality of this module and I want to have this covered in unit tests.",
+      "parentUuid": "7b85ffc8_97f9db4d",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -631,6 +709,24 @@
       "side": 1,
       "message": "So if you\u0027ve changed it, why do we still need the additional ftl_reloc call?",
       "parentUuid": "988c798d_a3ddb0bd",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30639174_d85cffe5",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T08:24:33Z",
+      "side": 1,
+      "message": "I\u0027ve decreased number of iterations.",
+      "parentUuid": "770f7751_becdfb3e",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
