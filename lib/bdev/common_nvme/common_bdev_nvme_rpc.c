@@ -161,50 +161,51 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	if (req.prchk_guard) {
 		opts.prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 
-	opts.name = req.name;
-	opts.hostnqn = req.hostnqn;
+		opts.name = req.name;
+		opts.hostnqn = req.hostnqn;
 
 #if defined(FTL)
-	if (req.punits)	{
-		if (spdk_bdev_ftl_parse_punits(&opts.range, req.punits)) {
-			goto invalid;
-		}
-	}
-
-	if (req.uuid) {
-		opts.uuid = calloc(1, sizeof(struct spdk_uuid));
-		if (spdk_uuid_parse(opts.uuid, req.uuid) < 0) {
-			goto invalid;
-		}
-	}
-#endif
-
-	if (req.mode != NULL) {
-		if (!strcasecmp(req.mode, "generic")) {
-			spdk_rpc_construct_generic_nvme_bdev(&opts, request);
-#if defined(FTL)
-		} else if (!strcasecmp(req.mode, "ftl")) {
-			if (req.punits == NULL) {
+		if (req.punits)	{
+			if (spdk_bdev_ftl_parse_punits(&opts.range, req.punits)) {
 				goto invalid;
 			}
-			spdk_rpc_construct_ftl_bdev(&opts, request);
-			free(opts.uuid);
-#endif
-		} else {
-			goto invalid;
 		}
-	} else {
-		spdk_rpc_construct_generic_nvme_bdev(&opts, request);
-	}
 
-	free_rpc_construct_nvme(&req);
-	return;
+		if (req.uuid) {
+			opts.uuid = calloc(1, sizeof(struct spdk_uuid));
+			if (spdk_uuid_parse(opts.uuid, req.uuid) < 0) {
+				goto invalid;
+			}
+		}
+#endif
+
+		if (req.mode != NULL) {
+			if (!strcasecmp(req.mode, "generic")) {
+				spdk_rpc_construct_generic_nvme_bdev(&opts, request);
+#if defined(FTL)
+			} else if (!strcasecmp(req.mode, "ftl")) {
+				if (req.punits == NULL) {
+					goto invalid;
+				}
+				spdk_rpc_construct_ftl_bdev(&opts, request);
+				free(opts.uuid);
+#endif
+			} else {
+				goto invalid;
+			}
+		} else {
+			spdk_rpc_construct_generic_nvme_bdev(&opts, request);
+		}
+
+		free_rpc_construct_nvme(&req);
+		return;
 
 invalid:
 #if defined(FTL)
-	free(opts.uuid);
+		free(opts.uuid);
 #endif
-	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_construct_nvme(&req);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		free_rpc_construct_nvme(&req);
+	}
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)

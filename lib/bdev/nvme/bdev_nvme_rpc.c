@@ -169,7 +169,8 @@ spdk_rpc_construct_generic_nvme_bdev(struct nvme_bdev_construct_opts *opts,
 	size_t i;
 
 	count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&opts->trid, &opts->hostid, opts->name, names, &count, opts->hostnqn, opts->prchk_flags)) {
+	if (spdk_bdev_nvme_create(&opts->trid, &opts->hostid, opts->name, names, &count, opts->hostnqn,
+				  opts->prchk_flags)) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		return;
 	}

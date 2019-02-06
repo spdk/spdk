@@ -35,7 +35,45 @@
 #define SPDK_COMMON_BDEV_NVME_H
 
 #include "spdk/nvme.h"
+#include "spdk/bdev_module.h"
 #include "spdk/ftl.h"
+
+#define NVME_MAX_CONTROLLERS 1024
+
+struct nvme_ctrlr {
+	/**
+	 * points to pinned, physically contiguous memory region;
+	 * contains 4KB IDENTIFY structure for controller which is
+	 *  target for CONTROLLER IDENTIFY command during initialization
+	 */
+	struct spdk_nvme_ctrlr		*ctrlr;
+	struct spdk_nvme_transport_id	trid;
+	char				*name;
+	int				ref;
+	bool				destruct;
+	/**
+	 * PI check flags. This flags is set to NVMe controllers created only
+	 * through construct_nvme_bdev RPC or .INI config file. Hot added
+	 * NVMe controllers are not included.
+	 */
+	uint32_t			prchk_flags;
+	uint32_t			num_ns;
+	/** Array of bdevs indexed by nsid - 1 */
+	struct nvme_bdev		*bdevs;
+
+	struct spdk_poller		*adminq_timer_poller;
+
+	/** linked list pointer for device list */
+	TAILQ_ENTRY(nvme_ctrlr)	tailq;
+};
+
+struct nvme_bdev {
+	struct spdk_bdev	disk;
+	struct nvme_ctrlr	*nvme_ctrlr;
+	uint32_t		id;
+	bool			active;
+	struct spdk_nvme_ns	*ns;
+};
 
 struct nvme_bdev_construct_opts {
 	/* NVMe controller's transport ID */
@@ -54,5 +92,8 @@ struct nvme_bdev_construct_opts {
 	uint32_t				prchk_flags;
 #endif
 };
+
+struct nvme_ctrlr *spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
+struct nvme_ctrlr *spdk_nvme_ctrlr_get_by_name(const char *name);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
