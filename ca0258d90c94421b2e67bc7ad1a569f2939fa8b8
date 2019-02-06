@@ -52,6 +52,24 @@
       "revId": "ca0258d90c94421b2e67bc7ad1a569f2939fa8b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "98557a80_a058f508",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T22:43:43Z",
+      "side": 1,
+      "message": "For each command we send, we need to get a SEND completion (acknowledgement that our command arrived at the target) and a RECV completion (which contains the NVMe completion) before we can free the associated rdma_req back to the pool. He\u0027s using this boolean to flag that we\u0027ve gotten at one of these completions, so when the second one comes in we can actually free the request.\n\nI think it\u0027s slightly convoluted this way - I might have used a mask with two bits in it (one for each completion) and then checked the mask against 0b11 (with a nice #define name) to see if it can be safely put back into the pool. That\u0027s probably easier for a human to read, but this way works too.",
+      "parentUuid": "04b75223_48fc5097",
+      "revId": "ca0258d90c94421b2e67bc7ad1a569f2939fa8b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
