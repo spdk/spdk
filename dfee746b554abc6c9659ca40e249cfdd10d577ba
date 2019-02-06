@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "035dc3a3_414d9732",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1941,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T21:47:39Z",
+      "side": 1,
+      "message": "seems we could avoid duplicated code by just putting case AWAIT_PDU_READY just above case AWAIT_PDU_CH, and adding a check after pdu-\u003ech_valid_bytes +\u003d rc to set the recv_state to AWAIT_PDU_CH if ch_valid_bytes \u003e 0.  it means there are some times where you unnecessarily overwrite state AWAIT_PDU_CH with AWAIT_PDU_CH but it avoids 10 lines or so of code duplication",
+      "revId": "dfee746b554abc6c9659ca40e249cfdd10d577ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
