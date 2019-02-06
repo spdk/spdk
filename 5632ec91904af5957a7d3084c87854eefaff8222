@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a8fe6ca_7aa2c67f",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T15:24:47Z",
+      "side": 0,
+      "message": "I think you can also remove the reserved field from struct spdk_mobj.\n\nI don\u0027t even remember why this code was put in.  Surely it\u0027s from 5+ years ago.  I\u0027m also not sure why the phys_addr was written this way, instead of just writing it to m-\u003ereserved (or using \"phys_addr\" as the field name instead of \"reserved\").",
+      "revId": "5632ec91904af5957a7d3084c87854eefaff8222",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
