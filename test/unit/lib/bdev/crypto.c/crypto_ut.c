@@ -44,6 +44,97 @@
 #include "rte_cryptodev.h"
 #include "bdev/crypto/vbdev_crypto.c"
 
+#define MAX_TEST_BLOCKS 8192
+struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
+struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
+
+/* These globals are externs in our local rte_ header files so we can control
+ * specific functions for mocking.
+ */
+uint16_t g_dequeue_mock;
+uint16_t g_enqueue_mock;
+unsigned ut_rte_crypto_op_bulk_alloc;
+int ut_rte_crypto_op_attach_sym_session = 0;
+int ut_rte_cryptodev_info_get = 0;
+bool ut_rte_cryptodev_info_get_mocked = false;
+
+/* Used in testing device full condition */
+static inline uint16_t
+rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
+			    struct rte_crypto_op **ops, uint16_t nb_ops)
+{
+	int i;
+
+	CU_ASSERT(nb_ops > 0);
+
+	for (i = 0; i < nb_ops; i++) {
+		/* Use this empty (til now) array of pointers to store
+		 * enqueued operations for assertion in dev_full test.
+		 */
+		g_test_dev_full_ops[i] = *ops++;
+	}
+
+	return g_enqueue_mock;
+}
+
+/* This is pretty ugly but in order to complete an IO via the
+ * poller in the submit path, we need to first call to this func
+ * to return the dequeued value and also decrement it.  On the subsequent
+ * call it needs to return 0 to indicate to the caller that there are
+ * no more IOs to drain.
+ */
+int g_test_overflow = 0;
+static inline uint16_t
+rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
+			    struct rte_crypto_op **ops, uint16_t nb_ops)
+{
+	CU_ASSERT(nb_ops > 0);
+
+	/* A crypto device can be full on enqueue, the driver is designed to drain
+	 * the device at the time by calling the poller until it's empty, then
+	 * submitting the remaining crypto ops.
+	 */
+	if (g_test_overflow) {
+		if (g_dequeue_mock == 0) {
+			return 0;
+		}
+		*ops = g_test_crypto_ops[g_enqueue_mock];
+		(*ops)->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
+		g_dequeue_mock -= 1;
+	}
+	return (g_dequeue_mock + 1);
+}
+
+/* Instead of allocating real memory, assign the allocations to our
+ * test array for assertion in tests.
+ */
+static inline unsigned
+rte_crypto_op_bulk_alloc(struct rte_mempool *mempool,
+			 enum rte_crypto_op_type type,
+			 struct rte_crypto_op **ops, uint16_t nb_ops)
+{
+	int i;
+
+	for (i = 0; i < nb_ops; i++) {
+		*ops++ = g_test_crypto_ops[i];
+	}
+	return ut_rte_crypto_op_bulk_alloc;
+}
+
+static __rte_always_inline void
+rte_mempool_put_bulk(struct rte_mempool *mp, void *const *obj_table,
+		     unsigned int n)
+{
+	return;
+}
+
+static inline int
+rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
+				 struct rte_cryptodev_sym_session *sess)
+{
+	return ut_rte_crypto_op_attach_sym_session;
+}
+
 /* SPDK stubs */
 DEFINE_STUB(spdk_conf_find_section, struct spdk_conf_section *,
 	    (struct spdk_conf *cp, const char *name), NULL);
@@ -112,20 +203,6 @@ struct vbdev_dev g_device;
 struct vbdev_crypto g_crypto_bdev;
 struct rte_config *g_test_config;
 struct device_qp g_dev_qp;
-
-#define MAX_TEST_BLOCKS 8192
-struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
-struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
-
-/* These globals are externs in our local rte_ header files so we can control
- * specific functions for mocking.
- */
-uint16_t g_dequeue_mock;
-uint16_t g_enqueue_mock;
-unsigned ut_rte_crypto_op_bulk_alloc;
-int ut_rte_crypto_op_attach_sym_session = 0;
-int ut_rte_cryptodev_info_get = 0;
-bool ut_rte_cryptodev_info_get_mocked = false;
 
 void
 rte_cryptodev_info_get(uint8_t dev_id, struct rte_cryptodev_info *dev_info)
@@ -208,83 +285,6 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 {
 	bdev_io->internal.status = status;
 	g_completion_called = true;
-}
-
-/* Used in testing device full condition */
-static inline uint16_t
-rte_cryptodev_enqueue_burst(uint8_t dev_id, uint16_t qp_id,
-			    struct rte_crypto_op **ops, uint16_t nb_ops)
-{
-	int i;
-
-	CU_ASSERT(nb_ops > 0);
-
-	for (i = 0; i < nb_ops; i++) {
-		/* Use this empty (til now) array of pointers to store
-		 * enqueued operations for assertion in dev_full test.
-		 */
-		g_test_dev_full_ops[i] = *ops++;
-	}
-
-	return g_enqueue_mock;
-}
-
-/* This is pretty ugly but in order to complete an IO via the
- * poller in the submit path, we need to first call to this func
- * to return the dequeued value and also decrement it.  On the subsequent
- * call it needs to return 0 to indicate to the caller that there are
- * no more IOs to drain.
- */
-int g_test_overflow = 0;
-static inline uint16_t
-rte_cryptodev_dequeue_burst(uint8_t dev_id, uint16_t qp_id,
-			    struct rte_crypto_op **ops, uint16_t nb_ops)
-{
-	CU_ASSERT(nb_ops > 0);
-
-	/* A crypto device can be full on enqueue, the driver is designed to drain
-	 * the device at the time by calling the poller until it's empty, then
-	 * submitting the remaining crypto ops.
-	 */
-	if (g_test_overflow) {
-		if (g_dequeue_mock == 0) {
-			return 0;
-		}
-		*ops = g_test_crypto_ops[g_enqueue_mock];
-		(*ops)->status = RTE_CRYPTO_OP_STATUS_SUCCESS;
-		g_dequeue_mock -= 1;
-	}
-	return (g_dequeue_mock + 1);
-}
-
-/* Instead of allocating real memory, assign the allocations to our
- * test array for assertion in tests.
- */
-static inline unsigned
-rte_crypto_op_bulk_alloc(struct rte_mempool *mempool,
-			 enum rte_crypto_op_type type,
-			 struct rte_crypto_op **ops, uint16_t nb_ops)
-{
-	int i;
-
-	for (i = 0; i < nb_ops; i++) {
-		*ops++ = g_test_crypto_ops[i];
-	}
-	return ut_rte_crypto_op_bulk_alloc;
-}
-
-static __rte_always_inline void
-rte_mempool_put_bulk(struct rte_mempool *mp, void *const *obj_table,
-		     unsigned int n)
-{
-	return;
-}
-
-static inline int
-rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
-				 struct rte_cryptodev_sym_session *sess)
-{
-	return ut_rte_crypto_op_attach_sym_session;
 }
 
 /* Global setup for all tests that share a bunch of preparation... */
