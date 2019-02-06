@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "583fc54e_31f44081",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1308,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T04:57:22Z",
+      "side": 1,
+      "message": "if we add assert, adding assert(i \u003c rqpair-\u003emax_send_sge) or assert(rdma_req-\u003ereq.iovcnt \u003c\u003d rqpair-\u003emax_send_sge) to the line 1280 ?",
+      "range": {
+        "startLine": 1308,
+        "startChar": 1,
+        "endLine": 1308,
+        "endChar": 7
+      },
+      "revId": "a767ca9f2c3435160aeb162e708cd15cc6ec6d6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
