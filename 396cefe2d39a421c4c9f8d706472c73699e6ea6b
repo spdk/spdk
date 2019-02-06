@@ -46,6 +46,30 @@
       "revId": "396cefe2d39a421c4c9f8d706472c73699e6ea6b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3d6af2df_c9376826",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T23:10:33Z",
+      "side": 1,
+      "message": "I couldn\u0027t follow that. I read the patch and github issue. Thank you!",
+      "parentUuid": "6baee2ab_93a1400a",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 174,
+        "endChar": 22
+      },
+      "revId": "396cefe2d39a421c4c9f8d706472c73699e6ea6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
