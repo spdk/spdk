@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48b56937_ec7c4c04",
+        "filename": "lib/bdev/common_nvme/common_bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T14:09:39Z",
+      "side": 1,
+      "message": "Unnecessary newline.",
+      "revId": "bf714a4607ef49af230192c2e589bca1987108f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a16d0e32_d3b25e50",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 789,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T14:09:39Z",
+      "side": 1,
+      "message": "Remove this.",
+      "range": {
+        "startLine": 780,
+        "startChar": 0,
+        "endLine": 789,
+        "endChar": 2
+      },
+      "revId": "bf714a4607ef49af230192c2e589bca1987108f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6262a79a_7aa869de",
+        "filename": "lib/bdev/ftl/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 851,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T14:09:39Z",
+      "side": 1,
+      "message": "You should swap these two. I don\u0027t think we don\u0027t need to call bdev_unregister under the mutex, however bdev_unregister might acquire the mutex, which will result in a deadlock now that the mutex isn\u0027t recursive.",
+      "range": {
+        "startLine": 849,
+        "startChar": 0,
+        "endLine": 851,
+        "endChar": 44
+      },
+      "revId": "bf714a4607ef49af230192c2e589bca1987108f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90f903fa_94c58def",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T14:09:39Z",
+      "side": 1,
+      "message": "I think it\u0027d be nice to have this moved into the generic_nvme library as well, as bdev_ftl does very similar things.",
+      "range": {
+        "startLine": 1002,
+        "startChar": 0,
+        "endLine": 1026,
+        "endChar": 2
+      },
+      "revId": "bf714a4607ef49af230192c2e589bca1987108f6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
