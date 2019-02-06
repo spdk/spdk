@@ -31,62 +31,41 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SPDK_COMMON_BDEV_NVME_H
-#define SPDK_COMMON_BDEV_NVME_H
+#include "spdk/env.h"
+#include "common_bdev_nvme.h"
 
-#include "spdk/nvme.h"
-#include "spdk/bdev_module.h"
-#include "spdk/ftl.h"
 
-#define NVME_MAX_CONTROLLERS 1024
+TAILQ_HEAD(, nvme_ctrlr) g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
+pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
-struct nvme_ctrlr {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
-	char				*name;
-	int				ref;
-	bool				destruct;
-	uint32_t			num_ns;
-	/** Array of bdevs indexed by nsid - 1 */
-	struct nvme_bdev		*bdevs;
-
-	struct spdk_poller		*adminq_timer_poller;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
+struct nvme_ctrlr *
+nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+{
 	struct nvme_ctrlr	*nvme_ctrlr;
-	uint32_t		id;
-	bool			active;
-	struct spdk_nvme_ns	*ns;
-};
 
-struct nvme_bdev_construct_opts {
-	/* NVMe controller's transport ID */
-	struct spdk_nvme_transport_id		trid;
-	/* Bdev's name */
-	const char				*name;
-	/* Transport address to be used by the host when connecting to the NVMe-oF endpoint */
-	struct spdk_nvme_host_id		hostid;
-	/* Host NQN */
-	const char				*hostnqn;
-#if defined(FTL)
-	/* Parallel unit range (FTL bdev specific) */
-	struct spdk_ftl_punit_range		range;
-	/* UUID if device is restored from SSD (FTL bdev specific) */
-	struct spdk_uuid			*uuid;
-#endif
-};
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->trid) == 0) {
+			return nvme_ctrlr;
+		}
+	}
 
-struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
-struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
+	return NULL;
+}
 
-#endif /* SPDK_COMMON_BDEV_NVME_H */
+struct nvme_ctrlr *
+nvme_ctrlr_get_by_name(const char *name)
+{
+	struct nvme_ctrlr *nvme_ctrlr;
+
+	if (name == NULL) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (strcmp(name, nvme_ctrlr->name) == 0) {
+			return nvme_ctrlr;
+		}
+	}
+
+	return NULL;
+}
