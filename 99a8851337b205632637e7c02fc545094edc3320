@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4f14dd33_3e07a092",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T17:51:05Z",
+      "side": 1,
+      "message": "agree with Konrad - \"...since all the blocks are valid\" is better worded.\n\nThe text as it is would need to be modified anyways - \"...since there are not any invalid blocks\".  But removing the double negative (not..invalid) would be better.",
+      "revId": "99a8851337b205632637e7c02fc545094edc3320",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
