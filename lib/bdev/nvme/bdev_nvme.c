@@ -116,7 +116,6 @@ static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
-static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 static int bdev_nvme_library_init(void);

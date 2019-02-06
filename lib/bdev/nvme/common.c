@@ -35,6 +35,7 @@
 #include "common.h"
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
+pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
