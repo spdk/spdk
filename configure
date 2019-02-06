@@ -68,6 +68,8 @@ function usage()
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
 	echo "                           No path required."
+	echo " crctable                  Use tables to generate T10 CRC-16 faster.  Faster than default,"
+	echo "                           but slower than isal."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -283,6 +285,10 @@ for i in "$@"; do
                 --without-isal)
                         CONFIG[ISAL]=n
                         ;;
+		--with-crctable)
+			CONFIG[CRCTABLE]=y
+                        CONFIG[ISAL]=n
+                        ;;
 		--)
 			break
 			;;
@@ -384,7 +390,7 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 6)}') -lt "21202" ]]; then
 		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.12.02 or newer.  Please install"
 		echo "or upgrade then re-run this script."
