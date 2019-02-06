@@ -539,6 +539,24 @@
     },
     {
       "key": {
+        "uuid": "820b5318_7713de80",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T10:26:37Z",
+      "side": 1,
+      "message": "This is cost of unit test - if we start using vector reads it will be good to check that behaviour is diffrent and we need to adjust our test.",
+      "parentUuid": "1425e80b_d7b7685f",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e5f5ab5_66324077",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4

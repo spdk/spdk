@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "21d24545_262bb2ac",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 190,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T10:26:37Z",
+      "side": 1,
+      "message": "t stands for temp",
+      "parentUuid": "c85d00bb_0e452117",
+      "range": {
+        "startLine": 190,
+        "startChar": 22,
+        "endLine": 190,
+        "endChar": 24
+      },
+      "revId": "97ee8eecf31b7d5a92c53c22a06e5fa0406f9c21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4144a6aa_52e93e09",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 7
@@ -59,6 +83,30 @@
       "writtenOn": "2019-02-06T10:11:31Z",
       "side": 1,
       "message": "\"there is no any invalid blocks\" -\u003e all the blocks are valid",
+      "range": {
+        "startLine": 277,
+        "startChar": 40,
+        "endLine": 277,
+        "endChar": 70
+      },
+      "revId": "97ee8eecf31b7d5a92c53c22a06e5fa0406f9c21",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "354bcf12_e8917b61",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-06T10:26:37Z",
+      "side": 1,
+      "message": "I don\u0027t see any difference.",
+      "parentUuid": "4144a6aa_52e93e09",
       "range": {
         "startLine": 277,
         "startChar": 40,
