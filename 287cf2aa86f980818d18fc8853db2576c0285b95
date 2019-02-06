@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c9e4475d_49f5d783",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T13:40:42Z",
+      "side": 1,
+      "message": "I propose to have this part common as well - make the construct_(generic|ftl)_nvme_bdev take a callback to be called with a list of names that have been created. bdev_ftl does this nearly identically (it additionally prints the UUID of the device that has been created, but it can be omitted, as you can easily get it thru get_bdevs call).",
+      "range": {
+        "startLine": 176,
+        "startChar": 0,
+        "endLine": 188,
+        "endChar": 0
+      },
+      "revId": "287cf2aa86f980818d18fc8853db2576c0285b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "384f58ee_92cc88a4",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 3
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T13:40:42Z",
+      "side": 1,
+      "message": "Why not use SPDK_CONFIG_FTL?",
+      "revId": "287cf2aa86f980818d18fc8853db2576c0285b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cb458fe_76d4977f",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-06T13:40:42Z",
+      "side": 1,
+      "message": "There already is a construct_ftl_bdev. So we should either hide this argument from the user and still have distinct construct_nvme_bdev / construct_ftl_bdev (which I\u0027d prefer, since the code duplication would be pretty low and I feel it\u0027d more user friendly this way) or get rid of construct_ftl_bdev and add its arguments (range, mode, etc.) here.",
+      "range": {
+        "startLine": 289,
+        "startChar": 49,
+        "endLine": 289,
+        "endChar": 64
+      },
+      "revId": "287cf2aa86f980818d18fc8853db2576c0285b95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
