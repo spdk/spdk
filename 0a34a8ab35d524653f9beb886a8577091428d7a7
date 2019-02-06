@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6854e9ef_c5fea16f",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 2460,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T19:37:14Z",
+      "side": 1,
+      "message": "Can you change these to use the SCT_GENERIC and SC_SUCCESS while you\u0027re here?\n\nAnother thing to consider - just define spdk_nvme_cpl_is_success(cpl) as !spdk_nvme_cpl_is_error(cpl).",
+      "revId": "0a34a8ab35d524653f9beb886a8577091428d7a7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
