@@ -31,10 +31,19 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "spdk_internal/thread.h"
+
 #include "spdk/ftl.h"
 #include "ftl/ftl_core.h"
 
-static struct spdk_ftl_dev *
+struct spdk_ftl_dev *test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
+				       const struct spdk_ftl_punit_range *range);
+struct ftl_band *test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id);
+void test_free_ftl_dev(struct spdk_ftl_dev *dev);
+void test_free_ftl_band(struct ftl_band *band);
+uint64_t test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band);
+
+struct spdk_ftl_dev *
 test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 		  const struct spdk_ftl_punit_range *range)
 {
@@ -47,6 +56,8 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	dev->xfer_size = geo->ws_opt;
 	dev->geo = *geo;
 	dev->range = *range;
+	dev->core_thread.thread = spdk_thread_create("unit_test_thread");
+	spdk_set_thread(dev->core_thread.thread);
 
 	dev->bands = calloc(geo->num_chk, sizeof(*dev->bands));
 	SPDK_CU_ASSERT_FATAL(dev->bands != NULL);
@@ -61,10 +72,13 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 		dev->punits[i].start_ppa.pu = punit / geo->num_grp;
 	}
 
+	LIST_INIT(&dev->free_bands);
+	LIST_INIT(&dev->shut_bands);
+
 	return dev;
 }
 
-static struct ftl_band *
+struct ftl_band *
 test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 {
 	struct ftl_band *band;
@@ -76,6 +90,9 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	band = &dev->bands[id];
 	band->dev = dev;
 	band->id = id;
+
+	band->state = FTL_BAND_STATE_CLOSED;
+	LIST_INSERT_HEAD(&dev->shut_bands, band, list_entry);
 	CIRCLEQ_INIT(&band->chunks);
 
 	band->md.vld_map = spdk_bit_array_create(ftl_num_band_lbks(dev));
@@ -99,16 +116,17 @@ test_init_ftl_band(struct spdk_ftl_dev *dev, size_t id)
 	return band;
 }
 
-static void
+void
 test_free_ftl_dev(struct spdk_ftl_dev *dev)
 {
 	SPDK_CU_ASSERT_FATAL(dev != NULL);
+	spdk_thread_exit(dev->core_thread.thread);
 	free(dev->punits);
 	free(dev->bands);
 	free(dev);
 }
 
-static void
+void
 test_free_ftl_band(struct ftl_band *band)
 {
 	SPDK_CU_ASSERT_FATAL(band != NULL);
@@ -117,7 +135,7 @@ test_free_ftl_band(struct ftl_band *band)
 	free(band->md.lba_map);
 }
 
-static uint64_t
+uint64_t
 test_offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
