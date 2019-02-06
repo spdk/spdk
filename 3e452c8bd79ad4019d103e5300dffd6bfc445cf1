@@ -1,0 +1,90 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f1d479f5_6e8dd388",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T09:01:49Z",
+      "side": 1,
+      "message": "Use tab for the following three variables?",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a4f9aeb_c7c383ba",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T09:01:49Z",
+      "side": 1,
+      "message": "you can use i :-)",
+      "range": {
+        "startLine": 142,
+        "startChar": 9,
+        "endLine": 142,
+        "endChar": 10
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebc21ceb_c932d21c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T09:01:49Z",
+      "side": 1,
+      "message": "Is it possible for this case to return error?",
+      "range": {
+        "startLine": 599,
+        "startChar": 1,
+        "endLine": 599,
+        "endChar": 28
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a5e6bdeb_14f4f58b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T09:01:49Z",
+      "side": 1,
+      "message": "spdk_bdev_module_release_bdev(comp_bdev-\u003ebase_bdev) should be called in this case?",
+      "range": {
+        "startLine": 780,
+        "startChar": 7,
+        "endLine": 780,
+        "endChar": 27
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
