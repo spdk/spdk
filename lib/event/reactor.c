@@ -262,7 +262,7 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		_spdk_event_queue_run_batch(reactor, thread);
 
-		rc = spdk_thread_poll(thread, 0);
+		rc = spdk_thread_poll(thread, 0, 0);
 
 		/* Determine if the thread can sleep */
 		if (sleep_cycles && rc == 0) {
