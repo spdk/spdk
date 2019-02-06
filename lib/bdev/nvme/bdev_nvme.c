@@ -49,6 +49,11 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
+#include "../common_nvme/common_bdev_nvme.h"
+
+extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
+extern pthread_mutex_t g_bdev_nvme_mutex;
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -111,9 +116,6 @@ static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
-static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
 static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
@@ -812,38 +814,6 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attaching to %s\n", trid->traddr);
 
 	return true;
-}
-
-static struct nvme_ctrlr *
-nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
-{
-	struct nvme_ctrlr	*nvme_ctrlr;
-
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, &nvme_ctrlr->trid) == 0) {
-			return nvme_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
-static struct nvme_ctrlr *
-nvme_ctrlr_get_by_name(const char *name)
-{
-	struct nvme_ctrlr *nvme_ctrlr;
-
-	if (name == NULL) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (strcmp(name, nvme_ctrlr->name) == 0) {
-			return nvme_ctrlr;
-		}
-	}
-
-	return NULL;
 }
 
 static bool

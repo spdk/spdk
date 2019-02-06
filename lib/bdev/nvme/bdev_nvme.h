@@ -40,8 +40,6 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 
-#define NVME_MAX_CONTROLLERS 1024
-
 enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
@@ -53,35 +51,6 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
-};
-
-struct nvme_ctrlr {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
-	char				*name;
-	int				ref;
-	bool				destruct;
-	uint32_t			num_ns;
-	/** Array of bdevs indexed by nsid - 1 */
-	struct nvme_bdev		*bdevs;
-
-	struct spdk_poller		*adminq_timer_poller;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
-	struct nvme_ctrlr	*nvme_ctrlr;
-	uint32_t		id;
-	bool			active;
-	struct spdk_nvme_ns	*ns;
 };
 
 void spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid,
