@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "3c512ff8_fc290da3",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T16:00:43Z",
+      "side": 1,
+      "message": "I mentioned this in the earlier review, but I think you should remove the \"One must be specified but either will work.\"  That may be true but we are deprecating strip_size so don\u0027t want to suggest in any way that using strip_size should be used.  Deprecating infers that it will work now but won\u0027t later.",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "664785e2_05ddc28e",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 12
@@ -70,6 +87,23 @@
       "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9726cc2d_070eed5c",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T16:00:43Z",
+      "side": 1,
+      "message": "From earlier review - please add an ERRLOG here if user specifies the deprecated strip_size.",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
