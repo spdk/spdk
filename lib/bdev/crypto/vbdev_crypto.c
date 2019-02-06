@@ -1288,6 +1288,7 @@ vbdev_crypto_finish(void)
 	struct bdev_names *name;
 	struct vbdev_dev *device;
 	struct device_qp *dev_qp;
+	unsigned i;
 
 	while ((name = TAILQ_FIRST(&g_bdev_names))) {
 		TAILQ_REMOVE(&g_bdev_names, name, link);
@@ -1299,8 +1300,20 @@ vbdev_crypto_finish(void)
 	}
 
 	while ((device = TAILQ_FIRST(&g_vbdev_devs))) {
+		struct rte_cryptodev *rte_dev;
+
 		TAILQ_REMOVE(&g_vbdev_devs, device, link);
 		rte_cryptodev_stop(device->cdev_id);
+
+		assert(device->cdev_id < RTE_CRYPTO_MAX_DEVS);
+		rte_dev = &rte_cryptodevs[device->cdev_id];
+
+		if (rte_dev->dev_ops->queue_pair_release != NULL) {
+			for (i = 0; i < device->cdev_info.max_nb_queue_pairs; i++) {
+				rte_dev->dev_ops->queue_pair_release(rte_dev, i);
+			}
+		}
+
 		free(device);
 	}
 
