@@ -45,6 +45,30 @@
       "revId": "6c565a152513255b95e481d58996b115d2bee248",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "66f524ad_98f72f15",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1945,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T18:31:58Z",
+      "side": 1,
+      "message": "I haven\u0027t looked at the asm dump for this one, but typically the compiler picks the true case for an if statement as the likely path which generates asm that causes default speculation down that path. These macros flip it around so that it assumes the other way. The branch predictor in the CPU is going to override this default speculation path of course, after it goes down the wrong path once. But the branch predictor can\u0027t hold that many entries so having it \"right\" by default can sometimes help.\n\nIt would be cool to see the actual difference in the asm here though.",
+      "parentUuid": "9ae179eb_c8cbf43b",
+      "range": {
+        "startLine": 1943,
+        "startChar": 0,
+        "endLine": 1945,
+        "endChar": 2
+      },
+      "revId": "6c565a152513255b95e481d58996b115d2bee248",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
