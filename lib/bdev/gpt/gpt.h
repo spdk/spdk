@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/gpt_spec.h"
+#include "spdk/bdev_module.h"
 
 #define SPDK_GPT_PART_TYPE_GUID SPDK_GPT_GUID(0x7c5222bd, 0x8f5d, 0x4087, 0x9c00, 0xbf9843c7b58c)
 #define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */
@@ -55,13 +56,17 @@ enum spdk_gpt_parse_phase {
 struct spdk_gpt {
 	uint8_t parse_phase;
 	unsigned char *buf;
+	unsigned char *bounce_buf;
 	uint64_t buf_size;
+	uint64_t bounce_buf_size;
 	uint64_t lba_start;
 	uint64_t lba_end;
 	uint64_t total_sectors;
 	uint32_t sector_size;
+	uint32_t ext_sector_size;
 	struct spdk_gpt_header *header;
 	struct spdk_gpt_partition_entry *partitions;
+	spdk_bdev_io_completion_cb bounce_cb;
 };
 
 int spdk_gpt_parse_mbr(struct spdk_gpt *gpt);
