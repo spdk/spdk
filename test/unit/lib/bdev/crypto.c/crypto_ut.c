@@ -114,6 +114,7 @@ struct rte_config *g_test_config;
 struct device_qp g_dev_qp;
 
 #define MAX_TEST_BLOCKS 8192
+struct rte_crypto_op *g_unaligned_crypto_ops[MAX_TEST_BLOCKS];
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
 struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
 
@@ -319,8 +320,9 @@ test_setup(void)
 	 * same coverage just calloc them here.
 	 */
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
-		g_test_crypto_ops[i] = calloc(1, sizeof(struct rte_crypto_op) +
-					      sizeof(struct rte_crypto_sym_op));
+		g_unaligned_crypto_ops[i] = calloc(1, sizeof(struct rte_crypto_op) +
+						   sizeof(struct rte_crypto_sym_op) + 64);
+		g_test_crypto_ops[i] = (void *)(((uintptr_t)g_unaligned_crypto_ops[i] + 63) & ~63);
 	}
 	return 0;
 }
@@ -334,7 +336,7 @@ test_cleanup(void)
 	free(g_test_config);
 	spdk_mempool_free(g_mbuf_mp);
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
-		free(g_test_crypto_ops[i]);
+		free(g_unaligned_crypto_ops[i]);
 	}
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
