@@ -16,6 +16,24 @@
       "revId": "0f2b49b2a61d159c0d175d7af82594d1aebfada3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c47eb09_3108eb7e",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1861,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-06T23:43:14Z",
+      "side": 1,
+      "message": "Done. I didn\u0027t set MIN_IO_BUFFER_SIZE to 8192, I set it to the calculation we were using for DEFAULT_BUFFER_SIZE just in case SPDK_NVMF_MAX_SGL_ENTRIES changes.",
+      "parentUuid": "f62a9da8_88a6ef3f",
+      "revId": "0f2b49b2a61d159c0d175d7af82594d1aebfada3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
