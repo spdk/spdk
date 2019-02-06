@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c724838_1aacee68",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1859,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-06T04:53:51Z",
+      "side": 1,
+      "message": "even if opts-\u003eio_unit_size is already 4K multiples, extra 4K is necessary?\n\n(opts-\u003eio_unit_size + NVMF_DATA_BUFFER_ALIGNMENT - 1) \u0026 ~NVMF_DATA_BUFFER_MASK ?",
+      "range": {
+        "startLine": 1859,
+        "startChar": 8,
+        "endLine": 1859,
+        "endChar": 98
+      },
+      "revId": "4019378fa04dcc95a75f935a51ef5800805fe2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
