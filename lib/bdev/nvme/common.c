@@ -30,3 +30,42 @@
  *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+#include "spdk/env.h"
+#include "common.h"
+
+
+TAILQ_HEAD(, nvme_bdev_ctrlr) g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
+pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
+
+struct nvme_bdev_ctrlr *
+spdk_bdev_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
+{
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(trid, &nvme_bdev_ctrlr->trid) == 0) {
+			return nvme_bdev_ctrlr;
+		}
+	}
+
+	return NULL;
+}
+
+struct nvme_bdev_ctrlr *
+spdk_bdev_nvme_ctrlr_get_by_name(const char *name)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+
+	if (name == NULL) {
+		return NULL;
+	}
+
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (strcmp(name, nvme_bdev_ctrlr->name) == 0) {
+			return nvme_bdev_ctrlr;
+		}
+	}
+
+	return NULL;
+}

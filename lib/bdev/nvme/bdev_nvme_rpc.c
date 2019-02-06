@@ -42,6 +42,8 @@
 #include "spdk_internal/log.h"
 #include "spdk/bdev_module.h"
 
+#include "common.h"
+
 struct open_descriptors {
 	void *desc;
 	struct  spdk_bdev *bdev;
