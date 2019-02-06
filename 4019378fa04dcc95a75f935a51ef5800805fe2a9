@@ -22,6 +22,30 @@
       "revId": "4019378fa04dcc95a75f935a51ef5800805fe2a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13e22e81_8b847f3f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1859,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-06T17:13:00Z",
+      "side": 1,
+      "message": "Ah, you\u0027re right. I didn\u0027t think about that case. Your proposal is better. We want to make the buffer as small as possible.",
+      "parentUuid": "9c724838_1aacee68",
+      "range": {
+        "startLine": 1859,
+        "startChar": 8,
+        "endLine": 1859,
+        "endChar": 98
+      },
+      "revId": "4019378fa04dcc95a75f935a51ef5800805fe2a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
