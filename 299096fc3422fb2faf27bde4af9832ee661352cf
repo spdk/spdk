@@ -52,6 +52,24 @@
       "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb64bc42_49c667be",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1263,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-06T15:55:15Z",
+      "side": 1,
+      "message": "In the old code, strip_size gets set in KB here, and then later in raid_bdev_configure gets converted to blocks.  Therefore it must be that strip_size is not actually valid until after it gets converted in raid_bdev_configure.  But we had to set it here because we only had one field.\n\nSo based on that, I don\u0027t think you should set strip_size here.  We have two separate fields now, so I don\u0027t see why we need to set strip_size to an invalid value here and then be converted later.",
+      "parentUuid": "7e955a72_5531be34",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
