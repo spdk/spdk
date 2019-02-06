@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0d03007_35699704",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 221,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T23:06:57Z",
+      "side": 1,
+      "message": "Similar to comment made on previous review - I think you can add a data member to spdk_bdev with the dif check type instead of a function callback here.",
+      "revId": "03eae8a931c6ab90c6e66e92b431989d057929ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
