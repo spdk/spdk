@@ -22,6 +22,30 @@
       "revId": "396cefe2d39a421c4c9f8d706472c73699e6ea6b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6baee2ab_93a1400a",
+        "filename": "lib/vhost/vhost_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 174,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-06T16:16:30Z",
+      "side": 1,
+      "message": "The write_bool -\u003e write_int32 was changed in a separate patch, here: https://review.gerrithub.io/c/spdk/spdk/+/442434\n\nI only rebased on that patch.",
+      "parentUuid": "38c3dc61_b85f1ba5",
+      "range": {
+        "startLine": 174,
+        "startChar": 1,
+        "endLine": 174,
+        "endChar": 22
+      },
+      "revId": "396cefe2d39a421c4c9f8d706472c73699e6ea6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
