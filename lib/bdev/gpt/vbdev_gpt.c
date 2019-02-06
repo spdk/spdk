@@ -46,7 +46,6 @@
 #include "spdk/string.h"
 #include "spdk/util.h"
 
-#include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
 static int vbdev_gpt_init(void);
@@ -125,6 +124,7 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 {
 	struct gpt_base *gpt_base;
 	struct spdk_gpt *gpt;
+	uint32_t md_size;
 
 	gpt_base = calloc(1, sizeof(*gpt_base));
 	if (!gpt_base) {
@@ -146,15 +146,35 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 
 	gpt = &gpt_base->gpt;
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
-	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, bdev->blocklen);
+
+	gpt->ext_sector_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+	if (md_size != 0 && spdk_bdev_is_md_interleaved(bdev)) {
+		gpt->sector_size = gpt->ext_sector_size - md_size;
+	} else {
+		gpt->sector_size = gpt->ext_sector_size;
+	}
+	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, gpt->sector_size);
 	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
 	if (!gpt->buf) {
 		SPDK_ERRLOG("Cannot alloc buf\n");
 		spdk_bdev_part_base_free(gpt_base->part_base);
 		return NULL;
 	}
+	if (gpt->sector_size != gpt->ext_sector_size) {
+		gpt->bounce_buf_size = SPDK_GPT_BUFFER_SIZE -
+				       (SPDK_GPT_BUFFER_SIZE % gpt->ext_sector_size);
+		gpt->bounce_buf_size = spdk_max(gpt->bounce_buf_size, gpt->ext_sector_size);
+		gpt->bounce_buf = spdk_dma_zmalloc(gpt->bounce_buf_size,
+						   spdk_bdev_get_buf_align(bdev), NULL);
+		if (!gpt->bounce_buf) {
+			spdk_dma_free(gpt->buf);
+			SPDK_ERRLOG("Cannot alloc bounce buf\n");
+			spdk_bdev_part_base_free(gpt_base->part_base);
+			return NULL;
+		}
+	}
 
-	gpt->sector_size = bdev->blocklen;
 	gpt->total_sectors = bdev->blockcnt;
 	gpt->lba_start = 0;
 	gpt->lba_end = gpt->total_sectors - 1;
@@ -376,12 +396,32 @@ end:
 	}
 }
 
+static void
+vbdev_gpt_read_strip_complete(struct spdk_bdev_io *bdev_io, bool status, void *arg)
+{
+	struct gpt_base *gpt_base = (struct gpt_base *)arg;
+	struct spdk_gpt *gpt = &gpt_base->gpt;
+	uint64_t buf_offset = 0, bounce_buf_offset = 0;
+
+	if (status == SPDK_BDEV_IO_STATUS_SUCCESS) {
+		while (buf_offset < gpt->buf_size && bounce_buf_offset < gpt->bounce_buf_size) {
+			memcpy(gpt->buf + buf_offset, gpt->bounce_buf + bounce_buf_offset,
+			       gpt->sector_size);
+			buf_offset += gpt->sector_size;
+			bounce_buf_offset += gpt->ext_sector_size;
+		}
+	}
+
+	gpt->bounce_cb(bdev_io, status, arg);
+}
+
 static int
 vbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)
 {
 	struct spdk_gpt *gpt;
 	struct spdk_bdev_desc *part_base_desc;
 	uint64_t secondary_offset;
+	spdk_bdev_io_completion_cb cb;
 
 	gpt = &gpt_base->gpt;
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_SECONDARY;
@@ -390,10 +430,17 @@ vbdev_gpt_read_secondary_table(struct gpt_base *gpt_base)
 
 	part_base_desc = spdk_bdev_part_base_get_desc(gpt_base->part_base);
 
-	secondary_offset = gpt->total_sectors * gpt->sector_size - gpt->buf_size;
-	return spdk_bdev_read(part_base_desc, gpt_base->ch, gpt_base->gpt.buf, secondary_offset,
-			      gpt_base->gpt.buf_size, spdk_gpt_read_secondary_table_complete,
-			      gpt_base);
+	secondary_offset = gpt->total_sectors * gpt->ext_sector_size - gpt->buf_size;
+
+	if (!gpt->bounce_buf) {
+		cb = spdk_gpt_read_secondary_table_complete;
+	} else {
+		gpt->bounce_cb = spdk_gpt_read_secondary_table_complete;
+		cb = vbdev_gpt_read_strip_complete;
+	}
+
+	return spdk_bdev_read(part_base_desc, gpt_base->ch, gpt->buf, secondary_offset,
+			      gpt->buf_size, cb, gpt_base);
 }
 
 static void
@@ -457,7 +504,9 @@ static int
 vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 {
 	struct gpt_base *gpt_base;
+	struct spdk_gpt *gpt;
 	struct spdk_bdev_desc *part_base_desc;
+	spdk_bdev_io_completion_cb cb;
 	int rc;
 
 	gpt_base = spdk_gpt_base_bdev_init(bdev);
@@ -474,8 +523,17 @@ vbdev_gpt_read_gpt(struct spdk_bdev *bdev)
 		return -1;
 	}
 
-	rc = spdk_bdev_read(part_base_desc, gpt_base->ch, gpt_base->gpt.buf, 0,
-			    gpt_base->gpt.buf_size, spdk_gpt_bdev_complete, gpt_base);
+	gpt = &gpt_base->gpt;
+
+	if (!gpt->bounce_buf) {
+		cb = spdk_gpt_bdev_complete;
+	} else {
+		gpt->bounce_cb = spdk_gpt_bdev_complete;
+		cb = vbdev_gpt_read_strip_complete;
+	}
+
+	rc = spdk_bdev_read(part_base_desc, gpt_base->ch, gpt->buf, 0,
+			    gpt->buf_size, cb, gpt_base);
 	if (rc < 0) {
 		spdk_put_io_channel(gpt_base->ch);
 		spdk_bdev_part_base_free(gpt_base->part_base);
@@ -508,6 +566,7 @@ vbdev_gpt_get_ctx_size(void)
 static void
 vbdev_gpt_examine(struct spdk_bdev *bdev)
 {
+	uint32_t data_block_size, md_size;
 	int rc;
 
 	/* A bdev with fewer than 2 blocks cannot have a GPT. Block 0 has
@@ -518,9 +577,15 @@ vbdev_gpt_examine(struct spdk_bdev *bdev)
 		return;
 	}
 
-	if (spdk_bdev_get_block_size(bdev) % 512 != 0) {
-		SPDK_ERRLOG("GPT module does not support block size %" PRIu32 " for bdev %s\n",
-			    spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
+	data_block_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+	if (md_size != 0 && spdk_bdev_is_md_interleaved(bdev)) {
+		data_block_size -= md_size;
+	}
+
+	if (data_block_size % 512 != 0) {
+		SPDK_ERRLOG("GPT module does not support data block size %" PRIu32 " for bdev %s\n",
+			    data_block_size, spdk_bdev_get_name(bdev));
 		spdk_bdev_module_examine_done(&gpt_if);
 		return;
 	}
