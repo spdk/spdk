@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "c17b5d92_e52456b4",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T23:04:46Z",
+      "side": 1,
+      "message": "The dif type and the location of the metadata are relatively static things, so I think instead of adding function callbacks here, you can add data members to spdk_bdev (like write_cache, blocklen, blockcnt, etc.) that get filled out when a bdev is created.",
+      "revId": "d2c71f31d735ab6ac03fe4d76812d4aeecabe99c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "94aed96d_633aa396",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2330,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T23:04:46Z",
+      "side": 1,
+      "message": "Should these be checking that md_len is greater than 0? They\u0027re not valid unless md_len is greater than 0, right?",
+      "revId": "d2c71f31d735ab6ac03fe4d76812d4aeecabe99c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59fcb933_747907e1",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 3
@@ -13,6 +47,24 @@
       "writtenOn": "2019-02-06T16:20:02Z",
       "side": 1,
       "message": "astyle format checker and enums do not get along :)",
+      "revId": "d2c71f31d735ab6ac03fe4d76812d4aeecabe99c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd234399_5c866099",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2333,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-06T23:04:46Z",
+      "side": 1,
+      "message": "Yeah usually for enum return types, we put the return type on the same line. Astyle doesn\u0027t mess that up so bad.",
+      "parentUuid": "59fcb933_747907e1",
       "revId": "d2c71f31d735ab6ac03fe4d76812d4aeecabe99c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
