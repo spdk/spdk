@@ -45,6 +45,30 @@
       "revId": "10782ac3b53de0aeef5d71afa6c181c14669c3f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70829883_87029c4b",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 409,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-06T07:48:43Z",
+      "side": 1,
+      "message": "True, but I think this would be a small change, so I would leave as is for now.\nAre you ok with that?",
+      "parentUuid": "fd3defb3_40506873",
+      "range": {
+        "startLine": 406,
+        "startChar": 0,
+        "endLine": 409,
+        "endChar": 0
+      },
+      "revId": "10782ac3b53de0aeef5d71afa6c181c14669c3f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
