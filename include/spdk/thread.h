@@ -216,10 +216,12 @@ void spdk_thread_exit(struct spdk_thread *thread);
  * \param thread The thread to process
  * \param max_msgs The maximum number of messages that will be processed.
  *                 Use 0 to process the default number of messages (8).
+ * \param now The current time, in ticks. Optional. If 0 is passed, this
+ *            function may call spdk_get_ticks() to get the current time.
  *
  * \return 1 if work was done. 0 if no work was done. -1 if unknown.
  */
-int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
+int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now);
 
 /**
  * Return the number of ticks until the next timed poller

@@ -649,7 +649,7 @@ spdk_fio_event(struct thread_data *td, int event)
 static size_t
 spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
 {
-	return spdk_thread_poll(fio_thread->thread, 0);
+	return spdk_thread_poll(fio_thread->thread, 0, 0);
 }
 
 static int

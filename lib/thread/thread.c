@@ -372,16 +372,19 @@ _spdk_poller_insert_timer(struct spdk_thread *thread, struct spdk_poller *poller
 }
 
 int
-spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
+spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now)
 {
 	uint32_t msg_count;
 	struct spdk_thread *orig_thread;
 	struct spdk_poller *poller;
 	int rc = 0;
-	uint64_t now;
 
 	orig_thread = _get_thread();
 	tls_thread = thread;
+
+	if (now == 0) {
+		now = spdk_get_ticks();
+	}
 
 	msg_count = _spdk_msg_queue_run_batch(thread, max_msgs);
 	if (msg_count) {
@@ -415,8 +418,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 
 	poller = TAILQ_FIRST(&thread->timer_pollers);
 	if (poller) {
-		uint64_t now = spdk_get_ticks();
-
 		if (now >= poller->next_run_tick) {
 			int timer_rc = 0;
 
@@ -443,7 +444,6 @@ spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs)
 		}
 	}
 
-	now = spdk_get_ticks();
 	if (rc == 0) {
 		/* Poller status idle */
 		thread->stats.idle_tsc += now - thread->tsc_last;
