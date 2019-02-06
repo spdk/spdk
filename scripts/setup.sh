@@ -188,8 +188,12 @@ function configure_linux_pci {
 	if [ -z "${DRIVER_OVERRIDE}" ]; then
 		driver_name=vfio-pci
 		if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
-			# No IOMMU. Use uio.
-			driver_name=uio_pci_generic
+			# No IOMMU. If no-IOMMU mode vfio is not present, then use uio.
+			if ! [ -e /sys/module/vfio/parameters/enable_unsafe_noiommu_mode ] ||
+			! [ "$(cat /sys/module/vfio/parameters/enable_unsafe_noiommu_mode)" == "Y" ]
+			then
+				driver_name=uio_pci_generic
+			fi
 		fi
 	else
 		driver_name="${DRIVER_OVERRIDE}"
