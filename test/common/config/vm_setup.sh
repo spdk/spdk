@@ -426,7 +426,8 @@ if $INSTALL; then
     sshfs \
     sshpass \
     python3-pandas \
-    btrfs-progs
+    btrfs-progs \
+    iptables
 fi
 
 sudo mkdir -p /usr/src
