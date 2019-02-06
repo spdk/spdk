@@ -39,6 +39,7 @@
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
+extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
 
