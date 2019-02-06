@@ -243,7 +243,7 @@ bdev_aio_group_poll(void *arg)
 	timeout.tv_sec = 0;
 	timeout.tv_nsec = 0;
 
-	nr = io_getevents(group_ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
+	nr = io_getevents(group_ch->io_ctx, 0, SPDK_AIO_QUEUE_DEPTH,
 			  events, &timeout);
 
 	if (nr < 0) {
