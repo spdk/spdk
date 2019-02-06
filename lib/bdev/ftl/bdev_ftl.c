@@ -45,22 +45,14 @@
 
 #include "bdev_ftl.h"
 
+#include "../common_nvme/common_bdev_nvme.h"
+
 #define FTL_COMPLETION_RING_SIZE 4096
-
-struct ftl_bdev_ctrlr {
-	struct spdk_nvme_ctrlr		*ctrlr;
-
-	struct spdk_nvme_transport_id	trid;
-
-	size_t				ref_cnt;
-
-	LIST_ENTRY(ftl_bdev_ctrlr)	list_entry;
-};
 
 struct ftl_bdev {
 	struct spdk_bdev		bdev;
 
-	struct ftl_bdev_ctrlr		*ctrlr;
+	struct nvme_ctrlr		*ctrlr;
 
 	struct spdk_ftl_dev		*dev;
 
@@ -98,8 +90,6 @@ struct ftl_bdev_io {
 typedef void (*bdev_ftl_finish_fn)(void);
 
 static LIST_HEAD(, ftl_bdev)		g_ftl_bdevs = LIST_HEAD_INITIALIZER(g_ftl_bdevs);
-static LIST_HEAD(, ftl_bdev_ctrlr)	g_ftl_bdev_ctrlrs =
-	LIST_HEAD_INITIALIZER(g_ftl_bdev_ctrlrs);
 static bdev_ftl_finish_fn		g_finish_cb;
 static size_t				g_num_conf_bdevs;
 static size_t				g_num_init_bdevs;
@@ -128,12 +118,12 @@ static struct spdk_bdev_module g_ftl_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&g_ftl_if)
 
-static struct ftl_bdev_ctrlr *
+static struct nvme_ctrlr *
 bdev_ftl_ctrlr_find(const struct spdk_nvme_transport_id *trid)
 {
-	struct ftl_bdev_ctrlr *ftl_ctrlr = NULL;
+	struct nvme_ctrlr *ftl_ctrlr = NULL;
 
-	LIST_FOREACH(ftl_ctrlr, &g_ftl_bdev_ctrlrs, list_entry) {
+	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (!spdk_nvme_transport_id_compare(&ftl_ctrlr->trid, trid)) {
 			break;
 		}
@@ -142,16 +132,16 @@ bdev_ftl_ctrlr_find(const struct spdk_nvme_transport_id *trid)
 	return ftl_ctrlr;
 }
 
-static struct ftl_bdev_ctrlr *
+static struct nvme_ctrlr *
 bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
 {
-	struct ftl_bdev_ctrlr *ftl_ctrlr = NULL;
+	struct nvme_ctrlr *ftl_ctrlr = NULL;
 
 	pthread_mutex_lock(&g_ftl_bdev_lock);
 
 	ftl_ctrlr = bdev_ftl_ctrlr_find(trid);
 	if (ftl_ctrlr) {
-		ftl_ctrlr->ref_cnt++;
+		ftl_ctrlr->ref++;
 	} else {
 		ftl_ctrlr = calloc(1, sizeof(*ftl_ctrlr));
 		if (!ftl_ctrlr) {
@@ -160,9 +150,9 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 
 		ftl_ctrlr->ctrlr = ctrlr;
 		ftl_ctrlr->trid = *trid;
-		ftl_ctrlr->ref_cnt = 1;
+		ftl_ctrlr->ref = 1;
 
-		LIST_INSERT_HEAD(&g_ftl_bdev_ctrlrs, ftl_ctrlr, list_entry);
+		TAILQ_INSERT_HEAD(&g_nvme_ctrlrs, ftl_ctrlr, tailq);
 	}
 out:
 	pthread_mutex_unlock(&g_ftl_bdev_lock);
@@ -170,17 +160,17 @@ out:
 }
 
 static void
-bdev_ftl_remove_ctrlr(struct ftl_bdev_ctrlr *ctrlr)
+bdev_ftl_remove_ctrlr(struct nvme_ctrlr *ctrlr)
 {
 	pthread_mutex_lock(&g_ftl_bdev_lock);
 
-	if (--ctrlr->ref_cnt == 0) {
+	if (--ctrlr->ref == 0) {
 		if (spdk_nvme_detach(ctrlr->ctrlr)) {
 			SPDK_ERRLOG("Failed to detach the controller\n");
 			goto out;
 		}
 
-		LIST_REMOVE(ctrlr, list_entry);
+		TAILQ_REMOVE(&g_nvme_ctrlrs, ctrlr, tailq);
 		free(ctrlr);
 	}
 out:
@@ -662,7 +652,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 		const struct spdk_uuid *uuid, ftl_bdev_init_fn cb, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev = NULL;
-	struct ftl_bdev_ctrlr *ftl_ctrlr;
+	struct nvme_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
 	int rc;
 
@@ -821,7 +811,7 @@ error:
 int
 bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *cb_arg)
 {
-	struct ftl_bdev_ctrlr *ftl_ctrlr;
+	struct nvme_ctrlr *ftl_ctrlr;
 	struct spdk_nvme_ctrlr *ctrlr;
 
 	assert(opts != NULL);
@@ -830,7 +820,7 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 	pthread_mutex_lock(&g_ftl_bdev_lock);
 
 	/* Check already attached controllers first */
-	LIST_FOREACH(ftl_ctrlr, &g_ftl_bdev_ctrlrs, list_entry) {
+	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (!spdk_nvme_transport_id_compare(&ftl_ctrlr->trid, &opts->trid)) {
 			pthread_mutex_unlock(&g_ftl_bdev_lock);
 			return bdev_ftl_create(ftl_ctrlr->ctrlr, &ftl_ctrlr->trid, opts->name,

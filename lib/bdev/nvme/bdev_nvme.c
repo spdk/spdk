@@ -49,6 +49,8 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
+#include "../common_nvme/common_bdev_nvme.h"
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -112,8 +114,6 @@ static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 
 static void nvme_ctrlr_create_bdevs(struct nvme_ctrlr *nvme_ctrlr);
 static int bdev_nvme_library_init(void);
