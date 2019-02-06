@@ -115,7 +115,6 @@ struct device_qp g_dev_qp;
 
 #define MAX_TEST_BLOCKS 8192
 struct rte_crypto_op *g_test_crypto_ops[MAX_TEST_BLOCKS];
-struct rte_crypto_op *g_test_dequeued_ops[MAX_TEST_BLOCKS];
 struct rte_crypto_op *g_test_dev_full_ops[MAX_TEST_BLOCKS];
 
 /* These globals are externs in our local rte_ header files so we can control
@@ -322,8 +321,6 @@ test_setup(void)
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
 		g_test_crypto_ops[i] = calloc(1, sizeof(struct rte_crypto_op) +
 					      sizeof(struct rte_crypto_sym_op));
-		g_test_dequeued_ops[i] = calloc(1, sizeof(struct rte_crypto_op) +
-						sizeof(struct rte_crypto_sym_op));
 	}
 	return 0;
 }
@@ -338,7 +335,6 @@ test_cleanup(void)
 	spdk_mempool_free(g_mbuf_mp);
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
 		free(g_test_crypto_ops[i]);
-		free(g_test_dequeued_ops[i]);
 	}
 	free(g_bdev_io->u.bdev.iovs);
 	free(g_bdev_io);
