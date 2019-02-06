@@ -291,7 +291,7 @@ rte_crypto_op_attach_sym_session(struct rte_crypto_op *op,
 static int
 test_setup(void)
 {
-	int i;
+	int i, rc;
 
 	/* Prepare essential variables for test routines */
 	g_bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct crypto_bdev_io));
@@ -319,8 +319,13 @@ test_setup(void)
 	 * same coverage just calloc them here.
 	 */
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
-		g_test_crypto_ops[i] = calloc(1, sizeof(struct rte_crypto_op) +
-					      sizeof(struct rte_crypto_sym_op));
+		rc = posix_memalign((void **)&g_test_crypto_ops[i], 64,
+				    sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op));
+		if (rc != 0) {
+			assert(false);
+		}
+		memset(g_test_crypto_ops[i], 0, sizeof(struct rte_crypto_op) +
+		       sizeof(struct rte_crypto_sym_op));
 	}
 	return 0;
 }
