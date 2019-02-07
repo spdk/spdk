@@ -60,18 +60,19 @@ function usage()
 }
 
 # In monolithic kernels the lsmod won't work. So
-# back that with a /sys/modules check. Return a different code for
-# built-in vs module just in case we want that down the road.
+# back that with a /sys/modules. We also check
+# /sys/bus/pci/drivers/ as neither lsmod nor /sys/modules might
+# contain needed info (like in Fedora-like OS).
 function check_for_driver {
-	$(lsmod | grep $1 > /dev/null)
-	if [ $? -eq 0 ]; then
+	if lsmod | grep -q ${1//-/_}; then
 		return 1
-	else
-		if [[ -d /sys/module/$1 ]]; then
-			return 2
-		else
-			return 0
-		fi
+	fi
+
+	if [[ -d /sys/module/${1} || \
+			-d /sys/module/${1//-/_} || \
+			-d /sys/bus/pci/drivers/${1} || \
+			-d /sys/bus/pci/drivers/${1//-/_} ]]; then
+		return 2
 	fi
 	return 0
 }
