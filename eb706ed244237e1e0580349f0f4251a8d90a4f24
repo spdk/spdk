@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "35c58733_a3d2a74a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2780,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-07T18:54:53Z",
+      "side": 1,
+      "message": "Let\u0027s assert here (and in the success path) that num_outstanding_data_wr is 0.",
+      "revId": "eb706ed244237e1e0580349f0f4251a8d90a4f24",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
