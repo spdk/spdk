@@ -145,32 +145,6 @@ spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 	return nvme_ch->qpair;
 }
 
-struct nvme_ctrlr *
-spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
-{
-	struct nvme_ctrlr *_nvme_ctrlr;
-
-	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (strcmp(ctrlr_name, _nvme_ctrlr->name) == 0) {
-			return _nvme_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
-struct nvme_ctrlr *
-spdk_bdev_nvme_first_ctrlr(void)
-{
-	return TAILQ_FIRST(&g_nvme_ctrlrs);
-}
-
-struct nvme_ctrlr *
-spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
-{
-	return TAILQ_NEXT(prev, tailq);
-}
-
 static int
 bdev_nvme_get_ctx_size(void)
 {
