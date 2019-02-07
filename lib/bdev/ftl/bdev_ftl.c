@@ -49,6 +49,9 @@
 
 #define FTL_COMPLETION_RING_SIZE 4096
 
+extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
+extern pthread_mutex_t g_bdev_nvme_mutex;
+
 struct ftl_bdev {
 	struct spdk_bdev		bdev;
 

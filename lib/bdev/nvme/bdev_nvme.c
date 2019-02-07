@@ -51,6 +51,9 @@
 
 #include "../common_nvme/common_bdev_nvme.h"
 
+extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
+extern pthread_mutex_t g_bdev_nvme_mutex;
+
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
@@ -140,32 +143,6 @@ spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 	nvme_ch =  spdk_io_channel_get_ctx(ctrlr_io_ch);
 
 	return nvme_ch->qpair;
-}
-
-struct nvme_ctrlr *
-spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
-{
-	struct nvme_ctrlr *_nvme_ctrlr;
-
-	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (strcmp(ctrlr_name, _nvme_ctrlr->name) == 0) {
-			return _nvme_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
-struct nvme_ctrlr *
-spdk_bdev_nvme_first_ctrlr(void)
-{
-	return TAILQ_FIRST(&g_nvme_ctrlrs);
-}
-
-struct nvme_ctrlr *
-spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
-{
-	return TAILQ_NEXT(prev, tailq);
 }
 
 static int

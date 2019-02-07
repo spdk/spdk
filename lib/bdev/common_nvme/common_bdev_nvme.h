@@ -40,9 +40,6 @@
 
 #define NVME_MAX_CONTROLLERS 1024
 
-extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
-extern pthread_mutex_t g_bdev_nvme_mutex;
-
 struct nvme_ctrlr {
 	/**
 	 * points to pinned, physically contiguous memory region;
@@ -88,5 +85,9 @@ struct nvme_bdev_construct_opts {
 	struct spdk_uuid			*uuid;
 #endif
 };
+
+struct nvme_ctrlr *spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name);
+struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
+struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
