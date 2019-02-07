@@ -4,6 +4,8 @@
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
  *   are met:
@@ -588,7 +590,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries, ns_size, sector_size;
+	uint32_t max_xfer_size, entries, sector_size;
+	uint64_t ns_size;
 	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -606,7 +609,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (ns_size < g_io_size_bytes || sector_size > g_io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
-		       "ns size %u / block size %u for I/O size %u\n",
+		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       ns_size, spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
 		g_warn = true;
