@@ -53,12 +53,7 @@ struct spdk_bdev_nvme_opts {
 	uint64_t nvme_adminq_poll_period_us;
 };
 
-void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
-			      struct spdk_json_write_ctx *w);
-
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
-struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);

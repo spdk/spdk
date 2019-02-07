@@ -80,5 +80,10 @@ struct nvme_bdev {
 
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_bdev_ctrlr *nvme_bdev_ctrlr_get_by_name(const char *name);
+struct nvme_bdev_ctrlr *nvme_bdev_first_ctrlr(void);
+struct nvme_bdev_ctrlr *nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev);
+
+void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
+			      struct spdk_json_write_ctx *w);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
