@@ -77,26 +77,6 @@ function check_for_driver {
 	return 0
 }
 
-function pci_can_bind() {
-	# The '\ ' part is important
-	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]] ; then
-		return 1
-	fi
-
-	if [[ -z "$PCI_WHITELIST" ]]; then
-		#no whitelist specified, bind all devices
-		return 0
-	fi
-
-	for i in $PCI_WHITELIST; do
-		if [ "$i" == "$1" ] ; then
-			return 0
-		fi
-	done
-
-	return 1
-}
-
 function pci_dev_echo() {
 	local bdf="$1"
 	local vendor="$(cat /sys/bus/pci/devices/$bdf/vendor)"
