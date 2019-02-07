@@ -135,6 +135,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rdma_req.req.rsp = &cpl;
 	rdma_req.data.wr.sg_list = rdma_req.data.sgl;
 	rdma_req.req.qpair = &rqpair.qpair;
+	rdma_req.req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 
