@@ -170,6 +170,12 @@ DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 DEFINE_STUB(rte_cryptodev_count, uint8_t, (void), 0);
 DEFINE_STUB(rte_eal_get_configuration, struct rte_config *, (void), NULL);
 DEFINE_STUB_V(rte_mempool_free, (struct rte_mempool *mp));
+DEFINE_STUB(rte_mempool_create, struct rte_mempool *, (const char *name, unsigned n,
+		unsigned elt_size,
+		unsigned cache_size, unsigned private_data_size,
+		rte_mempool_ctor_t *mp_init, void *mp_init_arg,
+		rte_mempool_obj_cb_t *obj_init, void *obj_init_arg,
+		int socket_id, unsigned flags), (struct rte_mempool *)1);
 DEFINE_STUB(rte_socket_id, unsigned, (void), 0);
 DEFINE_STUB(rte_crypto_op_pool_create, struct rte_mempool *,
 	    (const char *name, enum rte_crypto_op_type type, unsigned nb_elts,
@@ -684,7 +690,7 @@ test_initdrivers(void)
 {
 	int rc;
 	static struct spdk_mempool *orig_mbuf_mp;
-	static struct spdk_mempool *orig_session_mp;
+	static struct rte_mempool *orig_session_mp;
 
 
 	/* These tests will alloc and free our g_mbuf_mp
@@ -770,7 +776,7 @@ test_initdrivers(void)
 	CU_ASSERT(g_mbuf_mp != NULL);
 	CU_ASSERT(g_session_mp != NULL);
 	spdk_mempool_free(g_mbuf_mp);
-	spdk_mempool_free(g_session_mp);
+	rte_mempool_free(g_session_mp);
 	CU_ASSERT(rc == 0);
 
 	/* restore our initial values. */
