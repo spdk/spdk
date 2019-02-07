@@ -182,9 +182,18 @@ DEFINE_STUB(rte_crypto_op_pool_create, struct rte_mempool *,
 	     unsigned cache_size, uint16_t priv_size, int socket_id), (struct rte_mempool *)1);
 DEFINE_STUB(rte_cryptodev_device_count_by_driver, uint8_t, (uint8_t driver_id), 0);
 DEFINE_STUB(rte_cryptodev_configure, int, (uint8_t dev_id, struct rte_cryptodev_config *config), 0);
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue_pair_id,
+		const struct rte_cryptodev_qp_conf *qp_conf, int socket_id), 0);
+DEFINE_STUB(rte_cryptodev_sym_session_pool_create, struct rte_mempool *, (const char *name,
+		uint32_t nb_elts,
+		uint32_t elt_size, uint32_t cache_size, uint16_t priv_size,
+		int socket_id), (struct rte_mempool *)1);
+#else
 DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue_pair_id,
 		const struct rte_cryptodev_qp_conf *qp_conf,
 		int socket_id, struct rte_mempool *session_pool), 0);
+#endif
 DEFINE_STUB(rte_cryptodev_start, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_cryptodev_stop, (uint8_t dev_id));
 DEFINE_STUB(rte_cryptodev_sym_session_create, struct rte_cryptodev_sym_session *,
@@ -692,6 +701,7 @@ test_initdrivers(void)
 	int rc;
 	static struct spdk_mempool *orig_mbuf_mp;
 	static struct rte_mempool *orig_session_mp;
+	static struct rte_mempool *orig_session_mp_priv;
 
 
 	/* These tests will alloc and free our g_mbuf_mp
@@ -699,7 +709,9 @@ test_initdrivers(void)
 	 */
 	orig_mbuf_mp = g_mbuf_mp;
 	orig_session_mp = g_session_mp;
+	orig_session_mp_priv = g_session_mp_priv;
 
+	g_session_mp_priv = NULL;
 	g_session_mp = NULL;
 	g_mbuf_mp = NULL;
 
@@ -710,6 +722,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 
 	/* Test failure of DPDK dev init. */
 	MOCK_SET(rte_cryptodev_count, 2);
@@ -718,6 +731,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_SET(rte_vdev_init, 0);
 
 	/* Can't create session pool. */
@@ -726,6 +740,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == -ENOMEM);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_CLEAR(spdk_mempool_create);
 
 	/* Can't create op pool. */
@@ -734,6 +749,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == -ENOMEM);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_SET(rte_crypto_op_pool_create, (struct rte_mempool *)1);
 
 	/* Check resources are not sufficient */
@@ -750,6 +766,7 @@ test_initdrivers(void)
 	MOCK_SET(rte_cryptodev_configure, 0);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	CU_ASSERT(rc == -EINVAL);
 
 	/* Test failure of qp setup. */
@@ -759,6 +776,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_SET(rte_cryptodev_queue_pair_setup, 0);
 
 	/* Test failure of dev start. */
@@ -768,6 +786,7 @@ test_initdrivers(void)
 	CU_ASSERT(rc == -EINVAL);
 	CU_ASSERT(g_mbuf_mp == NULL);
 	CU_ASSERT(g_session_mp == NULL);
+	CU_ASSERT(g_session_mp_priv == NULL);
 	MOCK_SET(rte_cryptodev_start, 0);
 
 	/* Test happy path. */
@@ -778,11 +797,16 @@ test_initdrivers(void)
 	CU_ASSERT(g_session_mp != NULL);
 	spdk_mempool_free(g_mbuf_mp);
 	rte_mempool_free(g_session_mp);
+	if (g_session_mp_priv != NULL) {
+		/* g_session_mp_priv may or may not be set depending on the DPDK version */
+		rte_mempool_free(g_session_mp_priv);
+	}
 	CU_ASSERT(rc == 0);
 
 	/* restore our initial values. */
 	g_mbuf_mp = orig_mbuf_mp;
 	g_session_mp = orig_session_mp;
+	g_session_mp_priv = orig_session_mp_priv;
 }
 
 static void
