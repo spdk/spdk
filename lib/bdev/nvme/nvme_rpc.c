@@ -462,7 +462,7 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ctx->nvme_ctrlr = spdk_bdev_nvme_lookup_ctrlr(ctx->req.name);
+	ctx->nvme_ctrlr = nvme_ctrlr_get_by_name(ctx->req.name);
 	if (ctx->nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed at device lookup\n");
 		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
