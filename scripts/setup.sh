@@ -171,10 +171,10 @@ function configure_linux_pci {
 
 	# NVMe
 	modprobe $driver_name || true
-	for bdf in $(iter_pci_class_code 01 08 02); do
+	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
-		if ! pci_can_bind $bdf; then
+		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller $blkname"
 			continue
 		fi
@@ -197,8 +197,8 @@ function configure_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
-			if ! pci_can_bind $bdf; then
+		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
 			fi
@@ -214,8 +214,8 @@ function configure_linux_pci {
 	| awk -F"x" '{print $2}' > $TMP
 
 	for dev_id in `cat $TMP`; do
-		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
-			if ! pci_can_bind $bdf; then
+		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
+			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at $bdf"
 				continue
 			fi
@@ -352,8 +352,8 @@ function reset_linux_pci {
 	check_for_driver nvme
 	driver_loaded=$?
 	set -e
-	for bdf in $(iter_pci_class_code 01 08 02); do
-		if ! pci_can_bind $bdf; then
+	for bdf in $(iter_all_pci_class_code 01 08 02); do
+		if ! pci_can_use $bdf; then
 			pci_dev_echo "$bdf" "Skipping un-whitelisted NVMe controller $blkname"
 			continue
 		fi
@@ -375,8 +375,8 @@ function reset_linux_pci {
 	driver_loaded=$?
 	set -e
 	for dev_id in `cat $TMP`; do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
-			if ! pci_can_bind $bdf; then
+		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
+			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted I/OAT device"
 				continue
 			fi
@@ -401,8 +401,8 @@ function reset_linux_pci {
 	#  underscore vs. dash right in the virtio_scsi name.
 	modprobe virtio-pci || true
 	for dev_id in `cat $TMP`; do
-		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
-			if ! pci_can_bind $bdf; then
+		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
+			if ! pci_can_use $bdf; then
 				pci_dev_echo "$bdf" "Skipping un-whitelisted Virtio device at"
 				continue
 			fi
@@ -456,7 +456,7 @@ function status_linux {
 	echo "NVMe devices"
 
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
-	for bdf in $(iter_pci_class_code 01 08 02); do
+	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 		node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 		device=$(cat /sys/bus/pci/devices/$bdf/device)
@@ -477,7 +477,7 @@ function status_linux {
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver"
 	for dev_id in $TMP; do
-		for bdf in $(iter_pci_dev_id 8086 $dev_id); do
+		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
@@ -494,7 +494,7 @@ function status_linux {
 	| awk -F"x" '{print $2}'`
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
 	for dev_id in $TMP; do
-		for bdf in $(iter_pci_dev_id 1af4 $dev_id); do
+		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
