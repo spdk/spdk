@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 
 rootdir=$(readlink -f $(dirname $0))
+
+# autotest_common.sh disables all tests by default.
+# If the configuration of tests is not provided, no tests will be carried out.
+if [[ -z $1 ]]; then
+	echo "SPDK test configuration not specified"
+	exit 1
+fi
+
 source "$rootdir/test/common/autotest_common.sh"
 source "$rootdir/test/nvmf/common.sh"
 
 set -xe
-
 if [ $EUID -ne 0 ]; then
 	echo "$0 must be run as root"
 	exit 1
