@@ -63,6 +63,7 @@ def main():
             spdk_shell.run_interactive()
         except ExecutionError as e:
             spdk_shell.log.error("%s" % e)
+    root_node.client.stop()
 
 
 if __name__ == "__main__":
