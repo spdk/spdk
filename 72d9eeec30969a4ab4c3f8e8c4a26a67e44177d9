@@ -22,6 +22,40 @@
       "revId": "72d9eeec30969a4ab4c3f8e8c4a26a67e44177d9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa586681_a2bb3810",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-07T10:24:29Z",
+      "side": 1,
+      "message": "I haven\u0027t seen the kernel code, but it looks like we\u0027re missing a read barrier here. The tail read can be reordered with the ring-\u003eevents read, which will make us process stale events (or even zeroed event structs).\n\n* SPDK: early ring-\u003eevents read (reordered)\n* Kernel: fill ring-\u003eevents[]\n* Kernel: wmb() to ensure tail is updated after the events\n* Kernel: set tail-\u003ering\n* SPDK: ring-\u003etail read",
+      "revId": "72d9eeec30969a4ab4c3f8e8c4a26a67e44177d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53948c4d_6912d1a1",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-07T10:24:29Z",
+      "side": 1,
+      "message": "I assume the head is only updated by us, and not the kernel..? But then why would you have a read barrier in #273? It doesn\u0027t protecting anything.",
+      "revId": "72d9eeec30969a4ab4c3f8e8c4a26a67e44177d9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
