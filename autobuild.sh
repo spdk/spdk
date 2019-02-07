@@ -14,6 +14,11 @@ cd $rootdir
 date -u
 git describe --tags
 
+if [[ -z $1 ]]; then
+	echo "SPDK test configuration file not found"
+	config_params=""
+fi
+
 if [ "$SPDK_TEST_OCF" -eq 1 ]; then
 	# We compile OCF sources ourselves
 	# They don't need to be checked with scanbuild and code coverage is not applicable
