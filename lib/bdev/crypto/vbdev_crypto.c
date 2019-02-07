@@ -41,6 +41,7 @@
 
 
 #include <rte_config.h>
+#include <rte_version.h>
 #include <rte_bus_vdev.h>
 #include <rte_crypto.h>
 #include <rte_cryptodev.h>
@@ -311,7 +312,10 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 
 		struct rte_cryptodev_qp_conf qp_conf = {
-			.nb_descriptors = CRYPTO_QP_DESCRIPTORS
+			.nb_descriptors = CRYPTO_QP_DESCRIPTORS,
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+			.mp_session = (struct rte_mempool *)g_session_mp,
+#endif
 		};
 
 		/* Pre-setup all pottential qpairs now and assign them in the channel
@@ -320,8 +324,12 @@ vbdev_crypto_init_crypto_drivers(void)
 		 * even on other queue pairs.
 		 */
 		for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+			rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY);
+#else
 			rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY,
 							    (struct rte_mempool *)g_session_mp);
+#endif
 
 			if (rc < 0) {
 				SPDK_ERRLOG("Failed to setup queue pair %u on "

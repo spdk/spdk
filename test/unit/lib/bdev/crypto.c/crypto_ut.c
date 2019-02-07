@@ -176,9 +176,14 @@ DEFINE_STUB(rte_crypto_op_pool_create, struct rte_mempool *,
 	     unsigned cache_size, uint16_t priv_size, int socket_id), (struct rte_mempool *)1);
 DEFINE_STUB(rte_cryptodev_device_count_by_driver, uint8_t, (uint8_t driver_id), 0);
 DEFINE_STUB(rte_cryptodev_configure, int, (uint8_t dev_id, struct rte_cryptodev_config *config), 0);
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue_pair_id,
+		const struct rte_cryptodev_qp_conf *qp_conf, int socket_id), 0);
+#else
 DEFINE_STUB(rte_cryptodev_queue_pair_setup, int, (uint8_t dev_id, uint16_t queue_pair_id,
 		const struct rte_cryptodev_qp_conf *qp_conf,
 		int socket_id, struct rte_mempool *session_pool), 0);
+#endif
 DEFINE_STUB(rte_cryptodev_start, int, (uint8_t dev_id), 0);
 DEFINE_STUB_V(rte_cryptodev_stop, (uint8_t dev_id));
 DEFINE_STUB(rte_cryptodev_sym_session_create, struct rte_cryptodev_sym_session *,
