@@ -88,5 +88,7 @@ struct nvme_bdev_construct_opts {
 
 struct nvme_ctrlr *nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
+struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
+struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
