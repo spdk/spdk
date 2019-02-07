@@ -34,7 +34,6 @@
 #include "spdk/env.h"
 #include "common_bdev_nvme.h"
 
-
 TAILQ_HEAD(, nvme_ctrlr) g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -68,4 +67,45 @@ spdk_bdev_nvme_ctrlr_get_by_name(const char *name)
 	}
 
 	return NULL;
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_first_ctrlr(void)
+{
+	return TAILQ_FIRST(&g_nvme_ctrlrs);
+}
+
+struct nvme_ctrlr *
+spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
+{
+	return TAILQ_NEXT(prev, tailq);
+}
+
+void
+spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+{
+	const char *trtype_str;
+	const char *adrfam_str;
+
+	trtype_str = spdk_nvme_transport_id_trtype_str(trid->trtype);
+	if (trtype_str) {
+		spdk_json_write_named_string(w, "trtype", trtype_str);
+	}
+
+	adrfam_str = spdk_nvme_transport_id_adrfam_str(trid->adrfam);
+	if (adrfam_str) {
+		spdk_json_write_named_string(w, "adrfam", adrfam_str);
+	}
+
+	if (trid->traddr[0] != '\0') {
+		spdk_json_write_named_string(w, "traddr", trid->traddr);
+	}
+
+	if (trid->trsvcid[0] != '\0') {
+		spdk_json_write_named_string(w, "trsvcid", trid->trsvcid);
+	}
+
+	if (trid->subnqn[0] != '\0') {
+		spdk_json_write_named_string(w, "subnqn", trid->subnqn);
+	}
 }
