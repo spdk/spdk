@@ -234,6 +234,7 @@ spdk_init_thread_poll(void *arg)
 	/* Create a dummy thread data for use on the initialization thread. */
 	td.o.iodepth = 32;
 	td.eo = eo;
+	pthread_setcancelstate(PTHREAD_CANCEL_ENABLE, NULL);
 
 	/* Parse the SPDK configuration file */
 	eo = arg;
@@ -693,6 +694,12 @@ spdk_fio_invalidate(struct thread_data *td, struct fio_file *f)
 	/* TODO: This should probably send a flush to the device, but for now just return successful. */
 	return 0;
 }
+static void spdk_fio_finish_env(void);
+static void spdk_fio_terminate(struct thread_data *td)
+{
+	pthread_cancel(g_init_thread_id);
+	spdk_fio_finish_env();
+}
 
 static struct fio_option options[] = {
 	{
@@ -747,7 +754,7 @@ struct ioengine_ops ioengine = {
 	.invalidate		= spdk_fio_invalidate,
 	/* .unlink_file		= unused, */
 	/* .get_file_size	= unused, */
-	/* .terminate		= unused, */
+	.terminate		= spdk_fio_terminate,
 	.iomem_alloc		= spdk_fio_iomem_alloc,
 	.iomem_free		= spdk_fio_iomem_free,
 	.io_u_init		= spdk_fio_io_u_init,
