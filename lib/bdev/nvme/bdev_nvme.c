@@ -57,16 +57,6 @@ extern pthread_mutex_t g_bdev_nvme_mutex;
 static void bdev_nvme_get_spdk_running_config(FILE *fp);
 static int bdev_nvme_config_json(struct spdk_json_write_ctx *w);
 
-struct nvme_io_channel {
-	struct spdk_nvme_qpair	*qpair;
-	struct spdk_poller	*poller;
-
-	bool			collect_spin_stat;
-	uint64_t		spin_ticks;
-	uint64_t		start_ticks;
-	uint64_t		end_ticks;
-};
-
 struct nvme_bdev_io {
 	/** array of iovecs to transfer. */
 	struct iovec *iovs;
@@ -134,16 +124,6 @@ static int bdev_nvme_io_passthru_md(struct nvme_bdev *nbdev, struct spdk_io_chan
 				    struct nvme_bdev_io *bio,
 				    struct spdk_nvme_cmd *cmd, void *buf, size_t nbytes, void *md_buf, size_t md_len);
 static int nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid);
-
-struct spdk_nvme_qpair *
-spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
-{
-	struct nvme_io_channel *nvme_ch;
-
-	nvme_ch =  spdk_io_channel_get_ctx(ctrlr_io_ch);
-
-	return nvme_ch->qpair;
-}
 
 static int
 bdev_nvme_get_ctx_size(void)
