@@ -446,6 +446,16 @@ enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev);
 bool spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev);
 
 /**
+ * Check whether the DIF check type is enabled.
+ *
+ * \param bdev Block device to query.
+ * \param check_type The specific DIF check type.
+ * \return true if enabled, false otherwise.
+ */
+bool spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
+				    enum spdk_dif_check_type check_type);
+
+/**
  * Get the most recently measured queue depth from a bdev.
  *
  * The reported queue depth is the aggregate of outstanding I/O
