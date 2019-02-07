@@ -336,7 +336,7 @@ spdk_init_thread_poll(void *arg)
 
 	spdk_fio_cleanup_thread(fio_thread);
 
-	pthread_exit(NULL);
+	return NULL;
 
 err_exit:
 	exit(rc);
