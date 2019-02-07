@@ -365,7 +365,7 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 	if (ctrlr != NULL) {
 		spdk_rpc_dump_nvme_controller_info(w, ctrlr);
 	} else {
-		for (ctrlr = spdk_bdev_nvme_first_ctrlr(); ctrlr; ctrlr = spdk_bdev_nvme_next_ctrlr(ctrlr))  {
+		for (ctrlr = nvme_bdev_first_ctrlr(); ctrlr; ctrlr = nvme_bdev_next_ctrlr(ctrlr))  {
 			spdk_rpc_dump_nvme_controller_info(w, ctrlr);
 		}
 	}
