@@ -53,6 +53,12 @@ enum spdk_dif_type {
 	SPDK_DIF_TYPE3 = 3,
 };
 
+enum spdk_dif_check_type {
+	SPDK_DIF_CHECK_TYPE_REFTAG = 1,
+	SPDK_DIF_CHECK_TYPE_APPTAG = 2,
+	SPDK_DIF_CHECK_TYPE_GUARD = 3,
+};
+
 struct spdk_dif {
 	uint16_t guard;
 	uint16_t app_tag;

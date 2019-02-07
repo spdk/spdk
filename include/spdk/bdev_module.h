@@ -321,6 +321,11 @@ struct spdk_bdev {
 	bool dif_is_head_of_md;
 
 	/**
+	 * Specify whether each DIF check type is enabled.
+	 */
+	uint32_t dif_check_flags;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
