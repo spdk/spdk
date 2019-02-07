@@ -38,10 +38,9 @@
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
 
-#include "bdev_nvme.h"
 #include "spdk/base64.h"
 
-#include "../common_nvme/common_bdev_nvme.h"
+#include "common_bdev_nvme.h"
 
 enum spdk_nvme_rpc_type {
 	NVME_ADMIN_CMD = 1,

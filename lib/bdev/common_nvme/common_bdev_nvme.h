@@ -86,8 +86,19 @@ struct nvme_bdev_construct_opts {
 #endif
 };
 
+struct nvme_io_channel {
+	struct spdk_nvme_qpair	*qpair;
+	struct spdk_poller	*poller;
+
+	bool			collect_spin_stat;
+	uint64_t		spin_ticks;
+	uint64_t		start_ticks;
+	uint64_t		end_ticks;
+};
+
 struct nvme_ctrlr *spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name);
 struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
 struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
+struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
