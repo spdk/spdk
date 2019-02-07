@@ -80,3 +80,13 @@ spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev)
 {
 	return TAILQ_NEXT(prev, tailq);
 }
+
+struct spdk_nvme_qpair *
+spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
+{
+	struct nvme_io_channel *nvme_ch;
+
+	nvme_ch =  spdk_io_channel_get_ctx(ctrlr_io_ch);
+
+	return nvme_ch->qpair;
+}
