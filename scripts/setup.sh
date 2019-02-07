@@ -140,6 +140,7 @@ function linux_unbind_driver() {
 	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
 
 	if ! [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
+		pci_dev_echo "$bdf" "Can't unbind device as it is not using any driver."
 		return 0
 	fi
 
@@ -493,7 +494,7 @@ function status_linux {
 		else
 			name="-";
 		fi
-		echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t$driver\t\t$name";
+		echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}\t\t$name";
 	done
 
 	echo ""
@@ -509,7 +510,7 @@ function status_linux {
 			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
-			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t$driver"
+			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}"
 		done
 	done
 
@@ -528,7 +529,7 @@ function status_linux {
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 			blknames=''
 			get_virtio_names_from_bdf "$bdf" blknames
-			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t$driver\t\t$blknames"
+			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t\t${driver:--}\t\t$blknames"
 		done
 	done
 }
