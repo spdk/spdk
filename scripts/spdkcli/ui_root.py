@@ -45,8 +45,13 @@ class UIRoot(UINode):
         if self.has_subsystem("iscsi"):
             UIISCSI(self)
 
+    def response_handler(self, response):
+        print("Response received (id=%s)" % response['id'])
+        print(response)
+
     def set_rpc_target(self, s):
         self.client = rpc.client.JSONRPCClient(s)
+        self.client.add_handler(self.response_handler)
 
     def print_array(self, a):
         return " ".join(a)
