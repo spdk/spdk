@@ -1,5 +1,33 @@
 # Common shell utility functions
 
+# Check if PCI device is on PCI_WHITELIST and not on PCI_BLACKLIST
+# Env:
+# if PCI_WHITELIST is empty assume device is whitelistened
+# if PCI_BLACKLIST is empty assume device is NOT blacklistened
+# Params:
+# $1 - PCI BDF
+function pci_can_bind() {
+	local i
+
+	# The '\ ' part is important
+	if [[ " $PCI_BLACKLIST " =~ \ $1\  ]] ; then
+		return 1
+	fi
+
+	if [[ -z "$PCI_WHITELIST" ]]; then
+		#no whitelist specified, bind all devices
+		return 0
+	fi
+
+	for i in $PCI_WHITELIST; do
+		if [ "$i" == "$1" ] ; then
+			return 0
+		fi
+	done
+
+	return 1
+}
+
 function iter_pci_class_code() {
 	local class="$(printf %02x $((0x$1)))"
 	local subclass="$(printf %02x $((0x$2)))"
