@@ -160,7 +160,7 @@ struct vbdev_crypto {
 static TAILQ_HEAD(, vbdev_crypto) g_vbdev_crypto = TAILQ_HEAD_INITIALIZER(g_vbdev_crypto);
 
 /* Shared mempools between all devices on this system */
-static struct spdk_mempool *g_session_mp = NULL;	/* session mempool */
+static struct rte_mempool *g_session_mp = NULL;	/* session mempool */
 static struct spdk_mempool *g_mbuf_mp = NULL;		/* mbuf mempool */
 static struct rte_mempool *g_crypto_op_mp = NULL;	/* crypto operations, must be rte* mempool */
 
@@ -207,6 +207,7 @@ vbdev_crypto_init_crypto_drivers(void)
 	struct device_qp *dev_qp = NULL;
 	unsigned int max_sess_size = 0, sess_size;
 	uint16_t num_lcores = rte_lcore_count();
+	uint32_t cache_size;
 
 	/* Only the first call, via RPC or module init should init the crypto drivers. */
 	if (g_session_mp != NULL) {
@@ -240,9 +241,9 @@ vbdev_crypto_init_crypto_drivers(void)
 		}
 	}
 
-	g_session_mp = spdk_mempool_create("session_mp", NUM_SESSIONS, max_sess_size,
-					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
+	cache_size = spdk_min(RTE_MEMPOOL_CACHE_MAX_SIZE, NUM_SESSIONS / 2 / num_lcores);
+	g_session_mp = rte_mempool_create("session_mp", NUM_SESSIONS, max_sess_size, cache_size,
+					  0, NULL, NULL, NULL, NULL, SOCKET_ID_ANY, 0);
 	if (g_session_mp == NULL) {
 		SPDK_ERRLOG("Cannot create session pool max size 0x%x\n", max_sess_size);
 		return -ENOMEM;
@@ -321,7 +322,7 @@ vbdev_crypto_init_crypto_drivers(void)
 		 */
 		for (j = 0; j < device->cdev_info.max_nb_queue_pairs; j++) {
 			rc = rte_cryptodev_queue_pair_setup(cdev_id, j, &qp_conf, SOCKET_ID_ANY,
-							    (struct rte_mempool *)g_session_mp);
+							    g_session_mp);
 
 			if (rc < 0) {
 				SPDK_ERRLOG("Failed to setup queue pair %u on "
@@ -375,7 +376,7 @@ error_create_op:
 	spdk_mempool_free(g_mbuf_mp);
 	g_mbuf_mp = NULL;
 error_create_mbuf:
-	spdk_mempool_free(g_session_mp);
+	rte_mempool_free(g_session_mp);
 	g_session_mp = NULL;
 	return rc;
 }
@@ -1324,7 +1325,7 @@ vbdev_crypto_finish(void)
 
 	rte_mempool_free(g_crypto_op_mp);
 	spdk_mempool_free(g_mbuf_mp);
-	spdk_mempool_free(g_session_mp);
+	rte_mempool_free(g_session_mp);
 }
 
 /* During init we'll be asked how much memory we'd like passed to us
@@ -1505,14 +1506,14 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		}
 
 		/* Get sessions. */
-		vbdev->session_encrypt = rte_cryptodev_sym_session_create((struct rte_mempool *)g_session_mp);
+		vbdev->session_encrypt = rte_cryptodev_sym_session_create(g_session_mp);
 		if (NULL == vbdev->session_encrypt) {
 			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
 			rc = -EINVAL;
 			goto error_session_en_create;
 		}
 
-		vbdev->session_decrypt = rte_cryptodev_sym_session_create((struct rte_mempool *)g_session_mp);
+		vbdev->session_decrypt = rte_cryptodev_sym_session_create(g_session_mp);
 		if (NULL == vbdev->session_decrypt) {
 			SPDK_ERRLOG("ERROR trying to create crypto session!\n");
 			rc = -EINVAL;
@@ -1530,7 +1531,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_ENCRYPT;
 		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_encrypt,
 						    &vbdev->cipher_xform,
-						    (struct rte_mempool *)g_session_mp);
+						    g_session_mp);
 		if (rc < 0) {
 			SPDK_ERRLOG("ERROR trying to init encrypt session!\n");
 			rc = -EINVAL;
@@ -1540,7 +1541,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 		vbdev->cipher_xform.cipher.op = RTE_CRYPTO_CIPHER_OP_DECRYPT;
 		rc = rte_cryptodev_sym_session_init(device->cdev_id, vbdev->session_decrypt,
 						    &vbdev->cipher_xform,
-						    (struct rte_mempool *)g_session_mp);
+						    g_session_mp);
 		if (rc < 0) {
 			SPDK_ERRLOG("ERROR trying to init decrypt session!\n");
 			rc = -EINVAL;
