@@ -1437,6 +1437,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 
 		spdk_nvmf_rdma_request_free_buffers(rdma_req, &rgroup->group, &rtransport->transport);
 	}
+	rdma_req->num_outstanding_data_wr = 0;
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
 	rdma_req->req.data = NULL;
@@ -2801,10 +2802,10 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
+				rdma_req->num_outstanding_data_wr--;
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
 					assert(rdma_req->num_outstanding_data_wr > 0);
 					rqpair->current_read_depth--;
-					rdma_req->num_outstanding_data_wr--;
 					if (rdma_req->num_outstanding_data_wr == 0) {
 						spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_COMPLETED);
 					}
@@ -2871,6 +2872,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 			rqpair->current_send_depth--;
+			rdma_req->num_outstanding_data_wr--;
 
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
