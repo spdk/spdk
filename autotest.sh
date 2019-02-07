@@ -73,8 +73,11 @@ if [ $(uname -s) = Linux ]; then
 			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
 			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
 			PCI_BLACKLIST+=" $bdf"
+			OCSSD_PCI_DEVICES+=" $bdf"
 		fi
 	done
+
+	export OCSSD_PCI_DEVICES
 
 	# Now, bind blacklistened devices to pci-stub module. This will prevent
 	# automatic grabbing these devices when we add device/vendor ID to
