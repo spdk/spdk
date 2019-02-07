@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7f17dbad_39fa51dd",
+        "filename": "test/unit/lib/ftl/common/utils.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-07T09:28:33Z",
+      "side": 1,
+      "message": "Why did you make it non-static? Is it to get rid of the unused static function warnings? If so, please change all the other functions in this file.",
+      "revId": "3d1e00e85de5b642e6e120b72ce8604c7763b975",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c4b1a68_0f86dc6c",
+        "filename": "test/unit/lib/ftl/ftl_wptr/ftl_wptr_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 133,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-07T09:28:33Z",
+      "side": 1,
+      "message": "This test verifies multiple different functions. I think you should divide it into several tests:\n - one for wptr_advance (checking different geos: one chunk, multiple chunks, band with some offline chunks, etc.),\n - one for add_wptr (checking both if dev-\u003enext_band or not, verifying correct state transitions when it\u0027s empty, checking it\u0027s added to the wptr list, verifying its sequence number, checking the wptr is not added when there are no more free bands, etc.),\n - one for wptr_ready (checking different states and the transitions between them),\n - one for metadata write cb (testing the behavior when the band is opening, closing, when the write fails, etc.).",
+      "revId": "3d1e00e85de5b642e6e120b72ce8604c7763b975",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
