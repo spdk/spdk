@@ -557,6 +557,24 @@
     },
     {
       "key": {
+        "uuid": "1de988ad_ec79e294",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 309,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-07T09:46:06Z",
+      "side": 1,
+      "message": "All right, I don\u0027t think it\u0027s worth to argue about this for so long. I\u0027m OK with leaving it as it is.",
+      "parentUuid": "820b5318_7713de80",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e5f5ab5_66324077",
         "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
         "patchSetId": 4
@@ -787,6 +805,24 @@
       "side": 1,
       "message": "I\u0027ve decreased number of iterations.",
       "parentUuid": "770f7751_becdfb3e",
+      "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d594dadd_7c8ca934",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-07T09:46:06Z",
+      "side": 1,
+      "message": "A comment would be nice explaining why we need to do that.",
+      "parentUuid": "30639174_d85cffe5",
       "revId": "139ce08bd0799077ff0d0621af899618d9b1afa7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
