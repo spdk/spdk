@@ -14,7 +14,7 @@ bs=4k
 filename=FTL_BDEV_NAME
 random_distribution=normal
 serialize_overlap=1
-io_size=5G
+io_size=256M
 
 [test]
 numjobs=1
