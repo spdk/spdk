@@ -2137,6 +2137,9 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+
+bool spdk_nvme_ctrlr_is_zns_supported(struct spdk_nvme_ctrlr *ctrlr);
+
 #ifdef SPDK_CONFIG_RDMA
 struct ibv_context;
 struct ibv_pd;

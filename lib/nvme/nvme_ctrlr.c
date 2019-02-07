@@ -2807,3 +2807,9 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 
 	return 0;
 }
+
+bool
+spdk_nvme_ctrlr_is_zns_supported(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->cdata.oncs.zoned_namespaces;
+}

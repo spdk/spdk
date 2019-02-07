@@ -1221,7 +1221,9 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 		uint16_t	set_features_save: 1;
 		uint16_t	reservations: 1;
 		uint16_t	timestamp: 1;
-		uint16_t	reserved: 9;
+		uint16_t	reserved0: 2;
+		uint16_t	zoned_namespaces: 1;
+		uint16_t	reserved1: 6;
 	} oncs;
 
 	/** fused operation support */
@@ -1276,7 +1278,25 @@ struct __attribute__((packed)) spdk_nvme_ctrlr_data {
 
 	uint8_t			subnqn[256];
 
-	uint8_t			reserved5[768];
+	/** total zoned capacity */
+	uint64_t		tzcap[2];
+
+	/** unallocated zoned capacity */
+	uint64_t		uzcap[2];
+
+	/** number of active resources */
+	uint32_t		nar;
+
+	/** number of open resources */
+	uint32_t		nor;
+
+	/** zone active absolute limit */
+	uint32_t		zaal;
+
+	/** zone active relative limit */
+	uint32_t		zarl;
+
+	uint8_t			reserved5[720];
 
 	/** NVMe over Fabrics-specific fields */
 	struct {
@@ -1575,7 +1595,10 @@ struct spdk_nvme_ns_data {
 		uint32_t	reserved6 : 6;
 	} lbaf[16];
 
-	uint8_t			reserved6[192];
+	/** Zone Size */
+	uint64_t		zsze;
+
+	uint8_t			reserved6[184];
 
 	uint8_t			vendor_specific[3712];
 };
@@ -1798,6 +1821,9 @@ enum spdk_nvme_log_page {
 	/** Reservation notification (optional) */
 	SPDK_NVME_LOG_RESERVATION_NOTIFICATION	= 0x80,
 
+	/** Zone information (optional) */
+	SPDK_NVME_LOG_ZONE_INFORMATION		= 0x82,
+
 	/* 0x81-0xBF - I/O command set specific */
 
 	/* 0xC0-0xFF - vendor specific */
@@ -1919,6 +1945,53 @@ struct spdk_nvme_cmds_and_effect_log_page {
 	uint8_t reserved0[2048];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmds_and_effect_log_page) == 4096, "Incorrect size");
+
+enum spdk_nvme_zone_type {
+	SPDK_NVME_ZONE_TYPE_SEQUENTIAL_WRITE = 0x2,
+};
+
+enum spdk_nvme_zone_state {
+	SPDK_NVME_ZONE_STATE_EMPTY		= 0x1,
+	SPDK_NVME_ZONE_STATE_IMPLICIT_OPEN	= 0x2,
+	SPDK_NVME_ZONE_STATE_EXPLICIT_OPEN	= 0x3,
+	SPDK_NVME_ZONE_STATE_CLOSED		= 0x4,
+	SPDK_NVME_ZONE_STATE_READ_ONLY		= 0xd,
+	SPDK_NVME_ZONE_STATE_FULL		= 0xe,
+	SPDK_NVME_ZONE_STATE_OFFLINE		= 0xf,
+};
+
+/* Zone Information Log Page */
+struct spdk_nvme_zone_information_entry {
+	struct {
+		/** Zone Type */
+		uint8_t zt	  : 4;
+		uint8_t reserved0 : 4;
+	};
+
+	struct {
+		uint8_t reserved1 : 4;
+		/** Zone State */
+		uint8_t zs	  : 4;
+	};
+
+	struct {
+		/** Zone Finished by Controller */
+		uint8_t zfc	  : 1;
+		/** Zone Finish Recommended */
+		uint8_t zfr	  : 1;
+		uint8_t reserved  : 6;
+	} za;
+
+	uint8_t		reserved2[5];
+	/** Zone Capacity */
+	uint64_t	zcap;
+	/** Zone Start LBA */
+	uint64_t	zslba;
+	/** Write Pointer */
+	uint64_t	wp;
+	uint8_t		reserved3[32];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_zone_information_entry) == 64, "Incorrect size");
 
 /**
  * Asynchronous Event Type

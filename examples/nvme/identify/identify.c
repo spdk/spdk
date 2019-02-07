@@ -48,6 +48,7 @@
 #define MAX_DISCOVERY_LOG_ENTRIES	((uint64_t)1000)
 
 #define NUM_CHUNK_INFO_ENTRIES		8
+#define NUM_ZONE_INFO_ENTRIES		8
 
 static int outstanding_commands;
 
@@ -79,6 +80,8 @@ static uint64_t g_discovery_page_numrec;
 static struct spdk_ocssd_geometry_data geometry_data;
 
 static struct spdk_ocssd_chunk_information_entry g_ocssd_chunk_info_page[NUM_CHUNK_INFO_ENTRIES ];
+
+static struct spdk_nvme_zone_information_entry g_zone_info_page[NUM_ZONE_INFO_ENTRIES];
 
 static bool g_hex_dump = false;
 
@@ -500,6 +503,30 @@ get_ocssd_chunk_info_log_page(struct spdk_nvme_ns *ns)
 	return 0;
 }
 
+static int
+get_zone_info_log_page(struct spdk_nvme_ns *ns, struct spdk_nvme_zone_information_entry *entry,
+		       size_t num_entries)
+{
+	struct spdk_nvme_ctrlr *ctrlr = spdk_nvme_ns_get_ctrlr(ns);
+	int nsid = spdk_nvme_ns_get_id(ns);
+	outstanding_commands = 0;
+
+	if (spdk_nvme_ctrlr_cmd_get_log_page(ctrlr, SPDK_NVME_LOG_ZONE_INFORMATION,
+					     nsid, entry, sizeof(*entry) * num_entries, 0,
+					     get_log_page_completion, NULL) == 0) {
+		outstanding_commands++;
+	} else {
+		printf("get_zone_info_log_page() failed\n");
+		return -1;
+	}
+
+	while (outstanding_commands) {
+		spdk_nvme_ctrlr_process_admin_completions(ctrlr);
+	}
+
+	return 0;
+}
+
 static void
 get_ocssd_geometry(struct spdk_nvme_ns *ns, struct spdk_ocssd_geometry_data *geometry_data)
 {
@@ -656,6 +683,59 @@ print_ocssd_geometry(struct spdk_ocssd_geometry_data *geometry_data)
 }
 
 static void
+print_zone_info(const struct spdk_nvme_zone_information_entry *info, size_t num_zones)
+{
+	const char *type_str, *state_str, *attr_str;
+	size_t i;
+
+	printf("Zone Info Glance\n");
+	printf("======================\n");
+
+	for (i = 0; i < num_zones; ++i, info++) {
+		type_str = info->zt == SPDK_NVME_ZONE_TYPE_SEQUENTIAL_WRITE ? "sequential" :
+			   "random";
+		attr_str = info->za.zfc ? "zone finished by controller" :
+			   info->za.zfr ? "zone finish recommended" :
+			   "none";
+		switch (info->zs) {
+		case SPDK_NVME_ZONE_STATE_EMPTY:
+			state_str = "empty";
+			break;
+		case SPDK_NVME_ZONE_STATE_IMPLICIT_OPEN:
+			state_str = "implicitly opened";
+			break;
+		case SPDK_NVME_ZONE_STATE_EXPLICIT_OPEN:
+			state_str = "explictly opened";
+			break;
+		case SPDK_NVME_ZONE_STATE_CLOSED:
+			state_str = "closed";
+			break;
+		case SPDK_NVME_ZONE_STATE_READ_ONLY:
+			state_str = "read only";
+			break;
+		case SPDK_NVME_ZONE_STATE_FULL:
+			state_str = "full";
+			break;
+		case SPDK_NVME_ZONE_STATE_OFFLINE:
+			state_str = "offline";
+			break;
+		default:
+			state_str = "unknown";
+			break;
+		}
+
+		printf("------------\n");
+		printf("Zone Type:			%s\n", type_str);
+		printf("Zone State:			%s\n", state_str);
+		printf("Zone Attributes:		%s\n", attr_str);
+		printf("Zone Capacity:			%"PRIu64"\n", info->zcap);
+		printf("Zone Start LBA:			%"PRIu64"\n", info->zslba);
+		printf("Write Pointer:			%"PRIu64"\n", info->wp);
+		printf("\n");
+	}
+}
+
+static void
 print_namespace(struct spdk_nvme_ns *ns)
 {
 	const struct spdk_nvme_ns_data		*nsdata;
@@ -758,6 +838,11 @@ print_namespace(struct spdk_nvme_ns *ns)
 		print_ocssd_geometry(&geometry_data);
 		get_ocssd_chunk_info_log_page(ns);
 		print_ocssd_chunk_info(g_ocssd_chunk_info_page, NUM_CHUNK_INFO_ENTRIES);
+	}
+
+	if (spdk_nvme_ctrlr_is_zns_supported(spdk_nvme_ns_get_ctrlr(ns))) {
+		get_zone_info_log_page(ns, &g_zone_info_page[0], NUM_ZONE_INFO_ENTRIES);
+		print_zone_info(&g_zone_info_page[0], NUM_ZONE_INFO_ENTRIES);
 	}
 }
 
@@ -1613,6 +1698,23 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 		}
 		free(g_discovery_page);
 		g_discovery_page = NULL;
+	}
+
+	if (spdk_nvme_ctrlr_is_zns_supported(ctrlr)) {
+		printf("Zoned namespace controller data\n");
+		printf("==================\n");
+		printf("Total Zoned Capacity:                           0x%"PRIx64"%"PRIx64"\n",
+		       from_le64(&cdata->tzcap[1]), from_le64(&cdata->tzcap[0]));
+		printf("Unallocated Zoned Capacity:                     0x%"PRIx64"%"PRIx64"\n",
+		       from_le64(&cdata->uzcap[1]), from_le64(&cdata->uzcap[0]));
+		printf("Number of Active Resources:                     %"PRIu32"\n",
+		       from_le32(&cdata->nar));
+		printf("Number of Open Resources:                       %"PRIu32"\n",
+		       from_le32(&cdata->nor));
+		printf("Zone Active Absolute Limit:                     %"PRIu32"\n",
+		       from_le32(&cdata->zaal));
+		printf("Zone Active Absolute Limit:                     %"PRIu32"\n",
+		       from_le32(&cdata->zarl));
 	}
 }
 
