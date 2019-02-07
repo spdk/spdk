@@ -16,6 +16,24 @@
       "revId": "99a8851337b205632637e7c02fc545094edc3320",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d99de4a6_0f2372ac",
+        "filename": "test/unit/lib/ftl/ftl_reloc.c/ftl_reloc_ut.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-07T12:35:24Z",
+      "side": 1,
+      "message": "Ok, removing double negation make sense.",
+      "parentUuid": "4f14dd33_3e07a092",
+      "revId": "99a8851337b205632637e7c02fc545094edc3320",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
