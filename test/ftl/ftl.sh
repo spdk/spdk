@@ -8,14 +8,27 @@ rpc_py=$rootdir/scripts/rpc.py
 
 source $rootdir/test/common/autotest_common.sh
 
-vendor_id='0x1d1d'
-device_id='0x1f1f'
-device=$(lspci -d ${vendor_id}:${device_id} | cut -d' ' -f 1)
+function at_ftl_exit() {
+	# restore original driver
+	PCI_WHITELIST="$device" CI_BLACKLIST="" DRIVER_OVERRIDE="$ocssd_original_dirver" ./scripts/setup.sh
+}
 
-if [ -z "$device" ]; then
-	echo "Could not find FTL device. Tests skipped."
-	exit 0
+read device _ <<< "$OCSSD_PCI_DEVICES"
+
+if [[ -z "$device" ]]; then
+	echo "OCSSD device list is empty."
+	echo "This test require that OCSSD_PCI_DEVICES environment variable to be set"
+	echo "and point to OCSSD devices PCI BDF. You can specify multiple space"
+	echo "separated BDFs in this case first one will be used."
+	exit 1
 fi
+
+ocssd_original_dirver="$(basename $(readlink /sys/bus/pci/devices/$device/driver))"
+
+trap "at_ftl_exit" SIGINT SIGTERM EXIT
+
+# OCSSD is blacklisted so bind it to vfio/uio driver before testing
+PCI_WHITELIST="$device" CI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
 timing_enter ftl
 timing_enter fio
