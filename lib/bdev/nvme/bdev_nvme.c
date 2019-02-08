@@ -1328,6 +1328,7 @@ bdev_nvme_library_init(void)
 	uint32_t local_nvme_num = 0;
 	int64_t hotplug_period;
 	bool hotplug_enabled = g_nvme_hotplug_enabled;
+	uint32_t hotplug_prchk_flags = 0;
 
 	g_bdev_nvme_init_thread = spdk_get_thread();
 
@@ -1398,6 +1399,13 @@ bdev_nvme_library_init(void)
 	}
 
 	hotplug_period = spdk_conf_section_get_intval(sp, "HotplugPollRate");
+
+	if (spdk_conf_section_get_boolval(sp, "HotPlugPrchkRefTag", false)) {
+		hotplug_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+	if (spdk_conf_section_get_boolval(sp, "HotPlugPrchkGuard", false)) {
+		hotplug_prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
 
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
@@ -1510,7 +1518,8 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	rc = spdk_bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, 0, NULL, NULL);
+	rc = spdk_bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, hotplug_prchk_flags,
+					NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Failed to setup hotplug (%d): %s", rc, spdk_strerror(rc));
 		rc = -1;
@@ -1887,6 +1896,10 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		"# Set how often the hotplug is processed for insert and remove events."
 		"# Units in microseconds.\n");
 	fprintf(fp, "HotplugPollRate %"PRIu64"\n", g_nvme_hotplug_poll_period_us);
+	fprintf(fp, "HotplugPrchkReftag %s\n",
+		(g_nvme_hotplug_prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) ? "Yes" : "No");
+	fprintf(fp, "HotplugPrchkGuard %s\n",
+		(g_nvme_hotplug_prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) ? "Yes" : "No");
 	if (g_nvme_hostnqn) {
 		fprintf(fp, "HostNQN %s\n",  g_nvme_hostnqn);
 	}
