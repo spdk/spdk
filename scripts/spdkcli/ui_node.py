@@ -34,17 +34,19 @@ class UINode(ConfigNode):
         self.ui_command_ls(path, depth)
 
     def execute_command(self, command, pparams=[], kparams={}):
+        self.rpc_status = 0
         try:
             result = ConfigNode.execute_command(self, command,
                                                 pparams, kparams)
-        except Exception as msg:
-            self.shell.log.error(str(msg))
-        else:
-            self.shell.log.debug("Command %s succeeded." % command)
-            return result
-        finally:
-            self.get_root().refresh()
-            self.refresh_node()
+        except JSONRPCException as e:
+            self.shell.log.error(e.message)
+            self.rpc_status = 1
+        self.get_root().refresh()
+        self.refresh_node()
+        if self.rpc_status != 0:
+            raise JSONRPCException("Spdk rpc execution error")
+        self.shell.log.debug("Command %s succeeded." % command)
+        return result
 
 
 class UIBdevs(UINode):
@@ -114,6 +116,7 @@ class UILvolStores(UINode):
                 self.delete(None, lvs.lvs.uuid)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Lvol stores: %s" % len(self.children), None
@@ -140,6 +143,7 @@ class UIBdev(UINode):
                 self.delete(bdev.name)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Bdevs: %d" % len(self.children), None
@@ -289,6 +293,7 @@ class UINvmeBdev(UIBdev):
                 self.delete(ctrlr)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def ui_command_delete(self, name):
         """

@@ -107,6 +107,7 @@ class UINVMfSubsystems(UINode):
                 self.delete(child.subsystem.nqn)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Subsystems: %s" % len(self.children), None
@@ -211,6 +212,7 @@ class UINVMfSubsystemListeners(UINode):
                 self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Addresses: %s" % len(self.listen_addresses), None
@@ -271,6 +273,7 @@ class UINVMfSubsystemHosts(UINode):
                 self.delete(host['nqn'])
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Hosts: %s" % len(self.hosts), None
@@ -336,6 +339,7 @@ class UINVMfSubsystemNamespaces(UINode):
                 self.delete(namespace['nsid'])
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def summary(self):
         return "Namespaces: %s" % len(self.namespaces), None

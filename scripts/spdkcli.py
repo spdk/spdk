@@ -3,6 +3,7 @@ import sys
 import argparse
 import configshell_fb
 from os import getuid
+from rpc.client import JSONRPCException
 from configshell_fb import ConfigShell, shell, ExecutionError
 from spdkcli import UIRoot
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
@@ -51,6 +52,8 @@ def main():
     if len(args.commands) > 0:
         try:
             spdk_shell.run_cmdline(" ".join(args.commands))
+        except JSONRPCException:
+            sys.exit(1)
         except Exception as e:
             sys.stderr.write("%s\n" % e)
             sys.exit(1)
@@ -61,6 +64,8 @@ def main():
     while not spdk_shell._exit:
         try:
             spdk_shell.run_interactive()
+        except JSONRPCException:
+            pass
         except ExecutionError as e:
             spdk_shell.log.error("%s" % e)
 

@@ -128,6 +128,7 @@ class UIISCSIDevices(UINode):
                 self.delete(device.device_name)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def ui_command_add_lun(self, name, bdev_name, lun_id=None):
         """Add lun to the target node.
@@ -320,6 +321,7 @@ class UIPortalGroups(UINode):
                 self.delete(pg.tag)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def refresh(self):
         self._children = set([])
@@ -392,6 +394,7 @@ class UIInitiatorGroups(UINode):
                 self.delete(ig.tag)
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def ui_command_add_initiator(self, tag, initiators, netmasks):
         """Add initiators to an existing initiator group.
@@ -542,6 +545,7 @@ class UIISCSIAuthGroups(UINode):
                 self.delete(iscsi_auth_group['tag'])
             except JSONRPCException as e:
                 self.shell.log.error(e.message)
+                self.rpc_status = 1
 
     def ui_command_add_secret(self, tag, user, secret,
                               muser=None, msecret=None):
@@ -584,6 +588,7 @@ class UIISCSIAuthGroups(UINode):
                         self.delete_secret(tag, secret['user'])
                     except JSONRPCException as e:
                         self.shell.log.error(e.message)
+                        self.rpc_status = 1
 
     def summary(self):
         return "Groups: %s" % len(self.iscsi_auth_groups), None
