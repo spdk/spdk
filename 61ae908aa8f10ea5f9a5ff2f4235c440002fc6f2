@@ -22,6 +22,30 @@
       "revId": "61ae908aa8f10ea5f9a5ff2f4235c440002fc6f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ecc5d605_25a903c9",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 212,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-08T08:36:10Z",
+      "side": 1,
+      "message": "Note, that in line 203 we are calling callback. The subscriber can call spdk_notify_get inside that callback to increase refcnt.\n\nWe are increasing refcnt in spdk_notify_alloc and decresing in spdk_notify_send.\n\nSo the possible schemes should look like this:\n1. alloc[ -\u003e refcnt++] -\u003e send[ -\u003e cb -\u003e refcnt-- -\u003e notify freed] \n2. alloc[ -\u003e refcnt++] -\u003e send[ -\u003e cb[ -\u003e get[refcnt++]] -\u003e refcnt--] ... and async put[refcnt--] -\u003e notify freed\n...and so on.\nNote, that there might be multiple listeners.",
+      "parentUuid": "56584fb2_89234b3b",
+      "range": {
+        "startLine": 212,
+        "startChar": 1,
+        "endLine": 212,
+        "endChar": 25
+      },
+      "revId": "61ae908aa8f10ea5f9a5ff2f4235c440002fc6f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
