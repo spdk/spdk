@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9aa924a3_0a86a42c",
+        "filename": "autotest.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-08T19:15:16Z",
+      "side": 1,
+      "message": "Can you move this reset out of the if statement (and eliminate the one that follows this new check)?\n\nWe don\u0027t want to reset twice if we don\u0027t have to.",
+      "revId": "df74e7a66cb21f4f97c79528c25c66e3d0825bd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3a732ba_a29e7c12",
+        "filename": "autotest.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-08T19:15:16Z",
+      "side": 1,
+      "message": "blacklisted",
+      "revId": "df74e7a66cb21f4f97c79528c25c66e3d0825bd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51154f53_26389584",
+        "filename": "autotest.sh",
+        "patchSetId": 28
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-08T19:15:16Z",
+      "side": 1,
+      "message": "Instead of actually manipulating the real variables, couldn\u0027t you instead do:\n\nPCI_WHITELIST\u003d$PCI_BLACKLIST PCI_BLACKLIST\u003d DRIVER_OVERRIDE\u003dpci-stub ./scripts/setup.sh",
+      "revId": "df74e7a66cb21f4f97c79528c25c66e3d0825bd7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
