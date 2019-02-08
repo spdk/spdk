@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c77f7876_cb377a6d",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-08T08:23:29Z",
+      "side": 1,
+      "message": "JSONRPCException?",
+      "range": {
+        "startLine": 69,
+        "startChar": 15,
+        "endLine": 69,
+        "endChar": 24
+      },
+      "revId": "e88330a3d2edaf9500a0db09ea084f0e6fe058d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
