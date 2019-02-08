@@ -32,7 +32,6 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += $(ENV_CFLAGS)
 CFLAGS += -I$(SPDK_ROOT_DIR)/test/lib

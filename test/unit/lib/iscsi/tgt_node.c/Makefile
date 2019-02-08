@@ -32,7 +32,6 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 SPDK_LIB_LIST = conf
 TEST_FILE = tgt_node_ut.c
