@@ -37,8 +37,8 @@ class UINode(ConfigNode):
         try:
             result = ConfigNode.execute_command(self, command,
                                                 pparams, kparams)
-        except Exception as msg:
-            self.shell.log.error(str(msg))
+        except Exception as e:
+            raise e
         else:
             self.shell.log.debug("Command %s succeeded." % command)
             return result
@@ -110,11 +110,14 @@ class UILvolStores(UINode):
         self.delete(name, uuid)
 
     def ui_command_delete_all(self):
+        rpc_messages = ""
         for lvs in self._children:
             try:
                 self.delete(None, lvs.lvs.uuid)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Lvol stores: %s" % len(self.children), None
@@ -136,11 +139,14 @@ class UIBdev(UINode):
 
     def ui_command_delete_all(self):
         """Delete all bdevs from this tree node."""
+        rpc_messages = ""
         for bdev in self._children:
             try:
                 self.delete(bdev.name)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Bdevs: %d" % len(self.children), None
@@ -282,6 +288,7 @@ class UINvmeBdev(UIBdev):
         self.shell.log.info(ret_name)
 
     def ui_command_delete_all(self):
+        rpc_messages = ""
         ctrlrs = [x.name for x in self._children]
         ctrlrs = [x.rsplit("n", 1)[0] for x in ctrlrs]
         ctrlrs = set(ctrlrs)
@@ -289,7 +296,9 @@ class UINvmeBdev(UIBdev):
             try:
                 self.delete(ctrlr)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.messages
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def ui_command_delete(self, name):
         """
