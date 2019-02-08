@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0abae405_973651cc",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-08T15:29:04Z",
+      "side": 1,
+      "message": "Please explain:\n1) what is the issue\n2) how is it reproducible\n3) how this patch fixes it\n\nCurrently you require the reviewers to do find out about all that by themselves, which is rude.",
+      "revId": "9660994bc1e6b6a812e7190113a8aad918c75fe4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
