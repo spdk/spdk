@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c2221b5_2e5a61d0",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-08T19:17:33Z",
+      "side": 1,
+      "message": "Does:\n\nDRIVER_OVERRIDE\u003d\"$ocssd_original_driver\" ./scripts/setup.sh\n\nwork?",
+      "revId": "88688f552a9bacc9f23b61554d1db2e73b090310",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "056d714b_e1d79a3d",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-08T19:17:33Z",
+      "side": 1,
+      "message": "blacklisted",
+      "revId": "88688f552a9bacc9f23b61554d1db2e73b090310",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
