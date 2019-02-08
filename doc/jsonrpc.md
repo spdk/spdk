@@ -1459,6 +1459,8 @@ subnqn                  | Optional | string      | NVMe-oF target subnqn
 hostnqn                 | Optional | string      | NVMe-oF target hostnqn
 hostaddr                | Optional | string      | NVMe-oF host address: ip address
 hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
+prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
+prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
 
 ### Example
 
