@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "198ba53e_3f9ea3bd",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-08T23:51:06Z",
+      "side": 1,
+      "message": "similar to last patch suggestion?  have bdevperf_construct_task_on_target return the bdevperf_task pointer, and then do the TAILQ_INSERT_TAIL here instead of inside of the construct_task function itself",
+      "revId": "c22cbb45251b01b6aa7e6a4956fe716ed4b9594b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
