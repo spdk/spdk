@@ -27,7 +27,6 @@ function usage()
 	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
 	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
 	echo " --disable-tests           Disable building of tests"
-	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
 	echo "Specifying Dependencies:"
 	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
@@ -36,14 +35,17 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
-	echo " crypto                    Required to build vbdev crypto module."
-	echo "                           No path required."
 	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
+	echo " env                       Use an alternate environment implementation instead of DPDK."
+	echo "                           Implies --without-dpdk."
+	echo " igb-uio-driver            Build and use DPDK's igb-uio driver instead of uio_pci_generic"
+	echo "                           or vfio-pci. Required on some systems to use qat devices"
+	echo "                           No path required"
+	echo " crypto                    Required to build vbdev crypto module."
+	echo "                           No path required."
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
-	echo " igb-uio-driver            Required on some systems to use qat devices"
-	echo "                           No path required"
 	echo " vhost                     Required to build vhost target."
 	echo "                           No path required."
 	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
@@ -172,6 +174,13 @@ for i in "$@"; do
 		--disable-werror)
 			CONFIG[WERROR]=n
 			;;
+		--with-dpdk=*)
+			check_dir "$i"
+			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-dpdk)
+			CONFIG[DPDK_DIR]=
+			;;
 		--with-env=*)
 			CONFIG[ENV]="${i#*=}"
 			;;
@@ -198,13 +207,6 @@ for i in "$@"; do
 			;;
 		--without-iscsi-initiator)
 			CONFIG[ISCSI_INITIATOR]=n
-			;;
-		--with-dpdk=*)
-			check_dir "$i"
-			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
-			;;
-		--without-dpdk)
-			CONFIG[DPDK_DIR]=
 			;;
 		--with-crypto)
 			CONFIG[CRYPTO]=y
@@ -335,6 +337,11 @@ if [ -z "${CONFIG[ENV]}" ]; then
 		fi
 	fi
 else
+	if [ -n "${CONFIG[DPDK_DIR]}" ]; then
+		echo "--with-env and --with-dpdk are mutually exclusive."
+		exit 1
+	fi
+
 	if [ "${CONFIG[VHOST]}" = "y" ]; then
 		echo "Vhost is only supported when using the default DPDK environment. Disabling it."
 	fi
