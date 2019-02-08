@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "274d9698_2219b2b3",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T11:07:24Z",
+      "side": 1,
+      "message": "please initialize: self.handler \u003d False",
+      "range": {
+        "startLine": 26,
+        "startChar": 31,
+        "endLine": 27,
+        "endChar": 8
+      },
+      "revId": "d2957e2df6333b207b813cbc228afd1b7f4bae81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c63798b0_cce36b81",
         "filename": "scripts/rpc/client.py",
         "patchSetId": 2
