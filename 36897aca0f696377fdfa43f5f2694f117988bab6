@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c447f840_e029b20f",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-08T14:09:17Z",
+      "side": 1,
+      "message": "I think that this (and other `delete_all` commands) should break on first failure so no need adding try-catch here but I don\u0027t insist on that - just to point other reviewers on this part.\n\nAnyway, if no one else down vote this I\u0027m fine how it is changed in this patch.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 47
+      },
+      "revId": "36897aca0f696377fdfa43f5f2694f117988bab6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
