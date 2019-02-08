@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c63798b0_cce36b81",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T10:51:15Z",
+      "side": 1,
+      "message": "Hi,\nI think we need to create eg. lock on:\nif self.handler:\n    self.handler(response)\n\nto avoid situation when after checking condition handler is set to False( it will cause exception).",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 72,
+        "endChar": 34
+      },
+      "revId": "d2957e2df6333b207b813cbc228afd1b7f4bae81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
