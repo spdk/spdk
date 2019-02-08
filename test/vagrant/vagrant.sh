@@ -8,6 +8,7 @@ rootdir=$(readlink -f $scriptdir/../..)
 VM_MEMORY=10240
 VM_CORES=16
 VM_DISTRO=fedora28
+VM_PROVIDER=virtualbox
 RUN_AUTOTEST=false
 VM_PROXY=""
 
@@ -25,11 +26,12 @@ function usage()
 	echo "-s                    VM memory in MiB. Minimum of 8192MiB is required for autotest. [default=$VM_MEMORY]"
 	echo "-n                    VM cores [default=$VM_CORES]"
 	echo "-x                    VM http proxy [default=$VM_PROXY]"
+	echo "-p                    VM provider, libvirt or virtualbox [default=$VM_PROVIDER]"
 	echo "-d  --distro          VM linux distro, available distros are: centos7, ubuntu16, ubuntu18,"
 	echo "                      fedora27, fedora28 ,freebsd11 [default=$VM_DISTRO]"
 }
 
-while getopts "n:s:d:txh-:" optchar; do
+while getopts "n:s:d:p:txh-:" optchar; do
 	case "$optchar" in
 		-)
 		case "$OPTARG" in
@@ -45,6 +47,7 @@ while getopts "n:s:d:txh-:" optchar; do
 		n) VM_CORES=$OPTARG ;;
 		d) VM_DISTRO=$OPTARG;;
 		x) VM_PROXY="-x $OPTARG" ;;
+		p) VM_PROVIDER=$OPTARG;;
 		*) usage $0 "Invalid argument '$optchar'" && exit 1 ;;
 	esac
 done
@@ -52,7 +55,16 @@ done
 source $rootdir/scripts/common.sh
 source $rootdir/test/common/autotest_common.sh
 vagrantdir=$rootdir/scripts/vagrant
-vagrant_vm=$rootdir/../$VM_DISTRO-virtualbox/
+
+if [[ "$VM_PROVIDER" = "virtualbox" ]]; then
+	vagrant_vm=$rootdir/../$VM_DISTRO-virtualbox/
+elif [[ "$VM_PROVIDER" = "libvirt" ]]; then
+	vagrant_vm=$rootdir/../$VM_DISTRO-libvirt/
+else
+	echo "$VM_PROVIDER is not valid provider."
+	echo "Please chose virtualbox or libvirt."
+	exit 1
+fi
 
 trap "set +e; clean_vagrant; exit 1" SIGINT SIGTERM EXIT
 
@@ -66,7 +78,7 @@ timing_enter vagrant_create_vm
 timing_enter setup_vagrant_vm
 cd $rootdir/..
 sudo $vagrantdir/create_nvme_img.sh -s 2G
-$vagrantdir/create_vbox.sh -v -s $VM_MEMORY -n $VM_CORES $VM_PROXY $VM_DISTRO
+$vagrantdir/create_vbox.sh -v -s $VM_MEMORY -n $VM_CORES -p $VM_PROVIDER $VM_PROXY $VM_DISTRO
 cd $vagrant_vm
 
 if ! vagrant ssh -c 'lsblk | grep -Fq "nvme0n1"'; then
