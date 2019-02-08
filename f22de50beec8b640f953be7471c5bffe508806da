@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "22d14f22_c60321d4",
+        "filename": "test/vhost/hotplug/scsi_hotattach.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T14:18:09Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "f1fb5543_b8fdfee4",
+      "range": {
+        "startLine": 4,
+        "startChar": 0,
+        "endLine": 4,
+        "endChar": 70
+      },
+      "revId": "f22de50beec8b640f953be7471c5bffe508806da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "04acc1dc_4e040a29",
         "filename": "test/vhost/hotplug/scsi_hotplug.sh",
         "patchSetId": 7
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-07T11:35:13Z",
       "side": 0,
       "message": "We could remove vhost.conf.base if it\u0027s not used anymore.",
+      "range": {
+        "startLine": 12,
+        "startChar": 7,
+        "endLine": 12,
+        "endChar": 32
+      },
+      "revId": "f22de50beec8b640f953be7471c5bffe508806da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c08e1673_f19ab890",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T14:18:09Z",
+      "side": 0,
+      "message": "Done",
+      "parentUuid": "04acc1dc_4e040a29",
       "range": {
         "startLine": 12,
         "startChar": 7,
