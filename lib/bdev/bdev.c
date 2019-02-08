@@ -3459,6 +3459,12 @@ spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io)
 	return spdk_io_channel_get_thread(bdev_io->internal.ch->channel);
 }
 
+struct spdk_io_channel *
+spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io)
+{
+	return bdev_io->internal.ch->channel;
+}
+
 static void
 _spdk_bdev_qos_config_limit(struct spdk_bdev *bdev, uint64_t *limits)
 {
