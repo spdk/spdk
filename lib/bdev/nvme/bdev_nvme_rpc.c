@@ -112,11 +112,15 @@ SPDK_RPC_REGISTER("set_bdev_nvme_options", spdk_rpc_set_bdev_nvme_options, SPDK_
 struct rpc_bdev_nvme_hotplug {
 	bool enabled;
 	uint64_t period_us;
+	bool prchk_reftag;
+	bool prchk_guard;
 };
 
 static const struct spdk_json_object_decoder rpc_bdev_nvme_hotplug_decoders[] = {
 	{"enable", offsetof(struct rpc_bdev_nvme_hotplug, enabled), spdk_json_decode_bool, false},
 	{"period_us", offsetof(struct rpc_bdev_nvme_hotplug, period_us), spdk_json_decode_uint64, true},
+	{"prchk_reftag", offsetof(struct rpc_bdev_nvme_hotplug, prchk_reftag), spdk_json_decode_bool, true},
+	{"prchk_guard", offsetof(struct rpc_bdev_nvme_hotplug, prchk_guard), spdk_json_decode_bool, true},
 };
 
 static void
@@ -135,7 +139,8 @@ static void
 spdk_rpc_set_bdev_nvme_hotplug(struct spdk_jsonrpc_request *request,
 			       const struct spdk_json_val *params)
 {
-	struct rpc_bdev_nvme_hotplug req = {false, 0};
+	struct rpc_bdev_nvme_hotplug req = {false, 0, false, false};
+	uint32_t prchk_flags = 0;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_bdev_nvme_hotplug_decoders,
@@ -145,8 +150,15 @@ spdk_rpc_set_bdev_nvme_hotplug(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	rc = spdk_bdev_nvme_set_hotplug(req.enabled, req.period_us, rpc_set_bdev_nvme_hotplug_done,
-					request);
+	if (req.prchk_reftag) {
+		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+	if (req.prchk_guard) {
+		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
+
+	rc = spdk_bdev_nvme_set_hotplug(req.enabled, req.period_us, prchk_flags,
+					rpc_set_bdev_nvme_hotplug_done, request);
 	if (rc) {
 		goto invalid;
 	}

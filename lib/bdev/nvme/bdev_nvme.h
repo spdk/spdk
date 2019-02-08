@@ -94,7 +94,8 @@ struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
 struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
-int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
+int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, uint32_t prchk_flags,
+			       spdk_msg_fn cb, void *cb_ctx);
 
 int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  struct spdk_nvme_host_id *hostid,

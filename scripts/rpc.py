@@ -271,7 +271,11 @@ if __name__ == "__main__":
     p.set_defaults(func=set_bdev_nvme_options)
 
     def set_bdev_nvme_hotplug(args):
-        rpc.bdev.set_bdev_nvme_hotplug(args.client, enable=args.enable, period_us=args.period_us)
+        rpc.bdev.set_bdev_nvme_hotplug(args.client,
+                                       enable=args.enable,
+                                       period_us=args.period_us,
+                                       prchk_reftag=args.prchk_reftag,
+                                       prchk_guard=args.prchk_guard)
 
     p = subparsers.add_parser('set_bdev_nvme_hotplug',
                               help='Set hotplug options for bdev nvme type.')
@@ -279,6 +283,11 @@ if __name__ == "__main__":
     p.add_argument('-e', '--enable', dest='enable', action='store_true', help="Enable hotplug")
     p.add_argument('-r', '--period-us',
                    help='How often the hotplug is processed for insert and remove events', type=int)
+    p.add_argument('-t', '--prchk-reftag',
+                   help='Enable checking of PI reference tag for hot-added controllers.', action='store_true')
+    p.add_argument('-g', '--prchk-guard',
+                   help='Enable checking of PI guard for hot-added controllers.', action='store_true')
+
     p.set_defaults(func=set_bdev_nvme_hotplug)
 
     def construct_nvme_bdev(args):

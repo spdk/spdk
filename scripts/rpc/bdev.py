@@ -254,18 +254,26 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
     return client.call('set_bdev_nvme_options', params)
 
 
-def set_bdev_nvme_hotplug(client, enable, period_us=None):
+def set_bdev_nvme_hotplug(client, enable, period_us=None, prchk_reftag=None, prchk_guard=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
        enable: True to enable hotplug, False to disable.
        period_us: how often the hotplug is processed for insert and remove events. Set 0 to reset to default. (optional)
+       prchk_reftag: Enable checking of PI reference tag for hot added controllers (optional)
+       prchk_guard: Enable checking of PI guard for hot added controllers (optional)
 
     """
     params = {'enable': enable}
 
     if period_us:
         params['period_us'] = period_us
+
+    if prchk_reftag:
+        params['prchk_reftag'] = prchk_reftag
+
+    if prchk_guard:
+        params['prchk_guard'] = prchk_guard
 
     return client.call('set_bdev_nvme_hotplug', params)
 

@@ -109,6 +109,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 static int g_hot_insert_nvme_controller_index = 0;
 static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT;
 static bool g_nvme_hotplug_enabled = false;
+static uint32_t g_nvme_hotplug_prchk_flags = 0;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
@@ -1081,6 +1082,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		}
 	} else {
 		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
+		prchk_flags = g_nvme_hotplug_prchk_flags;
 	}
 	if (!name) {
 		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
@@ -1160,6 +1162,7 @@ spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts)
 struct set_nvme_hotplug_ctx {
 	uint64_t period_us;
 	bool enabled;
+	uint32_t prchk_flags;
 	spdk_msg_fn fn;
 	void *fn_ctx;
 };
@@ -1176,6 +1179,7 @@ set_nvme_hotplug_period_cb(void *_ctx)
 
 	g_nvme_hotplug_poll_period_us = ctx->period_us;
 	g_nvme_hotplug_enabled = ctx->enabled;
+	g_nvme_hotplug_prchk_flags = ctx->prchk_flags;
 	if (ctx->fn) {
 		ctx->fn(ctx->fn_ctx);
 	}
@@ -1184,7 +1188,8 @@ set_nvme_hotplug_period_cb(void *_ctx)
 }
 
 int
-spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx)
+spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, uint32_t prchk_flags,
+			   spdk_msg_fn cb, void *cb_ctx)
 {
 	struct set_nvme_hotplug_ctx *ctx;
 
@@ -1200,6 +1205,7 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 	period_us = period_us == 0 ? NVME_HOTPLUG_POLL_PERIOD_DEFAULT : period_us;
 	ctx->period_us = spdk_min(period_us, NVME_HOTPLUG_POLL_PERIOD_MAX);
 	ctx->enabled = enabled;
+	ctx->prchk_flags = prchk_flags;
 	ctx->fn = cb;
 	ctx->fn_ctx = cb_ctx;
 
@@ -1504,7 +1510,7 @@ bdev_nvme_library_init(void)
 		}
 	}
 
-	rc = spdk_bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, NULL, NULL);
+	rc = spdk_bdev_nvme_set_hotplug(hotplug_enabled, hotplug_period, 0, NULL, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Failed to setup hotplug (%d): %s", rc, spdk_strerror(rc));
 		rc = -1;
