@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3cf726a_2b85840c",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-08T14:18:10Z",
+      "side": 1,
+      "message": "And this is the reason why *delete_all() commands should not try-catch :/\n\nOriginal message from JSONRPCException is lost in *delete_all() function when you catch and discard the exception and this \"Spdk rcp excution error\" message is redundant and useless.\n\nWhat happen if try not catching this exception here but let it propagate. Then you can print proper error message in https://review.gerrithub.io/#/c/spdk/spdk/+/443887/1/scripts/spdkcli.py@56 and https://review.gerrithub.io/#/c/spdk/spdk/+/443887/1/scripts/spdkcli.py@68",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 63
+      },
+      "revId": "4ca51d98bb2e40428918d5057fe44c934d8efb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20bc29b3_4a02a9a1",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-08T14:18:10Z",
+      "side": 1,
+      "message": "What is the value of result if you catch JSONRPCException exception?",
+      "range": {
+        "startLine": 49,
+        "startChar": 15,
+        "endLine": 49,
+        "endChar": 21
+      },
+      "revId": "4ca51d98bb2e40428918d5057fe44c934d8efb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
