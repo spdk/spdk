@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a64174fb_3f62359e",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T18:17:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a3cf726a_2b85840c",
+      "range": {
+        "startLine": 41,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 63
+      },
+      "revId": "4ca51d98bb2e40428918d5057fe44c934d8efb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "20bc29b3_4a02a9a1",
         "filename": "scripts/spdkcli/ui_node.py",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-08T14:18:10Z",
       "side": 1,
       "message": "What is the value of result if you catch JSONRPCException exception?",
+      "range": {
+        "startLine": 49,
+        "startChar": 15,
+        "endLine": 49,
+        "endChar": 21
+      },
+      "revId": "4ca51d98bb2e40428918d5057fe44c934d8efb3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1c2f645_8510d7b5",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T18:17:31Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "20bc29b3_4a02a9a1",
       "range": {
         "startLine": 49,
         "startChar": 15,
