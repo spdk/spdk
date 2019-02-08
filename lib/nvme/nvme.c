@@ -965,4 +965,57 @@ spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 	return 0;
 }
 
+int
+spdk_nvme_prchk_flags_parse(uint32_t *prchk_flags, const char *str)
+{
+	size_t val_len;
+	char key[32];
+	char val[1024];
+
+	if (prchk_flags == NULL || str == NULL) {
+		return -EINVAL;
+	}
+
+	while (*str != '\0') {
+		val_len = parse_next_key(&str, key, val, sizeof(key), sizeof(val));
+
+		if (val_len == 0) {
+			SPDK_ERRLOG("Failed to parse PRCHK\n");
+			return -EINVAL;
+		}
+
+		if (strcmp(key, "PRCHK") == 0) {
+			if (strstr(val, "REFTAG") != NULL) {
+				*prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+			}
+			if (strstr(val, "GUARD") != NULL) {
+				*prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+			}
+		} else {
+			SPDK_ERRLOG("Unknown key '%s'\n", key);
+			return -EINVAL;
+		}
+	}
+
+	return 0;
+}
+
+const char *
+spdk_nvme_prchk_flags_str(uint32_t prchk_flags)
+{
+	if (prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) {
+		if (prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+			return "PRCHK:REFTAG|GUARD";
+		} else {
+			return "PRCHK:REFTAG";
+		}
+	} else {
+		if (prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) {
+			return "PRCHK:GUARD";
+		} else {
+			return NULL;
+		}
+	}
+}
+
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)

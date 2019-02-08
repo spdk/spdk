@@ -419,6 +419,27 @@ int spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 				   const struct spdk_nvme_transport_id *trid2);
 
 /**
+ * Parse the string representation of PI check settings (PRCHK:GUARD|REFTAG)
+ *
+ * \param prchk_flags Output PI check flags.
+ * \param str Input string representation of PI check settings.
+ *
+ * \return 0 if parsing was successful and prchk_flags is set, or negated errno
+ * values on failure.
+ */
+int spdk_nvme_prchk_flags_parse(uint32_t *prchk_flags, const char *str);
+
+/**
+ * Look up the string representation of PI check settings.
+ *
+ * \param prchk_flags PI check flags to convert.
+ *
+ * \return static string constant describing PI check settings. If prchk_flags is 0,
+ * empty string is returned.
+ */
+const char *spdk_nvme_prchk_flags_str(uint32_t prchk_flags);
+
+/**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics
  * transport type.
  *
