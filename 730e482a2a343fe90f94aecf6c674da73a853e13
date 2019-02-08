@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d911672f_29b40c77",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T05:48:44Z",
+      "side": 1,
+      "message": "Thank you, honestly, I didn\u0027t notice spdk_bdev_io_get_thread. That was a nice hint. I inserted a patch to add spdk_bdev_io_get_io_channel.",
+      "parentUuid": "2b3d7758_02c24f82",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "770e4ef9_f695a3e5",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 5
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "9da0594c_c2519368",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1625,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T05:48:44Z",
+      "side": 1,
+      "message": "No, I remove it. Thank you.",
+      "parentUuid": "770e4ef9_f695a3e5",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "cbcd7d76_4f65ff3b",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 5
@@ -47,6 +83,24 @@
       "writtenOn": "2019-02-06T20:47:51Z",
       "side": 1,
       "message": "this name confused me a bit - from the perspective of the SSD, this is actually an unchecked readv since the SSD is not doing a check\n\nmaybe bdev_nvme_no_pi_readv?  I am open to alternate names.",
+      "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e85df301_380dd382",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1753,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T05:48:44Z",
+      "side": 1,
+      "message": "Thank you. bdev_nvme_no_pi_readv is more meaningful. I may like bdev_nvme_readv_wo_prchk if wo is OK as abbreviation. \n(I found _wo_ in DPDK code, but _without_ is also fine to me, but I fell a little bit long.)",
+      "parentUuid": "cbcd7d76_4f65ff3b",
       "revId": "730e482a2a343fe90f94aecf6c674da73a853e13",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
