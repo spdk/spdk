@@ -407,7 +407,7 @@ def verify_get_interfaces(rpc_py):
     nics_names = set(x["name"] for x in nics)
     # parse ip link show to verify the get_interfaces result
     ip_show = ns_cmd + " ip link show"
-    ifcfg_nics = set(re.findall("\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*", check_output(ip_show.split()).decode()))
+    ifcfg_nics = set(re.findall(r'\S+:\s(\S+?)(?:@\S+){0,1}:\s<.*', check_output(ip_show.split()).decode()))
     verify(nics_names == ifcfg_nics, 1, "get_interfaces returned {}".format(nics))
     print("verify_get_interfaces passed.")
 
@@ -461,7 +461,7 @@ def verify_add_nvme_bdev_rpc_methods(rpc_py):
     rpc = spdk_rpc(rpc_py)
     test_pass = 0
     output = check_output(["lspci", "-mm", "-nn"])
-    addrs = re.findall('^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output.decode(), re.MULTILINE)
+    addrs = re.findall(r'^([0-9]{2}:[0-9]{2}.[0-9]) "Non-Volatile memory controller \[0108\]".*-p02', output.decode(), re.MULTILINE)
     for addr in addrs:
         ctrlr_address = "-b Nvme{} -t pcie -a 0000:{}".format(addrs.index(addr), addr)
         rpc.construct_nvme_bdev(ctrlr_address)

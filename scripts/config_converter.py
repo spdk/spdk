@@ -166,7 +166,7 @@ def get_aio_bdev_json(config, section):
     if value is None:
         return aio_json
     for item in value:
-        items = re.findall("\S+", item)
+        items = re.findall(r"\S+", item)
         params = {}
         params['filename'] = items[0]
         params['name'] = items[1]
@@ -215,12 +215,12 @@ def get_nvme_bdev_json(config, section):
     for option in config.options("Nvme"):
         value = config.get("Nvme", option)
         if "TransportID" == option:
-            entry = re.findall("\S+", value)
+            entry = re.findall(r"\S+", value)
             nvme_name = entry[-1]
-            trtype = re.findall("trtype:\S+", value)
+            trtype = re.findall(r"trtype:\S+", value)
             if trtype:
                 trtype = trtype[0].replace("trtype:", "").replace("\"", "")
-            traddr = re.findall("traddr:\S+", value)
+            traddr = re.findall(r"traddr:\S+", value)
             if traddr:
                 traddr = traddr[0].replace("traddr:", "").replace("\"", "")
             nvme_json.append({
@@ -251,7 +251,7 @@ def get_pmem_bdev_json(config, section):
     for option in config.options(section):
         if "Blk" == option:
             for value in config.get(section, option).split("\n"):
-                items = re.findall("\S+", value)
+                items = re.findall(r"\S+", value)
                 pmem_json.append({
                     "params": {
                         "name": items[1],
@@ -272,7 +272,7 @@ def get_split_bdev_json(config, section):
     if value and not isinstance(value, list):
         value = [value]
     for split in value:
-        items = re.findall("\S+", split)
+        items = re.findall(r"\S+", split)
         split_size_mb = 0
         base_bdev = items[0]
         split_count = int(items[1])
@@ -330,7 +330,7 @@ def get_nvmf_subsystem_json(config, section):
             set_param(params, option, value)
             continue
         if "Listen" == option:
-            items = re.findall("\S+", value)
+            items = re.findall(r"\S+", value)
             adrfam = "IPv4"
             if len(items[1].split(":")) > 2:
                 adrfam = "IPv6"
@@ -343,7 +343,7 @@ def get_nvmf_subsystem_json(config, section):
             })
         if "Namespace" == option:
             for item in value.split("\n"):
-                items = re.findall("\S+", item)
+                items = re.findall(r"\S+", item)
                 if len(items) == 2:
                     nsid = items[1]
                 else:
@@ -404,7 +404,7 @@ def get_vhost_scsi_json(config, section):
             set_param(params, option, value)
         if "Target" == option:
             for item in value.split("\n"):
-                items = re.findall("\S+", item)
+                items = re.findall(r"\S+", item)
                 targets.append({
                     "scsi_target_num": int(items[0]),
                     "ctrlr": params[0][3],
@@ -523,7 +523,7 @@ def get_iscsi_portal_group_json(config, name):
     for option in config.options(name):
         if "Portal" == option:
             for value in config.get(name, option).split("\n"):
-                items = re.findall("\S+", value)
+                items = re.findall(r"\S+", value)
                 portal = {'host': items[1].rsplit(":", 1)[0]}
                 if "@" in items[1]:
                     portal['port'] =\
@@ -537,7 +537,7 @@ def get_iscsi_portal_group_json(config, name):
     portal_group_json.append({
         "params": {
             "portals": portals,
-            "tag": int(re.findall('\d+', name)[0])
+            "tag": int(re.findall(r'\d+', name)[0])
         },
         "method": "add_portal_group"
     })
@@ -557,7 +557,7 @@ def get_iscsi_initiator_group_json(config, name):
     initiator_group_json = {
         "params": {
             "initiators": initiators,
-            "tag": int(re.findall('\d+', name)[0]),
+            "tag": int(re.findall(r'\d+', name)[0]),
             "netmasks": netmasks
         },
         "method": "add_initiator_group"
@@ -586,13 +586,13 @@ def get_iscsi_target_node_json(config, section):
         if "TargetAlias" == option:
             alias_name = value.replace("\"", "")
         if "Mapping" == option:
-            items = re.findall("\S+", value)
+            items = re.findall(r"\S+", value)
             pg_ig_maps.append({
-                "ig_tag": int(re.findall('\d+', items[1])[0]),
-                "pg_tag": int(re.findall('\d+', items[0])[0])
+                "ig_tag": int(re.findall(r'\d+', items[1])[0]),
+                "pg_tag": int(re.findall(r'\d+', items[0])[0])
             })
         if "AuthMethod" == option:
-            items = re.findall("\S+", value)
+            items = re.findall(r"\S+", value)
             for item in items:
                 if "CHAP" == item:
                     require_chap = True
@@ -607,10 +607,10 @@ def get_iscsi_target_node_json(config, section):
                     require_chap = False
                     mutual_chap = False
         if "AuthGroup" == option:  # AuthGroup1
-            items = re.findall("\S+", value)
-            chap_group = int(re.findall('\d+', items[0])[0])
+            items = re.findall(r"\S+", value)
+            chap_group = int(re.findall(r'\d+', items[0])[0])
         if "UseDigest" == option:
-            items = re.findall("\S+", value)
+            items = re.findall(r"\S+", value)
             for item in items:
                 if "Header" == item:
                     header_digest = True
@@ -620,7 +620,7 @@ def get_iscsi_target_node_json(config, section):
                     header_digest = False
                     data_digest = False
 
-        if re.match("LUN\d+", option):
+        if re.match(r"LUN\d+", option):
             luns.append({"lun_id": len(luns),
                          "bdev_name": value})
         if "QueueDepth" == option:
@@ -663,10 +663,10 @@ if __name__ == "__main__":
             config.add_section(section)
 
     for section in config.sections():
-        match = re.match("(Bdev|Nvme|Malloc|VirtioUser\d+|Split|Pmem|AIO|"
-                         "iSCSI|PortalGroup\d+|InitiatorGroup\d+|"
-                         "TargetNode\d+|Nvmf|Subsystem\d+|VhostScsi\d+|"
-                         "VhostBlk\d+|VhostNvme\d+)", section)
+        match = re.match(r'(Bdev|Nvme|Malloc|VirtioUser\d+|Split|Pmem|AIO|'
+                         r'iSCSI|PortalGroup\d+|InitiatorGroup\d+|'
+                         r'TargetNode\d+|Nvmf|Subsystem\d+|VhostScsi\d+|'
+                         r'VhostBlk\d+|VhostNvme\d+)', section)
         if match:
             match_section = ''.join(letter for letter in match.group(0)
                                     if not letter.isdigit())
