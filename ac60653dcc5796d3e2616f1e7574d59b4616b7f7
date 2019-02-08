@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab6a28c7_53063b67",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 434,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T07:20:19Z",
+      "side": 1,
+      "message": "Note that this function is valid only if there is metadata.",
+      "revId": "ac60653dcc5796d3e2616f1e7574d59b4616b7f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
