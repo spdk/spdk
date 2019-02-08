@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "93f08b95_c8726990",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-08T17:59:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3c512ff8_fc290da3",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "664785e2_05ddc28e",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 12
@@ -104,6 +122,24 @@
       "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63d345ba_73cf790e",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-08T17:59:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9726cc2d_070eed5c",
+      "revId": "299096fc3422fb2faf27bde4af9832ee661352cf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
