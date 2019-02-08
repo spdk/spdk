@@ -92,6 +92,7 @@ struct nvme_probe_ctx {
 	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
 	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
 	const char *names[NVME_MAX_CONTROLLERS];
+	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
 	const char *hostnqn;
 };
 
@@ -1067,12 +1068,14 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct nvme_probe_ctx *ctx = cb_ctx;
 	char *name = NULL;
+	uint32_t prchk_flags = 0;
 	size_t i;
 
 	if (ctx) {
 		for (i = 0; i < ctx->count; i++) {
 			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
 				name = strdup(ctx->names[i]);
+				prchk_flags = ctx->prchk_flags[i];
 				break;
 			}
 		}
@@ -1086,7 +1089,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
-	create_ctrlr(ctrlr, name, trid, 0);
+	create_ctrlr(ctrlr, name, trid, prchk_flags);
 
 	free(name);
 }
@@ -1421,6 +1424,17 @@ bdev_nvme_library_init(void)
 		}
 
 		probe_ctx->names[i] = val;
+
+		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 2);
+		if (val != NULL) {
+			rc = spdk_nvme_prchk_flags_parse(&probe_ctx->prchk_flags[i], val);
+			if (rc < 0) {
+				SPDK_ERRLOG("Unable to parse PRCHK: %s\n", val);
+				rc = -1;
+				goto end;
+			}
+		}
+
 		probe_ctx->count++;
 
 		if (probe_ctx->trids[i].trtype != SPDK_NVME_TRANSPORT_PCIE) {
@@ -1792,6 +1806,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		const char *trtype;
+		const char *prchk_flags;
 
 		trtype = spdk_nvme_transport_id_trtype_str(nvme_ctrlr->trid.trtype);
 		if (!trtype) {
@@ -1806,19 +1821,25 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 			const char *adrfam;
 
 			adrfam = spdk_nvme_transport_id_adrfam_str(nvme_ctrlr->trid.adrfam);
+			prchk_flags = spdk_nvme_prchk_flags_str(nvme_ctrlr->prchk_flags);
 
 			if (adrfam) {
-				fprintf(fp, "TransportID \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				fprintf(fp, "TransportID \"trtype:%s adrfam:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
 					trtype,	adrfam,
 					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
 					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
 			} else {
-				fprintf(fp, "TransportID \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s\n",
+				fprintf(fp, "TransportID \"trtype:%s traddr:%s trsvcid:%s subnqn:%s\" %s",
 					trtype,
 					nvme_ctrlr->trid.traddr, nvme_ctrlr->trid.trsvcid,
 					nvme_ctrlr->trid.subnqn, nvme_ctrlr->name);
 			}
 
+			if (prchk_flags) {
+				fprintf(fp, " \"%s\"\n", prchk_flags);
+			} else {
+				fprintf(fp, "\n");
+			}
 		}
 	}
 

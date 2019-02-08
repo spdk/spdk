@@ -260,6 +260,7 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     Args:
        enable: True to enable hotplug, False to disable.
        period_us: how often the hotplug is processed for insert and remove events. Set 0 to reset to default. (optional)
+
     """
     params = {'enable': enable}
 
