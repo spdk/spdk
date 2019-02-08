@@ -66,6 +66,7 @@ struct nvme_ctrlr {
 	char				*name;
 	int				ref;
 	bool				destruct;
+	uint32_t			prchk_flags;
 	uint32_t			num_ns;
 	/** Array of bdevs indexed by nsid - 1 */
 	struct nvme_bdev		*bdevs;

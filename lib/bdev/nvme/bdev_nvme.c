@@ -797,6 +797,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 		bdev->disk.dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
 		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
 			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
+			bdev->disk.dif_check_flags = nvme_ctrlr->prchk_flags;
 		}
 	}
 
@@ -1009,7 +1010,8 @@ aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     const char *name,
-	     const struct spdk_nvme_transport_id *trid)
+	     const struct spdk_nvme_transport_id *trid,
+	     uint32_t prchk_flags)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
@@ -1036,6 +1038,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		free(nvme_ctrlr);
 		return -ENOMEM;
 	}
+	nvme_ctrlr->prchk_flags = prchk_flags;
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel),
@@ -1083,7 +1086,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
-	create_ctrlr(ctrlr, name, trid);
+	create_ctrlr(ctrlr, name, trid, 0);
 
 	free(name);
 }
@@ -1245,7 +1248,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	if (create_ctrlr(ctrlr, base_name, trid)) {
+	if (create_ctrlr(ctrlr, base_name, trid, 0)) {
 		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
 	}
@@ -1458,7 +1461,7 @@ bdev_nvme_library_init(void)
 				goto end;
 			}
 
-			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i]);
+			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i], 0);
 			if (rc) {
 				goto end;
 			}
