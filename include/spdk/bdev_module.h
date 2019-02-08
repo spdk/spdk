@@ -762,6 +762,14 @@ void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_s
 struct spdk_thread *spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io);
 
 /**
+ * Get the bdev module's I/O channel that the given bdev_io was submitted on.
+ *
+ * \param bdev_io I/O
+ * \return the bdev module's I/O channel that the given bdev_io was submitted on.
+ */
+struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io);
+
+/**
  * Resize for a bdev.
  *
  * Change number of blocks for provided block device.
