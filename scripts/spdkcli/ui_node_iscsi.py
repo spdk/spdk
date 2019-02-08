@@ -125,11 +125,14 @@ class UIISCSIDevices(UINode):
 
     def ui_command_delete_all(self):
         """Delete all target nodes"""
+        rpc_messages = ""
         for device in self.scsi_devices:
             try:
                 self.delete(device.device_name)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def ui_command_add_lun(self, name, bdev_name, lun_id=None):
         """Add lun to the target node.
@@ -317,11 +320,14 @@ class UIPortalGroups(UINode):
 
     def ui_command_delete_all(self):
         """Delete all portal groups"""
+        rpc_messages = ""
         for pg in self.pgs:
             try:
                 self.delete(pg.tag)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def refresh(self):
         self._children = set([])
@@ -392,11 +398,14 @@ class UIInitiatorGroups(UINode):
 
     def ui_command_delete_all(self):
         """Delete all initiator groups"""
+        rpc_messages = ""
         for ig in self.igs:
             try:
                 self.delete(ig.tag)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def ui_command_add_initiator(self, tag, initiators, netmasks):
         """Add initiators to an existing initiator group.
@@ -542,11 +551,14 @@ class UIISCSIAuthGroups(UINode):
 
     def ui_command_delete_all(self):
         """Delete all authentication groups."""
+        rpc_messages = ""
         for iscsi_auth_group in self.iscsi_auth_groups:
             try:
                 self.delete(iscsi_auth_group['tag'])
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def ui_command_add_secret(self, tag, user, secret,
                               muser=None, msecret=None):
@@ -581,6 +593,7 @@ class UIISCSIAuthGroups(UINode):
         Args:
            tag: Authentication group tag (unique, integer > 0)
         """
+        rpc_messages = ""
         tag = self.ui_eval_param(tag, "number", None)
         for ag in self.iscsi_auth_groups:
             if ag['tag'] == tag:
@@ -588,7 +601,9 @@ class UIISCSIAuthGroups(UINode):
                     try:
                         self.delete_secret(tag, secret['user'])
                     except JSONRPCException as e:
-                        self.shell.log.error(e.message)
+                        rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Groups: %s" % len(self.iscsi_auth_groups), None
