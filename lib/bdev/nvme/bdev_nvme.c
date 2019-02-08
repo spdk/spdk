@@ -75,7 +75,7 @@ struct nvme_bdev_io {
 	/** Offset in current iovec. */
 	uint32_t iov_offset;
 
-	/** Saved status for admin passthru completion event. */
+	/** Saved status for admin passthru completion event or PI error verification. */
 	struct spdk_nvme_cpl cpl;
 
 	/** Originating thread */
@@ -118,6 +118,9 @@ static void bdev_nvme_library_fini(void);
 static int bdev_nvme_readv(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			   struct nvme_bdev_io *bio,
 			   struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba);
+static int bdev_nvme_readv_wo_prchk(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+				    struct nvme_bdev_io *bio,
+				    struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba);
 static int bdev_nvme_writev(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 			    struct nvme_bdev_io *bio,
 			    struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba);
@@ -1580,9 +1583,47 @@ bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+bdev_nvme_readv_wo_prchk_done(void *ref, const struct spdk_nvme_cpl *cpl)
+{
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+
+	if (spdk_nvme_cpl_is_success(cpl)) {
+		/* Run PI verification for read data buffer. */
+		bdev_nvme_verify_pi_error(bdev_io);
+	}
+
+	/* Return original completion status */
+	spdk_bdev_io_complete_nvme_status(bdev_io, bio->cpl.status.sct,
+					  bio->cpl.status.sc);
+}
+
+static void
 bdev_nvme_readv_done(void *ref, const struct spdk_nvme_cpl *cpl)
 {
-	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx((struct nvme_bdev_io *)ref);
+	struct nvme_bdev_io *bio = ref;
+	struct spdk_bdev_io *bdev_io = spdk_bdev_io_from_ctx(bio);
+	int ret;
+
+	if (spdk_nvme_cpl_is_pi_error(cpl)) {
+		SPDK_ERRLOG("readv completed with PI error (sct=%d, sc=%d)\n",
+			    cpl->status.sct, cpl->status.sc);
+
+		/* Save completion status to use after checked read. */
+		bio->cpl = *cpl;
+
+		/* Read without PI checking to verify PI error. */
+		ret = bdev_nvme_readv_wo_prchk((struct nvme_bdev *)bdev_io->bdev->ctxt,
+					       spdk_bdev_io_get_io_channel(bdev_io),
+					       bio,
+					       bdev_io->u.bdev.iovs,
+					       bdev_io->u.bdev.iovcnt,
+					       bdev_io->u.bdev.num_blocks,
+					       bdev_io->u.bdev.offset_blocks);
+		if (ret == 0) {
+			return;
+		}
+	}
 
 	spdk_bdev_io_complete_nvme_status(bdev_io, cpl->status.sct, cpl->status.sc);
 }
@@ -1672,6 +1713,32 @@ bdev_nvme_queued_next_sge(void *ref, void **address, uint32_t *length)
 	}
 
 	return 0;
+}
+
+static int
+bdev_nvme_readv_wo_prchk(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
+			 struct nvme_bdev_io *bio,
+			 struct iovec *iov, int iovcnt, uint64_t lba_count, uint64_t lba)
+{
+	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
+	int rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "iead %lu blocks with offset %#lx without PI check\n",
+		      lba_count, lba);
+
+	bio->iovs = iov;
+	bio->iovcnt = iovcnt;
+	bio->iovpos = 0;
+	bio->iov_offset = 0;
+
+	rc = spdk_nvme_ns_cmd_readv(nbdev->ns, nvme_ch->qpair, lba, lba_count,
+				    bdev_nvme_readv_wo_prchk_done, bio, 0,
+				    bdev_nvme_queued_reset_sgl, bdev_nvme_queued_next_sge);
+
+	if (rc != 0 && rc != -ENOMEM) {
+		SPDK_ERRLOG("readv_wo_prchk failed: rc = %d\n", rc);
+	}
+	return rc;
 }
 
 static int
