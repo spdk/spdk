@@ -291,7 +291,9 @@ if __name__ == "__main__":
                                                  subnqn=args.subnqn,
                                                  hostnqn=args.hostnqn,
                                                  hostaddr=args.hostaddr,
-                                                 hostsvcid=args.hostsvcid))
+                                                 hostsvcid=args.hostsvcid,
+                                                 prchk_reftag=args.prchk_reftag,
+                                                 prchk_guard=args.prchk_guard))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -310,6 +312,10 @@ if __name__ == "__main__":
                    help='NVMe-oF host address: e.g., an ip address')
     p.add_argument('-c', '--hostsvcid',
                    help='NVMe-oF host svcid: e.g., a port number')
+    p.add_argument('-r', '--prchk-reftag',
+                   help='Enable checking of PI reference tag for I/O processing.', action='store_true')
+    p.add_argument('-g', '--prchk-guard',
+                   help='Enable checking of PI guard for I/O processing.', action='store_true')
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):

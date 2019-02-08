@@ -1209,7 +1209,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvme_host_id *hostid,
 		      const char *base_name,
 		      const char **names, size_t *count,
-		      const char *hostnqn)
+		      const char *hostnqn,
+		      uint32_t prchk_flags)
 {
 	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
@@ -1248,7 +1249,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	if (create_ctrlr(ctrlr, base_name, trid, 0)) {
+	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags)) {
 		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
 	}
@@ -1905,6 +1906,10 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
 		spdk_bdev_nvme_dump_trid_json(trid, w);
+		spdk_json_write_named_bool(w, "prchk_reftag",
+					   (nvme_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
+		spdk_json_write_named_bool(w, "prchk_guard",
+					   (nvme_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_GUARD) != 0);
 
 		spdk_json_write_object_end(w);
 

@@ -167,6 +167,8 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	bool prchk_reftag;
+	bool prchk_guard;
 };
 
 static void
@@ -193,8 +195,10 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"subnqn", offsetof(struct rpc_construct_nvme, subnqn), spdk_json_decode_string, true},
 	{"hostnqn", offsetof(struct rpc_construct_nvme, hostnqn), spdk_json_decode_string, true},
 	{"hostaddr", offsetof(struct rpc_construct_nvme, hostaddr), spdk_json_decode_string, true},
-	{"hostsvcid", offsetof(struct rpc_construct_nvme, hostsvcid), spdk_json_decode_string, true}
+	{"hostsvcid", offsetof(struct rpc_construct_nvme, hostsvcid), spdk_json_decode_string, true},
 
+	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
+	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true}
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -210,6 +214,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	size_t count;
 	size_t i;
+	uint32_t prchk_flags = 0;
 	int rc;
 
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
@@ -256,8 +261,17 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 		snprintf(hostid.hostsvcid, sizeof(hostid.hostsvcid), "%s", req.hostsvcid);
 	}
 
+	if (req.prchk_reftag) {
+		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
+	}
+
+	if (req.prchk_guard) {
+		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
+	}
+
 	count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, &hostid, req.name, names, &count, req.hostnqn)) {
+	if (spdk_bdev_nvme_create(&trid, &hostid, req.name, names, &count, req.hostnqn,
+				  prchk_flags)) {
 		goto invalid;
 	}
 
