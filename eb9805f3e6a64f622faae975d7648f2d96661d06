@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a516b516_968d4233",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T06:52:19Z",
+      "side": 1,
+      "message": "Current may be fine but aggregating the line 69 and 102, and then moving to the line 67 may be better?\n\nOnly one valid transport type must be set in [Transport] section. The first is case of RDMA transport and the second is case of TCP transport.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 69,
+        "endChar": 80
+      },
+      "revId": "eb9805f3e6a64f622faae975d7648f2d96661d06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0321281e_1298f2e5",
+        "filename": "etc/spdk/nvmf.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T06:52:19Z",
+      "side": 1,
+      "message": "Please see above.",
+      "range": {
+        "startLine": 102,
+        "startChar": 2,
+        "endLine": 102,
+        "endChar": 74
+      },
+      "revId": "eb9805f3e6a64f622faae975d7648f2d96661d06",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
