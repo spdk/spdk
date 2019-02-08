@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e5fa16e_ee31d41d",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 454,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T07:22:47Z",
+      "side": 1,
+      "message": "Note that this function is valid only if DIF is enabled.",
+      "revId": "678755582f305a33c1755262465448d757f2af35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "316c2f44_d6072765",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-08T07:22:47Z",
+      "side": 1,
+      "message": "Note that this field is valid only if DIF is enabled.",
+      "revId": "678755582f305a33c1755262465448d757f2af35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
