@@ -22,6 +22,30 @@
       "revId": "e88330a3d2edaf9500a0db09ea084f0e6fe058d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f2642c_67d67e3a",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 13
+      },
+      "lineNbr": 69,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-08T12:12:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c77f7876_cb377a6d",
+      "range": {
+        "startLine": 69,
+        "startChar": 15,
+        "endLine": 69,
+        "endChar": 24
+      },
+      "revId": "e88330a3d2edaf9500a0db09ea084f0e6fe058d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
