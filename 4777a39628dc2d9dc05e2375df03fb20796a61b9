@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9cbcfcfe_3e1b7b0d",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-08T16:53:02Z",
+      "side": 1,
+      "message": "Could you change these to lower case versions of the word instead, and use strcasecmp instead of strcmp?  This would make it more consistent with spdk_nvme_transport_id_parse.\n\nLet\u0027s use lower case for the strings returned below as well (spdk_nvme_prchk_flags_str).",
+      "revId": "4777a39628dc2d9dc05e2375df03fb20796a61b9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
