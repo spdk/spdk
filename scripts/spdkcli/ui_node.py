@@ -27,6 +27,15 @@ class UINode(ConfigNode):
     def ui_command_refresh(self):
         self.refresh()
 
+    def delete_all_decorator(f):
+        def w(self, *args, **kwargs):
+            self.rpc_messages = ""
+            ret_value = f(self, *args, **kwargs)
+            if self.rpc_messages:
+                raise JSONRPCException(self.rpc_messages)
+            return ret_value
+        return w
+
     def ui_command_ll(self, path=None, depth=None):
         """
         Alias for ls.
@@ -37,8 +46,8 @@ class UINode(ConfigNode):
         try:
             result = ConfigNode.execute_command(self, command,
                                                 pparams, kparams)
-        except Exception as msg:
-            self.shell.log.error(str(msg))
+        except Exception as e:
+            raise e
         else:
             self.shell.log.debug("Command %s succeeded." % command)
             return result
@@ -108,12 +117,13 @@ class UILvolStores(UINode):
         """
         self.delete(name, uuid)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         for lvs in self._children:
             try:
                 self.delete(None, lvs.lvs.uuid)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def summary(self):
         return "Lvol stores: %s" % len(self.children), None
@@ -133,13 +143,14 @@ class UIBdev(UINode):
         ret = self.get_root().get_bdevs_iostat(name=name)
         self.shell.log.info(json.dumps(ret, indent=2))
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         """Delete all bdevs from this tree node."""
         for bdev in self._children:
             try:
                 self.delete(bdev.name)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def summary(self):
         return "Bdevs: %d" % len(self.children), None
@@ -280,6 +291,7 @@ class UINvmeBdev(UIBdev):
                                                     trsvcid=trsvcid, subnqn=subnqn)
         self.shell.log.info(ret_name)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         ctrlrs = [x.name for x in self._children]
         ctrlrs = [x.rsplit("n", 1)[0] for x in ctrlrs]
@@ -288,7 +300,7 @@ class UINvmeBdev(UIBdev):
             try:
                 self.delete(ctrlr)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def ui_command_delete(self, name):
         """

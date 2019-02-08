@@ -100,13 +100,14 @@ class UINVMfSubsystems(UINode):
         """
         self.delete(subsystem_nqn)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         """Delete all subsystems"""
         for child in self._children:
             try:
                 self.delete(child.subsystem.nqn)
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages = e.message
 
     def summary(self):
         return "Subsystems: %s" % len(self.children), None
@@ -204,13 +205,14 @@ class UINVMfSubsystemListeners(UINode):
         """
         self.delete(trtype, traddr, trsvcid, adrfam)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         """Remove all address listeners from subsystem."""
         for la in self.listen_addresses:
             try:
                 self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def summary(self):
         return "Addresses: %s" % len(self.listen_addresses), None
@@ -264,13 +266,14 @@ class UINVMfSubsystemHosts(UINode):
         """
         self.delete(host)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         """Delete host from subsystem"""
         for host in self.hosts:
             try:
                 self.delete(host['nqn'])
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def summary(self):
         return "Hosts: %s" % len(self.hosts), None
@@ -329,13 +332,14 @@ class UINVMfSubsystemNamespaces(UINode):
         nsid = self.ui_eval_param(nsid, "number", None)
         self.delete(nsid)
 
+    @UINode.delete_all_decorator
     def ui_command_delete_all(self):
         """Delete all namespaces from subsystem."""
         for namespace in self.namespaces:
             try:
                 self.delete(namespace['nsid'])
             except JSONRPCException as e:
-                self.shell.log.error(e.message)
+                self.rpc_messages += e.message
 
     def summary(self):
         return "Namespaces: %s" % len(self.namespaces), None
