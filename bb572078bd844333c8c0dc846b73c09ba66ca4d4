@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f8d5cfe_915b3f26",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 110,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-09T11:11:47Z",
+      "side": 1,
+      "message": "+\u003d ?\n\nCan you remove this decorator and do something like?\n\n  rpc_messages \u003d \"\"\n  for ...\n    try:\n       ...\n    except JSONRPCException as e:\n       rpc_messages +\u003d e.message\n\n   if rpc_messages:\n     raise JSONRPCException(rpc_messages)\n\nThis way you don\u0027t add rpc_messages field to `self` (see that you are not clearing it in the decorator so next delete_all after exception will raise the same exception).",
+      "range": {
+        "startLine": 110,
+        "startChar": 34,
+        "endLine": 110,
+        "endChar": 35
+      },
+      "revId": "bb572078bd844333c8c0dc846b73c09ba66ca4d4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
