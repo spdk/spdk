@@ -55,6 +55,7 @@ struct bdevperf_task {
 
 static const char *g_workload_type;
 static int g_io_size = 0;
+static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
 static int g_is_random;
@@ -112,6 +113,46 @@ static int g_target_count = 0;
  *  AIO blockdevs.
  */
 static size_t g_min_alignment = 8;
+
+static void
+generate_data(void *buf, int buf_len, int block_size, int md_size,
+	      int num_blocks, int seed)
+{
+	int offset_blocks = 0;
+
+	if (buf_len < num_blocks * block_size) {
+		return;
+	}
+
+	while (offset_blocks < num_blocks) {
+		memset(buf, seed, block_size - md_size);
+		memset(buf + block_size - md_size, 0, md_size);
+		buf += block_size;
+		offset_blocks++;
+	}
+}
+
+static bool
+verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len,
+	    int block_size, int md_size, int num_blocks)
+{
+	int offset_blocks = 0;
+
+	if (wr_buf_len < num_blocks * block_size || rd_buf_len < num_blocks * block_size) {
+		return false;
+	}
+
+	while (offset_blocks < num_blocks) {
+		if (memcmp(wr_buf, rd_buf, block_size - md_size) != 0) {
+			return false;
+		}
+		wr_buf += block_size;
+		rd_buf += block_size;
+		offset_blocks++;
+	}
+
+	return true;
+}
 
 static int
 blockdev_heads_init(void)
@@ -185,6 +226,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 {
 	struct io_target *target;
 	size_t align;
+	int block_size, md_size, data_block_size;
 	int rc;
 
 	*_target = NULL;
@@ -221,16 +263,28 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	target->io_completed = 0;
 	target->current_queue_depth = 0;
 	target->offset_in_ios = 0;
-	target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
-	if (target->io_size_blocks == 0 ||
-	    (g_io_size % spdk_bdev_get_block_size(bdev)) != 0) {
-		SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32") or not a blocksize multiple\n",
-			    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+	if (md_size != 0 && !spdk_bdev_is_md_interleaved(bdev)) {
+		SPDK_ERRLOG("Separate metadata is not expected.\n");
+		free(target->name);
+		free(target);
+		return -EINVAL;
+	}
+	data_block_size = block_size - md_size;
+	target->io_size_blocks = g_io_size / data_block_size;
+	if (target->io_size_blocks == 0 || (g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is bigger than data block size of bdev %s (%"PRIu32") or"
+			    " not a data block size multiple\n",
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
 		spdk_bdev_close(target->bdev_desc);
 		free(target->name);
 		free(target);
 		return 0;
 	}
+
+	g_buf_size = spdk_max(g_buf_size, target->io_size_blocks * block_size);
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 	align = spdk_bdev_get_buf_align(bdev);
@@ -316,7 +370,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
-		if (memcmp(task->buf, iovs[0].iov_base, g_io_size) != 0) {
+		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
+				 spdk_bdev_get_block_size(target->bdev),
+				 spdk_bdev_get_md_size(target->bdev),
+				 target->io_size_blocks) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
 			target->is_draining = true;
 			g_run_failed = true;
@@ -403,9 +460,12 @@ bdevperf_prep_task(struct bdevperf_task *task)
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
 	if (g_verify || g_reset) {
-		memset(task->buf, rand_r(&seed) % 256, g_io_size);
+		generate_data(task->buf, g_buf_size,
+			      spdk_bdev_get_block_size(target->bdev),
+			      spdk_bdev_get_md_size(target->bdev),
+			      target->io_size_blocks, rand_r(&seed) % 256);
 		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_io_size;
+		task->iov.iov_len = g_buf_size;
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	} else if (g_flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
@@ -418,7 +478,7 @@ bdevperf_prep_task(struct bdevperf_task *task)
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_io_size;
+		task->iov.iov_len = g_buf_size;
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	}
 }
