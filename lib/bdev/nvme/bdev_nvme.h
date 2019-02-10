@@ -66,6 +66,11 @@ struct nvme_ctrlr {
 	char				*name;
 	int				ref;
 	bool				destruct;
+	/**
+	 * PI check flags. This flags is set to NVMe controllers created only
+	 * through construct_nvme_bdev RPC or .INI config file. Hot added
+	 * NVMe controllers are not included.
+	 */
 	uint32_t			prchk_flags;
 	uint32_t			num_ns;
 	/** Array of bdevs indexed by nsid - 1 */
