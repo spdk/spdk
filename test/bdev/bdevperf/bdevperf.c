@@ -102,7 +102,7 @@ struct io_target {
 };
 
 struct io_target **g_head;
-uint32_t *coremap;
+uint32_t *g_coremap;
 static int g_target_count = 0;
 
 /*
@@ -126,8 +126,8 @@ blockdev_heads_init(void)
 		return -1;
 	}
 
-	coremap = calloc(core_count, sizeof(uint32_t));
-	if (!coremap) {
+	g_coremap = calloc(core_count, sizeof(uint32_t));
+	if (!g_coremap) {
 		free(g_head);
 		fprintf(stderr, "Cannot allocate coremap array with size=%u\n",
 			core_count);
@@ -135,7 +135,7 @@ blockdev_heads_init(void)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		coremap[idx++] = i;
+		g_coremap[idx++] = i;
 	}
 
 	return 0;
@@ -177,7 +177,7 @@ blockdev_heads_destroy(void)
 	}
 
 	free(g_head);
-	free(coremap);
+	free(g_coremap);
 }
 
 static void
@@ -226,7 +226,7 @@ bdevperf_construct_targets(void)
 		/* Mapping each target to lcore */
 		index = g_target_count % spdk_env_get_core_count();
 		target->next = g_head[index];
-		target->lcore = coremap[index];
+		target->lcore = g_coremap[index];
 		target->io_completed = 0;
 		target->current_queue_depth = 0;
 		target->offset_in_ios = 0;
