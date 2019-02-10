@@ -96,6 +96,7 @@ struct io_target {
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
+	uint32_t			dif_check_flags;
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
@@ -285,6 +286,14 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	}
 
 	g_buf_size = spdk_max(g_buf_size, target->io_size_blocks * block_size);
+
+	target->dif_check_flags = 0;
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
 
 	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
 	align = spdk_bdev_get_buf_align(bdev);
@@ -483,6 +492,35 @@ bdevperf_prep_task(struct bdevperf_task *task)
 	}
 }
 
+static int
+bdevperf_generate_dif(struct bdevperf_task *task)
+{
+	struct io_target	*target = task->target;
+	struct spdk_bdev	*bdev = target->bdev;
+	struct spdk_dif_ctx	dif_ctx;
+	int			rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       spdk_bdev_get_block_size(bdev),
+			       spdk_bdev_get_md_size(bdev),
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       target->dif_check_flags,
+			       task->offset_blocks, 0, 0);
+	if (rc != 0) {
+		fprintf(stderr, "Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	rc = spdk_dif_generate(&task->iov, 1, target->io_size_blocks, &dif_ctx);
+	if (rc != 0) {
+		fprintf(stderr, "Generation of DIF failed\n");
+	}
+
+	return rc;
+}
+
 static void
 bdevperf_submit_task(void *arg)
 {
@@ -492,16 +530,21 @@ bdevperf_submit_task(void *arg)
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
 	void			*rbuf;
-	int			rc;
+	int			rc = 0;
 
 	desc = target->bdev_desc;
 	ch = target->ch;
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
-		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, cb_fn, task);
+		if (spdk_bdev_get_md_size(target->bdev) != 0 && target->dif_check_flags != 0) {
+			rc = bdevperf_generate_dif(task);
+		}
+		if (rc == 0) {
+			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
+			rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
+						     target->io_size_blocks, cb_fn, task);
+		}
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
