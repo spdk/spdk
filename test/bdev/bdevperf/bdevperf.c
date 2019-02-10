@@ -694,6 +694,28 @@ performance_statistics_thread(void *arg)
 	return -1;
 }
 
+static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
+{
+	struct bdevperf_task *task;
+
+	task = calloc(1, sizeof(struct bdevperf_task));
+	if (!task) {
+		fprintf(stderr, "Failed to allocate task from memory\n");
+		return NULL;
+	}
+
+	task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
+	if (!task->buf) {
+		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+		free(task);
+		return NULL;
+	}
+
+	task->target = target;
+
+	return task;
+}
+
 static int
 bdevperf_construct_targets_tasks(void)
 {
@@ -719,20 +741,10 @@ bdevperf_construct_targets_tasks(void)
 		}
 		while (target != NULL) {
 			for (j = 0; j < task_num; j++) {
-				task = calloc(1, sizeof(struct bdevperf_task));
-				if (!task) {
-					fprintf(stderr, "Failed to allocate task from memory\n");
+				task = bdevperf_construct_task_on_target(target);
+				if (task == NULL) {
 					goto ret;
 				}
-
-				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
-				if (!task->buf) {
-					fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
-					free(task);
-					goto ret;
-				}
-
-				task->target = target;
 				TAILQ_INSERT_TAIL(&target->task_list, task, link);
 			}
 			target = target->next;
