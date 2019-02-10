@@ -794,6 +794,13 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 	if (bdev->disk.md_len != 0) {
 		nsdata = spdk_nvme_ns_get_data(ns);
 		bdev->disk.md_interleave = nsdata->flbas.extended;
+		if (!bdev->disk.md_interleave) {
+			SPDK_ERRLOG("Bdev doesn't support metadata not intereleaved with block data\n");
+			free(bdev->disk.name);
+			nvme_ctrlr->ref--;
+			memset(bdev, 0, sizeof(*bdev));
+			return -EINVAL;
+		}
 		bdev->disk.dif_type = (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns);
 		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
 			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
