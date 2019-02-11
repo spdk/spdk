@@ -88,6 +88,23 @@
     },
     {
       "key": {
+        "uuid": "b673b000_a082ffcf",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-11T21:09:11Z",
+      "side": 1,
+      "message": "this check is not valid in case where the I/O spans a full stripe (i.e. bigger than one strip per disk) - it is only the *first* time that the start disk is used, that the start_offset is changed, the second time that the start disk is used, the offset should be 0\n\nsame for end_offset below",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b1777068_df08558b",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 9
