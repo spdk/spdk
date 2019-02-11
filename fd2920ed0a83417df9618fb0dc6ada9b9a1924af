@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bce3a8aa_311a8e29",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1712,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-11T06:33:17Z",
+      "side": 1,
+      "message": "Although perf/fio plugin tools are all using the same PRCHK flags for the whole Namespace testing, but I think PRCHK flags should be commands specific, for example, users may only want to enable GUARD check for some critical data, and enable APP tag for other data.",
+      "revId": "fd2920ed0a83417df9618fb0dc6ada9b9a1924af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
