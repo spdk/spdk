@@ -111,6 +111,25 @@ static struct spdk_bdev_module g_ftl_if = {
 
 SPDK_BDEV_MODULE_REGISTER(&g_ftl_if)
 
+static void
+bdev_ftl_remove_ctrlr(struct nvme_ctrlr *ctrlr)
+{
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	if (--ctrlr->ref == 0) {
+		if (spdk_nvme_detach(ctrlr->ctrlr)) {
+			SPDK_ERRLOG("Failed to detach the controller\n");
+			goto out;
+		}
+
+		TAILQ_REMOVE(&g_nvme_ctrlrs, ctrlr, tailq);
+		free(ctrlr->name);
+		free(ctrlr);
+	}
+out:
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
 static struct nvme_ctrlr *
 bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
 {
@@ -130,14 +149,8 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->ctrlr = ctrlr;
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
-		ftl_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
-		ftl_ctrlr->bdevs = calloc(ftl_ctrlr->num_ns, sizeof(struct nvme_bdev));
-		if (!ftl_ctrlr->bdevs) {
-			SPDK_ERRLOG("Failed to allocate block devices struct\n");
-			free(ftl_ctrlr);
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			return NULL;
-		}
+		ftl_ctrlr->remove_fn = bdev_ftl_remove_ctrlr;
+		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
 
 		TAILQ_INIT(&ftl_ctrlr->ftl_bdevs);
 		TAILQ_INSERT_HEAD(&g_nvme_ctrlrs, ftl_ctrlr, tailq);
@@ -145,24 +158,6 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 out:
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	return ftl_ctrlr;
-}
-
-static void
-bdev_ftl_remove_ctrlr(struct nvme_ctrlr *ctrlr)
-{
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
-	if (--ctrlr->ref == 0) {
-		if (spdk_nvme_detach(ctrlr->ctrlr)) {
-			SPDK_ERRLOG("Failed to detach the controller\n");
-			goto out;
-		}
-
-		TAILQ_REMOVE(&g_nvme_ctrlrs, ctrlr, tailq);
-		free(ctrlr);
-	}
-out:
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 static void
@@ -186,13 +181,22 @@ bdev_ftl_free_cb(void *ctx, int status)
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
 
-	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_ctrlr);
+	ctrlr = ftl_bdev->nvme_ctrlr;
+	if (ctrlr->destruct) {
+		bdev_ftl_remove_ctrlr(ctrlr);
+	}
 
 	spdk_bdev_destruct_done(&ftl_bdev->bdev, status);
 	free(ftl_bdev->bdev.name);
 	free(ftl_bdev);
 
 	if (finish_done && g_finish_cb) {
+		/* If this controller's destruction was already started
+		 * before the application started shutting down then skip it
+		 */
+		if (ctrlr->destruct == false) {
+			bdev_ftl_remove_ctrlr(ctrlr);
+		}
 		g_finish_cb();
 	}
 }
