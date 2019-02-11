@@ -40,7 +40,9 @@
 #include "spdk/rpc.h"
 
 TAILQ_HEAD(nvme_bdev_ctrlrs, nvme_bdev_ctrlr);
+TAILQ_HEAD(nvme_probe_skip_entries, nvme_probe_skip_entry);
 extern struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs;
+extern struct nvme_probe_skip_entries g_skipped_nvme_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 
 #define NVME_MAX_CONTROLLERS 1024
@@ -69,6 +71,8 @@ struct nvme_bdev_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	void (*remove_fn)(struct nvme_bdev_ctrlr *);
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_bdev_ctrlr)	tailq;
 };
@@ -94,6 +98,11 @@ struct ftl_bdev {
 struct nvme_bdev_info {
 	const char *names[NVME_MAX_BDEVS_PER_RPC];
 	size_t count;
+};
+
+struct nvme_probe_skip_entry {
+	struct spdk_nvme_transport_id		trid;
+	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
 };
 
 struct spdk_bdev_nvme_construct_opts {
@@ -158,5 +167,16 @@ static void __attribute__((constructor)) rpc_register_##construct_fn(void) \
 { \
 	spdk_rpc_register_nvme_construct_methods(bdev_type, construct_fn, parse_fn); \
 }
+
+/**
+ * Delete NVMe controller with all bdevs on top of it.
+ * Requires to pass name of NVMe controller.
+ *
+ * \param name NVMe controller name
+ * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
+ */
+int spdk_bdev_nvme_delete(const char *name);
+void spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+void spdk_bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
