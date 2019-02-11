@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3fb39bf_2e95acfa",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 17
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T13:02:04Z",
+      "side": 0,
+      "message": "I assume this shouldn\u0027t have been there in the first place, but could we make a separate patch for it? This one is huge already and it\u0027s easy to miss changes like that in the review. Besides, this isn\u0027t mentioned in the commit msg.",
+      "range": {
+        "startLine": 102,
+        "startChar": 8,
+        "endLine": 103,
+        "endChar": 52
+      },
+      "revId": "ce75af214046a321a224180b5b2abeeab90c3c96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
