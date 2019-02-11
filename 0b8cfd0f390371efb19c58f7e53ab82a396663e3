@@ -22,6 +22,30 @@
       "revId": "0b8cfd0f390371efb19c58f7e53ab82a396663e3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb8d3573_1c87f35a",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-11T13:46:39Z",
+      "side": 1,
+      "message": "This would overcomplicate this as printing at #64 would also need to be changed.\nI suggest to treat this as integer while it is integer and when I will stop being integer, change this code\nDo you agree?",
+      "parentUuid": "30111563_1fff38ad",
+      "range": {
+        "startLine": 50,
+        "startChar": 39,
+        "endLine": 50,
+        "endChar": 43
+      },
+      "revId": "0b8cfd0f390371efb19c58f7e53ab82a396663e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
