@@ -58,6 +58,8 @@ struct nvme_ctrlr {
 
 	struct spdk_poller		*adminq_timer_poller;
 
+	void (*remove_fn)(struct nvme_ctrlr *);
+
 	/** linked list pointer for device list */
 	TAILQ_ENTRY(nvme_ctrlr)	tailq;
 };
@@ -110,5 +112,16 @@ struct nvme_ctrlr *nvme_ctrlr_get_by_name(const char *name);
 struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
 struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
+
+/**
+ * Delete NVMe controller with all bdevs on top of it.
+ * Requires to pass name of NVMe controller.
+ *
+ * \param name NVMe controller name
+ * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
+ */
+int spdk_bdev_nvme_delete(const char *name);
+void spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
+void spdk_bdev_nvme_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
