@@ -94,6 +94,16 @@ COMMON_CFLAGS += -flto
 LDFLAGS += -flto
 endif
 
+ifeq ($(CONFIG_PGO_CAPTURE),y)
+COMMON_CFLAGS += -fprofile-generate=$(SPDK_ROOT_DIR)/build/pgo
+LDFLAGS += -fprofile-generate=$(SPDK_ROOT_DIR)/build/pgo
+endif
+
+ifeq ($(CONFIG_PGO_USE),y)
+COMMON_CFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
+LDFLAGS += -fprofile-use=$(SPDK_ROOT_DIR)/build/pgo
+endif
+
 COMMON_CFLAGS += -Wformat -Wformat-security
 
 COMMON_CFLAGS += -D_GNU_SOURCE
