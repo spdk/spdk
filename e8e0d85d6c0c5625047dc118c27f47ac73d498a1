@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "aa6e3f56_5b23c0d1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T00:03:39Z",
+      "side": 1,
+      "message": "Thank you, if so, I want to use bdev_nvme_no_pi_readv you suggested originally.",
+      "parentUuid": "88f7b680_cccfa435",
+      "revId": "e8e0d85d6c0c5625047dc118c27f47ac73d498a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6849a60c_4a1222ca",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-08T23:47:14Z",
       "side": 1,
       "message": "let\u0027s add an spdk_unlikely around this check (sorry - missed this earlier, but was doing some bdev and NVMe optimization today which made me think of it)",
+      "revId": "e8e0d85d6c0c5625047dc118c27f47ac73d498a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de09f4c5_ebafe11a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1608,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T00:03:39Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6849a60c_4a1222ca",
       "revId": "e8e0d85d6c0c5625047dc118c27f47ac73d498a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
