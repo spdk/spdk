@@ -117,6 +117,7 @@ struct nvme_tcp_req {
 	uint32_t				r2tl_remain;
 	bool					in_capsule_data;
 	struct nvme_tcp_pdu			send_pdu;
+	void					*buf;
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 	TAILQ_ENTRY(nvme_tcp_req)		active_r2t_link;
 };
@@ -154,6 +155,7 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
 	tcp_req->r2tl_remain = 0;
+	tcp_req->buf = NULL;
 	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
@@ -509,14 +511,15 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
  * Build SGL describing contiguous payload buffer.
  */
 static int
-nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_request *req)
+nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
-	void *payload = req->payload.contig_or_cb_arg + req->payload_offset;
+	struct nvme_request *req = tcp_req->req;
+	tcp_req->buf = req->payload.contig_or_cb_arg + req->payload_offset;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
-	req->cmd.dptr.sgl1.address = (uint64_t)payload;
+	req->cmd.dptr.sgl1.address = (uint64_t)tcp_req->buf;
 
 	return 0;
 }
@@ -525,11 +528,11 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_request
  * Build SGL describing scattered payload buffer.
  */
 static int
-nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_request *req)
+nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	int rc;
-	void *virt_addr;
 	uint32_t length;
+	struct nvme_request *req = tcp_req->req;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 
@@ -540,7 +543,8 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_request *r
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
 	/* TODO: for now, we only support a single SGL entry */
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &virt_addr, &length);
+	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &tcp_req->buf, &length);
+
 	if (rc) {
 		return -1;
 	}
@@ -550,7 +554,7 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_request *r
 		return -1;
 	}
 
-	req->cmd.dptr.sgl1.address = (uint64_t)virt_addr;
+	req->cmd.dptr.sgl1.address = (uint64_t)tcp_req->buf;
 
 	return 0;
 }
@@ -578,9 +582,9 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 	req->cmd.dptr.sgl1.unkeyed.length = req->payload_size;
 
 	if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG) {
-		rc = nvme_tcp_build_contig_request(tqpair, req);
+		rc = nvme_tcp_build_contig_request(tqpair, tcp_req);
 	} else if (nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_SGL) {
-		rc = nvme_tcp_build_sgl_request(tqpair, req);
+		rc = nvme_tcp_build_sgl_request(tqpair, tcp_req);
 	} else {
 		rc = -1;
 	}
@@ -622,14 +626,7 @@ static void
 nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
 			  struct nvme_tcp_req *tcp_req)
 {
-	/* Here is the tricky, we should consider different NVME data command type: SGL with continue or
-	scatter data, now we only consider continous data, which is not exactly correct, shoud be fixed */
-	if (spdk_unlikely(!tcp_req->req->cmd.dptr.sgl1.address)) {
-		pdu->data = (void *)tcp_req->req->payload.contig_or_cb_arg + tcp_req->datao;
-	} else {
-		pdu->data = (void *)tcp_req->req->cmd.dptr.sgl1.address + tcp_req->datao;
-	}
-
+	pdu->data = (void *)((uint64_t)tcp_req->buf + tcp_req->datao);
 }
 
 static int
@@ -682,10 +679,10 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	}
 
 	tcp_req->datao = 0;
-	nvme_tcp_pdu_set_data_buf(pdu, tcp_req);
 	pdu->data_len = tcp_req->req->payload_size;
 
 end:
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req);
 	capsule_cmd->common.plen = plen;
 	return nvme_tcp_qpair_write_pdu(tqpair, pdu, nvme_tcp_qpair_cmd_send_complete, NULL);
 
