@@ -117,19 +117,17 @@ function linux_bind_driver() {
 }
 
 function linux_unbind_driver() {
-	bdf="$1"
-	ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
+	local bdf="$1"
+	local ven_dev_id=$(lspci -n -s $bdf | cut -d' ' -f3 | sed 's/:/ /')
+	local old_driver_name="no driver"
 
-	if ! [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
-		pci_dev_echo "$bdf" "Can't unbind device as it is not using any driver."
-		return 0
+	if [ -e "/sys/bus/pci/devices/$bdf/driver" ]; then
+		old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
+		echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
+		echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
 	fi
 
-	old_driver_name=$(basename $(readlink /sys/bus/pci/devices/$bdf/driver))
-
-	echo "$ven_dev_id" > "/sys/bus/pci/devices/$bdf/driver/remove_id" 2> /dev/null || true
-	echo "$bdf" > "/sys/bus/pci/devices/$bdf/driver/unbind"
-	echo "$bdf ($ven_dev_id): $old_driver_name -> no driver"
+	pci_dev_echo "$bdf" "$old_driver_name -> no driver"
 }
 
 function linux_hugetlbfs_mounts() {
