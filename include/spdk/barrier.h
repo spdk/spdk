@@ -114,7 +114,7 @@ extern "C" {
 #elif defined(__aarch64__)
 #define spdk_smp_mb()	__asm volatile("dmb ish" ::: "memory")
 #elif defined(__x86_64__)
-#define spdk_smp_mb() __asm volatile("lock addl $0, -128(%%rsp); " ::: "memory");
+#define spdk_smp_mb() __asm volatile("lock addl $0, -132(%%rsp); " ::: "memory");
 #elif defined(__i386__)
 #define spdk_smp_mb() __asm volatile("lock addl $0, -128(%%esp); " ::: "memory");
 #else
