@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75e54102_2f53e46b",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-11T09:51:25Z",
+      "side": 1,
+      "message": "Whats the reasoning behind having default for defaults ?\nI though main goal behind this change was to let autotest.sh perform only tests that are explicitly specified in config file ?\nIf yes, then setting everything to 0 should be fine for this.\n\nIf doing this change, please verify that Jenkins ran the same set of tests on this patch as on any patch in master. We probably would like to avoid having disabling any tests by accident - on current Jenkins setup.",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 40
+      },
+      "revId": "1705b271c71d2a7b4f257fd85c9cdd5661b327d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
