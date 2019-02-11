@@ -92,11 +92,17 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 		return -EINVAL;
 	}
 
+	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
+	if (rc) {
+		return rc;
+	}
+
 	/* This function blocks execution until all OCF requests are finished
 	 * But we don't have to worry about possible deadlocks because in
 	 * supported modes (WT and PT) all OCF requests are finished before
 	 * SPDK bdev io requests */
 	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
 		SPDK_ERRLOG("Could not stop cache for '%s'\n", vbdev->name);
 		return rc;
@@ -109,6 +115,7 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 static int
 remove_base(struct vbdev_ocf_base *base)
 {
+	ocf_core_t core;
 	int rc = 0;
 
 	if (base == NULL) {
@@ -118,11 +125,21 @@ remove_base(struct vbdev_ocf_base *base)
 	assert(base->attached);
 
 	/* Release OCF-part */
+	//TODO @mmielewc Is it really needed?
 	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
 		if (base->is_cache) {
 			rc = stop_vbdev(base->parent);
 		} else {
-			rc = ocf_mngt_cache_remove_core(base->parent->ocf_cache, base->id, false);
+			rc = ocf_core_get(base->parent->ocf_cache, base->id, &core);
+			if (rc) {
+				return -EINVAL;
+			}
+			rc = ocf_mngt_cache_lock(base->parent->ocf_cache);
+			if (rc) {
+				return rc;
+			}
+			rc = ocf_mngt_cache_remove_core(core);
+			ocf_mngt_cache_unlock(base->parent->ocf_cache);
 		}
 	}
 
@@ -276,13 +293,16 @@ io_submit_to_ocf(struct spdk_bdev_io *bdev_io, struct ocf_io *io)
 			dir = OCF_WRITE;
 		}
 		ocf_io_configure(io, offset, len, dir, 0, 0);
-		return ocf_submit_io(io);
+		ocf_core_submit_io(io);
+		return 0;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		ocf_io_configure(io, offset, len, OCF_WRITE, 0, OCF_WRITE_FLUSH);
-		return ocf_submit_flush(io);
+		ocf_core_submit_flush(io);
+		return 0;
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		ocf_io_configure(io, offset, len, 0, 0, 0);
-		return ocf_submit_discard(io);
+		ocf_core_submit_discard(io);
+		return 0;
 	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 	default:
@@ -301,7 +321,7 @@ io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct vbdev_ocf_qcxt *qctx = spdk_io_channel_get_ctx(ch);
 	int err;
 
-	io = ocf_new_io(vbdev->ocf_core);
+	io = ocf_core_new_io(vbdev->ocf_core);
 	if (!io) {
 		err = -ENOMEM;
 		goto fail;
@@ -445,6 +465,7 @@ start_cache(struct vbdev_ocf *vbdev)
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
 
 	rc = ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device);
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
 		SPDK_ERRLOG("Failed to attach cache device\n");
 		return rc;
@@ -459,7 +480,12 @@ add_core(struct vbdev_ocf *vbdev)
 {
 	int rc;
 
+	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
+	if (rc)
+		return rc;
+
 	rc = ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->ocf_core, &vbdev->cfg.core);
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
 		SPDK_ERRLOG("Failed to add core device to cache instance\n");
 		return rc;
@@ -632,7 +658,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	/* Id 0 means OCF decides the id */
 	cfg->cache.id = 0;
 	cfg->cache.name = vbdev->name;
-	cfg->cache.name_size = strlen(vbdev->name) + 1;
 
 	/* TODO [metadata]: make configurable with persistent
 	 * metadata support */
@@ -659,7 +684,10 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->device.perform_test = false;
 	cfg->device.discard_on_start = false;
 
-	cfg->core.data_obj_type = SPDK_OBJECT;
+	vbdev->cfg.cache.locked = true;
+
+	cfg->core.volume_type = SPDK_OBJECT;
+	cfg->device.volume_type = SPDK_OBJECT;
 
 	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
 	cfg->device.uuid.data = vbdev->cache.name;
@@ -678,7 +706,7 @@ init_vbdev(const char *vbdev_name,
 	int rc = 0;
 
 	if (spdk_bdev_get_by_name(vbdev_name) || vbdev_ocf_get_by_name(vbdev_name)) {
-		SPDK_ERRLOG("Device with name '%s' already exists", vbdev_name);
+		SPDK_ERRLOG("Device with name '%s' already exists\n", vbdev_name);
 		return -EPERM;
 	}
 
@@ -723,12 +751,15 @@ init_vbdev(const char *vbdev_name,
 		goto error_mem;
 	}
 
+	vbdev->core.name = strdup(core_name);
 	init_vbdev_config(vbdev);
 
+	vbdev->core.name = strdup(core_name);
 	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
 	return rc;
 
 error_mem:
+	vbdev->core.name = strdup(core_name);
 	rc = -ENOMEM;
 error_free:
 	free_vbdev(vbdev);
@@ -750,7 +781,7 @@ vbdev_ocf_init(void)
 		return status;
 	}
 
-	status = vbdev_ocf_dobj_init();
+	status = vbdev_ocf_volume_init();
 	if (status) {
 		vbdev_ocf_ctx_cleanup();
 		SPDK_ERRLOG("OCF dobj initialization failed with=%d\n", status);
@@ -812,7 +843,7 @@ vbdev_ocf_module_fini(void)
 		free_vbdev(vbdev);
 	}
 
-	vbdev_ocf_dobj_cleanup();
+	vbdev_ocf_volume_cleanup();
 	vbdev_ocf_ctx_cleanup();
 }
 

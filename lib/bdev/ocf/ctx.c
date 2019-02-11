@@ -336,39 +336,13 @@ static void vbdev_ocf_dobj_updater_kick(ocf_metadata_updater_t mu)
 	/* TODO [metadata]: implement with persistent metadata support */
 }
 
-static const struct ocf_ctx_ops vbdev_ocf_ctx_ops = {
-	.name = "OCF SPDK",
-
-	.data_alloc = vbdev_ocf_ctx_data_alloc,
-	.data_free = vbdev_ocf_ctx_data_free,
-	.data_mlock = vbdev_ocf_ctx_data_mlock,
-	.data_munlock = vbdev_ocf_ctx_data_munlock,
-	.data_rd = vbdev_ocf_ctx_data_rd,
-	.data_wr = vbdev_ocf_ctx_data_wr,
-	.data_zero = vbdev_ocf_ctx_data_zero,
-	.data_seek = vbdev_ocf_ctx_data_seek,
-	.data_cpy = vbdev_ocf_ctx_data_cpy,
-	.data_secure_erase = vbdev_ocf_ctx_data_secure_erase,
-
-	.queue_init = vbdev_ocf_ctx_queue_init,
-	.queue_kick = vbdev_ocf_ctx_queue_kick,
-	.queue_stop = vbdev_ocf_ctx_queue_stop,
-
-	.cleaner_init = vbdev_ocf_ctx_cleaner_init,
-	.cleaner_stop = vbdev_ocf_ctx_cleaner_stop,
-
-	.metadata_updater_init = vbdev_ocf_dobj_updater_init,
-	.metadata_updater_stop = vbdev_ocf_dobj_updater_stop,
-	.metadata_updater_kick = vbdev_ocf_dobj_updater_kick,
-};
-
 /* This function is main way by which OCF communicates with user
  * We don't want to use SPDK_LOG here because debugging information that is
  * associated with every print message is not helpful in callback that only prints info
  * while the real source is somewhere in OCF code */
 static int
-vbdev_ocf_ctx_log_printf(const struct ocf_logger *logger,
-			 ocf_logger_lvl_t lvl, const char *fmt, va_list args)
+vbdev_ocf_ctx_log_printf(ocf_logger_t logger, ocf_logger_lvl_t lvl,
+		const char *fmt, va_list args)
 {
 	FILE *lfile = stdout;
 
@@ -383,9 +357,46 @@ vbdev_ocf_ctx_log_printf(const struct ocf_logger *logger,
 	return vfprintf(lfile, fmt, args);
 }
 
-static const struct ocf_logger logger = {
-	.printf = vbdev_ocf_ctx_log_printf,
-	.dump_stack = NULL,
+static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
+	.name = "OCF SPDK",
+
+	.ops = {
+		.data = {
+			.alloc = vbdev_ocf_ctx_data_alloc,
+			.free = vbdev_ocf_ctx_data_free,
+			.mlock = vbdev_ocf_ctx_data_mlock,
+			.munlock = vbdev_ocf_ctx_data_munlock,
+			.read = vbdev_ocf_ctx_data_rd,
+			.write = vbdev_ocf_ctx_data_wr,
+			.zero = vbdev_ocf_ctx_data_zero,
+			.seek = vbdev_ocf_ctx_data_seek,
+			.copy = vbdev_ocf_ctx_data_cpy,
+			.secure_erase = vbdev_ocf_ctx_data_secure_erase,
+		},
+
+		.queue = {
+			.init = vbdev_ocf_ctx_queue_init,
+			.kick = vbdev_ocf_ctx_queue_kick,
+			.stop = vbdev_ocf_ctx_queue_stop,
+		},
+
+		.metadata_updater = {
+			.init = vbdev_ocf_dobj_updater_init,
+			.stop = vbdev_ocf_dobj_updater_stop,
+			.kick = vbdev_ocf_dobj_updater_kick,
+		},
+
+		.cleaner = {
+			.init = vbdev_ocf_ctx_cleaner_init,
+			.stop = vbdev_ocf_ctx_cleaner_stop,
+		},
+
+		.logger = {
+			.printf = vbdev_ocf_ctx_log_printf,
+			.dump_stack = NULL,
+		},
+
+	},
 };
 
 int
@@ -393,12 +404,10 @@ vbdev_ocf_ctx_init(void)
 {
 	int ret;
 
-	ret = ocf_ctx_init(&vbdev_ocf_ctx, &vbdev_ocf_ctx_ops);
+	ret = ocf_ctx_init(&vbdev_ocf_ctx, &vbdev_ocf_ctx_cfg);
 	if (ret < 0) {
 		return ret;
 	}
-
-	ocf_ctx_set_logger(vbdev_ocf_ctx, &logger);
 
 	return 0;
 }
