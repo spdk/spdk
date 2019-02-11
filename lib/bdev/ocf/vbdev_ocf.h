@@ -59,8 +59,10 @@ struct vbdev_ocf_qcxt {
 
 /* Important states */
 struct vbdev_ocf_state {
-	/* From the moment when finish started */
+	/* From the moment when finish started until it is completed */
 	bool                         doing_finish;
+	/* When unregister completed */
+	bool                         finished;
 	/* From the moment when reset IO recieved, until it is completed */
 	bool                         doing_reset;
 	/* From the moment when exp_bdev is registered */
