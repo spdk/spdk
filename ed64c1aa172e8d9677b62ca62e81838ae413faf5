@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0ffb59c7_c07f2a8f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 806,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T20:55:02Z",
+      "side": 1,
+      "message": "You have a pointer to the controller here, so can\u0027t you request the flags here when you need them instead of storing them in the nvme_ctrlr object?",
+      "revId": "ed64c1aa172e8d9677b62ca62e81838ae413faf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
