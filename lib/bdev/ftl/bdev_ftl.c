@@ -52,20 +52,6 @@
 extern TAILQ_HEAD(, nvme_ctrlr)	g_nvme_ctrlrs;
 extern pthread_mutex_t g_bdev_nvme_mutex;
 
-struct ftl_bdev {
-	struct spdk_bdev		bdev;
-
-	struct nvme_ctrlr		*ctrlr;
-
-	struct spdk_ftl_dev		*dev;
-
-	ftl_bdev_init_fn		init_cb;
-
-	void				*init_arg;
-
-	LIST_ENTRY(ftl_bdev)		list_entry;
-};
-
 struct ftl_io_channel {
 	struct spdk_ftl_dev		*dev;
 
@@ -90,9 +76,14 @@ struct ftl_bdev_io {
 	struct spdk_thread		*orig_thread;
 };
 
+struct ftl_bdev_ctx {
+	struct ftl_bdev			*bdev;
+	ftl_bdev_init_fn		cb;
+	void				*cb_arg;
+};
+
 typedef void (*bdev_ftl_finish_fn)(void);
 
-static LIST_HEAD(, ftl_bdev)		g_ftl_bdevs = LIST_HEAD_INITIALIZER(g_ftl_bdevs);
 static bdev_ftl_finish_fn		g_finish_cb;
 static size_t				g_num_conf_bdevs;
 static size_t				g_num_init_bdevs;
@@ -139,7 +130,16 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->ctrlr = ctrlr;
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
+		ftl_ctrlr->num_ns = spdk_nvme_ctrlr_get_num_ns(ctrlr);
+		ftl_ctrlr->bdevs = calloc(ftl_ctrlr->num_ns, sizeof(struct nvme_bdev));
+		if (!ftl_ctrlr->bdevs) {
+			SPDK_ERRLOG("Failed to allocate block devices struct\n");
+			free(ftl_ctrlr);
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			return NULL;
+		}
 
+		TAILQ_INIT(&ftl_ctrlr->ftl_bdevs);
 		TAILQ_INSERT_HEAD(&g_nvme_ctrlrs, ftl_ctrlr, tailq);
 	}
 out:
@@ -169,16 +169,24 @@ static void
 bdev_ftl_free_cb(void *ctx, int status)
 {
 	struct ftl_bdev *ftl_bdev = ctx;
-	bool finish_done;
+	struct nvme_ctrlr *ctrlr = NULL;
+	bool finish_done = true;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	LIST_REMOVE(ftl_bdev, list_entry);
-	finish_done = LIST_EMPTY(&g_ftl_bdevs);
+
+	TAILQ_REMOVE(&ftl_bdev->nvme_ctrlr->ftl_bdevs, ftl_bdev, tailq);
+
+	TAILQ_FOREACH(ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (!TAILQ_EMPTY(&ctrlr->ftl_bdevs)) {
+			finish_done = false;
+		}
+	}
+
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
 
-	bdev_ftl_remove_ctrlr(ftl_bdev->ctrlr);
+	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_ctrlr);
 
 	spdk_bdev_destruct_done(&ftl_bdev->bdev, status);
 	free(ftl_bdev->bdev.name);
@@ -570,11 +578,12 @@ bdev_ftl_io_channel_destroy_cb(void *io_device, void *ctx_buf)
 static void
 bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 {
-	struct ftl_bdev		*ftl_bdev = ctx;
+	struct ftl_bdev_ctx	*ftl_bdev_ctx = ctx;
+	struct ftl_bdev		*ftl_bdev = ftl_bdev_ctx->bdev;
 	struct ftl_bdev_info	info = {};
 	struct spdk_ftl_attrs	attrs;
-	ftl_bdev_init_fn	init_cb = ftl_bdev->init_cb;
-	void			*init_arg = ftl_bdev->init_arg;
+	ftl_bdev_init_fn	init_cb = ftl_bdev_ctx->cb;
+	void			*init_arg = ftl_bdev_ctx->cb_arg;
 	int			rc = -ENODEV;
 
 	if (status) {
@@ -617,19 +626,21 @@ bdev_ftl_create_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 	info.uuid = ftl_bdev->bdev.uuid;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	LIST_INSERT_HEAD(&g_ftl_bdevs, ftl_bdev, list_entry);
+	TAILQ_INSERT_HEAD(&ftl_bdev->nvme_ctrlr->ftl_bdevs, ftl_bdev, tailq);
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
 	init_cb(&info, init_arg, 0);
+	free(ftl_bdev_ctx);
 	return;
 
 error_unregister:
 	spdk_io_device_unregister(ftl_bdev, NULL);
 error_dev:
-	bdev_ftl_remove_ctrlr(ftl_bdev->ctrlr);
+	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_ctrlr);
 
 	free(ftl_bdev->bdev.name);
 	free(ftl_bdev);
+	free(ftl_bdev_ctx);
 
 	init_cb(NULL, init_arg, rc);
 }
@@ -640,6 +651,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 		const struct spdk_uuid *uuid, ftl_bdev_init_fn cb, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev = NULL;
+	struct ftl_bdev_ctx *ftl_bdev_ctx = NULL;
 	struct nvme_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
 	int rc;
@@ -663,9 +675,18 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 		goto error_ctrlr;
 	}
 
-	ftl_bdev->ctrlr = ftl_ctrlr;
-	ftl_bdev->init_cb = cb;
-	ftl_bdev->init_arg = cb_arg;
+	ftl_bdev_ctx = calloc(1, sizeof(*ftl_bdev_ctx));
+	if (!ftl_bdev_ctx) {
+		SPDK_ERRLOG("Could not allocate ftl_bdev\n");
+		rc = -ENOMEM;
+		goto error_name;
+	}
+
+	ftl_bdev->nvme_ctrlr = ftl_ctrlr;
+
+	ftl_bdev_ctx->bdev = ftl_bdev;
+	ftl_bdev_ctx->cb = cb;
+	ftl_bdev_ctx->cb_arg = cb_arg;
 
 	opts.conf = NULL;
 	opts.ctrlr = ctrlr;
@@ -677,14 +698,16 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 	/* TODO: set threads based on config */
 	opts.core_thread = opts.read_thread = spdk_get_thread();
 
-	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev);
+	rc = spdk_ftl_dev_init(&opts, bdev_ftl_create_cb, ftl_bdev_ctx);
 	if (rc) {
 		SPDK_ERRLOG("Could not create FTL device\n");
-		goto error_name;
+		goto error_ctx;
 	}
 
 	return 0;
 
+error_ctx:
+	free(ftl_bdev_ctx);
 error_name:
 	free(ftl_bdev->bdev.name);
 error_ctrlr:
@@ -830,15 +853,18 @@ void
 bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev, *tmp;
+	struct nvme_ctrlr *ftl_ctrlr;
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
-	LIST_FOREACH_SAFE(ftl_bdev, &g_ftl_bdevs, list_entry, tmp) {
-		if (strcmp(ftl_bdev->bdev.name, name) == 0) {
-			spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
+	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_ctrlrs, tailq) {
+		TAILQ_FOREACH_SAFE(ftl_bdev, &ftl_ctrlr->ftl_bdevs, tailq, tmp) {
+			if (strcmp(ftl_bdev->bdev.name, name) == 0) {
+				spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
 
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			return;
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+				return;
+			}
 		}
 	}
 
@@ -869,10 +895,20 @@ bdev_ftl_finish_cb(void)
 static void
 bdev_ftl_finish(void)
 {
+	struct nvme_ctrlr *ctrlr;
+	bool finish = true;
+
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
-	if (LIST_EMPTY(&g_ftl_bdevs)) {
-		pthread_mutex_unlock(&g_bdev_nvme_mutex);
+	TAILQ_FOREACH(ctrlr, &g_nvme_ctrlrs, tailq) {
+		if (!TAILQ_EMPTY(&ctrlr->ftl_bdevs)) {
+			finish = false;
+		}
+	}
+
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+	if (finish) {
 		bdev_ftl_finish_cb();
 		return;
 	}
