@@ -46,6 +46,12 @@ CONFIG_WERROR=n
 # Build with link-time optimization.
 CONFIG_LTO=n
 
+# Generate profile guided optimization data.
+CONFIG_PGO_CAPTURE=n
+
+# Use profile guided optimization data.
+CONFIG_PGO_USE=n
+
 # Build with code coverage instrumentation.
 CONFIG_COVERAGE=n
 

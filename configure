@@ -24,6 +24,8 @@ function usage()
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
+	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
+	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
 	echo " --disable-tests           Disable building of tests"
 	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
@@ -145,6 +147,18 @@ for i in "$@"; do
 			;;
 		--disable-lto)
 			CONFIG[LTO]=n
+			;;
+		--enable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=y
+			;;
+		--disable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=n
+			;;
+		--enable-pgo-use)
+			CONFIG[PGO_USE]=y
+			;;
+		--disable-pgo-use)
+			CONFIG[PGO_USE]=n
 			;;
 		--enable-tests)
 			CONFIG[TESTS]=y
@@ -465,6 +479,12 @@ if [[ "${CONFIG[OCF]}" = "y" ]]; then
 		fi
 	fi
 fi
+
+if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
+	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
+	exit 1
+fi
+
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
