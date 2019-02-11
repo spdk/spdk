@@ -34,6 +34,24 @@
       "revId": "f9f617932174476601b9297dc30c40d8372b1886",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dec9178c_ec185d6d",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 492,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-11T03:06:38Z",
+      "side": 1,
+      "message": "Yes, it\u0027s a better name.\nApplied reset_expected as Jim suggested.",
+      "parentUuid": "0df3e955_96e33322",
+      "revId": "f9f617932174476601b9297dc30c40d8372b1886",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
