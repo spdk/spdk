@@ -68,6 +68,47 @@ free_vbdev(struct vbdev_ocf *vbdev)
 	free(vbdev);
 }
 
+/* Get existing cache base
+ * that is attached to other vbdev */
+static struct vbdev_ocf_base *
+get_other_cache_base(struct vbdev_ocf_base *base)
+{
+	struct vbdev_ocf *vbdev;
+
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (&vbdev->cache == base || !vbdev->cache.attached) {
+			continue;
+		}
+		if (!strcmp(vbdev->cache.name, base->name)) {
+			return &vbdev->cache;
+		}
+	}
+
+	return NULL;
+}
+
+/* Get existing OCF cache instance
+ * that is started by other vbdev */
+static ocf_cache_t
+get_other_cache_instance(struct vbdev_ocf *vbdev)
+{
+	struct vbdev_ocf *cmp;
+
+	TAILQ_FOREACH(cmp, &g_ocf_vbdev_head, tailq) {
+		if (cmp->state.doing_finish || cmp == vbdev) {
+			continue;
+		}
+		if (strcmp(cmp->cache.name, vbdev->cache.name)) {
+			continue;
+		}
+		if (cmp->ocf_cache) {
+			return cmp->ocf_cache;
+		}
+	}
+
+	return NULL;
+}
+
 /* Stop OCF cache object
  * vbdev_ocf is not operational after this */
 static int
@@ -85,6 +126,13 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 
 	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
 		return -EINVAL;
+	}
+
+	if (get_other_cache_instance(vbdev)) {
+		SPDK_NOTICELOG("Not stopping cache instance '%s'"
+			       " because it is referenced by other OCF bdev\n",
+			       vbdev->cache.name);
+		return 0;
 	}
 
 	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
@@ -118,6 +166,11 @@ remove_base(struct vbdev_ocf_base *base)
 	}
 
 	assert(base->attached);
+
+	if (base->is_cache && get_other_cache_base(base)) {
+		base->attached = false;
+		return 0;
+	}
 
 	/* Release OCF-part */
 	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
@@ -474,7 +527,20 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 static int
 start_cache(struct vbdev_ocf *vbdev)
 {
+	ocf_cache_t existing;
 	int rc;
+
+	if (vbdev->ocf_cache) {
+		return -EALREADY;
+	}
+
+	existing = get_other_cache_instance(vbdev);
+	if (existing) {
+		SPDK_NOTICELOG("OCF bdev %s connects to existing cache device %s\n",
+			       vbdev->name, vbdev->cache.name);
+		vbdev->ocf_cache = existing;
+		return 0;
+	}
 
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
@@ -678,6 +744,7 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 
 	cfg->core.volume_type = SPDK_OBJECT;
 	cfg->device.volume_type = SPDK_OBJECT;
+	cfg->core.core_id = OCF_CORE_MAX;
 
 	cfg->device.uuid.size = strlen(vbdev->cache.name) + 1;
 	cfg->device.uuid.data = vbdev->cache.name;
@@ -832,21 +899,36 @@ vbdev_ocf_module_fini(void)
 }
 
 /* When base device gets unpluged this is called
- * We will unregister cache vbdev here */
+ * We will unregister cache vbdev here
+ * When cache device is removed, we delete every OCF bdev that used it */
 static void
 hotremove_cb(void *ctx)
 {
 	struct vbdev_ocf_base *base = ctx;
-	struct spdk_bdev *bdev = base->bdev;
+	struct vbdev_ocf *vbdev;
 
-	if (base->parent->state.doing_finish) {
+	if (!base->is_cache) {
+		if (base->parent->state.doing_finish) {
+			return;
+		}
+
+		SPDK_NOTICELOG("Deinitializing '%s' because its core device '%s' was removed\n",
+			       base->parent->name, base->name);
+		vbdev_ocf_delete(base->parent);
 		return;
 	}
 
-	SPDK_NOTICELOG("Deinitializing '%s' because its %s device '%s' was removed\n",
-		       base->parent->name, base->is_cache ? "cache" : "core", bdev->name);
-
-	vbdev_ocf_delete(base->parent);
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (vbdev->state.doing_finish) {
+			continue;
+		}
+		if (strcmp(base->name, vbdev->cache.name) == 0) {
+			SPDK_NOTICELOG("Deinitializing '%s' because"
+				       " its cache device '%s' was removed\n",
+				       vbdev->name, base->name);
+			vbdev_ocf_delete(vbdev);
+		}
+	}
 }
 
 /* Open base SPDK bdev and claim it */
@@ -857,6 +939,17 @@ attach_base(struct vbdev_ocf_base *base)
 
 	if (base->attached) {
 		return -EALREADY;
+	}
+
+	/* If base cache bdev was already opened by other vbdev,
+	 * we just copy its descriptor here */
+	if (base->is_cache) {
+		struct vbdev_ocf_base *existing = get_other_cache_base(base);
+		if (existing) {
+			base->desc = existing->desc;
+			base->attached = true;
+			return 0;
+		}
 	}
 
 	status = spdk_bdev_open(base->bdev, true, hotremove_cb, base, &base->desc);
@@ -954,7 +1047,7 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
 			create_from_bdevs(vbdev, bdev, NULL);
-			break;
+			continue;
 		}
 		if (!strcmp(bdev_name, vbdev->core.name)) {
 			create_from_bdevs(vbdev, NULL, bdev);
