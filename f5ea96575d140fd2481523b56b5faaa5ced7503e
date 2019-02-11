@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f6060ec_a3625aa5",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-11T07:50:02Z",
+      "side": 1,
+      "message": "You can use SPDK_SEC_TO_USEC defined in util.h.",
+      "revId": "f5ea96575d140fd2481523b56b5faaa5ced7503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
