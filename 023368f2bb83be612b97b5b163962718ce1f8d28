@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ca6212b_07081643",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1817,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T00:20:40Z",
+      "side": 1,
+      "message": "Sorry, this logic is not clear to me.\nWhat you want to do is to get the minimum of max_sge of all ibv devices and should be the following?\n\nmax_device_sge \u003d SPDK_NVMF_MAX_SGL_ENTRIES;\n\n(snip)\n\nwhile (contexts[i] !\u003d NULL) {\n  device \u003d calloc();\n  device-\u003econtext \u003d context[i]:\n  ibv_query_device(device-\u003econtext, \u0026device-\u003eattr);\n  max_device_sge \u003d spdk_min(max_device_sge, device-\u003eattr.max_sge);\n}\n\nif (opts-\u003eio_unit_size * max_device_sge \u003c opts-\u003emax_io_size) {",
+      "range": {
+        "startLine": 1817,
+        "startChar": 2,
+        "endLine": 1817,
+        "endChar": 77
+      },
+      "revId": "023368f2bb83be612b97b5b163962718ce1f8d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
