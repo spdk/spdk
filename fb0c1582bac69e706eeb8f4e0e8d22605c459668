@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "410a95f7_819ae92c",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 2113,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-11T07:34:07Z",
+      "side": 1,
+      "message": "There is performance issue if we sent all the IOs to the subsystem\u0027s thread first, do you have any better ideas ?  Can a atomic flag be helpful to judge the subsystem is persistent enabled or not ?",
+      "revId": "fb0c1582bac69e706eeb8f4e0e8d22605c459668",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
