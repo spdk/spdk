@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3308a90f_3d34337b",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 278,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-11T19:53:58Z",
+      "side": 1,
+      "message": "The first part of this ERRLOG is incorrect - but this was also incorrect in the original code. I think the (target-\u003eio_size_blocks \u003d\u003d 0) part can just be removed, or changed to (g_io_size \u003d\u003d 0).  But probably g_io_size \u003d\u003d 0 check should be up front when args are originally parsed.\n\nPlease don\u0027t change this patch - it is fine.  We can make these other changes later.",
+      "revId": "a858be33f4c801405cc4eaa7a22d62957ecb66c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
