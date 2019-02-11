@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3416919d_b63f075b",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 540,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-11T20:00:52Z",
+      "side": 1,
+      "message": "Should we avoid bdevperf_generate_dif() call if target-\u003edif_check_flags \u003d\u003d 0?  Maybe it avoids some extra overhead.  Or similar check could be in bdevperf_generate_dif if dif_check_flags \u003d\u003d 0.",
+      "revId": "e6b6693d10301aea1ce2cb0b39525378f77b6b17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
