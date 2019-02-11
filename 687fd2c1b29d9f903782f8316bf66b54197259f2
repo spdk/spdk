@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff457197_90de0ce7",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1220,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T09:50:02Z",
+      "side": 1,
+      "message": "I feel like this could be added in the previous patch where you added the same param to create_ctrlr. Those two patches could be actually squashed altogether. It\u0027s fine though, +2.",
+      "range": {
+        "startLine": 1220,
+        "startChar": 17,
+        "endLine": 1220,
+        "endChar": 28
+      },
+      "revId": "687fd2c1b29d9f903782f8316bf66b54197259f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
