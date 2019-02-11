@@ -71,13 +71,4 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  void *cb_ctx);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
-/**
- * Delete NVMe controller with all bdevs on top of it.
- * Requires to pass name of NVMe controller.
- *
- * \param name NVMe controller name
- * \return zero on success, -EINVAL on wrong parameters or -ENODEV if controller is not found
- */
-int spdk_bdev_nvme_delete(const char *name);
-
 #endif /* SPDK_BDEV_NVME_H */
