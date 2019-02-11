@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4047dbc3_8dbcdeab",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "There is montion that CRCTABLE disable ISAL option. I think you should check and exit with error if ISAL is enabled instead silently disabling it.",
+      "range": {
+        "startLine": 290,
+        "startChar": 24,
+        "endLine": 290,
+        "endChar": 38
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "82f96496_9696aafa",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "How much it is faster? If it is faster why not using it as default?",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 3
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b4b6fb7_0eab214c",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "pls chenge to\n\n  type\n  function_name(...) {\n\nhere and other places.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 37
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0371c833_e70a4e69",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "We can see that these tables are static and used in this implementation.\n\nCan you explain from where this algorithm is taken from?",
+      "range": {
+        "startLine": 72,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 3
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f491e02f_580e1eef",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "Values in `crc_table` don\u0027t have \u0027u\u0027 suffix, this table does. Pls choose one form.",
+      "range": {
+        "startLine": 114,
+        "startChar": 8,
+        "endLine": 114,
+        "endChar": 9
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a429f8d8_189e22b3",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 665,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "+ new line",
+      "range": {
+        "startLine": 664,
+        "startChar": 1,
+        "endLine": 665,
+        "endChar": 1
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42c21c0a_c651f2fa",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "+ new line",
+      "range": {
+        "startLine": 693,
+        "startChar": 1,
+        "endLine": 694,
+        "endChar": 1
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf4a4946_48d6c9a3",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "alignment",
+      "range": {
+        "startLine": 706,
+        "startChar": 0,
+        "endLine": 707,
+        "endChar": 55
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "61a9e141_098f17d4",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 711,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-11T07:33:51Z",
+      "side": 1,
+      "message": "\u0027)\u0027 ?",
+      "range": {
+        "startLine": 711,
+        "startChar": 8,
+        "endLine": 711,
+        "endChar": 9
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
