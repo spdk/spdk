@@ -44,7 +44,7 @@ struct vbdev_ocf_stats {
 	struct ocf_stats_errors errors;
 };
 
-int vbdev_ocf_stats_get(int cache_id, int core_id, struct vbdev_ocf_stats *stats);
+int vbdev_ocf_stats_get(ocf_cache_t cache, struct vbdev_ocf_stats *stats);
 
 void vbdev_ocf_stats_write_json(struct spdk_json_write_ctx *w, struct vbdev_ocf_stats *stats);
 
