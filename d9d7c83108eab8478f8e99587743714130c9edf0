@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f53b9ed2_749e7e09",
+        "filename": "autotest.sh",
+        "patchSetId": 30
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-11T15:52:35Z",
+      "side": 1,
+      "message": "I\u0027m not sure I understand the reason behind this. Why do we need to bind blacklisted devices to pci-stub? Should this also be done for devices blacklisted by the user (as opposed to those found by the above loop)?",
+      "revId": "d9d7c83108eab8478f8e99587743714130c9edf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
