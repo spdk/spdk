@@ -85,6 +85,23 @@
       "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b1777068_df08558b",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-11T20:57:10Z",
+      "side": 1,
+      "message": "I think I\u0027d rather make this (and the raid_common.sh changes) into a completely separate script for testing the RAID module.  I\u0027m concerned about adding test code that is specific to only one module into this generic blockdev.sh script.",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
