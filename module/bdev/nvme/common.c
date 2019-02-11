@@ -31,11 +31,14 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "spdk/env.h"
+#include "spdk/log.h"
 #include "common.h"
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
+/* All the controllers deleted by users via RPC are skipped by hotplug monitor */
+struct nvme_probe_skip_entries g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
+			g_skipped_nvme_ctrlrs);
 
 struct nvme_bdev_ctrlr *
 nvme_bdev_ctrlr_get(const struct spdk_nvme_transport_id *trid)
@@ -108,4 +111,70 @@ nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_w
 	if (trid->subnqn[0] != '\0') {
 		spdk_json_write_named_string(w, "subnqn", trid->subnqn);
 	}
+}
+
+void
+spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
+{
+	uint32_t i;
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
+	struct nvme_bdev *nvme_bdev;
+
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+		if (nvme_bdev_ctrlr->ctrlr == ctrlr) {
+			pthread_mutex_unlock(&g_bdev_nvme_mutex);
+
+			for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
+				uint32_t	nsid = i + 1;
+
+				nvme_bdev = &nvme_bdev_ctrlr->bdevs[nsid - 1];
+				if (nvme_bdev->active) {
+					assert(nvme_bdev->id == nsid);
+					spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
+				}
+			}
+
+			pthread_mutex_lock(&g_bdev_nvme_mutex);
+			assert(!nvme_bdev_ctrlr->destruct);
+			nvme_bdev_ctrlr->destruct = true;
+			if (nvme_bdev_ctrlr->ref == 0) {
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+				nvme_bdev_ctrlr->remove_fn(nvme_bdev_ctrlr);
+			} else {
+				pthread_mutex_unlock(&g_bdev_nvme_mutex);
+			}
+			return;
+		}
+	}
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
+int
+spdk_bdev_nvme_delete(const char *name)
+{
+	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr = NULL;
+	struct nvme_probe_skip_entry *entry;
+
+	if (name == NULL) {
+		return -EINVAL;
+	}
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
+	if (nvme_bdev_ctrlr == NULL) {
+		SPDK_ERRLOG("Failed to find NVMe controller\n");
+		return -ENODEV;
+	}
+
+	if (nvme_bdev_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		entry = calloc(1, sizeof(*entry));
+		if (!entry) {
+			return -ENOMEM;
+		}
+		entry->trid = nvme_bdev_ctrlr->trid;
+		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
+	}
+
+	spdk_bdev_nvme_delete_cb(NULL, nvme_bdev_ctrlr->ctrlr);
+	return 0;
 }
