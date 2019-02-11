@@ -16,6 +16,24 @@
       "revId": "1cda8666a27a2626a153a1ae444e2f6be7d57ec8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "91aefadd_569c9c10",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 765,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T00:00:11Z",
+      "side": 1,
+      "message": "Thank you for very clear explanation. Done",
+      "parentUuid": "7c548392_8e044531",
+      "revId": "1cda8666a27a2626a153a1ae444e2f6be7d57ec8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
