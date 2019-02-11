@@ -55,7 +55,7 @@ function usage()
 	echo "                  By default the current user will be used."
 	echo "DRIVER_OVERRIDE   Disable automatic vfio-pci/uio_pci_generic selection and forcefully"
 	echo "                  bind devices to the given driver."
-	echo "                  E.g. DRIVER_OVERRIDE=uio_pci_generic or DRIVER_OVERRIDE=vfio-pci"
+	echo "                  E.g. DRIVER_OVERRIDE=uio_pci_generic or DRIVER_OVERRIDE=/home/public/dpdk/build/kmod/igb_uio.ko"
 	exit 0
 }
 
@@ -168,17 +168,38 @@ function get_virtio_names_from_bdf {
 
 function configure_linux_pci {
 	if [ -z "${DRIVER_OVERRIDE}" ]; then
-		driver_name=vfio-pci
+		driver_path=vfio-pci
 		if [ -z "$(ls /sys/kernel/iommu_groups)" ]; then
 			# No IOMMU. Use uio.
-			driver_name=uio_pci_generic
+			if ! find "/lib/modules/`uname -r`" | grep -q uio_pci_generic; then
+				driver_path="$rootdir/dpdk/build/kmod/igb_uio.ko"
+				if [ -f $driver_path ]; then
+
+					modprobe uio
+				else
+					echo "No valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please either enable the vfio-pci or uio_pci_generic"
+					echo "kernel modules, or have SPDK build the igb_uio driver by running ./configure --with-igb-uio-driver and recompiling."
+					return 1
+				fi
+			else
+				driver_path=uio_pci_generic
+			fi
 		fi
 	else
-		driver_name="${DRIVER_OVERRIDE}"
+		driver_path="${DRIVER_OVERRIDE}"
 	fi
 
+	# modprobe assumes the directory of the module. If the user passes in a path, we should use insmod
+	if echo $driver_path | grep -q '/'; then
+		insmod $driver_path 2>/dev/null || true
+	else
+		modprobe $driver_path
+	fi
+
+	temp=`basename $driver_path`
+	driver_name=${temp%.*}
+
 	# NVMe
-	modprobe $driver_name
 	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		blkname=''
 		get_nvme_name_from_bdf "$bdf" blkname
