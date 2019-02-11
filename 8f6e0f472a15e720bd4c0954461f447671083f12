@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "8378e593_1daa8d35",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T19:00:12Z",
+      "side": 1,
+      "message": "Do you need this read? Can\u0027t you just use OCSSD_PCI_DEVICES directly?",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "462d2673_7534894d",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 12
@@ -19,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e5ad1d49_e02cbc8c",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T19:00:12Z",
+      "side": 1,
+      "message": "I think that read on line 16 can fail. But I don\u0027t think that read is needed, so this could be moved back to the original spot.",
+      "parentUuid": "462d2673_7534894d",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64732005_254b6fc5",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 12
@@ -30,6 +65,30 @@
       "writtenOn": "2019-02-11T15:55:23Z",
       "side": 1,
       "message": "It\u0027s pretty ugly, it\u0027d be nice to have a function in autotest_common.sh  for that.",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 19
+      },
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "066d9e7e_ea520b25",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T19:00:12Z",
+      "side": 1,
+      "message": "I don\u0027t think the line gets to long if you write it like this:\n\nPCI_WHITELIST\u003d\"$device\" PCI_BLACKLIST\u003d\"\" DRIVER_OVERRIDE\u003d\"\" ./scripts/setup.sh",
+      "parentUuid": "64732005_254b6fc5",
       "range": {
         "startLine": 33,
         "startChar": 0,
