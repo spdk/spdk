@@ -12,6 +12,7 @@
 	g_trace_histories;
 	g_nvme_ctrlrs;
 	g_bdev_nvme_mutex;
+	g_skipped_nvme_ctrlrs;
 
 	local: *;
 };
