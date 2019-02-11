@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30111563_1fff38ad",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T12:39:27Z",
+      "side": 1,
+      "message": "since you\u0027re using an external type now, you might want to drop the extra \"\u003d 0\" to avoid problems when env_atomic gets refactored to a struct or pointer. There are no guarantees env_atomic will remain a primitive. That\u0027s typically why new types like that are introduced.",
+      "range": {
+        "startLine": 50,
+        "startChar": 39,
+        "endLine": 50,
+        "endChar": 43
+      },
+      "revId": "0b8cfd0f390371efb19c58f7e53ab82a396663e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
