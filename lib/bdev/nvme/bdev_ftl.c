@@ -114,6 +114,26 @@ static struct spdk_bdev_module g_ftl_if = {
 
 SPDK_BDEV_MODULE_REGISTER(ftl, &g_ftl_if)
 
+static void
+bdev_ftl_remove_ctrlr(struct nvme_bdev_ctrlr *ctrlr)
+{
+	pthread_mutex_lock(&g_bdev_nvme_mutex);
+
+	if (--ctrlr->ref == 0) {
+		if (spdk_nvme_detach(ctrlr->ctrlr)) {
+			SPDK_ERRLOG("Failed to detach the controller\n");
+			goto out;
+		}
+
+		TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
+		free(ctrlr->name);
+		free(ctrlr);
+		ctrlr = NULL;
+	}
+out:
+	pthread_mutex_unlock(&g_bdev_nvme_mutex);
+}
+
 static struct nvme_bdev_ctrlr *
 bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
 {
@@ -133,6 +153,8 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->ctrlr = ctrlr;
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
+		ftl_ctrlr->remove_fn = bdev_ftl_remove_ctrlr;
+		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
 
 		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
 		if (!ftl_ctrlr->name) {
@@ -148,25 +170,6 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 out:
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 	return ftl_ctrlr;
-}
-
-static void
-bdev_ftl_remove_ctrlr(struct nvme_bdev_ctrlr *ctrlr)
-{
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-
-	if (--ctrlr->ref == 0) {
-		if (spdk_nvme_detach(ctrlr->ctrlr)) {
-			SPDK_ERRLOG("Failed to detach the controller\n");
-			goto out;
-		}
-
-		TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
-		free(ctrlr->name);
-		free(ctrlr);
-	}
-out:
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
 static void
@@ -190,7 +193,10 @@ bdev_ftl_free_cb(struct spdk_ftl_dev *dev, void *ctx, int status)
 
 	spdk_io_device_unregister(ftl_bdev, NULL);
 
-	bdev_ftl_remove_ctrlr(ftl_bdev->nvme_bdev_ctrlr);
+	ctrlr = ftl_bdev->nvme_bdev_ctrlr;
+	if ((ctrlr->destruct) || (finish_done && g_finish_cb)) {
+		bdev_ftl_remove_ctrlr(ctrlr);
+	}
 
 	if (ftl_bdev->cache_bdev_desc) {
 		spdk_bdev_module_release_bdev(spdk_bdev_desc_get_bdev(ftl_bdev->cache_bdev_desc));
