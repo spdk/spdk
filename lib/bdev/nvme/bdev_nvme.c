@@ -943,6 +943,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	nvme_ctrlr->ctrlr = ctrlr;
 	nvme_ctrlr->ref = 0;
 	nvme_ctrlr->trid = *trid;
+	nvme_ctrlr->remove_fn = bdev_nvme_ctrlr_destruct;
 	nvme_ctrlr->name = strdup(name);
 	if (nvme_ctrlr->name == NULL) {
 		free(nvme_ctrlr->bdevs);
@@ -1001,46 +1002,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	free(name);
 }
 
-static void
-remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
-{
-	uint32_t i;
-	struct nvme_ctrlr *nvme_ctrlr;
-	struct nvme_bdev *nvme_bdev;
-
-	pthread_mutex_lock(&g_bdev_nvme_mutex);
-	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
-		if (nvme_ctrlr->ctrlr == ctrlr) {
-			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			for (i = 0; i < nvme_ctrlr->num_ns; i++) {
-				uint32_t	nsid = i + 1;
-
-				nvme_bdev = &nvme_ctrlr->bdevs[nsid - 1];
-				assert(nvme_bdev->id == nsid);
-				if (nvme_bdev->active) {
-					spdk_bdev_unregister(&nvme_bdev->disk, NULL, NULL);
-				}
-			}
-
-			pthread_mutex_lock(&g_bdev_nvme_mutex);
-			assert(!nvme_ctrlr->destruct);
-			nvme_ctrlr->destruct = true;
-			if (nvme_ctrlr->ref == 0) {
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-				bdev_nvme_ctrlr_destruct(nvme_ctrlr);
-			} else {
-				pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			}
-			return;
-		}
-	}
-	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-}
-
 static int
 bdev_nvme_hotplug(void *arg)
 {
-	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
+	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, spdk_bdev_nvme_delete_cb) != 0) {
 		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
 	}
 
@@ -1193,25 +1158,6 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 
 	*count = j;
 
-	return 0;
-}
-
-int
-spdk_bdev_nvme_delete(const char *name)
-{
-	struct nvme_ctrlr *nvme_ctrlr = NULL;
-
-	if (name == NULL) {
-		return -EINVAL;
-	}
-
-	nvme_ctrlr = spdk_nvme_ctrlr_get_by_name(name);
-	if (nvme_ctrlr == NULL) {
-		SPDK_ERRLOG("Failed to find NVMe controller\n");
-		return -ENODEV;
-	}
-
-	remove_cb(NULL, nvme_ctrlr->ctrlr);
 	return 0;
 }
 
