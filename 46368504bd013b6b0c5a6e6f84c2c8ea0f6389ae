@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "970a6c93_89262de9",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T13:08:20Z",
+      "side": 1,
+      "message": "If I were picky, I\u0027d say this suggests an error, but in reality everything\u0027s fine and we just skipped some extra work.\n\nI\u0027d probably prefer to see \"no driver -\u003e no driver\"",
+      "revId": "46368504bd013b6b0c5a6e6f84c2c8ea0f6389ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f46332e_fdd25b51",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T13:08:20Z",
+      "side": 1,
+      "message": "unrelated, but shouldn\u0027t we use pci_dev_echo here?",
+      "range": {
+        "startLine": 151,
+        "startChar": 1,
+        "endLine": 151,
+        "endChar": 6
+      },
+      "revId": "46368504bd013b6b0c5a6e6f84c2c8ea0f6389ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
