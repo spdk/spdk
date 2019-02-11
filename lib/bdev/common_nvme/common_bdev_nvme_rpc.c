@@ -278,3 +278,55 @@ invalid:
 	free_rpc_get_nvme_controllers(&req);
 }
 SPDK_RPC_REGISTER("get_nvme_controllers", spdk_rpc_get_nvme_controllers, SPDK_RPC_RUNTIME)
+
+struct rpc_delete_nvme {
+	char *name;
+};
+
+static void
+free_rpc_delete_nvme(struct rpc_delete_nvme *req)
+{
+	free(req->name);
+}
+
+static const struct spdk_json_object_decoder rpc_delete_nvme_decoders[] = {
+	{"name", offsetof(struct rpc_delete_nvme, name), spdk_json_decode_string},
+};
+
+static void
+spdk_rpc_delete_nvme_ctrlr(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_delete_nvme req = {NULL};
+	struct spdk_json_write_ctx *w;
+	int rc = 0;
+
+	if (spdk_json_decode_object(params, rpc_delete_nvme_decoders,
+				    SPDK_COUNTOF(rpc_delete_nvme_decoders),
+				    &req)) {
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_bdev_nvme_delete(req.name);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	free_rpc_delete_nvme(&req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+	free_rpc_delete_nvme(&req);
+}
+SPDK_RPC_REGISTER("delete_nvme_controller", spdk_rpc_delete_nvme_ctrlr, SPDK_RPC_RUNTIME)
