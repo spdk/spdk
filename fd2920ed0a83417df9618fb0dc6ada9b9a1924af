@@ -16,6 +16,24 @@
       "revId": "fd2920ed0a83417df9618fb0dc6ada9b9a1924af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be771514_59138c36",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1712,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T08:08:52Z",
+      "side": 1,
+      "message": "Umm, traditionally DIF has been used end-to-end data protection simply and I want to support that case first, is it OK for you to add this request to future enhancements as same as previous comments?",
+      "parentUuid": "bce3a8aa_311a8e29",
+      "revId": "fd2920ed0a83417df9618fb0dc6ada9b9a1924af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
