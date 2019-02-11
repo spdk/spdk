@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "330d218a_10c0d0a0",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T12:49:23Z",
+      "side": 1,
+      "message": "below",
+      "range": {
+        "startLine": 75,
+        "startChar": 15,
+        "endLine": 75,
+        "endChar": 21
+      },
+      "revId": "07d2c0f188b2520e4e4aed04e5319eaa48dfbfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcd93184_53020631",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 4
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-11T12:49:23Z",
+      "side": 1,
+      "message": "using",
+      "range": {
+        "startLine": 89,
+        "startChar": 33,
+        "endLine": 89,
+        "endChar": 39
+      },
+      "revId": "07d2c0f188b2520e4e4aed04e5319eaa48dfbfe5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
