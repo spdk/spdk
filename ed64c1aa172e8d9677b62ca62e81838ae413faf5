@@ -34,6 +34,24 @@
       "revId": "ed64c1aa172e8d9677b62ca62e81838ae413faf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3478a8b_7b69da6f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 806,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-11T22:39:46Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nI would like to confirm your idea before updating the patch.\n\nAre you saying that we inherit prchk_flags like the following and set prchk_flags directly to bdev-\u003edisk.dif_check_flags here?\n\nnvme_ctrlr_create_bdevs(nvme_ctrlr, prchk_flags)\n{\n\tfor_each (nsid) {\n\t\tnvme_ctrlr_create_bdev(nvme_ctrlr, nsid, prchk_flags);\n\t}\n}\n\nThen we will be able to remove prchk_flags from struct nvme_ctrlr.",
+      "parentUuid": "71f6a87a_db7feb0a",
+      "revId": "ed64c1aa172e8d9677b62ca62e81838ae413faf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
