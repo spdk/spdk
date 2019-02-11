@@ -52,6 +52,24 @@
       "revId": "ed64c1aa172e8d9677b62ca62e81838ae413faf5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36bb531a_002365c1",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 806,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T22:59:31Z",
+      "side": 1,
+      "message": "I misunderstood. I thought the prchk flags were coming from the NVMe controller. They\u0027re not though - they\u0027re set by the user.",
+      "parentUuid": "f3478a8b_7b69da6f",
+      "revId": "ed64c1aa172e8d9677b62ca62e81838ae413faf5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
