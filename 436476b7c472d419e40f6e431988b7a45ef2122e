@@ -49,6 +49,23 @@
     },
     {
       "key": {
+        "uuid": "0ecd7b6b_fa9fc907",
+        "filename": "configure",
+        "patchSetId": 2
+      },
+      "lineNbr": 392,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-11T18:52:42Z",
+      "side": 1,
+      "message": "This change isn\u0027t correct. Here\u0027s the output I get for each stage of the pipeline:\n\nnasm -v: NASM version 2.13.03 compiled on Feb 8 2018\nsed \u0027s/[^0-9]*//g\u0027: 2130382018\nawk \u0027{print substr ($0, 0, 5)}\u0027: 21303\n\nvs the new change of 6 characters which yields 213038, where 8 is part of the date instead of the version.\n\nBut looking at this, I\u0027m not sure why it was written this way to begin with. It is a lot simpler to flip the awk and the sed parts around to this:\n\nnasm -v | awk \u0027{print $3}\u0027 | sed \u0027s/[^0-9]*//g\u0027\n\nThen you don\u0027t need to worry about how many characters are in the version number.",
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "82f96496_9696aafa",
         "filename": "lib/util/crc16.c",
         "patchSetId": 2
