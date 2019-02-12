@@ -275,9 +275,8 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 	}
 	data_block_size = block_size - md_size;
 	target->io_size_blocks = g_io_size / data_block_size;
-	if (target->io_size_blocks == 0 || (g_io_size % data_block_size) != 0) {
-		SPDK_ERRLOG("IO size (%d) is bigger than data block size of bdev %s (%"PRIu32") or"
-			    " not a data block size multiple\n",
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
 			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
 		spdk_bdev_close(target->bdev_desc);
 		free(target->name);
