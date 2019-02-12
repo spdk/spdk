@@ -65,6 +65,7 @@ function usage()
 	echo " ocf                       Required to build OCF module."
 	echo "                           If argument is directory, interpret it as root of OCF repo"
 	echo "                           If argument is file, interpret it as compiled OCF lib"
+	echo "                           If no argument is specified, default OCF repository is used"
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
 	echo "                           No path required."
@@ -268,6 +269,10 @@ for i in "$@"; do
 			;;
 		--without-ftl)
 			CONFIG[FTL]=n
+			;;
+		--with-ocf)
+			CONFIG[OCF_PATH]=$(readlink -f "./ocf")
+			CONFIG[OCF]=y
 			;;
 		--with-ocf=*)
 			CONFIG[OCF]=y
