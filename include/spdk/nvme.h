@@ -2099,6 +2099,14 @@ spdk_nvme_ns_cmd_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * TODO: add description
+ */
+int
+spdk_nvme_ns_cmd_zone_append(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
+			     uint64_t slba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg, uint32_t io_flags);
+
+/**
  * \brief Inject an error for the next request with a given opcode.
  *
  * \param ctrlr NVMe controller.
