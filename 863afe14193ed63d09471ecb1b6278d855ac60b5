@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55a81762_a0713e62",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 985,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T17:56:59Z",
+      "side": 1,
+      "message": "explicit return not needed",
+      "revId": "863afe14193ed63d09471ecb1b6278d855ac60b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
