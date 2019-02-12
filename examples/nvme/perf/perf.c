@@ -1865,7 +1865,7 @@ int main(int argc, char **argv)
 
 	if (g_num_namespaces == 0) {
 		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
-		return 0;
+		goto cleanup;
 	}
 
 	rc = pthread_create(&thread_id, NULL, &nvme_poll_ctrlrs, NULL);
@@ -1903,7 +1903,7 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
-	if (pthread_cancel(thread_id) == 0) {
+	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
 	unregister_trids();
