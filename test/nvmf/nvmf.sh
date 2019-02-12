@@ -43,8 +43,6 @@ run_test suite test/nvmf/nmic/nmic.sh
 timing_exit host
 trap - SIGINT SIGTERM EXIT
 
-# TODO: enable nvme device detachment for multi-process so that
-#  we can use the stub for this test
 run_test suite test/nvmf/rpc/rpc.sh
 run_test suite test/nvmf/fio/fio.sh
 revert_soft_roce
