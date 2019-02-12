@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b3ab6c2f_d2c9118d",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T07:51:01Z",
+      "side": 1,
+      "message": "Not used. Can be removed.",
+      "range": {
+        "startLine": 206,
+        "startChar": 2,
+        "endLine": 206,
+        "endChar": 25
+      },
+      "revId": "f5d2b4b1e25974fc6a195b9bc5c5025a87b26369",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
