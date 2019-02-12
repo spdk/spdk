@@ -1,0 +1,153 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "235d6163_7b7a9b6a",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "I think you can move this part to identify.c.",
+      "range": {
+        "startLine": 860,
+        "startChar": 0,
+        "endLine": 876,
+        "endChar": 1
+      },
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "67f9b4b0_c8910271",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "You can remove this header file include to stdinc.h, BTW, do we need it?",
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b036eaa0_a0d8dd94",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "using the same code style, tab or space, I\u0027d prefer tab here.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 45,
+        "endChar": 27
+      },
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b11603f_a75b06bb",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "This part belongs to scsi_spec.h file.",
+      "range": {
+        "startLine": 58,
+        "startChar": 0,
+        "endLine": 63,
+        "endChar": 21
+      },
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69e97041_a8e16d98",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "I think you can move this part to the internal .h file.",
+      "range": {
+        "startLine": 167,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 2
+      },
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35592166_7b0998a1",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 612,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "Move this part to the example app which call the function.",
+      "range": {
+        "startLine": 523,
+        "startChar": 0,
+        "endLine": 612,
+        "endChar": 1
+      },
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "328e27f3_db3201c4",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 13
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T09:35:08Z",
+      "side": 1,
+      "message": "I think most of the code here belongs to opal.h file.",
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
