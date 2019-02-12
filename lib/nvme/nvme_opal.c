@@ -183,6 +183,274 @@ opal_finalize_and_send(struct spdk_opal_dev *dev, bool eod, spdk_opal_cb cb)
 	return opal_send_recv(dev, cb);
 }
 
+static size_t
+opal_response_parse_tiny(struct spdk_opal_resp_token *token,
+			 const uint8_t *pos)
+{
+	token->pos = pos;
+	token->len = 1;
+	token->width = OPAL_WIDTH_TINY;
+
+	if (pos[0] & SPDK_TINY_ATOM_SIGN_FLAG) {
+		token->type = OPAL_DTA_TOKENID_SINT;
+	} else {
+		token->type = OPAL_DTA_TOKENID_UINT;
+		token->stored.unsigned_num = pos[0] & SPDK_TINY_ATOM_DATA_MASK;
+	}
+
+	return token->len;
+}
+
+static size_t
+opal_response_parse_short(struct spdk_opal_resp_token *token,
+			  const uint8_t *pos)
+{
+	token->pos = pos;
+	token->len = (pos[0] & SPDK_SHORT_ATOM_LEN_MASK) + 1; /* plus 1-byte header */
+	token->width = OPAL_WIDTH_SHORT;
+
+	if (pos[0] & SPDK_SHORT_ATOM_BYTESTRING_FLAG) {
+		token->type = OPAL_DTA_TOKENID_BYTESTRING;
+	} else if (pos[0] & SPDK_SHORT_ATOM_SIGN_FLAG) {
+		token->type = OPAL_DTA_TOKENID_SINT;
+	} else {
+		uint64_t u_integer = 0;
+		size_t i, b = 0;
+
+		token->type = OPAL_DTA_TOKENID_UINT;
+		if (token->len > 9) {
+			SPDK_ERRLOG("uint64 with more than 8 bytes\n");
+			return -EINVAL;
+		}
+		for (i = token->len - 1; i > 0; i--) {
+			u_integer |= ((uint64_t)pos[i] << (8 * b));
+			b++;
+		}
+		token->stored.unsigned_num = u_integer;
+	}
+
+	return token->len;
+}
+
+static size_t
+opal_response_parse_medium(struct spdk_opal_resp_token *token,
+			   const uint8_t *pos)
+{
+	token->pos = pos;
+	token->len = (((pos[0] & SPDK_MEDIUM_ATOM_LEN_MASK) << 8) | pos[1]) + 2; /* plus 2-byte header */
+	token->width = OPAL_WIDTH_MEDIUM;
+
+	if (pos[0] & SPDK_MEDIUM_ATOM_BYTESTRING_FLAG) {
+		token->type = OPAL_DTA_TOKENID_BYTESTRING;
+	} else if (pos[0] & SPDK_MEDIUM_ATOM_SIGN_FLAG) {
+		token->type = OPAL_DTA_TOKENID_SINT;
+	} else {
+		token->type = OPAL_DTA_TOKENID_UINT;
+	}
+
+	return token->len;
+}
+
+static size_t
+opal_response_parse_long(struct spdk_opal_resp_token *token,
+			 const uint8_t *pos)
+{
+	token->pos = pos;
+	token->len = ((pos[1] << 16) | (pos[2] << 8) | pos[3]) + 4; /* plus 4-byte header */
+	token->width = OPAL_WIDTH_LONG;
+
+	if (pos[0] & SPDK_LONG_ATOM_BYTESTRING_FLAG) {
+		token->type = OPAL_DTA_TOKENID_BYTESTRING;
+	} else if (pos[0] & SPDK_LONG_ATOM_SIGN_FLAG) {
+		token->type = OPAL_DTA_TOKENID_SINT;
+	} else {
+		token->type = OPAL_DTA_TOKENID_UINT;
+	}
+
+	return token->len;
+}
+
+static size_t
+opal_response_parse_token(struct spdk_opal_resp_token *token,
+			  const uint8_t *pos)
+{
+	token->pos = pos;
+	token->len = 1;
+	token->type = OPAL_DTA_TOKENID_TOKEN;
+	token->width = OPAL_WIDTH_TOKEN;
+
+	return token->len;
+}
+
+static int
+opal_response_parse(const uint8_t *buf, size_t length,
+		    struct spdk_opal_resp_parsed *resp)
+{
+	const struct spdk_opal_header *hdr;
+	struct spdk_opal_resp_token *token_iter;
+	int num_entries = 0;
+	int total;
+	size_t token_length;
+	const uint8_t *pos;
+	uint32_t clen, plen, slen;
+
+	if (!buf || !resp) {
+		return -EINVAL;
+	}
+
+	hdr = (struct spdk_opal_header *)buf;
+	pos = buf;
+	pos += sizeof(*hdr);
+
+	clen = from_be32(&hdr->com_packet.length);
+	plen = from_be32(&hdr->packet.length);
+	slen = from_be32(&hdr->sub_packet.length);
+	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "Response size: cp: %u, pkt: %u, subpkt: %u\n",
+		      clen, plen, slen);
+
+	if (clen == 0 || plen == 0 || slen == 0 ||
+	    slen > IO_BUFFER_LENGTH - sizeof(*hdr)) {
+		SPDK_ERRLOG("Bad header length. cp: %u, pkt: %u, subpkt: %u\n",
+			    clen, plen, slen);
+		return -EINVAL;
+	}
+
+	if (pos > buf + length) {
+		return -EFAULT;
+	}
+
+	token_iter = resp->resp_tokens;
+	total = slen;
+
+	while (total > 0) {
+		if (pos[0] <= SPDK_TINY_ATOM_TYPE_MAX) { /* tiny atom */
+			token_length = opal_response_parse_tiny(token_iter, pos);
+		} else if (pos[0] <= SPDK_SHORT_ATOM_TYPE_MAX) { /* short atom */
+			token_length = opal_response_parse_short(token_iter, pos);
+		} else if (pos[0] <= SPDK_MEDIUM_ATOM_TYPE_MAX) { /* medium atom */
+			token_length = opal_response_parse_medium(token_iter, pos);
+		} else if (pos[0] <= SPDK_LONG_ATOM_TYPE_MAX) { /* long atom */
+			token_length = opal_response_parse_long(token_iter, pos);
+		} else { /* TOKEN */
+			token_length = opal_response_parse_token(token_iter, pos);
+		}
+
+		pos += token_length;
+		total -= token_length;
+		token_iter++;
+		num_entries++;
+	}
+
+	if (num_entries == 0) {
+		SPDK_ERRLOG("Couldn't parse response.\n");
+		return -EINVAL;
+	}
+	resp->num = num_entries;
+
+	return 0;
+}
+
+static inline bool
+opal_response_token_matches(const struct spdk_opal_resp_token *token,
+			    uint8_t match)
+{
+	if (!token ||
+	    token->type != OPAL_DTA_TOKENID_TOKEN ||
+	    token->pos[0] != match) {
+		SPDK_ERRLOG("Token not matching\n");
+		return false;
+	}
+	return true;
+}
+
+static const struct spdk_opal_resp_token *
+opal_response_get_token(const struct spdk_opal_resp_parsed *resp, int index)
+{
+	const struct spdk_opal_resp_token *token;
+
+	if (index >= resp->num) {
+		SPDK_ERRLOG("Token number doesn't exist: %d, resp: %d\n",
+			    index, resp->num);
+		return NULL;
+	}
+
+	token = &resp->resp_tokens[index];
+	if (token->len == 0) {
+		SPDK_ERRLOG("Token length must be non-zero\n");
+		return NULL;
+	}
+
+	return token;
+}
+
+static uint64_t
+opal_response_get_u64(const struct spdk_opal_resp_parsed *resp, int index)
+{
+	if (!resp) {
+		SPDK_ERRLOG("Response is NULL\n");
+		return 0;
+	}
+
+	if (resp->resp_tokens[index].type != OPAL_DTA_TOKENID_UINT) {
+		SPDK_ERRLOG("Token is not unsigned int: %d\n",
+			    resp->resp_tokens[index].type);
+		return 0;
+	}
+
+	if (!(resp->resp_tokens[index].width == OPAL_WIDTH_TINY ||
+	      resp->resp_tokens[index].width == OPAL_WIDTH_SHORT)) {
+		SPDK_ERRLOG("Atom is not short or tiny: %d\n",
+			    resp->resp_tokens[index].width);
+		return 0;
+	}
+
+	return resp->resp_tokens[index].stored.unsigned_num;
+}
+
+static int
+opal_response_status(const struct spdk_opal_resp_parsed *resp)
+{
+	const struct spdk_opal_resp_token *tok;
+
+	/* if we get an EOS token, just return 0 */
+	tok = opal_response_get_token(resp, 0);
+	if (opal_response_token_matches(tok, SPDK_OPAL_ENDOFSESSION)) {
+		return 0;
+	}
+
+	if (resp->num < 5) {
+		return SPDK_DTAERROR_NO_METHOD_STATUS;
+	}
+
+	tok = opal_response_get_token(resp, resp->num - 5); /* the first token should be STARTLIST */
+	if (!opal_response_token_matches(tok, SPDK_OPAL_STARTLIST)) {
+		return SPDK_DTAERROR_NO_METHOD_STATUS;
+	}
+
+	tok = opal_response_get_token(resp, resp->num - 1); /* the last token should be ENDLIST */
+	if (!opal_response_token_matches(tok, SPDK_OPAL_ENDLIST)) {
+		return SPDK_DTAERROR_NO_METHOD_STATUS;
+	}
+
+	/* The second and third values in the status list are reserved, and are
+	defined in core spec to be 0x00 and 0x00 and SHOULD be ignored by the host. */
+	return (int)opal_response_get_u64(resp,
+					  resp->num - 4); /* We only need the first value in the status list. */
+}
+
+static int
+opal_parse_and_check_status(struct spdk_opal_dev *dev)
+{
+	int error;
+
+	error = opal_response_parse(dev->resp, IO_BUFFER_LENGTH, &dev->parsed_resp);
+	if (error) {
+		SPDK_ERRLOG("Couldn't parse response.\n");
+		return error;
+	}
+	return opal_response_status(&dev->parsed_resp);
+}
+
 static inline void
 opal_clear_cmd(struct spdk_opal_dev *dev)
 {
@@ -458,7 +726,7 @@ opal_end_session_cb(struct spdk_opal_dev *dev)
 {
 	dev->hsn = 0;
 	dev->tsn = 0;
-	return 0;
+	return opal_parse_and_check_status(dev);
 }
 
 static int
