@@ -113,6 +113,15 @@ struct nvme_io_channel {
 	uint64_t		end_ticks;
 };
 
+struct nvme_probe_ctx {
+	size_t count;
+	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
+	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
+	const char *names[NVME_MAX_CONTROLLERS];
+	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
+	const char *hostnqn;
+};
+
 struct nvme_ctrlr *spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid);
 struct nvme_ctrlr *spdk_nvme_ctrlr_get_by_name(const char *name);
 
@@ -130,5 +139,7 @@ struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrl
 int spdk_bdev_nvme_delete(const char *name);
 void spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 void spdk_bdev_nvme_ctrlr_destruct(struct nvme_ctrlr *nvme_ctrlr);
+bool spdk_bdev_nvme_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			     struct spdk_nvme_ctrlr_opts *opts);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
