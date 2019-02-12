@@ -33,6 +33,7 @@
 
 #include "spdk/env.h"
 #include "spdk/log.h"
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 #include "common_bdev_nvme.h"
 
@@ -41,6 +42,7 @@ pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 /* All the controllers deleted by users via RPC are skipped by hotplug monitor */
 TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
 			g_skipped_nvme_ctrlrs);
+static int g_hot_insert_nvme_controller_index = 0;
 
 struct nvme_ctrlr *
 spdk_nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
@@ -207,4 +209,38 @@ spdk_bdev_nvme_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	}
 
 	return true;
+}
+
+void
+spdk_bdev_nvme_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			 struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct nvme_probe_ctx *ctx = cb_ctx;
+	char *name = NULL;
+	uint32_t prchk_flags = 0;
+	size_t i;
+
+	assert(ctx->create_ctrlr_fn != NULL);
+
+	if (ctx->count > 0) {
+		for (i = 0; i < ctx->count; i++) {
+			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+				prchk_flags = ctx->prchk_flags[i];
+				name = strdup(ctx->names[i]);
+				break;
+			}
+		}
+	} else {
+		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
+	}
+	if (!name) {
+		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
+		return;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
+
+	ctx->create_ctrlr_fn(ctrlr, name, trid, prchk_flags);
+
+	free(name);
 }
