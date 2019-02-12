@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab838504_d7314283",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T08:04:37Z",
+      "side": 1,
+      "message": "Can we drop \"nofity_\" prefix?",
+      "range": {
+        "startLine": 52,
+        "startChar": 10,
+        "endLine": 52,
+        "endChar": 17
+      },
+      "revId": "7939083b035381bf5ea0afdb197ab76da748fd2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca33cafe_51914cea",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T08:04:37Z",
+      "side": 1,
+      "message": "I think that sending this even should be done in the destruct callback. after removing this bdev from g_malloc_disks list.\n\nThis is not so important for malloc bdev\u0027s but will be for other kind of bdevs when real destruction of bdev might take place after some time from the point where delete was called. Also will simplify implementing hotremove path.",
+      "range": {
+        "startLine": 471,
+        "startChar": 0,
+        "endLine": 472,
+        "endChar": 26
+      },
+      "revId": "7939083b035381bf5ea0afdb197ab76da748fd2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da095de1_3bf23705",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T08:04:37Z",
+      "side": 1,
+      "message": "Just wondering if we need these macros. Maybe we should return to the first patch and remove them. Then move event\u0027s registration to bdev (or module) initialization function. Don\u0027t know if we wan\u0027t (need?) to send events before we load configuration.",
+      "range": {
+        "startLine": 546,
+        "startChar": 0,
+        "endLine": 547,
+        "endChar": 53
+      },
+      "revId": "7939083b035381bf5ea0afdb197ab76da748fd2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
