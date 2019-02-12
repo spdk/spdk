@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42b6400d_b4ff23cc",
+        "filename": "lib/bdev/aio/bdev_aio.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T19:40:47Z",
+      "side": 1,
+      "message": "should this be \u003c\u003d\n\nif head + count runs right up to the end of the ring, we can still do the memcpy in one shot",
+      "revId": "c58c4c9ce58e4b94831b3808d91b1ed413f76887",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
