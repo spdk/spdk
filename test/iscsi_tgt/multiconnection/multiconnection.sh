@@ -34,7 +34,6 @@ set -e
 timing_enter multiconnection
 
 timing_enter start_iscsi_tgt
-# Start the iSCSI target without using stub.
 $ISCSI_APP --wait-for-rpc &
 iscsipid=$!
 echo "iSCSI target launched. pid: $iscsipid"
