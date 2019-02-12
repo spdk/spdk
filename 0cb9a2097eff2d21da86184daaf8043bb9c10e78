@@ -1,0 +1,349 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e63600b2_113301ed",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "Since you removed try-except for JSONRPCException from ui_commands then probably this is the line which now catches JSONRPCException.\n\nYou should add another try-except just for the JSONRPCException and leave the \"except Exception\" as a second catch, just in case any other exception occurs.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 42
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3027e2f0_640a5462",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "Mixed feelings about this.\nGenerally this removes some repetitive lines, which is good, but also causes unnecessary get_* RPC calls.\n\nFor example: doing just \"cd /bdevs\" will refresh the whole tree twice. Setting debug level with \"set global loglevel_console\u003ddebug\" also refreshes the whole tree.\n\nAdditionally - this should be described in commit message.",
+      "range": {
+        "startLine": 45,
+        "startChar": 0,
+        "endLine": 47,
+        "endChar": 31
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76d3a9ed_f09368c0",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "Commit says:\n\n\u003e Move try-catch sections from particular commands to\nexecute_command method.\n\nYet there is still try-catch in this command.",
+      "range": {
+        "startLine": 113,
+        "startChar": 0,
+        "endLine": 116,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88ba3efe_c3895e91",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113",
+      "range": {
+        "startLine": 139,
+        "startChar": 0,
+        "endLine": 142,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c98a9c00_e72357e1",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113",
+      "range": {
+        "startLine": 288,
+        "startChar": 0,
+        "endLine": 291,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0088d59b_ba19cee5",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 129,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "062cc52f_73260b37",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 324,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 321,
+        "startChar": 0,
+        "endLine": 324,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85b7ac53_18c1d992",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 393,
+        "startChar": 0,
+        "endLine": 396,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f09f36db_323b71a7",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 543,
+        "startChar": 0,
+        "endLine": 546,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6213c07d_3c114ab2",
+        "filename": "scripts/spdkcli/ui_node_iscsi.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 585,
+        "startChar": 0,
+        "endLine": 588,
+        "endChar": 55
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01b35d1b_542d2d72",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 106,
+        "startChar": 0,
+        "endLine": 109,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fcfb795_115341aa",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 213,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 210,
+        "startChar": 0,
+        "endLine": 213,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26b322b6_bd225741",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 248,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "Please try not to break lines on opening parentheses.\nIf you want to break it into two lines - how about breaking after first param?",
+      "range": {
+        "startLine": 247,
+        "startChar": 0,
+        "endLine": 248,
+        "endChar": 53
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b854e0a5_da60caab",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 273,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 270,
+        "startChar": 0,
+        "endLine": 273,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0e8d2fb_00560707",
+        "filename": "scripts/spdkcli/ui_node_nvmf.py",
+        "patchSetId": 18
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T10:18:34Z",
+      "side": 1,
+      "message": "as line 113 in ui_node.py",
+      "range": {
+        "startLine": 335,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 47
+      },
+      "revId": "0cb9a2097eff2d21da86184daaf8043bb9c10e78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
