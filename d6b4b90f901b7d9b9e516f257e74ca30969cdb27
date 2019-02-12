@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9534f832_d73e0845",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1008,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T01:25:46Z",
+      "side": 1,
+      "message": "I understood the reason why you don\u0027t check return code here is that we only have to check if probe_ctx-\u003einit_ctrlrs is NULL.",
+      "range": {
+        "startLine": 1008,
+        "startChar": 3,
+        "endLine": 1008,
+        "endChar": 27
+      },
+      "revId": "d6b4b90f901b7d9b9e516f257e74ca30969cdb27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a46246d2_c84e9912",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T01:25:46Z",
+      "side": 1,
+      "message": "I don\u0027t think break is necessary. we can do like the following instead?\n\nctrlr \u003d TAILQ_FIRST(\u0026probe_ctx-\u003einit_ctrlrs);\nif (ctrlr !\u003d NULL) {\n  nvme_ctrlr_poll_internal(ctrlr, probe_ctx);\n}",
+      "range": {
+        "startLine": 1009,
+        "startChar": 3,
+        "endLine": 1009,
+        "endChar": 8
+      },
+      "revId": "d6b4b90f901b7d9b9e516f257e74ca30969cdb27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
