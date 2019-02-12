@@ -45,6 +45,30 @@
       "revId": "d6b4b90f901b7d9b9e516f257e74ca30969cdb27",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "126e5df3_56199f36",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1009,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T04:16:52Z",
+      "side": 1,
+      "message": "Thanks Shuhei, I will remove the break here, but still keep the TAILQ_FOREACH_SAFE part so that every controller in the list can have a chance to be moved to the next status.",
+      "parentUuid": "a46246d2_c84e9912",
+      "range": {
+        "startLine": 1009,
+        "startChar": 3,
+        "endLine": 1009,
+        "endChar": 8
+      },
+      "revId": "d6b4b90f901b7d9b9e516f257e74ca30969cdb27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
