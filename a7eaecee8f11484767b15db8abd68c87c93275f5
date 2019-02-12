@@ -16,6 +16,24 @@
       "revId": "a7eaecee8f11484767b15db8abd68c87c93275f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d3f7eb4_4a32e4b2",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T08:56:21Z",
+      "side": 1,
+      "message": "This is normal performance sensitive path and must be compatible with current SPDK.\n\nWe can rely on hardware if we enable PRCHK.\n\nWe don\u0027t have to verify PI error by software if we don\u0027t enable PRCHK because user don\u0027t request PI error is detected.",
+      "parentUuid": "75fdcbf8_a0770e5e",
+      "revId": "a7eaecee8f11484767b15db8abd68c87c93275f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
