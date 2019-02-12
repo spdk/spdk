@@ -94,6 +94,15 @@ struct nvme_probe_skip_entry {
 	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
 };
 
+struct nvme_probe_ctx {
+	size_t count;
+	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
+	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
+	const char *names[NVME_MAX_CONTROLLERS];
+	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
+	const char *hostnqn;
+};
+
 struct nvme_bdev_construct_opts {
 	/* NVMe controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
@@ -142,5 +151,7 @@ void nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid,
 int spdk_bdev_nvme_delete(const char *name);
 void spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 void spdk_bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
+bool spdk_bdev_nvme_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			     struct spdk_nvme_ctrlr_opts *opts);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
