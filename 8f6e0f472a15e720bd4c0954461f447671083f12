@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "8d5c574f_02e420c4",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-12T07:42:08Z",
+      "side": 1,
+      "message": "Couldn\u0027t you do something like device\u003d$(cut -d\u0027 \u0027 -f1 \u003c\u003c\u003c \"$OCSSD_PCI_DEVICES\")? That way the set -e can be left where it was.",
+      "parentUuid": "962cf7ae_8c8de5a7",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "462d2673_7534894d",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 12
@@ -90,6 +108,24 @@
     },
     {
       "key": {
+        "uuid": "5bff2573_8d700624",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-12T07:42:08Z",
+      "side": 1,
+      "message": "I think it\u0027s a good practice to have it on top of the file, to be sure that all the statements were successful. I\u0027d rather leave \"set -e\" on top and just use \"set +e\" / \"set -e\" to exclude some statements.",
+      "parentUuid": "ad530e3b_63312c50",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "64732005_254b6fc5",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 12
@@ -125,6 +161,30 @@
       "side": 1,
       "message": "I don\u0027t think the line gets to long if you write it like this:\n\nPCI_WHITELIST\u003d\"$device\" PCI_BLACKLIST\u003d\"\" DRIVER_OVERRIDE\u003d\"\" ./scripts/setup.sh",
       "parentUuid": "64732005_254b6fc5",
+      "range": {
+        "startLine": 33,
+        "startChar": 0,
+        "endLine": 36,
+        "endChar": 19
+      },
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ff435d4_95f02c3c",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-12T07:42:08Z",
+      "side": 1,
+      "message": "Yeah, maybe it\u0027s a bit too much to create a function for this, but I strongly prefer that notation.",
+      "parentUuid": "066d9e7e_ea520b25",
       "range": {
         "startLine": 33,
         "startChar": 0,
