@@ -2091,6 +2091,26 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     uint16_t apptag_mask, uint16_t apptag);
 
 /**
+ * Submit a zone management request to the specified NVMe namespace. Zone
+ * management operations are designed to modify the state of the zone (e.g.
+ * finish / close it to reclaim resources, reset it to reuse it for further
+ * writes, etc.).
+ *
+ * \param ns NVMe namespace to submit the request
+ * \param qpair I/O queue pair to submit the request
+ * \param slba Zone starting LBA
+ * \param action Action to be performed (finish, reset, etc.)
+ * \param cb_fn Callback function to invoke once the command is completed
+ * \param cb_arg Argument to pass to the callback function
+ *
+ * \return 0 if successfully submitted, negative errno otherwise
+ */
+int
+spdk_nvme_ns_cmd_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				 uint64_t slba, enum spdk_nvme_zone_action action,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * \brief Inject an error for the next request with a given opcode.
  *
  * \param ctrlr NVMe controller.

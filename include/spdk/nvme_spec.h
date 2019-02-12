@@ -610,6 +610,15 @@ enum spdk_nvme_generic_command_status_code {
 	SPDK_NVME_SC_NAMESPACE_NOT_READY		= 0x82,
 	SPDK_NVME_SC_RESERVATION_CONFLICT               = 0x83,
 	SPDK_NVME_SC_FORMAT_IN_PROGRESS                 = 0x84,
+
+	SPDK_NVME_SC_ZONE_BOUNDARY_ERROR		= 0x85,
+	SPDK_NVME_SC_ZONE_FULL				= 0x86,
+	SPDK_NVME_SC_ZONE_READ_ONLY			= 0x87,
+	SPDK_NVME_SC_ZONE_OFFLINE			= 0x88,
+	SPDK_NVME_SC_ZONE_INVALID_WRITE			= 0x89,
+	SPDK_NVME_SC_ZONE_EARLY_FINISH			= 0x8a,
+	SPDK_NVME_SC_ZONE_TOO_MANY_ACTIVE		= 0x8b,
+	SPDK_NVME_SC_ZONE_TOO_MANY_OPEN			= 0x8c,
 };
 
 /**
@@ -655,6 +664,9 @@ enum spdk_nvme_command_specific_status_code {
 	SPDK_NVME_SC_CONFLICTING_ATTRIBUTES		= 0x80,
 	SPDK_NVME_SC_INVALID_PROTECTION_INFO		= 0x81,
 	SPDK_NVME_SC_ATTEMPTED_WRITE_TO_RO_PAGE		= 0x82,
+
+	/* TODO: should this be the same as above? */
+	SPDK_NVME_SC_INVALID_STATE_CHANGE		= 0x82,
 };
 
 /**
@@ -744,6 +756,8 @@ enum spdk_nvme_nvm_opcode {
 
 	SPDK_NVME_OPC_RESERVATION_ACQUIRE		= 0x11,
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
+
+	SPDK_NVME_OPC_ZONE_MANAGEMENT			= 0x1c,
 };
 
 /**
@@ -832,6 +846,14 @@ enum spdk_nvme_dsm_attribute {
 	SPDK_NVME_DSM_ATTR_INTEGRAL_READ		= 0x1,
 	SPDK_NVME_DSM_ATTR_INTEGRAL_WRITE		= 0x2,
 	SPDK_NVME_DSM_ATTR_DEALLOCATE			= 0x4,
+};
+
+/** Zone Action for ZONE MANAGEMENT command. */
+enum spdk_nvme_zone_action {
+	SPDK_NVME_ZONE_ACTION_CLOSE			= 0x1,
+	SPDK_NVME_ZONE_ACTION_FINISH			= 0x2,
+	SPDK_NVME_ZONE_ACTION_OPEN			= 0x3,
+	SPDK_NVME_ZONE_ACTION_RESET			= 0x4,
 };
 
 struct spdk_nvme_power_state {
