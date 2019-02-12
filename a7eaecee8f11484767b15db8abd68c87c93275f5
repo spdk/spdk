@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75fdcbf8_a0770e5e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1600,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-12T08:43:57Z",
+      "side": 1,
+      "message": "From my understanding, we should do the verification for the successful IO commands too.",
+      "revId": "a7eaecee8f11484767b15db8abd68c87c93275f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
