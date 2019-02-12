@@ -117,7 +117,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor";
-	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
 
