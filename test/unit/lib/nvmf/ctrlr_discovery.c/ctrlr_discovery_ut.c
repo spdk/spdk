@@ -135,12 +135,6 @@ spdk_nvmf_tgt_get_transport(struct spdk_nvmf_tgt *tgt, enum spdk_nvme_transport_
 	return &g_transport;
 }
 
-bool
-spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	return false;
-}
-
 int
 spdk_nvme_transport_id_parse_trtype(enum spdk_nvme_transport_type *trtype, const char *str)
 {
