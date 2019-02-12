@@ -1537,13 +1537,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
-	req->timed_out = false;
-	if (spdk_unlikely(rqpair->qpair.ctrlr->timeout_enabled)) {
-		req->submit_tick = spdk_get_ticks();
-	} else {
-		req->submit_tick = 0;
-	}
-
 	wr = &rdma_req->send_wr;
 
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
