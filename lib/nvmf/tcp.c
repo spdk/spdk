@@ -2712,19 +2712,6 @@ spdk_nvmf_tcp_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return 0;
 }
 
-static bool
-spdk_nvmf_tcp_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	struct spdk_nvmf_tcp_qpair *tqpair;
-
-	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
-	if (tqpair->state_cntr[TCP_REQUEST_STATE_FREE] == tqpair->max_queue_depth) {
-		return true;
-	}
-
-	return false;
-}
-
 static int
 spdk_nvmf_tcp_qpair_get_trid(struct spdk_nvmf_qpair *qpair,
 			     struct spdk_nvme_transport_id *trid, bool peer)
@@ -2840,7 +2827,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_tcp = {
 	.req_complete = spdk_nvmf_tcp_req_complete,
 
 	.qpair_fini = spdk_nvmf_tcp_close_qpair,
-	.qpair_is_idle = spdk_nvmf_tcp_qpair_is_idle,
 	.qpair_get_local_trid = spdk_nvmf_tcp_qpair_get_local_trid,
 	.qpair_get_peer_trid = spdk_nvmf_tcp_qpair_get_peer_trid,
 	.qpair_get_listen_trid = spdk_nvmf_tcp_qpair_get_listen_trid,

@@ -359,32 +359,6 @@ test_nvmf_tcp_poll_group_create(void)
 	spdk_thread_exit(thread);
 }
 
-static void
-test_nvmf_tcp_qpair_is_idle(void)
-{
-	struct spdk_nvmf_tcp_qpair tqpair;
-
-	memset(&tqpair, 0, sizeof(tqpair));
-
-	/* case 1 */
-	tqpair.max_queue_depth = 0;
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 0;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == true);
-
-	/* case 2 */
-	tqpair.max_queue_depth = UT_MAX_QUEUE_DEPTH;
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 0;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == false);
-
-	/* case 3 */
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 1;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == false);
-
-	/* case 4 */
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = UT_MAX_QUEUE_DEPTH;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == true);
-}
-
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -403,8 +377,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "nvmf_tcp_create", test_nvmf_tcp_create) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_destroy", test_nvmf_tcp_destroy) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_qpair_is_idle", test_nvmf_tcp_qpair_is_idle) == NULL
+		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

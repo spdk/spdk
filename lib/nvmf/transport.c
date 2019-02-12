@@ -288,12 +288,6 @@ spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 	qpair->transport->ops->qpair_fini(qpair);
 }
 
-bool
-spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	return qpair->transport->ops->qpair_is_idle(qpair);
-}
-
 int
 spdk_nvmf_transport_qpair_get_peer_trid(struct spdk_nvmf_qpair *qpair,
 					struct spdk_nvme_transport_id *trid)

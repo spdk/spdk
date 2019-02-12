@@ -96,12 +96,6 @@ spdk_nvmf_transport_listener_discover(struct spdk_nvmf_transport *transport,
 	entry->trtype = 42;
 }
 
-bool
-spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	return false;
-}
-
 static struct spdk_nvmf_transport g_transport = {};
 
 struct spdk_nvmf_transport *
