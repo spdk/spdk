@@ -34,6 +34,24 @@
       "revId": "e37b78472750b64a66dc68c70eddad85595864c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "695007c9_af59f3eb",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-12T17:16:07Z",
+      "side": 1,
+      "message": "On second thought, we can\u0027t enforce this in the destroy function. We need to destroy qpairs when we fail initialization, but can\u0027t call the normal path because it includes the thread safe check for a poll group which hasn\u0027t been assigned yet. So we can\u0027t know if we are disconnecting from a different thread and we just don\u0027t have the updated value for the group or if we are disconnecting from the initialization path. We are going to have to keep two paths. But at least this way, we avoid any contention after the qpair is initialized.",
+      "parentUuid": "92f83225_1aa7c21a",
+      "revId": "e37b78472750b64a66dc68c70eddad85595864c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
