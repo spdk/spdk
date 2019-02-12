@@ -2111,6 +2111,30 @@ spdk_nvme_ns_cmd_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair
 				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
 
 /**
+ * Submit a zone append request to the specified NVMe namespace. Zone append
+ * operations are designed to write data to a zone without specified the exact
+ * address it is to be placed within a zone.
+ *
+ * The address of the last sector written is returned in the completion entry in
+ * Dword 0 (bits 31:0) and Dword 1 (bits 63:32).
+ *
+ * \param ns NVMe namespace to submit the request
+ * \param qpair I/O queue pair to submit the request
+ * \param payload Virtual address pointer to the data payload
+ * \param slba Starting LBA of a zone to append to
+ * \param lba_count Length (in sectors) for the append operation
+ * \param cb_fn Callback function to invoke once the command is completed
+ * \param cb_arg Argument to pass to the callback function
+ * \param io_flags Set flags, defined in nvme_spec.h for this I/O
+ *
+ * \return 0 if successfully submitted, negative errno otherwise
+ */
+int
+spdk_nvme_ns_cmd_zone_append(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair, void *payload,
+			     uint64_t slba, uint32_t lba_count, spdk_nvme_cmd_cb cb_fn,
+			     void *cb_arg, uint32_t io_flags);
+
+/**
  * \brief Inject an error for the next request with a given opcode.
  *
  * \param ctrlr NVMe controller.

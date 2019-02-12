@@ -2059,7 +2059,7 @@ spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
 		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
-		      rsp->cid, rsp->cdw0, rsp->rsvd1,
+		      rsp->cid, rsp->cdw0, rsp->cdw1,
 		      *(uint16_t *)&rsp->status);
 
 	TAILQ_REMOVE(&qpair->outstanding, req, link);

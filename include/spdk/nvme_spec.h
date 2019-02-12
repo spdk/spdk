@@ -518,7 +518,7 @@ struct spdk_nvme_cpl {
 	uint32_t		cdw0;	/* command-specific */
 
 	/* dword 1 */
-	uint32_t		rsvd1;
+	uint32_t		cdw1;	/* command-specific */
 
 	/* dword 2 */
 	uint16_t		sqhd;	/* submission queue head pointer */
@@ -758,6 +758,7 @@ enum spdk_nvme_nvm_opcode {
 	SPDK_NVME_OPC_RESERVATION_RELEASE		= 0x15,
 
 	SPDK_NVME_OPC_ZONE_MANAGEMENT			= 0x1c,
+	SPDK_NVME_OPC_ZONE_APPEND			= 0x1d,
 };
 
 /**
