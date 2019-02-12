@@ -1903,7 +1903,7 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
-	if (pthread_cancel(thread_id) == 0) {
+	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
 	unregister_trids();
