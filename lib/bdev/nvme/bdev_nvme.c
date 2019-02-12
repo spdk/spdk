@@ -96,7 +96,6 @@ static struct spdk_bdev_nvme_opts g_opts = {
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
 #define NVME_HOTPLUG_POLL_PERIOD_DEFAULT		100000ULL
 
-static int g_hot_insert_nvme_controller_index = 0;
 static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT;
 static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
@@ -931,51 +930,22 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
-static void
-attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct nvme_probe_ctx *ctx = cb_ctx;
-	char *name = NULL;
-	uint32_t prchk_flags = 0;
-	size_t i;
-
-	if (ctx) {
-		for (i = 0; i < ctx->count; i++) {
-			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-				prchk_flags = ctx->prchk_flags[i];
-				name = strdup(ctx->names[i]);
-				break;
-			}
-		}
-	} else {
-		name = spdk_sprintf_alloc("HotInNvme%d", g_hot_insert_nvme_controller_index++);
-	}
-	if (!name) {
-		SPDK_ERRLOG("Failed to assign name to NVMe device\n");
-		return;
-	}
-
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
-
-	create_ctrlr(ctrlr, name, trid, prchk_flags);
-
-	free(name);
-}
-
 static int
 bdev_nvme_hotplug(void *arg)
 {
 	struct spdk_nvme_transport_id trid_pcie;
+	struct nvme_probe_ctx ctx = {};
 	int done;
+
+	ctx.create_ctrlr_fn = create_ctrlr;
 
 	if (!g_hotplug_probe_ctx) {
 		memset(&trid_pcie, 0, sizeof(trid_pcie));
 		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
 
-		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
+		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, &ctx,
 				      hotplug_probe_cb,
-				      attach_cb, spdk_bdev_nvme_delete_cb);
+				      spdk_bdev_nvme_attach_cb, spdk_bdev_nvme_delete_cb);
 		if (!g_hotplug_probe_ctx) {
 			return -1;
 		}
@@ -1397,8 +1367,10 @@ bdev_nvme_library_init(void)
 	}
 
 	if (local_nvme_num > 0) {
+		probe_ctx->create_ctrlr_fn = create_ctrlr;
+
 		/* used to probe local NVMe device */
-		if (spdk_nvme_probe(NULL, probe_ctx, spdk_bdev_nvme_probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(NULL, probe_ctx, spdk_bdev_nvme_probe_cb, spdk_bdev_nvme_attach_cb, NULL)) {
 			rc = -1;
 			goto end;
 		}
