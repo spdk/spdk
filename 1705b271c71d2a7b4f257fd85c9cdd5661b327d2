@@ -46,6 +46,30 @@
       "revId": "1705b271c71d2a7b4f257fd85c9cdd5661b327d2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd130f20_18623900",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-12T14:05:56Z",
+      "side": 1,
+      "message": "\u003e This would make configuring autotest easier and relieve us from updating config file every time when new functionality is added.\n\nYet any config that wants to only explicitly run 1 test, needs to set those three flags to 0. This goes against improving simplicity for new config files.\n\n\u003e But setting all values to 0 makes it necessary to update all existing config files ...\n\nThis was the point I was making. If there are any configs for existing jobs on Jenkins that do not specify an exact test to run, but it ran because default was 1 - they should be updated. To either explicitly set it to 1 or leave out by intent.\n\nOtherwise it means some tests were run either by mistake, outdated config (not defined) or simply never (explicit \u003d0 in all configs).",
+      "parentUuid": "429a40d8_c8aef2dc",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 39,
+        "endChar": 40
+      },
+      "revId": "1705b271c71d2a7b4f257fd85c9cdd5661b327d2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
