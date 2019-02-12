@@ -7,3 +7,6 @@
 [submodule "isa-l"]
 	path = isa-l
 	url = https://github.com/spdk/isa-l.git
+[submodule "ocf"]
+	path = ocf
+	url = https://github.com/Open-CAS/ocf.git
