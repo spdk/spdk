@@ -112,6 +112,52 @@
     },
     {
       "key": {
+        "uuid": "6424808b_05928a56",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T05:30:15Z",
+      "side": 1,
+      "message": "It looks that this is not used yet.",
+      "range": {
+        "startLine": 62,
+        "startChar": 23,
+        "endLine": 62,
+        "endChar": 37
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed30c02a_7bb7d85d",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 67,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T05:30:15Z",
+      "side": 1,
+      "message": "Do you have plan to add feature in this function?",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 67,
+        "endChar": 49
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0371c833_e70a4e69",
         "filename": "lib/util/crc16.c",
         "patchSetId": 2
@@ -197,6 +243,29 @@
         "startChar": 1,
         "endLine": 694,
         "endChar": 1
+      },
+      "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "88e00920_5277af2a",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T05:30:15Z",
+      "side": 1,
+      "message": "uint16_t ?",
+      "range": {
+        "startLine": 706,
+        "startChar": 7,
+        "endLine": 706,
+        "endChar": 14
       },
       "revId": "436476b7c472d419e40f6e431988b7a45ef2122e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
