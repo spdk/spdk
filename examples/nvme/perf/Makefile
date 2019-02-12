@@ -38,7 +38,7 @@ APP = perf
 
 ifeq ($(OS),Linux)
 SYS_LIBS += -laio
-CFLAGS += -DHAVE_LIBAIO
+CFLAGS += -DHAVE_IO_URING
 endif
 
 install: $(APP)
