@@ -49,6 +49,21 @@
 #include <libaio.h>
 #endif
 
+#if HAVE_IO_URING
+#include "arch/arch.h"
+#include "types.h"
+#include "io_uring.h"
+#ifndef __NR_sys_io_uring_setup
+#define __NR_sys_io_uring_setup         387
+#endif
+#ifndef __NR_sys_io_uring_enter
+#define __NR_sys_io_uring_enter         388
+#endif
+#ifndef __NR_sys_io_uring_register
+#define __NR_sys_io_uring_register      389
+#endif
+#endif
+
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	enum spdk_nvme_transport_type		trtype;
@@ -60,9 +75,41 @@ struct ctrlr_entry {
 enum entry_type {
 	ENTRY_TYPE_NVME_NS,
 	ENTRY_TYPE_AIO_FILE,
+	ENTRY_TYPE_IO_URING_FILE,
 };
 
 struct ns_fn_table;
+
+#if HAVE_IO_URING
+unsigned sq_ring_mask, cq_ring_mask;
+struct io_sq_ring {
+	unsigned                *head;
+	unsigned                *tail;
+	unsigned                *ring_mask;
+	unsigned                *ring_entries;
+	unsigned                *flags;
+	unsigned                *array;
+};
+struct io_cq_ring {
+	unsigned                *head;
+	unsigned                *tail;
+	unsigned                *ring_mask;
+	unsigned                *ring_entries;
+	struct io_uring_cqe     *cqes;
+};
+struct ioring_data {
+	int                     ring_fd;
+	int                     file_fd;
+	struct io_sq_ring       sq_ring;
+	struct io_cq_ring       cq_ring;
+	int			inflight;
+	uint64_t		last_tsc;
+	struct io_uring_sqe     *sqes;
+	struct iovec            *iovecs;
+	int			cq_ring_off;
+	unsigned                cq_ring_mask;
+};
+#endif
 
 struct ns_entry {
 	enum entry_type		type;
@@ -77,6 +124,10 @@ struct ns_entry {
 		struct {
 			int			fd;
 		} aio;
+#endif
+
+#if HAVE_IO_URING
+		struct ioring_data ioring_data;
 #endif
 	} u;
 
@@ -132,6 +183,9 @@ struct ns_worker_ctx {
 			struct io_event		*events;
 			io_context_t		ctx;
 		} aio;
+#endif
+#if HAVE_IO_URING
+		struct ioring_data ioring_data;
 #endif
 	} u;
 
@@ -217,6 +271,7 @@ struct trid_entry {
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
 static int g_aio_optind; /* Index of first AIO filename in argv */
+static int g_io_uring_optind; /* Index of first IO_URING filename in argv */
 
 static void
 task_complete(struct perf_task *task);
@@ -408,6 +463,297 @@ register_aio_files(int argc, char **argv)
 	return 0;
 }
 #endif /* HAVE_LIBAIO */
+
+#if HAVE_IO_URING
+static int io_uring_enter(struct ioring_data *ld, unsigned int to_submit,
+			  unsigned int min_complete, unsigned int flags)
+{
+	return syscall(__NR_sys_io_uring_enter, ld->ring_fd, to_submit,
+		       min_complete, flags);
+}
+
+static void
+io_uring_setup_payload(struct perf_task *task, uint8_t pattern)
+{
+	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	task->iov.iov_len = g_io_size_bytes;
+	if (task->iov.iov_base == NULL) {
+		fprintf(stderr, "spdk_dma_zmalloc() for task->buf failed\n");
+		exit(1);
+	}
+	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+}
+
+static int
+io_uring_submit(struct ioring_data *ld, int fd, const __u8 cmd, struct iovec *iov,
+		uint64_t offset, void *cb_ctx)
+{
+	struct io_uring_sqe *sqe;
+	struct io_sq_ring *ring = &ld->sq_ring;
+	unsigned tail, next_tail;
+	int ret;
+	ld->iovecs = iov;
+
+	next_tail = tail = *ring->tail;
+	next_tail++;
+
+	/* fail if the ring is full */
+	if (next_tail == *ring->head) {
+		return -1;
+	}
+	sqe = &ld->sqes[tail & *ring->ring_mask];
+
+	sqe->ioprio = 0;
+	sqe->off = offset * iov->iov_len;
+	sqe->user_data = (unsigned long) cb_ctx;
+	sqe->fd = fd;
+
+	sqe->flags = 0;
+	sqe->buf_index = 0;
+	sqe->opcode = cmd;
+	sqe->addr = (unsigned long) &ld->iovecs[tail & *ring->ring_mask];
+	sqe->len = 1;
+
+	tail = next_tail;
+	if (*ring->tail != tail) {
+		/* now tell the kernel that we have a new tail */
+		*ring->tail = tail;
+	}
+
+	ret = io_uring_enter(ld, g_queue_depth, 0, IORING_ENTER_GETEVENTS);
+
+	if (ret < 0) {
+		printf("io_submit error");
+		return -1;
+	}
+
+	return 0;
+}
+
+static int
+io_uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		   struct ns_entry *entry, uint64_t offset_in_ios)
+{
+	if (task->is_read) {
+		return io_uring_submit(&ns_ctx->u.ioring_data, entry->u.ioring_data.file_fd, IORING_OP_READV,
+				       &task->iov, offset_in_ios, task);
+	} else {
+		return io_uring_submit(&ns_ctx->u.ioring_data, entry->u.ioring_data.file_fd, IORING_OP_WRITEV,
+				       &task->iov, offset_in_ios, task);
+
+	}
+}
+
+static void
+io_uring_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
+}
+
+static int
+io_uring_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	int fd;
+
+	struct io_uring_params p;
+	struct ioring_data *ld = &ns_ctx->u.ioring_data;
+	struct io_sq_ring *sring = &ld->sq_ring;
+	struct io_cq_ring *cring = &ld->cq_ring;
+	void *ptr;
+
+	memset(&p, 0, sizeof(p));
+	p.flags |= IORING_SETUP_IOPOLL;
+	fd = syscall(__NR_sys_io_uring_setup, g_queue_depth, &p);
+	printf("RING_FD: %d\n", fd);
+	if (fd < 0) {
+		fprintf(stderr, "io_uring_setup\n");
+		return 1;
+	}
+	ns_ctx->u.ioring_data.ring_fd = fd;
+
+	ptr = mmap(0, p.sq_off.array + p.sq_entries * sizeof(__u32),
+		   PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd,
+		   IORING_OFF_SQ_RING);
+	printf("sq_ring ptr = 0x%p\n", ptr);
+	sring->head = ptr + p.sq_off.head;
+	sring->tail = ptr + p.sq_off.tail;
+	sring->ring_mask = ptr + p.sq_off.ring_mask;
+	sring->ring_entries = ptr + p.sq_off.ring_entries;
+	sring->flags = ptr + p.sq_off.flags;
+	sring->array = ptr + p.sq_off.array;
+	sq_ring_mask = *sring->ring_mask;
+
+	ld->sqes = mmap(0, p.sq_entries * sizeof(struct io_uring_sqe),
+			PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd,
+			IORING_OFF_SQES);
+	printf("sqes ptr    = 0x%p\n", ld->sqes);
+	ptr = mmap(0, p.cq_off.cqes + p.cq_entries * sizeof(struct io_uring_cqe),
+		   PROT_READ | PROT_WRITE, MAP_SHARED | MAP_POPULATE, fd,
+		   IORING_OFF_CQ_RING);
+	printf("cq_ring ptr = 0x%p\n", ptr);
+	cring->head = ptr + p.cq_off.head;
+	cring->tail = ptr + p.cq_off.tail;
+	cring->ring_mask = ptr + p.cq_off.ring_mask;
+	cring->ring_entries = ptr + p.cq_off.ring_entries;
+	cring->cqes = ptr + p.cq_off.cqes;
+	cq_ring_mask = *cring->ring_mask;
+	printf(" QD=%d, sq_ring=%d, cq_ring=%d\n", g_queue_depth, *ld->sq_ring.ring_entries,
+	       *ld->cq_ring.ring_entries);
+
+	return 0;
+}
+
+static void
+io_uring_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	close(ns_ctx->u.ioring_data.ring_fd);
+}
+
+static int
+io_uring_reap_io(struct ns_worker_ctx *ns_ctx, unsigned int events,
+		 unsigned int max)
+{
+	struct io_cq_ring *ring = &ns_ctx->u.ioring_data.cq_ring;
+	unsigned head, tail, reaped = 0;
+
+	head = *ring->head;
+	tail = *ring->tail;
+
+	do {
+		if (head == tail) {
+			break;
+		}
+
+		reaped++;
+		head++;
+	} while (reaped + events < max);
+
+	*ring->head = head;
+	return reaped;
+}
+
+static void
+io_uring_check_io(struct ns_worker_ctx *ns_ctx)
+{
+	int count, i;
+	struct io_cq_ring *ring = &ns_ctx->u.ioring_data.cq_ring;
+	int r, events = 0;
+	struct ioring_data *ld = &ns_ctx->u.ioring_data;
+	int index;
+
+	ld->cq_ring_off = *ring->head;
+	do {
+		r = io_uring_reap_io(ns_ctx, events, 1);
+		if (r) {
+			events += r;
+			continue;
+		}
+
+		r = io_uring_enter(ld, 0, 1, IORING_ENTER_GETEVENTS);
+	} while (events < 1);
+
+	count = r < 0 ? r : events;
+
+	if (count < 0) {
+		fprintf(stderr, "io_complete error\n");
+		exit(1);
+	}
+	index = (events + ld->cq_ring_off) & ld->cq_ring_mask;
+
+	for (i = 0; i < count; i++) {
+		task_complete((struct perf_task *) ns_ctx->u.ioring_data.cq_ring.cqes[index].user_data);
+	}
+
+}
+
+static const struct ns_fn_table io_uring_fn_table = {
+	.setup_payload          = io_uring_setup_payload,
+	.submit_io              = io_uring_submit_io,
+	.check_io               = io_uring_check_io,
+	.verify_io              = io_uring_verify_io,
+	.init_ns_worker_ctx     = io_uring_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx  = io_uring_cleanup_ns_worker_ctx,
+};
+
+static int
+register_io_uring_file(const char *path)
+{
+	struct ns_entry *entry;
+
+	int fd, flags;
+	uint64_t size;
+	uint32_t blklen;
+
+	if (g_rw_percentage == 100) {
+		flags = O_RDONLY;
+	} else if (g_rw_percentage == 0) {
+		flags = O_WRONLY;
+	} else {
+		flags = O_RDWR;
+	}
+
+	flags |= O_NOATIME | O_DIRECT;
+	fd = open(path, flags);
+	if (fd < 0) {
+		fprintf(stderr, "Could not open IO_URING device %s: %s\n", path, strerror(errno));
+		return -1;
+	}
+
+	size = spdk_fd_get_size(fd);
+	if (size == 0) {
+		fprintf(stderr, "Could not determine size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	blklen = spdk_fd_get_blocklen(fd);
+	if (blklen == 0) {
+		fprintf(stderr, "Could not determine block size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	if (g_io_align < blklen) {
+		g_io_align = blklen;
+	}
+
+	entry = malloc(sizeof(struct ns_entry));
+	if (entry == NULL) {
+		close(fd);
+		perror("io_uring ns_entry malloc");
+		return -1;
+	}
+
+	entry->type = ENTRY_TYPE_IO_URING_FILE;
+	entry->fn_table = &io_uring_fn_table;
+	entry->u.ioring_data.file_fd = fd;
+	entry->size_in_ios = size / g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / blklen;
+
+	snprintf(entry->name, sizeof(entry->name), "%s", path);
+
+	g_num_namespaces++;
+	entry->next = g_namespaces;
+	g_namespaces = entry;
+
+	return 0;
+}
+
+static int
+register_io_uring_files(int argc, char **argv)
+{
+	int i;
+
+	/* Treat everything after the options as files for IO_URING */
+	for (i = g_io_uring_optind; i < argc; i++) {
+		if (register_io_uring_file(argv[i]) != 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+#endif
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 
@@ -1587,6 +1933,7 @@ parse_args(int argc, char **argv)
 	}
 
 	g_aio_optind = optind;
+	g_io_uring_optind = optind;
 
 	return 0;
 }
@@ -1849,6 +2196,12 @@ int main(int argc, char **argv)
 
 #if HAVE_LIBAIO
 	if (register_aio_files(argc, argv) != 0) {
+		rc = -1;
+		goto cleanup;
+	}
+#endif
+#if HAVE_IO_URING
+	if (register_io_uring_files(argc, argv) != 0) {
 		rc = -1;
 		goto cleanup;
 	}
