@@ -16,6 +16,24 @@
       "revId": "d99cee0c3d0ae25946b1cf17c257cd6563e71759",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8a25125_2ab90cc0",
+        "filename": "lib/bdev/gpt/vbdev_gpt.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 152,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T23:13:30Z",
+      "side": 1,
+      "message": "What I wanted to do is just strip metadata from read data when there is metadata in read data.\n\nIf we shift from the start, we can strip metadata without using two buffers. But I added another temporary buffer.\n\nYou are correct and we don\u0027t have to increase the size of another temporary buffer.\n\nBut as I comment, I have not verified the original GPT bdev and this patch, and so this patch is not reviewable yet.",
+      "parentUuid": "5d219672_1a37601a",
+      "revId": "d99cee0c3d0ae25946b1cf17c257cd6563e71759",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
