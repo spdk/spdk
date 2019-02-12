@@ -101,6 +101,8 @@ struct nvme_probe_ctx {
 	const char *names[NVME_MAX_CONTROLLERS];
 	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
 	const char *hostnqn;
+	int (*create_ctrlr_fn)(struct spdk_nvme_ctrlr *, const char *,
+			       const struct spdk_nvme_transport_id *, uint32_t);
 };
 
 struct nvme_bdev_construct_opts {
@@ -153,5 +155,7 @@ void spdk_bdev_nvme_delete_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr);
 void spdk_bdev_nvme_ctrlr_destruct(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 bool spdk_bdev_nvme_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			     struct spdk_nvme_ctrlr_opts *opts);
+void spdk_bdev_nvme_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			      struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts);
 
 #endif /* SPDK_COMMON_BDEV_NVME_H */
