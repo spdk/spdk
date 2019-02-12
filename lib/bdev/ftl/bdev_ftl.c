@@ -130,10 +130,17 @@ out:
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 }
 
-static struct nvme_ctrlr *
-bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid)
+static int
+bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const char *name,
+		   const struct spdk_nvme_transport_id *trid)
 {
 	struct nvme_ctrlr *ftl_ctrlr = NULL;
+
+	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
+		spdk_nvme_detach(ctrlr);
+		SPDK_ERRLOG("This NVMe is not FTL capable\n");
+		return -EPERM;
+	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 
@@ -150,14 +157,14 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
 		ftl_ctrlr->remove_fn = bdev_ftl_remove_ctrlr;
-		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
+		ftl_ctrlr->name = strdup(name);
 
 		TAILQ_INIT(&ftl_ctrlr->ftl_bdevs);
 		TAILQ_INSERT_HEAD(&g_nvme_ctrlrs, ftl_ctrlr, tailq);
 	}
 out:
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
-	return ftl_ctrlr;
+	return 0;
 }
 
 static void
@@ -650,20 +657,21 @@ error_dev:
 }
 
 static int
-bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
+bdev_ftl_create(const struct spdk_nvme_transport_id *trid,
 		const char *name, struct spdk_ftl_punit_range *range, unsigned int mode,
 		const struct spdk_uuid *uuid, ftl_bdev_init_fn cb, void *cb_arg)
 {
+	struct nvme_ctrlr *ftl_ctrlr;
 	struct ftl_bdev *ftl_bdev = NULL;
 	struct ftl_bdev_ctx *ftl_bdev_ctx = NULL;
-	struct nvme_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
 	int rc;
 
-	ftl_ctrlr = bdev_ftl_add_ctrlr(ctrlr, trid);
+	ftl_ctrlr = spdk_nvme_ctrlr_get(trid);
 	if (!ftl_ctrlr) {
-		spdk_nvme_detach(ctrlr);
-		return -ENOMEM;
+		SPDK_ERRLOG("NVMe SSD \"%s\" could not be found.\n", trid->traddr);
+		SPDK_ERRLOG("Check PCIe BDF and that it is attached to UIO/VFIO driver.\n");
+		return -ENODEV;
 	}
 
 	ftl_bdev = calloc(1, sizeof(*ftl_bdev));
@@ -693,7 +701,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 	ftl_bdev_ctx->cb_arg = cb_arg;
 
 	opts.conf = NULL;
-	opts.ctrlr = ctrlr;
+	opts.ctrlr = ftl_ctrlr->ctrlr;
 	opts.trid = *trid;
 	opts.range = *range;
 	opts.mode = mode;
@@ -821,7 +829,9 @@ int
 bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *cb_arg)
 {
 	struct nvme_ctrlr *ftl_ctrlr;
-	struct spdk_nvme_ctrlr *ctrlr;
+	struct nvme_probe_ctx probe_ctx = {};
+	char *name;
+	int rc;
 
 	assert(opts != NULL);
 	assert(cb != NULL);
@@ -832,24 +842,28 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (!spdk_nvme_transport_id_compare(&ftl_ctrlr->trid, &opts->trid)) {
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			return bdev_ftl_create(ftl_ctrlr->ctrlr, &ftl_ctrlr->trid, opts->name,
-					       &opts->range, opts->mode, &opts->uuid, cb, cb_arg);
+			ftl_ctrlr->ref++;
+			return bdev_ftl_create(&ftl_ctrlr->trid, opts->name, &opts->range, opts->mode, &opts->uuid, cb,
+					       cb_arg);
 		}
 	}
 
 	pthread_mutex_unlock(&g_bdev_nvme_mutex);
 
-	ctrlr = spdk_nvme_connect(&opts->trid, NULL, 0);
-	if (!ctrlr) {
-		return -ENODEV;
+	probe_ctx.count = 1;
+	name = spdk_sprintf_alloc("NVMe_%s", opts->trid.traddr);
+	probe_ctx.names[0] = name;
+	probe_ctx.trids[0] = opts->trid;
+	probe_ctx.create_ctrlr_fn = bdev_ftl_add_ctrlr;
+
+	rc = spdk_nvme_probe(NULL, &probe_ctx, spdk_bdev_nvme_probe_cb, spdk_bdev_nvme_attach_cb, NULL);
+	if (rc) {
+		free(name);
+		return rc;
 	}
 
-	if (!spdk_nvme_ctrlr_is_ocssd_supported(ctrlr)) {
-		spdk_nvme_detach(ctrlr);
-		return -EPERM;
-	}
-
-	return bdev_ftl_create(ctrlr, &opts->trid, opts->name, &opts->range,
+	free(name);
+	return bdev_ftl_create(&opts->trid, opts->name, &opts->range,
 			       opts->mode, &opts->uuid, cb, cb_arg);
 }
 
