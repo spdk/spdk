@@ -37,8 +37,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
-
-typedef void (*spdk_delete_passthru_complete)(void *cb_arg, int bdeverrno);
+#include "spdk/bdev_module.h"
 
 /**
  * Create new pass through bdev.
@@ -56,7 +55,7 @@ int create_passthru_disk(const char *bdev_name, const char *vbdev_name);
  * \param cb_fn Function to call after deletion.
  * \param cb_arg Argument to pass to cb_fn.
  */
-void delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn,
+void delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn,
 			  void *cb_arg);
 
 #endif /* SPDK_VBDEV_PASSTHRU_H */
