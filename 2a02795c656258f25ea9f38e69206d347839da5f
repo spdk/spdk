@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6621355a_8ceeec7c",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 176,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-12T17:21:59Z",
+      "side": 1,
+      "message": "uio is a dependency for igb_uio.\nWe can\u0027t use modprobe for igb_uio since it is an out of tree module and modprobe only checks the directories under /lib/modules/`uname -r`. insmod doesn\u0027t check dependencies so we have to modprobe uio or else we will get undefined symbols.",
+      "parentUuid": "e9fb535b_96f5e50b",
+      "revId": "2a02795c656258f25ea9f38e69206d347839da5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4731817b_9b6e070a",
         "filename": "scripts/setup.sh",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-11T23:28:31Z",
       "side": 1,
       "message": "This error message could be a bit clearer.\n\nNo valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please either enable the vfio-pci or uio_pci_generic kernel modules, or have SPDK build the igb_uio driver by running ./configure --with-igb-uio-driver and recompiling.",
+      "revId": "2a02795c656258f25ea9f38e69206d347839da5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d676d1d1_faeed96d",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-12T17:21:59Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4731817b_9b6e070a",
       "revId": "2a02795c656258f25ea9f38e69206d347839da5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
