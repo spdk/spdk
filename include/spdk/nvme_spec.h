@@ -1788,7 +1788,13 @@ enum spdk_nvme_log_page {
 	/** Command effects log (optional) */
 	SPDK_NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
 
-	/* 0x06-0x6F - reserved */
+	/** Host initiated telemetry log (optional) */
+	SPDK_NVME_LOG_TELEMETRY_HOST_INITIATED	= 0x07,
+
+	/** Controller initiated telemetry log (optional) */
+	SPDK_NVME_LOG_TELEMETRY_CTRLR_INITIATED	= 0x08,
+
+	/* 0x09-0x6F - reserved */
 
 	/** Discovery(refer to the NVMe over Fabrics specification) */
 	SPDK_NVME_LOG_DISCOVERY		= 0x70,
@@ -1919,6 +1925,24 @@ struct spdk_nvme_cmds_and_effect_log_page {
 	uint8_t reserved0[2048];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmds_and_effect_log_page) == 4096, "Incorrect size");
+
+/*
+ * Get Log Page – Telemetry Host/Controller Initiated Log (Log Identifiers 07h/08h)
+ */
+struct spdk_nvme_telemetry_log_page_hdr {
+	uint8_t    lpi;		/* Log page identifier */
+	uint8_t    rsvd[4];
+	uint8_t    iee_oui[3];
+	uint16_t   dalb1;		/* Data area 1 last block */
+	uint16_t   dalb2;		/* Data area 2 last block */
+	uint16_t   dalb3;		/* Data area 3 last block */
+	uint8_t    rsvd1[368];
+	uint8_t    ctrlavail;		/* Controller initiated data avail */
+	uint8_t    ctrldgn;		/* Controller initiated telemetry Data Gen # */
+	uint8_t    rsnident[128];
+	uint8_t    telemetry_dataarea[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_telemetry_log_page_hdr) == 512, "Incorrect size");
 
 /**
  * Asynchronous Event Type
@@ -2284,6 +2308,24 @@ union spdk_nvme_feat_host_identifier {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_host_identifier) == 4, "Incorrect size");
+
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_INTERRUPT_COALESCING
+ */
+union spdk_nvme_feat_interrupt_coalescing {
+	uint32_t raw;
+	struct {
+		/** Aggregation Threshold */
+		uint32_t aggregationThreshold : 8;
+
+		/** Aggregration time */
+		uint32_t aggregationTime      : 8;
+
+		uint32_t reserved             : 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_interrupt_coalescing) == 4, "Incorrect size");
+
 
 /**
  * Firmware slot information page (\ref SPDK_NVME_LOG_FIRMWARE_SLOT)
