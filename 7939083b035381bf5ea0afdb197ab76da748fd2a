@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "7c6eb795_a2d70303",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 471,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-12T15:16:34Z",
+      "side": 1,
+      "message": "\"\u0026bdev\" is a pointer to the local variable in this function. It shouldn\u0027t be used as a context. Why not just \"bdev\"?",
+      "range": {
+        "startLine": 471,
+        "startChar": 56,
+        "endLine": 471,
+        "endChar": 61
+      },
+      "revId": "7939083b035381bf5ea0afdb197ab76da748fd2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ca33cafe_51914cea",
         "filename": "lib/bdev/malloc/bdev_malloc.c",
         "patchSetId": 5

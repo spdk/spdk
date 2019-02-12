@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f6dfd847_9e3e8924",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 455,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-12T15:16:34Z",
+      "side": 1,
+      "message": "It should be \"mdisk\" or \"\u0026mdisk-\u003edisk\". \"mdisk\" is a local variable and this pointer may not be valid when function ends.",
+      "range": {
+        "startLine": 455,
+        "startChar": 59,
+        "endLine": 455,
+        "endChar": 65
+      },
+      "revId": "cec92068403da7071816107933a855ce812da174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
