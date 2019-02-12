@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "811eac48_251117d6",
+        "filename": "scripts/spdkcli.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T14:56:00Z",
+      "side": 1,
+      "message": "quite possibly you could overload __del__() method in UIRoot class and call self.client.stop() there",
+      "range": {
+        "startLine": 66,
+        "startChar": 4,
+        "endLine": 66,
+        "endChar": 27
+      },
+      "revId": "3530aa1fd552350662d824a60f572cd5e622376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5492e603_773e40d9",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-12T14:56:00Z",
+      "side": 1,
+      "message": "I know this is just a PoC and work in progress, but just as a future note: use self.shell.log",
+      "range": {
+        "startLine": 49,
+        "startChar": 8,
+        "endLine": 49,
+        "endChar": 59
+      },
+      "revId": "3530aa1fd552350662d824a60f572cd5e622376a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
