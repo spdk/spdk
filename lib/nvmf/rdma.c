@@ -2204,19 +2204,6 @@ spdk_nvmf_rdma_stop_listen(struct spdk_nvmf_transport *transport,
 	return 0;
 }
 
-static bool
-spdk_nvmf_rdma_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	struct spdk_nvmf_rdma_qpair *rqpair;
-
-	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-	if (rqpair->qd == 0) {
-		return true;
-	}
-	return false;
-}
-
 static void
 spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 				     struct spdk_nvmf_rdma_qpair *rqpair, bool drain)
@@ -3315,7 +3302,6 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.req_complete = spdk_nvmf_rdma_request_complete,
 
 	.qpair_fini = spdk_nvmf_rdma_close_qpair,
-	.qpair_is_idle = spdk_nvmf_rdma_qpair_is_idle,
 	.qpair_get_peer_trid = spdk_nvmf_rdma_qpair_get_peer_trid,
 	.qpair_get_local_trid = spdk_nvmf_rdma_qpair_get_local_trid,
 	.qpair_get_listen_trid = spdk_nvmf_rdma_qpair_get_listen_trid,
