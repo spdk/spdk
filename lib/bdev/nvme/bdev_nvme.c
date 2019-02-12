@@ -84,15 +84,6 @@ struct nvme_bdev_io {
 	struct spdk_thread *orig_thread;
 };
 
-struct nvme_probe_ctx {
-	size_t count;
-	struct spdk_nvme_transport_id trids[NVME_MAX_CONTROLLERS];
-	struct spdk_nvme_host_id hostids[NVME_MAX_CONTROLLERS];
-	const char *names[NVME_MAX_CONTROLLERS];
-	uint32_t prchk_flags[NVME_MAX_CONTROLLERS];
-	const char *hostnqn;
-};
-
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
@@ -774,44 +765,6 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
-static bool
-probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
-	 struct spdk_nvme_ctrlr_opts *opts)
-{
-	struct nvme_probe_ctx *ctx = cb_ctx;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
-
-	if (nvme_bdev_ctrlr_get(trid)) {
-		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
-			    trid->traddr);
-		return false;
-	}
-
-	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		bool claim_device = false;
-		size_t i;
-
-		for (i = 0; i < ctx->count; i++) {
-			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
-				claim_device = true;
-				break;
-			}
-		}
-
-		if (!claim_device) {
-			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
-			return false;
-		}
-	}
-
-	if (ctx->hostnqn) {
-		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", ctx->hostnqn);
-	}
-
-	return true;
-}
-
 static void
 spdk_nvme_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
@@ -1445,7 +1398,7 @@ bdev_nvme_library_init(void)
 
 	if (local_nvme_num > 0) {
 		/* used to probe local NVMe device */
-		if (spdk_nvme_probe(NULL, probe_ctx, probe_cb, attach_cb, NULL)) {
+		if (spdk_nvme_probe(NULL, probe_ctx, spdk_bdev_nvme_probe_cb, attach_cb, NULL)) {
 			rc = -1;
 			goto end;
 		}
