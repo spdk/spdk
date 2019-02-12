@@ -670,7 +670,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn, void *cb_arg)
+delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
 
