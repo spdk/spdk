@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "6b49703c_c88e8257",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T18:29:21Z",
+      "side": 1,
+      "message": "Added asynchronous probe support.  New APIs spdk_nvme_probe_ctx_init(), spdk_nvme_probe_async() and spdk_nvme_probe_poll() were added to enable this feature.",
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c2570c9_8057dbe0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 589,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T18:29:21Z",
+      "side": 1,
+      "message": "this should mention that after this function is called, user must call spdk_nvme_probe_poll",
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9c3fc562_ce003d2a",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 3
@@ -69,6 +103,40 @@
       "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e1b221c_4633da79",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T18:29:21Z",
+      "side": 1,
+      "message": "I think this should say:\n\n\\return true if all probe operations are complete; the probe_ctx may be discarded at this point\n\\return false if there are still pending probe operations; user must call spdk_nvme_poll_async again to\n        continue progress",
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b8ceadb_8a80974c",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T18:29:21Z",
+      "side": 1,
+      "message": "spdk_nvme_probe_poll?\n\nI think we need the word \"probe\" in the function name.",
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
