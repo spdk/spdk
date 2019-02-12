@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82e5756a_8a83098b",
+        "filename": "doc/Doxyfile",
+        "patchSetId": 7
+      },
+      "lineNbr": 814,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T21:58:21Z",
+      "side": 1,
+      "message": "let\u0027s put gdb_macros.md here to keep this list alphabetical",
+      "revId": "933e04e4570cdb848db0d13127f9a5b1816c3745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5726920_b8c31931",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T21:58:21Z",
+      "side": 1,
+      "message": "with \u003d\u003e wish?",
+      "revId": "933e04e4570cdb848db0d13127f9a5b1816c3745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42e88689_3e559d2c",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T21:58:21Z",
+      "side": 1,
+      "message": "You can also put these under the gdb data directory - which I think might be a bit simpler.\n\nOn most systems, the data directory is /usr/share/gdb.  The python script should be copied into the python/gdb/function (or python/gdb/command) directory under the data directory.  So on my system, that is /usr/share/gdb/python/gdb/function.  If the python script is in there, then the only thing you need to do when starting gdb is type \"spdk_load_macros\".  You don\u0027t even need to put anything in .gdbinit.",
+      "revId": "933e04e4570cdb848db0d13127f9a5b1816c3745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc81a68c_ff70efe7",
+        "filename": "doc/prog_guides.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-12T21:58:21Z",
+      "side": 1,
+      "message": "This doesn\u0027t really fit in with the other programmer guides.  The Programmer Guides are typically for how a programmer uses specific libraries in SPDK.  But I\u0027m not exactly sure which section it should go into instead.  So this is probably OK for now.",
+      "revId": "933e04e4570cdb848db0d13127f9a5b1816c3745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
