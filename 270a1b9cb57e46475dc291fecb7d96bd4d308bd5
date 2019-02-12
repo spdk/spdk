@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1634696_59daea3e",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "State of vbdev_ocf_base changes over time, so malloc is definitely bad here.\nSeems like priv does not have to have size of vbdev_ocf_base if we can do obj_set_priv(obj, base);\n\nI propose to set private to be pointer to base (as it was before) and fixing private size in volume configs (to be 0?)",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 51
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "703b0cc4_d3d9789e",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "I think we should leave core_id argument because it is going to be used in many-to-one configuration",
+      "range": {
+        "startLine": 38,
+        "startChar": 20,
+        "endLine": 38,
+        "endChar": 37
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8af99a4c_5411e8f1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "To which part do you refer here? We need checks for the case when cache device is not started.",
+      "range": {
+        "startLine": 128,
+        "startChar": 1,
+        "endLine": 128,
+        "endChar": 38
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0216e856_386e6bab",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "This return might get us in trouble because no matter what is the error in OCF, we still need to close SPDK devices (#147, #148)",
+      "range": {
+        "startLine": 135,
+        "startChar": 4,
+        "endLine": 135,
+        "endChar": 19
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "60015cf0_22869d5d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 754,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "Is this required?",
+      "range": {
+        "startLine": 754,
+        "startChar": 1,
+        "endLine": 754,
+        "endChar": 38
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1da318b1_7bc4caca",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-12T14:45:21Z",
+      "side": 1,
+      "message": "As in stats* I think this function should recieve core index as well.",
+      "range": {
+        "startLine": 203,
+        "startChar": 30,
+        "endLine": 203,
+        "endChar": 46
+      },
+      "revId": "270a1b9cb57e46475dc291fecb7d96bd4d308bd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
