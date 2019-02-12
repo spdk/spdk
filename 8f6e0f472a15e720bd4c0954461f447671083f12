@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "962cf7ae_8c8de5a7",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T06:53:45Z",
+      "side": 1,
+      "message": "This test use one (first one) OCSSD device from OCSSD_PCI_DEVICES (like has been described in message  in lines 19-23).",
+      "parentUuid": "8378e593_1daa8d35",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "462d2673_7534894d",
         "filename": "test/ftl/ftl.sh",
         "patchSetId": 12
@@ -48,6 +66,24 @@
       "side": 1,
       "message": "I think that read on line 16 can fail. But I don\u0027t think that read is needed, so this could be moved back to the original spot.",
       "parentUuid": "462d2673_7534894d",
+      "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ad530e3b_63312c50",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-12T06:53:45Z",
+      "side": 1,
+      "message": "\u0027-e\u0027 will terminate script on first error so I think it is good to make \u0027set -e\u0027 close to the trap handlers. Isn\u0027t it?",
+      "parentUuid": "e5ad1d49_e02cbc8c",
       "revId": "8f6e0f472a15e720bd4c0954461f447671083f12",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
