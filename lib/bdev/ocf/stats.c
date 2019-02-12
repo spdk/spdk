@@ -47,7 +47,7 @@ vbdev_ocf_stats_get(int cache_id, int core_id, struct vbdev_ocf_stats *stats)
 		return status;
 	}
 
-	status = ocf_core_get(cache, 0, &core);
+	status = ocf_core_get(cache, core_id, &core);
 	if (status) {
 		return status;
 	}
