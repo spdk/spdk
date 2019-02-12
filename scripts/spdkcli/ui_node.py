@@ -111,7 +111,10 @@ class UILvolStores(UINode):
 
     def ui_command_delete_all(self):
         for lvs in self._children:
-            self.delete(None, lvs.lvs.uuid)
+            try:
+                self.delete(None, lvs.lvs.uuid)
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Lvol stores: %s" % len(self.children), None
@@ -134,7 +137,10 @@ class UIBdev(UINode):
     def ui_command_delete_all(self):
         """Delete all bdevs from this tree node."""
         for bdev in self._children:
-            self.delete(bdev.name)
+            try:
+                self.delete(bdev.name)
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Bdevs: %d" % len(self.children), None
@@ -280,7 +286,10 @@ class UINvmeBdev(UIBdev):
         ctrlrs = [x.rsplit("n", 1)[0] for x in ctrlrs]
         ctrlrs = set(ctrlrs)
         for ctrlr in ctrlrs:
-            self.delete(ctrlr)
+            try:
+                self.delete(ctrlr)
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def ui_command_delete(self, name):
         """
