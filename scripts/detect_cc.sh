@@ -35,16 +35,24 @@ for i in "$@"; do
 			exit 0
 			;;
 		--cc=*)
-			CC="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				CC="${i#*=}"
+			fi
 			;;
 		--cxx=*)
-			CXX="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				CXX="${i#*=}"
+			fi
 			;;
 		--lto=*)
-			LTO="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				LTO="${i#*=}"
+			fi
 			;;
 		--ld=*)
-			LD="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				LD="${i#*=}"
+			fi
 			;;
 		--)
 			break
