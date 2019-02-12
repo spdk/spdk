@@ -261,7 +261,7 @@ struct spdk_opal_resp_token {
 		uint64_t unsigned_num;
 		int64_t signed_num;
 	} stored;
-	size_t len;
+	size_t len; /* header + data */
 	enum spdk_opal_token_type type;
 	enum spdk_opal_atom_width width;
 };
