@@ -33,6 +33,7 @@
 
 #include "spdk/log.h"
 #include "common.h"
+#include "spdk_internal/log.h"
 
 struct nvme_bdev_ctrlrs g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_bdev_ctrlrs);
 pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -177,4 +178,42 @@ spdk_bdev_nvme_delete(const char *name)
 
 	spdk_bdev_nvme_delete_cb(NULL, nvme_bdev_ctrlr->ctrlr);
 	return 0;
+}
+
+bool
+spdk_bdev_nvme_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+			struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct nvme_probe_ctx *ctx = cb_ctx;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
+
+	if (nvme_bdev_ctrlr_get(trid)) {
+		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
+			    trid->traddr);
+		return false;
+	}
+
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		bool claim_device = false;
+		size_t i;
+
+		for (i = 0; i < ctx->count; i++) {
+			if (spdk_nvme_transport_id_compare(trid, &ctx->trids[i]) == 0) {
+				claim_device = true;
+				break;
+			}
+		}
+
+		if (!claim_device) {
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Not claiming device at %s\n", trid->traddr);
+			return false;
+		}
+	}
+
+	if (ctx->hostnqn) {
+		snprintf(opts->hostnqn, sizeof(opts->hostnqn), "%s", ctx->hostnqn);
+	}
+
+	return true;
 }
