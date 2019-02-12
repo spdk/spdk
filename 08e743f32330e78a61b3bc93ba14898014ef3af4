@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c3fc562_ce003d2a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T05:13:38Z",
+      "side": 1,
+      "message": "until",
+      "range": {
+        "startLine": 592,
+        "startChar": 41,
+        "endLine": 592,
+        "endChar": 45
+      },
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9962b55f_35a62618",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-12T05:13:38Z",
+      "side": 1,
+      "message": "false if all controllers in the probe context are probed, or true if some controllers in the probe context remain to be probed.",
+      "range": {
+        "startLine": 596,
+        "startChar": 11,
+        "endLine": 596,
+        "endChar": 42
+      },
+      "revId": "08e743f32330e78a61b3bc93ba14898014ef3af4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
