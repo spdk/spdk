@@ -103,7 +103,10 @@ class UINVMfSubsystems(UINode):
     def ui_command_delete_all(self):
         """Delete all subsystems"""
         for child in self._children:
-            self.delete(child.subsystem.nqn)
+            try:
+                self.delete(child.subsystem.nqn)
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Subsystems: %s" % len(self.children), None
@@ -204,7 +207,10 @@ class UINVMfSubsystemListeners(UINode):
     def ui_command_delete_all(self):
         """Remove all address listeners from subsystem."""
         for la in self.listen_addresses:
-            self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
+            try:
+                self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Addresses: %s" % len(self.listen_addresses), None
@@ -261,7 +267,10 @@ class UINVMfSubsystemHosts(UINode):
     def ui_command_delete_all(self):
         """Delete host from subsystem"""
         for host in self.hosts:
-            self.delete(host['nqn'])
+            try:
+                self.delete(host['nqn'])
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Hosts: %s" % len(self.hosts), None
@@ -323,7 +332,10 @@ class UINVMfSubsystemNamespaces(UINode):
     def ui_command_delete_all(self):
         """Delete all namespaces from subsystem."""
         for namespace in self.namespaces:
-            self.delete(namespace['nsid'])
+            try:
+                self.delete(namespace['nsid'])
+            except JSONRPCException as e:
+                self.shell.log.error(e.message)
 
     def summary(self):
         return "Namespaces: %s" % len(self.namespaces), None
