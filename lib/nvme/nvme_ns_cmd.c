@@ -1024,3 +1024,25 @@ spdk_nvme_ns_cmd_reservation_report(struct spdk_nvme_ns *ns,
 
 	return nvme_qpair_submit_request(qpair, req);
 }
+
+int
+spdk_nvme_ns_cmd_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				 uint64_t lba, enum spdk_nvme_zone_action action,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg)
+{
+	struct nvme_request	*req;
+	struct spdk_nvme_cmd	*cmd;
+
+	req = nvme_allocate_request_null(qpair, cb_fn, cb_arg);
+	if (!req) {
+		return -ENOMEM;
+	}
+
+	cmd = &req->cmd;
+	cmd->opc = SPDK_NVME_OPC_ZONE_MANAGEMENT;
+	cmd->nsid = ns->id;
+	cmd->cdw12 = action;
+	*(uint64_t *)&cmd->cdw10 = lba;
+
+	return nvme_qpair_submit_request(qpair, req);
+}

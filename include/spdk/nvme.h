@@ -2091,6 +2091,14 @@ int spdk_nvme_ns_cmd_compare_with_md(struct spdk_nvme_ns *ns, struct spdk_nvme_q
 				     uint16_t apptag_mask, uint16_t apptag);
 
 /**
+ * TODO: add description
+ */
+int
+spdk_nvme_ns_cmd_zone_management(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
+				 uint64_t lba, enum spdk_nvme_zone_action action,
+				 spdk_nvme_cmd_cb cb_fn, void *cb_arg);
+
+/**
  * \brief Inject an error for the next request with a given opcode.
  *
  * \param ctrlr NVMe controller.
