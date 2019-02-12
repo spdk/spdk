@@ -16,6 +16,24 @@
       "revId": "e37b78472750b64a66dc68c70eddad85595864c3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92f83225_1aa7c21a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-12T16:45:32Z",
+      "side": 1,
+      "message": "Thanks for pointing this out. I can\u0027t even do this check yet actually. I will need to fix the paths in qpair_init and poll_group_destroy before I can. It\u0027s possible that both of those paths are called out of tree. I can do the qpair_init paths after I remove the activating state, then the poll_group_destroy call will require a little more plumbing.\nOnce I fix all of the paths I will make this an assert.",
+      "parentUuid": "051d7b4b_d7945279",
+      "revId": "e37b78472750b64a66dc68c70eddad85595864c3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
