@@ -118,7 +118,6 @@ extern pid_t g_spdk_nvme_pid;
 
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
-#define NVME_MIN_TIMEOUT_PERIOD		(5)
 #define NVME_MAX_TIMEOUT_PERIOD		(120)
 
 /* Maximum log page size to fetch for AERs. */
