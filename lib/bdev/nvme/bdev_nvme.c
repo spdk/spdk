@@ -91,6 +91,14 @@ struct nvme_probe_ctx {
 	const char *hostnqn;
 };
 
+struct nvme_probe_skip_entry {
+	struct spdk_nvme_transport_id		trid;
+	TAILQ_ENTRY(nvme_probe_skip_entry)	tailq;
+};
+/* All the controllers deleted by users via RPC are skipped by hotplug monitor */
+static TAILQ_HEAD(, nvme_probe_skip_entry) g_skipped_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
+			g_skipped_nvme_ctrlrs);
+
 static struct spdk_bdev_nvme_opts g_opts = {
 	.action_on_timeout = SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE,
 	.timeout_us = 0,
@@ -801,6 +809,14 @@ static bool
 hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		 struct spdk_nvme_ctrlr_opts *opts)
 {
+	struct nvme_probe_skip_entry *entry;
+
+	TAILQ_FOREACH(entry, &g_skipped_nvme_ctrlrs, tailq) {
+		if (spdk_nvme_transport_id_compare(trid, &entry->trid) == 0) {
+			return false;
+		}
+	}
+
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attaching to %s\n", trid->traddr);
 
 	return true;
@@ -1200,6 +1216,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	struct nvme_bdev		*nvme_bdev;
 	uint32_t			i, nsid;
 	size_t				j;
+	struct nvme_probe_skip_entry	*entry, *tmp;
 
 	if (nvme_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
@@ -1209,6 +1226,16 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	if (nvme_ctrlr_get_by_name(base_name)) {
 		SPDK_ERRLOG("A controller with the provided name (%s) already exists.\n", base_name);
 		return -1;
+	}
+
+	if (trid->trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, tmp) {
+			if (spdk_nvme_transport_id_compare(trid, &entry->trid) == 0) {
+				TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
+				free(entry);
+				break;
+			}
+		}
 	}
 
 	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
@@ -1273,6 +1300,7 @@ int
 spdk_bdev_nvme_delete(const char *name)
 {
 	struct nvme_ctrlr *nvme_ctrlr = NULL;
+	struct nvme_probe_skip_entry *entry;
 
 	if (name == NULL) {
 		return -EINVAL;
@@ -1282,6 +1310,15 @@ spdk_bdev_nvme_delete(const char *name)
 	if (nvme_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed to find NVMe controller\n");
 		return -ENODEV;
+	}
+
+	if (nvme_ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		entry = calloc(1, sizeof(*entry));
+		if (!entry) {
+			return -ENOMEM;
+		}
+		entry->trid = nvme_ctrlr->trid;
+		TAILQ_INSERT_TAIL(&g_skipped_nvme_ctrlrs, entry, tailq);
 	}
 
 	remove_cb(NULL, nvme_ctrlr->ctrlr);
@@ -1499,8 +1536,14 @@ static void
 bdev_nvme_library_fini(void)
 {
 	struct nvme_ctrlr *nvme_ctrlr, *tmp;
+	struct nvme_probe_skip_entry *entry, *entry_tmp;
 
 	spdk_poller_unregister(&g_hotplug_poller);
+
+	TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, entry_tmp) {
+		TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
+		free(entry);
+	}
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH_SAFE(nvme_ctrlr, &g_nvme_ctrlrs, tailq, tmp) {
