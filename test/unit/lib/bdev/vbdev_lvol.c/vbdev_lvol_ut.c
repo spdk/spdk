@@ -1034,13 +1034,6 @@ ut_lvol_destroy(void)
 	CU_ASSERT(g_lvolerrno == 0);
 	lvol2 = g_lvol;
 
-	/* Unsuccessful lvols destroy */
-	g_lvol_deletable = false;
-	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
-	CU_ASSERT(g_lvol != NULL);
-	CU_ASSERT(g_lvserrno == -EPERM);
-
-	g_lvol_deletable = true;
 	/* Successful lvols destroy */
 	vbdev_lvol_destroy(lvol, lvol_store_op_complete, NULL);
 	CU_ASSERT(g_lvol == NULL);
