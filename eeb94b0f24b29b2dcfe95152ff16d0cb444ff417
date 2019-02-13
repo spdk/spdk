@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c6b3bb81_3b3e55a5",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-13T09:50:55Z",
+      "side": 1,
+      "message": "shouldn\u0027t those be in the reverse order? Does it even execute now?\n\n\u0027{split(); print a}\u0027\n\nBesides, can we use just `cut` here?\n\ncut -d \"\u003d\" -f 2",
+      "range": {
+        "startLine": 494,
+        "startChar": 112,
+        "endLine": 494,
+        "endChar": 114
+      },
+      "revId": "eeb94b0f24b29b2dcfe95152ff16d0cb444ff417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
