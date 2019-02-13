@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d3093926_d79f1c10",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2112,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T20:42:38Z",
+      "side": 1,
+      "message": "This funnels every I/O command over to the subsystem thread. That will tank our performance. Instead, you need to store the current reservation state in group-\u003esgroup and just check that.\n\nHowever, that makes acquiring and releasing reservations much more complex because you\u0027ll need to send a message to each thread to set the group-\u003esgroup to the correct value.",
+      "revId": "094c74693ffa5c8b854c18a1e3e416a8fbb589a6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
