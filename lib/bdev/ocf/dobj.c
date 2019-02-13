@@ -44,29 +44,30 @@
 #include "vbdev_ocf.h"
 
 static int
-vbdev_ocf_dobj_open(ocf_data_obj_t obj)
+vbdev_ocf_volume_open(ocf_volume_t volume)
 {
-	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_data_obj_get_uuid(obj)->data);
+	struct vbdev_ocf_base *priv = ocf_volume_get_priv(volume);
+	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
 
 	if (base == NULL) {
 		assert(false);
 		return -EINVAL;
 	}
 
-	ocf_data_obj_set_priv(obj, base);
+	*priv = *base;
 
 	return 0;
 }
 
 static void
-vbdev_ocf_dobj_close(ocf_data_obj_t obj)
+vbdev_ocf_volume_close(ocf_volume_t volume)
 {
 }
 
 static uint64_t
-vbdev_ocf_dobj_get_length(ocf_data_obj_t obj)
+vbdev_ocf_volume_get_length(ocf_volume_t volume)
 {
-	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(obj);
+	struct vbdev_ocf_base *base = ocf_volume_get_priv(volume);
 	uint64_t len;
 
 	len = base->bdev->blocklen * base->bdev->blockcnt;
@@ -75,8 +76,8 @@ vbdev_ocf_dobj_get_length(ocf_data_obj_t obj)
 }
 
 static int
-vbdev_ocf_dobj_io_set_data(struct ocf_io *io, ctx_data_t *data,
-			   uint32_t offset)
+vbdev_ocf_volume_io_set_data(struct ocf_io *io, ctx_data_t *data,
+			     uint32_t offset)
 {
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 
@@ -91,13 +92,13 @@ vbdev_ocf_dobj_io_set_data(struct ocf_io *io, ctx_data_t *data,
 }
 
 static ctx_data_t *
-vbdev_ocf_dobj_io_get_data(struct ocf_io *io)
+vbdev_ocf_volume_io_get_data(struct ocf_io *io)
 {
 	return ocf_get_io_ctx(io)->data;
 }
 
 static void
-vbdev_ocf_dobj_io_get(struct ocf_io *io)
+vbdev_ocf_volume_io_get(struct ocf_io *io)
 {
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 
@@ -105,43 +106,13 @@ vbdev_ocf_dobj_io_get(struct ocf_io *io)
 }
 
 static void
-vbdev_ocf_dobj_io_put(struct ocf_io *io)
+vbdev_ocf_volume_io_put(struct ocf_io *io)
 {
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 
 	if (--io_ctx->ref) {
 		return;
 	}
-
-	ocf_data_obj_del_io(io);
-}
-
-static const struct ocf_io_ops vbdev_ocf_dobj_io_ops = {
-	.set_data = vbdev_ocf_dobj_io_set_data,
-	.get_data = vbdev_ocf_dobj_io_get_data,
-	.get = vbdev_ocf_dobj_io_get,
-	.put = vbdev_ocf_dobj_io_put,
-};
-
-static struct ocf_io *
-vbdev_ocf_dobj_new_io(ocf_data_obj_t obj)
-{
-	struct ocf_io *io;
-	struct ocf_io_ctx *io_ctx;
-
-	io = ocf_data_obj_new_io(obj);
-	if (io == NULL) {
-		return NULL;
-	}
-
-	io->ops = &vbdev_ocf_dobj_io_ops;
-
-	io_ctx = ocf_get_io_ctx(io);
-	io_ctx->rq_cnt = 0;
-	io_ctx->ref = 1;
-	io_ctx->error = 0;
-
-	return io;
 }
 
 static int
@@ -187,7 +158,7 @@ initialize_cpy_vector(struct iovec *cpy_vec, int cpy_vec_len, struct iovec *orig
 }
 
 static void
-vbdev_ocf_dobj_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *opaque)
+vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *opaque)
 {
 	struct ocf_io *io;
 	struct ocf_io_ctx *io_ctx;
@@ -224,7 +195,7 @@ vbdev_ocf_dobj_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *op
 		spdk_put_io_channel(io_ctx->ch);
 	}
 
-	vbdev_ocf_dobj_io_put(io);
+	vbdev_ocf_volume_io_put(io);
 	if (bdev_io) {
 		spdk_bdev_free_io(bdev_io);
 	}
@@ -248,8 +219,8 @@ prepare_submit(struct ocf_io *io)
 		return 0;
 	}
 
-	vbdev_ocf_dobj_io_get(io);
-	base = ocf_data_obj_get_priv(io->obj);
+	vbdev_ocf_volume_io_get(io);
+	base = ocf_volume_get_priv(io->volume);
 
 	if (io->io_queue == 0) {
 		/* In SPDK we never set queue id to 0
@@ -281,9 +252,9 @@ prepare_submit(struct ocf_io *io)
 }
 
 static void
-vbdev_ocf_dobj_submit_flush(struct ocf_io *io)
+vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(io->obj);
+	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status;
 
@@ -297,25 +268,25 @@ vbdev_ocf_dobj_submit_flush(struct ocf_io *io)
 	status = spdk_bdev_flush(
 			 base->desc, io_ctx->ch,
 			 io->addr, io->bytes,
-			 vbdev_ocf_dobj_submit_io_cb, io);
+			 vbdev_ocf_volume_submit_io_cb, io);
 	if (status) {
 		/* Since callback is not called, we need to do it manually to free io structures */
 		SPDK_ERRLOG("Submission failed with status=%d\n", status);
-		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 	}
 }
 
 static void
-vbdev_ocf_dobj_submit_io(struct ocf_io *io)
+vbdev_ocf_volume_submit_io(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(io->obj);
+	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
 	int iovcnt, status = 0, i, offset;
 	uint64_t addr, len;
 
 	if (io->flags == OCF_WRITE_FLUSH) {
-		vbdev_ocf_dobj_submit_flush(io);
+		vbdev_ocf_volume_submit_flush(io);
 		return;
 	}
 
@@ -331,7 +302,7 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 
 		if (i < 0) {
 			SPDK_ERRLOG("offset bigger than data size\n");
-			vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 			return;
 		}
 
@@ -341,7 +312,7 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 
 		if (!iovs) {
 			SPDK_ERRLOG("allocation failed\n");
-			vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+			vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 			return;
 		}
 
@@ -354,10 +325,10 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 
 	if (io->dir == OCF_READ) {
 		status = spdk_bdev_readv(base->desc, io_ctx->ch,
-					 iovs, iovcnt, addr, len, vbdev_ocf_dobj_submit_io_cb, io);
+					 iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
 	} else if (io->dir == OCF_WRITE) {
 		status = spdk_bdev_writev(base->desc, io_ctx->ch,
-					  iovs, iovcnt, addr, len, vbdev_ocf_dobj_submit_io_cb, io);
+					  iovs, iovcnt, addr, len, vbdev_ocf_volume_submit_io_cb, io);
 	}
 
 	if (status) {
@@ -365,14 +336,14 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 
 		/* Since callback is not called, we need to do it manually to free io structures */
 		SPDK_ERRLOG("submission failed with status=%d\n", status);
-		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 	}
 }
 
 static void
-vbdev_ocf_dobj_submit_discard(struct ocf_io *io)
+vbdev_ocf_volume_submit_discard(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_data_obj_get_priv(io->obj);
+	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status = 0;
 
@@ -381,55 +352,59 @@ vbdev_ocf_dobj_submit_discard(struct ocf_io *io)
 	status = spdk_bdev_unmap(
 			 base->desc, io_ctx->ch,
 			 io->addr, io->bytes,
-			 vbdev_ocf_dobj_submit_io_cb, io);
+			 vbdev_ocf_volume_submit_io_cb, io);
 	if (status) {
 		/* Since callback is not called, we need to do it manually to free io structures */
 		SPDK_ERRLOG("Submission failed with status=%d\n", status);
-		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		vbdev_ocf_volume_submit_io_cb(NULL, false, io);
 	}
 }
 
 static void
-vbdev_ocf_dobj_submit_metadata(struct ocf_io *io)
+vbdev_ocf_volume_submit_metadata(struct ocf_io *io)
 {
 	/* Implement with persistent metadata support */
 }
 
 static unsigned int
-vbdev_ocf_dobj_get_max_io_size(ocf_data_obj_t obj)
+vbdev_ocf_volume_get_max_io_size(ocf_volume_t volume)
 {
 	return 256;
 }
 
-static struct ocf_data_obj_properties vbdev_ocf_dobj_props = {
+static struct ocf_volume_properties vbdev_volume_props = {
 	.name = "SPDK block device",
-	.io_context_size = sizeof(struct ocf_io_ctx),
+	.io_priv_size = sizeof(struct ocf_io_ctx),
+	.volume_priv_size = sizeof(struct vbdev_ocf_base),
 	.caps = {
 		.atomic_writes = 0 /* to enable need to have ops->submit_metadata */
 	},
 	.ops = {
-		.new_io = vbdev_ocf_dobj_new_io,
-		.open = vbdev_ocf_dobj_open,
-		.close = vbdev_ocf_dobj_close,
-		.get_length = vbdev_ocf_dobj_get_length,
-		.submit_io = vbdev_ocf_dobj_submit_io,
-		.submit_discard = vbdev_ocf_dobj_submit_discard,
-		.submit_flush = vbdev_ocf_dobj_submit_flush,
-		.get_max_io_size = vbdev_ocf_dobj_get_max_io_size,
-		.submit_metadata = vbdev_ocf_dobj_submit_metadata,
-	}
+		.open = vbdev_ocf_volume_open,
+		.close = vbdev_ocf_volume_close,
+		.get_length = vbdev_ocf_volume_get_length,
+		.submit_io = vbdev_ocf_volume_submit_io,
+		.submit_discard = vbdev_ocf_volume_submit_discard,
+		.submit_flush = vbdev_ocf_volume_submit_flush,
+		.get_max_io_size = vbdev_ocf_volume_get_max_io_size,
+		.submit_metadata = vbdev_ocf_volume_submit_metadata,
+	},
+	.io_ops = {
+		.set_data = vbdev_ocf_volume_io_set_data,
+		.get_data = vbdev_ocf_volume_io_get_data,
+	},
 };
 
 int
-vbdev_ocf_dobj_init(void)
+vbdev_ocf_volume_init(void)
 {
-	return ocf_ctx_register_data_obj_type(vbdev_ocf_ctx, SPDK_OBJECT, &vbdev_ocf_dobj_props);
+	return ocf_ctx_register_volume_type(vbdev_ocf_ctx, SPDK_OBJECT, &vbdev_volume_props);
 }
 
 void
-vbdev_ocf_dobj_cleanup(void)
+vbdev_ocf_volume_cleanup(void)
 {
-	ocf_ctx_unregister_data_obj_type(vbdev_ocf_ctx, SPDK_OBJECT);
+	ocf_ctx_unregister_volume_type(vbdev_ocf_ctx, SPDK_OBJECT);
 }
 
-SPDK_LOG_REGISTER_COMPONENT("vbdev_ocf_dobj", SPDK_TRACE_VBDEV_OCF_DOBJ)
+SPDK_LOG_REGISTER_COMPONENT("vbdev_ocf_volume", SPDK_TRACE_VBDEV_OCF_DOBJ)
