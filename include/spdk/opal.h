@@ -40,6 +40,7 @@
 #include "spdk/endian.h"
 #include "spdk/string.h"
 
+#define MAX_PASSWORD_SIZE 32 /* in byte */
 /*
  * For further development
  */
@@ -63,6 +64,7 @@ enum spdk_opal_cmd {
 	OPAL_CMD_ERASE_LOCKING_RANGE,
 	OPAL_CMD_SECURE_ERASE_LOCKING_RANGE,
 	OPAL_CMD_INITIAL_SETUP,
+	OPAL_CMD_SCAN,
 };
 
 struct spdk_opal_info {
@@ -116,10 +118,11 @@ struct spdk_opal_dev;
 
 struct spdk_opal_dev *spdk_init_opal_dev(void *data, enum spdk_if_protocol protocol);
 
-void spdk_opal_scan(struct spdk_opal_dev *dev);
+int spdk_opal_scan(struct spdk_opal_dev *dev);
 void spdk_opal_close(struct spdk_opal_dev *dev);
 struct spdk_opal_info *spdk_get_opal_info(struct spdk_opal_dev *dev);
 
 bool spdk_get_opal_support(struct spdk_opal_dev *dev);
+int spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg);
 
 #endif
