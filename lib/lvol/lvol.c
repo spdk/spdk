@@ -890,7 +890,7 @@ spdk_lvol_deletable(struct spdk_lvol *lvol)
 	size_t count;
 
 	spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, NULL, &count);
-	return (count == 0);
+	return (count <= 2);
 }
 
 static void
