@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f25da8af_84349be3",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1317,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-13T16:14:21Z",
+      "side": 1,
+      "message": "should we only do this for PCIE trids?  I don\u0027t see a need to track this for RDMA/TCP trids - they are affected by hot-insert operations;  then we don\u0027t waste time/resources on extra entries for RDMA/TCP trids",
+      "revId": "19107c946da322ab538bee3d613a6685dd0f0872",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
