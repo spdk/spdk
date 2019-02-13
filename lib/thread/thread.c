@@ -55,6 +55,7 @@
 static pthread_mutex_t g_devlist_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static spdk_new_thread_fn g_new_thread_fn = NULL;
+static size_t g_ctx_sz = 0;
 
 struct io_device {
 	void				*io_device;
@@ -132,6 +133,9 @@ struct spdk_thread {
 
 	SLIST_HEAD(, spdk_msg)		msg_cache;
 	size_t				msg_cache_count;
+
+	/* User context allocated at the end */
+	uint8_t				ctx[0];
 };
 
 static TAILQ_HEAD(, spdk_thread) g_threads = TAILQ_HEAD_INITIALIZER(g_threads);
@@ -158,12 +162,14 @@ _set_thread_name(const char *thread_name)
 }
 
 int
-spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn)
+spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 {
 	char mempool_name[SPDK_MAX_MEMZONE_NAME_LEN];
 
 	assert(g_new_thread_fn == NULL);
 	g_new_thread_fn = new_thread_fn;
+
+	g_ctx_sz = ctx_sz;
 
 	snprintf(mempool_name, sizeof(mempool_name), "msgpool_%d", getpid());
 	g_spdk_msg_mempool = spdk_mempool_create(mempool_name,
@@ -200,7 +206,7 @@ spdk_thread_create(const char *name)
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
 	int rc, i;
 
-	thread = calloc(1, sizeof(*thread));
+	thread = calloc(1, sizeof(*thread) + g_ctx_sz);
 	if (!thread) {
 		SPDK_ERRLOG("Unable to allocate memory for thread\n");
 		return NULL;
@@ -324,6 +330,16 @@ spdk_thread_exit(struct spdk_thread *thread)
 	}
 
 	free(thread);
+}
+
+void *
+spdk_thread_get_ctx(struct spdk_thread *thread)
+{
+	if (g_ctx_sz > 0) {
+		return thread->ctx;
+	}
+
+	return NULL;
 }
 
 static inline uint32_t
