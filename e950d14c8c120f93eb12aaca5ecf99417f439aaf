@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9dfd6d1c_a3f66406",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-13T11:00:08Z",
+      "side": 1,
+      "message": "why you hide errors?",
+      "range": {
+        "startLine": 194,
+        "startChar": 22,
+        "endLine": 194,
+        "endChar": 41
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb1f6af4_17950139",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-13T11:00:08Z",
+      "side": 1,
+      "message": "Can you try something like this?\n\n\tlocal driver_path\u003d\"\"\n\tlocal driver_name\u003d\"\"\n\n\tif [[ -n \"${DRIVER_OVERRIDE}\" ]]; then\n\t\tdriver_path\u003d\"${DRIVER_OVERRIDE%/*}\"\n\t\tdriver_name\u003d\"${DRIVER_OVERRIDE##*/}\"\n\t\t# path \u003d name -\u003e there is no path\n\t\tif [[ \"$driver_path\" \u003d \"$driver_name\" ]]; then\n\t\t\tdriver_path\u003d\"\"\n\t\tfi\n\telif [[ -n \"$(ls /sys/kernel/iommu_groups)\" ]]; then\n\t\tdriver_name\u003dvfio-pci\n\telif modinfo uio_pci_generic 2\u003e/dev/null; then\n\t\tdriver_name\u003duio_pci_generic\n\telif [[ -r \"$rootdir/dpdk/build/kmod/igb_uio.ko\" ]]; then\n\t\tdriver_path\u003d\"$rootdir/dpdk/build/kmod/igb_uio.ko\"\n\t\tdriver_name\u003d\"igb_uio\"\n\t\techo \"WARNING: uio_pci_generic not detected - using $driver_name\"\n\telse\n\t\techo \"No valid drivers found [vfio-pci, uio_pci_generic, igb_uio]. Please either enable the vfio-pci or uio_pci_generic\"\n\t\techo \"kernel modules, or have SPDK build the igb_uio driver by running ./configure --with-igb-uio-driver and recompiling.\"\n\t\treturn 1\n\tfi\n\n\tif [[ -n \"$driver_path\" ]]; then\n\t\tinsmod $driver_path\n\telse\n\t\tmodprobe $driver_name\n\tfi\n\nThanks",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 23
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
