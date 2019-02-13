@@ -1148,7 +1148,7 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 				    struct spdk_nvmf_transport_poll_group *group, struct spdk_nvmf_transport *transport)
 {
 	for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
-		if (group->buf_cache_count < group->buf_cache_size) {
+		if ((group != NULL) && (group->buf_cache_count < group->buf_cache_size)) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
 					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
 			group->buf_cache_count++;

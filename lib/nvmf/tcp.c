@@ -2095,13 +2095,14 @@ spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 {
 	for (uint32_t i = 0; i < tcp_req->req.iovcnt; i++) {
 		assert(tcp_req->buffers[i] != NULL);
-		if (group->buf_cache_count < group->buf_cache_size) {
+		if ((group != NULL) && (group->buf_cache_count < group->buf_cache_size)) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
 					   (struct spdk_nvmf_transport_pg_cache_buf *)tcp_req->buffers[i], link);
 			group->buf_cache_count++;
 		} else {
 			spdk_mempool_put(transport->data_buf_pool, tcp_req->buffers[i]);
 		}
+
 		tcp_req->req.iov[i].iov_base = NULL;
 		tcp_req->buffers[i] = NULL;
 		tcp_req->req.iov[i].iov_len = 0;
