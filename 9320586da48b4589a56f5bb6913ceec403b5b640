@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "561ba902_6b1e1aaf",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-13T07:37:15Z",
+      "side": 1,
+      "message": "is this assert too strong? (it looks that this means no state change has occurred.)",
+      "range": {
+        "startLine": 1258,
+        "startChar": 1,
+        "endLine": 1258,
+        "endChar": 7
+      },
+      "revId": "9320586da48b4589a56f5bb6913ceec403b5b640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
