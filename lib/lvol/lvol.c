@@ -901,14 +901,15 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 
 	if (lvolerrno < 0) {
 		SPDK_ERRLOG("Could not delete blob on lvol\n");
+		lvol->action_in_progress = false;
 		goto end;
 	}
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
 	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
+	_spdk_lvol_free(lvol);
 
 end:
-	_spdk_lvol_free(lvol);
 	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
 }
