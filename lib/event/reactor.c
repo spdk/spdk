@@ -64,8 +64,6 @@ struct spdk_reactor {
 	struct rusage					rusage;
 
 	struct spdk_ring				*events;
-
-	uint64_t					max_delay_us;
 } __attribute__((aligned(64)));
 
 static struct spdk_reactor *g_reactors;
@@ -74,8 +72,7 @@ static enum spdk_reactor_state	g_reactor_state = SPDK_REACTOR_STATE_INVALID;
 
 static bool g_context_switch_monitor_enabled = true;
 
-static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore,
-				   uint64_t max_delay_us);
+static void spdk_reactor_construct(struct spdk_reactor *w, uint32_t lcore);
 
 static struct spdk_mempool *g_spdk_event_mempool = NULL;
 
@@ -239,10 +236,6 @@ _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
 	struct spdk_thread	*thread;
-	uint64_t		now;
-	uint64_t		sleep_cycles;
-	uint32_t		sleep_us;
-	int			rc;
 	char			thread_name[32];
 
 	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
@@ -252,7 +245,6 @@ _spdk_reactor_run(void *arg)
 	}
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
-	sleep_cycles = reactor->max_delay_us * spdk_get_ticks_hz() / SPDK_SEC_TO_USEC;
 	if (g_context_switch_monitor_enabled) {
 		spdk_set_thread(thread);
 		_spdk_reactor_context_switch_monitor_start(reactor, NULL);
@@ -262,31 +254,7 @@ _spdk_reactor_run(void *arg)
 	while (1) {
 		_spdk_event_queue_run_batch(reactor, thread);
 
-		rc = spdk_thread_poll(thread, 0, 0);
-
-		/* Determine if the thread can sleep */
-		if (sleep_cycles && rc == 0) {
-			uint64_t next_run_tick;
-
-			now = spdk_get_ticks();
-			sleep_us = reactor->max_delay_us;
-			next_run_tick = spdk_thread_next_poller_expiration(thread);
-
-			/* There are timers registered, so don't sleep beyond
-			 * when the next timer should fire */
-			if (next_run_tick > 0 && next_run_tick < (now + sleep_cycles)) {
-				if (next_run_tick <= now) {
-					sleep_us = 0;
-				} else {
-					sleep_us = ((next_run_tick - now) *
-						    SPDK_SEC_TO_USEC) / spdk_get_ticks_hz();
-				}
-			}
-
-			if (sleep_us > 0) {
-				usleep(sleep_us);
-			}
-		}
+		spdk_thread_poll(thread, 0, 0);
 
 		if (g_reactor_state != SPDK_REACTOR_STATE_RUNNING) {
 			break;
@@ -300,10 +268,9 @@ _spdk_reactor_run(void *arg)
 }
 
 static void
-spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore, uint64_t max_delay_us)
+spdk_reactor_construct(struct spdk_reactor *reactor, uint32_t lcore)
 {
 	reactor->lcore = lcore;
-	reactor->max_delay_us = max_delay_us;
 
 	reactor->events = spdk_ring_create(SPDK_RING_TYPE_MP_SC, 65536, SPDK_ENV_SOCKET_ID_ANY);
 	assert(reactor->events != NULL);
@@ -374,7 +341,7 @@ spdk_reactors_stop(void *arg1, void *arg2)
 }
 
 int
-spdk_reactors_init(unsigned int max_delay_us)
+spdk_reactors_init(void)
 {
 	int rc;
 	uint32_t i, last_core;
@@ -410,7 +377,7 @@ spdk_reactors_init(unsigned int max_delay_us)
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
-		spdk_reactor_construct(reactor, i, max_delay_us);
+		spdk_reactor_construct(reactor, i);
 	}
 
 	g_reactor_state = SPDK_REACTOR_STATE_INITIALIZED;
