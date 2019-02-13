@@ -22,6 +22,30 @@
       "revId": "e3d7d86436f2793ce81493eae0c35177239cf7dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5d14500a_1de09ee5",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-13T12:56:20Z",
+      "side": 1,
+      "message": "I think there is no need to add this particular exception as we want to only log error for all type of exceptions",
+      "parentUuid": "ad643404_31e45f4a",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 42
+      },
+      "revId": "e3d7d86436f2793ce81493eae0c35177239cf7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
