@@ -34,6 +34,24 @@
       "revId": "6bae09f224028be6eff4a8e14636044607026e72",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aa818fca_19c78524",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-13T05:08:03Z",
+      "side": 1,
+      "message": "Your current code is run-to-completion for each trid_entry. Hence according to your new comment in the previous patch, current code will be better for now at least until error recovery is implemented.",
+      "parentUuid": "c48b959e_f2f6dbd7",
+      "revId": "6bae09f224028be6eff4a8e14636044607026e72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
