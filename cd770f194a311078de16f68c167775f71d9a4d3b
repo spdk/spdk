@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acd295e7_edb10723",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 414,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T19:08:13Z",
+      "side": 1,
+      "message": "This is probably best written the other way around now\n\nif (ctrlr-\u003estate !\u003d NVME_CTRLR_STATE_READY) {\n    nvme_robust_mutex_unlock(\u0026g_spdk_nvme_driver-\u003elock);\n    return 0;\n}",
+      "revId": "cd770f194a311078de16f68c167775f71d9a4d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d53234a9_9bd8551f",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T19:08:13Z",
+      "side": 1,
+      "message": "Can you move this check to the beginning of nvme_init_controllers? I think that avoids the duplicated code.",
+      "revId": "cd770f194a311078de16f68c167775f71d9a4d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
