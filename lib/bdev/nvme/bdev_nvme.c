@@ -778,6 +778,7 @@ nvme_ctrlr_create_bdev(struct nvme_ctrlr *nvme_ctrlr, uint32_t nsid)
 		if (bdev->disk.dif_type != SPDK_DIF_DISABLE) {
 			bdev->disk.dif_is_head_of_md = nsdata->dps.md_start;
 			bdev->disk.dif_check_flags = nvme_ctrlr->prchk_flags;
+			bdev->disk.dif_guard_seed = nvme_ctrlr->pi_guard_seed;
 		}
 	}
 
@@ -991,7 +992,7 @@ static int
 create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 	     const char *name,
 	     const struct spdk_nvme_transport_id *trid,
-	     uint32_t prchk_flags)
+	     uint32_t prchk_flags, uint16_t pi_guard_seed)
 {
 	struct nvme_ctrlr *nvme_ctrlr;
 
@@ -1019,6 +1020,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 		return -ENOMEM;
 	}
 	nvme_ctrlr->prchk_flags = prchk_flags;
+	nvme_ctrlr->pi_guard_seed = pi_guard_seed;
 
 	spdk_io_device_register(ctrlr, bdev_nvme_create_cb, bdev_nvme_destroy_cb,
 				sizeof(struct nvme_io_channel),
@@ -1068,7 +1070,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Attached to %s (%s)\n", trid->traddr, name);
 
-	create_ctrlr(ctrlr, name, trid, prchk_flags);
+	create_ctrlr(ctrlr, name, trid, prchk_flags, 0);
 
 	free(name);
 }
@@ -1231,7 +1233,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags)) {
+	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags, 0)) {
 		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
 	}
@@ -1455,7 +1457,7 @@ bdev_nvme_library_init(void)
 				goto end;
 			}
 
-			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i], 0);
+			rc = create_ctrlr(ctrlr, probe_ctx->names[i], &probe_ctx->trids[i], 0, 0);
 			if (rc) {
 				goto end;
 			}
@@ -1558,7 +1560,7 @@ bdev_nvme_verify_pi_error(struct spdk_bdev_io *bdev_io)
 	rc = spdk_dif_ctx_init(&dif_ctx,
 			       bdev->blocklen, bdev->md_len, bdev->md_interleave,
 			       bdev->dif_is_head_of_md, bdev->dif_type, bdev->dif_check_flags,
-			       bdev_io->u.bdev.offset_blocks, 0, 0, 0);
+			       bdev_io->u.bdev.offset_blocks, 0, 0, bdev->dif_guard_seed);
 	if (rc != 0) {
 		SPDK_ERRLOG("Initialization of DIF context failed\n");
 		return;

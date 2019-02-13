@@ -72,6 +72,7 @@ struct nvme_ctrlr {
 	 * NVMe controllers are not included.
 	 */
 	uint32_t			prchk_flags;
+	uint16_t			pi_guard_seed;
 	uint32_t			num_ns;
 	/** Array of bdevs indexed by nsid - 1 */
 	struct nvme_bdev		*bdevs;
