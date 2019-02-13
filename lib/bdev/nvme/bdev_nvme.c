@@ -57,6 +57,7 @@ struct nvme_io_channel {
 	struct spdk_poller	*poller;
 
 	bool			collect_spin_stat;
+	bool			is_error;
 	uint64_t		spin_ticks;
 	uint64_t		start_ticks;
 	uint64_t		end_ticks;
@@ -201,7 +202,12 @@ bdev_nvme_poll(void *arg)
 		ch->start_ticks = spdk_get_ticks();
 	}
 
-	num_completions = spdk_nvme_qpair_process_completions(ch->qpair, 0);
+	if (!ch->is_error) {
+		num_completions = spdk_nvme_qpair_process_completions(ch->qpair, 0);
+		if ((num_completions < 0) && !ch->is_error) {
+			ch->is_error = true;
+		}
+	}
 
 	if (ch->collect_spin_stat) {
 		if (num_completions > 0) {
@@ -302,6 +308,7 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 		return;
 	}
 
+	nvme_ch->is_error = false;
 	spdk_for_each_channel_continue(i, 0);
 }
 
@@ -391,8 +398,8 @@ static int
 _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
-	if (nvme_ch->qpair == NULL) {
-		/* The device is currently resetting */
+	if (nvme_ch->qpair == NULL || nvme_ch->is_error) {
+		/* The device is currently resetting or the device is not available */
 		return -1;
 	}
 
