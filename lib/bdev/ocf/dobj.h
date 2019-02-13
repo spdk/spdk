@@ -51,12 +51,12 @@ struct ocf_io_ctx {
 	int error;
 };
 
-int vbdev_ocf_dobj_init(void);
-void vbdev_ocf_dobj_cleanup(void);
+int vbdev_ocf_volume_init(void);
+void vbdev_ocf_volume_cleanup(void);
 
 static inline struct ocf_io_ctx *ocf_get_io_ctx(struct ocf_io *io)
 {
-	return ocf_data_obj_get_data_from_io(io);
+	return ocf_io_get_priv(io);
 }
 
 #endif
