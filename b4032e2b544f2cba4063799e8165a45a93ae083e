@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab833e57_c663b199",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-13T18:44:46Z",
+      "side": 1,
+      "message": "let\u0027s just remove the thread created here, and then assert that the thread list is empty",
+      "revId": "b4032e2b544f2cba4063799e8165a45a93ae083e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
