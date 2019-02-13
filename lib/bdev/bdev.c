@@ -2370,6 +2370,12 @@ spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 	}
 }
 
+uint16_t
+spdk_bdev_get_dif_guard_seed(const struct spdk_bdev *bdev)
+{
+	return bdev->dif_guard_seed;
+}
+
 uint64_t
 spdk_bdev_get_qd(const struct spdk_bdev *bdev)
 {
