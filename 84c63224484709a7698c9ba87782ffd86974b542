@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "62623a22_79efb81e",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-13T14:51:16Z",
+      "side": 1,
+      "message": "$rootdir is not defined here yet",
+      "parentUuid": "fbe7a4b9_1d7a7afe",
+      "range": {
+        "startLine": 274,
+        "startChar": 35,
+        "endLine": 274,
+        "endChar": 36
+      },
+      "revId": "84c63224484709a7698c9ba87782ffd86974b542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a612fa54_04ec702f",
         "filename": "configure",
         "patchSetId": 1
