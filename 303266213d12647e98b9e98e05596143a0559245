@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b16c405_807feed8",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-13T02:26:22Z",
+      "side": 1,
+      "message": "this should be lw_thread-\u003ethread ?",
+      "range": {
+        "startLine": 300,
+        "startChar": 66,
+        "endLine": 300,
+        "endChar": 72
+      },
+      "revId": "303266213d12647e98b9e98e05596143a0559245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
