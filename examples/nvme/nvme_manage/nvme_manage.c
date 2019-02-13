@@ -142,7 +142,7 @@ static void usage(void)
 	printf("\t[5: detach namespace from controller]\n");
 	printf("\t[6: format namespace or controller]\n");
 	printf("\t[7: firmware update]\n");
-	printf("\t[8: opal scan]\n");
+	printf("\t[8: opal]\n");
 	printf("\t[9: quit]\n");
 }
 
@@ -932,23 +932,102 @@ static void spdk_dump_opal_info(struct spdk_opal_info *opal)
 	}
 }
 
+static void opal_usage(void)
+{
+	printf("Opal General Usage:\n");
+	printf("\n");
+	printf("\t[1: scan device]\n");
+	printf("\t[2: take ownership]\n");
+	printf("\t[0: quit]\n");
+}
+
+static void opal_scan(void)
+{
+	struct dev *ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI Address.\n");
+		return;
+	}
+
+	ctrlr->opal_dev = spdk_init_opal_dev(ctrlr->ctrlr, OPAL_NVME);
+	if (spdk_get_opal_support(ctrlr->opal_dev)) {
+		printf("\n\nOpal Supported:\n");
+		display_controller(ctrlr, CONTROLLER_DISPLAY_SIMPLISTIC);
+		spdk_opal_scan(ctrlr->opal_dev);
+		spdk_dump_opal_info(spdk_get_opal_info(ctrlr->opal_dev));
+		spdk_opal_close(ctrlr->opal_dev);
+	}
+}
+
+static void opal_take_ownership(void)
+{
+	char new_passwd[MAX_PASSWORD_SIZE];
+	char *passwd_p;
+	int ret;
+
+	struct dev *ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI Address.\n");
+		return;
+	}
+
+	memset(new_passwd, 0, sizeof(new_passwd));
+
+	printf("Please input the new password for ownership:\n");
+	passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin);
+	if (passwd_p) {
+		ctrlr->opal_dev = spdk_init_opal_dev(ctrlr->ctrlr, OPAL_NVME);
+		if (spdk_get_opal_support(ctrlr->opal_dev)) {
+			ret = spdk_opal_cmd(ctrlr->opal_dev, OPAL_CMD_TAKE_OWNERSHIP, passwd_p);
+			if (ret) {
+				printf("Take ownership failure: %d\n", ret);
+				return;
+			}
+			printf("Take Ownership Success\n");
+			spdk_opal_close(ctrlr->opal_dev);
+		}
+	} else {
+		printf("Input password invalid. Take ownership failure\n");
+	}
+}
+
 static void
 test_opal(void)
 {
-	struct dev *iter;
-	int i;
-	foreach_dev(iter) {
-		iter->opal_dev = spdk_init_opal_dev(iter->ctrlr, OPAL_NVME);
-	}
+	int exit_flag = false;
 
-	for (i = 0; i < num_devs; i++) {
-		if (spdk_get_opal_support(devs[i].opal_dev)) {
-			printf("\n\nOpal Supported:\n");
-			display_controller(&devs[i], CONTROLLER_DISPLAY_SIMPLISTIC);
-			spdk_opal_scan(devs[i].opal_dev);
-			spdk_dump_opal_info(spdk_get_opal_info(devs[i].opal_dev));
-			spdk_opal_close(devs[i].opal_dev);
+	opal_usage();
+	while (1) {
+		int cmd;
+		if (!scanf("%d", &cmd)) {
+			printf("Invalid Command: command must be number 0-2\n");
+			while (getchar() != '\n');
+			opal_usage();
+			continue;
 		}
+		switch (cmd) {
+		case 0:
+			exit_flag = true;
+			break;
+		case 1:
+			opal_scan();
+			break;
+		case 2:
+			opal_take_ownership();
+			break;
+
+		default:
+			printf("Invalid option\n");
+		}
+
+		if (exit_flag) {
+			break;
+		}
+
+		while (getchar() != '\n');
+		printf("press Enter to display cmd menu ...\n");
+		while (getchar() != '\n');
+		opal_usage();
 	}
 }
 
