@@ -53,6 +53,29 @@
     },
     {
       "key": {
+        "uuid": "9dbe8223_99460f8e",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-13T12:37:54Z",
+      "side": 1,
+      "message": "Can we add information that we can just type:\nsource /opt/km/install/tools/gdb_macros/gdb_macros.py\ninstead of importing module",
+      "range": {
+        "startLine": 95,
+        "startChar": 0,
+        "endLine": 99,
+        "endChar": 3
+      },
+      "revId": "933e04e4570cdb848db0d13127f9a5b1816c3745",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cc81a68c_ff70efe7",
         "filename": "doc/prog_guides.md",
         "patchSetId": 7
