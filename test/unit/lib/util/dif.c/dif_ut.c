@@ -38,6 +38,7 @@
 #include "util/dif.c"
 
 #define DATA_PATTERN	0xAB
+#define GUARD_SEED	0xCD
 
 static int
 ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
@@ -272,8 +273,54 @@ dif_sec_512_md_0_error_test(void)
 	int rc;
 
 	/* Metadata size is 0. */
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, true, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc != 0);
+}
+
+static void
+dif_guard_seed_test(void)
+{
+	struct iovec iov;
+	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error err_blk = {};
+	struct spdk_dif *dif;
+	uint16_t guard;
+	int rc;
+
+	_iov_alloc_buf(&iov, 512 + 8);
+
+	memset(iov.iov_base, 0, 512 + 8);
+
+	dif = (struct spdk_dif *)(iov.iov_base + 512);
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, 0);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
+
+	/* Guard should be zero if the block is all zero and seed is not added. */
+	guard = from_be16(&dif->guard);
+	CU_ASSERT(guard == 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_ctx_init(&ctx, 512 + 8, 8, true, false, SPDK_DIF_TYPE1,
+			       SPDK_DIF_FLAGS_GUARD_CHECK, 0, 0, 0, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_generate(&iov, 1, 1, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* Guard should not be zero if the block is all zero but seed is not added. */
+	guard = from_be16(&dif->guard);
+	CU_ASSERT(guard != 0);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iov);
 }
 
 static void
@@ -289,7 +336,7 @@ dif_generate_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag);
+			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
@@ -594,7 +641,7 @@ _dif_inject_error_and_verify(struct iovec *iovs, int iovcnt,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc,
-			       SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88);
+			       SPDK_DIF_TYPE1, dif_flags, 88, 0xFFFF, 0x88, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate(iovs, iovcnt, num_blocks, &ctx);
@@ -752,7 +799,7 @@ dif_copy_gen_and_verify(struct iovec *iovs, int iovcnt, struct iovec *bounce_iov
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag);
+			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
@@ -923,7 +970,7 @@ _dif_copy_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, true, dif_loc, SPDK_DIF_TYPE1, dif_flags,
-			       88, 0xFFFF, 0x88);
+			       88, 0xFFFF, 0x88, GUARD_SEED);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
 
 	rc = spdk_dif_generate_copy(iovs, iovcnt, bounce_iov, num_blocks, &ctx);
@@ -1028,7 +1075,7 @@ dix_sec_512_md_0_error(void)
 	struct spdk_dif_ctx ctx;
 	int rc;
 
-	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
+	rc = spdk_dif_ctx_init(&ctx, 512, 0, false, false, SPDK_DIF_TYPE1, 0, 0, 0, 0, 0);
 	CU_ASSERT(rc != 0);
 }
 
@@ -1045,7 +1092,7 @@ dix_generate_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, dif_type, dif_flags,
-			       init_ref_tag, apptag_mask, app_tag);
+			       init_ref_tag, apptag_mask, app_tag, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dix_generate(iovs, iovcnt, md_iov, num_blocks, &ctx);
@@ -1211,7 +1258,7 @@ _dix_inject_error_and_verify(struct iovec *iovs, int iovcnt, struct iovec *md_io
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dif_ctx_init(&ctx, block_size, md_size, false, dif_loc, SPDK_DIF_TYPE1, dif_flags,
-			       88, 0xFFFF, 0x88);
+			       88, 0xFFFF, 0x88, GUARD_SEED);
 	CU_ASSERT(rc == 0);
 
 	rc = spdk_dix_generate(iovs, iovcnt, md_iov, num_blocks, &ctx);
@@ -1315,6 +1362,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dif_generate_and_verify_test", dif_generate_and_verify_test) == NULL ||
 		CU_add_test(suite, "dif_disable_check_test", dif_disable_check_test) == NULL ||
 		CU_add_test(suite, "dif_sec_512_md_0_error_test", dif_sec_512_md_0_error_test) == NULL ||
+		CU_add_test(suite, "dif_guard_seed_test", dif_guard_seed_test) == NULL ||
 		CU_add_test(suite, "dif_disable_sec_512_md_8_single_iov_test",
 			    dif_disable_sec_512_md_8_single_iov_test) == NULL ||
 		CU_add_test(suite, "dif_sec_512_md_8_prchk_0_single_iov_test",
