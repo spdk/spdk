@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbe7a4b9_1d7a7afe",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-13T10:19:35Z",
+      "side": 1,
+      "message": "please use $rootdir/ocf to match the convention in rest of the file.",
+      "range": {
+        "startLine": 274,
+        "startChar": 35,
+        "endLine": 274,
+        "endChar": 36
+      },
+      "revId": "84c63224484709a7698c9ba87782ffd86974b542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a612fa54_04ec702f",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 445,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-13T10:19:35Z",
+      "side": 1,
+      "message": "Could you update this message as well? E.g. point the user to `git submodule update --init` like other submodules do (see line #414)",
+      "revId": "84c63224484709a7698c9ba87782ffd86974b542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
