@@ -545,7 +545,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
 			       true, false,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
-			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG);
+			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return;
