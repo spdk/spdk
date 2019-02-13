@@ -68,6 +68,30 @@
       "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdd0dd47_b3b5c87a",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-13T16:08:23Z",
+      "side": 1,
+      "message": "I can add assert for this. At this point ftl_ltp_get must return cached value.",
+      "parentUuid": "e250f2f8_58c785c5",
+      "range": {
+        "startLine": 1071,
+        "startChar": 7,
+        "endLine": 1071,
+        "endChar": 36
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
