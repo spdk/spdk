@@ -45,6 +45,30 @@
       "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0b4db04_1148e4de",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-13T11:01:57Z",
+      "side": 1,
+      "message": "+ modprobe uio\n\n\n  \telif [[ -r \"$rootdir/dpdk/build/kmod/igb_uio.ko\" ]]; then\n  \t\tdriver_path\u003d\"$rootdir/dpdk/build/kmod/igb_uio.ko\"\n  \t\tdriver_name\u003d\"igb_uio\"\n  +\t\tmodprobe uio\n  \t\techo \"WARNING: uio_pci_generic not detected - using $driver_name\"\n  \telse",
+      "parentUuid": "bb1f6af4_17950139",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 23
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
