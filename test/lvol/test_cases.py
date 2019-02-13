@@ -1235,12 +1235,6 @@ class TestCases(object):
         fail_count += self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
-        # Try to destroy snapshot with clones and check if it fails
-        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev['name'])
-        if ret_value == 0:
-            print("ERROR: Delete snapshot should fail but didn't")
-            fail_count += 1
-
         # Destroy clone and then snapshot
         fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
         fail_count += self.c.destroy_lvol_bdev(clone_bdev['name'])
@@ -1300,15 +1294,14 @@ class TestCases(object):
         fail_count += self.c.snapshot_lvol_bdev(clone_bdev['name'], snapshot_name2)
         snapshot_bdev2 = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name2)
 
-        # Try to destroy snapshots with clones and check if it fails
+        # Try to destroy snapshot with 2 clones and check if it fails
         ret_value = self.c.destroy_lvol_bdev(snapshot_bdev['name'])
         if ret_value == 0:
             print("ERROR: Delete snapshot should fail but didn't")
             fail_count += 1
-        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev2['name'])
-        if ret_value == 0:
-            print("ERROR: Delete snapshot should fail but didn't")
-            fail_count += 1
+
+        # Try to destroy snapshot with 1 clone and check if it succeed
+        fail_count += self.c.destroy_lvol_bdev(snapshot_bdev2['name'])
 
         # Destroy lvol store without deleting lvol bdevs
         fail_count += self.c.destroy_lvol_store(uuid_store)
@@ -2704,12 +2697,6 @@ class TestCases(object):
         fail_count += self.c.snapshot_lvol_bdev(lvol_bdev['name'], snapshot_name)
         snapshot_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + snapshot_name)
 
-        # Try to destroy snapshot and check if it fails
-        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev['name'])
-        if ret_value == 0:
-            print("ERROR: Delete snapshot should fail but didn't")
-            fail_count += 1
-
         # Decouple parent lvol bdev
         fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
         lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev0)
@@ -2806,12 +2793,6 @@ class TestCases(object):
             begin_fill = int(size * i / 5)
             fail_count += self.run_fio_test(nbd_name, begin_fill * MEGABYTE,
                                             fill_range * MEGABYTE, "read", pattern[i])
-
-        # Delete snapshot and check if it fails
-        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev2['name'])
-        if ret_value == 0:
-            print("ERROR: Delete snapshot should fail but didn't")
-            fail_count += 1
 
         # Decouple parent
         fail_count += self.c.decouple_parent_lvol_bdev(lvol_bdev['name'])
