@@ -46,7 +46,7 @@
 static int
 vbdev_ocf_volume_open(ocf_volume_t volume)
 {
-	struct vbdev_ocf_base *priv = ocf_volume_get_priv(volume);
+	struct vbdev_ocf_base **priv = ocf_volume_get_priv(volume);
 	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
 
 	if (base == NULL) {
@@ -54,7 +54,7 @@ vbdev_ocf_volume_open(ocf_volume_t volume)
 		return -EINVAL;
 	}
 
-	*priv = *base;
+	*priv = base;
 
 	return 0;
 }
@@ -67,7 +67,7 @@ vbdev_ocf_volume_close(ocf_volume_t volume)
 static uint64_t
 vbdev_ocf_volume_get_length(ocf_volume_t volume)
 {
-	struct vbdev_ocf_base *base = ocf_volume_get_priv(volume);
+	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(volume));
 	uint64_t len;
 
 	len = base->bdev->blocklen * base->bdev->blockcnt;
@@ -220,7 +220,7 @@ prepare_submit(struct ocf_io *io)
 	}
 
 	vbdev_ocf_volume_io_get(io);
-	base = ocf_volume_get_priv(io->volume);
+	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 
 	if (io->io_queue == 0) {
 		/* In SPDK we never set queue id to 0
@@ -254,7 +254,7 @@ prepare_submit(struct ocf_io *io)
 static void
 vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
+	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status;
 
@@ -279,7 +279,7 @@ vbdev_ocf_volume_submit_flush(struct ocf_io *io)
 static void
 vbdev_ocf_volume_submit_io(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
+	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct iovec *iovs;
 	int iovcnt, status = 0, i, offset;
@@ -343,7 +343,7 @@ vbdev_ocf_volume_submit_io(struct ocf_io *io)
 static void
 vbdev_ocf_volume_submit_discard(struct ocf_io *io)
 {
-	struct vbdev_ocf_base *base = ocf_volume_get_priv(io->volume);
+	struct vbdev_ocf_base *base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status = 0;
 
@@ -375,7 +375,7 @@ vbdev_ocf_volume_get_max_io_size(ocf_volume_t volume)
 static struct ocf_volume_properties vbdev_volume_props = {
 	.name = "SPDK block device",
 	.io_priv_size = sizeof(struct ocf_io_ctx),
-	.volume_priv_size = sizeof(struct vbdev_ocf_base),
+	.volume_priv_size = sizeof(struct vbdev_ocf_base *),
 	.caps = {
 		.atomic_writes = 0 /* to enable need to have ops->submit_metadata */
 	},
