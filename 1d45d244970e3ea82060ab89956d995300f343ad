@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b5d7617d_5348c092",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-13T13:20:19Z",
+      "side": 1,
+      "message": "This also copies the state of base at current moment which is not enought because the state changes. Is it possible to set priv to be pointer to base? That would solve the issue.",
+      "range": {
+        "startLine": 57,
+        "startChar": 1,
+        "endLine": 57,
+        "endChar": 14
+      },
+      "revId": "1d45d244970e3ea82060ab89956d995300f343ad",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
