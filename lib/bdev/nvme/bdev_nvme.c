@@ -202,6 +202,10 @@ bdev_nvme_poll(void *arg)
 	}
 
 	num_completions = spdk_nvme_qpair_process_completions(ch->qpair, 0);
+	if (num_completions < 0) {
+		spdk_nvme_ctrlr_free_io_qpair(ch->qpair);
+		ch->qpair = NULL;
+	}
 
 	if (ch->collect_spin_stat) {
 		if (num_completions > 0) {
@@ -392,7 +396,7 @@ _bdev_nvme_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 {
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(ch);
 	if (nvme_ch->qpair == NULL) {
-		/* The device is currently resetting */
+		/* The device is currently resetting or the device is not available */
 		return -1;
 	}
 

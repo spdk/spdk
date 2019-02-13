@@ -406,7 +406,7 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		bdevperf_submit_single(target, task);
 	} else {
 		TAILQ_INSERT_TAIL(&target->task_list, task, link);
-		if (target->current_queue_depth == 0) {
+		if (target->current_queue_depth == 0 || g_run_failed) {
 			complete = spdk_event_allocate(g_master_core, end_run, target, NULL);
 			spdk_event_call(complete);
 		}
