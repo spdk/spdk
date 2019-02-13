@@ -33,7 +33,7 @@ class SpdkArr(object):
         self.element_type = element_type
 
     def __iter__(self):
-        for i in xrange(0, self.num_elements):
+        for i in range(0, self.num_elements):
             curr = (self.arr_pointer + i).dereference()
             if (curr == 0x0):
                 continue
@@ -149,7 +149,7 @@ class NvmfSubsystem(SpdkObject):
     def get_ns_list(self):
         max_nsid = int(self.obj['max_nsid'])
         ns_list = []
-        for i in xrange(0, max_nsid):
+        for i in range(0, max_nsid):
             nsptr = (self.obj['ns'] + i).dereference()
             if nsptr == 0x0:
                 continue
