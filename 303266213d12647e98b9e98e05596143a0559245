@@ -22,6 +22,30 @@
       "revId": "303266213d12647e98b9e98e05596143a0559245",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "995f0bee_d1adcab3",
+        "filename": "lib/event/reactor.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 300,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T16:40:16Z",
+      "side": 1,
+      "message": "You\u0027re right, good catch.",
+      "parentUuid": "5b16c405_807feed8",
+      "range": {
+        "startLine": 300,
+        "startChar": 66,
+        "endLine": 300,
+        "endChar": 72
+      },
+      "revId": "303266213d12647e98b9e98e05596143a0559245",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
