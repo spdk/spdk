@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4f375ed8_99d279c5",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 194,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-13T19:25:09Z",
+      "side": 1,
+      "message": "If the module has already been inserted, insmod returns an error. I didn\u0027t want to fail out in that case, but you\u0027re right, I should still display the error message to the user.",
+      "parentUuid": "9dfd6d1c_a3f66406",
+      "range": {
+        "startLine": 194,
+        "startChar": 22,
+        "endLine": 194,
+        "endChar": 41
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb1f6af4_17950139",
         "filename": "scripts/setup.sh",
         "patchSetId": 3
@@ -60,6 +84,54 @@
       "side": 1,
       "message": "+ modprobe uio\n\n\n  \telif [[ -r \"$rootdir/dpdk/build/kmod/igb_uio.ko\" ]]; then\n  \t\tdriver_path\u003d\"$rootdir/dpdk/build/kmod/igb_uio.ko\"\n  \t\tdriver_name\u003d\"igb_uio\"\n  +\t\tmodprobe uio\n  \t\techo \"WARNING: uio_pci_generic not detected - using $driver_name\"\n  \telse",
       "parentUuid": "bb1f6af4_17950139",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 23
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7f8fbc3_d604ac18",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-13T19:25:09Z",
+      "side": 1,
+      "message": "Done, except that driver_name can\u0027t be local because it is used in configure_linux later. Also I had to improvise a little on the rebase. Also, I changed the uio_pci_generic command to not output anything.",
+      "parentUuid": "bb1f6af4_17950139",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 200,
+        "endChar": 23
+      },
+      "revId": "e950d14c8c120f93eb12aaca5ecf99417f439aaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8c146c9c_5c860774",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 200,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-13T19:25:09Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d0b4db04_1148e4de",
       "range": {
         "startLine": 170,
         "startChar": 0,
