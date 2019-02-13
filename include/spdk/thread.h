@@ -177,10 +177,13 @@ struct spdk_io_channel {
  *
  * \param new_thread_fn Called each time a new SPDK thread is created. The implementor
  * is expected to frequently call spdk_thread_poll() on the provided thread.
+ * \param ctx_sz For each thread allocated, an additional region of memory of
+ * size ctx_size will also be allocated, for use by the thread scheduler. A pointer
+ * to this region may be obtained by calling spdk_thread_get_ctx().
  *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn);
+int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz);
 
 /**
  * Release all resources associated with this library.
@@ -208,6 +211,16 @@ struct spdk_thread *spdk_thread_create(const char *name);
  * spdk_put_io_channel() prior to calling this function.
  */
 void spdk_thread_exit(struct spdk_thread *thread);
+
+/**
+ * Return a pointer to this thread's context.
+ *
+ * \param thread The thread on which to get the context.
+ *
+ * \return a pointer to the per-thread context, or NULL if there is
+ * no per-thread context.
+ */
+void *spdk_thread_get_ctx(struct spdk_thread *thread);
 
 /**
  * Perform one iteration worth of processing on the thread. This includes
