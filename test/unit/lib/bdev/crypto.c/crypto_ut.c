@@ -323,7 +323,8 @@ test_setup(void)
 	 */
 	for (i = 0; i < MAX_TEST_BLOCKS; i++) {
 		rc = posix_memalign((void **)&g_test_crypto_ops[i], 64,
-				    sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op));
+				    sizeof(struct rte_crypto_op) + sizeof(struct rte_crypto_sym_op) +
+				    AES_CBC_IV_LENGTH);
 		if (rc != 0) {
 			assert(false);
 		}
