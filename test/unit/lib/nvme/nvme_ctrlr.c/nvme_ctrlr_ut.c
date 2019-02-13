@@ -293,6 +293,13 @@ spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
 }
 
+int
+spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+				      struct nvme_completion_poll_status *status,
+				      uint64_t timeout_in_secs)
+{
+	return spdk_nvme_wait_for_completion_robust_lock(qpair, status, NULL);
+}
 
 int
 nvme_ctrlr_cmd_set_async_event_config(struct spdk_nvme_ctrlr *ctrlr,
