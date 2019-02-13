@@ -279,7 +279,6 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
-	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	opts->num_entries = SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES;
@@ -629,7 +628,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
+	if ((rc = spdk_reactors_init()) != 0) {
 		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
 		goto app_start_log_close_err;
 	}
@@ -985,12 +984,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 			break;
 		case MAX_REACTOR_DELAY_OPT_IDX:
-			tmp = spdk_strtol(optarg, 10);
-			if (tmp < 0) {
-				fprintf(stderr, "Invalid maximum latency %s\n", optarg);
-				goto out;
-			}
-			opts->max_delay_us = (uint64_t)tmp;
+			fprintf(stderr,
+				"Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
 			break;
 		case '?':
 			/*
