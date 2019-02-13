@@ -601,6 +601,29 @@ nvmf_rdma_dump_qpair_contents(struct spdk_nvmf_rdma_qpair *rqpair)
 #endif
 
 static void
+nvmf_rdma_resources_destroy(struct spdk_nvmf_rdma_resources *resources)
+{
+	if (resources->cmds_mr) {
+		ibv_dereg_mr(resources->cmds_mr);
+	}
+
+	if (resources->cpls_mr) {
+		ibv_dereg_mr(resources->cpls_mr);
+	}
+
+	if (resources->bufs_mr) {
+		ibv_dereg_mr(resources->bufs_mr);
+	}
+
+	spdk_dma_free(resources->cmds);
+	spdk_dma_free(resources->cpls);
+	spdk_dma_free(resources->bufs);
+	free(resources->reqs);
+	free(resources->recvs);
+	free(resources);
+}
+
+static void
 spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 #ifdef SPDK_CONFIG_RDMA_SRQ
@@ -624,19 +647,8 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 	}
 
-#ifndef SPDK_CONFIG_RDMA_SRQ
-	if (rqpair->resources->cmds_mr) {
-		ibv_dereg_mr(rqpair->resources->cmds_mr);
-	}
 
-	if (rqpair->resources->cpls_mr) {
-		ibv_dereg_mr(rqpair->resources->cpls_mr);
-	}
-
-	if (rqpair->resources->bufs_mr) {
-		ibv_dereg_mr(rqpair->resources->bufs_mr);
-	}
-#else
+#ifdef SPDK_CONFIG_RDMA_SRQ
 	/* Drop all received but unprocessed commands for this queue and return them to SRQ */
 	STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 		if (rqpair == rdma_recv->qpair) {
@@ -658,15 +670,10 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		}
 	}
 
-	/* Free all memory */
 #ifndef SPDK_CONFIG_RDMA_SRQ
-	spdk_dma_free(rqpair->resources->cmds);
-	spdk_dma_free(rqpair->resources->cpls);
-	spdk_dma_free(rqpair->resources->bufs);
-	free(rqpair->resources->reqs);
-	free(rqpair->resources->recvs);
-	free(rqpair->resources);
+	nvmf_rdma_resources_destroy(rqpair->resources);
 #endif
+
 	free(rqpair);
 }
 
@@ -2773,30 +2780,12 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
 
 #ifdef SPDK_CONFIG_RDMA_SRQ
-		if (poller->resources->cmds_mr) {
-			ibv_dereg_mr(poller->resources->cmds_mr);
-		}
-
-		if (poller->resources->cpls_mr) {
-			ibv_dereg_mr(poller->resources->cpls_mr);
-		}
-
-		if (poller->resources->bufs_mr) {
-			ibv_dereg_mr(poller->resources->bufs_mr);
-		}
-
 		if (poller->srq) {
 			ibv_destroy_srq(poller->srq);
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Destroyed RDMA shared queue %p\n", poller->srq);
 		}
 
-		/* Free all memory */
-		spdk_dma_free(poller->resources->cmds);
-		spdk_dma_free(poller->resources->cpls);
-		spdk_dma_free(poller->resources->bufs);
-		free(poller->resources->reqs);
-		free(poller->resources->recvs);
-		free(poller->resources);
+		nvmf_rdma_resources_destroy(poller->resources);
 #endif
 
 		if (poller->cq) {
