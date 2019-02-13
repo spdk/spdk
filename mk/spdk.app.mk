@@ -35,6 +35,8 @@ include $(SPDK_ROOT_DIR)/mk/spdk.app_vars.mk
 
 LIBS += $(SPDK_LIB_LINKER_ARGS)
 
+CLEAN_FILES = $(APP)
+
 all : $(APP)
 	@:
 
@@ -44,6 +46,6 @@ $(APP) : $(OBJS) $(SPDK_LIB_FILES) $(ENV_LIBS)
 	$(LINK_C)
 
 clean :
-	$(CLEAN_C) $(APP)
+	$(CLEAN_C) $(CLEAN_FILES)
 
 include $(SPDK_ROOT_DIR)/mk/spdk.deps.mk
