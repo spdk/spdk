@@ -40,7 +40,7 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 
 #define OCF_WRITE_FLUSH 11
 
-#define SPDK_OBJECT 0
+#define SPDK_OBJECT 1
 
 int vbdev_ocf_ctx_init(void);
 void vbdev_ocf_ctx_cleanup(void);
