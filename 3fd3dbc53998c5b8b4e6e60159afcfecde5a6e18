@@ -70,6 +70,24 @@
       "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "75b3f145_751423de",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-02-13T01:52:05Z",
+      "side": 1,
+      "message": "hi seth ,Do you have another patch to find the root case?\nthis error always reports with asan enable, and ctrl+c to kill initiator in physical machine. \nif use virtual machine to run nvmf cases. it will be blocked here. In scripts/vagrant/autorun-spdk.conf, default setting SPDK_RUN_ASAN\u003d1.",
+      "parentUuid": "0a65e497_deaaab3b",
+      "revId": "3fd3dbc53998c5b8b4e6e60159afcfecde5a6e18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
