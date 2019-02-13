@@ -22,6 +22,30 @@
       "revId": "9320586da48b4589a56f5bb6913ceec403b5b640",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11eb02ca_606d37b7",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 1258,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-02-13T10:28:22Z",
+      "side": 1,
+      "message": "Hi Shuhei,\n\nThanks for asking this. This implementation follows the spec, when the targets sends out termreq(we change the recv state to error state), the target will not accept any cmds to execute. It will wait for the initiator/host to close. The target will detect it via the socket close. Otherwise, it will use the timer to terminate the connection. Definitely, if the socket is close, the poller will not be executed. So this assert will not cause problem.",
+      "parentUuid": "561ba902_6b1e1aaf",
+      "range": {
+        "startLine": 1258,
+        "startChar": 1,
+        "endLine": 1258,
+        "endChar": 7
+      },
+      "revId": "9320586da48b4589a56f5bb6913ceec403b5b640",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
