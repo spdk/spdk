@@ -285,4 +285,5 @@ class spdk_load_macros(gdb.Command):
         spdk_print_nvmf_subsystems()
         spdk_find_bdev()
 
+
 spdk_load_macros()
