@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "8f8183d1_d5767db7",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 458,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T19:13:42Z",
+      "side": 1,
+      "message": "Also can you drop this comment in this patch? nvme_ctrlr_process_init doesn\u0027t exist anymore.",
+      "revId": "cd770f194a311078de16f68c167775f71d9a4d3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d53234a9_9bd8551f",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 9
