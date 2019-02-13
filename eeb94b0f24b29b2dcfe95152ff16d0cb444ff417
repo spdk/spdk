@@ -22,6 +22,30 @@
       "revId": "eeb94b0f24b29b2dcfe95152ff16d0cb444ff417",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "31f18963_3e8ea9ec",
+        "filename": "configure",
+        "patchSetId": 1
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-13T16:39:01Z",
+      "side": 1,
+      "message": "what I have works - it splits the string into the array \u0027a\u0027 delimited by the equals sign. But I like the cut solution too.",
+      "parentUuid": "c6b3bb81_3b3e55a5",
+      "range": {
+        "startLine": 494,
+        "startChar": 112,
+        "endLine": 494,
+        "endChar": 114
+      },
+      "revId": "eeb94b0f24b29b2dcfe95152ff16d0cb444ff417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
