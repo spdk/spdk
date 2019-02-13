@@ -514,7 +514,13 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
+	int count;
+
+	count = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
+	if (count < 0) {
+		fprintf(stderr, "NVMe io qpair process completion error\n");
+		exit(1);
+	}
 }
 
 static void
