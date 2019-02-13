@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b821c00b_fa6d576d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 537,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-13T16:03:58Z",
+      "side": 1,
+      "message": "I think this comment can be misleading - it\u0027s not the entry\u0027s LBA that can be updated (as in: entry-\u003elba), but the l2p pointed by the entry\u0027s LBA. I suggest to rephrase it like so:\n\"If the l2p wasn\u0027t updated and still points at the entry, fill it with...\".",
+      "range": {
+        "startLine": 537,
+        "startChar": 4,
+        "endLine": 537,
+        "endChar": 39
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85563df9_ccd1d7be",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1070,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-13T16:03:58Z",
+      "side": 1,
+      "message": "Similar here: I suggest rephrasing it like so: \"If the l2p was updated in the meantime, don\u0027t update band\u0027s metadata.\"",
+      "range": {
+        "startLine": 1069,
+        "startChar": 6,
+        "endLine": 1070,
+        "endChar": 25
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e250f2f8_58c785c5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-13T16:03:58Z",
+      "side": 1,
+      "message": "Before doing such comparison, you should make sure that ftl_ppa_cached(prev_ppa) \u003d\u003d true.",
+      "range": {
+        "startLine": 1071,
+        "startChar": 7,
+        "endLine": 1071,
+        "endChar": 36
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
