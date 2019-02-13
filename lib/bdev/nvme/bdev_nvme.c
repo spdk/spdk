@@ -900,6 +900,15 @@ timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
 
 	SPDK_WARNLOG("Warning: Detected a timeout. ctrlr=%p qpair=%p cid=%u\n", ctrlr, qpair, cid);
 
+	if (cid == SPDK_NVME_INVALID_CID) {
+		SPDK_ERRLOG("Receive invalid cid, reset required\n");
+		rc = spdk_nvme_ctrlr_reset(ctrlr);
+		if (rc) {
+			SPDK_ERRLOG("Resetting controller failed.\n");
+		}
+		return;
+	}
+
 	csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 	if (csts.bits.cfs) {
 		SPDK_ERRLOG("Controller Fatal Status, reset required\n");

@@ -53,6 +53,7 @@ extern "C" {
 extern int32_t		spdk_nvme_retry_count;
 
 
+#define SPDK_NVME_INVALID_CID	(UINT16_MAX)
 
 /**
  * Opaque handle to a controller. Returned by spdk_nvme_probe()'s attach_cb.
@@ -796,10 +797,12 @@ struct spdk_nvme_qpair;
  * request.
  *
  * For timeouts detected on the admin queue pair, the qpair returned here will
- * be NULL.  If the controller has a serious error condition and is unable to
- * communicate with driver via completion queue, the controller can set Controller
- * Fatal Status field to 1, then reset is required to recover from such error.
- * Users may detect Controller Fatal Status when timeout happens.
+ * be NULL. The cid returned here could be a valid cid or SPDK_NVME_INVALID_CID,
+ * the reset of controller is required when SPDK_NVME_INVALID_CID is returned.
+ * If the controller has a serious error condition and is unable to communicate
+ * with driver via completion queue, the controller can set Controller Fatal Status
+ * field to 1, then reset is required to recover from such error. Users may detect
+ * Controller Fatal Status when timeout happens.
  *
  * \param cb_arg Argument passed to callback funciton.
  * \param ctrlr Opaque handle to NVMe controller.
