@@ -56,6 +56,9 @@ struct rpc_notify_request {
 	/* Time when this request will be completed. */
 	uint64_t timeout;
 
+	/* Maximum events this request can hold. */
+	uint32_t max_count;
+
 	/* Array of strings */
 	struct spdk_json_val *notification_types;
 
@@ -316,6 +319,7 @@ SPDK_RPC_REGISTER("get_notification_types", spdk_rpc_get_notification_types,
 
 static const struct spdk_json_object_decoder rpc_get_notifications_decoders[] = {
 	{"timeout_ms", offsetof(struct rpc_notify_request, timeout), spdk_json_decode_uint64, true},
+	{"max_count", offsetof(struct rpc_notify_request, max_count), spdk_json_decode_uint32, true},
 };
 
 static void
@@ -328,6 +332,7 @@ spdk_rpc_get_notifications(struct spdk_jsonrpc_request *request,
 
 	req = calloc(1, sizeof(*req));
 	req->timeout = SPDK_NOTIFY_RPC_DEFAULT_TIMEOUT_MS;
+	req->max_count = 1;
 
 	if (params &&
 	    spdk_json_decode_object(params, rpc_get_notifications_decoders,

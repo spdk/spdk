@@ -1752,13 +1752,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         ret = rpc.notify.get_notifications(
                 args.client,
                 timeout_ms=args.timeout_ms,
-                cnt=args.cnt)
+                cnt=args.cnt,
+                max_count=args.max_count)
         print_dict(ret)
 
     p = subparsers.add_parser('get_notifications', help='Wait for notifications')
     p.add_argument('-n', '--cnt', help="""How many event requests send to server. Default: 3""", type=int, default=3)
     p.add_argument('-t', '--timeout-ms', help="""Time (for remote side) from receiving the event request to completing it,
         in milliseconds, if 0, don't track timeout. Default: 500""", type=int, default=3000)
+    p.add_argument('-m', '--max-count', help="""Maximum notifications per request. Default: 1""", type=int, default=1)
     p.set_defaults(func=get_notifications)
 
     args = parser.parse_args()

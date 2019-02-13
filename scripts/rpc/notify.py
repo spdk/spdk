@@ -19,6 +19,9 @@ def get_notifications(client,
         cnt How many requests to schedule (default: 1).
         timeout_ms Timeout per event. If <= events won't timeout out (default: 3000)
 
+    **kwargs:
+        max_count Maximum notifications per request
+
     Return:
         Notifications array
     """
