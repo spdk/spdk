@@ -259,6 +259,8 @@ spdk_rpc_dump_bdev_info(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_bool(w, "guard",
 						   spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD));
 			spdk_json_write_object_end(w);
+
+			spdk_json_write_named_uint32(w, "dif_guard_seed", spdk_bdev_get_dif_guard_seed(bdev));
 		}
 	}
 

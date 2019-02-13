@@ -326,6 +326,14 @@ struct spdk_bdev {
 	uint32_t dif_check_flags;
 
 	/**
+	 * Seed value for DIF guard computation.
+	 *
+	 * This will be used to avoid the guard being zero in case of
+	 * all zero data.
+	 */
+	uint16_t dif_guard_seed;
+
+	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
 	struct spdk_bdev_module *module;
