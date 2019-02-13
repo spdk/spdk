@@ -410,7 +410,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status,
+			ctrlr->opts.admin_timeout_ms / 1000)) {
 		spdk_free(log_page_directory);
 		SPDK_WARNLOG("Intel log pages not supported on Intel drive!\n");
 		return 0;
