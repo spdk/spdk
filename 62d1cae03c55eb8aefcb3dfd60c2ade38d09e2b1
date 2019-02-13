@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8c0f413_e886a39a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-13T04:18:29Z",
+      "side": 1,
+      "message": "Related with my comment in the next patch, \nthe case such that\n* spdk_nvme_probe_async completes successfully, but \n* spdk_nvme_probe_poll_async is not called and probe_context is released\n\nwill cause any issue?",
+      "range": {
+        "startLine": 627,
+        "startChar": 5,
+        "endLine": 627,
+        "endChar": 31
+      },
+      "revId": "62d1cae03c55eb8aefcb3dfd60c2ade38d09e2b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
