@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5f784542_59b9a5af",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-13T09:42:01Z",
+      "side": 1,
+      "message": "You can move this part after the for loop and change it to\n\n: ${CC\u003d1}\n\nlike we do in atotest_common.sh",
+      "range": {
+        "startLine": 26,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 5
+      },
+      "revId": "79e2ab7adbe0cd78b9febc99e47ad0d92ca6b5d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
