@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d85ba22_b91f10db",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-13T04:11:59Z",
+      "side": 1,
+      "message": "The following will be more efficient, but is this possible?\n\nTAILQ_FOREACH(trid_entry, \u0026g_trid_list, tailq) {\n  spdk_nvme_probe_ctx_init(trid_entry);\n  if (spdk_probe_async(trid_entry) !\u003d 0) {\n    return -1;\n  }\n}\n\nbool in_progress \u003d false;\n\ndo {\n  TAILQ_FOREACH(trid_entry, \u0026g_trid_list, tailq) {\n    if (!spdk_nvme_probe_poll_async(trid_entry)) {\n      in_progress \u003d true;\n    }\n  }\n} while (in_progress);",
+      "revId": "6bae09f224028be6eff4a8e14636044607026e72",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
