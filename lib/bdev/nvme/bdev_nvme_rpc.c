@@ -169,6 +169,7 @@ struct rpc_construct_nvme {
 	char *hostsvcid;
 	bool prchk_reftag;
 	bool prchk_guard;
+	uint16_t pi_guard_seed;
 };
 
 static void
@@ -198,7 +199,8 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 	{"hostsvcid", offsetof(struct rpc_construct_nvme, hostsvcid), spdk_json_decode_string, true},
 
 	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
-	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true}
+	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true},
+	{"pi_guard_seed", offsetof(struct rpc_construct_nvme, pi_guard_seed), spdk_json_decode_uint16, true}
 };
 
 #define NVME_MAX_BDEVS_PER_RPC 128
@@ -271,7 +273,7 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 
 	count = NVME_MAX_BDEVS_PER_RPC;
 	if (spdk_bdev_nvme_create(&trid, &hostid, req.name, names, &count, req.hostnqn,
-				  prchk_flags)) {
+				  prchk_flags, req.pi_guard_seed)) {
 		goto invalid;
 	}
 

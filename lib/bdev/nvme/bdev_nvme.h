@@ -107,7 +107,7 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  const char **names, size_t *count,
 			  const char *hostnqn,
-			  uint32_t prchk_flags);
+			  uint32_t prchk_flags, uint16_t pi_guard_seed);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**

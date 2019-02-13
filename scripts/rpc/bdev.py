@@ -278,7 +278,7 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
 
 def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
                         subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
-                        prchk_reftag=None, prchk_guard=None):
+                        prchk_reftag=None, prchk_guard=None, pi_guard_seed=None):
     """Construct NVMe namespace block devices.
 
     Args:
@@ -293,6 +293,7 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
         prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
         prchk_guard: Enable checking of PI guard for I/O processing (optional)
+        pi_guard_seed: Seed value for PI guard computation (optional)
 
     Returns:
         Names of created block devices.
@@ -324,6 +325,9 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
 
     if prchk_guard:
         params['prchk_guard'] = prchk_guard
+
+    if pi_guard_seed:
+        params['pi_guard_seed'] = pi_guard_seed
 
     return client.call('construct_nvme_bdev', params)
 
