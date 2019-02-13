@@ -831,12 +831,6 @@ class TestCases(object):
         fail_count += self.c.clone_lvol_bdev(self.lvs_name + "/" + snapshot_name, clone_name)
         clone_bdev = self.c.get_lvol_bdev_with_name(self.lvs_name + "/" + clone_name)
 
-        # Try to destroy snapshot with clones and check if it fails
-        ret_value = self.c.destroy_lvol_bdev(snapshot_bdev['name'])
-        if ret_value == 0:
-            print("ERROR: Delete snapshot should fail but didn't")
-            fail_count += 1
-
         # Destroy clone and then snapshot
         fail_count += self.c.destroy_lvol_bdev(lvol_bdev['name'])
         fail_count += self.c.destroy_lvol_bdev(clone_bdev['name'])
