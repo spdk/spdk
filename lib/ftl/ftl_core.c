@@ -507,23 +507,22 @@ ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 	return &dev->conf.defrag.limits[type];
 }
 
-static int
-ftl_update_md_entry(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
+static bool
+ftl_cache_lba_valid(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
 {
 	struct ftl_ppa ppa;
 
 	/* If the LBA is invalid don't bother checking the md and l2p */
 	if (spdk_unlikely(entry->lba == FTL_LBA_INVALID)) {
-		return 1;
+		return false;
 	}
 
 	ppa = ftl_l2p_get(dev, entry->lba);
 	if (!(ftl_ppa_cached(ppa) && ppa.offset == entry->pos)) {
-		ftl_invalidate_addr(dev, entry->ppa);
-		return 1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 static void
@@ -535,13 +534,10 @@ ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
 		goto unlock;
 	}
 
-	/* Make sure the metadata is in sync with l2p. If the l2p still contains */
-	/* the entry, fill it with the on-disk PPA and clear the cache status */
-	/* bit. Otherwise, skip the l2p update and just clear the cache status. */
-	/* This can happen, when a write comes during the time that l2p contains */
-	/* the entry, but the entry doesn't  have a PPA assigned (and therefore */
-	/* does not have the cache bit set). */
-	if (ftl_update_md_entry(dev, entry)) {
+	/* If the l2p wasn't updated and still points at the entry, fill it with the */
+	/* on-disk PPA and clear the cache status bit. Otherwise, skip the l2p update */
+	/* and just clear the cache status. */
+	if (!ftl_cache_lba_valid(dev, entry)) {
 		goto clear;
 	}
 
@@ -891,10 +887,6 @@ ftl_write_cb(void *arg, int status)
 
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lu, lba:%lu\n",
 			      entry->ppa.ppa, entry->lba);
-
-		if (ftl_update_md_entry(dev, entry)) {
-			ftl_rwb_entry_invalidate(entry);
-		}
 	}
 
 	ftl_process_flush(dev, batch);
@@ -1039,7 +1031,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_batch	*batch;
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
-	struct ftl_ppa		ppa;
+	struct ftl_ppa		ppa, prev_ppa;
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {
@@ -1069,14 +1061,21 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	ppa = wptr->ppa;
 	ftl_rwb_foreach(entry, batch) {
 		entry->ppa = ppa;
-		/* Setting entry's cache bit needs to be done after metadata */
-		/* within the band is updated to make sure that writes */
-		/* invalidating the entry clear the metadata as well */
-		if (entry->lba != FTL_LBA_INVALID) {
-			ftl_band_set_addr(wptr->band, entry->lba, entry->ppa);
-		}
 
-		ftl_rwb_entry_set_valid(entry);
+		if (entry->lba != FTL_LBA_INVALID) {
+			pthread_spin_lock(&entry->lock);
+			prev_ppa = ftl_l2p_get(dev, entry->lba);
+
+			/* If the l2p was updated in the meantime, don't update band's metadata */
+			if (ftl_ppa_cached(prev_ppa) && prev_ppa.offset == entry->pos) {
+				/* Setting entry's cache bit needs to be done after metadata */
+				/* within the band is updated to make sure that writes */
+				/* invalidating the entry clear the metadata as well */
+				ftl_band_set_addr(wptr->band, entry->lba, entry->ppa);
+				ftl_rwb_entry_set_valid(entry);
+			}
+			pthread_spin_unlock(&entry->lock);
+		}
 
 		ftl_trace_rwb_pop(dev, entry);
 		ftl_update_rwb_stats(dev, entry);
