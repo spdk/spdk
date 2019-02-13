@@ -129,13 +129,105 @@ opal_add_token_u8(int *err, struct spdk_opal_dev *dev, uint8_t token)
 	dev->cmd[dev->cmd_pos++] = token;
 }
 
+static void
+spdk_add_short_atom_header(struct spdk_opal_dev *dev, bool bytestring,
+			bool has_sign, size_t len)
+{
+	uint8_t atom;
+	int err = 0;
+
+	atom = SPDK_SHORT_ATOM_ID;
+	atom |= bytestring ? SPDK_SHORT_ATOM_BYTESTRING_FLAG : 0;
+	atom |= has_sign ? SPDK_SHORT_ATOM_SIGN_FLAG : 0;
+	atom |= len & SPDK_SHORT_ATOM_LEN_MASK;
+
+	spdk_add_token_u8(&err, dev, atom);
+}
+
+static void 
+spdk_add_medium_atom_header(struct spdk_opal_dev *dev, bool bytestring,
+					bool has_sign, size_t len)
+{
+	uint8_t header;
+
+	header = SPDK_MEDIUM_ATOM_ID;
+	header |= bytestring ? SPDK_MEDIUM_ATOM_BYTESTRING_FLAG : 0;
+	header |= has_sign ? SPDK_MEDIUM_ATOM_SIGN_FLAG : 0;
+	header |= (len >> 8) & SPDK_MEDIUM_ATOM_LEN_MASK;
+	dev->cmd[dev->cmd_pos++] = header;
+	dev->cmd[dev->cmd_pos++] = len;
+}
+
+static void
+spdk_add_token_bytestring(int *err, struct spdk_opal_dev *dev,
+				      const uint8_t *bytestring, size_t len)
+{
+	size_t header_len = 1;
+	bool is_short_atom = true;
+
+	if (*err) {
+		return;
+	}
+
+	if (len & ~SPDK_SHORT_ATOM_LEN_MASK) {
+		header_len = 2;
+		is_short_atom = false;
+	}
+
+	if (len >= IO_BUFFER_LENGTH - dev->cmd_pos - header_len) {
+		SPDK_ERRLOG("Error adding bytestring: end of buffer.\n");
+		*err = -ERANGE;
+		return;
+	}
+
+	if (is_short_atom) {
+		spdk_add_short_atom_header(dev, true, false, len);
+	} else {
+		spdk_add_medium_atom_header(dev, true, false, len);
+	}
+
+	memcpy(&dev->cmd[dev->cmd_pos], bytestring, len);
+	dev->cmd_pos += len;
+}
+
+static void
+spdk_add_token_u64(int *err, struct spdk_opal_dev *dev, uint64_t number)
+{
+	int startat = 0;
+
+	/* add header first */
+	if (number <= SPDK_TINY_ATOM_DATA_MASK) {
+		dev->cmd[dev->cmd_pos++] = (uint8_t) number & SPDK_TINY_ATOM_DATA_MASK;
+	} else {
+		if (number < 0x100) {
+			dev->cmd[dev->cmd_pos++] = 0x81; /* short atom, 1 byte length */
+			startat = 0;
+		} else if (number < 0x10000) {
+			dev->cmd[dev->cmd_pos++] = 0x82; /* short atom, 2 byte length */
+			startat = 1;
+		} else if (number < 0x100000000) {
+			dev->cmd[dev->cmd_pos++] = 0x84; /* short atom, 4 byte length */
+			startat = 3;
+		} else {
+			dev->cmd[dev->cmd_pos++] = 0x88; /* short atom, 8 byte length */
+			startat = 7;
+		}
+
+		/* add number value */
+		for (int i = startat; i > -1; i--) {
+			dev->cmd[dev->cmd_pos++] = (uint8_t)((number >> (i * 8)) & 0xff);
+		}
+	}
+}
+
 static int
 opal_cmd_finalize(struct spdk_opal_dev *dev, uint32_t hsn, uint32_t tsn, bool eod)
 {
 	struct spdk_opal_header *hdr;
 	int err = 0;
 
-	if (eod) {
+	if (eod)
+	{
 		opal_add_token_u8(&err, dev, SPDK_OPAL_ENDOFDATA);
 		opal_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
 		opal_add_token_u8(&err, dev, 0);
@@ -144,7 +236,8 @@ opal_cmd_finalize(struct spdk_opal_dev *dev, uint32_t hsn, uint32_t tsn, bool eo
 		opal_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
 	}
 
-	if (err) {
+	if (err)
+	{
 		SPDK_ERRLOG("Error finalizing command.\n");
 		return -EFAULT;
 	}
@@ -155,7 +248,8 @@ opal_cmd_finalize(struct spdk_opal_dev *dev, uint32_t hsn, uint32_t tsn, bool eo
 	to_be32(&hdr->packet.session_hsn, hsn);
 
 	to_be32(&hdr->sub_packet.length, dev->cmd_pos - sizeof(*hdr));
-	while (dev->cmd_pos % 4) {
+	while (dev->cmd_pos % 4)
+	{
 		if (dev->cmd_pos >= IO_BUFFER_LENGTH) {
 			SPDK_ERRLOG("Error: Buffer overrun\n");
 			return -ERANGE;
@@ -367,7 +461,6 @@ opal_response_token_matches(const struct spdk_opal_resp_token *token,
 	if (!token ||
 	    token->type != OPAL_DTA_TOKENID_TOKEN ||
 	    token->pos[0] != match) {
-		SPDK_ERRLOG("Token not matching\n");
 		return false;
 	}
 	return true;
@@ -417,9 +510,35 @@ opal_response_get_u64(const struct spdk_opal_resp_parsed *resp, int index)
 	return resp->resp_tokens[index].stored.unsigned_num;
 }
 
+static size_t
+spdk_response_get_string(const struct spdk_opal_resp_parsed *resp, int n,
+			 const char **store)
+{
+	*store = NULL;
+	if (!resp) {
+		SPDK_ERRLOG("Response is NULL\n");
+		return 0;
+	}
+
+	if (n > resp->num) {
+		SPDK_ERRLOG("Response has %d tokens. Can't access %d\n",
+			    resp->num, n);
+		return 0;
+	}
+
+	if (resp->resp_tokens[n].type != SPDK_OPAL_DTA_TOKENID_BYTESTRING) {
+		SPDK_ERRLOG("Token is not a byte string!\n");
+		return 0;
+	}
+
+	*store = resp->resp_tokens[n].pos + 1;
+	return resp->resp_tokens[n].len - 1;
+}
+
 static int
 opal_response_status(const struct spdk_opal_resp_parsed *resp)
 {
+	int ret;
 	const struct spdk_opal_resp_token *tok;
 
 	/* if we get an EOS token, just return 0 */
@@ -793,6 +912,269 @@ spdk_opal_close(struct spdk_opal_dev *dev)
 	free(dev);
 }
 
+static int
+spdk_start_opal_session_cb(struct spdk_opal_dev *dev)
+{
+	uint32_t hsn, tsn;
+	int error = 0;
+
+	error = spdk_parse_and_check_status(dev);
+	if (error) {
+		return error;
+	}
+
+	hsn = spdk_response_get_u64(&dev->parsed_resp, 4);
+	tsn = spdk_response_get_u64(&dev->parsed_resp, 5);
+
+	if (hsn == 0 && tsn == 0) {
+		SPDK_ERRLOG("Couldn't authenticate session\n");
+		return -EPERM;
+	}
+
+	dev->hsn = hsn;
+	dev->tsn = tsn;
+	return 0;
+}
+
+static int
+spdk_start_generic_opal_session(struct spdk_opal_dev *dev,
+				enum spdk_opal_uid_enum auth,
+				enum spdk_opal_uid_enum sp_type,
+				const char *key,
+				uint8_t key_len)
+{
+	uint32_t hsn;
+	int err = 0;
+
+	if (key == NULL && auth != UID_ANYBODY) {
+		return OPAL_INVAL_PARAM;
+	}
+
+	spdk_clear_opal_cmd(dev);
+
+	spdk_set_comid(dev, dev->comid);
+	hsn = GENERIC_HOST_SESSION_NUM;
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_uid[UID_SMUID],
+				  OPAL_UID_LENGTH);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_method[STARTSESSION_METHOD],
+				  OPAL_UID_LENGTH);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	spdk_add_token_u64(&err, dev, hsn);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_uid[sp_type], OPAL_UID_LENGTH);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_TRUE); /* Write */
+
+	switch (auth) {
+	case UID_ANYBODY:
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+		break;
+	case UID_ADMIN1:
+	case UID_SID:
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+		spdk_add_token_u8(&err, dev, 0); /* HostChallenge */
+		spdk_add_token_bytestring(&err, dev, key, key_len);
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+		spdk_add_token_u8(&err, dev, 3); /* HostSignAuth */
+		spdk_add_token_bytestring(&err, dev, spdk_opal_uid[auth],
+					  OPAL_UID_LENGTH);
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+		spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+		break;
+	default:
+		SPDK_ERRLOG("Cannot start Admin SP session with auth %d\n", auth);
+		return -EINVAL;
+	}
+
+	if (err) {
+		SPDK_ERRLOG("Error building start adminsp session command.\n");
+		return err;
+	}
+
+	return spdk_finalize_and_send(dev, 1, spdk_start_opal_session_cb);
+}
+
+
+static int
+spdk_start_anybody_adminsp_opal_session(struct spdk_opal_dev *dev, void *data)
+{
+	return spdk_start_generic_opal_session(dev, UID_ANYBODY,
+					       UID_ADMINSP, NULL, 0);
+}
+
+static int
+spdk_get_msid_cpin_pin_cb(struct spdk_opal_dev *dev)
+{
+	const char *msid_pin;
+	size_t strlen;
+	int error = 0;
+
+	error = spdk_parse_and_check_status(dev);
+	if (error) {
+		return error;
+	}
+
+	strlen = spdk_response_get_string(&dev->parsed_resp, 4, &msid_pin);
+	if (!msid_pin) {
+		SPDK_ERRLOG("Couldn't extract PIN from response\n");
+		return -EINVAL;
+	}
+
+	dev->prev_d_len = strlen;
+	dev->prev_data = calloc(0, strlen);
+	if (!dev->prev_data) {
+		SPDK_ERRLOG("memory allocation error\n");
+		return -ENOMEM;
+	}
+	memcpy(dev->prev_data, msid_pin, strlen);
+
+	SPDK_DEBUGLOG(SPDK_LOG_OPAL, "MSID = %p\n", dev->prev_data);
+	return 0;
+}
+
+static int
+spdk_get_msid_cpin_pin(struct spdk_opal_dev *dev, void *data)
+{
+	int err = 0;
+
+	spdk_clear_opal_cmd(dev);
+	spdk_set_comid(dev, dev->comid);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_uid[UID_C_PIN_MSID],
+				  OPAL_UID_LENGTH);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_method[GET_METHOD], OPAL_UID_LENGTH);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTCOLUMN);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_PIN);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDCOLUMN);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_PIN);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+
+	if (err) {
+		SPDK_ERRLOG("Error building Get MSID CPIN PIN command.\n");
+		return err;
+	}
+
+	return spdk_finalize_and_send(dev, 1, spdk_get_msid_cpin_pin_cb);
+}
+
+static int
+spdk_start_adminsp_opal_session(struct spdk_opal_dev *dev, void *data)
+{
+	int ret;
+	uint8_t *key = dev->prev_data;
+
+	if (!key) {
+		const struct spdk_opal_key *okey = data;
+		if (okey == NULL) {
+			SPDK_ERRLOG("No key found for auth session\n");
+			return -EINVAL;
+		}
+		ret = spdk_start_generic_opal_session(dev, UID_SID,
+						      UID_ADMINSP,
+						      okey->key,
+						      okey->key_len);
+	} else {
+		ret = spdk_start_generic_opal_session(dev, UID_SID,
+						      UID_ADMINSP,
+						      key, dev->prev_d_len);
+		free(key);
+		dev->prev_data = NULL;
+	}
+
+	return ret;
+}
+
+static int
+spdk_generic_pw_cmd(uint8_t *key, size_t key_len, uint8_t *cpin_uid,
+		    struct spdk_opal_dev *dev)
+{
+	int err = 0;
+
+	spdk_clear_opal_cmd(dev);
+	spdk_set_comid(dev, dev->comid);
+
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	spdk_add_token_bytestring(&err, dev, cpin_uid, OPAL_UID_LENGTH);
+	spdk_add_token_bytestring(&err, dev, spdk_opal_method[SET_METHOD],
+				  OPAL_UID_LENGTH);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_VALUES);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_STARTNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_PIN);
+	spdk_add_token_bytestring(&err, dev, key, key_len);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDNAME);
+	spdk_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+
+	return err;
+}
+
+static int
+spdk_set_sid_cpin_pin(struct spdk_opal_dev *dev, void *data)
+{
+	uint8_t cpin_uid[OPAL_UID_LENGTH];
+	const char *new_passwd = data;
+	struct spdk_opal_key *opal_key = calloc(1, sizeof(struct spdk_opal_key));
+	if (!opal_key) {
+		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
+		return -ENOMEM;
+	}
+
+	opal_key->key_len = strlen(new_passwd);
+	memcpy(opal_key->key, new_passwd, opal_key->key_len);
+	dev->dev_key = opal_key;
+
+	memcpy(cpin_uid, spdk_opal_uid[UID_C_PIN_SID], OPAL_UID_LENGTH);
+
+	if (spdk_generic_pw_cmd(opal_key->key, opal_key->key_len, cpin_uid, dev)) {
+		SPDK_ERRLOG("Error building Set SID cpin\n");
+		return -ERANGE;
+	}
+	return spdk_finalize_and_send(dev, 1, spdk_parse_and_check_status);
+}
+
+static int
+spdk_opal_take_ownership(struct spdk_opal_dev *dev, char *new_passwd)
+{
+	const struct spdk_opal_step owner_steps[] = {
+		{ spdk_opal_discovery0, },
+		{ spdk_start_anybody_adminsp_opal_session, },
+		{ spdk_get_msid_cpin_pin, },
+		{ spdk_end_opal_session, },
+		{ spdk_start_adminsp_opal_session, },
+		{ spdk_set_sid_cpin_pin, new_passwd },
+		{ spdk_end_opal_session, },
+		{ NULL, }
+	};
+	int ret;
+
+	if (!dev) {
+		return -ENODEV;
+	}
+
+	pthread_mutex_lock(&dev->mutex_lock);
+	spdk_setup_opal_dev(dev, owner_steps);
+	ret = spdk_opal_next(dev);
+	pthread_mutex_unlock(&dev->mutex_lock);
+	return ret;
+}
+
 struct spdk_opal_dev *
 spdk_opal_init_dev(void *dev_handler)
 {
@@ -822,7 +1204,7 @@ spdk_opal_init_dev(void *dev_handler)
 	return dev;
 }
 
-void
+int
 spdk_opal_scan(struct spdk_opal_dev *dev)
 {
 	int ret;
@@ -831,8 +1213,9 @@ spdk_opal_scan(struct spdk_opal_dev *dev)
 	if (ret) {
 		SPDK_ERRLOG("check opal support failed: %d\n", ret);
 		spdk_opal_close(dev);
-		return;
+		return ret;
 	}
+	return 0;
 }
 
 struct spdk_opal_info *
@@ -845,6 +1228,34 @@ bool
 spdk_opal_supported(struct spdk_opal_dev *dev)
 {
 	return dev->supported;
+}
+
+int
+spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg)
+{
+	if (!dev) {
+		SPDK_ERRLOG("Device null\n");
+		return -ENODEV;
+	}
+	if (!dev->supported) {
+		SPDK_ERRLOG("Device not supported\n");
+		return -EINVAL;
+	}
+
+	switch (cmd) {
+	case OPAL_CMD_SCAN:
+		return spdk_opal_scan(dev);
+	case OPAL_CMD_TAKE_OWNERSHIP:
+		return spdk_opal_take_ownership(dev, arg);
+	case OPAL_CMD_LOCK_UNLOCK:
+	case OPAL_CMD_ACTIVATE_LSP:
+	case OPAL_CMD_REVERT_TPER:
+	case OPAL_CMD_SETUP_LOCKING_RANGE:
+
+	default:
+		SPDK_ERRLOG("NOT SUPPORTED\n");
+		return -EINVAL;
+	}
 }
 
 /* Log component for opal submodule */
