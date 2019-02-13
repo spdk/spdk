@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ad643404_31e45f4a",
+        "filename": "scripts/spdkcli/ui_node.py",
+        "patchSetId": 20
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-13T08:07:56Z",
+      "side": 1,
+      "message": "I\u0027d still suggest explicitly catching JSONRPCException and then have another \"except\" to catch general \"Exception\" for any other problems encountered.\n\nAt the moment handling of JSONRPCException is the same as for any other (print the error in log console), but I think haveing a separate \"except\" for just this class gives better readability and makes it easier to find where do we catch it.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 41,
+        "endChar": 42
+      },
+      "revId": "e3d7d86436f2793ce81493eae0c35177239cf7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
