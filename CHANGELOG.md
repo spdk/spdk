@@ -89,7 +89,7 @@ is specified, use that specified nbd device. If it's not specified, pick availab
 ### Opal
 
 Add Opal scan support for NVMe to check whether it supports SED Opal and dump
-device info. nvme_manage tool can be used to invoke this.
+device info. Add Opal take ownership command support. nvme_manage tool can be used to invoke this.
 
 ### nvmf
 

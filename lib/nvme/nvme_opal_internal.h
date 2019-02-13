@@ -325,6 +325,8 @@ struct spdk_opal_dev {
 	struct spdk_opal_info *opal_info;
 
 	uint64_t timeout;   /* seconds */
+
+	pthread_mutex_t mutex_lock; /* some structs are accessed by current thread only */
 };
 
 enum opal_lock_state {
