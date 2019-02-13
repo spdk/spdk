@@ -342,6 +342,19 @@ spdk_thread_get_ctx(struct spdk_thread *thread)
 	return NULL;
 }
 
+struct spdk_thread *
+spdk_thread_get_from_ctx(void *ctx)
+{
+	if (ctx == NULL) {
+		assert(false);
+		return NULL;
+	}
+
+	assert(g_ctx_sz > 0);
+
+	return SPDK_CONTAINEROF(ctx, struct spdk_thread, ctx);
+}
+
 static inline uint32_t
 _spdk_msg_queue_run_batch(struct spdk_thread *thread, uint32_t max_msgs)
 {

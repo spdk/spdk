@@ -223,6 +223,16 @@ void spdk_thread_exit(struct spdk_thread *thread);
 void *spdk_thread_get_ctx(struct spdk_thread *thread);
 
 /**
+ * Return the thread object associated with the context handle previously
+ * obtained by calling spdk_thread_get_ctx().
+ *
+ * \param ctx A context previously obtained by calling spdk_thread_get_ctx()
+ *
+ * \return The associated thread.
+ */
+struct spdk_thread *spdk_thread_get_from_ctx(void *ctx);
+
+/**
  * Perform one iteration worth of processing on the thread. This includes
  * both expired and continuous pollers as well as messages.
  *
