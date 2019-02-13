@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "57b9c476_123dbd4d",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 639,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "47d34883_723969ff",
+      "range": {
+        "startLine": 639,
+        "startChar": 1,
+        "endLine": 639,
+        "endChar": 11
+      },
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3665eca1_e23b11e0",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2019-01-29T23:55:42Z",
       "side": 1,
       "message": "same as above",
+      "range": {
+        "startLine": 640,
+        "startChar": 1,
+        "endLine": 640,
+        "endChar": 17
+      },
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52290761_bfc44804",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3665eca1_e23b11e0",
       "range": {
         "startLine": 640,
         "startChar": 1,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "1f889df7_a4bfea6e",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8618488a_d3e8abb1",
+      "range": {
+        "startLine": 641,
+        "startChar": 1,
+        "endLine": 641,
+        "endChar": 8
+      },
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "93b20b9a_e5a9f218",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 9
@@ -82,6 +154,24 @@
       "writtenOn": "2019-01-29T23:55:42Z",
       "side": 1,
       "message": "Factoring out code in this while loop to a function e.g., _raid_bdev_submit_split_unmap_request() will be easier to read.\n\nYou can pass 6 parameters raid_io, start_strip, end_strip, start_disk, end_disk, start_offset_in_strip, end_offset_in_strip to the function.\n\nand if _raid_bdev_submit_split_unmap_request() returns nonzero, we can return immediately from _raid_bdev_submit_unmap_request_next().",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8fe65211_2da40277",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "agreed, factoring out subfunction also makes it easier to add unit test.\nI just factored out _raid_bdev_get_io_range and _raid_bdev_split_io_range.\nThey can also be useful to flush io_type if we wanna support it.",
+      "parentUuid": "93b20b9a_e5a9f218",
       "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "e05f1523_d09cc640",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "Hi， Jim,\nfor the case where the IO bigger than one strip per disk, Each disk will be only called once to process multi strips, since these strips are neighbors.",
+      "parentUuid": "b673b000_a082ffcf",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b1777068_df08558b",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 9
@@ -119,6 +227,24 @@
       "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bcedc26b_181314ae",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-13T06:40:08Z",
+      "side": 1,
+      "message": "Done\nextract them into one separeate script \"test/bdev/bdev_raid.sh\" for testing the raid module.",
+      "parentUuid": "b1777068_df08558b",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
