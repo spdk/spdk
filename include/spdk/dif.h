@@ -91,6 +91,9 @@ struct spdk_dif_ctx {
 
 	/* Application tag mask */
 	uint16_t		apptag_mask;
+
+	/* Seed value for guard computation */
+	uint16_t		guard_seed;
 };
 
 /** DIF error information */
@@ -124,12 +127,14 @@ struct spdk_dif_error {
  * starting block address.
  * \param apptag_mask Application tag mask.
  * \param app_tag Application tag.
+ * \param guard_seed Seed value for guard computation.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		      uint16_t guard_seed);
 
 /**
  * Generate DIF for extended LBA payload.
