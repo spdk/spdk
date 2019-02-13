@@ -293,7 +293,8 @@ if __name__ == "__main__":
                                                  hostaddr=args.hostaddr,
                                                  hostsvcid=args.hostsvcid,
                                                  prchk_reftag=args.prchk_reftag,
-                                                 prchk_guard=args.prchk_guard))
+                                                 prchk_guard=args.prchk_guard,
+                                                 pi_guard_seed=args.pi_guard_seed))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -316,6 +317,8 @@ if __name__ == "__main__":
                    help='Enable checking of PI reference tag for I/O processing.', action='store_true')
     p.add_argument('-g', '--prchk-guard',
                    help='Enable checking of PI guard for I/O processing.', action='store_true')
+    p.add_argument('-e', '--pi-guard-seed',
+                   help='Seed value for PI guard computation.', type=int)
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):

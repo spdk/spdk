@@ -1461,6 +1461,7 @@ hostaddr                | Optional | string      | NVMe-oF host address: ip addr
 hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
 prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
 prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
+pi_guard_seed           | Optional | bool        | Seed value for PI guard computation
 
 ### Example
 
