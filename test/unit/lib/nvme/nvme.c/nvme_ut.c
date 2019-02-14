@@ -281,10 +281,12 @@ test_nvme_init_controllers(void)
 	 * Verify correct behavior when it does.
 	 */
 	MOCK_SET(nvme_ctrlr_process_init, 1);
+	MOCK_SET(spdk_process_is_primary, 1);
 	g_spdk_nvme_driver->initialized = false;
 	ut_destruct_called = false;
 	probe_ctx.cb_ctx = cb_ctx;
 	probe_ctx.attach_cb = attach_cb;
+	probe_ctx.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	rc = nvme_init_controllers(&probe_ctx);
 	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
