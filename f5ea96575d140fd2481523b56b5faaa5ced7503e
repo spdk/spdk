@@ -16,6 +16,24 @@
       "revId": "f5ea96575d140fd2481523b56b5faaa5ced7503e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2cc971b6_f9a02d5d",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-02-14T02:00:27Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2f6060ec_a3625aa5",
+      "revId": "f5ea96575d140fd2481523b56b5faaa5ced7503e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
