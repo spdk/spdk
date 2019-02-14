@@ -77,6 +77,9 @@ function usage()
 	echo "                           No path required."
 	echo " ftl                       Required to build FTL module."
 	echo "                           No path required."
+	echo " uring                     Required to support I/O uring on Linux. If no argument, searches"
+	echo "                           the standard installation directory. If an argument is provided, it is"
+	echo "                           considered a directory containing liburing.a and io_uring.h."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -314,6 +317,18 @@ for i in "$@"; do
 		--without-isal)
 			CONFIG[ISAL]=n
 			;;
+		--with-uring=*)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-uring)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=
+			;;
+		--without-uring)
+			CONFIG[URING]=n
+			CONFIG[URING_PATH]=
+			;;
 		--)
 			break
 			;;
@@ -491,6 +506,14 @@ elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
 	fi
 fi
 
+if [[ "${CONFIG[URING]}" = "y" ]]; then
+	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
+		if [ ! -d "${CONFIG[URING_PATH]}" ]; then
+			echo "${CONFIG[URING_PATH]}: directory not found"
+			exit 1
+		fi
+	fi
+fi
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
