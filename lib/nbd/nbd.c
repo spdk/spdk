@@ -355,10 +355,6 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 		spdk_bdev_close(nbd->bdev_desc);
 	}
 
-	if (nbd->nbd_path) {
-		free(nbd->nbd_path);
-	}
-
 	if (nbd->spdk_sp_fd >= 0) {
 		close(nbd->spdk_sp_fd);
 	}
@@ -368,9 +364,16 @@ _nbd_stop(struct spdk_nbd_disk *nbd)
 	}
 
 	if (nbd->dev_fd >= 0) {
-		ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
-		ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
+		/* Clear nbd device only if it is occupied by SPDK app */
+		if (nbd->nbd_path && spdk_nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
+			ioctl(nbd->dev_fd, NBD_CLEAR_QUE);
+			ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
+		}
 		close(nbd->dev_fd);
+	}
+
+	if (nbd->nbd_path) {
+		free(nbd->nbd_path);
 	}
 
 	if (nbd->nbd_poller) {
@@ -854,6 +857,28 @@ spdk_nbd_start_complete(struct spdk_nbd_start_ctx *ctx)
 	pthread_t	tid;
 	int		flag;
 
+	/* Add nbd_disk to the end of disk list */
+	rc = spdk_nbd_disk_register(ctx->nbd);
+	if (rc != 0) {
+		SPDK_ERRLOG("Failed to register %s, it should not happen.\n", ctx->nbd->nbd_path);
+		assert(false);
+		goto err;
+	}
+
+	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(ctx->nbd->bdev));
+	if (rc == -1) {
+		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
+		goto err;
+	}
+
+	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(ctx->nbd->bdev));
+	if (rc == -1) {
+		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", spdk_strerror(errno));
+		rc = -errno;
+		goto err;
+	}
+
 #ifdef NBD_FLAG_SEND_TRIM
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_FLAGS, NBD_FLAG_SEND_TRIM);
 	if (rc == -1) {
@@ -908,6 +933,7 @@ spdk_nbd_enable_kernel(void *arg)
 	struct spdk_nbd_start_ctx *ctx = arg;
 	int rc;
 
+	/* Declare device setup by this process */
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SOCK, ctx->nbd->kernel_sp_fd);
 	if (rc == -1) {
 		if (errno == EBUSY && ctx->polling_count-- > 0) {
@@ -1011,36 +1037,16 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	TAILQ_INIT(&nbd->received_io_list);
 	TAILQ_INIT(&nbd->executed_io_list);
 
-	/* Add nbd_disk to the end of disk list */
-	rc = spdk_nbd_disk_register(nbd);
-	if (rc != 0) {
+	/* Make sure nbd_path is not used in this SPDK app */
+	if (spdk_nbd_disk_find_by_nbd_path(nbd->nbd_path)) {
+		SPDK_NOTICELOG("%s is already exported\n", nbd->nbd_path);
+		rc = -EBUSY;
 		goto err;
 	}
 
 	nbd->dev_fd = open(nbd_path, O_RDWR);
 	if (nbd->dev_fd == -1) {
 		SPDK_ERRLOG("open(\"%s\") failed: %s\n", nbd_path, spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
-	rc = ioctl(nbd->dev_fd, NBD_SET_BLKSIZE, spdk_bdev_get_block_size(bdev));
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_BLKSIZE) failed: %s\n", spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
-	rc = ioctl(nbd->dev_fd, NBD_SET_SIZE_BLOCKS, spdk_bdev_get_num_blocks(bdev));
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_SET_SIZE_BLOCKS) failed: %s\n", spdk_strerror(errno));
-		rc = -errno;
-		goto err;
-	}
-
-	rc = ioctl(nbd->dev_fd, NBD_CLEAR_SOCK);
-	if (rc == -1) {
-		SPDK_ERRLOG("ioctl(NBD_CLEAR_SOCK) failed: %s\n", spdk_strerror(errno));
 		rc = -errno;
 		goto err;
 	}
