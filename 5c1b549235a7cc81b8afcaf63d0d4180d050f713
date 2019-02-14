@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1c46b85e_3b1aa933",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-14T14:42:39Z",
+      "side": 1,
+      "message": "This should be more like:\n\nnvme: make the completion status string accessible from external applications\n\nThis is a change in the qpair logic, but for the \u0027component\u0027 we usually roughly use the name of the library - in this case \u0027nvme\u0027.\n\nWe need to do a better job of explaining the title on the commit message in our documentation.  I\u0027ll take a note to do that.",
+      "revId": "5c1b549235a7cc81b8afcaf63d0d4180d050f713",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18692145_47b0ec2d",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-14T14:42:39Z",
+      "side": 1,
+      "message": "Hi Ernest,\n\nThe standard style we use in SPDK is that for function declarations, the return type goes in the same line as the rest of the function signature.\n\n-Jim",
+      "revId": "5c1b549235a7cc81b8afcaf63d0d4180d050f713",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
