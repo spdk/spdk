@@ -90,6 +90,8 @@ struct nvme_bdev {
 	struct spdk_nvme_ns	*ns;
 };
 
+typedef void (*spdk_bdev_nvme_fn)(void *ctx);
+
 void spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid,
 				   struct spdk_json_write_ctx *w);
 
@@ -106,7 +108,9 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  const char *base_name,
 			  const char **names, size_t *count,
 			  const char *hostnqn,
-			  uint32_t prchk_flags);
+			  uint32_t prchk_flags,
+			  spdk_bdev_nvme_fn cb_fn,
+			  void *cb_ctx);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**
