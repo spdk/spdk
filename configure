@@ -72,6 +72,9 @@ function usage()
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
 	echo "                           No path required."
+	echo " uring                     Required to support I/O uring on Linux. If no argument, searches"
+	echo "                           the standard installation directory. If an argument is provided, it is"
+	echo "                           considered a directory containing liburing.a and io_uring.h."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -294,11 +297,23 @@ for i in "$@"; do
 			CONFIG[OCF_PATH]=
 			;;
 		--with-isal)
-                        CONFIG[ISAL]=y
-                        ;;
-                --without-isal)
-                        CONFIG[ISAL]=n
-                        ;;
+			CONFIG[ISAL]=y
+			;;
+		--without-isal)
+			CONFIG[ISAL]=n
+			;;
+		--with-uring=*)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-uring)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=
+			;;
+		--without-uring)
+			CONFIG[URING]=n
+			CONFIG[URING_PATH]=
+			;;
 		--)
 			break
 			;;
@@ -410,7 +425,7 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
 		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.12.02 or newer.  Please install"
 		echo "or upgrade then re-run this script."
@@ -492,6 +507,14 @@ if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
 	exit 1
 fi
 
+if [[ "${CONFIG[URING]}" = "y" ]]; then
+	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
+		if [ ! -d "${CONFIG[URING_PATH]}" ]; then
+			echo "${CONFIG[URING_PATH]}: directory not found"
+			exit 1
+		fi
+	fi
+fi
 
 # We are now ready to generate final configuration. But first do sanity
 # check to see if all keys in CONFIG array have its reflection in CONFIG file.
