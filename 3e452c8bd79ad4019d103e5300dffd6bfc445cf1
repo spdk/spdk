@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a4bc7f78_52c83d64",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9d4a791d_bea06c46",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "340aeb91_341ac83c",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-06T18:23:40Z",
       "side": 1,
       "message": "this line and next line refer to \"node\" - what does node mean in this context?\n\n(I know a lot of this is copied from the crypto code - I guess I glossed over that when reviewing the crypto code way back when.)\n\nand is \"qp\" the queue pair index from the associated device pointer?",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "925a3887_6191c165",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "node as in \"node on a linked list\".  Yes on the qp index, I\u0027ll update the comments",
+      "parentUuid": "340aeb91_341ac83c",
       "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7e9d41b3_9a084012",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1d479f5_6e8dd388",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83b6767a_ac9eb30f",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -64,6 +118,24 @@
       "writtenOn": "2019-02-06T18:23:40Z",
       "side": 1,
       "message": "instead of struct vbdev_dev - would compress_dev be better?  just to make it clear this is not related to creating a vbdev\n\nit would resolve the naming conflict mentioned above - it might also be slightly clearer, when I was first reading this, I was trying to figure out where the vbdev was getting created but then realized it\u0027s the \"dev\" (compress dev) that\u0027s actually getting \"created\"",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "51741ddb_cdca3bbc",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "LOL, yes that\u0027s the name I picked from your earlier comment",
+      "parentUuid": "83b6767a_ac9eb30f",
       "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -93,6 +165,30 @@
     },
     {
       "key": {
+        "uuid": "bf41c875_478f091b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a4f9aeb_c7c383ba",
+      "range": {
+        "startLine": 142,
+        "startChar": 9,
+        "endLine": 142,
+        "endChar": 10
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "32e8eb85_02152e21",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -107,6 +203,24 @@
       "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7cde086_39ee768c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 366,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32e8eb85_02152e21",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -127,6 +241,24 @@
     },
     {
       "key": {
+        "uuid": "4033e4d1_c5b56a0c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 460,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc468caa_7be07933",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f453818d_b7271abf",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -144,6 +276,24 @@
     },
     {
       "key": {
+        "uuid": "00cdcfa1_eea10546",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "I went ahead and removed all device_qp related logic as it sure seems like we\u0027ll never use anything more than queue pair ID 0",
+      "parentUuid": "f453818d_b7271abf",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ebc21ceb_c932d21c",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -155,6 +305,30 @@
       "writtenOn": "2019-02-06T09:01:49Z",
       "side": 1,
       "message": "Is it possible for this case to return error?",
+      "range": {
+        "startLine": 599,
+        "startChar": 1,
+        "endLine": 599,
+        "endChar": 28
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea8cd9e1_503cce80",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 599,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "no longer applicable based on prev comment",
+      "parentUuid": "ebc21ceb_c932d21c",
       "range": {
         "startLine": 599,
         "startChar": 1,
@@ -184,6 +358,24 @@
     },
     {
       "key": {
+        "uuid": "dcd06535_c5d78bb7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 604,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "thanks",
+      "parentUuid": "161fecdb_4f1d836f",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2678bd4b_fe2d8765",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -201,6 +393,24 @@
     },
     {
       "key": {
+        "uuid": "1e66ee6f_82326382",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2678bd4b_fe2d8765",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4b9628e8_b796e877",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -212,6 +422,24 @@
       "writtenOn": "2019-02-06T18:23:40Z",
       "side": 1,
       "message": "this will be too racy - we could have other channels actively using the reduce_thread here\n\nI\u0027m not sure you need to worry about doing this extra work.  I think the method bdev/iscsi uses will work.  See how it does the ch_count - you can do something similar here.\n\n(And as I look at the bdev/iscsi code - I notice the master_ch part isn\u0027t even needed there - it\u0027s unused.  The important context is kept in the lun itself - which in your case is just the vbdev_compress.)",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "580b79fa_8bd21e98",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 630,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "OK, I\u0027ll go check out the iscsi code in more detail",
+      "parentUuid": "4b9628e8_b796e877",
       "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -235,6 +463,24 @@
     },
     {
       "key": {
+        "uuid": "b7bfeef2_a6ac36f7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "cool",
+      "parentUuid": "53a711c7_c556723a",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2d8aed07_ef6e0590",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -252,6 +498,24 @@
     },
     {
       "key": {
+        "uuid": "8362e1c4_90c65cd3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d8aed07_ef6e0590",
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a5e6bdeb_14f4f58b",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 32
@@ -263,6 +527,30 @@
       "writtenOn": "2019-02-06T09:01:49Z",
       "side": 1,
       "message": "spdk_bdev_module_release_bdev(comp_bdev-\u003ebase_bdev) should be called in this case?",
+      "range": {
+        "startLine": 780,
+        "startChar": 7,
+        "endLine": 780,
+        "endChar": 27
+      },
+      "revId": "3e452c8bd79ad4019d103e5300dffd6bfc445cf1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd499d07_70444385",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 780,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-14T20:35:07Z",
+      "side": 1,
+      "message": "Yup, you\u0027re right. Thanks.  As none of this has been tested I just realized its missing the open call too",
+      "parentUuid": "a5e6bdeb_14f4f58b",
       "range": {
         "startLine": 780,
         "startChar": 7,
