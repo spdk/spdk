@@ -6,6 +6,7 @@ from os import getuid
 from rpc.client import JSONRPCException
 from configshell_fb import ConfigShell, shell, ExecutionError
 from spdkcli import UIRoot
+import rpc.client
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
                        removeQuotes, dblQuotedString, OneOrMore)
 
@@ -43,29 +44,30 @@ def main():
                         help="commands to execute by SPDKCli as one-line command")
     args = parser.parse_args()
 
-    root_node = UIRoot(args.socket, spdk_shell)
-    root_node.verbose = args.verbose
-    try:
-        root_node.refresh()
-    except BaseException:
-        pass
-
-    if len(args.commands) > 0:
+    with rpc.client.JSONRPCClient(args.socket) as client:
+        root_node = UIRoot(client, spdk_shell)
+        root_node.verbose = args.verbose
         try:
-            spdk_shell.interactive = False
-            spdk_shell.run_cmdline(" ".join(args.commands))
-        except Exception as e:
-            sys.stderr.write("%s\n" % e)
-            sys.exit(1)
-        sys.exit(0)
+            root_node.refresh()
+        except BaseException:
+            pass
 
-    spdk_shell.con.display("SPDK CLI v0.1")
-    spdk_shell.con.display("")
-    while not spdk_shell._exit:
-        try:
-            spdk_shell.run_interactive()
-        except (JSONRPCException, ExecutionError) as e:
-            spdk_shell.log.error("%s" % e)
+        if len(args.commands) > 0:
+            try:
+                spdk_shell.interactive = False
+                spdk_shell.run_cmdline(" ".join(args.commands))
+            except Exception as e:
+                sys.stderr.write("%s\n" % e)
+                sys.exit(1)
+            sys.exit(0)
+
+        spdk_shell.con.display("SPDK CLI v0.1")
+        spdk_shell.con.display("")
+        while not spdk_shell._exit:
+            try:
+                spdk_shell.run_interactive()
+            except (JSONRPCException, ExecutionError) as e:
+                spdk_shell.log.error("%s" % e)
 
 
 if __name__ == "__main__":

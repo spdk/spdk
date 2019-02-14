@@ -48,6 +48,12 @@ class JSONRPCClient(object):
             raise JSONRPCException("Error while connecting to %s\n"
                                    "Error details: %s" % (addr, ex))
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
+
     def get_logger(self):
         return self._logger
 
@@ -61,9 +67,11 @@ class JSONRPCClient(object):
         self._logger.setLevel(lvl)
         self._logger.info("Log level set to %s", lvl)
 
-    def __del__(self):
+    def close(self):
         if getattr(self, "sock", None):
+            self.sock.shutdown(socket.SHUT_RDWR)
             self.sock.close()
+            self.sock = None
 
     def add_request(self, method, params):
         self._request_id += 1
