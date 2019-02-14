@@ -2465,12 +2465,7 @@ spdk_bdev_notify_blockcnt_change(struct spdk_bdev *bdev, uint64_t size)
 	return ret;
 }
 
-/*
- * Convert I/O offset and length from bytes to blocks.
- *
- * Returns zero on success or non-zero if the byte parameters aren't divisible by the block size.
- */
-static uint64_t
+uint64_t
 spdk_bdev_bytes_to_blocks(struct spdk_bdev *bdev, uint64_t offset_bytes, uint64_t *offset_blocks,
 			  uint64_t num_bytes, uint64_t *num_blocks)
 {

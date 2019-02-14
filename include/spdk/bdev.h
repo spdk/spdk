@@ -544,6 +544,22 @@ uint64_t spdk_bdev_get_weighted_io_time(const struct spdk_bdev *bdev);
 struct spdk_io_channel *spdk_bdev_get_io_channel(struct spdk_bdev_desc *desc);
 
 /**
+ * Convert I/O offset and length from bytes to blocks.
+ *
+ * \param bdev Block device to query.
+ * \param offset_bytes Offset in bytes.
+ * \param offset_blocks Converted offset in blocks.
+ * \param num_bytes Number of bytes.
+ * \param num_blocks Converted number of blocks.
+ *
+ * \return zero on success or non-zero if the byte parameters aren't divisible
+ * by the block size.
+ */
+uint64_t spdk_bdev_bytes_to_blocks(struct spdk_bdev *bdev,
+				   uint64_t offset_bytes, uint64_t *offset_blocks,
+				   uint64_t num_bytes, uint64_t *num_blocks);
+
+/**
  * \defgroup bdev_io_submit_functions bdev I/O Submit Functions
  *
  * These functions submit a new I/O request to a bdev.  The I/O request will
