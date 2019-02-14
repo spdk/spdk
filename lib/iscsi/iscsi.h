@@ -101,12 +101,6 @@
  */
 #define MAX_LARGE_DATAIN_PER_CONNECTION 64
 
-/*
- * Defines default maximum queue depth per connection and this can be
- * changed by configuration file.
- */
-#define DEFAULT_MAX_QUEUE_DEPTH	64
-
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
 
@@ -125,6 +119,12 @@
 #define SPDK_ISCSI_MIN_FIRST_BURST_LENGTH	512
 
 #define SPDK_ISCSI_MAX_FIRST_BURST_LENGTH	16777215
+
+/*
+ * Defines default maximum queue depth per connection and this can be
+ * changed by configuration file.
+ */
+#define DEFAULT_MAX_QUEUE_DEPTH	64
 
 /** Defines how long we should wait for a TCP close after responding to a
  *   logout request, before terminating the connection ourselves.
