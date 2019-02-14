@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "234ce127_6e711a6d",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 14
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-14T02:57:48Z",
+      "side": 1,
+      "message": "delete this line",
+      "revId": "60d6036ab814da0558a37abd0b9c2d26422ebb5b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
