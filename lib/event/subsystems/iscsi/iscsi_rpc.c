@@ -63,6 +63,7 @@ static const struct spdk_json_object_decoder rpc_set_iscsi_opts_decoders[] = {
 	{"error_recovery_level", offsetof(struct spdk_iscsi_opts, ErrorRecoveryLevel), spdk_json_decode_uint32, true},
 	{"allow_duplicated_isid", offsetof(struct spdk_iscsi_opts, AllowDuplicateIsid), spdk_json_decode_bool, true},
 	{"min_connections_per_core", offsetof(struct spdk_iscsi_opts, min_connections_per_core), spdk_json_decode_uint32, true},
+	{"data_out_buf_size", offsetof(struct spdk_iscsi_opts, data_out_buf_size), spdk_json_decode_uint32, true},
 };
 
 static void
