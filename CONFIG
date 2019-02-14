@@ -139,3 +139,9 @@ CONFIG_CUSTOMOCF=n
 
 # Build ISA-L library
 CONFIG_ISAL=y
+
+# Build with IO_URING support
+CONFIG_URING=n
+
+# Path to custom built IO_URING library
+CONFIG_URING_PATH=
