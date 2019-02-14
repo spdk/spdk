@@ -511,7 +511,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			 *  FirstBurstLength as our maximum data segment length
 			 *  value.
 			 */
-			max_segment_len = DEFAULT_FIRSTBURSTLENGTH;
+			max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT) {
 			max_segment_len = spdk_get_data_out_buffer_size();
 		} else if (pdu->bhs.opcode == ISCSI_OP_NOPOUT) {

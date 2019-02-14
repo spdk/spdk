@@ -386,7 +386,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->MaxQueueDepth = DEFAULT_MAX_QUEUE_DEPTH;
 	opts->DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	opts->DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
-	opts->FirstBurstLength = DEFAULT_FIRSTBURSTLENGTH;
+	opts->FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 	opts->ImmediateData = DEFAULT_IMMEDIATEDATA;
 	opts->AllowDuplicateIsid = false;
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;
