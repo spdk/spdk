@@ -140,6 +140,30 @@
       "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "366b6fd6_39526cc5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-02-14T08:57:56Z",
+      "side": 1,
+      "message": "I disagree - it is indeed a rare case, but it\u0027s definitely possible. Consider the following scenario:\n1. User writes LBA x - it goes through ftl_rwb_fill, acquires rwb entry and pushes it (but the rwb batch is not full).\n2. User writes to a different address, it acquires an entry from the same batch, but before pushing it, goes the thread sleeps.\n3. Another thread fills up the remaining entries in the batch, but the batch remains not full (as the entry in 2 wasn\u0027t pushed).\n4. User writes LBA x again, it acquires an entry from another batch, which becomes full and is submitted, and then finally completed.\n5. The entry is reused, so the L2P is updated with an on-disk PPA address.\n6. The thread wakes up, pushes the entry and the bath, and we end up here checking the prev_ppa.offset \u003d\u003d entry-\u003epos with prev_ppa not pointing at the cache.",
+      "parentUuid": "fdd0dd47_b3b5c87a",
+      "range": {
+        "startLine": 1071,
+        "startChar": 7,
+        "endLine": 1071,
+        "endChar": 36
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
