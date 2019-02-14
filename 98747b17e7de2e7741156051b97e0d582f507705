@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f328cca_87ebb6de",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 25
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-14T11:30:32Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we check request_id in response?",
+      "range": {
+        "startLine": 72,
+        "startChar": 4,
+        "endLine": 74,
+        "endChar": 45
+      },
+      "revId": "98747b17e7de2e7741156051b97e0d582f507705",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
