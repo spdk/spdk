@@ -119,6 +119,13 @@ spdk_event_allocate(uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2)
 	return event;
 }
 
+void spdk_event_free(struct spdk_event *event)
+{
+	if (NULL != event) {
+		spdk_mempool_put(g_spdk_event_mempool, event);
+	}
+}
+
 void
 spdk_event_call(struct spdk_event *event)
 {

@@ -271,6 +271,13 @@ struct spdk_event *spdk_event_allocate(uint32_t lcore, spdk_event_fn fn,
 				       void *arg1, void *arg2);
 
 /**
+ * Free an event allocated with spdk_event_allocate().
+ *
+ * \param event event to free.
+ */
+void spdk_event_free(struct spdk_event *event);
+
+/**
  * Pass the given event to the associated lcore and call the function.
  *
  * \param event Event to execute.
