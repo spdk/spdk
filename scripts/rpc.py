@@ -1737,10 +1737,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     args = parser.parse_args()
 
-    try:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
-        args.func(args)
-    except JSONRPCException as ex:
-        print("Exception:")
-        print(ex.message)
-        exit(1)
+    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+        try:
+            args.client = client
+            args.func(args)
+        except JSONRPCException as ex:
+            print("Exception:")
+            print(ex.message)
+            exit(1)
