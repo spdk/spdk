@@ -1005,12 +1005,12 @@ abort_queued_datain_task_test(void)
 	TAILQ_INSERT_TAIL(&conn.queued_datain_tasks, task, link);
 
 	/* Only one slot remains and a subtask is submitted. */
-	task->scsi.transfer_len = SPDK_BDEV_LARGE_BUF_MAX_SIZE * 3;
-	task->current_datain_offset = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
+	task->scsi.transfer_len = SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH * 3;
+	task->current_datain_offset = SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH;
 
 	rc = _spdk_iscsi_conn_abort_queued_datain_task(&conn, task);
 	CU_ASSERT(rc != 0);
-	CU_ASSERT(task->current_datain_offset == SPDK_BDEV_LARGE_BUF_MAX_SIZE * 2);
+	CU_ASSERT(task->current_datain_offset == SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH * 2);
 	CU_ASSERT(conn.data_in_cnt == MAX_LARGE_DATAIN_PER_CONNECTION);
 
 	/* Additional one slot becomes vacant. */
