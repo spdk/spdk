@@ -209,9 +209,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    try:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper()))
-    except JSONRPCException as ex:
-        print((ex.message))
-        exit(1)
-    args.func(args)
+    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+        try:
+            args.client = client
+            args.func(args)
+        except JSONRPCException as ex:
+            print((ex.message))
+            exit(1)
