@@ -1,9 +1,11 @@
-def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
+def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None,
+                     data_buf_size=None):
     """Set parameters for the bdev subsystem.
 
     Args:
         bdev_io_pool_size: number of bdev_io structures in shared buffer pool (optional)
         bdev_io_cache_size: maximum number of bdev_io structures cached per thread (optional)
+        data_buf_size: maximum buffer size allocatable for bdev_io (optional)
     """
     params = {}
 
@@ -11,6 +13,8 @@ def set_bdev_options(client, bdev_io_pool_size=None, bdev_io_cache_size=None):
         params['bdev_io_pool_size'] = bdev_io_pool_size
     if bdev_io_cache_size:
         params['bdev_io_cache_size'] = bdev_io_cache_size
+    if data_buf_size:
+        params['data_buf_size'] = data_buf_size
 
     return client.call('set_bdev_options', params)
 
