@@ -10,14 +10,14 @@ class UIRoot(UINode):
     """
     Root node for CLI menu tree structure. Refreshes running config on startup.
     """
-    def __init__(self, s, shell):
+    def __init__(self, client, shell):
         UINode.__init__(self, "/", shell=shell)
         self.current_bdevs = []
         self.current_lvol_stores = []
         self.current_vhost_ctrls = []
         self.current_nvmf_transports = []
         self.current_nvmf_subsystems = []
-        self.set_rpc_target(s)
+        self.set_rpc_target(client)
         self.verbose = False
         self.is_init = self.check_init()
         self.methods = []
@@ -45,8 +45,8 @@ class UIRoot(UINode):
         if self.has_subsystem("iscsi"):
             UIISCSI(self)
 
-    def set_rpc_target(self, s):
-        self.client = rpc.client.JSONRPCClient(s)
+    def set_rpc_target(self, client):
+        self.client = client
 
     def print_array(self, a):
         return " ".join(a)
