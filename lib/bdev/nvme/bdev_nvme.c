@@ -1253,17 +1253,71 @@ bdev_nvme_create_and_get_bdev_names(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx probe_ctx;
+	struct spdk_nvme_ctrlr *ctrlr;
+	const char *base_name;
+	const char **names;
+	size_t *count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	spdk_bdev_nvme_fn cb_fn;
+	void *cb_ctx;
+};
+
+static int
+spdk_bdev_nvme_async_poll(void *arg)
+{
+	struct nvme_async_probe_ctx	*ctx = arg;
+	bool				done;
+	int				rc;
+
+	done = spdk_nvme_probe_poll_async(&ctx->probe_ctx);
+	if (!done) {
+		return -1;
+	}
+	spdk_poller_unregister(&ctx->poller);
+
+	rc = bdev_nvme_create_and_get_bdev_names(ctx->ctrlr,
+			ctx->base_name,
+			ctx->names, ctx->count,
+			&ctx->probe_ctx.trid,
+			ctx->prchk_flags);
+	if (rc < 0) {
+		ctx->count = 0;
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_ctx);
+	}
+	free(ctx);
+	return 1;
+}
+
+static void
+spdk_bdev_nvme_start_async_probe_poller(void *_ctx)
+{
+	struct nvme_async_probe_ctx *ctx = _ctx;
+
+	assert(ctx->poller == NULL);
+	assert(g_bdev_nvme_init_thread == spdk_get_thread());
+
+	ctx->poller = spdk_poller_register(spdk_bdev_nvme_async_poll, ctx, 1000);
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvme_host_id *hostid,
 		      const char *base_name,
 		      const char **names, size_t *count,
 		      const char *hostnqn,
-		      uint32_t prchk_flags)
+		      uint32_t prchk_flags,
+		      spdk_bdev_nvme_fn cb_fn,
+		      void *cb_ctx)
 {
 	struct spdk_nvme_ctrlr_opts	opts;
-	struct spdk_nvme_ctrlr		*ctrlr;
 	struct nvme_probe_skip_entry	*entry, *tmp;
+	struct nvme_async_probe_ctx	*ctx;
 
 	if (nvme_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
@@ -1299,14 +1353,25 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
-	ctrlr = spdk_nvme_connect(trid, &opts);
-	if (!ctrlr) {
-		SPDK_ERRLOG("Failed to create new device\n");
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+	ctx->base_name = base_name;
+	ctx->names = names;
+	ctx->count = count;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	ctx->prchk_flags = prchk_flags;
+	ctx->ctrlr = spdk_nvme_connect_async(&ctx->probe_ctx, trid, &opts);
+	if (ctx->ctrlr == NULL) {
+		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
+		free(ctx);
 		return -1;
 	}
+	spdk_thread_send_msg(g_bdev_nvme_init_thread, spdk_bdev_nvme_start_async_probe_poller, ctx);
 
-	return bdev_nvme_create_and_get_bdev_names(ctrlr, base_name, names,
-			count, trid, prchk_flags);
+	return 0;
 }
 
 int
