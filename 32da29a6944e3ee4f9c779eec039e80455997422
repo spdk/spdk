@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aacab565_a28c0cbf",
+        "filename": "scripts/detect_cc.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-14T03:56:05Z",
+      "side": 1,
+      "message": "are the semicolons needed at the end?\n\nI think in autotest_common.sh, the semicolons are there to separate it from the following export statement (to keep them on the same line in the script)",
+      "revId": "32da29a6944e3ee4f9c779eec039e80455997422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
