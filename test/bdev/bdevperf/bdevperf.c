@@ -1091,9 +1091,9 @@ main(int argc, char **argv)
 	if (!strcmp(g_workload_type, "verify") ||
 	    !strcmp(g_workload_type, "reset")) {
 		g_rw_percentage = 50;
-		if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		if (g_io_size > (int)spdk_bdev_get_max_data_buf_size()) {
 			fprintf(stderr, "Unable to exceed max I/O size of %d for verify. (%d provided).\n",
-				SPDK_BDEV_LARGE_BUF_MAX_SIZE, g_io_size);
+				spdk_bdev_get_max_data_buf_size(), g_io_size);
 			exit(1);
 		}
 		if (opts.reactor_mask) {
@@ -1143,9 +1143,9 @@ main(int argc, char **argv)
 		g_is_random = 1;
 	}
 
-	if (g_io_size > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+	if (g_io_size > (int)spdk_bdev_get_max_data_buf_size()) {
 		printf("I/O size of %d is greater than zero copy threshold (%d).\n",
-		       g_io_size, SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+		       g_io_size, spdk_bdev_get_max_data_buf_size());
 		printf("Zero copy mechanism will not be used.\n");
 		g_zcopy = false;
 	}
