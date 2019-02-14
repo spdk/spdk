@@ -63,6 +63,8 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define BUF_LARGE_POOL_SIZE			1024
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
+#define SPDK_BDEV_SMALL_BUF_MAX_SIZE		8192
+#define SPDK_BDEV_LARGE_BUF_MAX_SIZE		(64 * 1024)
 
 #define OWNER_BDEV		0x2
 
@@ -4453,6 +4455,12 @@ spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *hist
 
 	spdk_for_each_channel(__bdev_to_io_dev(bdev), _spdk_bdev_histogram_get_channel, ctx,
 			      _spdk_bdev_histogram_get_channel_cb);
+}
+
+uint32_t
+spdk_bdev_get_max_data_buf_size(void)
+{
+	return SPDK_BDEV_LARGE_BUF_MAX_SIZE;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("bdev", SPDK_LOG_BDEV)

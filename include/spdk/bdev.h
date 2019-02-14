@@ -51,9 +51,6 @@
 extern "C" {
 #endif
 
-#define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
-#define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
-
 /**
  * Block device remove callback.
  *
@@ -1176,6 +1173,13 @@ void spdk_bdev_histogram_enable(struct spdk_bdev *bdev, spdk_bdev_histogram_stat
 void spdk_bdev_histogram_get(struct spdk_bdev *bdev, struct spdk_histogram_data *histogram,
 			     spdk_bdev_histogram_data_cb cb_fn,
 			     void *cb_arg);
+
+/**
+ * Get maximum buffer size allocatable on \c spdk_bdev_io_get_buf() call.
+ *
+ * \return maximum buffer size allocatable on \c spdk_bdev_io_get_buf() call.
+ */
+uint32_t spdk_bdev_get_max_data_buf_size(void);
 
 #ifdef __cplusplus
 }
