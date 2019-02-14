@@ -429,11 +429,11 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		if (pdu->data_buf == NULL) {
 			if (data_len <= spdk_get_immediate_data_buffer_size()) {
 				pool = g_spdk_iscsi.pdu_immediate_data_pool;
-			} else if (data_len <= spdk_get_data_out_buffer_size()) {
+			} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 				pool = g_spdk_iscsi.pdu_data_out_pool;
 			} else {
 				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-					    data_len, spdk_get_data_out_buffer_size());
+					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 				*_pdu = NULL;
 				spdk_put_pdu(pdu);
 				conn->pdu_in_progress = NULL;
@@ -513,7 +513,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			 */
 			max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
 		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT) {
-			max_segment_len = spdk_get_data_out_buffer_size();
+			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 		} else if (pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
 			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 		} else {

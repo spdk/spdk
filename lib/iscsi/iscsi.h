@@ -461,10 +461,4 @@ spdk_get_immediate_data_buffer_size(void)
 	       52;		   /* extended CDB AHS (for a 64-byte CDB) */
 }
 
-static inline int
-spdk_get_data_out_buffer_size(void)
-{
-	return SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-}
-
 #endif /* SPDK_ISCSI_H */
