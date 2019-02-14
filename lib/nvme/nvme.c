@@ -471,19 +471,21 @@ nvme_init_controllers(struct spdk_nvme_probe_ctx *probe_ctx)
 	int rc = 0;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	/* Initialize all new controllers in the probe context init_ctrlrs list in parallel. */
-	while (!TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
-		TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
-			rc = nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
-			if (rc) {
-				break;
+	if (spdk_process_is_primary() || probe_ctx->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
+		/* Initialize all new controllers in the probe context init_ctrlrs list in parallel. */
+		while (!TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
+			TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
+				rc = nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
+				if (rc) {
+					break;
+				}
 			}
 		}
-	}
 
-	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-	g_spdk_nvme_driver->initialized = true;
-	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+		g_spdk_nvme_driver->initialized = true;
+		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+	}
 
 	return rc;
 }
@@ -607,16 +609,11 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		return rc;
 	}
 
-	if (spdk_process_is_primary() || trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		/*
-		 * Keep going even if one or more nvme_attach() calls failed,
-		 *  but maintain the value of rc to signal errors when we return.
-		 */
-
-		rc = nvme_init_controllers(&probe_ctx);
-	}
-
-	return rc;
+	/*
+	 * Keep going even if one or more nvme_attach() calls failed,
+	 *  but maintain the value of rc to signal errors when we return.
+	 */
+	return nvme_init_controllers(&probe_ctx);
 }
 
 static bool
@@ -665,11 +662,9 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	spdk_nvme_probe_ctx_init(&probe_ctx, trid, user_connect_opts, probe_cb, NULL, NULL);
 	spdk_nvme_probe_internal(&probe_ctx, true);
 
-	if (spdk_process_is_primary() || trid->trtype != SPDK_NVME_TRANSPORT_PCIE) {
-		rc = nvme_init_controllers(&probe_ctx);
-		if (rc != 0) {
-			return NULL;
-		}
+	rc = nvme_init_controllers(&probe_ctx);
+	if (rc != 0) {
+		return NULL;
 	}
 
 	ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
