@@ -300,21 +300,31 @@ static void
 test_get_status_string(void)
 {
 	const char	*status_string;
+	struct spdk_nvme_status status;
 
-	status_string = get_status_string(SPDK_NVME_SCT_GENERIC, SPDK_NVME_SC_SUCCESS);
+	status.sct = SPDK_NVME_SCT_GENERIC;
+	status.sc = SPDK_NVME_SC_SUCCESS;
+	status_string = spdk_nvme_cpl_get_status_string(&status);
 	CU_ASSERT(strcmp(status_string, "SUCCESS") == 0);
 
-	status_string = get_status_string(SPDK_NVME_SCT_COMMAND_SPECIFIC,
-					  SPDK_NVME_SC_COMPLETION_QUEUE_INVALID);
+	status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	status.sc = SPDK_NVME_SC_COMPLETION_QUEUE_INVALID;
+	status_string = spdk_nvme_cpl_get_status_string(&status);
 	CU_ASSERT(strcmp(status_string, "INVALID COMPLETION QUEUE") == 0);
 
-	status_string = get_status_string(SPDK_NVME_SCT_MEDIA_ERROR, SPDK_NVME_SC_UNRECOVERED_READ_ERROR);
+	status.sct = SPDK_NVME_SCT_MEDIA_ERROR;
+	status.sc = SPDK_NVME_SC_UNRECOVERED_READ_ERROR;
+	status_string = spdk_nvme_cpl_get_status_string(&status);
 	CU_ASSERT(strcmp(status_string, "UNRECOVERED READ ERROR") == 0);
 
-	status_string = get_status_string(SPDK_NVME_SCT_VENDOR_SPECIFIC, 0);
+	status.sct = SPDK_NVME_SCT_VENDOR_SPECIFIC;
+	status.sc = 0;
+	status_string = spdk_nvme_cpl_get_status_string(&status);
 	CU_ASSERT(strcmp(status_string, "VENDOR SPECIFIC") == 0);
 
-	status_string = get_status_string(100, 0);
+	status.sct = 0x4;
+	status.sc = 0;
+	status_string = spdk_nvme_cpl_get_status_string(&status);
 	CU_ASSERT(strcmp(status_string, "RESERVED") == 0);
 }
 #endif
