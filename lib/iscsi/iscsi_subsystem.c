@@ -147,7 +147,7 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = spdk_get_data_out_buffer_size() +
+	int dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
