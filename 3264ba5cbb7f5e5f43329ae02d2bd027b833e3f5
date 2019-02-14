@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17ae8278_8a638752",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 15
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-14T10:53:26Z",
+      "side": 1,
+      "message": "Use: del self._reqs[:]\nOr: self._reqs \u003d []",
+      "range": {
+        "startLine": 94,
+        "startChar": 19,
+        "endLine": 94,
+        "endChar": 26
+      },
+      "revId": "3264ba5cbb7f5e5f43329ae02d2bd027b833e3f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
