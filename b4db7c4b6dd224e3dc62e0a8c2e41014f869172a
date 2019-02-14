@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa710582_2bbf6101",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 474,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-14T21:27:18Z",
+      "side": 1,
+      "message": "Please do same thing here, as Ben suggested on earlier patch - using this kind of if clause:\n\nif (!spdk_process_is_primary() \u0026\u0026 probe_ctx-\u003etrid.trtype \u003d\u003d SPDK_NVME_TRANSPORT_PCIE) {\n  return 0;\n}\n\nThen the rest of the code does not need to be indented.  In this case it also significantly reduces the size of the patch.",
+      "revId": "b4db7c4b6dd224e3dc62e0a8c2e41014f869172a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
