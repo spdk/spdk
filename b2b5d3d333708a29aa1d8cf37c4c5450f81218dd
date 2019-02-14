@@ -22,6 +22,30 @@
       "revId": "b2b5d3d333708a29aa1d8cf37c4c5450f81218dd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89bbbc74_3593e9b4",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-14T12:25:36Z",
+      "side": 1,
+      "message": "We need to close socket when object is delete explicitly or by GC.",
+      "parentUuid": "4b7ea086_461b5cae",
+      "range": {
+        "startLine": 38,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 29
+      },
+      "revId": "b2b5d3d333708a29aa1d8cf37c4c5450f81218dd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
