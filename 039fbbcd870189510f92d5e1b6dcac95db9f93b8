@@ -164,6 +164,30 @@
       "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c3efa50f_089182cc",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1071,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-14T09:39:18Z",
+      "side": 1,
+      "message": "Yes, it make sense - this thread should sleep for a long time but this is possible. Wondering if we don\u0027t have another issues with such scenario - for sure we could have data corruption on restore with previous implementation in such scenario.",
+      "parentUuid": "366b6fd6_39526cc5",
+      "range": {
+        "startLine": 1071,
+        "startChar": 7,
+        "endLine": 1071,
+        "endChar": 36
+      },
+      "revId": "039fbbcd870189510f92d5e1b6dcac95db9f93b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
