@@ -59,7 +59,6 @@
 #define MAX_INITIATOR 256
 #define MAX_NETMASK 256
 #define MAX_ISCSI_CONNECTIONS 1024
-#define MAX_FIRSTBURSTLENGTH	16777215
 
 #define DEFAULT_PORT 3260
 #define DEFAULT_MAX_SESSIONS 128
@@ -124,6 +123,8 @@
  *  SCSI command.
  */
 #define SPDK_ISCSI_MIN_FIRST_BURST_LENGTH	512
+
+#define SPDK_ISCSI_MAX_FIRST_BURST_LENGTH	16777215
 
 /** Defines how long we should wait for a TCP close after responding to a
  *   logout request, before terminating the connection ourselves.
