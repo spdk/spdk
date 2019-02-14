@@ -646,7 +646,7 @@ static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_b
 			return -1;
 		}
 
-		if (buf_len > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		if (buf_len > spdk_bdev_get_max_alloc_buf_size()) {
 			SPDK_ERRLOG("Trying to UNMAP too many blocks: %"PRIu64"\n",
 				    bdev_io->u.bdev.num_blocks);
 			return -1;
