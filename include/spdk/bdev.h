@@ -147,6 +147,7 @@ struct spdk_bdev_io_stat {
 struct spdk_bdev_opts {
 	uint32_t bdev_io_pool_size;
 	uint32_t bdev_io_cache_size;
+	uint32_t data_buf_size;
 };
 
 void spdk_bdev_get_opts(struct spdk_bdev_opts *opts);

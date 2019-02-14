@@ -115,11 +115,13 @@ if __name__ == "__main__":
     def set_bdev_options(args):
         rpc.bdev.set_bdev_options(args.client,
                                   bdev_io_pool_size=args.bdev_io_pool_size,
-                                  bdev_io_cache_size=args.bdev_io_cache_size)
+                                  bdev_io_cache_size=args.bdev_io_cache_size,
+                                  large_data_buf_size=args.large_data_buf_size)
 
     p = subparsers.add_parser('set_bdev_options', help="""Set options of bdev subsystem""")
     p.add_argument('-p', '--bdev-io-pool-size', help='Number of bdev_io structures in shared buffer pool', type=int)
     p.add_argument('-c', '--bdev-io-cache-size', help='Maximum number of bdev_io structures cached per thread', type=int)
+    p.add_argument('-d', '--data-buf-size', help='Maximum buffer size allocatable for bdev_io', type=int)
     p.set_defaults(func=set_bdev_options)
 
     def construct_crypto_bdev(args):
