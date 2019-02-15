@@ -143,7 +143,7 @@ Also send I/Os to the SPDK target application to generate events by previous per
 ./perf -q 128 -s 4096 -w randread -t 600 -r 'trtype:RDMA adrfam:IPv4 traddr:192.168.100.2 trsvcid:4420'
 ~~~
 
-After the completion of perf exmaple, shut down spdk_trace_record by signal SIGINT (Ctrl + C).
+After the completion of perf example, shut down spdk_trace_record by signal SIGINT (Ctrl + C).
 To analyze the tracepoints output file from spdk_trace_record, simply run spdk_trace program by:
 
 ~~~{.sh}
