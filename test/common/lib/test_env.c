@@ -162,6 +162,7 @@ spdk_dma_free(void *buf)
 	return spdk_free(buf);
 }
 
+#ifndef UNIT_TEST_NO_VTOPHYS
 DEFINE_RETURN_MOCK(spdk_vtophys, uint64_t);
 uint64_t
 spdk_vtophys(void *buf, uint64_t *size)
@@ -170,6 +171,7 @@ spdk_vtophys(void *buf, uint64_t *size)
 
 	return (uintptr_t)buf;
 }
+#endif
 
 void
 spdk_memzone_dump(FILE *f)
