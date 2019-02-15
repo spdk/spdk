@@ -194,6 +194,12 @@ static void rpc_get_reactors_stat(void *arg)
 		spdk_json_write_named_uint64(w, "busy", stats.busy_tsc);
 		spdk_json_write_named_uint64(w, "idle", stats.idle_tsc);
 		spdk_json_write_named_uint64(w, "unknown", stats.unknown_tsc);
+		spdk_json_write_named_string_fmt(w, "busy_sec", "%.3f",
+						 (double)stats.busy_tsc / spdk_get_ticks_hz());
+		spdk_json_write_named_string_fmt(w, "idle_sec", "%.3f",
+						 (double)stats.idle_tsc / spdk_get_ticks_hz());
+		spdk_json_write_named_string_fmt(w, "unknown_sec", "%.3f",
+						 (double)stats.unknown_tsc / spdk_get_ticks_hz());
 		spdk_json_write_object_end(w);
 	}
 	if (ctx->req.reset) {
