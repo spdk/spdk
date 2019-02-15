@@ -16,6 +16,24 @@
       "revId": "77085a70c788dd9d6cfdff8282ecefd0b863b1f5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3902c105_a2887834",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2295,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-02-15T04:05:07Z",
+      "side": 1,
+      "message": "I do not think so. If the request is not allocated or cannot be sent, it means that the ctrlr is already failed. We do not need to poll the completions functions again. This is used to enhance the keep time implementation. Otherwise, many error print info will be printed, e.g., if nvme_allocate_request_null is failed or the nvme_ctrlr_submit_admin_request is failed.",
+      "parentUuid": "98d57517_d489575c",
+      "revId": "77085a70c788dd9d6cfdff8282ecefd0b863b1f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
