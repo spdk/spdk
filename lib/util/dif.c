@@ -1297,3 +1297,95 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	return 0;
 }
+
+static int
+dif_generate_insert(void *buf, uint32_t parsed_bytes, uint32_t ext_data_bytes,
+		    const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, tail_unalign, parsed_blocks, new_bytes, new_blocks;
+	int offset_blocks;
+	uint8_t *src, *dst;
+	uint16_t guard;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	parsed_blocks = parsed_bytes / ctx->block_size;
+	new_bytes = ext_data_bytes - parsed_bytes;
+
+	new_blocks = new_bytes / data_block_size;
+	tail_unalign = new_bytes % data_block_size;
+
+	/* No progress until reading a block. */
+	if (new_blocks == 0) {
+		return parsed_bytes;
+	}
+
+	/* Shift the tail unalign data first to create a space to append DIF. */
+	if (tail_unalign != 0) {
+		src = buf + parsed_bytes + new_blocks * data_block_size;
+		dst = buf + parsed_bytes + new_blocks * ctx->block_size;
+		memmove(dst, src, tail_unalign);
+
+		src -= data_block_size;
+		dst -= ctx->block_size;
+	} else {
+		src = buf + parsed_bytes + (new_blocks - 1) * data_block_size;
+		dst = buf + parsed_bytes + (new_blocks - 1) * ctx->block_size;
+	}
+
+	/* Copy data and append DIF from the tail by reverse order. */
+	for (offset_blocks = new_blocks - 1; offset_blocks > 0; offset_blocks--) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(ctx->guard_seed, dst, src,
+						       ctx->guard_interval);
+		} else {
+			guard = 0;
+			memmove(dst, src, data_block_size);
+		}
+		_dif_generate(dst + ctx->guard_interval, guard,
+			      parsed_blocks + offset_blocks, ctx);
+
+		src -= data_block_size;
+		dst -= ctx->block_size;
+
+		parsed_bytes += ctx->block_size;
+	}
+
+	/* No copy is necessary for the first block in this call. */
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(ctx->guard_seed, src, ctx->guard_interval);
+	} else {
+		guard = 0;
+	}
+	_dif_generate(src + ctx->guard_interval, guard,
+		     parsed_blocks + offset_blocks, ctx);
+
+	return parsed_bytes + ctx->block_size;
+}
+
+int
+spdk_dif_generate_insert(struct iovec *iovs, int iovcnt,
+			 uint32_t parsed_bytes, uint32_t ext_data_bytes,
+			 const struct spdk_dif_ctx *ctx)
+{
+	if (parsed_bytes > ext_data_bytes || (parsed_bytes % ctx->block_size) != 0) {
+		return -EINVAL;
+	}
+
+	if (!_are_iovs_valid(iovs, iovcnt, ext_data_bytes)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return ext_data_bytes;
+	}
+
+	if (iovcnt == 1) {
+		return dif_generate_insert(iovs[0].iov_base, parsed_bytes,
+					   ext_data_bytes, ctx);
+	} else {
+		SPDK_ERRLOG("Multiple iovs is not supported yet.\n");
+		return -EINVAL;
+	}
+}
