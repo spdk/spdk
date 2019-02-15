@@ -16,6 +16,24 @@
       "revId": "2e7980d7337578095732798c4d37e8187b88c80b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "553a5cdf_369cd659",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-15T09:06:35Z",
+      "side": 1,
+      "message": "Thank you, Zhouhui. I will fix that typo and add such unit test.",
+      "parentUuid": "beb58d08_d2b9d8e7",
+      "revId": "2e7980d7337578095732798c4d37e8187b88c80b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
