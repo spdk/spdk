@@ -887,9 +887,8 @@ bdev_ftl_delete_bdev(const char *name, spdk_bdev_unregister_cb cb_fn, void *cb_a
 
 	LIST_FOREACH_SAFE(ftl_bdev, &g_ftl_bdevs, list_entry, tmp) {
 		if (strcmp(ftl_bdev->bdev.name, name) == 0) {
-			spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
-
 			pthread_mutex_unlock(&g_ftl_bdev_lock);
+			spdk_bdev_unregister(&ftl_bdev->bdev, cb_fn, cb_arg);
 			return;
 		}
 	}
