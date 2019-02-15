@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -37,6 +37,8 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
+#include "spdk/thread.h"
 
 #include "spdk_internal/log.h"
 
@@ -153,3 +155,88 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
+
+
+struct rpc_get_reactors_stat {
+	bool reset;
+};
+
+static const struct spdk_json_object_decoder rpc_get_reactors_stat_decoders[] = {
+	{"reset", offsetof(struct rpc_get_reactors_stat, reset), spdk_json_decode_bool},
+};
+
+struct rpc_get_reactors_stat_ctx {
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request;
+	struct rpc_get_reactors_stat req;
+};
+
+static void
+rpc_get_reactors_stat_done(void *arg)
+{
+	struct rpc_get_reactors_stat_ctx *ctx = arg;
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+	free(ctx);
+}
+
+static void rpc_get_reactors_stat(void *arg)
+{
+	struct rpc_get_reactors_stat_ctx *ctx = arg;
+	struct spdk_json_write_ctx *w = ctx->w;
+	struct spdk_thread_stats stats;
+
+	if (0 == spdk_thread_get_stats(&stats)) {
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", spdk_thread_get_name(spdk_get_thread()));
+		spdk_json_write_named_uint64(w, "busy", stats.busy_tsc);
+		spdk_json_write_named_uint64(w, "idle", stats.idle_tsc);
+		spdk_json_write_named_uint64(w, "unknown", stats.unknown_tsc);
+		spdk_json_write_object_end(w);
+	}
+	if (ctx->req.reset) {
+		spdk_thread_reset_stats();
+	}
+}
+
+static void
+spdk_rpc_get_reactors_stat(struct spdk_jsonrpc_request *request,
+			   const struct spdk_json_val *params)
+{
+	struct rpc_get_reactors_stat_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+	if (params != NULL) {
+		if (spdk_json_decode_object(params, rpc_get_reactors_stat_decoders,
+					    SPDK_COUNTOF(rpc_get_reactors_stat_decoders),
+					    &ctx->req)) {
+			SPDK_DEBUGLOG(SPDK_LOG_REACTOR, "spdk_json_decode_object failed\n");
+			spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+			free(ctx);
+			return;
+		}
+	}
+
+	ctx->w = spdk_jsonrpc_begin_result(request);
+	if (!ctx->w) {
+		free(ctx);
+		return;
+	}
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
+
+	spdk_json_write_name(ctx->w, "reactors");
+	spdk_json_write_array_begin(ctx->w);
+	spdk_for_each_thread(rpc_get_reactors_stat, ctx, rpc_get_reactors_stat_done);
+}
+
+SPDK_RPC_REGISTER("get_reactors_stat", spdk_rpc_get_reactors_stat, SPDK_RPC_RUNTIME)

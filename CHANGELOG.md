@@ -12,6 +12,12 @@ and spdk_nvme_probe_poll_async() were added to enable this feature.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### rpc
+Added get_reactors_stat RPC method to retrieve existing statistics.
+
+### environment
+Added thread statistics reset function.
+
 ## v19.01:
 
 ### ocf bdev

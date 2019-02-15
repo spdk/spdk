@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -595,6 +595,22 @@ spdk_thread_get_stats(struct spdk_thread_stats *stats)
 	}
 
 	*stats = thread->stats;
+
+	return 0;
+}
+
+int
+spdk_thread_reset_stats(void)
+{
+	struct spdk_thread *thread;
+
+	thread = _get_thread();
+	if (!thread) {
+		SPDK_ERRLOG("No thread allocated\n");
+		return -EINVAL;
+	}
+
+	memset(&thread->stats, 0, sizeof(thread->stats));
 
 	return 0;
 }

@@ -21,3 +21,18 @@ def context_switch_monitor(client, enabled=None):
     if enabled is not None:
         params['enabled'] = enabled
     return client.call('context_switch_monitor', params)
+
+
+def get_reactors_stat(client, reset=None):
+    """Query and optionally reset reactors statistics.
+
+    Args:
+        reset: True to reset statistics (optional)
+
+    Returns:
+        Current reactors statistics.
+    """
+    params = {}
+    if reset is not None:
+        params['reset'] = reset
+    return client.call('get_reactors_stat', params)

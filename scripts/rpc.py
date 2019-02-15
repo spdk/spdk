@@ -1738,6 +1738,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    help="""Command execution timeout value, in milliseconds,  if 0, don't track timeout""", type=int, default=0)
     p.set_defaults(func=send_nvme_cmd)
 
+    def get_reactors_stat(args):
+        print_dict(rpc.app.get_reactors_stat(args.client,
+                                             reset=args.reset))
+
+    p = subparsers.add_parser(
+        'get_reactors_stat', help='Display current statistics of all the reactors')
+    p.add_argument('-r', '--reset', action='store_true', help="Reset statistics", required=False)
+    p.set_defaults(func=get_reactors_stat)
+
     args = parser.parse_args()
 
     try:
