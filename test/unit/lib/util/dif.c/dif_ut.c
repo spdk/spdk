@@ -1343,6 +1343,62 @@ dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test(void)
 	_iov_free_buf(&md_iov);
 }
 
+static void
+dif_sec_512_md_8_stream_dif_insert_test(void)
+{
+	struct iovec iov;
+	struct spdk_dif_ctx dif_ctx;
+	struct spdk_dif_error err_blk = {};
+	uint32_t dif_flags;
+	int rc;
+
+	_iov_alloc_buf(&iov, 520 * 6);
+
+	dif_flags = SPDK_DIF_FLAGS_REFTAG_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+		    SPDK_DIF_FLAGS_GUARD_CHECK;
+
+	rc = spdk_dif_ctx_init(&dif_ctx, 520, 8, true, false, SPDK_DIF_TYPE1,
+			       dif_flags, 22, 0xFFFF, 0x22, 0);
+	CU_ASSERT(rc == 0);
+
+	memset(iov.iov_base, DATA_PATTERN, 512);
+	rc = spdk_dif_generate_insert(&iov, 1, 0, 512, &dif_ctx);
+	CU_ASSERT(rc == 520);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &dif_ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	memset(iov.iov_base + 520, DATA_PATTERN, 256);
+	rc = spdk_dif_generate_insert(&iov, 1, 520, 512 + 256, &dif_ctx);
+	CU_ASSERT(rc == 520);
+
+	rc = spdk_dif_verify(&iov, 1, 1, &dif_ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	memset(iov.iov_base + 512 + 256, DATA_PATTERN, 256);
+	rc = spdk_dif_generate_insert(&iov, 1, 520, 520 + 512, &dif_ctx);
+	CU_ASSERT(rc == 520 * 2);
+
+	rc = spdk_dif_verify(&iov, 1, 2, &dif_ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	memset(iov.iov_base + 520 * 2, DATA_PATTERN, 512 * 2 + 256);
+	rc = spdk_dif_generate_insert(&iov, 1, 520 * 2, 520 * 2 + 512 * 2 + 256, &dif_ctx);
+	CU_ASSERT(rc == 520 * 4);
+
+	rc = spdk_dif_verify(&iov, 1, 4, &dif_ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	memset(iov.iov_base + 520 * 4 + 256, DATA_PATTERN, 256);
+	rc = spdk_dif_generate_insert(&iov, 1, 520 * 4, 520 * 4 + 512, &dif_ctx);
+	CU_ASSERT(rc == 520 * 5);
+
+	rc = spdk_dif_verify(&iov, 1, 5, &dif_ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	_iov_free_buf(&iov);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1426,7 +1482,9 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
 			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
 		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
-			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL
+			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL ||
+		CU_add_test(suite, "dif_sec_512_md_8_stream_dif_insert_test",
+			    dif_sec_512_md_8_stream_dif_insert_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

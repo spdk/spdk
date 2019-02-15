@@ -257,4 +257,42 @@ int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			  uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 			  uint32_t inject_flags, uint32_t *inject_offset);
+
+/**
+ * Shift data block and append DIF form the tail of newly added data to
+ * create the extended LBA payload.
+ *
+ * In iSCSI and NVMe-oF TCP transport, incoming data can be split into
+ * multiple packets, and they are read sequentially into a data buffer.
+ * parsed_bytes and new_bytes are used for such applications.
+ * In NVMe-oF RDMA transport, incoming data will not be split and only
+ * data_bytes will be used.
+ *
+ * The code image is:
+ *    data_bytes = 0
+ *    ext_data_bytes = 0
+ *    parsed_bytes = 0
+ *    while (data_bytes < expected_data_bytes) {
+ *      rc = read_data(buf + ext_data_bytes, expected_data_bytes - data_bytes);
+ *      data_bytes += rc;
+ *      ext_data_bytes += rc;
+ *      parsed_bytes = spdk_dif_generate_insert(iovs, iovcnt, parsed_bytes, ext_data_bytes);
+ *      if (parsed_bytes > ext_data_bytes) {
+ *        ext_data_bytes = parsed_bytes;
+ *      }
+ *    }
+ *
+ * \param iovs iovec array describing the stream payload.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param parsed_bytes Number of parsed bytes in which DIF is inserted.
+ * \param ext_data_bytes parsed_bytes plus data bytes in which DIF is not inserted yet.
+ * \param ctx DIF context.
+ *
+ * return Number of parsed bytes after this call on success and negated errno otherwise.
+ * Return value should be used according to the above example.
+ */
+int spdk_dif_generate_insert(struct iovec *iovs, int iovcnt,
+			     uint32_t parsed_bytes, uint32_t ext_data_bytes,
+			     const struct spdk_dif_ctx *ctx);
+
 #endif /* SPDK_DIF_H */
