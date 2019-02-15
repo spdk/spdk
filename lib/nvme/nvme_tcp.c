@@ -1557,6 +1557,45 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 	return rc;
 }
 
+static void
+nvme_tcp_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
+{
+	uint64_t t02;
+	struct nvme_tcp_req *tcp_req, *tmp;
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+	struct spdk_nvme_ctrlr *ctrlr = qpair->ctrlr;
+	struct spdk_nvme_ctrlr_process *active_proc;
+
+	/* Don't check timeouts during controller initialization. */
+	if (ctrlr->state != NVME_CTRLR_STATE_READY) {
+		return;
+	}
+
+	if (nvme_qpair_is_admin_queue(qpair)) {
+		active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+	} else {
+		active_proc = qpair->active_proc;
+	}
+
+	/* Only check timeouts if the current process has a timeout callback. */
+	if (active_proc == NULL || active_proc->timeout_cb_fn == NULL) {
+		return;
+	}
+
+	t02 = spdk_get_ticks();
+	TAILQ_FOREACH_SAFE(tcp_req, &tqpair->outstanding_reqs, link, tmp) {
+		assert(tcp_req->req != NULL);
+
+		if (nvme_request_check_timeout(tcp_req->req, tcp_req->cid, active_proc, t02)) {
+			/*
+			 * The requests are in order, so as soon as one has not timed out,
+			 * stop iterating.
+			 */
+			break;
+		}
+	}
+}
+
 int
 nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -1588,6 +1627,10 @@ nvme_tcp_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_c
 		}
 
 	} while (reaped < max_completions);
+
+	if (spdk_unlikely(tqpair->qpair.ctrlr->timeout_enabled)) {
+		nvme_tcp_qpair_check_timeout(qpair);
+	}
 
 	return reaped;
 }
