@@ -142,6 +142,17 @@ int spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
 			  void *dst, uint64_t fill_pattern, uint64_t nbytes);
 
 /**
+ * Flush previously built descriptors.
+ *
+ * Descriptors are flushed by writing the channel's dmacount doorbell
+ * register.  This function enables batching multiple descriptors followed by
+ * a single doorbell write.
+ *
+ * \param chan I/OAT channel to flush.
+ */
+void spdk_ioat_flush(struct spdk_ioat_chan *chan);
+
+/**
  * Check for completed requests on an I/OAT channel.
  *
  * \param chan I/OAT channel to check for completions.

@@ -158,8 +158,8 @@ ioat_submit_single(struct spdk_ioat_chan *ioat)
 	ioat->head++;
 }
 
-static void
-ioat_flush(struct spdk_ioat_chan *ioat)
+void
+spdk_ioat_flush(struct spdk_ioat_chan *ioat)
 {
 	ioat->regs->dmacount = (uint16_t)ioat->head;
 }
@@ -454,7 +454,7 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	ioat_write_chainaddr(ioat, ioat->ring[0].phys_addr);
 
 	ioat_prep_null(ioat);
-	ioat_flush(ioat);
+	spdk_ioat_flush(ioat);
 
 	i = 100;
 	while (i-- > 0) {
@@ -652,7 +652,7 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		return -ENOMEM;
 	}
 
-	ioat_flush(ioat);
+	spdk_ioat_flush(ioat);
 	return 0;
 }
 
@@ -709,7 +709,7 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		return -ENOMEM;
 	}
 
-	ioat_flush(ioat);
+	spdk_ioat_flush(ioat);
 	return 0;
 }
 
