@@ -855,7 +855,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case SHM_ID_OPT_IDX:
 			opts->shm_id = spdk_strtol(optarg, 10);
 			if (opts->shm_id < 0) {
-				fprintf(stderr, "Invalid shared memory ID %s\n", optarg);
+				fprintf(stderr, "Invalid shared memory ID %s, a decimal value is required\n", optarg);
 				goto out;
 			}
 			break;
@@ -865,14 +865,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 		case MEM_CHANNELS_OPT_IDX:
 			opts->mem_channel = spdk_strtol(optarg, 10);
 			if (opts->mem_channel < 0) {
-				fprintf(stderr, "Invalid memory channel %s\n", optarg);
+				fprintf(stderr, "Invalid memory channel %s, a decimal value is required\n", optarg);
 				goto out;
 			}
 			break;
 		case MASTER_CORE_OPT_IDX:
 			opts->master_core = spdk_strtol(optarg, 10);
 			if (opts->master_core < 0) {
-				fprintf(stderr, "Invalid master core %s\n", optarg);
+				fprintf(stderr, "Invalid master core %s, a decimal value is required\n", optarg);
 				goto out;
 			}
 			break;
