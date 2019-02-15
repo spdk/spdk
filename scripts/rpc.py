@@ -181,6 +181,14 @@ if __name__ == "__main__":
                               help='Get list of OCF devices including unregistered ones')
     p.set_defaults(func=get_ocf_bdevs)
 
+    def get_ocf_cores(args):
+        print_dict(rpc.bdev.get_ocf_cores(args.client,
+                                          cache_name=args.cache_name))
+    p = subparsers.add_parser('get_ocf_cores',
+                              help='Get list of bdevs that connected to given cache instance')
+    p.add_argument('cache_name', help='Name of cache instance')
+    p.set_defaults(func=get_ocf_cores)
+
     def construct_malloc_bdev(args):
         num_blocks = (args.total_size * 1024 * 1024) // args.block_size
         print(rpc.bdev.construct_malloc_bdev(args.client,
