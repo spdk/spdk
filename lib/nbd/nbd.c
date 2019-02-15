@@ -49,7 +49,9 @@
 #include "spdk_internal/log.h"
 #include "spdk/queue.h"
 
-#define GET_IO_LOOP_COUNT	16
+#define GET_IO_LOOP_COUNT		16
+#define NBD_BUSY_WAITING_MS		1000
+#define NBD_BUSY_POLLING_INTERVAL_US	20000
 
 enum nbd_io_state_t {
 	/* Receiving or ready to receive nbd request header */
@@ -842,6 +844,7 @@ struct spdk_nbd_start_ctx {
 	spdk_nbd_start_cb	cb_fn;
 	void			*cb_arg;
 	struct spdk_poller	*poller;
+	int			polling_count;
 };
 
 static void
@@ -907,14 +910,14 @@ spdk_nbd_enable_kernel(void *arg)
 
 	rc = ioctl(ctx->nbd->dev_fd, NBD_SET_SOCK, ctx->nbd->kernel_sp_fd);
 	if (rc == -1) {
-		if (errno == EBUSY) {
+		if (errno == EBUSY && ctx->polling_count-- > 0) {
 			if (ctx->poller == NULL) {
-				ctx->poller = spdk_poller_register(spdk_nbd_enable_kernel, ctx, 20000);
+				ctx->poller = spdk_poller_register(spdk_nbd_enable_kernel, ctx,
+								   NBD_BUSY_POLLING_INTERVAL_US);
 			}
 			/* If the kernel is busy, check back later */
 			return 0;
 		}
-
 
 		SPDK_ERRLOG("ioctl(NBD_SET_SOCK) failed: %s\n", spdk_strerror(errno));
 		if (ctx->poller) {
@@ -976,6 +979,7 @@ spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 	ctx->nbd = nbd;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
+	ctx->polling_count = NBD_BUSY_WAITING_MS * 1000ULL / NBD_BUSY_POLLING_INTERVAL_US;
 
 	rc = spdk_bdev_open(bdev, true, spdk_nbd_bdev_hot_remove, nbd, &nbd->bdev_desc);
 	if (rc != 0) {
