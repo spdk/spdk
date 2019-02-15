@@ -459,10 +459,10 @@ if [[ "${CONFIG[OCF]}" = "y" ]]; then
 		echo "configuring OCF..."
 		rootdir=$(readlink -f $(dirname $0))
 
-		if pushd "${CONFIG[OCF_PATH]}" > /dev/null && \
+		if pushd "${CONFIG[OCF_PATH]}" && \
 		   make inc O="$rootdir/lib/bdev/ocf/env/" && \
 		   make src O="$rootdir/lib/bdev/ocf/env/" CMD=cp 1>/dev/null && \
-		   popd > /dev/null
+		   popd
 		then
 			echo "done configuring OCF"
 		else
