@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "07121844_c6df101f",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "8af7bc95_0bcf19dc",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6b1729a_c74001fa",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -33,6 +51,24 @@
       "revId": "d00c034c0697c858d0337200588753073979c321",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d96d09d_18204bf0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e6b1729a_c74001fa",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "d86249bb_04d85e01",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "668c21ca_7249814d",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "96209719_cc30270e",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "46d687e0_094de7e1",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96209719_cc30270e",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "3cc06e14_177d0bb0",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -81,6 +153,24 @@
       "writtenOn": "2019-02-15T18:08:51Z",
       "side": 1,
       "message": "I think we may need to re-evaluate the design of nvme perf to attempt to do more batching of command submissions at some point. It isn\u0027t a huge deal for the SPDK interface, but io_uring and aio benefit a lot more from better batching. We\u0027ll leave this for the future though.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07271e77_7b9302f9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Agree. I tested and noticed using Jen\u0027s t/io_uring perf app that performance increases by upto 33% when doing batching of submission and completion of I/Os.",
+      "parentUuid": "3cc06e14_177d0bb0",
       "revId": "d00c034c0697c858d0337200588753073979c321",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "47646e2c_020fb756",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "This one I am not 100% sure. If I use io_uring_get_completion, then I don\u0027t know at what point would I/Os be actually completed. Current code is segfaulting by doing this. And I think the reason is cqe is not getting set.",
+      "parentUuid": "5c82480e_ba2cff24",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "19a16405_ea8df080",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "d17c5e21_0b4736d9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19a16405_ea8df080",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "baa9a880_a07a69eb",
         "filename": "examples/nvme/perf/perf.c",
         "patchSetId": 1
@@ -135,6 +261,24 @@
       "revId": "d00c034c0697c858d0337200588753073979c321",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0abffc6_6761fe6d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011715
+      },
+      "writtenOn": "2019-02-15T19:06:18Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "baa9a880_a07a69eb",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
