@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "59c2940a_582dabe8",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8273f378_9483bb2b",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7620b25_462c10c5",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 30
@@ -33,6 +51,24 @@
       "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d380bc4d_cf4d6820",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e7620b25_462c10c5",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "b937b2f5_a15bc91e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 641,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8157573e_dbdc6db9",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b13f9c3f_482287f7",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 30
@@ -67,6 +121,24 @@
       "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a66ee9fa_d17e27bf",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 666,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b13f9c3f_482287f7",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "3653f9b6_e945e26b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 692,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "3f7be5c7_68bec0b3",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d00ff8d1_d7446e8e",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 30
@@ -101,6 +191,24 @@
       "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "187fbebd_f9fb7058",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 717,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d00ff8d1_d7446e8e",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "10b66045_71c6aa9b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 732,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "It doesn\u0027t hurt though right? This is a common function for both so I could add another parm indicating whether we\u0027re doing init or load if you think its worth it?",
+      "parentUuid": "4d03f68c_c63ba3ba",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2bbdab95_04bcaee1",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 30
@@ -138,6 +264,24 @@
     },
     {
       "key": {
+        "uuid": "3485fc33_896ad746",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 750,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "Note the TODO comment above both of them, this is already addressed in the next patch in the series.",
+      "parentUuid": "2bbdab95_04bcaee1",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ccc28e10_45e4f06a",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 30
@@ -149,6 +293,24 @@
       "writtenOn": "2019-02-06T18:35:58Z",
       "side": 1,
       "message": "you have to wait to call examine_done until after the spdk_reduce_vol_load callback",
+      "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99b80305_9fa99967",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-15T17:16:45Z",
+      "side": 1,
+      "message": "So I had some problems doing that - that\u0027s how I had it initially coded.  I\u0027ll change it and see what the issue was, I vaguely remember but won\u0027t hazard to guess right now :)",
+      "parentUuid": "ccc28e10_45e4f06a",
       "revId": "ca7beedf4ce71f2d1f4c797e998831e0e7f5f1a9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
