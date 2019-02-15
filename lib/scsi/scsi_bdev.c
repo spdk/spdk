@@ -1320,31 +1320,13 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		    struct spdk_io_channel *bdev_ch, struct spdk_scsi_task *task,
 		    uint64_t lba)
 {
-	uint64_t blen;
-	uint64_t offset;
-	uint64_t nbytes;
+	uint64_t offset_blocks, num_blocks;
 	int rc;
 
-	blen = spdk_bdev_get_block_size(bdev);
-
-	lba += (task->offset / blen);
-	offset = lba * blen;
-	nbytes = task->length;
-
-	SPDK_DEBUGLOG(SPDK_LOG_SCSI,
-		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
-		      lba, (uint64_t)task->length / blen);
-
-	rc = spdk_bdev_readv(bdev_desc, bdev_ch, task->iovs,
-			     task->iovcnt, offset, nbytes,
-			     spdk_bdev_scsi_task_complete_cmd, task);
-
-	if (rc) {
-		if (rc == -ENOMEM) {
-			spdk_bdev_scsi_queue_io(task, spdk_bdev_scsi_process_block_resubmit, task);
-			return SPDK_SCSI_TASK_PENDING;
-		}
-		SPDK_ERRLOG("spdk_bdev_readv() failed\n");
+	if (spdk_bdev_bytes_to_blocks(bdev, task->offset, &offset_blocks,
+				      task->length, &num_blocks) != 0) {
+		SPDK_ERRLOG("task's offset %" PRIu64 " or length %" PRIu32 " is not block multiple\n",
+			    task->offset, task->length);
 		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
 					  SPDK_SCSI_SENSE_NO_SENSE,
 					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
@@ -1352,7 +1334,30 @@ spdk_bdev_scsi_read(struct spdk_bdev *bdev, struct spdk_bdev_desc *bdev_desc,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	task->data_transferred = nbytes;
+	offset_blocks += lba;
+
+	SPDK_DEBUGLOG(SPDK_LOG_SCSI,
+		      "Read: lba=%"PRIu64", len=%"PRIu64"\n",
+		      offset_blocks, num_blocks);
+
+	rc = spdk_bdev_readv_blocks(bdev_desc, bdev_ch, task->iovs, task->iovcnt,
+				    offset_blocks, num_blocks,
+				    spdk_bdev_scsi_task_complete_cmd, task);
+
+	if (rc) {
+		if (rc == -ENOMEM) {
+			spdk_bdev_scsi_queue_io(task, spdk_bdev_scsi_process_block_resubmit, task);
+			return SPDK_SCSI_TASK_PENDING;
+		}
+		SPDK_ERRLOG("spdk_bdev_readv_blocks() failed\n");
+		spdk_scsi_task_set_status(task, SPDK_SCSI_STATUS_CHECK_CONDITION,
+					  SPDK_SCSI_SENSE_NO_SENSE,
+					  SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE,
+					  SPDK_SCSI_ASCQ_CAUSE_NOT_REPORTABLE);
+		return SPDK_SCSI_TASK_COMPLETE;
+	}
+
+	task->data_transferred = task->length;
 	return SPDK_SCSI_TASK_PENDING;
 }
 
