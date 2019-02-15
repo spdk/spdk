@@ -900,13 +900,14 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
+	int rc;
 
 	if (vsession == NULL) {
 		/* Nothing more to do */
 		return 0;
 	}
 
-	svsession = (struct spdk_vhost_scsi_session *)vsession;;
+	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	/* copy the entire device state */
 	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
 
@@ -915,7 +916,25 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
-	spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
+	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Couldn't allocate io channnel for SCSI target %u in device %s\n",
+					scsi_tgt_num, vdev->name);
+
+		/* unset the SCSI target so that all I/O to it will be rejected */
+		svsession->scsi_dev_state[scsi_tgt_num].dev = NULL;
+		/* unset the removed flag so that we won't reply with SCSI hotremove
+		 * sense codes - the device hasn't ever been added.
+		 */
+		svsession->scsi_dev_state[scsi_tgt_num].removed = false;
+
+		/* Return with no error. We'll continue allocating io_channels for
+		 * other sessions on this device in hopes they succeed. The sessions
+		 * that failed to allocate io_channels simply won't be able to
+		 * detect the SCSI target, nor do any I/O to it.
+		 */
+		return 0;
+	}
 
 	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
@@ -1249,7 +1268,17 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 			continue;
 		}
 		svsession->scsi_dev_state[i] = *state;
-		spdk_scsi_dev_allocate_io_channels(state->dev);
+		rc = spdk_scsi_dev_allocate_io_channels(state->dev);
+		if (rc != 0) {
+			SPDK_ERRLOG("%s: failed to alloc io_channel for SCSI target %"PRIu32"\n", vdev->name, i);
+			/* unset the SCSI target so that all I/O to it will be rejected */
+			svsession->scsi_dev_state[i].dev = NULL;
+			/* unset the removed flag so that we won't reply with SCSI hotremove
+			 * sense codes - the device hasn't ever been added.
+			 */
+			svsession->scsi_dev_state[i].removed = false;
+			continue;
+		}
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vsession->lcore);
