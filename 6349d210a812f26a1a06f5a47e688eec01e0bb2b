@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa7ef293_5ae55b2f",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 306,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-15T07:44:53Z",
+      "side": 1,
+      "message": "Maybe better would be to convert this to something like:\n\n--with-crcarg\u003d*)\n  CONFIG[CRC16_ALG]\u003d\"${i#*\u003d}\"\n\nThen we can be ready for any implementations on other platforms (arm?)",
+      "range": {
+        "startLine": 305,
+        "startChar": 0,
+        "endLine": 306,
+        "endChar": 38
+      },
+      "revId": "6349d210a812f26a1a06f5a47e688eec01e0bb2b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
