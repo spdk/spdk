@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9588226_edb19062",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "globals need to start with g_",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0194a18_c06e1959",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "extra whitespace change",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83632cc7_fa4784f4",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "So I know there\u0027s other unit test code here that uses rand() - but we really need to change that.  It makes the unit tests non-deterministic.  We actually ran into this problem once with the RAID unit tests - periodically they would fail, and it was because a certain rand() value caused a problem.\n\nIt would be better to just pick several more different values.",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c76102aa_452a73bc",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "I think it would be more clear to break this code into a function, and then just call it a bunch of times.  Just call it with the specific parameters - no need to use the offsets_in_strip and start_bdev_idxs arrays.",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fe2ba66f_de5be412",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "you can use SPDK_COUNTOF here",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

@@ -213,6 +213,24 @@
     },
     {
       "key": {
+        "uuid": "3c878ae9_e99b3345",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 694,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:44:48Z",
+      "side": 1,
+      "message": "Ah - OK, now I understand the code better.  Thanks!",
+      "parentUuid": "e05f1523_d09cc640",
+      "revId": "8e5d58c3b90118952cd35788d756447e5e6bc7e2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b1777068_df08558b",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 9
