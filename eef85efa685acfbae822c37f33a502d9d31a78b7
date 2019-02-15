@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5b76adcd_ec713d5f",
+        "filename": "lib/jsonrpc/jsonrpc_server.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-15T08:06:23Z",
+      "side": 1,
+      "message": "Scan-build detects a \u0027use-after-free\u0027 here. Rakesh, could you look into that?\n\nhttps://ci.spdk.io/spdk-jenkins/results/autotest-per-patch/builds/11122/archive/unittest_autotests/scan-build/",
+      "revId": "eef85efa685acfbae822c37f33a502d9d31a78b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
