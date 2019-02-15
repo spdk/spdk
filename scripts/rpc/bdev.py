@@ -96,6 +96,20 @@ def get_ocf_bdevs(client):
     return client.call('get_ocf_bdevs', None)
 
 
+def get_ocf_cores(client, cache_name):
+    """Get list of bdevs that connected to given cache instance
+
+    Args:
+        cache_name: name of cache instance
+
+    Returns:
+        Array of names of core bdevs with their current status
+    """
+    params = {'cache_name': cache_name}
+
+    return client.call('get_ocf_cores', params)
+
+
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
     """Construct a malloc block device.
 

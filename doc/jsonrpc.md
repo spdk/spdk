@@ -1119,6 +1119,58 @@ Example response:
 }
 ~~~
 
+## get_ocf_cores {#rpc_get_ocf_cores}
+
+Get list of bdevs that connected to given cache instance.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+cache_name              | Required | string      | Name of cache instance
+
+### Response
+
+Array of names of core bdevs with their current status.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "params": {
+    "cache_name": "Malloc3"
+  },
+  "jsonrpc": "2.0",
+  "method": "get_ocf_cores",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": [
+    {
+      "name": "Malloc0",
+      "started": true
+    },
+    {
+      "name": "Malloc1",
+      "started": true
+    },
+    {
+      "name": "Malloc2",
+      "started": true
+    }
+  ]
+}
+~~~
+
 ## construct_malloc_bdev {#rpc_construct_malloc_bdev}
 
 Construct @ref bdev_config_malloc
