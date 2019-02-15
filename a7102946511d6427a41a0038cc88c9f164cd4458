@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e69982a4_71357bf4",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 421,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:15:36Z",
+      "side": 1,
+      "message": "we should also keep the options in alphabetical order",
+      "revId": "a7102946511d6427a41a0038cc88c9f164cd4458",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "553e1b94_30bf02ec",
         "filename": "examples/nvme/hotplug/hotplug.c",
         "patchSetId": 5
@@ -16,6 +33,23 @@
       "revId": "a7102946511d6427a41a0038cc88c9f164cd4458",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be003d72_f401db03",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-15T22:15:36Z",
+      "side": 1,
+      "message": "same here - case \u0027c\u0027 should go before case \u0027i\u0027",
+      "revId": "a7102946511d6427a41a0038cc88c9f164cd4458",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
