@@ -1297,3 +1297,69 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	return 0;
 }
+
+int
+spdk_dif_generate_insert_stream(void *buf, uint32_t parsed_bytes, uint32_t new_bytes,
+				const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, start, end, head_remain, tail_remain;
+	uint32_t start_blocks, num_blocks;
+	int offset_blocks;
+	uint8_t *src, *dst;
+	uint16_t guard;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	head_remain = parsed_bytes % ctx->block_size;
+
+	start = parsed_bytes - head_remain;
+	start_blocks = start / ctx->block_size;
+
+	new_bytes += head_remain;
+	num_blocks = new_bytes / data_block_size;
+	tail_remain = new_bytes % data_block_size;
+
+	if (num_blocks == 0) {
+		return start + tail_remain;
+	} else if (num_blocks == 1 && tail_remain == 0) {
+		src = buf + start;
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(0, src, ctx->guard_interval);
+		} else {
+			guard = 0;
+		}
+		_dif_generate(src + ctx->guard_interval, guard, start_blocks, ctx);
+		return start + ctx->block_size;
+	}
+
+	end = start + num_blocks * ctx->block_size;
+
+	if (tail_remain != 0) {
+		src = buf + start + num_blocks * data_block_size;
+		dst = buf + start + num_blocks * ctx->block_size;
+		memcpy(dst, src, tail_remain);
+
+		end += tail_remain;
+
+		src -= data_block_size;
+		dst -= ctx->block_size;
+	} else {
+		src = buf + start + (num_blocks - 1) * data_block_size;
+		dst = buf + start + (num_blocks - 1) * ctx->block_size;
+	}
+
+	for (offset_blocks = num_blocks - 1; offset_blocks >= 0; offset_blocks--) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(0, dst, src, ctx->guard_interval);
+		} else {
+			guard = 0;
+			memcpy(dst, src, data_block_size);
+		}
+		_dif_generate(dst + ctx->guard_interval, guard, start_blocks + offset_blocks, ctx);
+
+		src -= data_block_size;
+		dst -= ctx->block_size;
+	}
+
+	return end;
+}
