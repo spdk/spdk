@@ -22,6 +22,30 @@
       "revId": "557d427347d4cda41eafc9390e96da1c73ce4d9e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f091642_2b774b8f",
+        "filename": "lib/nbd/nbd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-15T08:38:29Z",
+      "side": 1,
+      "message": "Just think defining a ms value is more perceptual than defining a count value, since what we want here is \"wait a moment\", not \"try some times\".",
+      "parentUuid": "67bc09e0_549ef5fc",
+      "range": {
+        "startLine": 982,
+        "startChar": 22,
+        "endLine": 982,
+        "endChar": 82
+      },
+      "revId": "557d427347d4cda41eafc9390e96da1c73ce4d9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
