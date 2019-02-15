@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8af7bc95_0bcf19dc",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "We can\u0027t do both LIBAIO and IO_URING, because they operate on the same file descriptors. You should prefer IO_URING here if both #defines are set by doing an #undef on HAVE_LIBAIO.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6b1729a_c74001fa",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "I think here you only need to store the file descriptor of the device, just like we do with aio.\n\nstruct {\n    int fd;\n} uring;",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "668c21ca_7249814d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "For consistency, put this in a struct named uring, or at least change the name of \u0027ring\u0027 to uring.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "96209719_cc30270e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "Since you can\u0027t do both aio and io_uring, you only need one of these optind variables. You can just make the name more generic.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cc06e14_177d0bb0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "I think we may need to re-evaluate the design of nvme perf to attempt to do more batching of command submissions at some point. It isn\u0027t a huge deal for the SPDK interface, but io_uring and aio benefit a lot more from better batching. We\u0027ll leave this for the future though.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c82480e_ba2cff24",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 514,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "You want to call io_uring_get_completion here instead of wait. The wait version will block until you get at least one.\n\nIt\u0027s unfortunately that Jens hasn\u0027t implemented a wrapper capable of reaping multiple events in one go though. I\u0027m sure he will eventually.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19a16405_ea8df080",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 525,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "no space before cqe",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "baa9a880_a07a69eb",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-15T18:08:51Z",
+      "side": 1,
+      "message": "In the entry you just need to store this file descriptor, so you don\u0027t need a full copy of the ring structure like I said above. It\u0027s exactly like libaio actually - you might even be able to share this setup function between the two.",
+      "revId": "d00c034c0697c858d0337200588753073979c321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
