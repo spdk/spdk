@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b51be1e3_c73cd777",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-15T12:42:57Z",
+      "side": 1,
+      "message": "Ah.\n\nInstead of clarifying the error msg, can we use the special base 0 here? It will accept decimal, octal, or hex numbers at once.\n\n$ man strtol\n If base is zero or 16, the string may then include a \"0x\" or \"0X\" pre‐\n fix, and the number will be read in base 16; otherwise, a zero base is taken as 10 (decimal) unless  the\n next character is \u00270\u0027, in which case it is taken as 8 (octal).\n\nI believe this would match the original behavior - before spdk_strtol was introduced.",
+      "range": {
+        "startLine": 856,
+        "startChar": 38,
+        "endLine": 856,
+        "endChar": 40
+      },
+      "revId": "b73226c0476ce68b842cb2477d378d561cdba212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
