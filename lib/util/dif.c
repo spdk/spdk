@@ -1363,3 +1363,59 @@ spdk_dif_generate_insert_stream(void *buf, uint32_t parsed_bytes, uint32_t new_b
 
 	return end;
 }
+
+int
+spdk_dif_verify_strip_stream(void *buf, uint32_t data_bytes, const struct spdk_dif_ctx *ctx,
+			     struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, num_blocks, offset_blocks;
+	uint8_t *src, *dst;
+	uint16_t guard;
+	struct spdk_dif dif;
+	int rc;
+
+	if ((data_bytes % ctx->block_size) != 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	num_blocks = data_bytes / ctx->block_size;
+
+	src = buf;
+	dst = buf;
+	offset_blocks = 0;
+
+	/* First blocks doesn't have to be copied. */
+	guard = 0;
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(0, src, ctx->guard_interval);
+	}
+	rc = _dif_verify(buf + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
+	if (rc != 0) {
+		return rc;
+	}
+	src += ctx->block_size;
+	dst += data_block_size;
+	offset_blocks++;
+
+	while (offset_blocks < num_blocks) {
+		memcpy(&dif, src + ctx->guard_interval, sizeof(struct spdk_dif));
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(0, dst, src, ctx->guard_interval);
+		} else {
+			guard = 0;
+			memcpy(dst, src, data_block_size);
+		}
+		rc = _dif_verify(&dif, guard, offset_blocks, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+
+		src += ctx->block_size;
+		dst += data_block_size;
+		offset_blocks++;
+	}
+
+	return offset_blocks * data_block_size;
+}
