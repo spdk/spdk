@@ -584,8 +584,8 @@ spdk_ioat_detach(struct spdk_ioat_chan *ioat)
 }
 
 int
-spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
-		      void *dst, const void *src, uint64_t nbytes)
+spdk_ioat_build_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
+		     void *dst, const void *src, uint64_t nbytes)
 {
 	struct ioat_descriptor	*last_desc;
 	uint64_t	remaining, op_size;
@@ -652,13 +652,27 @@ spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		return -ENOMEM;
 	}
 
+	return 0;
+}
+
+int
+spdk_ioat_submit_copy(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
+		      void *dst, const void *src, uint64_t nbytes)
+{
+	int rc;
+
+	rc = spdk_ioat_build_copy(ioat, cb_arg, cb_fn, dst, src, nbytes);
+	if (rc != 0) {
+		return rc;
+	}
+
 	spdk_ioat_flush(ioat);
 	return 0;
 }
 
 int
-spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
-		      void *dst, uint64_t fill_pattern, uint64_t nbytes)
+spdk_ioat_build_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
+		     void *dst, uint64_t fill_pattern, uint64_t nbytes)
 {
 	struct ioat_descriptor	*last_desc = NULL;
 	uint64_t	remaining, op_size;
@@ -707,6 +721,20 @@ spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_c
 		 */
 		ioat->head = orig_head;
 		return -ENOMEM;
+	}
+
+	return 0;
+}
+
+int
+spdk_ioat_submit_fill(struct spdk_ioat_chan *ioat, void *cb_arg, spdk_ioat_req_cb cb_fn,
+		      void *dst, uint64_t fill_pattern, uint64_t nbytes)
+{
+	int rc;
+
+	rc = spdk_ioat_build_fill(ioat, cb_arg, cb_fn, dst, fill_pattern, nbytes);
+	if (rc != 0) {
+		return rc;
 	}
 
 	spdk_ioat_flush(ioat);
