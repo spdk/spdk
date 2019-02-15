@@ -49,6 +49,11 @@
 #include <libaio.h>
 #endif
 
+#if HAVE_IO_URING
+#include "liburing.h"
+#undef HAVE_LIBAIO
+#endif
+
 struct ctrlr_entry {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	enum spdk_nvme_transport_type		trtype;
@@ -60,6 +65,7 @@ struct ctrlr_entry {
 enum entry_type {
 	ENTRY_TYPE_NVME_NS,
 	ENTRY_TYPE_AIO_FILE,
+	ENTRY_TYPE_IO_URING_FILE,
 };
 
 struct ns_fn_table;
@@ -77,6 +83,12 @@ struct ns_entry {
 		struct {
 			int			fd;
 		} aio;
+#endif
+
+#if HAVE_IO_URING
+		struct {
+			int 			fd;
+		} uring;
 #endif
 	} u;
 
@@ -121,6 +133,8 @@ struct ns_worker_ctx {
 	uint64_t		current_queue_depth;
 	uint64_t		offset_in_ios;
 	bool			is_draining;
+	int			io_pending;
+	int			io_inflight;
 
 	union {
 		struct {
@@ -132,6 +146,10 @@ struct ns_worker_ctx {
 			struct io_event		*events;
 			io_context_t		ctx;
 		} aio;
+#endif
+#if HAVE_IO_URING
+		struct	io_uring uring;
+
 #endif
 	} u;
 
@@ -216,7 +234,7 @@ struct trid_entry {
 
 static TAILQ_HEAD(, trid_entry) g_trid_list = TAILQ_HEAD_INITIALIZER(g_trid_list);
 
-static int g_aio_optind; /* Index of first AIO filename in argv */
+static int g_io_interface_optind; /* Index of first AIO or IO_URING filename in argv */
 
 static void
 task_complete(struct perf_task *task);
@@ -399,7 +417,7 @@ register_aio_files(int argc, char **argv)
 	int i;
 
 	/* Treat everything after the options as files for AIO */
-	for (i = g_aio_optind; i < argc; i++) {
+	for (i = g_io_interface_optind; i < argc; i++) {
 		if (register_aio_file(argv[i]) != 0) {
 			return 1;
 		}
@@ -408,6 +426,238 @@ register_aio_files(int argc, char **argv)
 	return 0;
 }
 #endif /* HAVE_LIBAIO */
+
+#if HAVE_IO_URING
+
+static void
+io_uring_setup_payload(struct perf_task *task, uint8_t pattern)
+{
+	task->iov.iov_base = spdk_dma_zmalloc(g_io_size_bytes, g_io_align, NULL);
+	task->iov.iov_len = g_io_size_bytes;
+	if (task->iov.iov_base == NULL) {
+		fprintf(stderr, "spdk_dma_zmalloc() for task->buf failed\n");
+		exit(1);
+	}
+	memset(task->iov.iov_base, pattern, task->iov.iov_len);
+}
+
+static int
+io_uring_submit_single(struct io_uring *uring, int fd, const __u8 cmd, struct iovec *iov,
+		       uint64_t offset, void *cb_ctx)
+{
+	struct io_uring_sqe *sqe;
+
+	sqe = io_uring_get_sqe(uring);
+	if (cmd == IORING_OP_READV) {
+		io_uring_prep_readv(sqe, fd, iov, 1, offset * iov->iov_len);
+		io_uring_sqe_set_data(sqe, cb_ctx);
+	} else {
+		io_uring_prep_writev(sqe, fd, iov, 1, offset * iov->iov_len);
+		io_uring_sqe_set_data(sqe, cb_ctx);
+	}
+
+	return 0;
+}
+
+static int
+io_uring_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
+		   struct ns_entry *entry, uint64_t offset_in_ios)
+{
+
+	if (task->is_read) {
+		ns_ctx->io_pending++;
+		return io_uring_submit_single(&ns_ctx->u.uring, entry->u.uring.fd, IORING_OP_READV,
+					      &task->iov, offset_in_ios, task);
+	} else {
+		ns_ctx->io_pending++;
+		return io_uring_submit_single(&ns_ctx->u.uring, entry->u.uring.fd, IORING_OP_WRITEV,
+					      &task->iov, offset_in_ios, task);
+
+	}
+}
+
+static void
+io_uring_verify_io(struct perf_task *task, struct ns_entry *entry)
+{
+}
+
+static int
+io_uring_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	struct io_uring *ring = &ns_ctx->u.uring;
+	int ret;
+	ns_ctx->io_pending = 0;
+	ns_ctx->io_inflight = 0;
+
+	ret = io_uring_queue_init(g_queue_depth, ring, IORING_SETUP_IOPOLL);
+	if (ret < 0) {
+		fprintf(stderr, "queue_init error\n");
+		return 1;
+	}
+
+	return 0;
+}
+
+static void
+io_uring_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
+{
+	close(ns_ctx->u.uring.ring_fd);
+	io_uring_queue_exit(&ns_ctx->u.uring);
+}
+
+static int
+io_uring_reap(struct io_uring *ring, int max)
+{
+	int i, count, ret;
+	struct io_uring_cqe *cqe;
+	struct perf_task *perf_task;
+
+	count = 0;
+	for (i = 0; i < max; i++) {
+		ret = io_uring_get_completion(ring, &cqe);
+		if (ret != 0) {
+			return ret;
+		}
+
+		if (cqe == NULL) {
+			return count;
+		}
+
+		if (cqe->res != (signed) g_io_size_bytes) {
+			fprintf(stderr, "ret=%d, wanted 4096\n", cqe->res);
+			exit(1);
+		}
+
+		perf_task = (struct perf_task *)cqe->user_data;
+		task_complete(perf_task);
+
+		count++;
+	}
+
+	return count;
+}
+
+
+static void
+io_uring_check_io(struct ns_worker_ctx *ns_ctx)
+{
+	struct io_uring *ring = &ns_ctx->u.uring;
+	int to_submit, to_complete;
+	int ret = 0;
+	int count;
+
+	to_submit = ns_ctx->io_pending;
+	to_complete = ns_ctx->io_inflight;
+
+	if (to_submit > 0) {
+		ret = io_uring_submit(ring);
+		ns_ctx->io_pending = 0;
+		ns_ctx->io_inflight += to_submit;
+	} else if (to_complete > 0) {
+		ret = io_uring_enter(ring->ring_fd, 0, 0,
+				     IORING_ENTER_GETEVENTS, NULL);
+	}
+
+	if (ret < 0) {
+		exit(1);
+	}
+
+	if (to_complete > 0) {
+		count = io_uring_reap(ring, to_complete);
+		ns_ctx->io_inflight -= count;
+	}
+
+}
+
+static const struct ns_fn_table io_uring_fn_table = {
+	.setup_payload          = io_uring_setup_payload,
+	.submit_io              = io_uring_submit_io,
+	.check_io               = io_uring_check_io,
+	.verify_io              = io_uring_verify_io,
+	.init_ns_worker_ctx     = io_uring_init_ns_worker_ctx,
+	.cleanup_ns_worker_ctx  = io_uring_cleanup_ns_worker_ctx,
+};
+
+static int
+register_io_uring_file(const char *path)
+{
+	struct ns_entry *entry;
+
+	int fd, flags;
+	uint64_t size;
+	uint32_t blklen;
+
+	if (g_rw_percentage == 100) {
+		flags = O_RDONLY;
+	} else if (g_rw_percentage == 0) {
+		flags = O_WRONLY;
+	} else {
+		flags = O_RDWR;
+	}
+
+	flags |= O_NOATIME | O_DIRECT;
+	fd = open(path, flags);
+	if (fd < 0) {
+		fprintf(stderr, "Could not open IO_URING device %s: %s\n", path, strerror(errno));
+		return -1;
+	}
+
+	size = spdk_fd_get_size(fd);
+	if (size == 0) {
+		fprintf(stderr, "Could not determine size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	blklen = spdk_fd_get_blocklen(fd);
+	if (blklen == 0) {
+		fprintf(stderr, "Could not determine block size of IO_URING device %s\n", path);
+		close(fd);
+		return -1;
+	}
+
+	if (g_io_align < blklen) {
+		g_io_align = blklen;
+	}
+
+	entry = malloc(sizeof(struct ns_entry));
+	if (entry == NULL) {
+		close(fd);
+		perror("io_uring ns_entry malloc");
+		return -1;
+	}
+
+	entry->type = ENTRY_TYPE_IO_URING_FILE;
+	entry->fn_table = &io_uring_fn_table;
+	entry->u.uring.fd = fd;
+	entry->size_in_ios = size / g_io_size_bytes;
+	entry->io_size_blocks = g_io_size_bytes / blklen;
+
+	snprintf(entry->name, sizeof(entry->name), "%s", path);
+
+	g_num_namespaces++;
+	entry->next = g_namespaces;
+	g_namespaces = entry;
+
+	return 0;
+}
+
+static int
+register_io_uring_files(int argc, char **argv)
+{
+	int i;
+
+	/* Treat everything after the options as files for IO_URING */
+	for (i = g_io_interface_optind; i < argc; i++) {
+		if (register_io_uring_file(argv[i]) != 0) {
+			return 1;
+		}
+	}
+
+	return 0;
+}
+
+#endif
 
 static void io_complete(void *ctx, const struct spdk_nvme_cpl *cpl);
 
@@ -1592,7 +1842,7 @@ parse_args(int argc, char **argv)
 		}
 	}
 
-	g_aio_optind = optind;
+	g_io_interface_optind = optind;
 
 	return 0;
 }
@@ -1855,6 +2105,12 @@ int main(int argc, char **argv)
 
 #if HAVE_LIBAIO
 	if (register_aio_files(argc, argv) != 0) {
+		rc = -1;
+		goto cleanup;
+	}
+#endif
+#if HAVE_IO_URING
+	if (register_io_uring_files(argc, argv) != 0) {
 		rc = -1;
 		goto cleanup;
 	}
