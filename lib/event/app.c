@@ -853,7 +853,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			retval = SPDK_APP_PARSE_ARGS_HELP;
 			goto out;
 		case SHM_ID_OPT_IDX:
-			opts->shm_id = spdk_strtol(optarg, 10);
+			opts->shm_id = spdk_strtol(optarg, 0);
 			if (opts->shm_id < 0) {
 				fprintf(stderr, "Invalid shared memory ID %s\n", optarg);
 				goto out;
@@ -863,14 +863,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->reactor_mask = optarg;
 			break;
 		case MEM_CHANNELS_OPT_IDX:
-			opts->mem_channel = spdk_strtol(optarg, 10);
+			opts->mem_channel = spdk_strtol(optarg, 0);
 			if (opts->mem_channel < 0) {
 				fprintf(stderr, "Invalid memory channel %s\n", optarg);
 				goto out;
 			}
 			break;
 		case MASTER_CORE_OPT_IDX:
-			opts->master_core = spdk_strtol(optarg, 10);
+			opts->master_core = spdk_strtol(optarg, 0);
 			if (opts->master_core < 0) {
 				fprintf(stderr, "Invalid master core %s\n", optarg);
 				goto out;
