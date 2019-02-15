@@ -257,4 +257,20 @@ int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			  uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 			  uint32_t inject_flags, uint32_t *inject_offset);
+
+/**
+ * Insert DIF into stream payload. From the tail of the newly added data,
+ * shift block data, and generate and insert DIF among block data.
+ *
+ * \param buf Data buffer to which DIF is inserted.
+ * \param parsed_bytes Number of parsed bytes.
+ * \param new_bytes Number of newly stored bytes.
+ * \param ctx DIF context.
+ *
+ * return Number of parsed bytes after this call on success and negated errono otherwise.
+ * Return value should be used as the input to the next call on success.
+ */
+int spdk_dif_generate_stream(void *buf, uint32_t parsed_bytes, uint32_t new_bytes,
+			     const struct spdk_dif_ctx *ctx);
+
 #endif /* SPDK_DIF_H */
