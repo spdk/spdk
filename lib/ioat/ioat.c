@@ -161,6 +161,11 @@ ioat_submit_single(struct spdk_ioat_chan *ioat)
 void
 spdk_ioat_flush(struct spdk_ioat_chan *ioat)
 {
+	uint32_t index = ioat_get_ring_index(ioat, ioat->head - 1);
+	union spdk_ioat_hw_desc *hw_desc;
+
+	hw_desc = &ioat->hw_ring[index];
+	hw_desc->dma.u.control.completion_update = 1;
 	ioat->regs->dmacount = (uint16_t)ioat->head;
 }
 
@@ -179,7 +184,6 @@ ioat_prep_null(struct spdk_ioat_chan *ioat)
 	hw_desc->dma.u.control_raw = 0;
 	hw_desc->dma.u.control.op = SPDK_IOAT_OP_COPY;
 	hw_desc->dma.u.control.null = 1;
-	hw_desc->dma.u.control.completion_update = 1;
 
 	hw_desc->dma.size = 8;
 	hw_desc->dma.src_addr = 0;
@@ -210,7 +214,6 @@ ioat_prep_copy(struct spdk_ioat_chan *ioat, uint64_t dst,
 
 	hw_desc->dma.u.control_raw = 0;
 	hw_desc->dma.u.control.op = SPDK_IOAT_OP_COPY;
-	hw_desc->dma.u.control.completion_update = 1;
 
 	hw_desc->dma.size = len;
 	hw_desc->dma.src_addr = src;
@@ -241,7 +244,6 @@ ioat_prep_fill(struct spdk_ioat_chan *ioat, uint64_t dst,
 
 	hw_desc->fill.u.control_raw = 0;
 	hw_desc->fill.u.control.op = SPDK_IOAT_OP_FILL;
-	hw_desc->fill.u.control.completion_update = 1;
 
 	hw_desc->fill.size = len;
 	hw_desc->fill.src_data = fill_pattern;
