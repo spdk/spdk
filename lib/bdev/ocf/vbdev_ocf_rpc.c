@@ -258,3 +258,88 @@ spdk_rpc_get_ocf_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_j
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_ocf_bdevs", spdk_rpc_get_ocf_bdevs, SPDK_RPC_RUNTIME)
+
+/* Structure to hold the parameters for this RPC method. */
+struct rpc_get_ocf_cores {
+	char *cache_name;             /* name of connected cache device */
+};
+
+static void
+free_rpc_get_ocf_cores(struct rpc_get_ocf_cores *r)
+{
+	free(r->cache_name);
+}
+
+/* Structure to decode the input parameters for this RPC method. */
+static const struct spdk_json_object_decoder rpc_get_ocf_cores_decoders[] = {
+	{"cache_name", offsetof(struct rpc_get_ocf_cores, cache_name), spdk_json_decode_string},
+};
+
+struct cores_ctx {
+	char *cache_name;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+get_cores_fn(struct vbdev_ocf *vbdev, void *ctx)
+{
+	struct cores_ctx *cctx = ctx;
+	struct spdk_json_write_ctx *w = cctx->w;
+
+	if (strcmp(vbdev->cache.name, cctx->cache_name)) {
+		return;
+	}
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "name", vbdev->core.name);
+	spdk_json_write_named_bool(w, "started", vbdev->state.started);
+	spdk_json_write_object_end(w);
+}
+
+static void
+spdk_rpc_get_ocf_cores(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct rpc_get_ocf_cores req = {NULL};
+	struct spdk_json_write_ctx *w;
+	struct cores_ctx cctx;
+	struct vbdev_ocf_base *cache;
+	int status;
+
+	if (spdk_json_decode_object(params, rpc_get_ocf_cores_decoders,
+				    SPDK_COUNTOF(rpc_get_ocf_cores_decoders),
+				    &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
+
+	cache = vbdev_ocf_get_base_by_name(req.cache_name);
+	if (cache == NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+		goto end;
+	}
+
+	if (!cache->is_cache) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Selected core device");
+		goto end;
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	cctx.cache_name = req.cache_name;
+	cctx.w = w;
+
+	spdk_json_write_array_begin(w);
+	vbdev_ocf_foreach(get_cores_fn, &cctx);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+end:
+	free_rpc_get_ocf_cores(&req);
+}
+SPDK_RPC_REGISTER("get_ocf_cores", spdk_rpc_get_ocf_cores, SPDK_RPC_RUNTIME)
