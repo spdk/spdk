@@ -14,9 +14,13 @@ strip_size. The strip_size rpc param is deprecated.
 
 ### rpc
 Added get_reactors_stat RPC method to retrieve existing statistics.
+Added get_nvmf_stat RPC method to retrieve NVMf susbsystem statistics
 
 ### environment
 Added thread statistics reset function.
+
+### nvmf
+Added infrastructure to retrieve global and per poll group NVMf statistics.
 
 ## v19.01:
 

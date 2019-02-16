@@ -2,7 +2,7 @@
  *   BSD LICENSE
  *
  *   Copyright (c) Intel Corporation. All rights reserved.
- *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
+ *   Copyright (c) 2018-2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -2961,6 +2961,13 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	return count;
 }
 
+static void
+spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group *group,
+		struct spdk_json_write_ctx *w,
+		bool reset)
+{
+}
+
 static int
 spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 			       struct spdk_nvme_transport_id *trid,
@@ -3067,6 +3074,7 @@ const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
 	.poll_group_destroy = spdk_nvmf_rdma_poll_group_destroy,
 	.poll_group_add = spdk_nvmf_rdma_poll_group_add,
 	.poll_group_poll = spdk_nvmf_rdma_poll_group_poll,
+	.poll_group_write_stat_json = spdk_nvmf_rdma_poll_group_write_stat_json,
 
 	.req_free = spdk_nvmf_rdma_request_free,
 	.req_complete = spdk_nvmf_rdma_request_complete,

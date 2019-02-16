@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -74,6 +74,13 @@ struct nvmf_qpair_disconnect_many_ctx {
 	struct spdk_nvmf_poll_group *group;
 	spdk_nvmf_poll_group_mod_done cpl_fn;
 	void *cpl_ctx;
+};
+
+struct nvmf_write_stat_ctx {
+	struct spdk_json_write_ctx *w;
+	bool reset;
+	spdk_nvmf_tgt_write_stat_done_fn done_cb;
+	void *done_ctx;
 };
 
 static void
@@ -476,6 +483,74 @@ spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_
 		spdk_nvmf_write_subsystem_config_json(w, subsystem);
 		subsystem = spdk_nvmf_subsystem_get_next(subsystem);
 	}
+}
+
+static void
+nvmf_poll_group_write_stat_json_done(struct spdk_io_channel_iter *i, int status)
+{
+	struct nvmf_write_stat_ctx *ctx = spdk_io_channel_iter_get_ctx(i);
+	spdk_json_write_array_end(ctx->w);
+	ctx->done_cb(ctx->done_ctx);
+	free(ctx);
+}
+
+static void
+nvmf_poll_group_write_stat_json(struct spdk_io_channel_iter *i)
+{
+	struct nvmf_write_stat_ctx *ctx;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_transport_poll_group *tgroup;
+
+	ctx = spdk_io_channel_iter_get_ctx(i);
+	ch = spdk_io_channel_iter_get_channel(i);
+	group = spdk_io_channel_get_ctx(ch);
+
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(group->thread));
+	spdk_json_write_named_array_begin(ctx->w, "transports");
+	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "type",
+					     spdk_nvme_transport_id_trtype_str(tgroup->transport->ops->type));
+		if (tgroup->transport->ops->poll_group_write_stat_json) {
+			tgroup->transport->ops->poll_group_write_stat_json(tgroup,
+					ctx->w,
+					ctx->reset);
+		}
+		spdk_json_write_object_end(ctx->w);
+	}
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+
+	spdk_for_each_channel_continue(i, 0);
+}
+
+void
+spdk_nvmf_tgt_write_stat_json(struct spdk_json_write_ctx *w,
+			      struct spdk_nvmf_tgt *tgt,
+			      bool reset,
+			      spdk_nvmf_tgt_write_stat_done_fn done_cb,
+			      void *done_ctx)
+{
+	struct nvmf_write_stat_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		done_cb(done_ctx);
+		return;
+	}
+	ctx->w = w;
+	ctx->reset = reset;
+	ctx->done_cb = done_cb;
+	ctx->done_ctx = done_ctx;
+
+	spdk_json_write_named_array_begin(w, "poll_groups");
+
+	spdk_for_each_channel(tgt,
+			      nvmf_poll_group_write_stat_json,
+			      ctx,
+			      nvmf_poll_group_write_stat_json_done);
 }
 
 void

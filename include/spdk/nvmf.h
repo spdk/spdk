@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -102,6 +102,25 @@ void spdk_nvmf_tgt_destroy(struct spdk_nvmf_tgt *tgt,
  * \param tgt The NVMe-oF target
  */
 void spdk_nvmf_tgt_write_config_json(struct spdk_json_write_ctx *w, struct spdk_nvmf_tgt *tgt);
+
+/**
+ * Function to be called once all the target statistics is written.
+ *
+ * \param ctx Context argument passed to this function.
+ */
+typedef void (*spdk_nvmf_tgt_write_stat_done_fn)(void *ctx);
+
+/**
+ * Write NVMe-oF target statistics into provided JSON context.
+ * \param w JSON write context
+ * \param tgt The NVMe-oF target
+ * \param reset Reset statistics to zero when True
+ */
+void spdk_nvmf_tgt_write_stat_json(struct spdk_json_write_ctx *w,
+				   struct spdk_nvmf_tgt *tgt,
+				   bool reset,
+				   spdk_nvmf_tgt_write_stat_done_fn done_cb,
+				   void *done_ctx);
 
 /**
  * Function to be called once the target is listening.
