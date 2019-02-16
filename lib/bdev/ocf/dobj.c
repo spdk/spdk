@@ -292,7 +292,12 @@ vbdev_ocf_dobj_submit_flush(struct ocf_io *io)
 		return;
 	}
 
-	prepare_submit(io);
+	status = prepare_submit(io);
+	if (status) {
+		SPDK_ERRLOG("Preparing io failed with status=%d\n", status);
+		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		return;
+	}
 
 	status = spdk_bdev_flush(
 			 base->desc, io_ctx->ch,
@@ -319,7 +324,12 @@ vbdev_ocf_dobj_submit_io(struct ocf_io *io)
 		return;
 	}
 
-	prepare_submit(io);
+	status = prepare_submit(io);
+	if (status) {
+		SPDK_ERRLOG("Preparing io failed with status=%d\n", status);
+		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		return;
+	}
 
 	/* IO fields */
 	addr = io->addr;
@@ -376,7 +386,12 @@ vbdev_ocf_dobj_submit_discard(struct ocf_io *io)
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	int status = 0;
 
-	prepare_submit(io);
+	status = prepare_submit(io);
+	if (status) {
+		SPDK_ERRLOG("Preparing io failed with status=%d\n", status);
+		vbdev_ocf_dobj_submit_io_cb(NULL, false, io);
+		return;
+	}
 
 	status = spdk_bdev_unmap(
 			 base->desc, io_ctx->ch,
