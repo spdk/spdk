@@ -257,6 +257,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* set no huge  if enabled */
+	if (opts->no_huge) {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--no-huge"));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 	/* create just one hugetlbfs file */
 	if (opts->hugepage_single_segments) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--single-file-segments"));
@@ -313,7 +321,14 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	 *
 	 * Ref: https://github.com/google/sanitizers/wiki/AddressSanitizerAlgorithm
 	 */
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x200000000000"));
+	if (opts->use_low_memory_base_virtaddr)
+	{
+	    args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x000000000000"));
+	}
+	else
+	{
+	    args = spdk_push_arg(args, &argcount, _sprintf_alloc("--base-virtaddr=0x200000000000"));
+	}
 	if (args == NULL) {
 		return -1;
 	}
