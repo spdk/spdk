@@ -46,6 +46,12 @@ if [ "$cov_avail" = "yes" ]; then
 	# zero out coverage data
 	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
+
+# workaround for valgrind v3.13 on arm64
+if [ $(uname -m) = "aarch64" ]; then
+	export LD_HWCAP_MASK=1
+fi
+
 $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 
 $valgrind $testdir/lib/bdev/bdev.c/bdev_ut
