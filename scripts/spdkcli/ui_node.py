@@ -43,7 +43,8 @@ class UINode(ConfigNode):
             self.shell.log.debug("Command %s succeeded." % command)
             return result
         finally:
-            if command in ["create", "delete", "delete_all", "add_initiator",
+            if self.shell.interactive and\
+                command in ["create", "delete", "delete_all", "add_initiator",
                            "allow_any_host", "split_bdev", "add_lun",
                            "add_pg_ig_maps", "remove_target", "add_secret",
                            "destruct_split_bdev", "delete_pmem_pool",
