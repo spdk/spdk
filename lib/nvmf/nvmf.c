@@ -500,7 +500,10 @@ nvmf_poll_group_write_stat_json(struct spdk_io_channel_iter *i)
 	struct nvmf_write_stat_ctx *ctx;
 	struct spdk_io_channel *ch;
 	struct spdk_nvmf_poll_group *group;
+	struct spdk_nvmf_qpair *qpair;
 	struct spdk_nvmf_transport_poll_group *tgroup;
+	uint32_t io_qpairs = 0;
+	uint32_t admin_qpairs = 0;
 
 	ctx = spdk_io_channel_iter_get_ctx(i);
 	ch = spdk_io_channel_iter_get_channel(i);
@@ -508,6 +511,15 @@ nvmf_poll_group_write_stat_json(struct spdk_io_channel_iter *i)
 
 	spdk_json_write_object_begin(ctx->w);
 	spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(group->thread));
+	TAILQ_FOREACH(qpair, &group->qpairs, link) {
+		if (0 == qpair->qid) {
+			admin_qpairs++;
+		} else {
+			io_qpairs++;
+		}
+	}
+	spdk_json_write_named_uint32(ctx->w, "admin_qpairs", admin_qpairs);
+	spdk_json_write_named_uint32(ctx->w, "io_qpairs", io_qpairs);
 	spdk_json_write_named_array_begin(ctx->w, "transports");
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		spdk_json_write_object_begin(ctx->w);
