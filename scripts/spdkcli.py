@@ -32,6 +32,7 @@ def main():
     :return:
     """
     spdk_shell = ConfigShell("~/.scripts")
+    spdk_shell.interactive = True
     add_quotes_to_shell(spdk_shell)
 
     parser = argparse.ArgumentParser(description="SPDK command line interface")
@@ -51,6 +52,7 @@ def main():
 
     if len(args.commands) > 0:
         try:
+            spdk_shell.interactive = False
             spdk_shell.run_cmdline(" ".join(args.commands))
         except Exception as e:
             sys.stderr.write("%s\n" % e)
