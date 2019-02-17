@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c743476b_f2669b54",
+        "filename": "configure",
+        "patchSetId": 5
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-17T23:39:23Z",
+      "side": 1,
+      "message": "maybe crc16-table or crc16table because this is only for crc16.",
+      "range": {
+        "startLine": 75,
+        "startChar": 8,
+        "endLine": 75,
+        "endChar": 16
+      },
+      "revId": "82dabcc3f3cd5fa10e7a6a92537805198ccd03cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
