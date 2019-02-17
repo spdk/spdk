@@ -104,6 +104,8 @@ struct spdk_app_opts {
 	int			master_core;
 	int			mem_size;
 	bool			no_pci;
+	bool			no_huge;
+	bool			use_low_memory_base_virtaddr;
 	bool			hugepage_single_segments;
 	bool			unlink_hugepage;
 	const char		*hugedir;
