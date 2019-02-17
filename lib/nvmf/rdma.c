@@ -349,6 +349,9 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
+	uint64_t				pending_free_request;
+	uint64_t				pending_data_buffer;
+	uint64_t				pending_transfer;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -1520,6 +1523,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			if (!rdma_req->req.data) {
 				/* No buffers available. */
+				rqpair->poller->stat.pending_data_buffer++;
 				break;
 			}
 
@@ -1547,6 +1551,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			if (rqpair->current_send_depth + rdma_req->num_outstanding_data_wr > rqpair->max_send_depth
 			    || rqpair->current_read_depth + rdma_req->num_outstanding_data_wr > rqpair->max_read_depth) {
 				/* We can only have so many WRs outstanding. we have to wait until some finish. */
+				rqpair->poller->stat.pending_transfer++;
 				break;
 			}
 			rc = request_transfer_in(&rdma_req->req);
@@ -1599,6 +1604,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			    rqpair->max_send_depth) {
 				/* We can only have so many WRs outstanding. we have to wait until some finish.
 				 * +1 since each request has an additional wr in the resp. */
+				rqpair->poller->stat.pending_transfer++;
 				break;
 			}
 			/* The data transfer will be kicked off from
@@ -2209,6 +2215,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	/* The lowest priority is processing newly received commands */
 	TAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
 		if (TAILQ_EMPTY(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE])) {
+			rqpair->poller->stat.pending_free_request++;
 			break;
 		}
 
@@ -2997,6 +3004,12 @@ spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group 
 		} else {
 			spdk_json_write_named_uint64(w, "avg_comps_per_poll", 0);
 		}
+		spdk_json_write_named_uint64(w, "pending_free_request",
+					     rpoller->stat.pending_free_request);
+		spdk_json_write_named_uint64(w, "pending_data_buffer",
+					     rpoller->stat.pending_data_buffer);
+		spdk_json_write_named_uint64(w, "pending_transfer",
+					     rpoller->stat.pending_transfer);
 		spdk_json_write_object_end(w);
 		if (reset) {
 			memset(&rpoller->stat, 0, sizeof(rpoller->stat));

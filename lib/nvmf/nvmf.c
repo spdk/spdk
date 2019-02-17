@@ -520,6 +520,10 @@ nvmf_poll_group_write_stat_json(struct spdk_io_channel_iter *i)
 	}
 	spdk_json_write_named_uint32(ctx->w, "admin_qpairs", admin_qpairs);
 	spdk_json_write_named_uint32(ctx->w, "io_qpairs", io_qpairs);
+	spdk_json_write_named_uint32(ctx->w, "pending_bdev_io", group->stat.pending_bdev_io);
+	if (ctx->reset) {
+		memset(&group->stat, 0, sizeof(group->stat));
+	}
 	spdk_json_write_named_array_begin(ctx->w, "transports");
 	TAILQ_FOREACH(tgroup, &group->tgroups, link) {
 		spdk_json_write_object_begin(ctx->w);

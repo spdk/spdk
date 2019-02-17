@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -207,6 +207,7 @@ spdk_nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *des
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			req->qpair->group->stat.pending_bdev_io++;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -251,6 +252,7 @@ spdk_nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			req->qpair->group->stat.pending_bdev_io++;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -286,6 +288,7 @@ spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_d
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			req->qpair->group->stat.pending_bdev_io++;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		rsp->status.sct = SPDK_NVME_SCT_GENERIC;
@@ -318,6 +321,7 @@ spdk_nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *de
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			req->qpair->group->stat.pending_bdev_io++;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		response->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
@@ -422,6 +426,7 @@ nvmf_bdev_ctrlr_unmap(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		if (rc) {
 			if (rc == -ENOMEM) {
 				nvmf_bdev_ctrl_queue_io(req, bdev, ch, nvmf_bdev_ctrlr_unmap_resubmit, unmap_ctx);
+				req->qpair->group->stat.pending_bdev_io++;
 				/* Unmap was not yet submitted to bdev */
 				unmap_ctx->count--;
 				return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
@@ -471,6 +476,7 @@ spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_d
 	if (spdk_unlikely(rc)) {
 		if (rc == -ENOMEM) {
 			nvmf_bdev_ctrl_queue_io(req, bdev, ch, spdk_nvmf_ctrlr_process_io_cmd_resubmit, req);
+			req->qpair->group->stat.pending_bdev_io++;
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 		}
 		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
