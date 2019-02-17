@@ -4046,11 +4046,25 @@ Example response:
     "poll_groups": [
       {
         "name": "reactor_0",
-        "admin_qpairs": 0,
-        "io_qpairs": 0,
+        "admin_qpairs": 1,
+        "io_qpairs": 1,
         "transports": [
           {
-            "type": "RDMA"
+            "type": "RDMA",
+            "devices": [
+              {
+                "name": "mlx5_1",
+                "polls": 1536729,
+                "completions": 0,
+                "avg_comps_per_poll": 0.0
+              },
+              {
+                "name": "mlx5_0",
+                "polls": 1536729,
+                "completions": 18667357,
+                "avg_comps_per_poll": 12.15
+              }
+            ]
           },
           {
             "type": "TCP"

@@ -35,6 +35,7 @@
 #include "spdk_cunit.h"
 #include "common/lib/test_env.c"
 #include "nvmf/rdma.c"
+#include "unit/lib/json_mock.c"
 
 uint64_t g_mr_size;
 struct ibv_mr g_rdma_mr;
