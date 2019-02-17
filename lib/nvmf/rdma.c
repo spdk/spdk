@@ -346,6 +346,11 @@ struct spdk_nvmf_rdma_qpair {
 	bool					disconnect_started;
 };
 
+struct spdk_nvmf_rdma_poller_stat {
+	uint64_t				completions;
+	uint64_t				polls;
+};
+
 struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_device		*device;
 	struct spdk_nvmf_rdma_poll_group	*group;
@@ -353,6 +358,8 @@ struct spdk_nvmf_rdma_poller {
 	int					num_cqe;
 	int					required_num_wr;
 	struct ibv_cq				*cq;
+
+	struct spdk_nvmf_rdma_poller_stat	stat;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
 
@@ -2768,6 +2775,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		return -1;
 	}
 
+	rpoller->stat.polls++;
+	rpoller->stat.completions += reaped;
+
 	for (i = 0; i < reaped; i++) {
 
 		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
@@ -2966,6 +2976,33 @@ spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group 
 		struct spdk_json_write_ctx *w,
 		bool reset)
 {
+	struct spdk_nvmf_rdma_poll_group *rgroup;
+	struct spdk_nvmf_rdma_poller	 *rpoller;
+
+	rgroup = SPDK_CONTAINEROF(group, struct spdk_nvmf_rdma_poll_group, group);
+
+	spdk_json_write_named_array_begin(w, "devices");
+	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
+		char str[16];
+		int len;
+		spdk_json_write_object_begin(w);
+		spdk_json_write_named_string(w, "name", ibv_get_device_name(rpoller->device->context->device));
+		spdk_json_write_named_uint64(w, "polls", rpoller->stat.polls);
+		spdk_json_write_named_uint64(w, "completions", rpoller->stat.completions);
+		if (rpoller->stat.polls != 0) {
+			len = snprintf(str, sizeof(str), "%.2f",
+				       (double)rpoller->stat.completions / rpoller->stat.polls);
+			spdk_json_write_name(w, "avg_comps_per_poll");
+			spdk_json_write_val_raw(w, str, len);
+		} else {
+			spdk_json_write_named_uint64(w, "avg_comps_per_poll", 0);
+		}
+		spdk_json_write_object_end(w);
+		if (reset) {
+			memset(&rpoller->stat, 0, sizeof(rpoller->stat));
+		}
+	}
+	spdk_json_write_array_end(w);
 }
 
 static int
