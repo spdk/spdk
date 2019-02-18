@@ -22,6 +22,30 @@
       "revId": "1246c8ddac15d8b0bdc2472ab71ee443645bdc79",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "953113c4_bca58aa7",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T23:41:24Z",
+      "side": 1,
+      "message": "Thank you. I didn\u0027t understand enough. I changed this patch to remove SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH and use SPDK_BDEV_LARGE_BUF_MAX_SIZE instead.",
+      "parentUuid": "0bad1d55_1831a18d",
+      "range": {
+        "startLine": 86,
+        "startChar": 49,
+        "endLine": 86,
+        "endChar": 78
+      },
+      "revId": "1246c8ddac15d8b0bdc2472ab71ee443645bdc79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
