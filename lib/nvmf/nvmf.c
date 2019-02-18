@@ -672,9 +672,16 @@ spdk_nvmf_poll_group_add(struct spdk_nvmf_poll_group *group,
 static
 void _nvmf_ctrlr_destruct(void *ctx)
 {
-	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct nvmf_qpair_disconnect_ctx *qpair_ctx = ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = qpair_ctx->ctrlr;
 
 	spdk_nvmf_ctrlr_destruct(ctrlr);
+
+	if (qpair_ctx->cb_fn) {
+		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+	}
+
+	free(qpair_ctx);
 }
 
 static void
@@ -689,13 +696,13 @@ _spdk_nvmf_ctrlr_free_from_qpair(void *ctx)
 	if (count == 0) {
 		spdk_bit_array_free(&ctrlr->qpair_mask);
 
-		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, ctrlr);
+		spdk_thread_send_msg(ctrlr->subsys->thread, _nvmf_ctrlr_destruct, qpair_ctx);
+	} else {
+		if (qpair_ctx->cb_fn) {
+			spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
+		}
+		free(qpair_ctx);
 	}
-
-	if (qpair_ctx->cb_fn) {
-		spdk_thread_send_msg(qpair_ctx->thread, qpair_ctx->cb_fn, qpair_ctx->ctx);
-	}
-	free(qpair_ctx);
 }
 
 static void
