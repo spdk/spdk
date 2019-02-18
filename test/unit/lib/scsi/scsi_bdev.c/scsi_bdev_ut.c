@@ -69,7 +69,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 DEFINE_STUB(spdk_bdev_get_name, const char *,
 	    (const struct spdk_bdev *bdev), "test");
 
-DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
+DEFINE_STUB(spdk_bdev_get_data_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
 uint64_t
