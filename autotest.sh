@@ -179,6 +179,10 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite test/ioat/ioat.sh
 	fi
 
+	if [ $SPDK_TEST_NOTIFY -eq 1 ]; then
+		run_test suite test/notify/notify.sh
+	fi
+
 	timing_exit lib
 
 	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
