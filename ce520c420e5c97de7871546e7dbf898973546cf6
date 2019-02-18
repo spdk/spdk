@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e676fe5e_d2cface1",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-18T11:44:21Z",
+      "side": 1,
+      "message": "Why we overwrite dest\u003d\"verbose\" ?\nShouldn\u0027t be:\n  parser.add_argument(\u0027--verbose\u0027, dest\u003d\u0027verbose\u0027, choices\u003d \n [\u0027DEBUG\u0027, \u0027INFO\u0027, \u0027ERROR\u0027], help\u003d\"\"\"Set verbose level. \n  \"\"\", default\u003d\"ERROR\")\n?",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 55
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cd648c5c_3407f9b1",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-18T11:44:21Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be:\n self.client.set_log_level(self.verbose)\n?",
+      "range": {
+        "startLine": 60,
+        "startChar": 24,
+        "endLine": 60,
+        "endChar": 74
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
