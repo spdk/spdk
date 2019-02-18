@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "b745f609_f49253c6",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "maybe start LBA offset",
+      "range": {
+        "startLine": 631,
+        "startChar": 38,
+        "endLine": 631,
+        "endChar": 39
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "36a8edf1_07d17b3a",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "are located",
+      "range": {
+        "startLine": 638,
+        "startChar": 55,
+        "endLine": 638,
+        "endChar": 62
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd9f66db_e59b312a",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "this should assert if we check this.",
+      "range": {
+        "startLine": 850,
+        "startChar": 2,
+        "endLine": 852,
+        "endChar": 3
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9588226_edb19062",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -33,6 +102,52 @@
       "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "032e8532_1a734746",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "disk ?",
+      "range": {
+        "startLine": 886,
+        "startChar": 73,
+        "endLine": 886,
+        "endChar": 78
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0972488b_75514956",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "using just i may highlight disk_idx. I feel disk and disk_idx are a little confusing.",
+      "range": {
+        "startLine": 899,
+        "startChar": 10,
+        "endLine": 899,
+        "endChar": 14
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -70,6 +185,24 @@
     },
     {
       "key": {
+        "uuid": "eb3cc6d8_f508b198",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "I agree",
+      "parentUuid": "c76102aa_452a73bc",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fe2ba66f_de5be412",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -84,6 +217,23 @@
       "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d62e223e_bf2ad2db",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1834,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T01:31:35Z",
+      "side": 1,
+      "message": "I think we can factor out the block from line 1834 to 1847 to raid_bdev_io_submit() ?\n\nThat may make us understand io_range_idx easier.\n\n// pattern 1\nraid_bdev_io_generate()\nraid_bdev_io_submit().\n\n// pattern 2\nraid_bdev_io_generate()\nraid_bdev_io_submit()\n\n// pattern 3\nraid_bdev_io_generate()\nraid_bdev_io_submit()",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
