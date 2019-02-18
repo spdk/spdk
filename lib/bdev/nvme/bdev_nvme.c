@@ -1408,6 +1408,9 @@ bdev_nvme_library_init(void)
 	}
 
 	hotplug_period = spdk_conf_section_get_intval(sp, "HotplugPollRate");
+	if (hotplug_period < 0) {
+		hotplug_period = 0;
+	}
 
 	g_nvme_hostnqn = spdk_conf_section_get_val(sp, "HostNQN");
 	probe_ctx->hostnqn = g_nvme_hostnqn;
