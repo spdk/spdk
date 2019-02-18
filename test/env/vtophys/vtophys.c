@@ -33,10 +33,15 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/config.h"
 #include "spdk/env.h"
 #include "spdk/util.h"
 
 #include "CUnit/Basic.h"
+
+#define __SPDK_ENV_NAME(path)	(strrchr(#path, '/') + 1)
+#define _SPDK_ENV_NAME(path)	__SPDK_ENV_NAME(path)
+#define SPDK_ENV_NAME		_SPDK_ENV_NAME(SPDK_CONFIG_ENV)
 
 static void
 vtophys_malloc_test(void)
@@ -156,6 +161,10 @@ main(int argc, char **argv)
 	spdk_env_opts_init(&opts);
 	opts.name = "vtophys";
 	opts.core_mask = "0x1";
+	if (strcmp(SPDK_ENV_NAME, "env_dpdk") == 0) {
+		opts.env_context = "--log-level=lib.eal:8";
+	}
+
 	if (spdk_env_init(&opts) < 0) {
 		printf("Err: Unable to initialize SPDK env\n");
 		return 1;

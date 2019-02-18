@@ -302,6 +302,21 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
+	 * This can be overridden by specifying the same option in opts->env_context
+	 */
+	args = spdk_push_arg(args, &argcount, strdup("--log-level=lib.eal:6"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	if (opts->env_context) {
+		args = spdk_push_arg(args, &argcount, strdup(opts->env_context));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 #ifdef __linux__
 	/* Set the base virtual address - it must be an address that is not in the
 	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
@@ -415,9 +430,6 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		 */
 		spdk_env_unlink_shared_files();
 	}
-
-	/* Print only the significant EAL messages */
-	rte_log_set_level(RTE_LOGTYPE_EAL, RTE_LOG_NOTICE);
 
 	return spdk_env_dpdk_post_init();
 }
