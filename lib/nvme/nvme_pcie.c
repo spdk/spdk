@@ -867,6 +867,12 @@ struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transpo
 }
 
 int
+nvme_pcie_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
 nvme_pcie_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 {
 	struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
