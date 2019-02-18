@@ -22,6 +22,30 @@
       "revId": "99f373dac0f43f36ad4b169f2a834b2ac651aa33",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1080137_965d370a",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T05:53:17Z",
+      "side": 1,
+      "message": "Hi Changpeng,\n\nBefore updating the comment, the following make sense to you?\n\nIn iSCSI and NVMe-oF TCP transport, incoming data can be split into multiple packets,\nand they are read sequentially into a data buffer.\nThis API tries to insert DIF for every read of a single packet.\n\nHence in iSCSI and NVMe-oF TCP, parsed_bytes means the range in which DIF is inserted.\n  block_size \u003d data_block_size + md_size\n  parsed_bytes \u003d (read_bytes / data_block_size) * block_size + read_bytes % data_block_size\nnew_bytes means the range that has the data read from the latest packet and DIF is not inserted into.\n\nSo the code image will be:\n  data_bytes \u003d 0;\n  parsed_bytes \u003d 0;\n  do {\n    data_bytes +\u003d read_packet(buf, parsed_bytes);\n    parsed_bytes \u003d spdk_dif_generate_insert(buf, parsed_bytes, data_bytes);\n  } while (data_bytes !\u003d expected_data_bytes);\n\nFor NVMe-oF RDMA, incoming data will not be split and parsed_bytes will be equal to 0 and\nnew_bytes will be equal to all read data.",
+      "parentUuid": "9f7f9f89_dcd51eab",
+      "range": {
+        "startLine": 267,
+        "startChar": 1,
+        "endLine": 268,
+        "endChar": 49
+      },
+      "revId": "99f373dac0f43f36ad4b169f2a834b2ac651aa33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
