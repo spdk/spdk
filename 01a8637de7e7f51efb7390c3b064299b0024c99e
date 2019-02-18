@@ -120,6 +120,30 @@
     },
     {
       "key": {
+        "uuid": "04dee22d_b36f50a8",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T10:04:13Z",
+      "side": 1,
+      "message": "sure, would like to add it into my worklist",
+      "parentUuid": "798d2eb0_8c530313",
+      "range": {
+        "startLine": 64,
+        "startChar": 90,
+        "endLine": 64,
+        "endChar": 94
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbef7a20_01aa1060",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 6
@@ -179,6 +203,30 @@
       "side": 1,
       "message": "1. Ok\n2. What if we remove this wait time at all and just iterate? What I\u0027m trying to say is that the user (administrator) is creating these devices. So if some /dev/nbdX is used (EBUSY) this is a configuration issue and maybe we just should not try to solve it just return error. The same things as you are doing here user can do on it\u0027s own.",
       "parentUuid": "839ede66_7b954f30",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 32
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22129037_e68e4b01",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T10:04:13Z",
+      "side": 1,
+      "message": "It requires a clear way to clarify whether nbd-device is setup by others or kernel is not ready.\nEven kernel\u0027s non-ready is a small probablity event, but it should be there.\n\nSo the problem can also be turned to how to avoid kernel\u0027s non-ready in our autotest.\nI had thought to recover the change made for that issue, and fix it by some extra time-wait in test scripts. But I\u0027m sad to say I didn\u0027t success to reproduce that issue.\nThen since don\u0027t want to be blocked on it, so just trying to avoid it by the other two patches related to this patch.",
+      "parentUuid": "c237ce64_cf44a45d",
       "range": {
         "startLine": 148,
         "startChar": 2,
