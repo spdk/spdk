@@ -162,6 +162,7 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 
 	tmp = realloc(args, sizeof(char *) * (*argcount + 1));
 	if (tmp == NULL) {
+		free(arg);
 		spdk_free_args(args, *argcount);
 		return NULL;
 	}
