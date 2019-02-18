@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "f8665a5e_53a0c768",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-18T13:00:07Z",
+      "side": 1,
+      "message": "Because we want to preserve old behavior of \u0027-v\u0027 and add \u0027--verbose\u0027 long parameter to add more levels of debug.",
+      "parentUuid": "e676fe5e_d2cface1",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 55
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd648c5c_3407f9b1",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 28
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-18T11:44:21Z",
       "side": 1,
       "message": "Shouldn\u0027t be:\n self.client.set_log_level(self.verbose)\n?",
+      "range": {
+        "startLine": 60,
+        "startChar": 24,
+        "endLine": 60,
+        "endChar": 74
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba58cf7f_ee6d23d7",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-18T13:00:07Z",
+      "side": 1,
+      "message": "spdkcli is using true/false not the string literals. so if true \u003d\u003e INFO, false \u003d\u003e ERROR",
+      "parentUuid": "cd648c5c_3407f9b1",
       "range": {
         "startLine": 60,
         "startChar": 24,
