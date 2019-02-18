@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2aba365b_88febe12",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-18T05:19:43Z",
+      "side": 1,
+      "message": "but seed is added.",
+      "revId": "1666e3d1fe7093ee35618008cd3d3086572d2ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
