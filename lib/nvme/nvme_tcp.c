@@ -1856,6 +1856,12 @@ struct spdk_nvme_ctrlr *nvme_tcp_ctrlr_construct(const struct spdk_nvme_transpor
 		return NULL;
 	}
 
+	if (nvme_ctrlr_add_process(&tctrlr->ctrlr, 0) != 0) {
+		SPDK_ERRLOG("nvme_ctrlr_add_process() failed\n");
+		nvme_ctrlr_destruct(&tctrlr->ctrlr);
+		return NULL;
+	}
+
 	nvme_ctrlr_init_cap(&tctrlr->ctrlr, &cap, &vs);
 
 	return &tctrlr->ctrlr;
