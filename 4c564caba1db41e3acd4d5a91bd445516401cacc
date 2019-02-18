@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "68a2e1fd_ba746284",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Good point!\nDone.",
+      "parentUuid": "b745f609_f49253c6",
+      "range": {
+        "startLine": 631,
+        "startChar": 38,
+        "endLine": 631,
+        "endChar": 39
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36a8edf1_07d17b3a",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 14
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-18T01:31:35Z",
       "side": 1,
       "message": "are located",
+      "range": {
+        "startLine": 638,
+        "startChar": 55,
+        "endLine": 638,
+        "endChar": 62
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "86c30866_bc9e84ef",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "36a8edf1_07d17b3a",
       "range": {
         "startLine": 638,
         "startChar": 55,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "90673742_495f41a3",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "yes, Shuhei, it should be asserted.",
+      "parentUuid": "dd9f66db_e59b312a",
+      "range": {
+        "startLine": 850,
+        "startChar": 2,
+        "endLine": 852,
+        "endChar": 3
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a9588226_edb19062",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -85,6 +157,24 @@
       "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "323adde6_98e39a61",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a9588226_edb19062",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -105,6 +195,24 @@
     },
     {
       "key": {
+        "uuid": "8780946f_d2df8fb8",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a0194a18_c06e1959",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "032e8532_1a734746",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -116,6 +224,30 @@
       "writtenOn": "2019-02-18T01:31:35Z",
       "side": 1,
       "message": "disk ?",
+      "range": {
+        "startLine": 886,
+        "startChar": 73,
+        "endLine": 886,
+        "endChar": 78
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0f6186a_aeeb46a6",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 886,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "following the definition of verify_io.\nLet me change the names of disk/disk_idx inside this function",
+      "parentUuid": "032e8532_1a734746",
       "range": {
         "startLine": 886,
         "startChar": 73,
@@ -151,6 +283,30 @@
     },
     {
       "key": {
+        "uuid": "c7e6e29f_f77410e0",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "yes, disk is not a good name based on its usage, use io_idx now.",
+      "parentUuid": "0972488b_75514956",
+      "range": {
+        "startLine": 899,
+        "startChar": 10,
+        "endLine": 899,
+        "endChar": 14
+      },
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "83632cc7_fa4784f4",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -162,6 +318,24 @@
       "writtenOn": "2019-02-15T22:44:48Z",
       "side": 1,
       "message": "So I know there\u0027s other unit test code here that uses rand() - but we really need to change that.  It makes the unit tests non-deterministic.  We actually ran into this problem once with the RAID unit tests - periodically they would fail, and it was because a certain rand() value caused a problem.\n\nIt would be better to just pick several more different values.",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4721cf73_7fe34b02",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Yes, rand() may caused problems periodically.\nBut the reason why using rand() is that covering all reasonable cases requires too much time.\nIf rand() would cause one problem, then the problem might not be reported by just picking several different values. I would like to prefer reproting problem non-deterministically, than being unaware on potential error.\n\nSince this subfunction will be called several times, so many different offsets and start_idxs will be tried.",
+      "parentUuid": "83632cc7_fa4784f4",
       "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -203,6 +377,24 @@
     },
     {
       "key": {
+        "uuid": "fe0bc63c_3b95aea4",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1739,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "if break this code into a function, then, specific parameters are required to cover possible corner cases. Still need similar functions to generate the specific parameters.",
+      "parentUuid": "eb3cc6d8_f508b198",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fe2ba66f_de5be412",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -220,6 +412,24 @@
     },
     {
       "key": {
+        "uuid": "eff108be_d7090fa7",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe2ba66f_de5be412",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d62e223e_bf2ad2db",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
@@ -231,6 +441,24 @@
       "writtenOn": "2019-02-18T01:31:35Z",
       "side": 1,
       "message": "I think we can factor out the block from line 1834 to 1847 to raid_bdev_io_submit() ?\n\nThat may make us understand io_range_idx easier.\n\n// pattern 1\nraid_bdev_io_generate()\nraid_bdev_io_submit().\n\n// pattern 2\nraid_bdev_io_generate()\nraid_bdev_io_submit()\n\n// pattern 3\nraid_bdev_io_generate()\nraid_bdev_io_submit()",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b284f1af_abbf2412",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1834,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:04:02Z",
+      "side": 1,
+      "message": "ditto",
+      "parentUuid": "d62e223e_bf2ad2db",
       "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
