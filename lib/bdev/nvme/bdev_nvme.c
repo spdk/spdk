@@ -114,6 +114,7 @@ static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT
 static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
+static struct spdk_nvme_probe_ctx g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1128,8 +1129,17 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 static int
 bdev_nvme_hotplug(void *arg)
 {
-	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
-		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
+	int rc;
+	bool done;
+
+	rc = spdk_nvme_probe_async(&g_hotplug_probe_ctx);
+	if (rc < 0) {
+		return -1;
+	}
+
+	done = spdk_nvme_probe_poll_async(&g_hotplug_probe_ctx);
+	if (done) {
+		return 1;
 	}
 
 	return -1;
@@ -1163,9 +1173,14 @@ static void
 set_nvme_hotplug_period_cb(void *_ctx)
 {
 	struct set_nvme_hotplug_ctx *ctx = _ctx;
+	struct spdk_nvme_transport_id trid_pcie;
 
 	spdk_poller_unregister(&g_hotplug_poller);
 	if (ctx->enabled) {
+		memset(&trid_pcie, 0, sizeof(trid_pcie));
+		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+		spdk_nvme_probe_ctx_init(&g_hotplug_probe_ctx, &trid_pcie, NULL,
+					 hotplug_probe_cb, attach_cb, remove_cb);
 		g_hotplug_poller = spdk_poller_register(bdev_nvme_hotplug, NULL, ctx->period_us);
 	}
 
