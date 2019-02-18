@@ -454,6 +454,16 @@ bool spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 				    enum spdk_dif_check_type check_type);
 
 /**
+ * Get data block size of the block device. This is different from
+ * block size when there is metadata and metadata is interleaved with
+ * block data.
+ *
+ * \param bdev Block device to query.
+ * \return data block size of the block device.
+ */
+uint32_t spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev);
+
+/**
  * Get the most recently measured queue depth from a bdev.
  *
  * The reported queue depth is the aggregate of outstanding I/O

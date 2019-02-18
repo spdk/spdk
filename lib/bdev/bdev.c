@@ -2379,6 +2379,16 @@ spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
 	}
 }
 
+uint32_t
+spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
+{
+	if (bdev->md_len != 0 && bdev->md_interleave) {
+		return bdev->blocklen - bdev->md_len;
+	} else {
+		return bdev->blocklen;
+	}
+}
+
 uint64_t
 spdk_bdev_get_qd(const struct spdk_bdev *bdev)
 {
