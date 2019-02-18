@@ -22,6 +22,30 @@
       "revId": "06d3bab16439f93eb87b06a303c76ca6d2111932",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a1e4b08_b025bb06",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-18T13:07:20Z",
+      "side": 1,
+      "message": "Nope, we are sending cnt notification requests to provide SPDK RPC server with number of JSON RPC ID. This way it can complete (respond) some of them while we are waiting for next. If server will run out of IDs it can respond to it will drop notifications. This need to be documented in next patches.\n\nNote that we are in the middle of inventing true async notifications scheme but it will be added for spdkcli rather than here (or maybe this function will be changed). For now we can at least test this.",
+      "parentUuid": "66c2ffb7_058b4c23",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 55
+      },
+      "revId": "06d3bab16439f93eb87b06a303c76ca6d2111932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
