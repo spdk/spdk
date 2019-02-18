@@ -94,6 +94,7 @@ class JSONRPCClient(object):
 
         self._logger.debug("append request:\n%s\n", LazyString(lambda: json.dumps(req)))
         self._reqs.append(req)
+        return self._request_id
 
     def flush(self):
         self._logger.debug("Flushing buffer")
@@ -141,11 +142,14 @@ class JSONRPCClient(object):
             raise JSONRPCException("Timeout while waiting for response:\n%s\n" % self._recv_buf)
 
         self._logger.info("response:\n%s\n", LazyString(lambda: json.dumps(response, indent=2)))
-        if 'error' in response:
-            msg = "\n".join(["Got JSON-RPC error response",
-                             "response:",
-                             json.dumps(response['error'], indent=2)])
-            raise JSONRPCException(msg)
+        # TODO: This check should go to the upper layer to not lost information
+        #       about error and not brake connection
+        #
+        # if 'error' in response:
+        #     msg = "\n".join(["Got JSON-RPC error response",
+        #                      "response:",
+        #                      json.dumps(response['error'], indent=2)])
+        #     raise JSONRPCException(msg)
         return response
 
     def call(self, method, params=None):
