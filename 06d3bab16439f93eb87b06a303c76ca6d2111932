@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66c2ffb7_058b4c23",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 19
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-18T11:25:11Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we ask only once for notification?\nIf not get_notifications should be changed to get_notification ?",
+      "range": {
+        "startLine": 32,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 55
+      },
+      "revId": "06d3bab16439f93eb87b06a303c76ca6d2111932",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
