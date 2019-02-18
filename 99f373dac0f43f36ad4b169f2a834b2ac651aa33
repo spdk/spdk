@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f7f9f89_dcd51eab",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-18T05:31:29Z",
+      "side": 1,
+      "message": "Hi Shuhei, I don\u0027t quite get the meaning here for parsed_bytes and new_bytes, can you explain more clearly here ?",
+      "range": {
+        "startLine": 267,
+        "startChar": 1,
+        "endLine": 268,
+        "endChar": 49
+      },
+      "revId": "99f373dac0f43f36ad4b169f2a834b2ac651aa33",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
