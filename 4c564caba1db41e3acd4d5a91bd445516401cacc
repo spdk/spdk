@@ -342,6 +342,24 @@
     },
     {
       "key": {
+        "uuid": "a4cb75af_0c72179e",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T05:08:17Z",
+      "side": 1,
+      "message": "I add a comment about rand(). As long as I remember, using rand() in unit tests could find multiple bugs in raid bdev, and is very effective for some cases, and may be helpful for unmap too.",
+      "parentUuid": "4721cf73_7fe34b02",
+      "revId": "4c564caba1db41e3acd4d5a91bd445516401cacc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c76102aa_452a73bc",
         "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
         "patchSetId": 14
