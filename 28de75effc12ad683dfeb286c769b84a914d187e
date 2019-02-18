@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "10a51780_84ca58c7",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-18T14:58:28Z",
+      "side": 1,
+      "message": "My comment from PS4 still applies. Moving the function to different file doesnt solve the issue.\n\nWe dont need this as a function, it\u0027s only used once.\nJust call \"spdk_vhost_run\" itself and then do rpc calls in the main body of the script.",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 1
+      },
+      "revId": "28de75effc12ad683dfeb286c769b84a914d187e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
