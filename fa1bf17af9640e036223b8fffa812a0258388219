@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "853debf5_5f777596",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T05:31:15Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c69e79e6_2d93b698",
+      "range": {
+        "startLine": 271,
+        "startChar": 72,
+        "endLine": 271,
+        "endChar": 78
+      },
+      "revId": "fa1bf17af9640e036223b8fffa812a0258388219",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d36be800_824f3b9f",
         "filename": "lib/util/dif.c",
         "patchSetId": 6
@@ -36,6 +60,24 @@
       "writtenOn": "2019-02-18T04:44:09Z",
       "side": 1,
       "message": "What if (parsed_bytes+new_bytes) exceeds INT_MAX? Is it possible?",
+      "revId": "fa1bf17af9640e036223b8fffa812a0258388219",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c436bcc_9c39bc5f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T05:31:15Z",
+      "side": 1,
+      "message": "Thank you. For iSCSI, parsed_bytes + new_bytes will be (64KB / 512) * 520 at the maximum, and so not probable. But NVMe-oF, max_io_size will be 4G and it will probable. Hence I added a check not to exceed INT_MAX.",
+      "parentUuid": "d36be800_824f3b9f",
       "revId": "fa1bf17af9640e036223b8fffa812a0258388219",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
