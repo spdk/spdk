@@ -1385,3 +1385,85 @@ spdk_dif_generate_insert(struct iovec *iovs, int iovcnt,
 		return -EINVAL;
 	}
 }
+
+static int
+dif_verify_strip(void *buf, uint32_t data_bytes, const struct spdk_dif_ctx *ctx,
+		 struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, num_blocks, offset_blocks;
+	uint8_t *src, *dst;
+	uint16_t guard;
+	struct spdk_dif dif;
+	int rc;
+
+	if ((data_bytes % ctx->block_size) != 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	num_blocks = data_bytes / ctx->block_size;
+
+	src = buf;
+	dst = buf;
+	offset_blocks = 0;
+
+	/* First blocks doesn't have to be copied. */
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(ctx->guard_seed, src, ctx->guard_interval);
+	} else {
+		guard = 0;
+	}
+	rc = _dif_verify(buf + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
+	if (rc != 0) {
+		return rc;
+	}
+	src += ctx->block_size;
+	dst += data_block_size;
+	offset_blocks++;
+
+	while (offset_blocks < num_blocks) {
+		memcpy(&dif, src + ctx->guard_interval, sizeof(struct spdk_dif));
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif_copy(ctx->guard_seed, dst, src, ctx->guard_interval);
+		} else {
+			guard = 0;
+			memmove(dst, src, data_block_size);
+		}
+		rc = _dif_verify(&dif, guard, offset_blocks, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+
+		src += ctx->block_size;
+		dst += data_block_size;
+		offset_blocks++;
+	}
+
+	return offset_blocks * data_block_size;
+}
+
+int
+spdk_dif_verify_strip(struct iovec *iovs, int iovcnt, uint32_t data_bytes,
+		      const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
+{
+	if (!_are_iovs_valid(iovs, iovcnt, data_bytes)) {
+		SPDK_ERRLOG("Size of iovec array is not valid.\n");
+		return -EINVAL;
+	}
+
+	if (data_bytes == 0) {
+		return 0;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return data_bytes;
+	}
+
+	if (iovcnt == 1) {
+		return dif_verify_strip(iovs[0].iov_base, data_bytes, ctx, err_blk);
+	} else {
+		SPDK_ERRLOG("Multiple iovs is not supported yet\n");
+		return -EINVAL;
+	}
+}

@@ -275,4 +275,20 @@ int spdk_dif_generate_insert(struct iovec *iovs, int iovcnt,
 			     uint32_t parsed_bytes, uint32_t new_bytes,
 			     const struct spdk_dif_ctx *ctx);
 
+/**
+ * Strip DIF from stream payload. From the head, shift block data, and verify and
+ * strip DIF among block data. Different from spdk_dif_generate_stream, parsing
+ * whole block data by one call will be expected.
+ *
+ * \param iovs iovec array describing the payload from which DIF is strip.
+ * \param iovcnt Number of elements in the iovec array.
+ * \param data_bytes Number of data bytes to be parsed.
+ * \param ctx DIF context
+ * \param err_blk Error information of the block in which DIF error is found.
+ *
+ * \return Number of data bytes after this call on success and negated errno otherwise.
+ */
+int spdk_dif_verify_strip(struct iovec *iovs, int iovcnt, uint32_t data_bytes,
+			  const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk);
+
 #endif /* SPDK_DIF_H */
