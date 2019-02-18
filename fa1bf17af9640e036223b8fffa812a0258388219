@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c69e79e6_2d93b698",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-18T04:44:09Z",
+      "side": 1,
+      "message": "errno",
+      "range": {
+        "startLine": 271,
+        "startChar": 72,
+        "endLine": 271,
+        "endChar": 78
+      },
+      "revId": "fa1bf17af9640e036223b8fffa812a0258388219",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d36be800_824f3b9f",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1378,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-18T04:44:09Z",
+      "side": 1,
+      "message": "What if (parsed_bytes+new_bytes) exceeds INT_MAX? Is it possible?",
+      "revId": "fa1bf17af9640e036223b8fffa812a0258388219",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
