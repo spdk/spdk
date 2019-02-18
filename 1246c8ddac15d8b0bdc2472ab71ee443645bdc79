@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0bad1d55_1831a18d",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-18T14:00:02Z",
+      "side": 1,
+      "message": "Should this reference be removed as well?",
+      "range": {
+        "startLine": 86,
+        "startChar": 49,
+        "endLine": 86,
+        "endChar": 78
+      },
+      "revId": "1246c8ddac15d8b0bdc2472ab71ee443645bdc79",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
