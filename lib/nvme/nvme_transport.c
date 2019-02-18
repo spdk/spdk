@@ -100,6 +100,12 @@ struct spdk_nvme_ctrlr *nvme_transport_ctrlr_construct(const struct spdk_nvme_tr
 }
 
 int
+nvme_transport_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	NVME_TRANSPORT_CALL(ctrlr->trid.trtype, ctrlr_reset, (ctrlr));
+}
+
+int
 nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 			  bool direct_connect)
 {
