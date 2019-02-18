@@ -236,6 +236,30 @@
       "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93a619be_e086ad29",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-18T15:28:25Z",
+      "side": 1,
+      "message": "I\u0027m taking about implementing this flow:\n\n1. Remove lines 940..946 from nbd.c - the:\n\n  if (errno \u003d\u003d EBUSY \u0026\u0026 ctx-\u003epolling_count-- \u003e 0) {\n     ...\n  }\n\n2. Add pthread_yeld() after pthread_create() in spdk_nbd_start_complete() function - this should give kernel thread time to do ioctl(NBD_DO_IT).\n\n3. Remove find_available_nbd_disk, check_available_nbd_disk functions.\n\n4. Try this flow in RPC method (we rely on that NBD_SET_SOCK will fail if device is already used)\n\n  if device specified by user try \n    spdk_nbd_start(\"/dev/nbdX\") -\u003e fail on EBUSY -\u003e send error message\n  else\n      for i\u003d0..N\n          spdk_nbd_start(\"/dev/nbdN\") -\u003e fail on EBUSY -\u003e try next one",
+      "parentUuid": "22129037_e68e4b01",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 32
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
