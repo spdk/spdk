@@ -1256,6 +1256,13 @@ nvme_rdma_req_init(struct nvme_rdma_qpair *rqpair, struct nvme_request *req,
 	return 0;
 }
 
+int
+nvme_rdma_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	/* Will support it later */
+	return -1;
+}
+
 static struct spdk_nvme_qpair *
 nvme_rdma_ctrlr_create_qpair(struct spdk_nvme_ctrlr *ctrlr,
 			     uint16_t qid, uint32_t qsize,

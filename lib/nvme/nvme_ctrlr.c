@@ -837,6 +837,13 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 	/* Set the state back to INIT to cause a full hardware reset. */
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_INIT, NVME_TIMEOUT_INFINITE);
 
+	if (nvme_transport_ctrlr_reset(ctrlr)) {
+		SPDK_ERRLOG("Failed to reconstruct on ctrlr=%p\n", ctrlr);
+		nvme_ctrlr_fail(ctrlr, false);
+		rc = -EIO;
+		goto end;
+	}
+
 	while (ctrlr->state != NVME_CTRLR_STATE_READY) {
 		if (nvme_ctrlr_process_init(ctrlr) != 0) {
 			SPDK_ERRLOG("%s: controller reinitialization failed\n", __func__);
@@ -856,6 +863,7 @@ spdk_nvme_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
 		}
 	}
 
+end:
 	ctrlr->is_resetting = false;
 
 	nvme_robust_mutex_unlock(&ctrlr->ctrlr_lock);

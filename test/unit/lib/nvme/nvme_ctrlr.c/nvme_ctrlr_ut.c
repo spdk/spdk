@@ -175,6 +175,12 @@ nvme_transport_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_
 }
 
 int
+nvme_transport_ctrlr_reset(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return 0;
+}
+
+int
 nvme_transport_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
