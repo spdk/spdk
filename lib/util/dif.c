@@ -1398,3 +1398,94 @@ spdk_dif_generate_insert(struct iovec *iovs, int iovcnt,
 		return -EINVAL;
 	}
 }
+
+static int
+dif_verify_strip(void *buf, uint32_t buf_len,
+		 uint32_t ext_data_bytes, const struct spdk_dif_ctx *ctx,
+		 struct spdk_dif_error *err_blk)
+{
+	uint32_t data_block_size, num_blocks, offset_blocks;
+	uint8_t *src, *dst;
+	uint16_t guard;
+	struct spdk_dif dif;
+	int rc;
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	num_blocks = ext_data_bytes / ctx->block_size;
+
+	if (num_blocks == 0) {
+		return 0;
+	}
+
+	if (ext_data_bytes + num_blocks * ctx->md_size > buf_len) {
+		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
+			    " necessary size is %" PRIu32 "\n",
+			    buf_len, ext_data_bytes + num_blocks * ctx->md_size);
+		return -EINVAL;
+	}
+
+	src = buf;
+	dst = buf;
+	offset_blocks = 0;
+
+	/* First blocks doesn't have to be copied. */
+	if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+		guard = spdk_crc16_t10dif(ctx->guard_seed, src, ctx->guard_interval);
+	} else {
+		guard = 0;
+	}
+	rc = _dif_verify(buf + ctx->guard_interval, guard, offset_blocks, ctx, err_blk);
+	if (rc != 0) {
+		return rc;
+	}
+	src += ctx->block_size;
+	dst += data_block_size;
+	offset_blocks++;
+
+	while (offset_blocks < num_blocks) {
+		memcpy(&dif, src + ctx->guard_interval, sizeof(struct spdk_dif));
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(ctx->guard_seed, src, ctx->guard_interval);
+		} else {
+			guard = 0;
+		}
+		memmove(dst, src, ctx->guard_interval);
+		rc = _dif_verify(&dif, guard, offset_blocks, ctx, err_blk);
+		if (rc != 0) {
+			return rc;
+		}
+
+		src += ctx->block_size;
+		dst += data_block_size;
+		offset_blocks++;
+	}
+
+	return offset_blocks * data_block_size;
+}
+
+int
+spdk_dif_verify_strip(struct iovec *iovs, int iovcnt, uint32_t ext_data_bytes,
+		      const struct spdk_dif_ctx *ctx, struct spdk_dif_error *err_blk)
+{
+	if ((ext_data_bytes % ctx->block_size) != 0) {
+		return -EINVAL;
+	}
+
+	if (iovcnt == 0) {
+		SPDK_ERRLOG("iovec array is empty.\n");
+		return -EINVAL;
+	}
+
+	if (_dif_is_disabled(ctx->dif_type)) {
+		return ext_data_bytes;
+	}
+
+	if (iovcnt == 1) {
+		return dif_verify_strip(iovs[0].iov_base, iovs[0].iov_len,
+					ext_data_bytes, ctx, err_blk);
+	} else {
+		SPDK_ERRLOG("Multiple iovs is not supported yet\n");
+		return -EINVAL;
+	}
+}
