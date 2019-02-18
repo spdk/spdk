@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "75d081e0_d713fb19",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T13:46:36Z",
+      "side": 1,
+      "message": "just return false here may be enough",
+      "revId": "75faaaa4f1be1ce3626ec5d8f358d97632d25c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc5c10f3_c1931393",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-18T13:46:36Z",
+      "side": 1,
+      "message": "You can return true if you return false above",
+      "revId": "75faaaa4f1be1ce3626ec5d8f358d97632d25c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
