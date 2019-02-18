@@ -86,7 +86,7 @@
  * SPDK iSCSI target will only send a maximum of SPDK_BDEV_LARGE_BUF_MAX_SIZE data segments, even if the
  * connection can support more.
  */
-#define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH 65536
+#define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH SPDK_BDEV_LARGE_BUF_MAX_SIZE
 
 /*
  * Defines maximum number of data out buffers each connection can have in
@@ -120,6 +120,11 @@
 
 #define SPDK_ISCSI_MAX_FIRST_BURST_LENGTH	16777215
 
+/* The maximum data out buffer size is as much as necessary to store 8 byte DIF
+ * when 512-byte sector is used.
+ */
+#define	SPDK_ISCSI_MAX_DATA_OUT_BUFFER_SIZE	\
+		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 512) * 520
 /*
  * Defines default maximum queue depth per connection and this can be
  * changed by configuration file.
@@ -310,6 +315,7 @@ struct spdk_iscsi_opts {
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
 	uint32_t min_connections_per_core;
+	uint32_t data_out_buf_size;
 };
 
 struct spdk_iscsi_globals {
@@ -345,6 +351,7 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *pdu_data_out_pool;
 	struct spdk_mempool *session_pool;
 	struct spdk_mempool *task_pool;
+	uint32_t data_out_buf_size;
 
 	struct spdk_iscsi_sess	**session;
 	struct spdk_iscsi_poll_group *poll_group;
