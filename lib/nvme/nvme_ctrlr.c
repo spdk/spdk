@@ -1915,6 +1915,12 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 	}
 	ctrlr->sleep_timeout_tsc = 0;
 
+	if (ctrlr->is_resetting && nvme_transport_ctrlr_reconstruct(ctrlr)) {
+		SPDK_ERRLOG("Failed to reconstruct on ctrlr=%p\n", ctrlr);
+		nvme_ctrlr_fail(ctrlr, false);
+		return -EIO;
+	}
+
 	if (nvme_ctrlr_get_cc(ctrlr, &cc) ||
 	    nvme_ctrlr_get_csts(ctrlr, &csts)) {
 		if (ctrlr->state_timeout_tsc != NVME_TIMEOUT_INFINITE) {

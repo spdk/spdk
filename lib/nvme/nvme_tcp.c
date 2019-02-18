@@ -725,12 +725,6 @@ nvme_tcp_ctrlr_delete_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_q
 }
 
 int
-nvme_tcp_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
-{
-	return -1;
-}
-
-int
 nvme_tcp_qpair_enable(struct spdk_nvme_qpair *qpair)
 {
 	return 0;
@@ -1724,14 +1718,16 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 		return -1;
 	}
 
-	tqpair->max_r2t = NVME_TCP_MAX_R2T_DEFAULT;
-	rc = nvme_tcp_alloc_reqs(tqpair);
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
-	if (rc) {
-		SPDK_ERRLOG("Unable to allocate tqpair tcp requests\n");
-		return -1;
+	if (!ctrlr->is_resetting) {
+		tqpair->max_r2t = NVME_TCP_MAX_R2T_DEFAULT;
+		rc = nvme_tcp_alloc_reqs(tqpair);
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "rc =%d\n", rc);
+		if (rc) {
+			SPDK_ERRLOG("Unable to allocate tqpair tcp requests\n");
+			return -1;
+		}
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "TCP requests allocated\n");
 	}
-	SPDK_DEBUGLOG(SPDK_LOG_NVME, "TCP requests allocated\n");
 
 	rc = nvme_tcp_qpair_icreq_send(tqpair);
 	if (rc != 0) {
@@ -1746,6 +1742,25 @@ nvme_tcp_qpair_connect(struct nvme_tcp_qpair *tqpair)
 	}
 
 	return 0;
+}
+
+int
+nvme_tcp_ctrlr_reinit_io_qpair(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_tcp_qpair *tqpair = nvme_tcp_qpair(qpair);
+
+	return nvme_tcp_qpair_connect(tqpair);
+}
+
+int
+nvme_tcp_ctrlr_reconstruct(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct nvme_tcp_qpair *tqpair;
+
+	assert(ctrlr->adminq != NULL);
+	tqpair = nvme_tcp_qpair(ctrlr->adminq);
+
+	return nvme_tcp_qpair_connect(tqpair);
 }
 
 static struct spdk_nvme_qpair *
