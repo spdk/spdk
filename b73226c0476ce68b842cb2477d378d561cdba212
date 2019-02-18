@@ -22,6 +22,30 @@
       "revId": "b73226c0476ce68b842cb2477d378d561cdba212",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "66aab3fd_2005b52b",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 856,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-02-18T01:32:32Z",
+      "side": 1,
+      "message": "I do not know, if we changed it it to 0 will be same to atoi. Previously, it is atoi which thinks to be not secure.",
+      "parentUuid": "b51be1e3_c73cd777",
+      "range": {
+        "startLine": 856,
+        "startChar": 38,
+        "endLine": 856,
+        "endChar": 40
+      },
+      "revId": "b73226c0476ce68b842cb2477d378d561cdba212",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
