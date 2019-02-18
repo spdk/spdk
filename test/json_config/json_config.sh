@@ -45,6 +45,47 @@ function initiator_rpc() {
 	$rootdir/scripts/rpc.py -s "${app_socket[initiator]}" "$@"
 }
 
+RE_UUID="[[:alnum:]-]+"
+last_event_id=0
+
+function tgt_check_notifications() {
+        local event_line event ev_type ev_ctx
+        local rc=""
+
+        while read event_line; do
+                # remove ID
+                event="${event_line%:*}"
+
+                ev_type=${event%*:}
+                ev_ctx=${event#:*}
+
+                ex_ev_type=${1%*:}
+                ex_ev_ctx=${1#:*}
+
+                last_event_id=${event_line##*:}
+
+                # set rc=false in case of failure so all errors can be printed
+                if (( $# == 0 )); then
+                        echo "ERROR: got extra event: $event_line"
+                        rc=false
+                        continue
+                elif ! echo "$ev_type" | egrep -q  "^${ex_ev_type}\$" || ! echo "$ev_ctx" | egrep -q "^${ex_ev_ctx}\$"; then
+                        echo "ERROR: expected event '$1' but got '$event' (whole event line: $event_line)"
+                        rc=false
+                fi
+
+                shift
+        done < <(tgt_rpc get_notifications -i ${last_event_id} | jq -r '.[] | "\(.type):\(.ctx):\(.id)"')
+
+        $rc
+
+        if (( $# != 0 )); then
+                echo "ERROR: missing events:"
+                echo "$@"
+                return 1
+        fi
+}
+
 # $1 - target / initiator
 # $2..$n app parameters
 function json_config_test_start_app() {
@@ -99,6 +140,8 @@ function json_config_test_shutdown_app() {
 function create_bdev_subsystem_config() {
 	timing_enter $FUNCNAME
 
+	local expected_notifications=()
+
 	if [[ $SPDK_TEST_BLOCKDEV -eq 1 ]]; then
 		local lvol_store_base_bdev=Nvme0n1
 		if ! tgt_rpc get_bdevs --name ${lvol_store_base_bdev} >/dev/null; then
@@ -121,10 +164,23 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_malloc_bdev 32 512 --name Malloc0
 		tgt_rpc construct_malloc_bdev 16 4096 --name Malloc1
 
+		expected_notifications+=(
+			bdev_register:${lvol_store_base_bdev}
+			bdev_register:${lvol_store_base_bdev}p0
+			bdev_register:${lvol_store_base_bdev}p1
+			bdev_register:Null0
+			bdev_register:Malloc0p0
+			bdev_register:Malloc0p1
+			bdev_register:Malloc0p2
+			bdev_register:Malloc0
+			bdev_register:Malloc1
+		)
+
 		if [[ $(uname -s) = Linux ]]; then
 			# This AIO bdev must be large enough to be used as LVOL store
 			dd if=/dev/zero of=/tmp/sample_aio bs=1024 count=102400
 			tgt_rpc construct_aio_bdev /tmp/sample_aio aio_disk 1024
+			expected_notifications+=( bdev_register:aio_disk )
 		fi
 
 		# For LVOLs use split to check for proper order of initialization.
@@ -135,6 +191,13 @@ function create_bdev_subsystem_config() {
 		tgt_rpc construct_lvol_bdev -l lvs_test -t lvol1 32
 		tgt_rpc snapshot_lvol_bdev     lvs_test/lvol0 snapshot0
 		tgt_rpc clone_lvol_bdev        lvs_test/snapshot0 clone0
+
+		expected_notifications+=(
+			"bdev_register:$RE_UUID"
+			"bdev_register:$RE_UUID"
+			"bdev_register:$RE_UUID"
+			"bdev_register:$RE_UUID"
+		)
 	fi
 
 	if [[ $SPDK_TEST_CRYPTO -eq 1 ]]; then
@@ -146,6 +209,10 @@ function create_bdev_subsystem_config() {
 		fi
 
 		tgt_rpc construct_crypto_bdev -b MallocForCryptoBdev -c CryptoMallocBdev -d $crypto_dirver -k 0123456789123456
+		expected_notifications+=(
+			bdev_register:MallocForCryptoBdev
+			bdev_register:CryptoMallocBdev
+		)
 	fi
 
 	if [[ $SPDK_TEST_PMDK -eq 1 ]]; then
@@ -153,12 +220,16 @@ function create_bdev_subsystem_config() {
 		rm -f $pmem_pool_file
 		tgt_rpc create_pmem_pool $pmem_pool_file 128 4096
 		tgt_rpc construct_pmem_bdev -n pmem1 $pmem_pool_file
+		expected_notifications+=( bdev_register:pmem1 )
 	fi
 
 	if [[ $SPDK_TEST_RBD -eq 1 ]]; then
 		rbd_setup 127.0.0.1
 		tgt_rpc construct_rbd_bdev $RBD_POOL $RBD_NAME 4096
+		expected_notifications+=( bdev_register:Ceph0 )
 	fi
+
+	tgt_check_notifications "${expected_notifications[@]}"
 
 	timing_exit $FUNCNAME
 }
