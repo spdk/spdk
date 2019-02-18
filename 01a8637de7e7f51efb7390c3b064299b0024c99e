@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "64ea915d_0ab07181",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:38:32Z",
+      "side": 1,
+      "message": "good point, Pawel, applied nbd_idx.",
+      "parentUuid": "64e1be1a_a866234d",
+      "range": {
+        "startLine": 50,
+        "startChar": 5,
+        "endLine": 50,
+        "endChar": 14
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10cee880_855c471e",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 6
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a5aa45a2_51a55cae",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:38:32Z",
+      "side": 1,
+      "message": "Actually, nbd related rpc methods are not recorded in jsonrpc.md",
+      "parentUuid": "10cee880_855c471e",
+      "range": {
+        "startLine": 64,
+        "startChar": 90,
+        "endLine": 64,
+        "endChar": 94
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bbef7a20_01aa1060",
         "filename": "lib/nbd/nbd_rpc.c",
         "patchSetId": 6
@@ -59,6 +107,30 @@
       "writtenOn": "2019-02-15T15:43:53Z",
       "side": 1,
       "message": "spdk_nbd_start() will check device for you. There no need to do twice the same work. Just do\n\n\n  ...\n  if (rc \u003d\u003d -EBUSY \u0026\u0026 req-\u003estart_idx !\u003d USER_SPECIFIED_NBD_DEVICE) {\n    if (req-\u003estart_idx \u003d\u003d SOME_MAX_VALUE) {\n      fail;\n    } else {\n        free(req-\u003enbd_device);\n        req-\u003enbd_device \u003d spdk_asprintf(..., req-\u003estart_idx);\n    }\n\n    spdk_nbd_start(...).\n    return;\n  }\n  ...\n\nThis way you can remove these two new functions.\n\nAlso pls note that with this auto-dev-find feature this code is converted to use recurency. Can you change spdk_nbd_start() function to return error (-EBUSY) instead calling callback in case device is already in use?",
+      "range": {
+        "startLine": 148,
+        "startChar": 2,
+        "endLine": 149,
+        "endChar": 32
+      },
+      "revId": "01a8637de7e7f51efb7390c3b064299b0024c99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "839ede66_7b954f30",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 149,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-18T05:38:32Z",
+      "side": 1,
+      "message": "Added free(req-\u003enbd_device) here, thanks for notice.\n\nInside spdk_nbd_start, if ioctl(NBD_SET_SOCK) return with -EBUSY, then spdk_nbd_start won\u0027t return directly, and ioctl(NBD_SET_SOCK) will be tried several times later, then return rc by cb_fn. \n\n1. So even change spdk_nbd_start() function to return error (-EBUSY), it is still useless.\n2. If directly using spdk_nbd_start to iterate a valid nbd-device, then the rpc method may be required a long waiting time. that\u0027s the reason here still using /sys/.../pid to do a quick check, and using spdk_nbd_start() to do final verification.",
+      "parentUuid": "bbef7a20_01aa1060",
       "range": {
         "startLine": 148,
         "startChar": 2,
