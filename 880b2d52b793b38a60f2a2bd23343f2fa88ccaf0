@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3de35d7d_d4fcc97c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1013988
+      },
+      "writtenOn": "2019-02-18T14:06:13Z",
+      "side": 1,
+      "message": "Please rephrase, maybe something like this:\n\nRemoving band from \"free list\" is moved from FTL_BAND_STATE_OPENING to FTL_BAND_STATE_PREP state\u0027s change actions. This will fix race condition when one band is prepared (erased) and write pointer is trying to get next active band.",
+      "revId": "880b2d52b793b38a60f2a2bd23343f2fa88ccaf0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
