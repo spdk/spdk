@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c24ae17_20d74d29",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 89,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-18T14:01:53Z",
+      "side": 1,
+      "message": "the previous patch changed this from SPDK_BDEV_LARGE_BUF_MAX_SIZE to 65536 and here you change it back.",
+      "range": {
+        "startLine": 89,
+        "startChar": 48,
+        "endLine": 89,
+        "endChar": 76
+      },
+      "revId": "89a50fb9cf7ff8da3dd5ad2cf00848cd7fcb303c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
