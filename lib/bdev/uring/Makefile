@@ -31,73 +31,16 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-BLOCKDEV_MODULES_LIST = bdev_lvol blobfs blob blob_bdev lvol
-BLOCKDEV_MODULES_LIST += bdev_malloc bdev_null bdev_nvme nvme bdev_passthru bdev_error bdev_gpt bdev_split
-BLOCKDEV_MODULES_LIST += bdev_raid
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-ifeq ($(CONFIG_CRYPTO),y)
-BLOCKDEV_MODULES_LIST += bdev_crypto
-endif
+C_SRCS = bdev_uring.c
+LIBNAME = bdev_uring
+LOCAL_SYS_LIBS = -luring
 
-ifeq ($(CONFIG_OCF),y)
-BLOCKDEV_MODULES_LIST += bdev_ocf
-BLOCKDEV_MODULES_LIST += ocfenv
-endif
-
-ifeq ($(CONFIG_RDMA),y)
-SYS_LIBS += -libverbs -lrdmacm
-endif
-
-ifeq ($(OS),Linux)
-BLOCKDEV_MODULES_LIST += bdev_aio
-SYS_LIBS += -laio
-ifeq ($(CONFIG_VIRTIO),y)
-BLOCKDEV_MODULES_LIST += bdev_virtio virtio
-endif
-ifeq ($(CONFIG_ISCSI_INITIATOR),y)
-BLOCKDEV_MODULES_LIST += bdev_iscsi
-# Fedora installs libiscsi to /usr/lib64/iscsi for some reason.
-SYS_LIBS += -L/usr/lib64/iscsi -liscsi
-endif
-endif
-
-ifeq ($(CONFIG_URING),y)
-BLOCKDEV_MODULES_LIST += bdev_uring
-SYS_LIBS += -luring
 ifneq ($(strip $(CONFIG_URING_PATH)),)
 CFLAGS += -I$(CONFIG_URING_PATH)
 LDFLAGS += -L$(CONFIG_URING_PATH)
 endif
-endif
 
-ifeq ($(CONFIG_RBD),y)
-BLOCKDEV_MODULES_LIST += bdev_rbd
-SYS_LIBS += -lrados -lrbd
-endif
-
-ifeq ($(CONFIG_PMDK),y)
-BLOCKDEV_MODULES_LIST += bdev_pmem
-SYS_LIBS += -lpmemblk
-endif
-
-ifeq ($(CONFIG_FTL),y)
-BLOCKDEV_MODULES_LIST += ftl
-endif
-
-SOCK_MODULES_LIST = sock_posix
-
-ifeq ($(CONFIG_VPP),y)
-SYS_LIBS += -Wl,--whole-archive
-ifneq ($(CONFIG_VPP_DIR),)
-SYS_LIBS += -l:libvppinfra.a -l:libsvm.a -l:libvapiclient.a
-SYS_LIBS += -l:libvppcom.a -l:libvlibmemoryclient.a
-else
-SYS_LIBS += -lvppcom
-endif
-SYS_LIBS += -Wl,--no-whole-archive
-SOCK_MODULES_LIST += sock_vpp
-endif
-
-COPY_MODULES_LIST = copy_ioat ioat
-
-ALL_MODULES_LIST = $(BLOCKDEV_MODULES_LIST) $(COPY_MODULES_LIST) $(SOCK_MODULES_LIST)
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
