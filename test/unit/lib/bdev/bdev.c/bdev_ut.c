@@ -759,6 +759,7 @@ bdev_io_wait_test(void)
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 4,
 		.bdev_io_cache_size = 2,
+		.data_buf_size = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE,
 	};
 	struct bdev_ut_io_wait_entry io_wait_entry;
 	struct bdev_ut_io_wait_entry io_wait_entry2;
@@ -870,6 +871,7 @@ bdev_io_split(void)
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 512,
 		.bdev_io_cache_size = 64,
+		.data_buf_size = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE,
 	};
 	struct iovec iov[BDEV_IO_NUM_CHILD_IOV * 2];
 	struct ut_expected_io *expected_io;
@@ -1089,6 +1091,7 @@ bdev_io_split_with_io_wait(void)
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 2,
 		.bdev_io_cache_size = 1,
+		.data_buf_size = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE,
 	};
 	struct iovec iov[3];
 	struct ut_expected_io *expected_io;
@@ -1222,6 +1225,7 @@ bdev_io_alignment(void)
 	struct spdk_bdev_opts bdev_opts = {
 		.bdev_io_pool_size = 20,
 		.bdev_io_cache_size = 2,
+		.data_buf_size = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE,
 	};
 	int rc;
 	void *buf;

@@ -120,6 +120,7 @@ static struct spdk_bdev_mgr g_bdev_mgr = {
 static struct spdk_bdev_opts	g_bdev_opts = {
 	.bdev_io_pool_size = SPDK_BDEV_IO_POOL_SIZE,
 	.bdev_io_cache_size = SPDK_BDEV_IO_CACHE_SIZE,
+	.data_buf_size = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE,
 };
 
 static spdk_bdev_init_cb	g_init_cb_fn = NULL;
@@ -311,6 +312,12 @@ spdk_bdev_set_opts(struct spdk_bdev_opts *opts)
 			    " and %" PRIu32 " threads\n", opts->bdev_io_pool_size, opts->bdev_io_cache_size,
 			    spdk_thread_get_count());
 		SPDK_ERRLOG("bdev_io_pool_size must be at least %" PRIu32 "\n", min_pool_size);
+		return -1;
+	}
+
+	if (opts->data_buf_size < SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE) {
+		SPDK_ERRLOG("data_buf_size must be larger than %d\n",
+			    SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE);
 		return -1;
 	}
 
@@ -687,6 +694,7 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_object_begin(w, "params");
 	spdk_json_write_named_uint32(w, "bdev_io_pool_size", g_bdev_opts.bdev_io_pool_size);
 	spdk_json_write_named_uint32(w, "bdev_io_cache_size", g_bdev_opts.bdev_io_cache_size);
+	spdk_json_write_named_uint32(w, "data_buf_size", g_bdev_opts.data_buf_size);
 	spdk_json_write_object_end(w);
 	spdk_json_write_object_end(w);
 
@@ -948,7 +956,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
-				    SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE + SPDK_BDEV_POOL_ALIGNMENT,
+				    g_bdev_opts.data_buf_size + SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
