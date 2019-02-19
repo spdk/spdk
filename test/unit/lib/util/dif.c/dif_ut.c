@@ -37,16 +37,16 @@
 
 #include "util/dif.c"
 
-#define DATA_PATTERN	0xAB
-#define GUARD_SEED	0xCD
+#define DATA_PATTERN(offset)	((uint8_t)(0xAB + (offset)))
+#define GUARD_SEED		0xCD
 
 static int
 ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 			 uint32_t block_size, uint32_t md_size, uint32_t num_blocks)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, offset_in_block, buf_len;
-	void *buf;
+	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
+	uint8_t *buf;
 
 	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
 		return -1;
@@ -54,15 +54,19 @@ ut_data_pattern_generate(struct iovec *iovs, int iovcnt,
 
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
+	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
 		while (offset_in_block < block_size) {
-			_iov_iter_get_buf(&iter, &buf, &buf_len);
+			_iov_iter_get_buf(&iter, (void *)&buf, &buf_len);
 			if (offset_in_block < block_size - md_size) {
 				buf_len = spdk_min(buf_len,
 						   block_size - md_size - offset_in_block);
-				memset(buf, DATA_PATTERN, buf_len);
+				for (i = 0; i < buf_len; i++) {
+					buf[i] = DATA_PATTERN(data_offset + i);
+				}
+				data_offset += buf_len;
 			} else {
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 				memset(buf, 0, buf_len);
@@ -81,7 +85,7 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 		       uint32_t block_size, uint32_t md_size, uint32_t num_blocks)
 {
 	struct _iov_iter iter;
-	uint32_t offset_blocks, offset_in_block, buf_len, i;
+	uint32_t offset_blocks, offset_in_block, buf_len, data_offset, i;
 	uint8_t *buf;
 
 	if (!_are_iovs_valid(iovs, iovcnt, block_size * num_blocks)) {
@@ -90,6 +94,7 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 
 	offset_blocks = 0;
 	_iov_iter_init(&iter, iovs, iovcnt);
+	data_offset = 0;
 
 	while (offset_blocks < num_blocks) {
 		offset_in_block = 0;
@@ -100,10 +105,11 @@ ut_data_pattern_verify(struct iovec *iovs, int iovcnt,
 				buf_len = spdk_min(buf_len,
 						   block_size - md_size - offset_in_block);
 				for (i = 0; i < buf_len; i++) {
-					if (buf[i] != DATA_PATTERN) {
+					if (buf[i] != DATA_PATTERN(data_offset + i)) {
 						return -1;
 					}
 				}
+				data_offset += buf_len;
 			} else {
 				buf_len = spdk_min(buf_len, block_size - offset_in_block);
 			}
