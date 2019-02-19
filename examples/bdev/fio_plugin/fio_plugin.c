@@ -140,7 +140,8 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
-	while (spdk_fio_poll_thread(fio_thread) > 0) {}
+	while (spdk_fio_poll_thread(fio_thread) > 0 || spdk_thread_has_active_pollers(fio_thread->thread)) {
+	}
 
 	spdk_set_thread(fio_thread->thread);
 
