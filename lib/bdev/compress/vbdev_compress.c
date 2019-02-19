@@ -366,7 +366,6 @@ spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
 	struct spdk_bdev_io *bdev_io = arg;
 
 	if (reduce_errno == 0) {
-		SPDK_NOTICELOG("write for %p success\n", bdev_io);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
 		SPDK_ERRLOG("ERROR %u on bdev_io from reduce API\n", reduce_errno);
@@ -382,7 +381,6 @@ spdk_bdev_readv_blocks_cb(void *arg, int reduce_errno)
 	/* TODO: need to decide which error codes are bdev_io success vs failure;
 	 * example examine calls reading metadata */
 	if (reduce_errno == 0) {
-		SPDK_NOTICELOG("read for %p success\n", bdev_io);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
 		SPDK_ERRLOG("ERROR %d on read from reduce API\n", reduce_errno);
@@ -546,14 +544,11 @@ spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
 	/* Remove this device from the internal list */
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 
-	spdk_put_io_channel(comp_bdev->base_ch);
-
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 
 	/* Close the underlying bdev. */
-	/* TODO: determine if we want to do this here or let spdk_reduce_vol_unload() do it */
-	/* spdk_bdev_close(comp_bdev->base_desc); */
+	spdk_bdev_close(comp_bdev->base_desc);
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
@@ -636,6 +631,7 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 
 	/* We're done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_bdev_close(meta_ctx->base_desc);
 
 	if (ziperrno == 0) {
 		SPDK_NOTICELOG("OK for vol %s, error %u\n",
@@ -819,6 +815,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *co
 		free(meta_ctx);
 		return;
 	}
+
 	meta_ctx->base_ch = spdk_bdev_get_io_channel(meta_ctx->base_desc);
 
 	/* TODO: we'll want to pass name and compression parms to this
@@ -1024,6 +1021,13 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 				sizeof(struct comp_io_channel),
 				comp_bdev->comp_bdev.name);
 
+	rc = spdk_bdev_open(comp_bdev->base_bdev, true, vbdev_compress_base_bdev_hotremove_cb,
+			    comp_bdev->base_bdev, &comp_bdev->base_desc);
+	if (rc) {
+		SPDK_ERRLOG("could not open bdev %s\n", spdk_bdev_get_name(comp_bdev->base_bdev));
+		goto error_open;
+	}
+
 	rc = spdk_bdev_module_claim_bdev(comp_bdev->base_bdev, comp_bdev->base_desc,
 					 comp_bdev->comp_bdev.module);
 	if (rc) {
@@ -1044,6 +1048,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	/* Error cleanup paths. */
 error_vbdev_register:
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+error_open:
 error_claim:
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 	spdk_io_device_unregister(comp_bdev, NULL);
@@ -1077,14 +1082,16 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int ziperrno)
 {
 	struct vbdev_compress *meta_ctx = cb_arg;
 
+	/* Done with metadata operations */
+	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_bdev_close(meta_ctx->base_desc);
+
 	if (ziperrno != 0) {
 		/* This error means it is not a compress disk. */
 		if (ziperrno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
 				    spdk_bdev_get_name(meta_ctx->base_bdev), ziperrno);
 		}
-		spdk_put_io_channel(meta_ctx->base_ch);
-		spdk_bdev_close(meta_ctx->base_desc);
 		free(meta_ctx);
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
@@ -1102,6 +1109,11 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 {
 	struct vbdev_compress *meta_ctx;
 	int rc;
+
+	if (strcmp(bdev->product_name, COMP_BDEV_NAME) == 0) {
+		spdk_bdev_module_examine_done(&compress_if);
+		return;
+	}
 
 	meta_ctx = _prepare_for_load_init(bdev);
 	if (meta_ctx == NULL) {
