@@ -561,6 +561,7 @@ spdk_nvmf_tgt_write_stat_json(struct spdk_json_write_ctx *w,
 	ctx->done_cb = done_cb;
 	ctx->done_ctx = done_ctx;
 
+	spdk_json_write_named_uint64(w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(w, "poll_groups");
 
 	spdk_for_each_channel(tgt,

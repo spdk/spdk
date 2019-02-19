@@ -219,6 +219,7 @@ struct spdk_nvmf_rdma_recv {
 	uint8_t				*buf;
 
 	struct spdk_nvmf_rdma_wr	rdma_wr;
+	uint64_t			receive_tsc;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
 };
@@ -247,6 +248,7 @@ struct spdk_nvmf_rdma_request {
 	struct spdk_nvmf_rdma_request_data	data;
 
 	uint32_t				num_outstanding_data_wr;
+	uint64_t				receive_tsc;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
@@ -349,9 +351,11 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
+	uint64_t				requests;
 	uint64_t				pending_free_request;
 	uint64_t				pending_data_buffer;
 	uint64_t				pending_transfer;
+	uint64_t				request_completion_tsc;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -1642,6 +1646,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
+			rqpair->poller->stat.request_completion_tsc += spdk_get_ticks() - rdma_req->receive_tsc;
 			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
@@ -2221,6 +2226,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 
 		rdma_req = TAILQ_FIRST(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE]);
 		rdma_req->recv = rdma_recv;
+		rdma_req->receive_tsc = rdma_recv->receive_tsc;
 		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_NEW);
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
 			break;
@@ -2773,6 +2779,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int reaped, i;
 	int count = 0;
 	bool error = false;
+	uint64_t poll_tsc = spdk_get_ticks();
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
@@ -2814,6 +2821,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 				rqpair = rdma_recv->qpair;
 
+				rdma_recv->receive_tsc = poll_tsc;
+				rpoller->stat.requests++;
 				/* Dump this into the incoming queue. This gets cleaned up when
 				 * the queue pair disconnects or recovers. */
 				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
@@ -2937,6 +2946,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			} else {
 				rqpair->current_recv_depth++;
 			}
+			rdma_recv->receive_tsc = poll_tsc;
+			rpoller->stat.requests++;
 			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
@@ -3010,6 +3021,18 @@ spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group 
 					     rpoller->stat.pending_data_buffer);
 		spdk_json_write_named_uint64(w, "pending_transfer",
 					     rpoller->stat.pending_transfer);
+		if (rpoller->stat.requests != 0) {
+			spdk_json_write_named_uint64(w, "request_completion_latency",
+						     rpoller->stat.request_completion_tsc / rpoller->stat.requests);
+			len = snprintf(str, sizeof(str), "%.2f",
+				       (double)rpoller->stat.request_completion_tsc / rpoller->stat.requests
+				       / spdk_get_ticks_hz() * 1000000);
+			spdk_json_write_name(w, "request_completion_latency_us");
+			spdk_json_write_val_raw(w, str, len);
+		} else {
+			spdk_json_write_named_uint64(w, "request_completion_latency", 0);
+			spdk_json_write_named_uint64(w, "request_completion_latency_us", 0);
+		}
 		spdk_json_write_object_end(w);
 		if (reset) {
 			memset(&rpoller->stat, 0, sizeof(rpoller->stat));
