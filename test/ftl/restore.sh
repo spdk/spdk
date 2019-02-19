@@ -27,7 +27,7 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/test/app/bdev_svc/bdev_svc --max-delay=0 & svcpid=$!
+$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
@@ -56,7 +56,7 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/test/app/bdev_svc/bdev_svc --max-delay=0 & svcpid=$!
+$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
