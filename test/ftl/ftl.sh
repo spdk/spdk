@@ -41,6 +41,10 @@ timing_enter restore
 run_test suite $testdir/restore.sh $device
 timing_exit restore
 
+timing_enter json
+run_test suite $testdir/json.sh $device
+timing_exit json
+
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	timing_enter fio_basic
 	run_test suite $testdir/fio.sh $device basic
