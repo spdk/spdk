@@ -63,6 +63,8 @@ struct ioat_chan_entry {
 	uint64_t xfer_completed;
 	uint64_t xfer_failed;
 	uint64_t current_queue_depth;
+	uint64_t waiting_for_flush;
+	uint64_t flush_threshold;
 	bool is_draining;
 	struct spdk_mempool *data_pool;
 	struct spdk_mempool *task_pool;
@@ -302,6 +304,7 @@ parse_args(int argc, char **argv)
 static void
 drain_io(struct ioat_chan_entry *ioat_chan_entry)
 {
+	spdk_ioat_flush(ioat_chan_entry->chan);
 	while (ioat_chan_entry->current_queue_depth > 0) {
 		spdk_ioat_process_events(ioat_chan_entry->chan);
 	}
@@ -315,8 +318,13 @@ submit_single_xfer(struct ioat_chan_entry *ioat_chan_entry, struct ioat_task *io
 	ioat_task->src = src;
 	ioat_task->dst = dst;
 
-	spdk_ioat_submit_copy(ioat_chan_entry->chan, ioat_task, ioat_done, dst, src,
-			      g_user_config.xfer_size_bytes);
+	spdk_ioat_build_copy(ioat_chan_entry->chan, ioat_task, ioat_done, dst, src,
+			     g_user_config.xfer_size_bytes);
+	ioat_chan_entry->waiting_for_flush++;
+	if (ioat_chan_entry->waiting_for_flush >= ioat_chan_entry->flush_threshold) {
+		spdk_ioat_flush(ioat_chan_entry->chan);
+		ioat_chan_entry->waiting_for_flush = 0;
+	}
 
 	ioat_chan_entry->current_queue_depth++;
 }
@@ -355,6 +363,8 @@ work_fn(void *arg)
 	t = worker->ctx;
 	while (t != NULL) {
 		/* begin to submit transfers */
+		t->waiting_for_flush = 0;
+		t->flush_threshold = g_user_config.queue_depth / 2;
 		if (submit_xfers(t, g_user_config.queue_depth) < 0) {
 			return -1;
 		}
