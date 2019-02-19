@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab8471f5_ce5cdcda",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T13:33:19Z",
+      "side": 1,
+      "message": "Maybe other will have different opinion but I think this is not needed as \u0027tick_rate\u0027 is returned in response.",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 56
+      },
+      "revId": "433b1eba808f3c7beb1acacebff8bb0510f31134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
