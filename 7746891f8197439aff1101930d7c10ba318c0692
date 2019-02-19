@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0a6bed0e_19862670",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 6
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T04:13:31Z",
+      "side": 1,
+      "message": "Hi Darek, I can\u0027t remove this yet, I\u0027ll continue trying to do.",
+      "range": {
+        "startLine": 22,
+        "startChar": 4,
+        "endLine": 22,
+        "endChar": 32
+      },
+      "revId": "7746891f8197439aff1101930d7c10ba318c0692",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
