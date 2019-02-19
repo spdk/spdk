@@ -883,6 +883,11 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			if (!sgroup->channels) {
 				return -ENOMEM;
 			}
+			sgroup->ns_rsv_info = calloc(new_max_nsid, sizeof(struct spdk_nvmf_ns_rsv_info));
+			if (!sgroup->ns_rsv_info) {
+				free(sgroup->channels);
+				return -ENOMEM;
+			}
 		}
 	} else if (new_max_nsid > old_max_nsid) {
 		void *buf;
@@ -892,12 +897,18 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		if (!buf) {
 			return -ENOMEM;
 		}
-
 		sgroup->channels = buf;
+
+		buf = realloc(sgroup->ns_rsv_info, new_max_nsid * sizeof(struct spdk_nvmf_ns_rsv_info));
+		if (!buf) {
+			return -ENOMEM;
+		}
+		sgroup->ns_rsv_info = buf;
 
 		/* Null out the new channels slots */
 		for (i = old_max_nsid; i < new_max_nsid; i++) {
 			sgroup->channels[i] = NULL;
+			memset(&sgroup->ns_rsv_info[i], 0, sizeof(struct spdk_nvmf_ns_rsv_info));
 		}
 	} else if (new_max_nsid < old_max_nsid) {
 		void *buf;
@@ -908,6 +919,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				spdk_put_io_channel(sgroup->channels[i]);
 				sgroup->channels[i] = NULL;
 			}
+			memset(&sgroup->ns_rsv_info[i], 0, sizeof(struct spdk_nvmf_ns_rsv_info));
 		}
 
 		/* Make the array smaller */
@@ -917,9 +929,17 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				return -ENOMEM;
 			}
 			sgroup->channels = buf;
+
+			buf = realloc(sgroup->ns_rsv_info, new_max_nsid * sizeof(struct spdk_nvmf_ns_rsv_info));
+			if (!buf) {
+				return -ENOMEM;
+			}
+			sgroup->ns_rsv_info = buf;
 		} else {
 			free(sgroup->channels);
 			sgroup->channels = NULL;
+			free(sgroup->ns_rsv_info);
+			sgroup->ns_rsv_info = NULL;
 		}
 	}
 
@@ -943,6 +963,16 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			}
 		} else {
 			/* A namespace was present before and didn't change. */
+		}
+
+		if (ns == NULL) {
+			memset(&sgroup->ns_rsv_info[i], 0, sizeof(struct spdk_nvmf_ns_rsv_info));
+		} else if (ns != NULL && ns->rtype) {
+			sgroup->ns_rsv_info[i].crkey = ns->crkey;
+			sgroup->ns_rsv_info[i].rtype = ns->rtype;
+			if (ns->holder) {
+				sgroup->ns_rsv_info[i].hostid = ns->holder->hostid;
+			}
 		}
 	}
 
