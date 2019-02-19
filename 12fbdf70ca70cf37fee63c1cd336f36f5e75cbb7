@@ -91,6 +91,29 @@
       "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47ab3286_60341a61",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1284,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:48:29Z",
+      "side": 1,
+      "message": "\u003d\u003d spdk_get_thread() ?",
+      "range": {
+        "startLine": 1284,
+        "startChar": 32,
+        "endLine": 1284,
+        "endChar": 39
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
