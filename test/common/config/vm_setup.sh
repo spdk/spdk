@@ -372,6 +372,12 @@ if $INSTALL; then
     sudo dnf install -y git
 fi
 
+# Ensure spdk_repo is owned by user
+# It is sometimes not when installing from vagrant script
+if [[ "$USER" != "$(stat -c %U spdk_repo)" ]]; then
+	sudo chown -R $USER:$USER spdk_repo
+fi
+
 mkdir -p spdk_repo/output
 
 if [ -d spdk_repo/spdk ]; then
