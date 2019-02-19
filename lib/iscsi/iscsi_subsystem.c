@@ -84,6 +84,8 @@ static void *g_fini_cb_arg;
 "  FirstBurstLength %d\n" \
 "  ImmediateData %s\n" \
 "  ErrorRecoveryLevel %d\n" \
+"\n" \
+"  AutoDif %s\n" \
 "\n"
 
 static void
@@ -119,7 +121,8 @@ spdk_iscsi_globals_config_text(FILE *fp)
 		g_spdk_iscsi.DefaultTime2Wait, g_spdk_iscsi.DefaultTime2Retain,
 		g_spdk_iscsi.FirstBurstLength,
 		(g_spdk_iscsi.ImmediateData) ? "Yes" : "No",
-		g_spdk_iscsi.ErrorRecoveryLevel);
+		g_spdk_iscsi.ErrorRecoveryLevel,
+		g_spdk_iscsi.auto_dif ? "Yes" : "No");
 }
 
 #define ISCSI_DATA_BUFFER_ALIGNMENT	(0x1000)
@@ -145,10 +148,21 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
-			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH +
-			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
+	int imm_mobj_size, dout_mobj_size;
+
+	if (iscsi->auto_dif) {
+		imm_mobj_size = (spdk_get_immediate_data_buffer_size() / 512) * (512 + 16);
+	} else {
+		imm_mobj_size = spdk_get_immediate_data_buffer_size();
+	}
+	imm_mobj_size += sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
+
+	if (iscsi->auto_dif) {
+		dout_mobj_size = (SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 512) * (512 + 16);
+	} else {
+		dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	}
+	dout_mobj_size += sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
@@ -374,6 +388,9 @@ spdk_iscsi_log_globals(void)
 			      g_spdk_iscsi.chap_group);
 	}
 
+	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "AutoDif %s\n",
+		      g_spdk_iscsi.auto_dif ? "Yes" : "No");
+
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "MinConnectionsPerCore%d\n",
 		      spdk_iscsi_conn_get_min_per_core());
 }
@@ -399,6 +416,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->authfile = NULL;
 	opts->nodebase = NULL;
 	opts->min_connections_per_core = DEFAULT_CONNECTIONS_PER_LCORE;
+	opts->auto_dif = false;
 }
 
 struct spdk_iscsi_opts *
@@ -472,6 +490,7 @@ spdk_iscsi_opts_copy(struct spdk_iscsi_opts *src)
 	dst->mutual_chap = src->mutual_chap;
 	dst->chap_group = src->chap_group;
 	dst->min_connections_per_core = src->min_connections_per_core;
+	dst->auto_dif = src->auto_dif;
 
 	return dst;
 }
@@ -616,6 +635,9 @@ spdk_iscsi_read_config_file_params(struct spdk_conf_section *sp,
 			}
 		}
 	}
+
+	opts->auto_dif = spdk_conf_section_get_boolval(sp, "AutoDif", opts->auto_dif);
+
 	min_conn_per_core = spdk_conf_section_get_intval(sp, "MinConnectionsPerCore");
 	if (min_conn_per_core >= 0) {
 		opts->min_connections_per_core = min_conn_per_core;
@@ -772,6 +794,7 @@ spdk_iscsi_set_global_params(struct spdk_iscsi_opts *opts)
 	g_spdk_iscsi.require_chap = opts->require_chap;
 	g_spdk_iscsi.mutual_chap = opts->mutual_chap;
 	g_spdk_iscsi.chap_group = opts->chap_group;
+	g_spdk_iscsi.auto_dif = opts->auto_dif;
 
 	spdk_iscsi_conn_set_min_per_core(opts->min_connections_per_core);
 
@@ -1419,6 +1442,8 @@ spdk_iscsi_opts_info_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_bool(w, "require_chap", g_spdk_iscsi.require_chap);
 	spdk_json_write_named_bool(w, "mutual_chap", g_spdk_iscsi.mutual_chap);
 	spdk_json_write_named_int32(w, "chap_group", g_spdk_iscsi.chap_group);
+
+	spdk_json_write_named_bool(w, "auto_dif", g_spdk_iscsi.auto_dif);
 
 	spdk_json_write_named_uint32(w, "min_connections_per_core",
 				     spdk_iscsi_conn_get_min_per_core());
