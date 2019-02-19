@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8e0cf607_edf5f86b",
+        "filename": "include/spdk/nvmf.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 115,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:59:04Z",
+      "side": 1,
+      "message": "+ \\n before \\param",
+      "revId": "aabd0299c240b737d1e57d375abf56bd66fac1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8223787_3876ee2a",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1641,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:59:04Z",
+      "side": 1,
+      "message": "the same comment as in first",
+      "range": {
+        "startLine": 1641,
+        "startChar": 1,
+        "endLine": 1641,
+        "endChar": 22
+      },
+      "revId": "aabd0299c240b737d1e57d375abf56bd66fac1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c352f62f_924c1745",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1656,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:59:04Z",
+      "side": 1,
+      "message": "the same comment as in first",
+      "range": {
+        "startLine": 1652,
+        "startChar": 0,
+        "endLine": 1656,
+        "endChar": 2
+      },
+      "revId": "aabd0299c240b737d1e57d375abf56bd66fac1c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
