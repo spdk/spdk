@@ -249,7 +249,7 @@ struct spdk_nvmf_rdma_request {
 	uint32_t				num_outstanding_data_wr;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
-	TAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
+	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
 enum spdk_nvmf_rdma_qpair_disconnect_flags {
@@ -298,8 +298,12 @@ struct spdk_nvmf_rdma_qpair {
 	/* Receives that are waiting for a request object */
 	TAILQ_HEAD(, spdk_nvmf_rdma_recv)	incoming_queue;
 
-	/* Queues to track the requests in all states */
-	TAILQ_HEAD(, spdk_nvmf_rdma_request)	state_queue[RDMA_REQUEST_NUM_STATES];
+	/* Queues to track requests in critical states */
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	free_queue;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_read_queue;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_rdma_write_queue;
 
 	/* Number of requests in each state */
 	uint32_t				state_cntr[RDMA_REQUEST_NUM_STATES];
@@ -560,12 +564,10 @@ spdk_nvmf_rdma_request_set_state(struct spdk_nvmf_rdma_request *rdma_req,
 	qpair = rdma_req->req.qpair;
 	rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-	TAILQ_REMOVE(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
 	rqpair->state_cntr[rdma_req->state]--;
 
 	rdma_req->state = state;
 
-	TAILQ_INSERT_TAIL(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
 	rqpair->state_cntr[rdma_req->state]++;
 }
 
@@ -592,12 +594,11 @@ static void
 nvmf_rdma_dump_qpair_contents(struct spdk_nvmf_rdma_qpair *rqpair)
 {
 	int i;
-	struct spdk_nvmf_rdma_request *req;
+
 	SPDK_ERRLOG("Dumping contents of queue pair (QID %d)\n", rqpair->qpair.qid);
-	for (i = 1; i < RDMA_REQUEST_NUM_STATES; i++) {
-		SPDK_ERRLOG("\tdumping requests in state %d\n", i);
-		TAILQ_FOREACH(req, &rqpair->state_queue[i], state_link) {
-			nvmf_rdma_dump_request(req);
+	for (i = 0; i < rqpair->max_queue_depth; i++) {
+		if (rqpair->reqs[i].state != RDMA_REQUEST_STATE_FREE) {
+			nvmf_rdma_dump_request(&rqpair->reqs[i]);
 		}
 	}
 }
@@ -782,9 +783,12 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	/* Initialise request state queues and counters of the queue pair */
 	for (i = RDMA_REQUEST_STATE_FREE; i < RDMA_REQUEST_NUM_STATES; i++) {
-		TAILQ_INIT(&rqpair->state_queue[i]);
 		rqpair->state_cntr[i] = 0;
 	}
+
+	STAILQ_INIT(&rqpair->free_queue);
+	STAILQ_INIT(&rqpair->pending_rdma_read_queue);
+	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 
 	rqpair->current_recv_depth = rqpair->max_queue_depth;
 	for (i = 0; i < rqpair->max_queue_depth; i++) {
@@ -858,7 +862,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		/* Initialize request state to FREE */
 		rdma_req->state = RDMA_REQUEST_STATE_FREE;
-		TAILQ_INSERT_TAIL(&rqpair->state_queue[rdma_req->state], rdma_req, state_link);
+		STAILQ_INSERT_HEAD(&rqpair->free_queue, rdma_req, state_link);
 		rqpair->state_cntr[rdma_req->state]++;
 	}
 
@@ -1420,6 +1424,7 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
 	rdma_req->req.data = NULL;
+	STAILQ_INSERT_HEAD(&rqpair->free_queue, rdma_req, state_link);
 	spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_FREE);
 }
 
@@ -1522,6 +1527,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			 * arrive using in capsule data, we need to do a transfer from the host.
 			 */
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER && rdma_req->data_from_pool) {
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_read_queue, rdma_req, state_link);
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING);
 				break;
 			}
@@ -1532,8 +1538,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (rdma_req != TAILQ_FIRST(
-				    &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING])) {
+			if (rdma_req != STAILQ_FIRST(&rqpair->pending_rdma_read_queue)) {
 				/* This request needs to wait in line to perform RDMA */
 				break;
 			}
@@ -1542,6 +1547,10 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				/* We can only have so many WRs outstanding. we have to wait until some finish. */
 				break;
 			}
+
+			/* We have already verified that this request is the head of the queue. */
+			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_read_queue, state_link);
+
 			rc = request_transfer_in(&rdma_req->req);
 			if (!rc) {
 				spdk_nvmf_rdma_request_set_state(rdma_req,
@@ -1574,6 +1583,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_EXECUTED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 			if (rdma_req->req.xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
+				STAILQ_INSERT_TAIL(&rqpair->pending_rdma_write_queue, rdma_req, state_link);
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING);
 			} else {
 				spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_READY_TO_COMPLETE);
@@ -1583,8 +1593,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			if (rdma_req != TAILQ_FIRST(
-				    &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING])) {
+			if (rdma_req != STAILQ_FIRST(&rqpair->pending_rdma_write_queue)) {
 				/* This request needs to wait in line to perform RDMA */
 				break;
 			}
@@ -1594,6 +1603,10 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				 * +1 since each request has an additional wr in the resp. */
 				break;
 			}
+
+			/* We have already verified that this request is the head of the queue. */
+			STAILQ_REMOVE_HEAD(&rqpair->pending_rdma_write_queue, state_link);
+
 			/* The data transfer will be kicked off from
 			 * RDMA_REQUEST_STATE_READY_TO_COMPLETE state.
 			 */
@@ -2175,17 +2188,14 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
 
 	/* We process I/O in the data transfer pending queue at the highest priority. RDMA reads first */
-	TAILQ_FOREACH_SAFE(rdma_req,
-			   &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING],
-			   state_link, req_tmp) {
+	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_read_queue, state_link, req_tmp) {
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
 		}
 	}
 
-	/* Then RDMA writes sincereads have stronger restrictions than writes */
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->state_queue[RDMA_REQUEST_STATE_DATA_TRANSFER_TO_HOST_PENDING],
-			   state_link, req_tmp) {
+	/* Then RDMA writes since reads have stronger restrictions than writes */
+	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_write_queue, state_link, req_tmp) {
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
 		}
@@ -2201,11 +2211,11 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 
 	/* The lowest priority is processing newly received commands */
 	TAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
-		if (TAILQ_EMPTY(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE])) {
+		if (STAILQ_EMPTY(&rqpair->free_queue)) {
 			break;
 		}
 
-		rdma_req = TAILQ_FIRST(&rqpair->state_queue[RDMA_REQUEST_STATE_FREE]);
+		rdma_req = STAILQ_FIRST(&rqpair->free_queue);
 		rdma_req->recv = rdma_recv;
 		spdk_nvmf_rdma_request_set_state(rdma_req, RDMA_REQUEST_STATE_NEW);
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
