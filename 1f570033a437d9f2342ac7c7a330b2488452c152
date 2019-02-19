@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1bd552c3_52238baa",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-19T07:44:06Z",
+      "side": 1,
+      "message": "Much better than before, but you still need to limit max number of character in a line smaller than 70. Feel free to fix it if you get chance.",
+      "revId": "1f570033a437d9f2342ac7c7a330b2488452c152",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
