@@ -484,6 +484,7 @@ Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 bdev_io_pool_size       | Optional | number      | Number of spdk_bdev_io structures in shared buffer pool
 bdev_io_cache_size      | Optional | number      | Maximum number of spdk_bdev_io structures cached per thread
+data_buf_size           | Optional | number      | Maximum buffer size allocatable for bdev_io
 
 ### Example
 
@@ -495,7 +496,8 @@ Example request:
   "method": "set_bdev_options",
   "params": {
     "bdev_io_pool_size": 65536,
-    "bdev_io_cache_size": 256
+    "bdev_io_cache_size": 256,
+    "data_buf_size": 65536
   }
 }
 ~~~
