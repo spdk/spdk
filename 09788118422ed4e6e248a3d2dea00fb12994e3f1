@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a1875490_0172c723",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-19T14:57:44Z",
+      "side": 1,
+      "message": "Hi Shuhei,\nSuppose we have 2 block in buffer, the block_size and data_block_size is 520 and 512 respectively. So for the 2nd block, the dst and src is overlapped. In this case, the right direction of memcpy is from lower address to higher address (this is what the spdk_crc16_t10dif_copy() exactly do). But I\u0027m worried about some day we change spdk_crc16_t10dif_copy() to copy from highter to lower, and data broken.",
+      "revId": "09788118422ed4e6e248a3d2dea00fb12994e3f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
