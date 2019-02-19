@@ -655,6 +655,7 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 
 	/* We're done with metadata operations */
 	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_bdev_close(meta_ctx->base_desc);
 
 	if (reduce_errno == 0) {
 		SPDK_NOTICELOG("OK for vol %s, error %u\n",
@@ -664,8 +665,6 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	} else {
 		SPDK_ERRLOG("ERR for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
-		spdk_put_io_channel(meta_ctx->base_ch);
-		spdk_bdev_close(meta_ctx->base_desc);
 		free(meta_ctx);
 	}
 }
@@ -1145,14 +1144,16 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 {
 	struct vbdev_compress *meta_ctx = cb_arg;
 
+	/* Done with metadata operations */
+	spdk_put_io_channel(meta_ctx->base_ch);
+	spdk_bdev_close(meta_ctx->base_desc);
+
 	if (reduce_errno != 0) {
 		/* This error means it is not a compress disk. */
 		if (reduce_errno != -EILSEQ) {
 			SPDK_ERRLOG("for vol %s, error %u\n",
 				    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
 		}
-		spdk_put_io_channel(meta_ctx->base_ch);
-		spdk_bdev_close(meta_ctx->base_desc);
 		free(meta_ctx);
 		spdk_bdev_module_examine_done(&compress_if);
 		return;
@@ -1171,6 +1172,11 @@ vbdev_compress_examine(struct spdk_bdev *bdev)
 {
 	struct vbdev_compress *meta_ctx;
 	int rc;
+
+	if (strcmp(bdev->product_name, COMP_BDEV_NAME) == 0) {
+		spdk_bdev_module_examine_done(&compress_if);
+		return;
+	}
 
 	meta_ctx = _prepare_for_load_init(bdev);
 	if (meta_ctx == NULL) {
