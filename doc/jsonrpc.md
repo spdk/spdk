@@ -2385,6 +2385,7 @@ immediate_data              | Optional | boolean | Session specific parameter, I
 error_recovery_level        | Optional | number  | Session specific parameter, ErrorRecoveryLevel (default: 0)
 allow_duplicated_isid       | Optional | boolean | Allow duplicated initiator session ID (default: `false`)
 min_connections_per_core    | Optional | number  | Allocation unit of connections per core (default: 4)
+data_out_buf_size           | Optional | number  | Buffer size of data out buffer pool (default: 65536)
 
 To load CHAP shared secret file, its path is required to specify explicitly in the parameter `auth_file`.
 

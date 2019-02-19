@@ -572,7 +572,8 @@ if __name__ == "__main__":
             immediate_data=args.immediate_data,
             error_recovery_level=args.error_recovery_level,
             allow_duplicated_isid=args.allow_duplicated_isid,
-            min_connections_per_core=args.min_connections_per_core)
+            min_connections_per_core=args.min_connections_per_core,
+            data_out_buf_size=args.data_out_buf_size)
 
     p = subparsers.add_parser('set_iscsi_options', help="""Set options of iSCSI subsystem""")
     p.add_argument('-f', '--auth-file', help='Path to CHAP shared secret file')
@@ -596,6 +597,7 @@ if __name__ == "__main__":
     p.add_argument('-l', '--error-recovery-level', help='Negotiated parameter, ErrorRecoveryLevel', type=int)
     p.add_argument('-p', '--allow-duplicated-isid', help='Allow duplicated initiator session ID.', action='store_true')
     p.add_argument('-u', '--min-connections-per-core', help='Allocation unit of connections per core', type=int)
+    p.add_argument('-z', '--data-out-buf-size', help='Buffer size of data out buffer pool', type=int)
     p.set_defaults(func=set_iscsi_options)
 
     def set_iscsi_discovery_auth(args):

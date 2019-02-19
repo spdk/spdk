@@ -82,6 +82,14 @@
  */
 #define SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH  65536
 
+/* The maximum data out buffer size is twice of SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH.
+ * Actually it will be enough if 8 byte DIF per 512 byte data block will be enough, but
+ * to adopt different format like 16 byte metadata per 512 byte data block, add enough
+ * mergin.
+ */
+#define	SPDK_ISCSI_MAX_DATA_OUT_BUFFER_SIZE	\
+		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * 2)
+
 /*
  * Defines maximum number of data out buffers each connection can have in
  *  use at any given time.
@@ -304,6 +312,7 @@ struct spdk_iscsi_opts {
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
 	uint32_t min_connections_per_core;
+	uint32_t data_out_buf_size;
 };
 
 struct spdk_iscsi_globals {
@@ -339,6 +348,7 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *pdu_data_out_pool;
 	struct spdk_mempool *session_pool;
 	struct spdk_mempool *task_pool;
+	uint32_t data_out_buf_size;
 
 	struct spdk_iscsi_sess	**session;
 	struct spdk_iscsi_poll_group *poll_group;
