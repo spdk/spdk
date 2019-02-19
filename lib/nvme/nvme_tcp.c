@@ -76,7 +76,6 @@ struct nvme_tcp_qpair {
 
 	TAILQ_HEAD(, nvme_tcp_req)		free_reqs;
 	TAILQ_HEAD(, nvme_tcp_req)		outstanding_reqs;
-	TAILQ_HEAD(, nvme_tcp_req)		active_r2t_reqs;
 
 	TAILQ_HEAD(, nvme_tcp_pdu)		send_queue;
 	struct nvme_tcp_pdu			recv_pdu;
@@ -119,7 +118,6 @@ struct nvme_tcp_req {
 	struct nvme_tcp_pdu			send_pdu;
 	void					*buf;
 	TAILQ_ENTRY(nvme_tcp_req)		link;
-	TAILQ_ENTRY(nvme_tcp_req)		active_r2t_link;
 };
 
 static void spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req);
@@ -222,7 +220,6 @@ nvme_tcp_alloc_reqs(struct nvme_tcp_qpair *tqpair)
 	TAILQ_INIT(&tqpair->send_queue);
 	TAILQ_INIT(&tqpair->free_reqs);
 	TAILQ_INIT(&tqpair->outstanding_reqs);
-	TAILQ_INIT(&tqpair->active_r2t_reqs);
 	for (i = 0; i < tqpair->num_entries; i++) {
 		tcp_req = &tqpair->tcp_reqs[i];
 		tcp_req->cid = i;
