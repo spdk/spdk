@@ -200,8 +200,23 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 		spdk_bdev_free_io(bdev_io);
 	}
 
-	if (--io_ctx->rq_cnt == 0) {
-		io->end(io, io_ctx->error);
+	if (--io_ctx->rq_cnt != 0) {
+		return;
+	}
+
+	struct vbdev_ocf_qcxt *qctx;
+	ocf_queue_t q = NULL;
+	struct vbdev_ocf_base *base
+		= *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
+
+	io->end(io, io_ctx->error);
+
+	if (io->io_queue == 0) {
+		return;
+	}
+	if (ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q) == 0) {
+		qctx = ocf_queue_get_priv(q);
+		qctx->unfinished_requests--;
 	}
 }
 
@@ -247,6 +262,8 @@ prepare_submit(struct ocf_io *io)
 	} else {
 		io_ctx->ch = qctx->core_ch;
 	}
+
+	qctx->unfinished_requests++;
 
 	return rc;
 }
