@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1c90b38_215f5484",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-19T12:47:28Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be \u0027cache_name\u0027 or \u0027core_name\u0027 ? If we want to get NULL, this is fine, but then check below should be changed from !\u003d to \u003d\u003d",
+      "range": {
+        "startLine": 61,
+        "startChar": 35,
+        "endLine": 61,
+        "endChar": 45
+      },
+      "revId": "e5845e081faa00fe038efcc3f26bb189bfd47ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1d966858_64201f90",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-19T12:47:28Z",
+      "side": 1,
+      "message": "base \u003d\u003d NULL?",
+      "range": {
+        "startLine": 62,
+        "startChar": 22,
+        "endLine": 62,
+        "endChar": 32
+      },
+      "revId": "e5845e081faa00fe038efcc3f26bb189bfd47ba1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
