@@ -80,7 +80,6 @@ struct bdev_iscsi_lun {
 	char				*url;
 	pthread_mutex_t			mutex;
 	uint32_t			ch_count;
-	struct bdev_iscsi_io_channel	*master_ch;
 	struct spdk_thread		*master_td;
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
@@ -490,9 +489,7 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 
 	pthread_mutex_lock(&lun->mutex);
 	if (lun->ch_count == 0) {
-		assert(lun->master_ch == NULL);
 		assert(lun->master_td == NULL);
-		lun->master_ch = ch;
 		lun->master_td = spdk_get_thread();
 		lun->poller = spdk_poller_register(bdev_iscsi_poll_lun, lun, 0);
 		ch->lun = lun;
@@ -511,10 +508,8 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&lun->mutex);
 	lun->ch_count--;
 	if (lun->ch_count == 0) {
-		assert(lun->master_ch != NULL);
 		assert(lun->master_td != NULL);
 
-		lun->master_ch = NULL;
 		lun->master_td = NULL;
 		spdk_poller_unregister(&lun->poller);
 	}
