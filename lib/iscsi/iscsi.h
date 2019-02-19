@@ -304,6 +304,7 @@ struct spdk_iscsi_opts {
 	uint32_t ErrorRecoveryLevel;
 	bool AllowDuplicateIsid;
 	uint32_t min_connections_per_core;
+	bool auto_dif;
 };
 
 struct spdk_iscsi_globals {
@@ -339,6 +340,8 @@ struct spdk_iscsi_globals {
 	struct spdk_mempool *pdu_data_out_pool;
 	struct spdk_mempool *session_pool;
 	struct spdk_mempool *task_pool;
+
+	bool auto_dif;
 
 	struct spdk_iscsi_sess	**session;
 	struct spdk_iscsi_poll_group *poll_group;
