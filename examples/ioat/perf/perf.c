@@ -484,10 +484,14 @@ associate_workers_with_chan(void)
 		t->ioat_chan_id = i;
 		snprintf(buf_pool_name, sizeof(buf_pool_name), "buf_pool_%d", i);
 		snprintf(task_pool_name, sizeof(task_pool_name), "task_pool_%d", i);
-		t->data_pool = spdk_mempool_create(buf_pool_name, 512, g_user_config.xfer_size_bytes,
+		t->data_pool = spdk_mempool_create(buf_pool_name,
+						   g_user_config.queue_depth * 2, /* src + dst */
+						   g_user_config.xfer_size_bytes,
 						   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						   SPDK_ENV_SOCKET_ID_ANY);
-		t->task_pool = spdk_mempool_create(task_pool_name, 512, sizeof(struct ioat_task),
+		t->task_pool = spdk_mempool_create(task_pool_name,
+						   g_user_config.queue_depth,
+						   sizeof(struct ioat_task),
 						   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 						   SPDK_ENV_SOCKET_ID_ANY);
 		if (!t->data_pool || !t->task_pool) {
