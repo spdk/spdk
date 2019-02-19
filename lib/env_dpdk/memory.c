@@ -633,7 +633,7 @@ spdk_mem_map_clear_translation(struct spdk_mem_map *map, uint64_t vaddr, uint64_
 	return 0;
 }
 
-uint64_t
+inline uint64_t
 spdk_mem_map_translate(const struct spdk_mem_map *map, uint64_t vaddr, uint64_t *size)
 {
 	const struct map_1gb *map_1gb;
