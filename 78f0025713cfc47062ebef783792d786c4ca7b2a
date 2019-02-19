@@ -117,6 +117,29 @@
     },
     {
       "key": {
+        "uuid": "8da4bb9a_af2b1f55",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:55:23Z",
+      "side": 1,
+      "message": "\"reactors\" -\u003e \"threads\" ?\n\nspdk_json_write_name + spdk_json_write_array_begin -\u003e spdk_json_write_named_array_begin",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 37
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0df736d0_63e07793",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
