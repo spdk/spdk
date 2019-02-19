@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "ab9191dc_8c64c66b",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-19T15:20:20Z",
+      "side": 1,
+      "message": "Similar to https://review.gerrithub.io/c/spdk/spdk/+/444840/9/lib/util/dif.c#1432, but in this case the data has been broke. Unit test can\u0027t find it because every byte in data is same.",
+      "revId": "dee55ca99ed43f17cf4499b58c8124bbda4eeb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2dbb7fc9_d540f6c1",
         "filename": "lib/util/dif.c",
         "patchSetId": 10
