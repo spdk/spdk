@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "4d5c9d44_3047ac70",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-19T12:54:49Z",
+      "side": 1,
+      "message": "Ok. Thanks.",
+      "parentUuid": "f8665a5e_53a0c768",
+      "range": {
+        "startLine": 31,
+        "startChar": 0,
+        "endLine": 34,
+        "endChar": 55
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd648c5c_3407f9b1",
         "filename": "scripts/spdkcli/ui_root.py",
         "patchSetId": 28
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "spdkcli is using true/false not the string literals. so if true \u003d\u003e INFO, false \u003d\u003e ERROR",
       "parentUuid": "cd648c5c_3407f9b1",
+      "range": {
+        "startLine": 60,
+        "startChar": 24,
+        "endLine": 60,
+        "endChar": 74
+      },
+      "revId": "ce520c420e5c97de7871546e7dbf898973546cf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1798673b_0fa03fb2",
+        "filename": "scripts/spdkcli/ui_root.py",
+        "patchSetId": 28
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-19T12:54:49Z",
+      "side": 1,
+      "message": "Ok. Thanks.",
+      "parentUuid": "ba58cf7f_ee6d23d7",
       "range": {
         "startLine": 60,
         "startChar": 24,
