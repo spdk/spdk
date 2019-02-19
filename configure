@@ -474,23 +474,6 @@ if [[ "${CONFIG[OCF]}" = "y" ]]; then
 	else
 		CONFIG[CUSTOMOCF]=n
 	fi
-
-	# If OCF_PATH is not a library, we need to do sources export procedure using OCF Makefile
-	if [[ ${CONFIG[CUSTOMOCF]} = "n" ]]; then
-		echo "configuring OCF..."
-		rootdir=$(readlink -f $(dirname $0))
-
-		if pushd "${CONFIG[OCF_PATH]}" > /dev/null && \
-		   make inc O="$rootdir/lib/bdev/ocf/env/" && \
-		   make src O="$rootdir/lib/bdev/ocf/env/" CMD=cp 1>/dev/null && \
-		   popd > /dev/null
-		then
-			echo "done configuring OCF"
-		else
-			echo "Could not configure OCF"
-			exit 1
-		fi
-	fi
 fi
 
 if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then

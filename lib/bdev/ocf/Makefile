@@ -44,4 +44,17 @@ include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
 
 SPDK_DEP_LIBS = $(call spdk_lib_list_to_static_libs,ocfenv)
 
-$(LIB) : $(SPDK_DEP_LIBS)
+.PHONY: ocf_install ocf_uninstall
+
+ocf_inc:
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/"
+
+ocf_src:
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" CMD=cp \
+
+ocf_distclean:
+	$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/"
+
+$(LIB): ocf_inc ocf_src $(SPDK_DEP_LIBS)
+
+clean: ocf_distclean
