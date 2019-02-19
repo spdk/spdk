@@ -69,6 +69,7 @@ sig_name                | Required | string      | Signal to send (SIGINT, SIGTE
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -81,6 +82,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -108,6 +110,7 @@ enabled                 | boolean     | The current state of context switch moni
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -120,6 +123,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -147,6 +151,7 @@ Completion status of SPDK subsystem initialization is returned as a boolean.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -156,6 +161,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -180,6 +186,7 @@ Returns True when subsystems have been initialized.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -189,6 +196,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -214,6 +222,7 @@ The response is an array of supported RPC methods.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -223,6 +232,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -322,6 +332,7 @@ The response is an array of name and dependency relationship of SPDK subsystems 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -331,6 +342,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -408,6 +420,7 @@ Null is returned if it is not retrievable by the get_subsystem_config method and
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -420,6 +433,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -488,6 +502,7 @@ bdev_io_cache_size      | Optional | number      | Maximum number of spdk_bdev_i
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -501,6 +516,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -529,6 +545,7 @@ The response is an array of objects containing information about the requested b
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -541,6 +558,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -588,6 +606,7 @@ The response is an array of objects containing I/O statistics of the requested b
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -600,6 +619,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -642,6 +662,7 @@ enable                  | Required | boolean     | Enable or disable histogram o
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -655,6 +676,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -684,6 +706,7 @@ tsc_rate                | Ticks per second
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -725,6 +748,7 @@ name                    | Required | string      | Block device name
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -737,6 +761,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -762,6 +787,7 @@ w_mbytes_per_sec        | Optional | number      | Number of Write megabytes per
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -778,6 +804,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -1511,6 +1538,7 @@ The response is an array of objects containing information about the requested N
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -1523,6 +1551,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -2561,6 +2590,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3495,6 +3525,7 @@ buf_cache_size              | Optional | number  | The number of shared buffers 
 ### Example:
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3508,6 +3539,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3525,6 +3557,7 @@ This method has no parameters.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3534,6 +3567,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3909,6 +3943,7 @@ max_subsystems          | Required | number      | Maximum number of NVMe-oF sub
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3921,6 +3956,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3943,6 +3979,7 @@ acceptor_poll_rate      | Optional | number      | Polling interval of the accep
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3955,6 +3992,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3972,6 +4010,7 @@ This method has no parameters.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -3981,6 +4020,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4513,6 +4553,7 @@ UUID of the created logical volume store is returned.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4526,6 +4567,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4550,6 +4592,7 @@ Either uuid or lvs_name must be specified, but not both.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4562,6 +4605,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4587,6 +4631,7 @@ If both uuid and lvs_name are omitted, information about all logical volume stor
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4599,6 +4644,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4631,6 +4677,7 @@ new_name                | Required | string      | New logical volume store name
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4644,6 +4691,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4677,6 +4725,7 @@ UUID of the created logical volume is returned.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4693,6 +4742,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4719,6 +4769,7 @@ UUID of the created logical volume snapshot is returned.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4732,6 +4783,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4758,6 +4810,7 @@ UUID of the created logical volume clone is returned.
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0"
@@ -4771,6 +4824,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4793,6 +4847,7 @@ new_name                | Required | string      | New logical volume name
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4806,6 +4861,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4828,6 +4884,7 @@ size                    | Required | number      | Desired size of the logical v
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4841,6 +4898,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4862,6 +4920,7 @@ name                    | Required | string      | UUID or alias of the logical 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4874,6 +4933,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4895,6 +4955,7 @@ name                    | Required | string      | UUID or alias of the logical 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4907,6 +4968,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4928,6 +4990,7 @@ name                    | Required | string      | UUID or alias of the logical 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4940,6 +5003,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4961,6 +5025,7 @@ name                    | Required | string      | UUID or alias of the logical 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -4973,6 +5038,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -5120,6 +5186,7 @@ metadata                | string      | Metadata transferred from controller to 
 ### Example
 
 Example request:
+
 ~~~
 {
   "jsonrpc": "2.0",
@@ -5136,6 +5203,7 @@ Example request:
 ~~~
 
 Example response:
+
 ~~~
 {
   "jsonrpc": "2.0",
