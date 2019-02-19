@@ -355,7 +355,7 @@ struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				pending_free_request;
 	uint64_t				pending_data_buffer;
 	uint64_t				pending_transfer;
-	uint64_t				request_completion_tsc;
+	uint64_t				request_state_tsc[RDMA_REQUEST_NUM_STATES];
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -1646,7 +1646,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
-			rqpair->poller->stat.request_completion_tsc += spdk_get_ticks() - rdma_req->receive_tsc;
 			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
@@ -1657,6 +1656,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (rdma_req->state != prev_state) {
 			progress = true;
+			rqpair->poller->stat.request_state_tsc[prev_state] += spdk_get_ticks() - rdma_req->receive_tsc;
 		}
 	} while (rdma_req->state != prev_state);
 
@@ -3002,7 +3002,7 @@ spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group 
 	spdk_json_write_named_array_begin(w, "devices");
 	TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
 		char str[16];
-		int len;
+		int len, state;
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "name", ibv_get_device_name(rpoller->device->context->device));
 		spdk_json_write_named_uint64(w, "polls", rpoller->stat.polls);
@@ -3021,18 +3021,19 @@ spdk_nvmf_rdma_poll_group_write_stat_json(struct spdk_nvmf_transport_poll_group 
 					     rpoller->stat.pending_data_buffer);
 		spdk_json_write_named_uint64(w, "pending_transfer",
 					     rpoller->stat.pending_transfer);
-		if (rpoller->stat.requests != 0) {
-			spdk_json_write_named_uint64(w, "request_completion_latency",
-						     rpoller->stat.request_completion_tsc / rpoller->stat.requests);
-			len = snprintf(str, sizeof(str), "%.2f",
-				       (double)rpoller->stat.request_completion_tsc / rpoller->stat.requests
-				       / spdk_get_ticks_hz() * 1000000);
-			spdk_json_write_name(w, "request_completion_latency_us");
-			spdk_json_write_val_raw(w, str, len);
-		} else {
-			spdk_json_write_named_uint64(w, "request_completion_latency", 0);
-			spdk_json_write_named_uint64(w, "request_completion_latency_us", 0);
+		spdk_json_write_named_array_begin(w, "request_state_latencies_us");
+		for (state = RDMA_REQUEST_STATE_FREE; state < RDMA_REQUEST_NUM_STATES; ++state) {
+			if (rpoller->stat.requests != 0) {
+				len = snprintf(str, sizeof(str), "%.2f",
+					       (double)rpoller->stat.request_state_tsc[state]
+					       / rpoller->stat.requests
+					       / spdk_get_ticks_hz() * 1000000);
+				spdk_json_write_val_raw(w, str, len);
+			} else {
+				spdk_json_write_uint64(w, 0);
+			}
 		}
+		spdk_json_write_array_end(w);
 		spdk_json_write_object_end(w);
 		if (reset) {
 			memset(&rpoller->stat, 0, sizeof(rpoller->stat));
