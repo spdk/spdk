@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "26581815_2875d17a",
+        "filename": "test/vagrant/autorun-spdk.conf",
+        "patchSetId": 23
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-19T13:28:03Z",
+      "side": 1,
+      "message": "Why do we need to set these flags?",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 3,
+        "endChar": 20
+      },
+      "revId": "8713072b74b7971e9eeac431eb9e6989d263132a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
