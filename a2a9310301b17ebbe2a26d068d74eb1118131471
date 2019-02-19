@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d40b4e9_565acd70",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-19T04:45:55Z",
+      "side": 1,
+      "message": "form-\u003efrom",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "956dc677_ead7b179",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-19T04:45:55Z",
+      "side": 1,
+      "message": "much clear to me now, I think you can add a description here, and saying this API doesn\u0027t need a bounce buffer.",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
