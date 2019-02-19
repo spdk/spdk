@@ -322,14 +322,25 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 	/* TODO [writeback]: implement with writeback mode support */
 }
 
+static int metadata_poll(void *opaque)
+{
+	ocf_metadata_updater_t mu = opaque;
+
+	ocf_metadata_updater_run(mu);
+
+	return 1;
+}
+
 static int vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	struct spdk_poller *poller = spdk_poller_register(metadata_poll, mu, 0);
+	ocf_metadata_updater_set_priv(mu, poller);
 	return 0;
 }
 static void vbdev_ocf_volume_updater_stop(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	struct spdk_poller *poller = ocf_metadata_updater_get_priv(mu);
+	spdk_poller_unregister(&poller);
 }
 static void vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
 {

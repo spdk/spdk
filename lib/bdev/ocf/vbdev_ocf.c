@@ -723,9 +723,7 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->cache.id = 0;
 	cfg->cache.name = vbdev->name;
 
-	/* TODO [metadata]: make configurable with persistent
-	 * metadata support */
-	cfg->cache.metadata_volatile = true;
+	cfg->cache.metadata_volatile = false;
 
 	/* TODO [cache line size]: make cache line size configurable
 	 * Using standard 4KiB for now */
