@@ -857,7 +857,8 @@ update_firmware_image(void)
 	spdk_dma_free(fw_image);
 }
 
-static void spdk_dump_opal_info(struct spdk_opal_info *opal)
+static void
+spdk_dump_opal_info(struct spdk_opal_info *opal)
 {
 	if (!opal->opal_ssc_dev) {
 		SPDK_ERRLOG("This device is not Opal enabled. Not Supported!\n");
@@ -938,6 +939,7 @@ static void opal_usage(void)
 	printf("\n");
 	printf("\t[1: scan device]\n");
 	printf("\t[2: take ownership]\n");
+	printf("\t[3: revert tper]\n");
 	printf("\t[0: quit]\n");
 }
 
@@ -991,6 +993,37 @@ static void opal_take_ownership(void)
 	}
 }
 
+static void opal_revert_tper(void)
+{
+	char passwd[MAX_PASSWORD_SIZE];
+	char *passwd_p;
+	int ret;
+
+	struct dev *ctrlr = get_controller();
+	if (ctrlr == NULL) {
+		printf("Invalid controller PCI Address.\n");
+		return;
+	}
+
+	memset(passwd, 0, sizeof(passwd));
+
+	printf("Please input password for this device:\n");
+	passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+	if (passwd_p) {
+		ctrlr->opal_dev = spdk_init_opal_dev(ctrlr->ctrlr, OPAL_NVME);
+		if (spdk_get_opal_support(ctrlr->opal_dev)) {
+			ret = spdk_opal_cmd(ctrlr->opal_dev, OPAL_CMD_REVERT_TPER, passwd_p);
+			if (ret) {
+				printf("Revert TPer failure: %d\n", ret);
+				return;
+			}
+			printf("Revert TPer Success\n");
+			spdk_opal_close(ctrlr->opal_dev);
+		}
+	} else {
+		printf("Input password invalid. Revert TPer failure\n");
+	}
+}
 static void
 test_opal(void)
 {
@@ -1014,6 +1047,9 @@ test_opal(void)
 			break;
 		case 2:
 			opal_take_ownership();
+			break;
+		case 3:
+			opal_revert_tper();
 			break;
 
 		default:
