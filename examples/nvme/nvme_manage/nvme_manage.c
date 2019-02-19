@@ -939,6 +939,7 @@ opal_usage(void)
 	printf("\n");
 	printf("\t[1: scan device]\n");
 	printf("\t[2: take ownership]\n");
+	printf("\t[3: revert tper]\n");
 	printf("\t[0: quit]\n");
 }
 
@@ -969,7 +970,7 @@ opal_scan(struct dev *iter)
 static void
 opal_take_ownership(struct dev *iter)
 {
-	char new_passwd[MAX_PASSWORD_SIZE];
+	char new_passwd[MAX_PASSWORD_SIZE] = {0};
 	char *passwd_p;
 	int ret;
 	int ch;
@@ -980,7 +981,6 @@ opal_take_ownership(struct dev *iter)
 			return;
 		}
 		if (spdk_opal_supported(iter->opal_dev)) {
-			memset(new_passwd, 0, sizeof(new_passwd));
 			printf("Please input the new password for ownership:\n");
 			while ((ch = getchar()) != '\n' && ch != EOF);
 			passwd_p = get_line(new_passwd, MAX_PASSWORD_SIZE, stdin);
@@ -997,9 +997,43 @@ opal_take_ownership(struct dev *iter)
 		}
 		spdk_opal_close(iter->opal_dev);
 	} else {
-		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\n",
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
-		printf("%04x:%02x:%02x.%02x: Opal Not Supported\n\n\n",
+	}
+}
+
+static void
+opal_revert_tper(struct dev *iter)
+{
+	char passwd[MAX_PASSWORD_SIZE] = {0};
+	char *passwd_p;
+	int ret;
+	int ch;
+
+	if (spdk_nvme_ctrlr_get_flags(iter->ctrlr) & SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED) {
+		iter->opal_dev = spdk_opal_init_dev(iter->ctrlr);
+		if (iter->opal_dev == NULL) {
+			return;
+		}
+		if (spdk_opal_supported(iter->opal_dev)) {
+			printf("Please be noted this operation will erase ALL DATA on this drive\n");
+			printf("Please input password for revert TPer:\n");
+			while ((ch = getchar()) != '\n' && ch != EOF);
+			passwd_p = get_line(passwd, MAX_PASSWORD_SIZE, stdin);
+			if (passwd_p) {
+				ret = spdk_opal_cmd(iter->opal_dev, OPAL_CMD_REVERT_TPER, passwd_p);
+				if (ret) {
+					printf("Revert TPer failure: %d\n", ret);
+					return;
+				}
+				printf("...\n...\nRevert TPer Success\n");
+			} else {
+				printf("Input password invalid. Revert TPer failure\n");
+			}
+		}
+		spdk_opal_close(iter->opal_dev);
+	} else {
+		printf("%04x:%02x:%02x.%02x: NVMe Security Support/Receive Not supported.\nOpal Not Supported\n\n\n",
 		       iter->pci_addr.domain, iter->pci_addr.bus, iter->pci_addr.dev, iter->pci_addr.func);
 	}
 }
@@ -1035,6 +1069,9 @@ test_opal(void)
 			break;
 		case 2:
 			opal_take_ownership(ctrlr);
+			break;
+		case 3:
+			opal_revert_tper(ctrlr);
 			break;
 
 		default:
