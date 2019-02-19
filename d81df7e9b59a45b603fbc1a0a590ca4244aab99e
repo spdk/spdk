@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "92c60237_4ba03c26",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-19T12:44:02Z",
+      "side": 1,
+      "message": "Could we also add info that we can run commands: spdk_print_threads and spdk_print_nvmf_subsystems ?",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 3
+      },
+      "revId": "d81df7e9b59a45b603fbc1a0a590ca4244aab99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
