@@ -1224,6 +1224,58 @@ spdk_opal_scan(struct spdk_opal_dev *dev)
 	return ret;
 }
 
+static int
+opal_revert_tper(struct spdk_opal_dev *dev, void *data)
+{
+	int err = 0;
+	opal_clear_cmd(dev);
+	opal_set_comid(dev, dev->comid);
+
+	opal_add_token_u8(&err, dev, SPDK_OPAL_CALL);
+	opal_add_token_bytestring(&err, dev, spdk_opal_uid[UID_ADMINSP],
+				  OPAL_UID_LENGTH);
+	opal_add_token_bytestring(&err, dev, spdk_opal_method[REVERT_METHOD],
+				  OPAL_UID_LENGTH);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_STARTLIST);
+	opal_add_token_u8(&err, dev, SPDK_OPAL_ENDLIST);
+	if (err) {
+		SPDK_ERRLOG("Error building REVERT TPER command.\n");
+		return err;
+	}
+
+	return opal_finalize_and_send(dev, 1, opal_parse_and_check_status);
+}
+
+static int
+spdk_opal_revert_tper(struct spdk_opal_dev *dev, const char *passwd)
+{
+	int ret;
+	struct spdk_opal_key *opal_key = calloc(1,
+						sizeof(struct spdk_opal_key)); /* this needs to be a valid address */
+	const struct spdk_opal_step revert_steps[] = {
+		{ opal_discovery0, },
+		{ opal_start_adminsp_session, opal_key },
+		{ opal_revert_tper, },
+		{ NULL, }
+	};
+
+	/* check memory error here */
+	if (!opal_key) {
+		SPDK_ERRLOG("Memory allocation failed for spdk_opal_key\n");
+		return -ENOMEM;
+	}
+
+	opal_key->key_len = strlen(passwd);
+	memcpy(opal_key->key, passwd, opal_key->key_len);
+	pthread_mutex_lock(&dev->mutex_lock);
+	dev->dev_key = opal_key;
+	opal_setup_dev(dev, revert_steps);
+	ret = opal_next(dev);
+	pthread_mutex_unlock(&dev->mutex_lock);
+
+	return ret;
+}
+
 struct spdk_opal_info *
 spdk_opal_get_info(struct spdk_opal_dev *dev)
 {
@@ -1253,9 +1305,10 @@ spdk_opal_cmd(struct spdk_opal_dev *dev, unsigned int cmd, void *arg)
 		return spdk_opal_scan(dev);
 	case OPAL_CMD_TAKE_OWNERSHIP:
 		return spdk_opal_take_ownership(dev, arg);
+	case OPAL_CMD_REVERT_TPER:
+		return spdk_opal_revert_tper(dev, arg);
 	case OPAL_CMD_LOCK_UNLOCK:
 	case OPAL_CMD_ACTIVATE_LSP:
-	case OPAL_CMD_REVERT_TPER:
 	case OPAL_CMD_SETUP_LOCKING_RANGE:
 
 	default:
