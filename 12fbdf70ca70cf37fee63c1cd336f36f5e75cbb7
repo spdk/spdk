@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b0423e8_0542efe3",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:43:28Z",
+      "side": 1,
+      "message": "done \u003d spdk_nvme_probe_poll_async(\u0026ctx-\u003eprobe_ctx);\nif (!done) {\n  return -1;\n}\n\n(snip)\n\nreturn 1;\n\nmay be better",
+      "range": {
+        "startLine": 1235,
+        "startChar": 0,
+        "endLine": 1236,
+        "endChar": 12
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c31d3d2b_1146b42f",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:43:28Z",
+      "side": 1,
+      "message": "How can the caller know this failure?",
+      "range": {
+        "startLine": 1241,
+        "startChar": 3,
+        "endLine": 1241,
+        "endChar": 13
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dee1167a_6fbcb1c6",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1247,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:43:28Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 1247,
+        "startChar": 3,
+        "endLine": 1247,
+        "endChar": 13
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b904225_b1c0374d",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1265,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:43:28Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 1265,
+        "startChar": 4,
+        "endLine": 1265,
+        "endChar": 14
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
