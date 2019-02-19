@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2dbb7fc9_d540f6c1",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-19T14:28:11Z",
+      "side": 1,
+      "message": "Hi, Shuhei\nIf my understand is correct, the meaning of parsed_bytes and ext_data_bytes is following:\n1. Buffer between 0 ~ (parsed_bytes-1) is DIFed\n2. Buffer between parsed_bytes ~ (ext_data_bytes -1) is data without DIF, and these data are compacted.\nSo I think ext_data_bytes in _are_iovs_valid() is not enough, since ext_data_bytes doesn\u0027t contain space for metadata.",
+      "revId": "dee55ca99ed43f17cf4499b58c8124bbda4eeb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
