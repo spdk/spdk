@@ -33,6 +33,23 @@
       "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8078400_82c87916",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1387,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-19T05:06:20Z",
+      "side": 1,
+      "message": "What if iovcnt is zero?",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
