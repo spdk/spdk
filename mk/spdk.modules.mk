@@ -61,6 +61,16 @@ SYS_LIBS += -L/usr/lib64/iscsi -liscsi
 endif
 endif
 
+ifeq ($(CONFIG_URING),y)
+BLOCKDEV_MODULES_LIST += bdev_uring
+SYS_LIBS += -luring
+ifeq ($(strip $(CONFIG_URING_PATH)),)
+else
+CFLAGS += -I$(CONFIG_URING_PATH)
+LDFLAGS += -L$(CONFIG_URING_PATH)
+endif
+endif
+
 ifeq ($(CONFIG_RBD),y)
 BLOCKDEV_MODULES_LIST += bdev_rbd
 SYS_LIBS += -lrados -lrbd
