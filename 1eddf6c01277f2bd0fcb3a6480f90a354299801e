@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "aa721da1_1c6df14b",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T04:10:08Z",
+      "side": 1,
+      "message": "Thank you for nice comment. Yes, we can set maximum size.\n\nThe maximum data out buffer size is as much as necessary to store 8 byte DIF when 512-byte sector is used.",
+      "parentUuid": "f93fbbb4_bffb2241",
+      "range": {
+        "startLine": 707,
+        "startChar": 5,
+        "endLine": 707,
+        "endChar": 70
+      },
+      "revId": "1eddf6c01277f2bd0fcb3a6480f90a354299801e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f09c1483_ce8fe227",
         "filename": "lib/iscsi/iscsi_subsystem.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "c191f400_0d917691",
+        "filename": "lib/iscsi/iscsi_subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T04:10:08Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "f09c1483_ce8fe227",
+      "range": {
+        "startLine": 709,
+        "startChar": 1,
+        "endLine": 710,
+        "endChar": 2
+      },
+      "revId": "1eddf6c01277f2bd0fcb3a6480f90a354299801e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8d62844a_a84a3ad7",
         "filename": "scripts/rpc/iscsi.py",
         "patchSetId": 4
@@ -59,6 +107,24 @@
       "writtenOn": "2019-02-15T16:05:04Z",
       "side": 1,
       "message": "I don\u0027t understand whitespace/new line changes in this file. Can you revert it pls?",
+      "revId": "1eddf6c01277f2bd0fcb3a6480f90a354299801e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba7334c0_743dc7e3",
+        "filename": "scripts/rpc/iscsi.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T04:10:08Z",
+      "side": 1,
+      "message": "Thank you, I recreated the patch and saw these unknown changes were gone.",
+      "parentUuid": "8d62844a_a84a3ad7",
       "revId": "1eddf6c01277f2bd0fcb3a6480f90a354299801e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
