@@ -20,7 +20,7 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
 $rpc_py set_iscsi_options -o 30 -a 4 -b $node_base
@@ -44,7 +44,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; done; \
-	iscsicleanup; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1' SIGINT SIGTERM EXIT
+	iscsicleanup; killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
 sleep 1
 
