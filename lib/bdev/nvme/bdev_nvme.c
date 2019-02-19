@@ -1047,7 +1047,7 @@ create_ctrlr(struct spdk_nvme_ctrlr *ctrlr,
 
 	TAILQ_INSERT_TAIL(&g_nvme_ctrlrs, nvme_ctrlr, tailq);
 
-	if (g_opts.timeout_us > 0 && g_opts.action_on_timeout != SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE) {
+	if (g_opts.timeout_us > 0) {
 		spdk_nvme_ctrlr_register_timeout_callback(ctrlr, g_opts.timeout_us,
 				timeout_cb, NULL);
 	}
