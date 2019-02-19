@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5a6efb7b_c0e5e79f",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:05:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2d40b4e9_565acd70",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "956dc677_ead7b179",
         "filename": "include/spdk/dif.h",
         "patchSetId": 9
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "cf4d1f14_81c003f5",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:05:46Z",
+      "side": 1,
+      "message": "Yes, I added \"Bounce buffer is not necessary because DIF is inserted into the same buffer, but the size of the buffer must be enough to insert DIF..",
+      "parentUuid": "956dc677_ead7b179",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8078400_82c87916",
         "filename": "lib/util/dif.c",
         "patchSetId": 9
@@ -47,6 +83,24 @@
       "writtenOn": "2019-02-19T05:06:20Z",
       "side": 1,
       "message": "What if iovcnt is zero?",
+      "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "30e686e6_278fe17e",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1387,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:05:46Z",
+      "side": 1,
+      "message": "Thank you Zhouhui, nice question.\n\nI added check if iovcnt \u003d\u003d 0 to the line 1371. If we support multiple iovs, we will be able to remove that.",
+      "parentUuid": "e8078400_82c87916",
       "revId": "a2a9310301b17ebbe2a26d068d74eb1118131471",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
