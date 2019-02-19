@@ -31,24 +31,9 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
 
-DIRS-y = bdev.c part.c scsi_nvme.c gpt vbdev_lvol.c mt bdev_raid.c
+TEST_FILE = compress_ut.c
+CFLAGS += $(ENV_CFLAGS)
 
-ifeq ($(CONFIG_CRYPTO),y)
-DIRS-y += crypto.c
-endif
-
-ifeq ($(CONFIG_REDUCE),y)
-DIRS-y += compress.c
-endif
-
-DIRS-$(CONFIG_PMDK) += pmem
-
-.PHONY: all clean $(DIRS-y)
-
-all: $(DIRS-y)
-clean: $(DIRS-y)
-
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
