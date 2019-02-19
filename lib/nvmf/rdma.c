@@ -210,17 +210,17 @@ struct spdk_nvmf_rdma_wr {
  * command when there aren't any free request objects.
  */
 struct spdk_nvmf_rdma_recv {
-	struct ibv_recv_wr		wr;
-	struct ibv_sge			sgl[NVMF_DEFAULT_RX_SGE];
+	struct ibv_recv_wr			wr;
+	struct ibv_sge				sgl[NVMF_DEFAULT_RX_SGE];
 
-	struct spdk_nvmf_rdma_qpair	*qpair;
+	struct spdk_nvmf_rdma_qpair		*qpair;
 
 	/* In-capsule data buffer */
-	uint8_t				*buf;
+	uint8_t					*buf;
 
-	struct spdk_nvmf_rdma_wr	rdma_wr;
+	struct spdk_nvmf_rdma_wr		rdma_wr;
 
-	TAILQ_ENTRY(spdk_nvmf_rdma_recv) link;
+	STAILQ_ENTRY(spdk_nvmf_rdma_recv)	link;
 };
 
 struct spdk_nvmf_rdma_request_data {
@@ -296,7 +296,7 @@ struct spdk_nvmf_rdma_qpair {
 	uint32_t				max_recv_sge;
 
 	/* Receives that are waiting for a request object */
-	TAILQ_HEAD(, spdk_nvmf_rdma_recv)	incoming_queue;
+	STAILQ_HEAD(, spdk_nvmf_rdma_recv)	incoming_queue;
 
 	/* Queues to track requests in critical states */
 	STAILQ_HEAD(, spdk_nvmf_rdma_request)	free_queue;
@@ -1059,7 +1059,7 @@ nvmf_rdma_connect(struct spdk_nvmf_transport *transport, struct rdma_cm_event *e
 	rqpair->cm_id = event->id;
 	rqpair->listen_id = event->listen_id;
 	rqpair->qpair.transport = transport;
-	TAILQ_INIT(&rqpair->incoming_queue);
+	STAILQ_INIT(&rqpair->incoming_queue);
 	event->id->context = &rqpair->qpair;
 
 	cb_fn(&rqpair->qpair);
@@ -1444,8 +1444,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* The first element of the SGL is the NVMe command */
 			rdma_req->req.cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
-
-			TAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, link);
 
 			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
@@ -2148,7 +2146,6 @@ static void
 spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport,
 				     struct spdk_nvmf_rdma_qpair *rqpair, bool drain)
 {
-	struct spdk_nvmf_rdma_recv	*rdma_recv, *recv_tmp;
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
 
 	/* We process I/O in the data transfer pending queue at the highest priority. RDMA reads first */
@@ -2174,15 +2171,13 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	}
 
 	/* The lowest priority is processing newly received commands */
-	TAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
-		if (STAILQ_EMPTY(&rqpair->free_queue)) {
-			break;
-		}
+	while (!STAILQ_EMPTY(&rqpair->free_queue) && !STAILQ_EMPTY(&rqpair->incoming_queue)) {
 
 		rdma_req = STAILQ_FIRST(&rqpair->free_queue);
-		rdma_req->recv = rdma_recv;
-
 		STAILQ_REMOVE_HEAD(&rqpair->free_queue, state_link);
+		rdma_req->recv = STAILQ_FIRST(&rqpair->incoming_queue);
+		STAILQ_REMOVE_HEAD(&rqpair->incoming_queue, link);
+
 		rqpair->qd++;
 		rdma_req->state = RDMA_REQUEST_STATE_NEW;
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
@@ -2776,7 +2771,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 				/* Dump this into the incoming queue. This gets cleaned up when
 				 * the queue pair disconnects or recovers. */
-				TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+				STAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 				rqpair->current_recv_depth++;
 
 				/* Don't worry about responding to recv overflow, we are disconnecting anyways */
@@ -2897,7 +2892,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			} else {
 				rqpair->current_recv_depth++;
 			}
-			TAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
+			STAILQ_INSERT_TAIL(&rqpair->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 			break;
