@@ -1,0 +1,571 @@
+/*-
+ *   BSD LICENSE
+ *
+ *   Copyright (c) Intel Corporation.
+ *   All rights reserved.
+ *
+ *   Redistribution and use in source and binary forms, with or without
+ *   modification, are permitted provided that the following conditions
+ *   are met:
+ *
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above copyright
+ *       notice, this list of conditions and the following disclaimer in
+ *       the documentation and/or other materials provided with the
+ *       distribution.
+ *     * Neither the name of Intel Corporation nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ *   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *   "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *   LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *   A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ *   OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ *   SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ *   LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ *   DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ *   THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ *   (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+#include "bdev_uring.h"
+
+#include "spdk/stdinc.h"
+
+#include "spdk/barrier.h"
+#include "spdk/bdev.h"
+#include "spdk/conf.h"
+#include "spdk/env.h"
+#include "spdk/fd.h"
+#include "spdk/likely.h"
+#include "spdk/thread.h"
+#include "spdk/json.h"
+#include "spdk/util.h"
+#include "spdk/string.h"
+
+#include "spdk_internal/log.h"
+
+#include <liburing.h>
+
+struct bdev_uring_io_channel {
+	struct bdev_uring_group_channel		*group_ch;
+};
+
+struct bdev_uring_group_channel {
+	uint64_t				io_inflight;
+	uint64_t				io_pending;
+	struct spdk_poller			*poller;
+	struct io_uring				uring;
+};
+
+struct bdev_uring_task {
+	uint64_t			len;
+	struct bdev_uring_io_channel	*ch;
+	TAILQ_ENTRY(bdev_uring_task)	link;
+};
+
+struct bdev_uring {
+	struct spdk_bdev	disk;
+	char			*filename;
+	int			fd;
+	TAILQ_ENTRY(bdev_uring)  link;
+};
+
+static int bdev_uring_init(void);
+static void bdev_uring_fini(void);
+static void uring_free_disk(struct bdev_uring *uring);
+static TAILQ_HEAD(, bdev_uring) g_uring_disk_head;
+
+#define SPDK_URING_QUEUE_DEPTH 512
+#define MAX_EVENTS_PER_POLL 32
+
+static int
+bdev_uring_get_ctx_size(void)
+{
+	return sizeof(struct bdev_uring_task);
+}
+
+static struct spdk_bdev_module uring_if = {
+	.name		= "uring",
+	.module_init	= bdev_uring_init,
+	.module_fini	= bdev_uring_fini,
+	.config_text	= NULL,
+	.get_ctx_size	= bdev_uring_get_ctx_size,
+};
+
+SPDK_BDEV_MODULE_REGISTER(uring, &uring_if)
+
+static int
+bdev_uring_open(struct bdev_uring *disk)
+{
+	int fd;
+
+	fd = open(disk->filename, O_NOATIME | O_DIRECT);
+	if (fd < 0) {
+		SPDK_ERRLOG("open() failed (file:%s), errno %d: %s\n",
+			    disk->filename, errno, spdk_strerror(errno));
+		disk->fd = -1;
+		return -1;
+	}
+
+	disk->fd = fd;
+
+	return 0;
+}
+
+static int
+bdev_uring_close(struct bdev_uring *disk)
+{
+	int rc;
+
+	if (disk->fd == -1) {
+		return 0;
+	}
+
+	rc = close(disk->fd);
+	if (rc < 0) {
+		SPDK_ERRLOG("close() failed (fd=%d), errno %d: %s\n",
+			    disk->fd, errno, spdk_strerror(errno));
+		return -1;
+	}
+
+	disk->fd = -1;
+
+	return 0;
+}
+
+static int64_t
+bdev_uring_readv(struct bdev_uring *uring, struct spdk_io_channel *ch,
+		 struct bdev_uring_task *uring_task,
+		 struct iovec *iov, int iovcnt, uint64_t nbytes, uint64_t offset)
+{
+	struct bdev_uring_io_channel *uring_ch = spdk_io_channel_get_ctx(ch);
+	struct bdev_uring_group_channel *group_ch = uring_ch->group_ch;
+	struct io_uring_sqe *sqe;
+
+	sqe = io_uring_get_sqe(&group_ch->uring);
+	io_uring_prep_readv(sqe, uring->fd, iov, iovcnt, offset);
+	io_uring_sqe_set_data(sqe, uring_task);
+	uring_task->len = nbytes;
+	uring_task->ch = uring_ch;
+
+	SPDK_DEBUGLOG(SPDK_LOG_URING, "read %d iovs size %lu to off: %#lx\n",
+		      iovcnt, nbytes, offset);
+
+	group_ch->io_pending++;
+	return nbytes;
+}
+
+static int64_t
+bdev_uring_writev(struct bdev_uring *uring, struct spdk_io_channel *ch,
+		  struct bdev_uring_task *uring_task,
+		  struct iovec *iov, int iovcnt, size_t nbytes, uint64_t offset)
+{
+	struct bdev_uring_io_channel *uring_ch = spdk_io_channel_get_ctx(ch);
+	struct bdev_uring_group_channel *group_ch = uring_ch->group_ch;
+	struct io_uring_sqe *sqe;
+
+	sqe = io_uring_get_sqe(&group_ch->uring);
+	io_uring_prep_writev(sqe, uring->fd, iov, iovcnt, offset);
+	io_uring_sqe_set_data(sqe, uring_task);
+	uring_task->ch = uring_ch;
+
+	SPDK_DEBUGLOG(SPDK_LOG_URING, "write %d iovs size %lu from off: %#lx\n",
+		      iovcnt, nbytes, offset);
+
+	group_ch->io_pending++;
+	return nbytes;
+}
+
+static int
+bdev_uring_destruct(void *ctx)
+{
+	struct bdev_uring *uring = ctx;
+	int rc = 0;
+
+	TAILQ_REMOVE(&g_uring_disk_head, uring, link);
+	rc = bdev_uring_close(uring);
+	if (rc < 0) {
+		SPDK_ERRLOG("bdev_uring_close() failed\n");
+	}
+	spdk_io_device_unregister(uring, NULL);
+	uring_free_disk(uring);
+	return rc;
+}
+
+static int
+bdev_uring_reap(struct io_uring *ring, int max)
+{
+	int i, count, ret;
+	struct io_uring_cqe *cqe;
+	struct bdev_uring_task *uring_task;
+	enum spdk_bdev_io_status status;
+
+	count = 0;
+	for (i = 0; i < max; i++) {
+		ret = io_uring_get_completion(ring, &cqe);
+		if (ret != 0) {
+			return ret;
+		}
+
+		if (cqe == NULL) {
+			return count;
+		}
+
+		uring_task = (struct bdev_uring_task *)cqe->user_data;
+		if (cqe->res != (signed)uring_task->len) {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+		} else {
+			status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		}
+
+		uring_task->ch->group_ch->io_inflight--;
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(uring_task), status);
+		count++;
+	}
+
+	return count;
+}
+
+static int
+bdev_uring_group_poll(void *arg)
+{
+	struct bdev_uring_group_channel *group_ch = arg;
+	int to_complete, to_submit;
+	int count, ret;
+
+	to_submit = group_ch->io_pending;
+	to_complete = group_ch->io_inflight;
+
+	ret = 0;
+	if (to_submit > 0) {
+		/* If there are I/O to submit, use io_uring_submit here.
+		 * It will automatically call io_uring_enter appropriately. */
+		ret = io_uring_submit(&group_ch->uring);
+		group_ch->io_pending = 0;
+		group_ch->io_inflight += to_submit;
+	} else if (to_complete > 0) {
+		/* If there are I/O in flight but none to submit, we need to
+		 * call io_uring_enter ourselves. */
+		ret = io_uring_enter(group_ch->uring.ring_fd, 0, 0,
+				     IORING_ENTER_GETEVENTS, NULL);
+	}
+
+	if (ret < 0) {
+		return 1;
+	}
+
+	count = 0;
+	if (to_complete > 0) {
+		count = bdev_uring_reap(&group_ch->uring, to_complete);
+	}
+
+	return (count + to_submit);
+}
+
+static void bdev_uring_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+		bdev_uring_readv((struct bdev_uring *)bdev_io->bdev->ctxt,
+				 ch,
+				 (struct bdev_uring_task *)bdev_io->driver_ctx,
+				 bdev_io->u.bdev.iovs,
+				 bdev_io->u.bdev.iovcnt,
+				 bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				 bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		break;
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		bdev_uring_writev((struct bdev_uring *)bdev_io->bdev->ctxt,
+				  ch,
+				  (struct bdev_uring_task *)bdev_io->driver_ctx,
+				  bdev_io->u.bdev.iovs,
+				  bdev_io->u.bdev.iovcnt,
+				  bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+				  bdev_io->u.bdev.offset_blocks * bdev_io->bdev->blocklen);
+		break;
+	default:
+		SPDK_ERRLOG("Wrong io type\n");
+		break;
+	}
+}
+
+static int _bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	/* Read and write operations must be performed on buffers aligned to
+	 * bdev->required_alignment. If user specified unaligned buffers,
+	 * get the aligned buffer from the pool by calling spdk_bdev_io_get_buf. */
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		spdk_bdev_io_get_buf(bdev_io, bdev_uring_get_buf_cb,
+				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		return 0;
+	default:
+		return -1;
+	}
+}
+
+static void bdev_uring_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+{
+	if (_bdev_uring_submit_request(ch, bdev_io) < 0) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+static bool
+bdev_uring_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
+{
+	switch (io_type) {
+	case SPDK_BDEV_IO_TYPE_READ:
+	case SPDK_BDEV_IO_TYPE_WRITE:
+		return true;
+	default:
+		return false;
+	}
+}
+
+static int
+bdev_uring_create_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_uring_io_channel *ch = ctx_buf;
+
+	ch->group_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(&uring_if));
+
+	return 0;
+}
+
+static void
+bdev_uring_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_uring_io_channel *ch = ctx_buf;
+
+	spdk_put_io_channel(spdk_io_channel_from_ctx(ch->group_ch));
+}
+
+static struct spdk_io_channel *
+bdev_uring_get_io_channel(void *ctx)
+{
+	struct bdev_uring *uring = ctx;
+
+	return spdk_get_io_channel(uring);
+}
+
+
+static const struct spdk_bdev_fn_table uring_fn_table = {
+	.destruct		= bdev_uring_destruct,
+	.submit_request		= bdev_uring_submit_request,
+	.io_type_supported	= bdev_uring_io_type_supported,
+	.get_io_channel		= bdev_uring_get_io_channel,
+};
+
+static void uring_free_disk(struct bdev_uring *uring)
+{
+	if (uring == NULL) {
+		return;
+	}
+	free(uring->filename);
+	free(uring->disk.name);
+	free(uring);
+}
+
+static int
+bdev_uring_group_create_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_uring_group_channel *ch = ctx_buf;
+
+	if (io_uring_queue_init(SPDK_URING_QUEUE_DEPTH, &ch->uring, IORING_SETUP_IOPOLL) < 0) {
+		SPDK_ERRLOG("uring I/O context setup failure\n");
+		return -1;
+	}
+
+	ch->poller = spdk_poller_register(bdev_uring_group_poll, ch, 0);
+	return 0;
+}
+
+static void
+bdev_uring_group_destroy_cb(void *io_device, void *ctx_buf)
+{
+	struct bdev_uring_group_channel *ch = ctx_buf;
+
+	close(ch->uring.ring_fd);
+	io_uring_queue_exit(&ch->uring);
+
+	spdk_poller_unregister(&ch->poller);
+}
+
+struct spdk_bdev *
+create_uring_disk(const char *name, const char *filename)
+{
+	struct bdev_uring *uring;
+	uint32_t block_size;
+	uint64_t disk_size;
+	int rc;
+
+	uring = calloc(1, sizeof(*uring));
+	if (!uring) {
+		SPDK_ERRLOG("Unable to allocate enough memory for uring backend\n");
+		return NULL;
+	}
+
+	uring->filename = strdup(filename);
+	if (!uring->filename) {
+		goto error_return;
+	}
+
+	if (bdev_uring_open(uring)) {
+		SPDK_ERRLOG("Unable to open file %s. fd: %d errno: %d\n", filename, uring->fd, errno);
+		goto error_return;
+	}
+
+	disk_size = spdk_fd_get_size(uring->fd);
+
+	uring->disk.name = strdup(name);
+	if (!uring->disk.name) {
+		goto error_return;
+	}
+	uring->disk.product_name = "URING disk";
+	uring->disk.module = &uring_if;
+
+	uring->disk.write_cache = 1;
+
+	block_size = spdk_fd_get_blocklen(uring->fd);
+	if (block_size == 0) {
+		SPDK_ERRLOG("Block size could not be auto-detected\n");
+		goto error_return;
+	}
+
+	if (block_size < 512) {
+		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be at least 512).\n", block_size);
+		goto error_return;
+	}
+
+	if (!spdk_u32_is_pow2(block_size)) {
+		SPDK_ERRLOG("Invalid block size %" PRIu32 " (must be a power of 2.)\n", block_size);
+		goto error_return;
+	}
+
+	uring->disk.blocklen = block_size;
+	uring->disk.required_alignment = spdk_u32log2(block_size);
+
+	if (disk_size % uring->disk.blocklen != 0) {
+		SPDK_ERRLOG("Disk size %" PRIu64 " is not a multiple of block size %" PRIu32 "\n",
+			    disk_size, uring->disk.blocklen);
+		goto error_return;
+	}
+
+	uring->disk.blockcnt = disk_size / uring->disk.blocklen;
+	uring->disk.ctxt = uring;
+
+	uring->disk.fn_table = &uring_fn_table;
+
+	spdk_io_device_register(uring, bdev_uring_create_cb, bdev_uring_destroy_cb,
+				sizeof(struct bdev_uring_io_channel),
+				uring->disk.name);
+	rc = spdk_bdev_register(&uring->disk);
+	if (rc) {
+		spdk_io_device_unregister(uring, NULL);
+		goto error_return;
+	}
+
+	TAILQ_INSERT_TAIL(&g_uring_disk_head, uring, link);
+	return &uring->disk;
+
+error_return:
+	bdev_uring_close(uring);
+	uring_free_disk(uring);
+	return NULL;
+}
+
+struct delete_uring_disk_ctx {
+	spdk_delete_uring_complete cb_fn;
+	void *cb_arg;
+};
+
+static void
+uring_bdev_unregister_cb(void *arg, int bdeverrno)
+{
+	struct delete_uring_disk_ctx *ctx = arg;
+
+	ctx->cb_fn(ctx->cb_arg, bdeverrno);
+	free(ctx);
+}
+
+void
+delete_uring_disk(struct spdk_bdev *bdev, spdk_delete_uring_complete cb_fn, void *cb_arg)
+{
+	struct delete_uring_disk_ctx *ctx;
+
+	if (!bdev || bdev->module != &uring_if) {
+		cb_fn(cb_arg, -ENODEV);
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		cb_fn(cb_arg, -ENOMEM);
+		return;
+	}
+
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+	spdk_bdev_unregister(bdev, uring_bdev_unregister_cb, ctx);
+}
+
+static int
+bdev_uring_init(void)
+{
+	size_t i;
+	struct spdk_conf_section *sp;
+	struct spdk_bdev *bdev;
+
+	TAILQ_INIT(&g_uring_disk_head);
+	spdk_io_device_register(&uring_if, bdev_uring_group_create_cb, bdev_uring_group_destroy_cb,
+				sizeof(struct bdev_uring_group_channel),
+				"uring_module");
+
+	sp = spdk_conf_find_section(NULL, "URING");
+	if (!sp) {
+		return 0;
+	}
+
+	i = 0;
+	while (true) {
+		const char *file;
+		const char *name;
+
+		file = spdk_conf_section_get_nmval(sp, "URING", i, 0);
+		if (!file) {
+			break;
+		}
+
+		name = spdk_conf_section_get_nmval(sp, "URING", i, 1);
+		if (!name) {
+			SPDK_ERRLOG("No name provided for URING disk with file %s\n", file);
+			i++;
+			continue;
+		}
+
+		bdev = create_uring_disk(name, file);
+		if (!bdev) {
+			SPDK_ERRLOG("Unable to create URING bdev from file %s\n", file);
+			i++;
+			continue;
+		}
+
+		i++;
+	}
+
+	return 0;
+}
+
+static void
+bdev_uring_fini(void)
+{
+	spdk_io_device_unregister(&uring_if, NULL);
+}
+
+SPDK_LOG_REGISTER_COMPONENT("uring", SPDK_LOG_URING)
