@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc7ad2b5_73d7248b",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-19T23:30:45Z",
+      "side": 1,
+      "message": "I think you should always set the submit_tick. That is what the old code in the NVMe-oF transports does. That way submit_tick is much closer to the round trip time of going to the target.",
+      "revId": "32f369afeb51805691cec96671709cccf6e3dcfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
