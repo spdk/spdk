@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9c91238e_2fb8cb50",
+        "filename": "include/spdk/nbd.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T02:35:44Z",
+      "side": 1,
+      "message": "Maybe \"On success, 0 is assigned to rc; On failure, negated error is assigned to rc.\"",
+      "revId": "5482e7c9495ed7825972d17adda100a3357fa27b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
