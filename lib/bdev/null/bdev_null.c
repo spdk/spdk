@@ -285,7 +285,7 @@ bdev_null_initialize(void)
 	 *  Instead of using a real rbuf from the bdev pool, just always point to
 	 *  this same zeroed buffer.
 	 */
-	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL);
+	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE, 0, NULL);
 
 	/*
 	 * We need to pick some unique address as our "io device" - so just use the

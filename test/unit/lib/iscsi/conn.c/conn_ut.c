@@ -203,7 +203,7 @@ ut_conn_create_read_tasks(int transfer_len)
 
 	task->scsi.transfer_len = transfer_len;
 	task->scsi.offset = 0;
-	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, task->scsi.transfer_len);
+	task->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE, task->scsi.transfer_len);
 	task->scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 	remaining_size = task->scsi.transfer_len - task->scsi.length;
@@ -227,7 +227,7 @@ ut_conn_create_read_tasks(int transfer_len)
 			subtask = ut_conn_task_get(task);
 
 			subtask->scsi.offset = task->current_datain_offset;
-			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_MAX_SIZE, remaining_size);
+			subtask->scsi.length = DMIN32(SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE, remaining_size);
 			subtask->scsi.status = SPDK_SCSI_STATUS_GOOD;
 
 			task->current_datain_offset += subtask->scsi.length;
@@ -246,7 +246,7 @@ read_task_split_in_order_case(void)
 {
 	struct spdk_iscsi_task *primary, *task, *tmp;
 
-	ut_conn_create_read_tasks(SPDK_BDEV_LARGE_BUF_MAX_SIZE * 8);
+	ut_conn_create_read_tasks(SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE * 8);
 
 	TAILQ_FOREACH(task, &g_ut_read_tasks, link) {
 		primary = spdk_iscsi_task_get_primary(task);

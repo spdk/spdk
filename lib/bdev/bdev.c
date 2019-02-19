@@ -586,7 +586,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 		return;
 	}
 
-	assert(len + alignment <= SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT);
+	assert(len + alignment <= SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE + SPDK_BDEV_POOL_ALIGNMENT);
 	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
 	bdev_io->internal.buf_len = len;
@@ -948,7 +948,7 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
-				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT,
+				    SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE + SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
@@ -3604,10 +3604,10 @@ spdk_bdev_init(struct spdk_bdev *bdev)
 	if (spdk_bdev_get_buf_align(bdev) > 1) {
 		if (bdev->split_on_optimal_io_boundary) {
 			bdev->optimal_io_boundary = spdk_min(bdev->optimal_io_boundary,
-							     SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen);
+							     SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE / bdev->blocklen);
 		} else {
 			bdev->split_on_optimal_io_boundary = true;
-			bdev->optimal_io_boundary = SPDK_BDEV_LARGE_BUF_MAX_SIZE / bdev->blocklen;
+			bdev->optimal_io_boundary = SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE / bdev->blocklen;
 		}
 	}
 

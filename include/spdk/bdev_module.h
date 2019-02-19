@@ -706,7 +706,7 @@ const struct spdk_bdev_aliases_list *spdk_bdev_get_aliases(const struct spdk_bde
  * or the bdev_io has an SGL assigned already.
  * \param len size of the buffer to allocate. In case the bdev_io
  * doesn't have an SGL assigned this field must be no bigger than
- * \c SPDK_BDEV_LARGE_BUF_MAX_SIZE.
+ * \c SPDK_BDEV_LARGE_BUF_DEFAULT_SIZE.
  */
 void spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len);
 
