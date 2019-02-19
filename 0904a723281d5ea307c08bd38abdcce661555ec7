@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab41b67d_a5fe5ad6",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-19T05:07:16Z",
+      "side": 1,
+      "message": "A interesting thing here is, DPS is configured by user, DPC means the controller can support such feature, that\u0027s means DPS should be configured via NVM format command.  Since the block device is already formatted to TYPE1 or TYPE2, so I raised the question here for a open discussion first.",
+      "range": {
+        "startLine": 129,
+        "startChar": 3,
+        "endLine": 129,
+        "endChar": 56
+      },
+      "revId": "0904a723281d5ea307c08bd38abdcce661555ec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
