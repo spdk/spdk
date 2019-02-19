@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d5d8f3a_f51490ba",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-19T08:40:25Z",
+      "side": 1,
+      "message": "I think we might want to disable this flag too. Otherwise env.sh and couple others are ran by default.\n\nThere are two cases to consider:\n- autobuild.sh without config, here we want to compile without any additional checks/dependencies\n- autotest.sh without config, we might want to exit early if no tests are provided. I\u0027m fine with having such check added later as separate patch from this one.",
+      "range": {
+        "startLine": 42,
+        "startChar": 4,
+        "endLine": 42,
+        "endChar": 28
+      },
+      "revId": "96ff74cd7f822b1e57a67ec9362689eccc5eb4bd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
