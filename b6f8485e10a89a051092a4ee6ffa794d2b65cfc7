@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "03442634_0b5fff36",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1474,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-19T06:55:45Z",
+      "side": 1,
+      "message": "hotplug_period \u003d 0 may be better, because\n\n* in spdk_bdev_nvme_set_hotplug(), period_us is set to DEFAULT if 0\n\n* in spdk_bdev_nvme_hotplug RPC, period_us is set to 0 if skipped, and it is overwritten to DEFAULT in spdk_bdev_nvme_set_hotplug().",
+      "range": {
+        "startLine": 1474,
+        "startChar": 19,
+        "endLine": 1474,
+        "endChar": 52
+      },
+      "revId": "b6f8485e10a89a051092a4ee6ffa794d2b65cfc7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
