@@ -22,6 +22,30 @@
       "revId": "28de75effc12ad683dfeb286c769b84a914d187e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be2579d2_b22e93f4",
+        "filename": "test/vhost/hotplug/scsi_hotplug.sh",
+        "patchSetId": 11
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-19T11:11:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "10a51780_84ca58c7",
+      "range": {
+        "startLine": 53,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 1
+      },
+      "revId": "28de75effc12ad683dfeb286c769b84a914d187e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
