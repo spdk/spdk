@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe76be36_1e90e9b6",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "Can you document error codes here?",
+      "range": {
+        "startLine": 316,
+        "startChar": 25,
+        "endLine": 316,
+        "endChar": 55
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebbff119_edb5bf2c",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "There is no need to have separate structure. You can inline rpc_get_reactors_stat here abd use rpc_get_reactors_stat_ctx in decoders.",
+      "range": {
+        "startLine": 171,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 34
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0bfbdddd_0ace4252",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "this should be split into two phases\n\n  1. for each thread\n    1. collect stats\n    2. if ctx-\u003ereset then spdk_thread_reset_stats()\n  2. produce response.\n    1. If there was an error -\u003e send proper error response\n    2. otherwise:\n       1. ctx-\u003ew \u003d spdk_jsonrpc_begin_result(request);\n       2. if (ctx-\u003ew) write_stats",
+      "range": {
+        "startLine": 191,
+        "startChar": 1,
+        "endLine": 191,
+        "endChar": 42
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eaf19de8_99f3dec0",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "all params are mandatory so this will be checked by spdk_json_decode_object(), no need to put it here.",
+      "range": {
+        "startLine": 217,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 22
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dcc111c7_eb9bb2df",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "if `ctx-\u003ew \u003d\u003d NULL` user still might want to execute this request (e.g. just to reset stats) but don\u0027t wan\u0027t response.",
+      "range": {
+        "startLine": 229,
+        "startChar": 1,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0df736d0_63e07793",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "see comments in line 191",
+      "range": {
+        "startLine": 228,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 78
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24404deb_5ff2e1cc",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-19T12:51:42Z",
+      "side": 1,
+      "message": "pls update jsonrpc.md about new RPC call (all patches in this serie).",
+      "range": {
+        "startLine": 242,
+        "startChar": 19,
+        "endLine": 242,
+        "endChar": 36
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
