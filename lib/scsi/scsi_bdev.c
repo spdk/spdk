@@ -75,6 +75,21 @@ spdk_hex2bin(char ch)
 	return (int)ch;
 }
 
+static uint32_t
+_bdev_get_data_block_size(const struct spdk_bdev *bdev)
+{
+	uint32_t block_size, md_size;
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+
+	if (md_size != 0 && spdk_bdev_is_md_interleaved(bdev)) {
+		return block_size - md_size;
+	} else {
+		return block_size;
+	}
+}
+
 static void
 spdk_bdev_scsi_set_naa_ieee_extended(const char *name, uint8_t *buf)
 {
@@ -541,7 +556,7 @@ spdk_bdev_scsi_inquiry(struct spdk_bdev *bdev, struct spdk_scsi_task *task,
 		}
 
 		case SPDK_SPC_VPD_BLOCK_LIMITS: {
-			uint32_t block_size = spdk_bdev_get_block_size(bdev);
+			uint32_t block_size = _bdev_get_data_block_size(bdev);
 
 			/* PAGE LENGTH */
 			memset(&data[4], 0, 60);
@@ -1103,7 +1118,7 @@ spdk_bdev_scsi_mode_sense(struct spdk_bdev *bdev, int md,
 			  int page, int subpage, uint8_t *data, struct spdk_scsi_task *task)
 {
 	uint64_t num_blocks = spdk_bdev_get_num_blocks(bdev);
-	uint32_t block_size = spdk_bdev_get_block_size(bdev);
+	uint32_t block_size = _bdev_get_data_block_size(bdev);
 	uint8_t *hdr, *bdesc, *pages;
 	int hlen;
 	int blen;
@@ -1417,7 +1432,7 @@ spdk_bdev_scsi_readwrite(struct spdk_scsi_task *task,
 		return SPDK_SCSI_TASK_COMPLETE;
 	}
 
-	block_size = spdk_bdev_get_block_size(bdev);
+	block_size = _bdev_get_data_block_size(bdev);
 
 	/* Transfer Length is limited to the Block Limits VPD page Maximum Transfer Length */
 	max_xfer_len = SPDK_WORK_BLOCK_SIZE / block_size;
@@ -1708,7 +1723,7 @@ spdk_bdev_scsi_process_block(struct spdk_scsi_task *task)
 		} else {
 			to_be32(buffer, num_blocks - 1);
 		}
-		to_be32(&buffer[4], spdk_bdev_get_block_size(bdev));
+		to_be32(&buffer[4], _bdev_get_data_block_size(bdev));
 
 		len = spdk_min(task->length, sizeof(buffer));
 		if (spdk_scsi_task_scatter_data(task, buffer, len) < 0) {
@@ -1726,7 +1741,7 @@ spdk_bdev_scsi_process_block(struct spdk_scsi_task *task)
 			uint8_t buffer[32] = {0};
 
 			to_be64(&buffer[0], spdk_bdev_get_num_blocks(bdev) - 1);
-			to_be32(&buffer[8], spdk_bdev_get_block_size(bdev));
+			to_be32(&buffer[8], _bdev_get_data_block_size(bdev));
 			/*
 			 * Set the TPE bit to 1 to indicate thin provisioning.
 			 * The position of TPE bit is the 7th bit in 14th byte
