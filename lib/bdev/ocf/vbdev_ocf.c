@@ -97,10 +97,6 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 		return rc;
 	}
 
-	/* This function blocks execution until all OCF requests are finished
-	 * But we don't have to worry about possible deadlocks because in
-	 * supported modes (WT and PT) all OCF requests are finished before
-	 * SPDK bdev io requests */
 	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
 	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
@@ -151,18 +147,12 @@ close_spdk_dev:
 	return rc;
 }
 
-/* Free OCF resources, close base bdevs, unregister io device
- * This function is called during spdk_bdev_unregister */
-static int
-vbdev_ocf_destruct(void *opaque)
+/* Free OCF resources, close base bdevs */
+static void
+unregister_cb(void *opaque)
 {
 	struct vbdev_ocf *vbdev = opaque;
 	int status = 0;
-
-	if (vbdev->state.doing_finish) {
-		return -EALREADY;
-	}
-	vbdev->state.doing_finish = true;
 
 	if (vbdev->state.started) {
 		status = stop_vbdev(vbdev);
@@ -175,11 +165,35 @@ vbdev_ocf_destruct(void *opaque)
 		remove_base(&vbdev->cache);
 	}
 
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+}
+
+/* Unregister io device with callback to unregister_cb
+ * This function is called during spdk_bdev_unregister */
+static int
+vbdev_ocf_destruct(void *opaque)
+{
+	struct vbdev_ocf *vbdev = opaque;
+
+	if (vbdev->state.doing_finish) {
+		return -EALREADY;
+	}
+	vbdev->state.doing_finish = true;
+
 	if (vbdev->state.started) {
-		spdk_io_device_unregister(vbdev, NULL);
+		spdk_io_device_unregister(vbdev, unregister_cb);
+		/* Return 1 because unregister is delayed */
+		return 1;
 	}
 
-	return status;
+	if (vbdev->core.attached) {
+		remove_base(&vbdev->core);
+	}
+	if (vbdev->cache.attached) {
+		remove_base(&vbdev->cache);
+	}
+
+	return 0;
 }
 
 /* Stop OCF cache and unregister SPDK bdev */
@@ -573,6 +587,7 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 	qctx->cache_ch   = spdk_bdev_get_io_channel(vbdev->cache.desc);
 	qctx->core_ch    = spdk_bdev_get_io_channel(vbdev->core.desc);
 	qctx->poller     = spdk_poller_register(queue_poll, qctx, 0);
+	qctx->unfinished_requests = 0;
 
 	TAILQ_INSERT_TAIL(&vbdev->queues, qctx, tailq);
 
@@ -588,6 +603,13 @@ static void
 io_device_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_ocf_qcxt *qctx = ctx_buf;
+	struct spdk_thread *thread = spdk_get_thread();
+
+	/* There could still be pending requests on OCF queue that need to be competed */
+	while (qctx->unfinished_requests > 0 || ocf_queue_pending_io(qctx->queue)) {
+		ocf_queue_run(qctx->queue);
+		spdk_thread_poll(thread, 0, 0);
+	}
 
 	spdk_put_io_channel(qctx->cache_ch);
 	spdk_put_io_channel(qctx->core_ch);

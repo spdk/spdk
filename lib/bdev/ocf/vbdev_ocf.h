@@ -46,6 +46,8 @@ struct vbdev_ocf;
 struct vbdev_ocf_qcxt {
 	/* OCF queue. Contains OCF requests */
 	struct ocf_queue            *queue;
+	/* Counter for unfinished OCF requests */
+	int                          unfinished_requests;
 	/* Poller for OCF queue. Runs OCF requests */
 	struct spdk_poller          *poller;
 	/* Reference to parent vbdev */

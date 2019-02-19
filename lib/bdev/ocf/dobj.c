@@ -162,11 +162,15 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 {
 	struct ocf_io *io;
 	struct ocf_io_ctx *io_ctx;
+	struct vbdev_ocf_base *base;
+	ocf_queue_t q;
+	struct vbdev_ocf_qcxt *qctx;
 
 	assert(opaque);
 
 	io = opaque;
 	io_ctx = ocf_get_io_ctx(io);
+	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 
 	assert(io_ctx != NULL);
 
@@ -202,21 +206,24 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 
 	if (--io_ctx->rq_cnt == 0) {
 		io->end(io, io_ctx->error);
+
+		assert(ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q) == 0);
+		qctx = ocf_queue_get_priv(q);
+		qctx->unfinished_requests--;
 	}
 }
 
-static int
+static void
 prepare_submit(struct ocf_io *io)
 {
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct vbdev_ocf_qcxt *qctx;
 	struct vbdev_ocf_base *base;
 	ocf_queue_t q;
-	int rc;
 
 	io_ctx->rq_cnt++;
 	if (io_ctx->rq_cnt != 1) {
-		return 0;
+		return;
 	}
 
 	vbdev_ocf_volume_io_get(io);
@@ -229,17 +236,11 @@ prepare_submit(struct ocf_io *io)
 		 * So to get io channel that is usually passed as queue context
 		 * we have to reallocate it using global method */
 		io_ctx->ch = spdk_bdev_get_io_channel(base->desc);
-		if (io_ctx->ch == NULL) {
-			return -EPERM;
-		}
-		return 0;
+		assert(io_ctx->ch != NULL);
+		return;
 	}
 
-	rc = ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q);
-	if (rc) {
-		SPDK_ERRLOG("Could not get queue #%d\n", io->io_queue);
-		return rc;
-	}
+	assert(ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q) == 0);
 
 	qctx = ocf_queue_get_priv(q);
 	if (base->is_cache) {
@@ -248,7 +249,7 @@ prepare_submit(struct ocf_io *io)
 		io_ctx->ch = qctx->core_ch;
 	}
 
-	return rc;
+	qctx->unfinished_requests++;
 }
 
 static void
