@@ -5011,6 +5011,8 @@ Example response:
 }
 ~~~
 
+# Miscellaneous RPC commands
+
 ## send_nvme_cmd {#rpc_send_nvme_cmd}
 
 Send NVMe command directly to NVMe controller or namespace. Parameters and responses encoded by base64 urlsafe need further processing.
