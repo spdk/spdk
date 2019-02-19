@@ -65,6 +65,10 @@ if grep -q '#define SPDK_CONFIG_CRYPTO 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/bdev/crypto.c/crypto_ut
 fi
 
+if grep -q '#define SPDK_CONFIG_REDUCE 1' $rootdir/include/spdk/config.h; then
+        $valgrind $testdir/lib/bdev/compress.c/compress_ut
+fi
+
 if grep -q '#define SPDK_CONFIG_PMDK 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/bdev/pmem/bdev_pmem_ut
 fi
