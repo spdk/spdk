@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "39e8cf63_85d876bc",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1236,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-19T07:15:59Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "7b0423e8_0542efe3",
+      "range": {
+        "startLine": 1235,
+        "startChar": 0,
+        "endLine": 1236,
+        "endChar": 12
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c31d3d2b_1146b42f",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-19T06:43:28Z",
       "side": 1,
       "message": "How can the caller know this failure?",
+      "range": {
+        "startLine": 1241,
+        "startChar": 3,
+        "endLine": 1241,
+        "endChar": 13
+      },
+      "revId": "12fbdf70ca70cf37fee63c1cd336f36f5e75cbb7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "32157db1_3c2e55c0",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1241,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-19T07:15:59Z",
+      "side": 1,
+      "message": "yeah, will add it.",
+      "parentUuid": "c31d3d2b_1146b42f",
       "range": {
         "startLine": 1241,
         "startChar": 3,
