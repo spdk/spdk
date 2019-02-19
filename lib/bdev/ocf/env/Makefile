@@ -44,25 +44,36 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME := ocfenv
 
-ifeq ($(CONFIG_CUSTOMOCF),n)
-
 CFLAGS +=  $(ENV_CFLAGS) -I$(CURDIR) -I$(CURDIR)/include -w
 C_SRCS = $(shell find -name \*.c)
 
-include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
-
-else
-
 LIB = $(call spdk_lib_list_to_static_libs,$(LIBNAME))
 
-all: $(LIB)
-
+ifeq ($(CONFIG_CUSTOMOCF),y)
 $(LIB):
 	cp $(CONFIG_OCF_PATH) $(LIB)
 
 clean:
 	$(Q)rm -f $(LIB)
 install:
+
+else
+
+.PHONY: ocf_inc ocf_src ocf_distclean
+
+all: ocf_inc ocf_src
+
+ocf_inc:
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" --quiet
+
+ocf_src:
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" CMD=cp --quiet
+
+ocf_distclean:
+	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" distclean O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" --quiet
+
+clean: ocf_distclean
+	$(Q)rm -rf "$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/include" "$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/src";
 
 endif
 
