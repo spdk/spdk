@@ -140,10 +140,6 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 		return rc;
 	}
 
-	/* This function blocks execution until all OCF requests are finished
-	 * But we don't have to worry about possible deadlocks because in
-	 * supported modes (WT and PT) all OCF requests are finished before
-	 * SPDK bdev io requests */
 	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
 	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
@@ -199,13 +195,31 @@ close_spdk_dev:
 	return rc;
 }
 
-/* Free OCF resources, close base bdevs, unregister io device
+/* Free OCF resources, close base bdevs */
+static void
+unregister_cb(void *opaque)
+{
+	struct vbdev_ocf *vbdev = opaque;
+	int status;
+
+	status = stop_vbdev(vbdev);
+
+	if (vbdev->core.attached) {
+		remove_base(&vbdev->core);
+	}
+	if (vbdev->cache.attached) {
+		remove_base(&vbdev->cache);
+	}
+
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+}
+
+/* Unregister io device with callback to unregister_cb
  * This function is called during spdk_bdev_unregister */
 static int
 vbdev_ocf_destruct(void *opaque)
 {
 	struct vbdev_ocf *vbdev = opaque;
-	int status = 0;
 
 	if (vbdev->state.doing_finish) {
 		return -EALREADY;
@@ -213,7 +227,9 @@ vbdev_ocf_destruct(void *opaque)
 	vbdev->state.doing_finish = true;
 
 	if (vbdev->state.started) {
-		status = stop_vbdev(vbdev);
+		spdk_io_device_unregister(vbdev, unregister_cb);
+		/* Return 1 because unregister is delayed */
+		return 1;
 	}
 
 	if (vbdev->core.attached) {
@@ -223,11 +239,7 @@ vbdev_ocf_destruct(void *opaque)
 		remove_base(&vbdev->cache);
 	}
 
-	if (vbdev->state.started) {
-		spdk_io_device_unregister(vbdev, NULL);
-	}
-
-	return status;
+	return 0;
 }
 
 /* Stop OCF cache and unregister SPDK bdev */
@@ -616,6 +628,13 @@ vbdev_ocf_ctx_queue_kick(ocf_queue_t q)
 static void
 vbdev_ocf_ctx_queue_stop(ocf_queue_t q)
 {
+	struct vbdev_ocf_qcxt *qctx = ocf_queue_get_priv(q);
+
+	if (qctx) {
+		spdk_put_io_channel(qctx->cache_ch);
+		spdk_put_io_channel(qctx->core_ch);
+		spdk_poller_unregister(&qctx->poller);
+	}
 }
 
 /* Queue ops is an interface for running queue thread
@@ -651,16 +670,24 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 }
 
 /* Called per thread
- * We free resources associated with OCF queue here
- * and close base devices channels */
+ * Put OCF queue and relaunch poller with new context to finish pending requests */
 static void
 io_device_destroy_cb(void *io_device, void *ctx_buf)
 {
+	/* Making a copy of context to use it after io channel will be destroyed */
+	struct vbdev_ocf_qcxt *copy = malloc(sizeof(*copy));
 	struct vbdev_ocf_qcxt *qctx = ctx_buf;
 
-	spdk_put_io_channel(qctx->cache_ch);
-	spdk_put_io_channel(qctx->core_ch);
-	spdk_poller_unregister(&qctx->poller);
+	if (copy) {
+		ocf_queue_set_priv(qctx->queue, copy);
+		memcpy(copy, qctx, sizeof(*copy));
+		spdk_poller_unregister(&qctx->poller);
+		copy->poller = spdk_poller_register(queue_poll, copy, 0);
+	} else {
+		SPDK_ERRLOG("Unable to stop OCF queue properly: %s\n",
+			    spdk_strerror(ENOMEM));
+	}
+
 	ocf_queue_put(qctx->queue);
 }
 
