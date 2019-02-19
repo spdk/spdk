@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9605065f_97085028",
+        "filename": "test/unit/lib/bdev/mt/bdev.c/bdev_ut.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 688,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-02-19T08:22:43Z",
+      "side": 1,
+      "message": "Without this fix, this ASSERT will fail and the QoS is not properly setup (ch, thread and so on) as the channels are already obtained and no get_io_channel operation sent down to enable the QoS. So that we need to handle in the spdk_bdev_open() API for this case.",
+      "range": {
+        "startLine": 688,
+        "startChar": 1,
+        "endLine": 688,
+        "endChar": 43
+      },
+      "revId": "706ea0c8f458b2f04879a4dbeb54edd921ac1312",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
