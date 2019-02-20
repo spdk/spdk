@@ -16,6 +16,24 @@
       "revId": "09788118422ed4e6e248a3d2dea00fb12994e3f1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a166d31_021414e9",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1432,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T02:23:28Z",
+      "side": 1,
+      "message": "I changed this patch to use dif + memmove instead, and added check to buffer size, and refined test code.",
+      "parentUuid": "a1875490_0172c723",
+      "revId": "09788118422ed4e6e248a3d2dea00fb12994e3f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
