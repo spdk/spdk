@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "08aea462_7eeb4b54",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-20T20:13:11Z",
+      "side": 1,
+      "message": "Match the order in --with-ocf\u003d*",
+      "revId": "e7d48794896b67646cdccada93793eb92e5cf00b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7e6cd46_8e812d74",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-20T20:13:11Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to print this message at all now.",
+      "revId": "e7d48794896b67646cdccada93793eb92e5cf00b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
