@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "695221db_4ef38833",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:11:15Z",
+      "side": 1,
+      "message": "one empty line can be removed",
+      "revId": "0807cd44395e0a4a0450e61d829cb292f90fc956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "698690b4_3b150571",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:11:15Z",
+      "side": 1,
+      "message": "one empty line can be removed",
+      "revId": "0807cd44395e0a4a0450e61d829cb292f90fc956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f6ec1c2_3154235d",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:11:15Z",
+      "side": 1,
+      "message": "unnecessary empty lines",
+      "range": {
+        "startLine": 213,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 0
+      },
+      "revId": "0807cd44395e0a4a0450e61d829cb292f90fc956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aad71bc0_47081f00",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:11:15Z",
+      "side": 1,
+      "message": "maybe spdk_notify_get_ctx",
+      "range": {
+        "startLine": 268,
+        "startChar": 0,
+        "endLine": 268,
+        "endChar": 15
+      },
+      "revId": "0807cd44395e0a4a0450e61d829cb292f90fc956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e75b7c39_e0b1b352",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 277,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:11:15Z",
+      "side": 1,
+      "message": "this empty line is removable?",
+      "revId": "0807cd44395e0a4a0450e61d829cb292f90fc956",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
