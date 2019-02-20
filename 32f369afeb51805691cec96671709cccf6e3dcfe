@@ -34,6 +34,24 @@
       "revId": "32f369afeb51805691cec96671709cccf6e3dcfe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2fe934ca_0cb4adf1",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-20T20:07:35Z",
+      "side": 1,
+      "message": "OK, that works. I guess I misunderstood what the purpose of this variable was.",
+      "parentUuid": "f28b36a2_ce8a0b18",
+      "revId": "32f369afeb51805691cec96671709cccf6e3dcfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
