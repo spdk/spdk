@@ -16,6 +16,24 @@
       "revId": "32f369afeb51805691cec96671709cccf6e3dcfe",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f28b36a2_ce8a0b18",
+        "filename": "lib/nvme/nvme_qpair.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 546,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-02-20T13:56:56Z",
+      "side": 1,
+      "message": "Hi Seth,\n\nThe submit_tick is used for detecting requests timeout. A request has been submitted after calling spdk_nvme_ns_cmd_xxx api from the view of users. So I think the submit_tick should include the time that requests waiting in pending list, not only the round trip time of going to the target.",
+      "parentUuid": "dc7ad2b5_73d7248b",
+      "revId": "32f369afeb51805691cec96671709cccf6e3dcfe",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
