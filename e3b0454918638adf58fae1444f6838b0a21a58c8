@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96fe0a76_b7385bd8",
+        "filename": "test/notify/notify.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-20T13:29:52Z",
+      "side": 1,
+      "message": "Why we don\u0027t set max_count to e.g. 10. I think test should also work because we should receive 2 notifications (construct_malloc_bdev, delete_malloc_bdev)",
+      "range": {
+        "startLine": 188,
+        "startChar": 41,
+        "endLine": 188,
+        "endChar": 56
+      },
+      "revId": "e3b0454918638adf58fae1444f6838b0a21a58c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
