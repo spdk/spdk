@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab806667_0bc09776",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:24:02Z",
+      "side": 1,
+      "message": "ignoring",
+      "range": {
+        "startLine": 140,
+        "startChar": 61,
+        "endLine": 140,
+        "endChar": 69
+      },
+      "revId": "aec11ed8bf27a86fa882d4b76194c748746cbc5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
