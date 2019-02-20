@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "49044e64_323ded26",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-20T20:48:34Z",
+      "side": 1,
+      "message": "let\u0027s move this below the Controller Fatal Status check below\n\nif CFS bit is set, we definitely want that ERRLOG to print\n\nbut this ERRLOG here, for \"invalid cid\" should be removed I think; or make it an SPDK_DEBUGLOG - my concern is that we are using SPDK_NVME_INVALID_CID here to mark a queued request that has not been submitted, telling the user that we received an invalid cid may be confusing\n\nsomething like \"timeout callback with no CID - likely a queued request - reset required\"\n\nWe don\u0027t print when doing spdk_nvme_ctrlr_reset in the SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET case below, so I don\u0027t think we should ERRLOG here either, but a DEBUGLOG is probably good",
+      "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1cd216b_e79776de",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2030,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-20T20:48:34Z",
+      "side": 1,
+      "message": "Hi,\n\nThe * need to be aligned.  See line 2064-2069 below as an example.  This is what is failing the unit tests.  Note that \"unit tests\" in CI does more than just unit tests, it also does a build and runs the check_format.sh script.  The check_format.sh is what is failing.  You can also run this script before submitting a patch to make sure it passes.\n\n-Jim",
+      "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0dde6ad5_dd3db9e1",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 1
@@ -13,6 +47,24 @@
       "writtenOn": "2019-02-20T16:47:21Z",
       "side": 1,
       "message": "I think the code here causes ctrlr resetting continuously once requests in qpair-\u003equeued_req start to time out. For example, there are ten requests in qpair-\u003equeued_req and four of them are timed out. This loop will call timeout_cb in bdev_nvme four times and indirectly call spdk_nvme_ctrlr_reset four times. So I think it\u0027s better to mark both these four requests as timed_out but only calls timeout callback one time.",
+      "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "53bac6df_37ced299",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2047,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-20T20:48:34Z",
+      "side": 1,
+      "message": "Hi Lorne,\n\nI see your point.  Maybe modify nvme_request_check_timeout to *not* call the timeout_cb_fn if cid \u003d\u003d INVALID_CID.  Then here you can call the timeout_cb_fn directly if at least one queued_req timed out?\n\n-Jim",
+      "parentUuid": "0dde6ad5_dd3db9e1",
       "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
