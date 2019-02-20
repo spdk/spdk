@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "463cb86f_39bb4383",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-20T17:18:49Z",
+      "side": 1,
+      "message": "You\u0027re adding listener for each connection, but you\u0027re using g_rpc_notify_listeners global array for further processing (btw this listener argument is never used). For multiple connections each notification will be sent multiple times to the rpc_notify_new_notification_cb from notification library.\nI think that you should start listening only once or change rpc_notify_new_notification_cb to handle multiple listeners.",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 62
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7e69d385_86c5746f",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 23
