@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1f5e8e37_45ecbf20",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-20T09:27:10Z",
+      "side": 1,
+      "message": "If SPDK_DIF_FLAGS_GUARD_CHECK is not set, we just need to move data_block_size bytes from src to dst, and ctx-\u003eguard_interval may greater than data_block_size.",
+      "revId": "6395f25a0be89d953073f395a579ea8e3ab7f81e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
