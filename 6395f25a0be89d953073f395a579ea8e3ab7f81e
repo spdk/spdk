@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5beb6b6f_9acf0997",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-20T09:33:35Z",
+      "side": 1,
+      "message": "I think the real reason that we should use memmove is the src and dst is overlapped. Manual of memcpy says:\n\n\u003e The memory areas should not overlap.  Use memmove(3) if the memory areas do overlap.\n\n\"Use memmove just because ASAN complains\" is not persuasive, so the commit message should be updated or just removed.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "6395f25a0be89d953073f395a579ea8e3ab7f81e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1f5e8e37_45ecbf20",
         "filename": "lib/util/dif.c",
         "patchSetId": 13
