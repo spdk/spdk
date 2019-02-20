@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66b26658_f7fd3645",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:08:05Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "58fc5a15706c05655367fbf0bfcb17f684a89a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "94f3f910_f0cc03a2",
+        "filename": "lib/bdev/malloc/bdev_malloc.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:08:05Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "58fc5a15706c05655367fbf0bfcb17f684a89a04",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
