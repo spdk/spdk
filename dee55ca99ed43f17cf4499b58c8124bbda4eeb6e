@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "717c7ce7_accfb5ce",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T01:35:41Z",
+      "side": 1,
+      "message": "Thank you Zhouhui, by using cyclic data, I could observe that bug.\n\ndif_copy_reverse will be necessary for DIF insertion and dif_copy_forward will be necessary for DIF strip.\n\nI\u0027ll do workaround by using not dif_copy but dif + memmove for now.\n\nAnd I posted an issue to ISA-L https://github.com/01org/isa-l/issues/54 .\n\nEven if we can\u0027t use dif_copy, using single buffer is still better than two buffers, original and bounce.\n \nI hope we will be able to fix this issue by the best idea in the end.",
+      "parentUuid": "ab9191dc_8c64c66b",
+      "revId": "dee55ca99ed43f17cf4499b58c8124bbda4eeb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2dbb7fc9_d540f6c1",
         "filename": "lib/util/dif.c",
         "patchSetId": 10
@@ -33,6 +51,24 @@
       "revId": "dee55ca99ed43f17cf4499b58c8124bbda4eeb6e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9065e126_a91ed8b7",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1375,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T01:35:41Z",
+      "side": 1,
+      "message": "Yes, you are right. I added a check if buffer size is enough after inserting DIF. Thank you.",
+      "parentUuid": "2dbb7fc9_d540f6c1",
+      "revId": "dee55ca99ed43f17cf4499b58c8124bbda4eeb6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
