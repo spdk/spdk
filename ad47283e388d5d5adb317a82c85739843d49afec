@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e69d385_86c5746f",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-20T12:13:43Z",
+      "side": 1,
+      "message": "I think that here should be:\nend_time \u003d time.clock() + timeout_ms / 1000 * cnt",
+      "range": {
+        "startLine": 39,
+        "startChar": 8,
+        "endLine": 39,
+        "endChar": 53
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "60210749_58440cda",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-20T12:13:43Z",
+      "side": 1,
+      "message": "Do we really want to wait one hour?",
+      "range": {
+        "startLine": 41,
+        "startChar": 34,
+        "endLine": 41,
+        "endChar": 38
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
