@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0dde6ad5_dd3db9e1",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2047,
+      "author": {
+        "id": 1015656
+      },
+      "writtenOn": "2019-02-20T16:47:21Z",
+      "side": 1,
+      "message": "I think the code here causes ctrlr resetting continuously once requests in qpair-\u003equeued_req start to time out. For example, there are ten requests in qpair-\u003equeued_req and four of them are timed out. This loop will call timeout_cb in bdev_nvme four times and indirectly call spdk_nvme_ctrlr_reset four times. So I think it\u0027s better to mark both these four requests as timed_out but only calls timeout callback one time.",
+      "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
