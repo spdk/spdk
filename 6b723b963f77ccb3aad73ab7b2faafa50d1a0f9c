@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc9675fd_8d66e089",
+        "filename": "test/common/lib/test_env.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:47:31Z",
+      "side": 1,
+      "message": "maybe NO_VTOPHYS_MOCK or NO_VTOPHYS_UT_MOCK\n\nthis means that if there is spdk_vtophys, mock for it is not needed?",
+      "range": {
+        "startLine": 165,
+        "startChar": 8,
+        "endLine": 165,
+        "endChar": 28
+      },
+      "revId": "6b723b963f77ccb3aad73ab7b2faafa50d1a0f9c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
