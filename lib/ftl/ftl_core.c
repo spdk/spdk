@@ -733,9 +733,13 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
-		if (rc) {
+
+		if (rc != 0 && rc != -ENOMEM) {
 			SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
 			io->status = -EIO;
+			break;
+		} else if (rc == -ENOMEM) {
+			io->status = rc;
 			break;
 		}
 
