@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "44c6f73e_d2775ccb",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T04:22:30Z",
+      "side": 1,
+      "message": "maybe you can move this addition to two next patch.",
+      "range": {
+        "startLine": 23,
+        "startChar": 13,
+        "endLine": 23,
+        "endChar": 18
+      },
+      "revId": "bf36f6f7b67e13d50e298e59f26434c9e61b135f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
