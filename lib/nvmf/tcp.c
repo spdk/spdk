@@ -2684,7 +2684,6 @@ spdk_nvmf_tcp_poll_group_remove(struct spdk_nvmf_transport_poll_group *group,
 	tqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_tcp_qpair, qpair);
 
 	assert(tqpair->group == tgroup);
-	tqpair->group = NULL;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "remove tqpair=%p from the tgroup=%p\n", tqpair, tgroup);
 	TAILQ_REMOVE(&tgroup->qpairs, tqpair, link);
