@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7d67bd4_8284418a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1352,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-20T21:45:17Z",
+      "side": 1,
+      "message": "currently we use spdk_nvme_connect, not spdk_nvme_probe\n\nshould we have spdk_nvme_connect_async available and use that here?\n\nof course I realize that I was the one that suggested you use the async stuff in the bdev/nvme driver - I hadn\u0027t realized then the connect v. probe difference\n\nI guess I\u0027m OK with this but would like opinion from others.  I definitely think we should have spdk_nvme_connect_async added but that\u0027s a different patch obviously.",
+      "revId": "850ce7c0d316634b2bcd32f89857bc7156925839",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

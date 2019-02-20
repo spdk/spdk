@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91505bef_53b8eb84",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1261,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-20T21:45:17Z",
+      "side": 0,
+      "message": "could you create an intermediate patch that just moves this code to a new function?",
+      "revId": "8bbf0391f6c6c62e5117eb8eac4ce7c9304ab080",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
