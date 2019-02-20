@@ -22,6 +22,29 @@
       "revId": "e3b0454918638adf58fae1444f6838b0a21a58c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "29eb1311_34d44127",
+        "filename": "test/notify/notify.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-20T13:32:47Z",
+      "side": 1,
+      "message": "We should try to set max_count to 1. It should also work.",
+      "range": {
+        "startLine": 192,
+        "startChar": 41,
+        "endLine": 192,
+        "endChar": 56
+      },
+      "revId": "e3b0454918638adf58fae1444f6838b0a21a58c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
