@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "09197dbc_652acea4",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-20T09:54:50Z",
+      "side": 1,
+      "message": "Similar to https://review.gerrithub.io/c/spdk/spdk/+/444831/13//COMMIT_MSG#17. We still cannot use memcpy even if ASAN not complains.",
+      "range": {
+        "startLine": 16,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "b4421d3b56502e526437120234c10c12acdfb38c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3874d8ac_4f882ad6",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1425,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-20T09:54:50Z",
+      "side": 1,
+      "message": "For strip, the previous size check is find. Since we are strip DIF from (data+meta_data), so the the resulted buffer size is smaller than original.",
+      "range": {
+        "startLine": 1420,
+        "startChar": 1,
+        "endLine": 1425,
+        "endChar": 2
+      },
+      "revId": "b4421d3b56502e526437120234c10c12acdfb38c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4ec49876_68581321",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1452,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-20T09:54:50Z",
+      "side": 1,
+      "message": "Similar to https://review.gerrithub.io/c/spdk/spdk/+/444831/13/lib/util/dif.c#1352",
+      "revId": "b4421d3b56502e526437120234c10c12acdfb38c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
