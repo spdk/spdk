@@ -22,6 +22,29 @@
       "revId": "bf36f6f7b67e13d50e298e59f26434c9e61b135f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89229eb1_cb1306cb",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 30
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-20T11:32:42Z",
+      "side": 1,
+      "message": "Yup, unused variable for this and next commit. Should be probably moved to https://review.gerrithub.io/#/c/spdk/spdk/+/436529",
+      "range": {
+        "startLine": 23,
+        "startChar": 8,
+        "endLine": 23,
+        "endChar": 23
+      },
+      "revId": "bf36f6f7b67e13d50e298e59f26434c9e61b135f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
