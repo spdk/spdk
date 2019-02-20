@@ -162,7 +162,7 @@ spdk_nvmf_tgt_destroy_poll_group(void *io_device, void *ctx_buf)
 	for (sid = 0; sid < group->num_sgroups; sid++) {
 		sgroup = &group->sgroups[sid];
 
-		for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
+		for (nsid = 0; nsid < sgroup->max_nsid; nsid++) {
 			if (sgroup->channels[nsid]) {
 				spdk_put_io_channel(sgroup->channels[nsid]);
 				sgroup->channels[nsid] = NULL;
@@ -861,7 +861,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			    struct spdk_nvmf_subsystem *subsystem)
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
-	uint32_t new_num_channels, old_num_channels;
+	uint32_t new_max_nsid, old_max_nsid;
 	uint32_t i;
 	struct spdk_nvmf_ns *ns;
 
@@ -873,22 +873,22 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 	sgroup = &group->sgroups[subsystem->id];
 
 	/* Make sure the array of channels is the correct size */
-	new_num_channels = subsystem->max_nsid;
-	old_num_channels = sgroup->num_channels;
+	new_max_nsid = subsystem->max_nsid;
+	old_max_nsid = sgroup->max_nsid;
 
-	if (old_num_channels == 0) {
-		if (new_num_channels > 0) {
+	if (old_max_nsid == 0) {
+		if (new_max_nsid > 0) {
 			/* First allocation */
-			sgroup->channels = calloc(new_num_channels, sizeof(sgroup->channels[0]));
+			sgroup->channels = calloc(new_max_nsid, sizeof(sgroup->channels[0]));
 			if (!sgroup->channels) {
 				return -ENOMEM;
 			}
 		}
-	} else if (new_num_channels > old_num_channels) {
+	} else if (new_max_nsid > old_max_nsid) {
 		void *buf;
 
 		/* Make the array larger */
-		buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
+		buf = realloc(sgroup->channels, new_max_nsid * sizeof(sgroup->channels[0]));
 		if (!buf) {
 			return -ENOMEM;
 		}
@@ -896,14 +896,14 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		sgroup->channels = buf;
 
 		/* Null out the new channels slots */
-		for (i = old_num_channels; i < new_num_channels; i++) {
+		for (i = old_max_nsid; i < new_max_nsid; i++) {
 			sgroup->channels[i] = NULL;
 		}
-	} else if (new_num_channels < old_num_channels) {
+	} else if (new_max_nsid < old_max_nsid) {
 		void *buf;
 
 		/* Free the extra I/O channels */
-		for (i = new_num_channels; i < old_num_channels; i++) {
+		for (i = new_max_nsid; i < old_max_nsid; i++) {
 			if (sgroup->channels[i]) {
 				spdk_put_io_channel(sgroup->channels[i]);
 				sgroup->channels[i] = NULL;
@@ -911,8 +911,8 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		}
 
 		/* Make the array smaller */
-		if (new_num_channels > 0) {
-			buf = realloc(sgroup->channels, new_num_channels * sizeof(sgroup->channels[0]));
+		if (new_max_nsid > 0) {
+			buf = realloc(sgroup->channels, new_max_nsid * sizeof(sgroup->channels[0]));
 			if (!buf) {
 				return -ENOMEM;
 			}
@@ -923,10 +923,10 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	sgroup->num_channels = new_num_channels;
+	sgroup->max_nsid = new_max_nsid;
 
 	/* Detect bdevs that were added or removed */
-	for (i = 0; i < sgroup->num_channels; i++) {
+	for (i = 0; i < sgroup->max_nsid; i++) {
 		ns = subsystem->ns[i];
 		if (ns == NULL && sgroup->channels[i] == NULL) {
 			/* Both NULL. Leave empty */
@@ -1002,14 +1002,14 @@ _nvmf_poll_group_remove_subsystem_cb(void *ctx, int status)
 		goto fini;
 	}
 
-	for (nsid = 0; nsid < sgroup->num_channels; nsid++) {
+	for (nsid = 0; nsid < sgroup->max_nsid; nsid++) {
 		if (sgroup->channels[nsid]) {
 			spdk_put_io_channel(sgroup->channels[nsid]);
 			sgroup->channels[nsid] = NULL;
 		}
 	}
 
-	sgroup->num_channels = 0;
+	sgroup->max_nsid = 0;
 	free(sgroup->channels);
 	sgroup->channels = NULL;
 fini:

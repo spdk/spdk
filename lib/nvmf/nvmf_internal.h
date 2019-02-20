@@ -114,8 +114,10 @@ struct spdk_nvmf_transport_poll_group {
 
 struct spdk_nvmf_subsystem_poll_group {
 	/* Array of channels for each namespace indexed by nsid - 1 */
-	struct spdk_io_channel	**channels;
-	uint32_t		num_channels;
+	struct spdk_io_channel		**channels;
+	/* Array of NS's reservation information indexed by nsid - 1 */
+	struct spdk_nvmf_ns_rsv_info	**ns_rsv;
+	uint32_t			max_nsid;
 
 	enum spdk_nvmf_subsystem_state state;
 
