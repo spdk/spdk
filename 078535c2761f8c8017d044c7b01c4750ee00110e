@@ -1,0 +1,216 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41c8c661_355d90d9",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "void *data -\u003e void *dev_handle makes more sense here.",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9be1da18_c563443b",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "you can move this part to the .c file which uses it.",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f38f09d3_d4346b9b",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "Please add \"SPDK_SCSI\" prefix to these marco.",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "71a34ed0_2df1743d",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "you can combine the two functions into one, this is more clear, I think you can just use send/recv here, and then check the header-\u003ecom_packet.outstanding_data and header-\u003ecom_packet.min_transfer in the same function.",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "65e6e3e4_10f705dc",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "wrong type usage for cmd, I believe this is payload buffer for security send/receive commands.",
+      "range": {
+        "startLine": 128,
+        "startChar": 40,
+        "endLine": 128,
+        "endChar": 65
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f38774b3_66e8c664",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "ditto.",
+      "range": {
+        "startLine": 141,
+        "startChar": 36,
+        "endLine": 141,
+        "endChar": 54
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b56744cf_6a57169b",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "you can use SPDK_COUNTOF macro here.",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa13f4e8_9ebe7631",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "I think this section belongs to opal.h or opal_spec.h.",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e4a5b3d_dc0133b1",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "I don\u0027t see any reference for them, you can remove this part.",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9ce2cc6_741891f8",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-20T02:06:06Z",
+      "side": 1,
+      "message": "Think about the data buffer for security send/receive commands, is there any requirement from upper layer that can access the data buffer? if so, you should export them as API interface.",
+      "range": {
+        "startLine": 324,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 32
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
