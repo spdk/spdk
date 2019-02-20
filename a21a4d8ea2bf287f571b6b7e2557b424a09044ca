@@ -22,6 +22,30 @@
       "revId": "a21a4d8ea2bf287f571b6b7e2557b424a09044ca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "efeac25b_775e04ab",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 2388,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-20T08:38:46Z",
+      "side": 1,
+      "message": "Done. Thank you.",
+      "parentUuid": "c8c993ca_79b95480",
+      "range": {
+        "startLine": 2388,
+        "startChar": 49,
+        "endLine": 2388,
+        "endChar": 50
+      },
+      "revId": "a21a4d8ea2bf287f571b6b7e2557b424a09044ca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
