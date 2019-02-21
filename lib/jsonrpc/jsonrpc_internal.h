@@ -67,6 +67,8 @@ struct spdk_jsonrpc_request {
 
 	uint8_t *send_buf;
 
+	struct spdk_json_write_ctx *response;
+
 	STAILQ_ENTRY(spdk_jsonrpc_request) link;
 };
 
