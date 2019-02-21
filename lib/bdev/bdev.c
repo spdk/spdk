@@ -107,6 +107,9 @@ struct spdk_bdev_mgr {
 
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
+	__itt_counter	bdev_io_pool_counter;
+	__itt_counter	buf_small_pool_counter;
+	__itt_counter 	buf_large_pool_counter;
 #endif
 };
 
@@ -534,6 +537,13 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 	if (STAILQ_EMPTY(stailq)) {
 		spdk_mempool_put(pool, buf);
+#ifdef SPDK_CONFIG_VTUNE
+		if (pool == g_bdev_mgr.buf_small_pool) {
+			__itt_counter_dec_delta(g_bdev_mgr.buf_small_pool_counter, 1);
+		} else {
+			__itt_counter_dec_delta(g_bdev_mgr.buf_large_pool_counter, 1);
+		}
+#endif
 	} else {
 		tmp = STAILQ_FIRST(stailq);
 
@@ -619,6 +629,13 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	}
 
 	buf = spdk_mempool_get(pool);
+#ifdef SPDK_CONFIG_VTUNE
+	if (pool == g_bdev_mgr.buf_small_pool) {
+		__itt_counter_inc_delta(g_bdev_mgr.buf_small_pool_counter, 1);
+	} else {
+		__itt_counter_inc_delta(g_bdev_mgr.buf_large_pool_counter, 1);
+	}
+#endif
 
 	if (!buf) {
 		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
@@ -742,6 +759,9 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	ch->per_thread_cache_count = 0;
 	for (i = 0; i < ch->bdev_io_cache_size; i++) {
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+#ifdef SPDK_CONFIG_VTUNE
+		__itt_counter_inc_delta(g_bdev_mgr.bdev_io_pool_counter, 1);
+#endif
 		assert(bdev_io != NULL);
 		ch->per_thread_cache_count++;
 		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
@@ -772,6 +792,9 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, internal.buf_link);
 		ch->per_thread_cache_count--;
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+#ifdef SPDK_CONFIG_VTUNE
+		__itt_counter_dec_delta(g_bdev_mgr.bdev_io_pool_counter, 1);
+#endif
 	}
 
 	assert(ch->per_thread_cache_count == 0);
@@ -934,6 +957,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 		spdk_bdev_init_complete(-1);
 		return;
 	}
+#ifdef SPDK_CONFIG_VTUNE
+	g_bdev_mgr.bdev_io_pool_counter = __itt_counter_create("bdev_io_pool", "SPDK");
+#endif
 
 	/**
 	 * Ensure no more than half of the total buffers end up local caches, by
@@ -954,6 +980,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 		spdk_bdev_init_complete(-1);
 		return;
 	}
+#ifdef SPDK_CONFIG_VTUNE
+	g_bdev_mgr.buf_small_pool_counter = __itt_counter_create("buf_small_pool", "SPDK");
+#endif
 
 	cache_size = BUF_LARGE_POOL_SIZE / (2 * spdk_thread_get_count());
 	snprintf(mempool_name, sizeof(mempool_name), "buf_large_pool_%d", getpid());
@@ -969,6 +998,9 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 		spdk_bdev_init_complete(-1);
 		return;
 	}
+#ifdef SPDK_CONFIG_VTUNE
+	g_bdev_mgr.buf_large_pool_counter = __itt_counter_create("buf_large_pool", "SPDK");
+#endif
 
 	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(ZERO_BUFFER_SIZE, ZERO_BUFFER_SIZE,
 				 NULL);
@@ -1026,6 +1058,12 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+#ifdef SPDK_CONFIG_VTUNE
+	__itt_counter_destroy(g_bdev_mgr.bdev_io_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_small_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_large_pool_counter);
+#endif
+
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	cb_fn(g_fini_cb_arg);
@@ -1186,6 +1224,9 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 		bdev_io = NULL;
 	} else {
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+#ifdef SPDK_CONFIG_VTUNE
+		__itt_counter_inc_delta(g_bdev_mgr.bdev_io_pool_counter, 1);
+#endif
 	}
 
 	return bdev_io;
@@ -1217,6 +1258,9 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		/* We should never have a full cache with entries on the io wait queue. */
 		assert(TAILQ_EMPTY(&ch->io_wait_queue));
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+#ifdef SPDK_CONFIG_VTUNE
+		__itt_counter_inc_delta(g_bdev_mgr.bdev_io_pool_counter, 1);
+#endif
 	}
 }
 
