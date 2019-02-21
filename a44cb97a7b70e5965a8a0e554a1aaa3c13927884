@@ -69,6 +69,30 @@
       "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "048a94ce_2449c328",
+        "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-21T16:59:13Z",
+      "side": 1,
+      "message": "On the nightly test system, is it using soft roce or a real RNIC?",
+      "parentUuid": "6bea34c7_d27db207",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 4
+      },
+      "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
