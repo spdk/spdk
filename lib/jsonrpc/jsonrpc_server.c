@@ -102,6 +102,42 @@ invalid:
 	spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_INVALID_REQUEST);
 }
 
+static int
+spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
+{
+	struct spdk_jsonrpc_request *request = cb_ctx;
+	size_t new_size = request->send_buf_size;
+
+	while (new_size - request->send_len < size) {
+		if (new_size >= SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
+			SPDK_ERRLOG("Send buf exceeded maximum size (%zu)\n",
+				    (size_t)SPDK_JSONRPC_SEND_BUF_SIZE_MAX);
+			return -1;
+		}
+
+		new_size *= 2;
+	}
+
+	if (new_size != request->send_buf_size) {
+		uint8_t *new_buf;
+
+		new_buf = realloc(request->send_buf, new_size);
+		if (new_buf == NULL) {
+			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
+				    request->send_buf_size, new_size);
+			return -1;
+		}
+
+		request->send_buf = new_buf;
+		request->send_buf_size = new_size;
+	}
+
+	memcpy(request->send_buf + request->send_len, data, size);
+	request->send_len += size;
+
+	return 0;
+}
+
 int
 spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *json, size_t size)
 {
@@ -159,6 +195,13 @@ spdk_jsonrpc_parse_request(struct spdk_jsonrpc_server_conn *conn, const void *js
 		return -1;
 	}
 
+	request->response = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, request, 0);
+	if (request->response == NULL) {
+		SPDK_ERRLOG("Failed to allocate response JSON write context.\n");
+		spdk_jsonrpc_free_request(request);
+		return -1;
+	}
+
 	if (rc <= 0 || rc > SPDK_JSONRPC_MAX_VALUES) {
 		SPDK_DEBUGLOG(SPDK_LOG_RPC, "JSON parse error\n");
 		spdk_jsonrpc_server_handle_error(request, SPDK_JSONRPC_ERROR_PARSE_ERROR);
@@ -200,51 +243,11 @@ spdk_jsonrpc_get_conn(struct spdk_jsonrpc_request *request)
 	return request->conn;
 }
 
-static int
-spdk_jsonrpc_server_write_cb(void *cb_ctx, const void *data, size_t size)
-{
-	struct spdk_jsonrpc_request *request = cb_ctx;
-	size_t new_size = request->send_buf_size;
-
-	while (new_size - request->send_len < size) {
-		if (new_size >= SPDK_JSONRPC_SEND_BUF_SIZE_MAX) {
-			SPDK_ERRLOG("Send buf exceeded maximum size (%zu)\n",
-				    (size_t)SPDK_JSONRPC_SEND_BUF_SIZE_MAX);
-			return -1;
-		}
-
-		new_size *= 2;
-	}
-
-	if (new_size != request->send_buf_size) {
-		uint8_t *new_buf;
-
-		new_buf = realloc(request->send_buf, new_size);
-		if (new_buf == NULL) {
-			SPDK_ERRLOG("Resizing send_buf failed (current size %zu, new size %zu)\n",
-				    request->send_buf_size, new_size);
-			return -1;
-		}
-
-		request->send_buf = new_buf;
-		request->send_buf_size = new_size;
-	}
-
-	memcpy(request->send_buf + request->send_len, data, size);
-	request->send_len += size;
-
-	return 0;
-}
-
+/* Never return NULL */
 static struct spdk_json_write_ctx *
 begin_response(struct spdk_jsonrpc_request *request)
 {
-	struct spdk_json_write_ctx *w;
-
-	w = spdk_json_write_begin(spdk_jsonrpc_server_write_cb, request, 0);
-	if (w == NULL) {
-		return NULL;
-	}
+	struct spdk_json_write_ctx *w = request->response;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "jsonrpc", "2.0");
@@ -292,22 +295,9 @@ spdk_jsonrpc_free_request(struct spdk_jsonrpc_request *request)
 struct spdk_json_write_ctx *
 spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request)
 {
-	struct spdk_json_write_ctx *w;
-
-	if (request->id == NULL || request->id->type == SPDK_JSON_VAL_NULL) {
-		/* Notification - no response required */
-		skip_response(request);
-		return NULL;
-	}
-
-	w = begin_response(request);
-	if (w == NULL) {
-		skip_response(request);
-		return NULL;
-	}
+	struct spdk_json_write_ctx *w = begin_response(request);
 
 	spdk_json_write_name(w, "result");
-
 	return w;
 }
 
@@ -316,20 +306,19 @@ spdk_jsonrpc_end_result(struct spdk_jsonrpc_request *request, struct spdk_json_w
 {
 	assert(w != NULL);
 
-	end_response(request, w);
+	/* If there was no ID in request we skip response. */
+	if (request->id && request->id->type != SPDK_JSON_VAL_NULL) {
+		end_response(request, w);
+	} else {
+		skip_response(request);
+	}
 }
 
 void
 spdk_jsonrpc_send_error_response(struct spdk_jsonrpc_request *request,
 				 int error_code, const char *msg)
 {
-	struct spdk_json_write_ctx *w;
-
-	w = begin_response(request);
-	if (w == NULL) {
-		skip_response(request);
-		return;
-	}
+	struct spdk_json_write_ctx *w = begin_response(request);
 
 	spdk_json_write_named_object_begin(w, "error");
 	spdk_json_write_named_int32(w, "code", error_code);
@@ -343,14 +332,8 @@ void
 spdk_jsonrpc_send_error_response_fmt(struct spdk_jsonrpc_request *request,
 				     int error_code, const char *fmt, ...)
 {
-	struct spdk_json_write_ctx *w;
+	struct spdk_json_write_ctx *w = begin_response(request);
 	va_list args;
-
-	w = begin_response(request);
-	if (w == NULL) {
-		skip_response(request);
-		return;
-	}
 
 	spdk_json_write_named_object_begin(w, "error");
 	spdk_json_write_named_int32(w, "code", error_code);
