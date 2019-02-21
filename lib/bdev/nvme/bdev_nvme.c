@@ -1099,6 +1099,10 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_ctrlr, &g_nvme_ctrlrs, tailq) {
 		if (nvme_ctrlr->ctrlr == ctrlr) {
+			/* The controller's destruction was already started */
+			if (nvme_ctrlr->destruct) {
+				continue;
+			}
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
 			for (i = 0; i < nvme_ctrlr->num_ns; i++) {
 				uint32_t	nsid = i + 1;
@@ -1111,7 +1115,6 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			}
 
 			pthread_mutex_lock(&g_bdev_nvme_mutex);
-			assert(!nvme_ctrlr->destruct);
 			nvme_ctrlr->destruct = true;
 			if (nvme_ctrlr->ref == 0) {
 				pthread_mutex_unlock(&g_bdev_nvme_mutex);
