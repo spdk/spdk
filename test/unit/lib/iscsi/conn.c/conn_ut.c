@@ -137,11 +137,6 @@ DEFINE_STUB_V(spdk_clear_all_transfer_task,
 	      (struct spdk_iscsi_conn *conn, struct spdk_scsi_lun *lun,
 	       struct spdk_iscsi_pdu *pdu));
 
-DEFINE_STUB(spdk_iscsi_build_iovecs, int,
-	    (struct spdk_iscsi_conn *conn, struct iovec *iovec,
-	     struct spdk_iscsi_pdu *pdu),
-	    0);
-
 DEFINE_STUB(spdk_iscsi_is_deferred_free_pdu, bool,
 	    (struct spdk_iscsi_pdu *pdu), false);
 
