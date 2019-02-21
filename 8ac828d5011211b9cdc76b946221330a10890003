@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe51f996_e16b9d52",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:44:46Z",
+      "side": 1,
+      "message": "I think for best performance with DIF enabled - we want to increase size of buffers in small data buffer pool also.  With 8192 as default, it means when DIF is enabled, really only 4KB I/O will use buffers from the small pool, since 8KB + DIF metadata will need to use the large pool.  (I\u0027m not counting I/O such as 4.5K or 5K.)\n\nBut I think for now we should just increase the buffer sizes unilaterally to what is needed for DIF.  I know it adds some small amount of additional memory (3% or so) but then DIF just works without needing to configure specifically for DIF.\n\nWhat do you think Shuhei?  In general I am OK with dynamic buffer sizes, but am not sure it\u0027s critical to enable DIF.  Please let me know your opinion.",
+      "revId": "8ac828d5011211b9cdc76b946221330a10890003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
