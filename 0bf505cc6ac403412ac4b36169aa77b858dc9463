@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46c88529_bdd3e206",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-02-21T15:51:49Z",
+      "side": 1,
+      "message": "This never will be true. See line 229.",
+      "range": {
+        "startLine": 233,
+        "startChar": 1,
+        "endLine": 233,
+        "endChar": 44
+      },
+      "revId": "0bf505cc6ac403412ac4b36169aa77b858dc9463",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
