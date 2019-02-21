@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6bea34c7_d27db207",
+        "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-21T08:55:16Z",
+      "side": 1,
+      "message": "When re-enabling the test it\u0027d be also good to put set +x on this loop, as this produces a lot of unnecessary output.",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 4
+      },
+      "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
