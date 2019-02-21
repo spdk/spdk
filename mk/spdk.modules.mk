@@ -72,7 +72,7 @@ SYS_LIBS += -lpmemblk
 endif
 
 ifeq ($(CONFIG_FTL),y)
-BLOCKDEV_MODULES_LIST += ftl bdev_ftl
+BLOCKDEV_MODULES_LIST += ftl
 endif
 
 SOCK_MODULES_LIST = sock_posix
