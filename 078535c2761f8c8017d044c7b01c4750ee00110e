@@ -409,6 +409,30 @@
       "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b7af4db_90e9530c",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:43:48Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. For now, send and receive buffers will be managed by this library API and so far I don\u0027t want users to touch this.If there are requirements in the future, we can consider whether put this external. Or we can also use API like get_cmd_buffer/get_resp_buffer if upper level wants to directly touch them. Thank you.",
+      "parentUuid": "d9ce2cc6_741891f8",
+      "range": {
+        "startLine": 324,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 32
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
