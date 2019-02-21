@@ -126,7 +126,9 @@ LDFLAGS += -Wl,-z,relro,-z,now
 LDFLAGS += -Wl,-z,noexecstack
 
 # Specify the linker to use
+ifneq ($(LD_TYPE),)
 LDFLAGS += -fuse-ld=$(LD_TYPE)
+endif
 
 ifeq ($(OS),FreeBSD)
 SYS_LIBS += -L/usr/local/lib
