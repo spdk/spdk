@@ -19,6 +19,29 @@
     },
     {
       "key": {
+        "uuid": "59c0d935_eabeb20a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 903,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-02-21T02:58:11Z",
+      "side": 1,
+      "message": "There are are many issues with this timeout function:\n1: About the qpair. \nIf qpair \u003d\u003d NULL, it is timeout caused by the admin qpair, then we should do the reset (we would like the admin qpair do the reset)\nIf the qpair !\u003d NULL, it is I/O qpair. So it seems that even if we want to do the reset, we should not do the brute force way. \n\n2 if the controller is getting from the remote ctrlr, checking csts here is not exactly correct. Since for remote ctrlr we do not supporting get csts status. So better to differentiate the ctrlr with local or remote.\n\n3 Directly calling spdk_nvme_ctrlr_reset in this function is wrong. Supposing you are running with multiple threads (cores), we should do the similar things like bdev_nvme_reset routine. Otherwise, you will trigger the issue. Since in spdk_nvme_ctrlr_reset function, it will operate on all the I/O queues. However we know those I/O qpairs are created by different threads, so it must be handled by its created thread. So this is why it should be handled like a similar routine like bdev_nvme_reset.\n\nPS: This may be not related with your patch, but I would like to point the issues in this function.",
+      "range": {
+        "startLine": 903,
+        "startChar": 1,
+        "endLine": 903,
+        "endChar": 36
+      },
+      "revId": "4459cd100a3353d7bf0d9129a3c57c3ae80c04b1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e1cd216b_e79776de",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 1
