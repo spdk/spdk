@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c0f30ddd_2f4f9d4e",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1132,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:11:09Z",
+      "side": 1,
+      "message": "This is not associated with Scatter-Gather List, so the leading two spaces should be removed.",
+      "revId": "9e9691ce75a366ef3a01acd43393ba674bac4fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23d2f25e_303e4607",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:11:09Z",
+      "side": 1,
+      "message": "we should convert both of these into something easier to parse by the user\n\nfor example, total_size is 0-based and in units of 128KB\naccess_size is 0-based and in units of 512B\n\nit would be OK to just do something like \"Total Size (in 128KB units) \u003d %d\\n\", total_size +1\nsimilar for access_size",
+      "revId": "9e9691ce75a366ef3a01acd43393ba674bac4fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f802157_5ca5d03b",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:11:09Z",
+      "side": 1,
+      "message": "Should add one more space before \"Not\"",
+      "revId": "9e9691ce75a366ef3a01acd43393ba674bac4fe0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
