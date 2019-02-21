@@ -70,9 +70,11 @@ LIB += isalbuild
 endif
 
 all: $(DIRS-y)
+
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f include/spdk/config.h
+	$(Q)rm -f $(ISAL_DIR)/isa-l
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
