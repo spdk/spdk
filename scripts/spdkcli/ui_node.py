@@ -50,7 +50,8 @@ class UINode(ConfigNode):
                             "destruct_split_bdev", "delete_pmem_pool",
                             "create_pmem_pool", "delete_secret_all",
                             "delete_initiator", "set_auth", "delete_secret",
-                            "delete_pg_ig_maps"]:
+                            "delete_pg_ig_maps", "load_config",
+                            "load_subsystem_config"]:
                 self.get_root().refresh()
                 self.refresh_node()
 
