@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "37e1de1a_cd620ec6",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "41c8c661_355d90d9",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9be1da18_c563443b",
         "filename": "include/spdk/opal_spec.h",
         "patchSetId": 17
@@ -30,6 +48,30 @@
       "writtenOn": "2019-02-20T02:06:06Z",
       "side": 1,
       "message": "you can move this part to the .c file which uses it.",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 143,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12847cd0_90abafc1",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9be1da18_c563443b",
       "range": {
         "startLine": 123,
         "startChar": 0,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "7b88be90_da4a9121",
+        "filename": "include/spdk/scsi_spec.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 731,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f38f09d3_d4346b9b",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71a34ed0_2df1743d",
         "filename": "lib/opal/opal.c",
         "patchSetId": 17
@@ -70,6 +130,30 @@
       "writtenOn": "2019-02-20T02:06:06Z",
       "side": 1,
       "message": "you can combine the two functions into one, this is more clear, I think you can just use send/recv here, and then check the header-\u003ecom_packet.outstanding_data and header-\u003ecom_packet.min_transfer in the same function.",
+      "range": {
+        "startLine": 117,
+        "startChar": 1,
+        "endLine": 124,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a21cdcc_e1f36015",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 124,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71a34ed0_2df1743d",
       "range": {
         "startLine": 117,
         "startChar": 1,
@@ -105,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "4ad3a150_2ac1d3ce",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 128,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done. I will rename it to dev. Naming to cmd is a bit confusing. You can regard it as the controller to add token. And it will operate on its cmd buffer.",
+      "parentUuid": "65e6e3e4_10f705dc",
+      "range": {
+        "startLine": 128,
+        "startChar": 40,
+        "endLine": 128,
+        "endChar": 65
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f38774b3_66e8c664",
         "filename": "lib/opal/opal.c",
         "patchSetId": 17
@@ -116,6 +224,30 @@
       "writtenOn": "2019-02-20T02:06:06Z",
       "side": 1,
       "message": "ditto.",
+      "range": {
+        "startLine": 141,
+        "startChar": 36,
+        "endLine": 141,
+        "endChar": 54
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ea8de27e_0f8c3cc0",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Thank you for your review.",
+      "parentUuid": "f38774b3_66e8c664",
       "range": {
         "startLine": 141,
         "startChar": 36,
@@ -145,6 +277,24 @@
     },
     {
       "key": {
+        "uuid": "74f4d04c_1f8981ce",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b56744cf_6a57169b",
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa13f4e8_9ebe7631",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 17
@@ -168,6 +318,30 @@
     },
     {
       "key": {
+        "uuid": "b9c90f41_8f8ccd90",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Hi Changpeng. Thanks for your review. For now, I think there is no need to put this external to users.",
+      "parentUuid": "fa13f4e8_9ebe7631",
+      "range": {
+        "startLine": 55,
+        "startChar": 0,
+        "endLine": 129,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4e4a5b3d_dc0133b1",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 17
@@ -179,6 +353,30 @@
       "writtenOn": "2019-02-20T02:06:06Z",
       "side": 1,
       "message": "I don\u0027t see any reference for them, you can remove this part.",
+      "range": {
+        "startLine": 153,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 2
+      },
+      "revId": "078535c2761f8c8017d044c7b01c4750ee00110e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4ffd318_7b556fc1",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-21T05:38:13Z",
+      "side": 1,
+      "message": "Hi Changpeng, Thanks for your review. These part can be refered in Architecture Core Spec Section 6.3. I think we will need this part which is a very necessary part in further development. You may also take a look on related patches and this will be indispensable. Sorry that I put it in this patch which makes it look like redundant. Thank you.",
+      "parentUuid": "4e4a5b3d_dc0133b1",
       "range": {
         "startLine": 153,
         "startChar": 0,
