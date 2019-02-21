@@ -573,6 +573,27 @@ struct spdk_nvme_probe_ctx {
 };
 
 /**
+ * Connect the NVMe driver to the device located at the given transport ID.
+ *
+ * The controller is not ready for use, user must call spdk_nvme_probe_poll_async()
+ * to initialize the controller to READY state.
+ *
+ * \param probe_ctx Context used to track probe actions.
+ * \param trid The transport ID indicating which device to connect. If the trtype
+ * is PCIe, this will connect the local PCIe bus. If the trtype is RDMA, the traddr
+ * and trsvcid must point at the location of an NVMe-oF service.
+ * \param opts NVMe controller initialization options. Default values will be used
+ * if the user does not specify the options. The controller may not support all
+ * requested parameters.
+ *
+ * \return pointer to the connected NVMe controller or NULL if there is any failure.
+ *
+ */
+struct spdk_nvme_ctrlr *spdk_nvme_connect_async(struct spdk_nvme_probe_ctx *probe_ctx,
+		const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts);
+
+/**
  * Initialize a context to track the probe result based on transport ID.
  *
  * \param probe_ctx Context used to track probe actions.

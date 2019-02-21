@@ -4,6 +4,10 @@
 
 ### nvme
 
+Added spdk_nvme_connect_async() to connect to the controller, the controller
+may not in the READY state, users must call spdk_nvme_probe_poll_async()
+before using it.
+
 Remove opts_size parameter in spdk_nvme_connect() API.
 
 Added asynchronous probe support.  New APIs spdk_nvme_probe_ctx_init(), spdk_nvme_probe_async()
