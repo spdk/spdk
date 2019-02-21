@@ -44,7 +44,7 @@ struct spdk_json_write_ctx {
 	bool first_value;
 	bool failed;
 	size_t buf_filled;
-	uint8_t buf[4096];
+	uint8_t buf[64];
 };
 
 static int emit_buf_full(struct spdk_json_write_ctx *w, const void *data, size_t size);
