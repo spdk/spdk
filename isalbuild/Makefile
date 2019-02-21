@@ -42,6 +42,7 @@ endif
 
 all:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l -j$(NPROC) all CC=cc $(REDIRECT)
+	@ln -s -f $(ISAL_DIR)/include $(ISAL_DIR)/isa-l
 
 install: all
 
