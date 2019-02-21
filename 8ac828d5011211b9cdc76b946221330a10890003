@@ -16,6 +16,24 @@
       "revId": "8ac828d5011211b9cdc76b946221330a10890003",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ddc68dc_3c99d025",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 15
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-21T22:23:46Z",
+      "side": 1,
+      "message": "I may not reply all of your questions. To develop DIF support in iSCSI, it will be OK if we reduce MaxRecvDataSegmentLength and MaxRecvDataSegmentLength.\n\nThis patch was started before I understand enough. I want to focus on iovec manipulation and suspend this patch for now.",
+      "parentUuid": "fe51f996_e16b9d52",
+      "revId": "8ac828d5011211b9cdc76b946221330a10890003",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
