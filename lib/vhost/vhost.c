@@ -1095,8 +1095,11 @@ start_device(int vid)
 	}
 
 	for (i = 0; i < vsession->mem->nregions; i++) {
-		if (vsession->mem->regions[i].size & MASK_2MB) {
-			SPDK_ERRLOG("vhost device %d: Guest memory size is not a 2MB multiple\n", vid);
+		uint64_t mmap_size = vsession->mem->regions[i].mmap_size;
+
+		if (mmap_size & MASK_2MB) {
+			SPDK_ERRLOG("vhost device %d: Guest mmaped memory size %" PRIx64
+				    " is not a 2MB multiple\n", vid, mmap_size);
 			free(vsession->mem);
 			goto out;
 		}
