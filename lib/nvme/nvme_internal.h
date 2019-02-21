@@ -705,14 +705,6 @@ extern struct nvme_driver *g_spdk_nvme_driver;
 
 int nvme_driver_init(void);
 
-/*
- * Used for the spdk_nvme_connect() public API to save user specified opts.
- */
-struct spdk_nvme_ctrlr_connect_opts {
-	const struct spdk_nvme_ctrlr_opts	*opts;
-	size_t					opts_size;
-};
-
 #define nvme_delay		usleep
 
 static inline bool

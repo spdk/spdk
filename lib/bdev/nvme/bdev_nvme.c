@@ -1252,7 +1252,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
-	ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
+	ctrlr = spdk_nvme_connect(trid, &opts);
 	if (!ctrlr) {
 		SPDK_ERRLOG("Failed to create new device\n");
 		return -1;
@@ -1484,7 +1484,7 @@ bdev_nvme_library_init(void)
 				snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", probe_ctx->hostids[i].hostsvcid);
 			}
 
-			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts, sizeof(opts));
+			ctrlr = spdk_nvme_connect(&probe_ctx->trids[i], &opts);
 			if (ctrlr == NULL) {
 				SPDK_ERRLOG("Unable to connect to provided trid (traddr: %s)\n",
 					    probe_ctx->trids[i].traddr);
