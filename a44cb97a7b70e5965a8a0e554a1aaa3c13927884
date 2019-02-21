@@ -93,6 +93,30 @@
       "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "617e0242_d6eb8da5",
+        "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 57,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-21T18:48:44Z",
+      "side": 1,
+      "message": "Both. Softroce fails, physical passes.",
+      "parentUuid": "048a94ce_2449c328",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 57,
+        "endChar": 4
+      },
+      "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
