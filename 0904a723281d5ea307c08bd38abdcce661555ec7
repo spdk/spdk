@@ -46,6 +46,30 @@
       "revId": "0904a723281d5ea307c08bd38abdcce661555ec7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ddbe22ae_5cfd85b4",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:49:00Z",
+      "side": 1,
+      "message": "This approach seems OK to me.  But I\u0027ll defer to Changpeng to add his vote (+2 or -1).",
+      "parentUuid": "e30d43cc_69096085",
+      "range": {
+        "startLine": 129,
+        "startChar": 3,
+        "endLine": 129,
+        "endChar": 56
+      },
+      "revId": "0904a723281d5ea307c08bd38abdcce661555ec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
