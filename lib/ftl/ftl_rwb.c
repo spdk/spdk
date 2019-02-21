@@ -191,11 +191,15 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 	rwb->md_size = md_size;
 	rwb->num_batches = conf->rwb_size / (FTL_BLOCK_SIZE * xfer_size);
 
-	ring_size = spdk_align32pow2(rwb->num_batches);
-
 	rwb->batches = calloc(rwb->num_batches, sizeof(*rwb->batches));
 	if (!rwb->batches) {
 		goto error;
+	}
+
+	if (spdk_u32_is_pow2(rwb->num_batches)) {
+		ring_size = spdk_align32pow2(rwb->num_batches + 1);
+	} else {
+		ring_size = spdk_align32pow2(rwb->num_batches);
 	}
 
 	rwb->submit_queue = spdk_ring_create(SPDK_RING_TYPE_MP_SC, ring_size,
