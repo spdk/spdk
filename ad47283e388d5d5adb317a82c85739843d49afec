@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "20131039_1013bacd",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T10:25:54Z",
+      "side": 1,
+      "message": "\u003e I think that you should start listening only once\n\nYes, this should be done. The callback parameter is used as UNIQUE ID here. I think NULL or \u0026g_rpc_notify_listeners should be fine when I move this to \n\n  if (TAILQ_EMPTY(\u0026g_rpc_notify_listeners)) {\n  }\n\nThanks",
+      "parentUuid": "463cb86f_39bb4383",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 62
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7e69d385_86c5746f",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 23
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "a3b99716_1200b83a",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T10:25:54Z",
+      "side": 1,
+      "message": "ack",
+      "parentUuid": "7e69d385_86c5746f",
+      "range": {
+        "startLine": 39,
+        "startChar": 8,
+        "endLine": 39,
+        "endChar": 53
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "60210749_58440cda",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 23
@@ -59,6 +107,30 @@
       "writtenOn": "2019-02-20T12:13:43Z",
       "side": 1,
       "message": "Do we really want to wait one hour?",
+      "range": {
+        "startLine": 41,
+        "startChar": 34,
+        "endLine": 41,
+        "endChar": 38
+      },
+      "revId": "ad47283e388d5d5adb317a82c85739843d49afec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "48be9af5_153455ff",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 23
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T10:25:54Z",
+      "side": 1,
+      "message": "I need to check what is default per-RPC timeout.",
+      "parentUuid": "60210749_58440cda",
       "range": {
         "startLine": 41,
         "startChar": 34,
