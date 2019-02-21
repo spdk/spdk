@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "93bc1ea2_b148d4d5",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-02-21T08:15:11Z",
+      "side": 1,
+      "message": "Do you mean that we should allocate some array and collect stats into it then write JSON only in the final callback if everything was OK?\nCan it be that number of threads will change while we are iterating? In this case we should use queue instead of array.\nDid I get you right?",
+      "parentUuid": "0bfbdddd_0ace4252",
+      "range": {
+        "startLine": 191,
+        "startChar": 1,
+        "endLine": 191,
+        "endChar": 42
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eaf19de8_99f3dec0",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -91,6 +115,30 @@
       "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d77cdeb_c5b16e7d",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-02-21T08:15:11Z",
+      "side": 1,
+      "message": "I would say that reset is not a required parameter. It is always present with SPDK RPC client but may be missing with any other. In this case we just assume reset is not needed.",
+      "parentUuid": "eaf19de8_99f3dec0",
+      "range": {
+        "startLine": 217,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 22
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -137,6 +185,30 @@
       "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0d48d4cb_97bf9ed4",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-02-21T08:15:11Z",
+      "side": 1,
+      "message": "Is it worth changing \"reactors\" to \"threads\" in all the functions and RPC method in this patch?\nOr change it only here?",
+      "parentUuid": "8da4bb9a_af2b1f55",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 37
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
