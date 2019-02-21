@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "8be1871a_c18eea36",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T11:22:30Z",
+      "side": 1,
+      "message": "\u003e Do you mean that we should allocate some array...\n\n\u003e queue instead of array.\n\nYou might just use spdk_thread_get_count() + malloc() and just realloc() array if you find that number of threads get increased or use queues and allocate each stat separately. No preference here.\n\nThe main thought here is that we don\u0027t have an API to discard data written to spdk_json_write_ctx so if you hit any error in the middle you can\u0027t inform user about it after response is started.",
+      "parentUuid": "93bc1ea2_b148d4d5",
+      "range": {
+        "startLine": 191,
+        "startChar": 1,
+        "endLine": 191,
+        "endChar": 42
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eaf19de8_99f3dec0",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -130,6 +154,30 @@
       "side": 1,
       "message": "I would say that reset is not a required parameter. It is always present with SPDK RPC client but may be missing with any other. In this case we just assume reset is not needed.",
       "parentUuid": "eaf19de8_99f3dec0",
+      "range": {
+        "startLine": 217,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 22
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45a2d7cf_59b8051b",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T11:22:30Z",
+      "side": 1,
+      "message": "so pls mark \"reset\" as optional as well. If not it confuses reviewers.\n\nBTW: do you plan to implement getting/reseting stats of only some threads (not all of them)?",
+      "parentUuid": "9d77cdeb_c5b16e7d",
       "range": {
         "startLine": 217,
         "startChar": 1,
@@ -200,6 +248,30 @@
       "side": 1,
       "message": "Is it worth changing \"reactors\" to \"threads\" in all the functions and RPC method in this patch?\nOr change it only here?",
       "parentUuid": "8da4bb9a_af2b1f55",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 37
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "18b4f6c6_1bd5c1bf",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-21T11:22:30Z",
+      "side": 1,
+      "message": "You are using thread API here so I\u0027m just asking why \"reactors\" instead of \"threads\". Maybe Ben can write something about what is proffered name.",
+      "parentUuid": "0d48d4cb_97bf9ed4",
       "range": {
         "startLine": 237,
         "startChar": 0,
