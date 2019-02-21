@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e123553d_d728ec57",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T20:11:52Z",
+      "side": 1,
+      "message": "you can\u0027t request write access here - remember that all of the other virtual bdev modules are going to try to examine and possibly claim this bdev as well.  If someone already claimed it, requesting write access here will produce an error message.\n\nOnce libreduce tells you it\u0027s a valid reduce volume, then you claim the bdev which will upgrade the descriptor to read/write.",
+      "revId": "ffa1c88d8a39461f170135d62c6608e71e52f31a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
