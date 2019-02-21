@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "64b1906c_8f94ee9c",
+        "filename": "autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-21T15:08:25Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we at the end of this if section run setup.sh again with previously allocated HUGEMEM",
+      "range": {
+        "startLine": 219,
+        "startChar": 2,
+        "endLine": 219,
+        "endChar": 33
+      },
+      "revId": "463d4b131407be87e43f055e403f6391e8e028f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
