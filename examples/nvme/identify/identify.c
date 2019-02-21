@@ -1753,7 +1753,7 @@ int main(int argc, char **argv)
 
 	/* A specific trid is required. */
 	if (strlen(g_trid.traddr) != 0) {
-		ctrlr = spdk_nvme_connect(&g_trid, NULL, 0);
+		ctrlr = spdk_nvme_connect(&g_trid, NULL);
 		if (!ctrlr) {
 			fprintf(stderr, "spdk_nvme_connect() failed\n");
 			return 1;

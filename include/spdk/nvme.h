@@ -556,15 +556,12 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
  * \param opts NVMe controller initialization options. Default values will be used
  * if the user does not specify the options. The controller may not support all
  * requested parameters.
- * \param opts_size Must be set to sizeof(struct spdk_nvme_ctrlr_opts), or 0 if
- * opts is NULL.
  *
  * \return pointer to the connected NVMe controller or NULL if there is any failure.
  *
  */
 struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
-		const struct spdk_nvme_ctrlr_opts *opts,
-		size_t opts_size);
+		const struct spdk_nvme_ctrlr_opts *opts);
 
 struct spdk_nvme_probe_ctx {
 	struct spdk_nvme_transport_id		trid;

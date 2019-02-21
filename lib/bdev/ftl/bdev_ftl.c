@@ -864,7 +864,7 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 
 	pthread_mutex_unlock(&g_ftl_bdev_lock);
 
-	ctrlr = spdk_nvme_connect(&opts->trid, NULL, 0);
+	ctrlr = spdk_nvme_connect(&opts->trid, NULL);
 	if (!ctrlr) {
 		return -ENODEV;
 	}
