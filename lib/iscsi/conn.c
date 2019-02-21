@@ -1096,11 +1096,16 @@ spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	return total;
 }
 
-static int
-spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iov,
-		      struct spdk_iscsi_pdu *pdu)
+struct _iov_iter {
+	struct iovec	*iov;
+	int		iovcnt;
+	uint32_t	total_len;
+};
+
+static void
+spdk_iscsi_build_iovs(struct _iov_iter *iter, struct spdk_iscsi_pdu *pdu,
+		      struct spdk_iscsi_conn *conn)
 {
-	int iovcnt = 0;
 	int enable_digest;
 	int total_ahs_len;
 	int data_len;
@@ -1115,39 +1120,42 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iov,
 	}
 
 	/* BHS */
-	iov[iovcnt].iov_base = &pdu->bhs;
-	iov[iovcnt].iov_len = ISCSI_BHS_LEN;
-	iovcnt++;
+	iter->iov->iov_base = &pdu->bhs;
+	iter->iov->iov_len = ISCSI_BHS_LEN;
+	iter->total_len += ISCSI_BHS_LEN;
+	iter->iovcnt++;
 
 	/* AHS */
 	if (total_ahs_len > 0) {
-		iov[iovcnt].iov_base = pdu->ahs;
-		iov[iovcnt].iov_len = 4 * total_ahs_len;
-		iovcnt++;
+		iter->iov->iov_base = pdu->ahs;
+		iter->iov->iov_len = 4 * total_ahs_len;
+		iter->total_len += 4 * total_ahs_len;
+		iter->iovcnt++;
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		iov[iovcnt].iov_base = pdu->header_digest;
-		iov[iovcnt].iov_len = ISCSI_DIGEST_LEN;
-		iovcnt++;
+		iter->iov->iov_base = pdu->header_digest;
+		iter->iov->iov_len = ISCSI_DIGEST_LEN;
+		iter->total_len += ISCSI_DIGEST_LEN;
+		iter->iovcnt++;
 	}
 
 	/* Data Segment */
 	if (data_len > 0) {
-		iov[iovcnt].iov_base = pdu->data;
-		iov[iovcnt].iov_len = ISCSI_ALIGN(data_len);
-		iovcnt++;
+		iter->iov->iov_base = pdu->data;
+		iter->iov->iov_len = ISCSI_ALIGN(data_len);
+		iter->total_len += ISCSI_ALIGN(data_len);
+		iter->iovcnt++;
 	}
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		iov[iovcnt].iov_base = pdu->data_digest;
-		iov[iovcnt].iov_len = ISCSI_DIGEST_LEN;
-		iovcnt++;
+		iter->iov->iov_base = pdu->data_digest;
+		iter->iov->iov_len = ISCSI_DIGEST_LEN;
+		iter->total_len += ISCSI_DIGEST_LEN;
+		iter->iovcnt++;
 	}
-
-	return iovcnt;
 }
 
 void
@@ -1204,10 +1212,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
 	const int num_iovs = 32;
 	struct iovec iovs[num_iovs];
-	struct iovec *iov = iovs;
-	int iovcnt = 0;
+	struct _iov_iter iter = { .iov = iovs, .iovcnt = 0, .total_len = 0 };
 	int bytes = 0;
-	int total_length = 0;
 	uint32_t writev_offset;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
@@ -1222,12 +1228,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  connection's write_pdu_list.
 	 */
-	while (pdu != NULL && ((num_iovs - iovcnt) >= 5)) {
-		pdu_length = spdk_iscsi_get_pdu_length(pdu,
-						       conn->header_digest,
-						       conn->data_digest);
-		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], pdu);
-		total_length += pdu_length;
+	while (pdu != NULL && ((num_iovs - iter.iovcnt) >= 5)) {
+		spdk_iscsi_build_iovs(&iter, pdu, conn);
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
@@ -1237,22 +1239,24 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 *  accordingly.
 	 */
 	writev_offset = TAILQ_FIRST(&conn->write_pdu_list)->writev_offset;
-	total_length -= writev_offset;
+	iter.total_len -= writev_offset;
+	iter.iov = iovs;
 	while (writev_offset > 0) {
-		if (writev_offset >= iov->iov_len) {
-			writev_offset -= iov->iov_len;
-			iov++;
-			iovcnt--;
+		if (writev_offset >= iter.iov->iov_len) {
+			writev_offset -= iter.iov->iov_len;
+			iter.iov++;
+			iter.iovcnt--;
 		} else {
-			iov->iov_len -= writev_offset;
-			iov->iov_base = (char *)iov->iov_base + writev_offset;
+			iter.iov->iov_len -= writev_offset;
+			iter.iov->iov_base = (char *)iter.iov->iov_base + writev_offset;
 			writev_offset = 0;
 		}
 	}
 
-	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
+	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, iter.total_len, 0,
+			  iter.iovcnt);
 
-	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
+	bytes = spdk_sock_writev(conn->sock, iter.iov, iter.iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
