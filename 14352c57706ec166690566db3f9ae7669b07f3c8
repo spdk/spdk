@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "81378a48_2412b8d0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1466,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:24:50Z",
+      "side": 1,
+      "message": "what\u0027s the impact of moving this device assignment here?  is it needed to do this loop_again approach?",
+      "revId": "14352c57706ec166690566db3f9ae7669b07f3c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2f61fc7f_eae0b1d7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1498,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:24:50Z",
+      "side": 1,
+      "message": "could we make some of these changes separate from the loop_again changes?",
+      "revId": "14352c57706ec166690566db3f9ae7669b07f3c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
