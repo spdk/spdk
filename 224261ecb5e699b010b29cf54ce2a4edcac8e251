@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7b965fc5_1204fc6f",
+        "filename": "lib/bdev/raid/bdev_raid.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 144,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:51:26Z",
+      "side": 1,
+      "message": "Hi Xiaodong,\n\nFirst let\u0027s do a patch that only changes the names of these three \"reset\" named variables.  Don\u0027t add base_bdev_io_expected or refactor any code in that patch.\n\nSecond patch should be breaking out the failure handling code to a separate function.\n\nThird patch should be adding this base_bdev_io_expected variable.\n\nThanks,\n\n-Jim",
+      "revId": "224261ecb5e699b010b29cf54ce2a4edcac8e251",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
