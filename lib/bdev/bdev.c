@@ -601,6 +601,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	}
 
 	buf = spdk_mempool_get(pool);
+	/* TODO: sampling for bdev buffer pool in VTune */
 
 	if (!buf) {
 		STAILQ_INSERT_TAIL(stailq, bdev_io, internal.buf_link);
@@ -724,6 +725,9 @@ spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 	ch->per_thread_cache_count = 0;
 	for (i = 0; i < ch->bdev_io_cache_size; i++) {
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+
+		/* TODO: sampling for bdev_io_pool in VTune */
+
 		assert(bdev_io != NULL);
 		ch->per_thread_cache_count++;
 		STAILQ_INSERT_HEAD(&ch->per_thread_cache, bdev_io, internal.buf_link);
@@ -754,6 +758,7 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 		STAILQ_REMOVE_HEAD(&ch->per_thread_cache, internal.buf_link);
 		ch->per_thread_cache_count--;
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+		/* TODO: sampling for bdev_io_pool in VTune */
 	}
 
 	assert(ch->per_thread_cache_count == 0);
@@ -1173,6 +1178,7 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 		bdev_io = NULL;
 	} else {
 		bdev_io = spdk_mempool_get(g_bdev_mgr.bdev_io_pool);
+		/* TODO: sampling for bdev_io_pool in VTune */
 	}
 
 	return bdev_io;
@@ -1204,6 +1210,7 @@ spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 		/* We should never have a full cache with entries on the io wait queue. */
 		assert(TAILQ_EMPTY(&ch->io_wait_queue));
 		spdk_mempool_put(g_bdev_mgr.bdev_io_pool, (void *)bdev_io);
+		/* TODO: sampling for bdev_io_pool in VTune */
 	}
 }
 
@@ -3261,7 +3268,7 @@ _spdk_bdev_io_complete(void *ctx)
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->internal.ch->start_tsc + bdev_io->internal.ch->interval_tsc)) {
-		uint64_t data[5];
+		uint64_t data[8];
 
 		data[0] = bdev_io->internal.ch->stat.num_read_ops - bdev_io->internal.ch->prev_stat.num_read_ops;
 		data[1] = bdev_io->internal.ch->stat.bytes_read - bdev_io->internal.ch->prev_stat.bytes_read;
@@ -3269,9 +3276,11 @@ _spdk_bdev_io_complete(void *ctx)
 		data[3] = bdev_io->internal.ch->stat.bytes_written - bdev_io->internal.ch->prev_stat.bytes_written;
 		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->internal.ch->channel) : 0;
-
+		data[5] = spdk_mempool_count(g_bdev_mgr.bdev_io_pool);
+		data[6] = spdk_mempool_count(g_bdev_mgr.buf_small_pool);
+		data[7] = spdk_mempool_count(g_bdev_mgr.buf_large_pool);
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->internal.ch->handle,
-				   __itt_metadata_u64, 5, data);
+				   __itt_metadata_u64, 8, data);
 
 		bdev_io->internal.ch->prev_stat = bdev_io->internal.ch->stat;
 		bdev_io->internal.ch->start_tsc = now_tsc;
