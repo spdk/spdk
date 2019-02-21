@@ -56,6 +56,7 @@
 #include "ittnotify.h"
 #include "ittnotify_types.h"
 int __itt_init_ittlib(const char *, __itt_group_id);
+#define SPDK_BDEV_VTUNE_TIMESLICE_IN_USEC 1000
 #endif
 
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024 - 1)
@@ -110,6 +111,10 @@ struct spdk_bdev_mgr {
 
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
+	__itt_counter	bdev_io_pool_counter;
+	__itt_counter	buf_small_pool_counter;
+	__itt_counter	buf_large_pool_counter;
+	struct spdk_poller *vtune_poller;
 #endif
 };
 
@@ -858,6 +863,29 @@ spdk_bdev_mgmt_channel_destroy(void *io_device, void *ctx_buf)
 	assert(ch->per_thread_cache_count == 0);
 }
 
+#ifdef SPDK_CONFIG_VTUNE
+
+/* To reduce perforamnce impact, instead of updating vtune data per
+ * invocation of spdk_mempool_get/spdk_mempool_put rather add a poller
+ * that will collect data every SPDK_BDEV_VTUNE_TIMESLICE_IN_USEC
+ */
+static int
+spdk_vtune_poll(void *arg)
+{
+	uint64_t bdev_io_pool = g_bdev_opts.bdev_io_pool_size -
+				spdk_mempool_count(g_bdev_mgr.bdev_io_pool);
+	uint64_t buf_small_pool = BUF_SMALL_POOL_SIZE -
+				  spdk_mempool_count(g_bdev_mgr.buf_small_pool);
+	uint64_t buf_large_pool = BUF_LARGE_POOL_SIZE -
+				  spdk_mempool_count(g_bdev_mgr.buf_large_pool);
+
+	__itt_counter_set_value(g_bdev_mgr.bdev_io_pool_counter, &bdev_io_pool);
+	__itt_counter_set_value(g_bdev_mgr.buf_small_pool_counter, &buf_small_pool);
+	__itt_counter_set_value(g_bdev_mgr.buf_large_pool_counter, &buf_large_pool);
+	return 1;
+}
+#endif
+
 static void
 spdk_bdev_init_complete(int rc)
 {
@@ -1074,6 +1102,14 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 #ifdef SPDK_CONFIG_VTUNE
 	g_bdev_mgr.domain = __itt_domain_create("spdk_bdev");
+	g_bdev_mgr.bdev_io_pool_counter = __itt_counter_create("bdev_io_pool",
+					  g_bdev_mgr.domain->nameA);
+	g_bdev_mgr.buf_small_pool_counter = __itt_counter_create("buf_small_pool",
+					    g_bdev_mgr.domain->nameA);
+	g_bdev_mgr.buf_large_pool_counter = __itt_counter_create("buf_large_pool",
+					    g_bdev_mgr.domain->nameA);
+	g_bdev_mgr.vtune_poller = spdk_poller_register(spdk_vtune_poll, NULL,
+				  SPDK_BDEV_VTUNE_TIMESLICE_IN_USEC);
 #endif
 
 	spdk_io_device_register(&g_bdev_mgr, spdk_bdev_mgmt_channel_create,
@@ -1120,6 +1156,13 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
 	spdk_free(g_bdev_mgr.zero_buffer);
+
+#ifdef SPDK_CONFIG_VTUNE
+	spdk_poller_unregister(&g_bdev_mgr.vtune_poller);
+	__itt_counter_destroy(g_bdev_mgr.bdev_io_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_small_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_large_pool_counter);
+#endif
 
 	cb_fn(g_fini_cb_arg);
 	g_fini_cb_fn = NULL;
