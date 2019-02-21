@@ -70,6 +70,30 @@
       "revId": "d81df7e9b59a45b603fbc1a0a590ca4244aab99e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "984fc5a0_817f2c72",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1014226
+      },
+      "writtenOn": "2019-02-21T09:01:41Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a1ea32cf_e2381e04",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 3
+      },
+      "revId": "d81df7e9b59a45b603fbc1a0a590ca4244aab99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
