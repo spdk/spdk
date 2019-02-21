@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a3d6dd65_f9e1cede",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-21T12:22:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a78abda4_d9d9650c",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 52
+      },
+      "revId": "a44cb97a7b70e5965a8a0e554a1aaa3c13927884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6bea34c7_d27db207",
         "filename": "test/nvmf/connect_disconnect/connect_disconnect.sh",
         "patchSetId": 1
