@@ -3296,7 +3296,7 @@ _spdk_bdev_io_complete(void *ctx)
 #ifdef SPDK_CONFIG_VTUNE
 	uint64_t now_tsc = spdk_get_ticks();
 	if (now_tsc > (bdev_io->internal.ch->start_tsc + bdev_io->internal.ch->interval_tsc)) {
-		uint64_t data[5];
+		uint64_t data[8];
 
 		data[0] = bdev_io->internal.ch->stat.num_read_ops - bdev_io->internal.ch->prev_stat.num_read_ops;
 		data[1] = bdev_io->internal.ch->stat.bytes_read - bdev_io->internal.ch->prev_stat.bytes_read;
@@ -3304,9 +3304,11 @@ _spdk_bdev_io_complete(void *ctx)
 		data[3] = bdev_io->internal.ch->stat.bytes_written - bdev_io->internal.ch->prev_stat.bytes_written;
 		data[4] = bdev_io->bdev->fn_table->get_spin_time ?
 			  bdev_io->bdev->fn_table->get_spin_time(bdev_io->internal.ch->channel) : 0;
-
+		data[5] = spdk_mempool_count(g_bdev_mgr.bdev_io_pool);
+		data[6] = spdk_mempool_count(g_bdev_mgr.buf_small_pool);
+		data[7] = spdk_mempool_count(g_bdev_mgr.buf_large_pool);
 		__itt_metadata_add(g_bdev_mgr.domain, __itt_null, bdev_io->internal.ch->handle,
-				   __itt_metadata_u64, 5, data);
+				   __itt_metadata_u64, 8, data);
 
 		bdev_io->internal.ch->prev_stat = bdev_io->internal.ch->stat;
 		bdev_io->internal.ch->start_tsc = now_tsc;
