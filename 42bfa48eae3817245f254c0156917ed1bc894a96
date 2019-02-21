@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a152efb5_a430607a",
+        "filename": "mk/spdk.common.mk",
+        "patchSetId": 1
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T18:21:14Z",
+      "side": 1,
+      "message": "this disables the warning in *all* cases, meaning if someone accidentally forgot a break, we\u0027d miss the warning\n\ncould we instead add a FALLTHROUGH comment in these specific places, as described by https://gcc.gnu.org/onlinedocs/gcc/Warning-Options.html#index-Wimplicit-fallthrough?",
+      "revId": "42bfa48eae3817245f254c0156917ed1bc894a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
