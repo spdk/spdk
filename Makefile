@@ -70,6 +70,7 @@ LIB += isalbuild
 endif
 
 all: $(DIRS-y)
+
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f include/spdk/config.h
