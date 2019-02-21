@@ -1102,6 +1102,15 @@ struct _iov_iter {
 	uint32_t	total_len;
 };
 
+static inline void
+_iov_iter_set_iov(struct _iov_iter *i, void *buf, uint32_t buf_len)
+{
+	i->iov->iov_base = buf;
+	i->iov->iov_len = buf_len;
+	i->total_len += buf_len;
+	i->iovcnt++;
+}
+
 static void
 spdk_iscsi_build_iovs(struct _iov_iter *iter, struct spdk_iscsi_pdu *pdu,
 		      struct spdk_iscsi_conn *conn)
@@ -1120,41 +1129,26 @@ spdk_iscsi_build_iovs(struct _iov_iter *iter, struct spdk_iscsi_pdu *pdu,
 	}
 
 	/* BHS */
-	iter->iov->iov_base = &pdu->bhs;
-	iter->iov->iov_len = ISCSI_BHS_LEN;
-	iter->total_len += ISCSI_BHS_LEN;
-	iter->iovcnt++;
+	_iov_iter_set_iov(iter, &pdu->bhs, ISCSI_BHS_LEN);
 
 	/* AHS */
 	if (total_ahs_len > 0) {
-		iter->iov->iov_base = pdu->ahs;
-		iter->iov->iov_len = 4 * total_ahs_len;
-		iter->total_len += 4 * total_ahs_len;
-		iter->iovcnt++;
+		_iov_iter_set_iov(iter, pdu->ahs, 4 * total_ahs_len);
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		iter->iov->iov_base = pdu->header_digest;
-		iter->iov->iov_len = ISCSI_DIGEST_LEN;
-		iter->total_len += ISCSI_DIGEST_LEN;
-		iter->iovcnt++;
+		_iov_iter_set_iov(iter, pdu->header_digest, ISCSI_DIGEST_LEN);
 	}
 
 	/* Data Segment */
 	if (data_len > 0) {
-		iter->iov->iov_base = pdu->data;
-		iter->iov->iov_len = ISCSI_ALIGN(data_len);
-		iter->total_len += ISCSI_ALIGN(data_len);
-		iter->iovcnt++;
+		_iov_iter_set_iov(iter, pdu->data, ISCSI_ALIGN(data_len));
 	}
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		iter->iov->iov_base = pdu->data_digest;
-		iter->iov->iov_len = ISCSI_DIGEST_LEN;
-		iter->total_len += ISCSI_DIGEST_LEN;
-		iter->iovcnt++;
+		_iov_iter_set_iov(iter, pdu->data_digest, ISCSI_DIGEST_LEN);
 	}
 }
 
