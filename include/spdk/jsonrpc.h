@@ -186,8 +186,7 @@ int spdk_jsonrpc_conn_del_close_cb(struct spdk_jsonrpc_server_conn *conn,
  *
  * \param request JSON-RPC request to respond to.
 
- * \return JSON write context to write the response object to, or NULL if no
- * response is necessary.
+ * \return Non-NULL pointer to JSON write context to write the response object to.
  */
 struct spdk_json_write_ctx *spdk_jsonrpc_begin_result(struct spdk_jsonrpc_request *request);
 
