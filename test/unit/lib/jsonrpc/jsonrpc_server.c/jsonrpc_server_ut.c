@@ -133,13 +133,33 @@ const struct spdk_json_val *g_cur_param;
 	g_cur_param++
 
 #define FREE_REQUEST() \
-	spdk_jsonrpc_free_request(g_request); \
+	ut_jsonrpc_free_request(g_request, g_parse_error); \
 	g_request = NULL; \
 	g_cur_param = NULL; \
 	g_parse_error = 0; \
 	g_method = NULL; \
 	g_cur_param = g_params = NULL
 
+static void
+ut_jsonrpc_free_request(struct spdk_jsonrpc_request *request, int err)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (!request) {
+		return;
+	}
+
+	/* Need to emulate response to get the response write contex free */
+	if (err == 0) {
+		w = spdk_jsonrpc_begin_result(request);
+		spdk_json_write_string(w, "UT PASS response");
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		spdk_jsonrpc_send_error_response_fmt(request, err, "UT error response");
+	}
+
+	spdk_jsonrpc_free_request(request);
+}
 
 static void
 ut_handle(struct spdk_jsonrpc_request *request, int error, const struct spdk_json_val *method,
@@ -168,7 +188,6 @@ spdk_jsonrpc_server_handle_request(struct spdk_jsonrpc_request *request,
 void
 spdk_jsonrpc_server_send_response(struct spdk_jsonrpc_request *request)
 {
-	/* TODO */
 }
 
 static void
