@@ -1129,6 +1129,16 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
 	printf("  Transport SGL Data Block:  %s\n",
 	       cdata->sgls.transport_sgl ? "Supported" : "Not Supported");
+	printf("  Replay Protected Memory Block:");
+	if (cdata->rpmbs.num_rpmb_units > 0) {
+		printf("  Supported\n");
+		printf("  Number of RPMB Units:  %d\n", cdata->rpmbs.num_rpmb_units);
+		printf("  Authentication Method: %s\n", cdata->rpmbs.auth_method == 0 ? "HMAC SHA-256" : "Unknown");
+		printf("  Total Size = %d\n", cdata->rpmbs.total_size);
+		printf("  Access Size = %d\n", cdata->rpmbs.access_size);
+	} else {
+		printf(" Not Supported\n");
+	}
 	printf("\n");
 
 	printf("Firmware Slot Information\n");
