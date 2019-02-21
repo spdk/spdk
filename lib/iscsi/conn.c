@@ -1096,6 +1096,60 @@ spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 	return total;
 }
 
+static int
+spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
+			struct spdk_iscsi_pdu *pdu)
+{
+	int iovec_cnt = 0;
+	int enable_digest;
+	int total_ahs_len;
+	int data_len;
+
+	total_ahs_len = pdu->bhs.total_ahs_len;
+	data_len = DGET24(pdu->bhs.data_segment_len);
+
+	enable_digest = 1;
+	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
+		/* this PDU should be sent without digest */
+		enable_digest = 0;
+	}
+
+	/* BHS */
+	iovec[iovec_cnt].iov_base = &pdu->bhs;
+	iovec[iovec_cnt].iov_len = ISCSI_BHS_LEN;
+	iovec_cnt++;
+
+	/* AHS */
+	if (total_ahs_len > 0) {
+		iovec[iovec_cnt].iov_base = pdu->ahs;
+		iovec[iovec_cnt].iov_len = 4 * total_ahs_len;
+		iovec_cnt++;
+	}
+
+	/* Header Digest */
+	if (enable_digest && conn->header_digest) {
+		iovec[iovec_cnt].iov_base = pdu->header_digest;
+		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
+		iovec_cnt++;
+	}
+
+	/* Data Segment */
+	if (data_len > 0) {
+		iovec[iovec_cnt].iov_base = pdu->data;
+		iovec[iovec_cnt].iov_len = ISCSI_ALIGN(data_len);
+		iovec_cnt++;
+	}
+
+	/* Data Digest */
+	if (enable_digest && conn->data_digest && data_len != 0) {
+		iovec[iovec_cnt].iov_base = pdu->data_digest;
+		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
+		iovec_cnt++;
+	}
+
+	return iovec_cnt;
+}
+
 void
 spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 {
