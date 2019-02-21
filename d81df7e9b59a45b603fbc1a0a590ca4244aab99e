@@ -94,6 +94,30 @@
       "revId": "d81df7e9b59a45b603fbc1a0a590ca4244aab99e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd7aa732_6c10e1d7",
+        "filename": "doc/gdb_macros.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-21T09:58:39Z",
+      "side": 1,
+      "message": "Thanks for update",
+      "parentUuid": "984fc5a0_817f2c72",
+      "range": {
+        "startLine": 64,
+        "startChar": 0,
+        "endLine": 64,
+        "endChar": 3
+      },
+      "revId": "d81df7e9b59a45b603fbc1a0a590ca4244aab99e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
