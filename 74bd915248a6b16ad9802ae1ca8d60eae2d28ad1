@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc6ba03a_5fe59d03",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T20:07:00Z",
+      "side": 1,
+      "message": "I think Shuhei meant that the variables (not the comments) should be tabbed over to align with variables just before it.",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eb67efba_0e66d98f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T20:07:00Z",
+      "side": 1,
+      "message": "each reduce vol funnels its IO to a single thread - but if we have 20 reduce vols, they will likely not all funnel to the same thread (could be 20 different threads)",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a0da909_71f2a6e5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T20:07:00Z",
+      "side": 1,
+      "message": "you only need a poller for the first channel created - other channels will funnel their I/O to the reduce_thread, and only the reduce_thread needs the poller",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a27be320_95b9f18e",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 37
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T20:07:00Z",
+      "side": 1,
+      "message": "see comment on previous revision",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
