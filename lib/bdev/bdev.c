@@ -55,6 +55,7 @@
 #include "ittnotify.h"
 #include "ittnotify_types.h"
 int __itt_init_ittlib(const char *, __itt_group_id);
+#define SPDK_BDEV_VTUNE_TIMESLICE_IN_USEC 1000
 #endif
 
 #define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024)
@@ -107,8 +108,13 @@ struct spdk_bdev_mgr {
 
 #ifdef SPDK_CONFIG_VTUNE
 	__itt_domain	*domain;
+	__itt_counter	bdev_io_pool_counter;
+	__itt_counter	buf_small_pool_counter;
+	__itt_counter	buf_large_pool_counter;
+	struct spdk_poller *vtune_poller;
 #endif
 };
+
 
 static struct spdk_bdev_mgr g_bdev_mgr = {
 	.bdev_modules = TAILQ_HEAD_INITIALIZER(g_bdev_mgr.bdev_modules),
@@ -297,6 +303,21 @@ static void _spdk_bdev_write_zero_buffer_next(void *_bdev_io);
 
 static void _spdk_bdev_enable_qos_msg(struct spdk_io_channel_iter *i);
 static void _spdk_bdev_enable_qos_done(struct spdk_io_channel_iter *i, int status);
+
+#ifdef SPDK_CONFIG_VTUNE
+static int
+spdk_vtune_poll(void *arg)
+{
+	size_t bdev_io_pool = spdk_mempool_count(g_bdev_mgr.bdev_io_pool);
+	size_t buf_small_pool = spdk_mempool_count(g_bdev_mgr.buf_small_pool);
+	size_t buf_large_pool = spdk_mempool_count(g_bdev_mgr.buf_large_pool);
+
+	__itt_counter_set_value(g_bdev_mgr.bdev_io_pool_counter, &bdev_io_pool);
+	__itt_counter_set_value(g_bdev_mgr.buf_small_pool_counter, &buf_small_pool);
+	__itt_counter_set_value(g_bdev_mgr.buf_large_pool_counter, &buf_large_pool);
+	return 1;
+}
+#endif
 
 void
 spdk_bdev_get_opts(struct spdk_bdev_opts *opts)
@@ -969,6 +990,13 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 		spdk_bdev_init_complete(-1);
 		return;
 	}
+#ifdef SPDK_CONFIG_VTUNE
+	g_bdev_mgr.bdev_io_pool_counter = __itt_counter_create("bdev_io_pool", "SPDK");
+	g_bdev_mgr.buf_small_pool_counter = __itt_counter_create("buf_small_pool", "SPDK");
+	g_bdev_mgr.buf_large_pool_counter = __itt_counter_create("buf_large_pool", "SPDK");
+	g_bdev_mgr.vtune_poller = spdk_poller_register(spdk_vtune_poll, NULL,
+				  SPDK_BDEV_VTUNE_TIMESLICE_IN_USEC);
+#endif
 
 	g_bdev_mgr.zero_buffer = spdk_dma_zmalloc(ZERO_BUFFER_SIZE, ZERO_BUFFER_SIZE,
 				 NULL);
@@ -1026,6 +1054,13 @@ spdk_bdev_mgr_unregister_cb(void *io_device)
 	spdk_mempool_free(g_bdev_mgr.bdev_io_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_small_pool);
 	spdk_mempool_free(g_bdev_mgr.buf_large_pool);
+#ifdef SPDK_CONFIG_VTUNE
+	__itt_counter_destroy(g_bdev_mgr.bdev_io_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_small_pool_counter);
+	__itt_counter_destroy(g_bdev_mgr.buf_large_pool_counter);
+	spdk_poller_unregister(&g_bdev_mgr.vtune_poller);
+#endif
+
 	spdk_dma_free(g_bdev_mgr.zero_buffer);
 
 	cb_fn(g_fini_cb_arg);
