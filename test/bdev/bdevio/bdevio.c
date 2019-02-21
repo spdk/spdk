@@ -957,7 +957,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts	opts = {};
 
 	spdk_app_opts_init(&opts);
-	opts.name = "bdevtest";
+	opts.name = "bdevio";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = "0x7";
 
