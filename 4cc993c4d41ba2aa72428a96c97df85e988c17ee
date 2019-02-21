@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54c52e75_b7a38e71",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "should this call to spdk_lvol_deletable be changed too?",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19d5f3e6_2f5f1b3f",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "should this check go in spdk_lvol_deletable instead?",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "83717a14_65c10ed0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5129,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "this lookup code (5129-5143) looks similar to code in _spdk_bs_blob_list_remove\n\ncould we create a helper function for that code in a separate patch before this one?",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59214fc5_47c9da6d",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5202,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "what happens in the following condition?\n\n1) clone A based on snapshot B (it\u0027s the only clone)\n2) delete B\n3) create clone C based on snapshot B\n4) this callback gets invoked\n\nIs it possible for this to happen?  I\u0027m just concerned about race conditions here - this is really tricky code.",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c5c78c5_3d56b525",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "maybe this is a GerritHub UI thing, but it looks like clones_count is not aligned with the other variables here",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9e8a32a_291472b4",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "should these changes be in a separate patch?",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a7c0f18_6223f6e0",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5342,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "Hi Maciek,\n\nCould we create something like blob_relations2 that specifically tests this new functionality?  This specific unit test is getting so big - it\u0027s really hard to follow.\n\n-Jim",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "363b95e6_9e299cd7",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5570,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 1,
+      "message": "(just picking a random place to ask this question)\n\nare there any atomicity concerns with these changes?  for example, application dies in the process of deleting this snapshot - I haven\u0027t thought through the full ramifications yet so wanted to ask",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

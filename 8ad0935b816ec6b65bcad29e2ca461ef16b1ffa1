@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf20bb69_2c296ce7",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 4978,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 0,
+      "message": "looks like this _spdk_blob_verify_md_op() call got lost",
+      "revId": "8ad0935b816ec6b65bcad29e2ca461ef16b1ffa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7211e58f_08324f2c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 4980,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 0,
+      "message": "please break this out to a separate function in a separate patch before this one - it will help reduce the size of this patch",
+      "revId": "8ad0935b816ec6b65bcad29e2ca461ef16b1ffa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61d0b437_eb4cb58c",
+        "filename": "test/unit/lib/bdev/vbdev_lvol.c/vbdev_lvol_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-21T17:41:46Z",
+      "side": 0,
+      "message": "I don\u0027t think I understand why this code needs to be removed, related to deleting snapshots with a single clone",
+      "revId": "8ad0935b816ec6b65bcad29e2ca461ef16b1ffa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
