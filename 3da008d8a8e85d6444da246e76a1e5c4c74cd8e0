@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4168355f_ea02f61c",
+        "filename": "scripts/vagrant/Vagrantfile",
+        "patchSetId": 9
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-21T15:35:04Z",
+      "side": 1,
+      "message": "I think we should reboot machine at the end of this script?",
+      "revId": "3da008d8a8e85d6444da246e76a1e5c4c74cd8e0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
