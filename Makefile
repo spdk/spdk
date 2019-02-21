@@ -65,14 +65,18 @@ ifeq ($(CONFIG_IPSEC_MB),y)
 LIB += ipsecbuild
 endif
 
+ALL = $(DIRS-y)
 ifeq ($(CONFIG_ISAL),y)
 LIB += isalbuild
+ALL += sym_include
 endif
 
-all: $(DIRS-y)
+all: $(ALL)
+
 clean: $(DIRS-y)
 	$(Q)rm -f mk/cc.mk
 	$(Q)rm -f include/spdk/config.h
+	$(Q)rm -f $(ISAL_DIR)/isa-l
 
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
@@ -113,6 +117,11 @@ cc_version: mk/cc.mk
 
 cxx_version: mk/cc.mk
 	$(Q)echo "SPDK using CXX=$(CXX)"; $(CXX) -v
+
+ifeq ($(CONFIG_ISAL),y)
+sym_include:
+	@ln -s -f $(ISAL_DIR)/include $(ISAL_DIR)/isa-l
+endif
 
 .libs_only_other:
 	$(Q)echo -n '$(SYS_LIBS) '
