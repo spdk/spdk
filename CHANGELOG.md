@@ -4,8 +4,11 @@
 
 ### nvme
 
-Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
-spdk_nvme_probe_poll_async() were added to enable this feature.
+Added asynchronous probe support.  New APIs spdk_nvme_probe_async(),
+spdk_nvme_connect_async() and spdk_nvme_probe_poll_async() were added to
+enable this feature.  The controllers associate with the probe context may
+not in the READY state, users must call spdk_nvme_probe_poll_async() before
+using them.
 
 ### raid
 
