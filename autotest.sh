@@ -95,6 +95,7 @@ if [ $(uname -s) = Linux ]; then
 
 		# Export our blacklist so it will take effect during next setup.sh
 		export PCI_BLACKLIST
+		./scripts/setup.sh status
 	fi
 fi
 
@@ -212,6 +213,7 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 
 	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
 		timing_enter vhost_initiator
+		HUGEMEM=8192 ./scripts/setup.sh
 		run_test suite ./test/vhost/initiator/blockdev.sh
 		run_test suite ./test/spdkcli/virtio.sh
 		run_test suite ./test/vhost/shared/shared.sh
