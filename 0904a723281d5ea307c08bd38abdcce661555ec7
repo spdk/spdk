@@ -22,6 +22,30 @@
       "revId": "0904a723281d5ea307c08bd38abdcce661555ec7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e30d43cc_69096085",
+        "filename": "lib/nvmf/ctrlr_bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 129,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-21T17:10:17Z",
+      "side": 1,
+      "message": "DPC is the capability of the device, while DPS is the current setting. I think what Shuhei is doing here is looking at the current setting of the underlying bdev, and then saying that value is both the current setting and the only supported mode (even if the actual device may support additional modes). I think this is the right approach here.",
+      "parentUuid": "ab41b67d_a5fe5ad6",
+      "range": {
+        "startLine": 129,
+        "startChar": 3,
+        "endLine": 129,
+        "endChar": 56
+      },
+      "revId": "0904a723281d5ea307c08bd38abdcce661555ec7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
