@@ -585,6 +585,22 @@ spdk_nvme_probe_internal(struct spdk_nvme_probe_ctx *probe_ctx,
 	return 0;
 }
 
+static void
+spdk_nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
+			 const struct spdk_nvme_transport_id *trid,
+			 void *cb_ctx,
+			 spdk_nvme_probe_cb probe_cb,
+			 spdk_nvme_attach_cb attach_cb,
+			 spdk_nvme_remove_cb remove_cb)
+{
+	probe_ctx->trid = *trid;
+	probe_ctx->cb_ctx = cb_ctx;
+	probe_ctx->probe_cb = probe_cb;
+	probe_ctx->attach_cb = attach_cb;
+	probe_ctx->remove_cb = remove_cb;
+	TAILQ_INIT(&probe_ctx->init_ctrlrs);
+}
+
 int
 spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
@@ -1046,33 +1062,34 @@ spdk_nvme_prchk_flags_str(uint32_t prchk_flags)
 	}
 }
 
-void
-spdk_nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
-			 const struct spdk_nvme_transport_id *trid,
-			 void *cb_ctx,
-			 spdk_nvme_probe_cb probe_cb,
-			 spdk_nvme_attach_cb attach_cb,
-			 spdk_nvme_remove_cb remove_cb)
-{
-	probe_ctx->trid = *trid;
-	probe_ctx->cb_ctx = cb_ctx;
-	probe_ctx->probe_cb = probe_cb;
-	probe_ctx->attach_cb = attach_cb;
-	probe_ctx->remove_cb = remove_cb;
-	TAILQ_INIT(&probe_ctx->init_ctrlrs);
-}
-
-int
-spdk_nvme_probe_async(struct spdk_nvme_probe_ctx *probe_ctx)
+struct spdk_nvme_probe_ctx *
+spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
+		      void *cb_ctx,
+		      spdk_nvme_probe_cb probe_cb,
+		      spdk_nvme_attach_cb attach_cb,
+		      spdk_nvme_remove_cb remove_cb)
 {
 	int rc;
+	struct spdk_nvme_probe_ctx *probe_ctx;
 
 	rc = nvme_driver_init();
 	if (rc != 0) {
-		return rc;
+		return NULL;
 	}
 
-	return spdk_nvme_probe_internal(probe_ctx, false);
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	if (!probe_ctx) {
+		return NULL;
+	}
+
+	spdk_nvme_probe_ctx_init(probe_ctx, trid, cb_ctx, probe_cb, attach_cb, remove_cb);
+	rc = spdk_nvme_probe_internal(probe_ctx, false);
+	if (rc != 0) {
+		free(probe_ctx);
+		return NULL;
+	}
+
+	return probe_ctx;
 }
 
 bool
