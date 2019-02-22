@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4ce977f_12259d5d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-22T08:29:28Z",
+      "side": 1,
+      "message": "This should definitively be in a separate patch set.",
+      "range": {
+        "startLine": 563,
+        "startChar": 8,
+        "endLine": 563,
+        "endChar": 43
+      },
+      "revId": "e40b8227fdb60c1c4827bf5a637c44f4fab24882",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
