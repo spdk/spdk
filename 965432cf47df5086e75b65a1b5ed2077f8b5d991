@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b16a5cd5_c40d94cf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 603,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T18:49:10Z",
+      "side": 1,
+      "message": "Can you remove the todos?",
+      "revId": "965432cf47df5086e75b65a1b5ed2077f8b5d991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "028c8da2_3a7e2c08",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3278,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T18:49:10Z",
+      "side": 1,
+      "message": "The numbers being reported here are per-channel, but these numbers you\u0027re adding are global. I think to correctly capture these numbers you\u0027ll need to keep counts in the stats on a per-channel basis whenever something is taken out of any of these pools.\n\nIt would also be interesting to report the current number of bdev I/O in the per-channel cache.",
+      "revId": "965432cf47df5086e75b65a1b5ed2077f8b5d991",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
