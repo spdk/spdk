@@ -1179,6 +1179,11 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
+	if (iovec_cnt == 0) {
+		assert(false);
+		return 1;
+	}
+
 	/*
 	 * Check if the first PDU was partially written out the last time
 	 *  this function was called, and if so adjust the iovec array
