@@ -7,6 +7,11 @@
 Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
 spdk_nvme_probe_poll_async() were added to enable this feature.
 
+### thread
+
+Added spdk_thread_has_scheduled_ops() function to verify if there are
+any pending operations to be performed on the thread at given time.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
