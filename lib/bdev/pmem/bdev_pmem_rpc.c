@@ -81,16 +81,10 @@ spdk_rpc_construct_pmem_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_construct_pmem_bdev(&req);
-		return;
-	}
-
 	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
 	spdk_jsonrpc_end_result(request, w);
 
 	free_rpc_construct_pmem_bdev(&req);
-
 	return;
 
 invalid:
@@ -117,12 +111,7 @@ static void
 _spdk_rpc_delete_pmem_bdev_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
 	spdk_json_write_bool(w, bdeverrno == 0);
 	spdk_jsonrpc_end_result(request, w);
@@ -214,11 +203,6 @@ spdk_rpc_create_pmem_pool(struct spdk_jsonrpc_request *request,
 	pmemblk_close(pbp);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_create_pmem_pool(&req);
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_create_pmem_pool(&req);
@@ -277,11 +261,6 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_pmem_pool_info(&req);
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_uint64(w, "num_blocks", num_blocks);
@@ -339,11 +318,6 @@ spdk_rpc_delete_pmem_pool(struct spdk_jsonrpc_request *request,
 	unlink(req.pmem_file);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_delete_pmem_pool(&req);
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_delete_pmem_pool(&req);

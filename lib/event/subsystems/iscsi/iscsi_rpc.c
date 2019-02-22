@@ -109,10 +109,6 @@ spdk_rpc_iscsi_set_opts(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }

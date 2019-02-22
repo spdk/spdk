@@ -98,10 +98,8 @@ spdk_rpc_set_bdev_nvme_options(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w != NULL) {
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
 
 	return;
 invalid:
@@ -125,10 +123,8 @@ rpc_set_bdev_nvme_hotplug_done(void *ctx)
 	struct spdk_jsonrpc_request *request = ctx;
 	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
-	if (w != NULL) {
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
 }
 
 static void
@@ -276,11 +272,6 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_construct_nvme(&req);
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	for (i = 0; i < count; i++) {
 		spdk_json_write_string(w, names[i]);
@@ -355,10 +346,6 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 
 	free_rpc_get_nvme_controllers(&req);
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	if (ctrlr != NULL) {
@@ -419,10 +406,6 @@ spdk_rpc_delete_nvme_ctrlr(struct spdk_jsonrpc_request *request,
 	free_rpc_delete_nvme(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -516,11 +499,7 @@ apply_firmware_complete_reset(struct spdk_bdev_io *bdev_io, bool success, void *
 		return;
 	}
 
-	if (!(w = spdk_jsonrpc_begin_result(firm_ctx->request))) {
-		apply_firmware_cleanup(firm_ctx);
-		return;
-	}
-
+	w = spdk_jsonrpc_begin_result(firm_ctx->request);
 	spdk_json_write_string(w, "firmware commit succeeded. Controller reset in progress.");
 	spdk_jsonrpc_end_result(firm_ctx->request, w);
 	apply_firmware_cleanup(firm_ctx);
