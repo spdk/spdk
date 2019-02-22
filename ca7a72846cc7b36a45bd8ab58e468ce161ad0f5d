@@ -45,6 +45,125 @@
       "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dd6a9c7c_ec3b8488",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1936,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "ieee_oui",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c08f68af_14af629c",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1941,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "ctrlr_avail",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da9c237a_2cf9d175",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1942,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "How about \"ctrlr_gen\" ? Can you remove the \"#\" at the this comment line.",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "28b4d6d2_9f0f0750",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1943,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "How about \"reason_id\"",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4122b75d_01d7984a",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 1944,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "How about \"telemetry_datablock\"",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "10aaaa7f_887087a2",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 2320,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "You can use \"thr\" or \"aggregation_threshold\" here.",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79e370b4_bd9adfbf",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 2323,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-22T10:21:55Z",
+      "side": 1,
+      "message": "SPDK usually uses short name specified by the NVMe spec, so here \"time\" maybe more suitable, or \"aggregation_time\".",
+      "revId": "ca7a72846cc7b36a45bd8ab58e468ce161ad0f5d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
