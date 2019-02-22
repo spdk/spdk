@@ -294,10 +294,6 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	SLIST_FOREACH(m, &g_rpc_methods, slist) {
 		if (req.current && ((m->state_mask & g_rpc_state) != g_rpc_state)) {
