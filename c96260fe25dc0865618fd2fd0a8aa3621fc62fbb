@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9b663ab2_43bcb496",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1015842
+      },
+      "writtenOn": "2019-02-22T11:49:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c4f57a6_425aa669",
+      "revId": "c96260fe25dc0865618fd2fd0a8aa3621fc62fbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f1e7739c_26b9ba8f",
         "filename": "lib/bdev/ocf/dobj.c",
         "patchSetId": 10
@@ -39,6 +57,30 @@
       "revId": "c96260fe25dc0865618fd2fd0a8aa3621fc62fbb",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "80033291_9d0edd72",
+        "filename": "lib/bdev/ocf/dobj.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 410,
+      "author": {
+        "id": 1015842
+      },
+      "writtenOn": "2019-02-22T11:49:14Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f1e7739c_26b9ba8f",
+      "range": {
+        "startLine": 410,
+        "startChar": 48,
+        "endLine": 410,
+        "endChar": 73
+      },
+      "revId": "c96260fe25dc0865618fd2fd0a8aa3621fc62fbb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
