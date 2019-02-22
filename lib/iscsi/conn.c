@@ -1149,7 +1149,7 @@ static int
 spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
 	const int array_size = 32;
-	struct iovec	iovec_array[array_size];
+	struct iovec	iovec_array[array_size] = {};
 	struct iovec	*iov = iovec_array;
 	int iovec_cnt = 0;
 	int bytes = 0;
