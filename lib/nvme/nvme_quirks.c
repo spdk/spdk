@@ -83,6 +83,9 @@ static const struct nvme_quirk nvme_quirks[] = {
 		NVME_QUIRK_IDENTIFY_CNS |
 		NVME_QUIRK_OCSSD
 	},
+	{	{SPDK_PCI_VID_VMWARE, 0x07f0, SPDK_PCI_ANY_ID, SPDK_PCI_ANY_ID},
+		NVME_QUIRK_SHST_COMPLETE
+	},
 	{	{0x0000, 0x0000, 0x0000, 0x0000}, 0}
 };
 
