@@ -90,10 +90,6 @@ _spdk_rpc_construct_ftl_bdev_cb(const struct ftl_bdev_info *bdev_info, void *ctx
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (!w) {
-		return;
-	}
-
 	spdk_uuid_fmt_lower(bdev_uuid, sizeof(bdev_uuid), &bdev_info->uuid);
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", bdev_info->name);
@@ -196,12 +192,7 @@ static void
 _spdk_rpc_delete_ftl_bdev_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
 	spdk_json_write_bool(w, bdeverrno == 0);
 	spdk_jsonrpc_end_result(request, w);
