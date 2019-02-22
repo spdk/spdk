@@ -78,10 +78,6 @@ spdk_rpc_add_ip_address(struct spdk_jsonrpc_request *request,
 	free_rpc_ip_address(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -113,10 +109,6 @@ spdk_rpc_delete_ip_address(struct spdk_jsonrpc_request *request,
 	free_rpc_ip_address(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -145,10 +137,6 @@ spdk_rpc_get_interfaces(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	TAILQ_FOREACH(ifc, interface_head, tailq) {
