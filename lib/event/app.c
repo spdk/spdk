@@ -653,7 +653,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
-	g_init_lcore = spdk_env_get_current_core();
+	g_init_lcore = spdk_env_get_master_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
 	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
 
@@ -704,7 +704,7 @@ _spdk_app_stop(void *arg1, void *arg2)
 
 	spdk_rpc_finish();
 
-	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
+	app_stop_event = spdk_event_allocate(spdk_env_get_master_core(), spdk_reactors_stop, NULL, NULL);
 	spdk_subsystem_fini(app_stop_event);
 }
 
