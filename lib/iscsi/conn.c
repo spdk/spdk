@@ -1116,7 +1116,7 @@ _iov_iter_set_iov(struct _iov_iter *i, void *buf, uint32_t buf_len)
 		i->iov->iov_base = buf + i->iov_offset;
 		i->iov->iov_len = buf_len - i->iov_offset;
 		i->total_len += buf_len - i->iov_offset;
-		i->iovcnt++;
+		i->iovcnt--;
 		i->iov_offset = 0;
 	}
 
@@ -1152,17 +1152,23 @@ spdk_iscsi_build_iovs(struct _iov_iter *iter, struct spdk_iscsi_pdu *pdu,
 
 	/* AHS */
 	if (total_ahs_len > 0) {
-		_iov_iter_set_iov(iter, pdu->ahs, 4 * total_ahs_len);
+		if (!_iov_iter_set_iov(iter, pdu->ahs, 4 * total_ahs_len)) {
+			return;
+		}
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		_iov_iter_set_iov(iter, pdu->header_digest, ISCSI_DIGEST_LEN);
+		if (!_iov_iter_set_iov(iter, pdu->header_digest, ISCSI_DIGEST_LEN)) {
+			return;
+		}
 	}
 
 	/* Data Segment */
 	if (data_len > 0) {
-		_iov_iter_set_iov(iter, pdu->data, ISCSI_ALIGN(data_len));
+		if (!_iov_iter_set_iov(iter, pdu->data, ISCSI_ALIGN(data_len))) {
+			return;
+		}
 	}
 
 	/* Data Digest */
@@ -1225,7 +1231,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
 	const int num_iovs = 32;
 	struct iovec iovs[num_iovs];
-	struct _iov_iter iter = { .iov = iovs, .iovcnt = 0, .total_len = 0 };
+	struct _iov_iter iter = { .iov = iovs, .iovcnt = num_iovs, .total_len = 0 };
 	int bytes = 0;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
@@ -1240,15 +1246,15 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  connection's write_pdu_list.
 	 */
-	while (pdu != NULL && ((num_iovs - iter.iovcnt) >= 5)) {
+	while (pdu != NULL && iter.iovcnt > 0) {
 		spdk_iscsi_build_iovs(&iter, pdu, conn);
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, iter.total_len, 0,
-			  iter.iovcnt);
+			  num_iovs - iter.iovcnt);
 
-	bytes = spdk_sock_writev(conn->sock, iovs, iter.iovcnt);
+	bytes = spdk_sock_writev(conn->sock, iovs, num_iovs - iter.iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
