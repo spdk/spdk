@@ -75,10 +75,6 @@ spdk_rpc_enable_tpoint_group(struct spdk_jsonrpc_request *request,
 	free_rpc_tpoint_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -115,10 +111,6 @@ spdk_rpc_disable_tpoint_group(struct spdk_jsonrpc_request *request,
 	free_rpc_tpoint_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -147,10 +139,6 @@ spdk_rpc_get_tpoint_group_mask(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	tpoint_group_mask = spdk_trace_get_tpoint_group_mask();
 
 	spdk_json_write_object_begin(w);

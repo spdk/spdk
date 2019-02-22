@@ -113,11 +113,6 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_get_raid_bdevs(&req);
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	/* Get raid bdev list based on the category requested */
@@ -295,10 +290,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	free_rpc_construct_raid_bdev(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;

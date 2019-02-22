@@ -52,10 +52,6 @@ spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	for (i = 0; i < SPDK_SCSI_MAX_DEVS; i++) {

@@ -74,10 +74,8 @@ construct_cb(int status, struct vbdev_ocf *vbdev, void *cb_arg)
 						     status);
 	} else {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w) {
-			spdk_json_write_string(w, vbdev->name);
-			spdk_jsonrpc_end_result(request, w);
-		}
+		spdk_json_write_string(w, vbdev->name);
+		spdk_jsonrpc_end_result(request, w);
 	}
 }
 
@@ -132,10 +130,8 @@ delete_cb(void *cb_arg, int status)
 						     status);
 	} else {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w) {
-			spdk_json_write_bool(w, true);
-			spdk_jsonrpc_end_result(request, w);
-		}
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
 	}
 }
 
@@ -225,10 +221,8 @@ spdk_rpc_get_ocf_stats(struct spdk_jsonrpc_request *request, const struct spdk_j
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w) {
-		vbdev_ocf_stats_write_json(w, &stats);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	vbdev_ocf_stats_write_json(w, &stats);
+	spdk_jsonrpc_end_result(request, w);
 
 end:
 	free_rpc_get_ocf_stats(&req);
@@ -311,9 +305,6 @@ spdk_rpc_get_ocf_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_j
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
 
 	cctx.name    = req.name;
 	cctx.w       = w;

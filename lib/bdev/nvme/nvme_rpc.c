@@ -135,10 +135,6 @@ spdk_rpc_send_nvme_cmd_complete(struct rpc_send_nvme_cmd_ctx *ctx, const struct 
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto out;
-	}
-
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "cpl", ctx->resp.cpl_text);
 

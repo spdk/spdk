@@ -52,10 +52,6 @@ spdk_rpc_get_subsystems(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	TAILQ_FOREACH(subsystem, &g_subsystems, tailq) {
 		spdk_json_write_object_begin(w);
@@ -110,10 +106,8 @@ spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 	free(req.name);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w) {
-		spdk_subsystem_config_json(w, subsystem);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_subsystem_config_json(w, subsystem);
+	spdk_jsonrpc_end_result(request, w);
 }
 
 SPDK_RPC_REGISTER("get_subsystem_config", spdk_rpc_get_subsystem_config, SPDK_RPC_RUNTIME)

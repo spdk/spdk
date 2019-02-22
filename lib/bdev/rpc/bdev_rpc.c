@@ -159,11 +159,6 @@ spdk_rpc_get_bdevs_iostat(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free(ctx);
-		return;
-	}
-
 	/*
 	 * Increment initial bdev_count so that it will never reach 0 in the middle
 	 * of iterating.
@@ -338,10 +333,6 @@ spdk_rpc_get_bdevs(struct spdk_jsonrpc_request *request,
 
 	free_rpc_get_bdevs(&req);
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	if (bdev != NULL) {
@@ -480,10 +471,6 @@ spdk_rpc_set_bdev_qos_limit_complete(void *cb_arg, int status)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -557,12 +544,7 @@ static void
 _spdk_bdev_histogram_status_cb(void *cb_arg, int status)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
 	spdk_json_write_bool(w, status == 0);
 	spdk_jsonrpc_end_result(request, w);
@@ -653,10 +635,6 @@ _spdk_rpc_bdev_histogram_data_cb(void *cb_arg, int status, struct spdk_histogram
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto free_encoded_histogram;
-	}
-
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "histogram", encoded_histogram);
 	spdk_json_write_named_int64(w, "bucket_shift", histogram->bucket_shift);
