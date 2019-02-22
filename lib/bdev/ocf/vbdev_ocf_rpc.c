@@ -88,10 +88,8 @@ spdk_rpc_construct_ocf_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w) {
-		spdk_json_write_string(w, req.name);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_string(w, req.name);
+	spdk_jsonrpc_end_result(request, w);
 
 end:
 	free_rpc_construct_ocf_bdev(&req);
@@ -148,10 +146,6 @@ spdk_rpc_delete_ocf_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto end;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 
@@ -209,10 +203,8 @@ spdk_rpc_get_ocf_stats(struct spdk_jsonrpc_request *request, const struct spdk_j
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w) {
-		vbdev_ocf_stats_write_json(w, &stats);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	vbdev_ocf_stats_write_json(w, &stats);
+	spdk_jsonrpc_end_result(request, w);
 
 end:
 	free_rpc_get_ocf_stats(&req);
@@ -247,10 +239,6 @@ spdk_rpc_get_ocf_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_j
 	struct spdk_json_write_ctx *w;
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	vbdev_ocf_foreach(get_bdevs_fn, w);
 	spdk_json_write_array_end(w);
