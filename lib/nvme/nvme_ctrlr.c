@@ -552,6 +552,9 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	} while (ms_waited < shutdown_timeout_ms);
 
 	SPDK_ERRLOG("did not shutdown within %u milliseconds\n", shutdown_timeout_ms);
+	if (ctrlr->quirks & NVME_QUIRK_SHST_COMPLETE) {
+		SPDK_ERRLOG("likely due to shutdown handling in the VMWare emulated NVMe SSD\n");
+	}
 }
 
 static int
