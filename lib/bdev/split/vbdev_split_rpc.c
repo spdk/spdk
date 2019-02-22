@@ -76,10 +76,6 @@ spdk_rpc_construct_split_vbdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto out;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	base_bdev = spdk_bdev_get_by_name(req.base_bdev);
@@ -139,10 +135,6 @@ spdk_rpc_destruct_split_vbdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto out;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 out:

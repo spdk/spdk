@@ -112,10 +112,6 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto cleanup;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	/* Get raid bdev list based on the category requested */
@@ -288,10 +284,6 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto cleanup;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 
@@ -365,10 +357,6 @@ destroy_raid_bdev_done(void *cb_arg, int rc)
 	raid_bdev_config_cleanup(raid_cfg);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto exit;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 exit:
