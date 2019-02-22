@@ -122,10 +122,6 @@ spdk_rpc_set_log_print_level(struct spdk_jsonrpc_request *request,
 	free_rpc_log_level(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -160,10 +156,6 @@ spdk_rpc_get_log_print_level(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, name);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -196,10 +188,6 @@ spdk_rpc_set_log_level(struct spdk_jsonrpc_request *request,
 	free_rpc_log_level(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -233,10 +221,6 @@ spdk_rpc_get_log_level(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, name);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -265,10 +249,6 @@ spdk_rpc_set_log_flag(struct spdk_jsonrpc_request *request,
 	free_rpc_log_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -302,10 +282,6 @@ spdk_rpc_clear_log_flag(struct spdk_jsonrpc_request *request,
 	free_rpc_log_flag(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -332,10 +308,6 @@ spdk_rpc_get_log_flags(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_object_begin(w);
 	flag = spdk_log_get_first_flag();
 	while (flag) {
