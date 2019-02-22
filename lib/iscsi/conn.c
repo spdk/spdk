@@ -1099,16 +1099,28 @@ spdk_iscsi_get_pdu_length(struct spdk_iscsi_pdu *pdu, int header_digest,
 struct _iov_iter {
 	struct iovec	*iov;
 	int		iovcnt;
+	uint32_t	iov_offset;
 	uint32_t	total_len;
 };
 
-static inline void
+static inline bool
 _iov_iter_set_iov(struct _iov_iter *i, void *buf, uint32_t buf_len)
 {
-	i->iov->iov_base = buf;
-	i->iov->iov_len = buf_len;
-	i->total_len += buf_len;
-	i->iovcnt++;
+	if (i->iovcnt == 0) {
+		return false;
+	}
+
+	if (i->iov_offset >= buf_len) {
+		i->iov_offset -= buf_len;
+	} else {
+		i->iov->iov_base = buf + i->iov_offset;
+		i->iov->iov_len = buf_len - i->iov_offset;
+		i->total_len += buf_len - i->iov_offset;
+		i->iovcnt++;
+		i->iov_offset = 0;
+	}
+
+	return true;
 }
 
 static void
@@ -1127,6 +1139,13 @@ spdk_iscsi_build_iovs(struct _iov_iter *iter, struct spdk_iscsi_pdu *pdu,
 		/* this PDU should be sent without digest */
 		enable_digest = 0;
 	}
+
+	/*
+	 * writev_offset is used to check if the PDU was partially written
+	 *  out the last time this function was called, and if so adjust
+	 *  the iovec array accordingly.
+	 */
+	iter->iov_offset = pdu->writev_offset;
 
 	/* BHS */
 	_iov_iter_set_iov(iter, &pdu->bhs, ISCSI_BHS_LEN);
@@ -1208,7 +1227,6 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	struct iovec iovs[num_iovs];
 	struct _iov_iter iter = { .iov = iovs, .iovcnt = 0, .total_len = 0 };
 	int bytes = 0;
-	uint32_t writev_offset;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
 
@@ -1227,30 +1245,10 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	/*
-	 * Check if the first PDU was partially written out the last time
-	 *  this function was called, and if so adjust the iovec array
-	 *  accordingly.
-	 */
-	writev_offset = TAILQ_FIRST(&conn->write_pdu_list)->writev_offset;
-	iter.total_len -= writev_offset;
-	iter.iov = iovs;
-	while (writev_offset > 0) {
-		if (writev_offset >= iter.iov->iov_len) {
-			writev_offset -= iter.iov->iov_len;
-			iter.iov++;
-			iter.iovcnt--;
-		} else {
-			iter.iov->iov_len -= writev_offset;
-			iter.iov->iov_base = (char *)iter.iov->iov_base + writev_offset;
-			writev_offset = 0;
-		}
-	}
-
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, iter.total_len, 0,
 			  iter.iovcnt);
 
-	bytes = spdk_sock_writev(conn->sock, iter.iov, iter.iovcnt);
+	bytes = spdk_sock_writev(conn->sock, iovs, iter.iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
