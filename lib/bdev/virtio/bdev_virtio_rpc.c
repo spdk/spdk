@@ -64,10 +64,6 @@ spdk_rpc_remove_virtio_bdev_cb(void *ctx, int errnum)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -119,10 +115,6 @@ spdk_rpc_get_virtio_scsi_devs(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	bdev_virtio_scsi_dev_list(w);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -172,16 +164,14 @@ spdk_rpc_create_virtio_dev_cb(void *ctx, int result, struct spdk_bdev **bdevs, s
 	}
 
 	w = spdk_jsonrpc_begin_result(req->request);
-	if (w) {
-		spdk_json_write_array_begin(w);
+	spdk_json_write_array_begin(w);
 
-		for (i = 0; i < cnt; i++) {
-			spdk_json_write_string(w, spdk_bdev_get_name(bdevs[i]));
-		}
-
-		spdk_json_write_array_end(w);
-		spdk_jsonrpc_end_result(req->request, w);
+	for (i = 0; i < cnt; i++) {
+		spdk_json_write_string(w, spdk_bdev_get_name(bdevs[i]));
 	}
+
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(req->request, w);
 
 	free_rpc_construct_virtio_dev(ctx);
 }

@@ -1064,10 +1064,6 @@ spdk_rpc_start_subsystem_init_cpl(void *arg1)
 	spdk_app_start_application();
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1099,10 +1095,8 @@ spdk_rpc_subsystem_init_poller_ctx(void *ctx)
 
 	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
 		w = spdk_jsonrpc_begin_result(poller_ctx->request);
-		if (w != NULL) {
-			spdk_json_write_bool(w, true);
-			spdk_jsonrpc_end_result(poller_ctx->request, w);
-		}
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(poller_ctx->request, w);
 		spdk_poller_unregister(&poller_ctx->init_poller);
 		free(poller_ctx);
 	}
@@ -1119,9 +1113,6 @@ spdk_rpc_wait_subsystem_init(struct spdk_jsonrpc_request *request,
 
 	if (spdk_rpc_get_state() == SPDK_RPC_RUNTIME) {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w == NULL) {
-			return;
-		}
 		spdk_json_write_bool(w, true);
 		spdk_jsonrpc_end_result(request, w);
 	} else {

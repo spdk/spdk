@@ -108,10 +108,6 @@ spdk_rpc_scan_ioat_copy_engine(struct spdk_jsonrpc_request *request,
 	copy_engine_ioat_enable_probe();
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }

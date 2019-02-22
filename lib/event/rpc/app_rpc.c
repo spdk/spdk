@@ -98,9 +98,6 @@ spdk_rpc_kill_instance(struct spdk_jsonrpc_request *request,
 	kill(getpid(), signals[i].signal);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -140,10 +137,6 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_object_begin(w);
 
 	spdk_json_write_named_bool(w, "enabled", spdk_reactor_context_switch_monitor_enabled());
