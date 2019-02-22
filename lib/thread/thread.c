@@ -549,6 +549,18 @@ spdk_thread_has_active_pollers(struct spdk_thread *thread)
 	return !TAILQ_EMPTY(&thread->active_pollers);
 }
 
+bool
+spdk_thread_has_scheduled_ops(struct spdk_thread *thread)
+{
+	if (spdk_thread_has_active_pollers(thread) ||
+	    spdk_ring_count(thread->messages) ||
+	    spdk_thread_next_poller_expiration(thread)) {
+		return true;
+	}
+
+	return false;
+}
+
 uint32_t
 spdk_thread_get_count(void)
 {
