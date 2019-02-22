@@ -691,6 +691,15 @@ struct spdk_nvme_ctrlr {
 	uint32_t			outstanding_aborts;
 };
 
+struct spdk_nvme_probe_ctx {
+	struct spdk_nvme_transport_id		trid;
+	void					*cb_ctx;
+	spdk_nvme_probe_cb			probe_cb;
+	spdk_nvme_attach_cb			attach_cb;
+	spdk_nvme_remove_cb			remove_cb;
+	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
+};
+
 struct nvme_driver {
 	pthread_mutex_t			lock;
 

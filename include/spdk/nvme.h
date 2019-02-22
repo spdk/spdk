@@ -563,19 +563,14 @@ int spdk_nvme_probe(const struct spdk_nvme_transport_id *trid,
 struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 		const struct spdk_nvme_ctrlr_opts *opts);
 
-struct spdk_nvme_probe_ctx {
-	struct spdk_nvme_transport_id		trid;
-	void					*cb_ctx;
-	spdk_nvme_probe_cb			probe_cb;
-	spdk_nvme_attach_cb			attach_cb;
-	spdk_nvme_remove_cb			remove_cb;
-	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
-};
+struct spdk_nvme_probe_ctx;
 
 /**
- * Initialize a context to track the probe result based on transport ID.
+ * Probe and add controllers to the probe context list.
  *
- * \param probe_ctx Context used to track probe actions.
+ * Users must call spdk_nvme_probe_poll_async() to initialize
+ * controllers in the probe context list to the READY state.
+ *
  * \param trid The transport ID indicating which bus to enumerate. If the trtype
  * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
  * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
@@ -589,25 +584,13 @@ struct spdk_nvme_probe_ctx {
  * spdk_nvme_probe() call but are no longer attached to the system. Optional;
  * specify NULL if removal notices are not desired.
  *
+ * \return probe context on success, NULL on failure.
  */
-void spdk_nvme_probe_ctx_init(struct spdk_nvme_probe_ctx *probe_ctx,
-			      const struct spdk_nvme_transport_id *trid,
-			      void *cb_ctx,
-			      spdk_nvme_probe_cb probe_cb,
-			      spdk_nvme_attach_cb attach_cb,
-			      spdk_nvme_remove_cb remove_cb);
-
-/**
- * Probe and add controllers to the probe context list.
- *
- * Users must call spdk_nvme_probe_poll_async() to initialize
- * controllers in the probe context list to the READY state.
- *
- * \param probe_ctx Context used to track probe actions.
- *
- * \return 0 on success, -1 on failure.
- */
-int spdk_nvme_probe_async(struct spdk_nvme_probe_ctx *probe_ctx);
+struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
+		void *cb_ctx,
+		spdk_nvme_probe_cb probe_cb,
+		spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb);
 
 /**
  * Start controllers in the context list.

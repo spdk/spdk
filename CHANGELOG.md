@@ -6,8 +6,8 @@
 
 Remove opts_size parameter in spdk_nvme_connect() API.
 
-Added asynchronous probe support.  New APIs spdk_nvme_probe_ctx_init(), spdk_nvme_probe_async()
-and spdk_nvme_probe_poll_async() were added to enable this feature.
+Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
+spdk_nvme_probe_poll_async() were added to enable this feature.
 
 ### raid
 
