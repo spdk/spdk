@@ -1445,8 +1445,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->req.cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
 
-			STAILQ_REMOVE(&rqpair->incoming_queue, rdma_recv, spdk_nvmf_rdma_recv, link);
-
 			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 				break;
@@ -2149,7 +2147,6 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 				     struct spdk_nvmf_rdma_qpair *rqpair, bool drain)
 {
 	struct spdk_nvmf_rdma_request	*rdma_req, *req_tmp;
-	struct spdk_nvmf_rdma_recv	*rdma_recv, *recv_tmp;
 
 	/* We process I/O in the data transfer pending queue at the highest priority. RDMA reads first */
 	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->pending_rdma_read_queue, state_link, req_tmp) {
@@ -2173,16 +2170,12 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		}
 	}
 
-	/* The lowest priority is processing newly received commands */
-	STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->incoming_queue, link, recv_tmp) {
-
-		if (STAILQ_EMPTY(&rqpair->free_queue)) {
-			break;
-		}
+	while (!STAILQ_EMPTY(&rqpair->free_queue) && !STAILQ_EMPTY(&rqpair->incoming_queue)) {
 
 		rdma_req = STAILQ_FIRST(&rqpair->free_queue);
-		rdma_req->recv = rdma_recv;
 		STAILQ_REMOVE_HEAD(&rqpair->free_queue, state_link);
+		rdma_req->recv = STAILQ_FIRST(&rqpair->incoming_queue);
+		STAILQ_REMOVE_HEAD(&rqpair->incoming_queue, link);
 
 		rqpair->qd++;
 		rdma_req->state = RDMA_REQUEST_STATE_NEW;
