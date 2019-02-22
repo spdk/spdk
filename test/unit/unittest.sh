@@ -149,6 +149,7 @@ $valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 $valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
 $valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
 $valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
+$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
 fi
 
 # local unit test coverage
