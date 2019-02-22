@@ -85,10 +85,6 @@ spdk_rpc_construct_vhost_scsi_controller(struct spdk_jsonrpc_request *request,
 	free_rpc_vhost_scsi_ctrlr(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -154,10 +150,6 @@ spdk_rpc_add_vhost_scsi_lun(struct spdk_jsonrpc_request *request,
 	free_rpc_add_vhost_scsi_ctrlr_lun(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_int32(w, rc);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -192,10 +184,6 @@ spdk_rpc_remove_vhost_scsi_target_finish_cb(struct spdk_vhost_dev *vdev, void *a
 	struct spdk_json_write_ctx *w;
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return -1;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return 0;
@@ -290,10 +278,6 @@ spdk_rpc_construct_vhost_blk_controller(struct spdk_jsonrpc_request *request,
 	free_rpc_vhost_blk_ctrlr(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -354,10 +338,6 @@ spdk_rpc_remove_vhost_controller(struct spdk_jsonrpc_request *request,
 	free_rpc_remove_vhost_ctrlr(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 
@@ -435,11 +415,6 @@ spdk_rpc_get_vhost_controllers(struct spdk_jsonrpc_request *request,
 		free_rpc_get_vhost_ctrlrs(&req);
 
 		w = spdk_jsonrpc_begin_result(request);
-		if (w == NULL) {
-			spdk_vhost_unlock();
-			return;
-		}
-
 		spdk_json_write_array_begin(w);
 
 		_spdk_rpc_get_vhost_controller(w, vdev);
@@ -529,10 +504,8 @@ spdk_rpc_set_vhost_controller_coalescing(struct spdk_jsonrpc_request *request,
 	free_rpc_set_vhost_controllers_event_coalescing(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w != NULL) {
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
 
 	return;
 
@@ -588,10 +561,6 @@ spdk_rpc_construct_vhost_nvme_controller(struct spdk_jsonrpc_request *request,
 	free_rpc_vhost_nvme_ctrlr(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -655,10 +624,6 @@ spdk_rpc_add_vhost_nvme_ns(struct spdk_jsonrpc_request *request,
 	free_rpc_add_vhost_nvme_ctrlr_ns(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
