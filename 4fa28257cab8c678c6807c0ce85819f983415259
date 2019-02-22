@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "abf54dfa_91bd1a58",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:47:25Z",
+      "side": 1,
+      "message": "Can probably just inline this",
+      "revId": "4fa28257cab8c678c6807c0ce85819f983415259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04396227_ce9c5cf8",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:47:25Z",
+      "side": 1,
+      "message": "Separate line",
+      "revId": "4fa28257cab8c678c6807c0ce85819f983415259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70875be3_44594ed6",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:47:25Z",
+      "side": 1,
+      "message": "separate line",
+      "revId": "4fa28257cab8c678c6807c0ce85819f983415259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb86039a_afb0ac8a",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 385,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:47:25Z",
+      "side": 1,
+      "message": "separate line",
+      "revId": "4fa28257cab8c678c6807c0ce85819f983415259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "17e4535c_89610bf3",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 396,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:47:25Z",
+      "side": 1,
+      "message": "separate line",
+      "revId": "4fa28257cab8c678c6807c0ce85819f983415259",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
