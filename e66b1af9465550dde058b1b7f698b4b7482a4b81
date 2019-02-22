@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9a48457b_35634155",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1447,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-22T17:08:18Z",
+      "side": 1,
+      "message": "This is an O(n) operation. It\u0027s very likely that this element is at the front of the tail queue, but maybe move this removal to line 2181 below so it\u0027s clear that we\u0027re removing the first element.",
+      "revId": "e66b1af9465550dde058b1b7f698b4b7482a4b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
