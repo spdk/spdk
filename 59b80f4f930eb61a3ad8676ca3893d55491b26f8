@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f06f3866_5d085b70",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-22T09:10:25Z",
+      "side": 1,
+      "message": "could be replaced with\ndata_len \u0026 ~0xF",
+      "range": {
+        "startLine": 618,
+        "startChar": 38,
+        "endLine": 618,
+        "endChar": 56
+      },
+      "revId": "59b80f4f930eb61a3ad8676ca3893d55491b26f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
