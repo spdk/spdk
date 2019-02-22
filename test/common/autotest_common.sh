@@ -94,7 +94,7 @@ if [ $SPDK_TEST_CRYPTO -eq 1 ]; then
 fi
 
 if [ $SPDK_TEST_OCF -eq 1 ]; then
-	config_params+=" --with-ocf"
+	config_params+=" --with-ocf=$rootdir/ocf"
 fi
 
 export UBSAN_OPTIONS='halt_on_error=1:print_stacktrace=1:abort_on_error=1'
