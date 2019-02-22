@@ -106,10 +106,6 @@ _spdk_rpc_lvol_store_construct_cb(void *cb_arg, struct spdk_lvol_store *lvol_sto
 	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol_store->uuid);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, lvol_store_uuid);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -213,10 +209,6 @@ _spdk_rpc_rename_lvol_store_cb(void *cb_arg, int lvserrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -289,10 +281,6 @@ _spdk_rpc_lvol_store_destroy_cb(void *cb_arg, int lvserrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -374,10 +362,6 @@ _spdk_rpc_construct_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvole
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, lvol->unique_id);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -477,10 +461,6 @@ _spdk_rpc_snapshot_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvoler
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, lvol->unique_id);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -563,10 +543,6 @@ _spdk_rpc_clone_lvol_bdev_cb(void *cb_arg, struct spdk_lvol *lvol, int lvolerrno
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, lvol->unique_id);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -649,10 +625,6 @@ _spdk_rpc_rename_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -732,10 +704,6 @@ _spdk_rpc_inflate_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -862,10 +830,6 @@ _spdk_rpc_resize_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -951,10 +915,6 @@ _spdk_rpc_set_ro_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -1040,10 +1000,6 @@ _spdk_rpc_destroy_lvol_bdev_cb(void *cb_arg, int lvolerrno)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -1177,11 +1133,6 @@ spdk_rpc_get_lvol_stores(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_get_lvol_stores(&req);
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	if (lvs_bdev != NULL) {
