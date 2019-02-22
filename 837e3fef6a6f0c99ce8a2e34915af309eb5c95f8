@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3bbccfcc_b7db4483",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-02-22T05:32:03Z",
+      "side": 1,
+      "message": "maybe put below command line : mkdir -p spdk_repo/output",
+      "revId": "837e3fef6a6f0c99ce8a2e34915af309eb5c95f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
