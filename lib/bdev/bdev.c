@@ -3695,33 +3695,18 @@ _remove_notify(void *arg)
 	}
 }
 
-void
-spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+/* Must be called while holding bdev->internal.mutex.
+ * returns: 0 - bdev removed and ready to be destructed.
+ *          -EBUSY - bdev can't be destructed yet.  */
+static int
+spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 {
 	struct spdk_bdev_desc	*desc, *tmp;
-	bool			do_destruct = true;
-	struct spdk_thread	*thread;
-
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
-
-	thread = spdk_get_thread();
-	if (!thread) {
-		/* The user called this from a non-SPDK thread. */
-		if (cb_fn != NULL) {
-			cb_fn(cb_arg, -ENOTSUP);
-		}
-		return;
-	}
-
-	pthread_mutex_lock(&bdev->internal.mutex);
-
-	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
-	bdev->internal.unregister_cb = cb_fn;
-	bdev->internal.unregister_ctx = cb_arg;
+	int			rc = 0;
 
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		if (desc->remove_cb) {
-			do_destruct = false;
+			rc = -EBUSY;
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and
@@ -3736,15 +3721,51 @@ spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void
 		}
 	}
 
-	if (!do_destruct) {
-		pthread_mutex_unlock(&bdev->internal.mutex);
+	if (rc == 0) {
+		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list done\n", bdev->name);
+	}
+
+	return rc;
+}
+
+void
+spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
+{
+	struct spdk_thread	*thread;
+	int			rc;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list\n", bdev->name);
+
+	thread = spdk_get_thread();
+	if (!thread) {
+		/* The user called this from a non-SPDK thread. */
+		if (cb_fn != NULL) {
+			cb_fn(cb_arg, -ENOTSUP);
+		}
 		return;
 	}
 
-	TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
+	pthread_mutex_lock(&bdev->internal.mutex);
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING) {
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		if (cb_fn) {
+			cb_fn(cb_arg, -EBUSY);
+		}
+		return;
+	}
+
+	bdev->internal.status = SPDK_BDEV_STATUS_REMOVING;
+	bdev->internal.unregister_cb = cb_fn;
+	bdev->internal.unregister_ctx = cb_arg;
+
+	/* Call under lock. */
+	rc = spdk_bdev_unregister_unsafe(bdev);
 	pthread_mutex_unlock(&bdev->internal.mutex);
 
-	spdk_bdev_fini(bdev);
+	if (rc == 0) {
+		spdk_bdev_fini(bdev);
+	}
 }
 
 int
@@ -3815,7 +3836,7 @@ void
 spdk_bdev_close(struct spdk_bdev_desc *desc)
 {
 	struct spdk_bdev *bdev = desc->bdev;
-	bool do_unregister = false;
+	int rc;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
 		      spdk_get_thread());
@@ -3848,12 +3869,14 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	spdk_bdev_set_qd_sampling_period(bdev, 0);
 
 	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
-		do_unregister = true;
-	}
-	pthread_mutex_unlock(&bdev->internal.mutex);
+		rc = spdk_bdev_unregister_unsafe(bdev);
+		pthread_mutex_unlock(&bdev->internal.mutex);
 
-	if (do_unregister == true) {
-		spdk_bdev_unregister(bdev, bdev->internal.unregister_cb, bdev->internal.unregister_ctx);
+		if (rc == 0) {
+			spdk_bdev_fini(bdev);
+		}
+	} else {
+		pthread_mutex_unlock(&bdev->internal.mutex);
 	}
 }
 
