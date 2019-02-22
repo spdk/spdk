@@ -20,12 +20,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface')
     parser.add_argument('-s', dest='server_addr',
-                        help='RPC server address', default='/var/tmp/spdk.sock')
+                        help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',
                         help='RPC port number (if server_addr is IP address)',
                         default=5260, type=int)
     parser.add_argument('-t', dest='timeout',
-                        help='Timout as a floating point number expressed in seconds waiting for reponse. Default: 60.0',
+                        help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=60.0, type=float)
     parser.add_argument('-v', dest='verbose',
                         help='Verbose mode', action='store_true')
