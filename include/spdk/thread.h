@@ -278,6 +278,15 @@ int spdk_thread_has_active_pollers(struct spdk_thread *thread);
 bool spdk_thread_has_pollers(struct spdk_thread *thread);
 
 /**
+ * Returns whether there are scheduled operations to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return true if there are no scheduled operations, false otherwise.
+ */
+bool spdk_thread_is_idle(struct spdk_thread *thread);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);

@@ -17,6 +17,9 @@ strip_size. The strip_size rpc param is deprecated.
 Added spdk_thread_has_pollers() function to verify if there are
 any registered pollers to be run on the thread.
 
+Added spdk_thread_is_idle() function to check if there are any scheduled operations
+to be performed on the thread at given time.
+
 ## v19.01:
 
 ### ocf bdev

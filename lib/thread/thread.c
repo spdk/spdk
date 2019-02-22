@@ -560,6 +560,17 @@ spdk_thread_has_pollers(struct spdk_thread *thread)
 	return true;
 }
 
+bool
+spdk_thread_is_idle(struct spdk_thread *thread)
+{
+	if (spdk_ring_count(thread->messages) ||
+	    spdk_thread_has_pollers(thread)) {
+		return false;
+	}
+
+	return true;
+}
+
 uint32_t
 spdk_thread_get_count(void)
 {
