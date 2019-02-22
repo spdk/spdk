@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62a645fb_41802c8a",
+        "filename": "scripts/setup.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 282,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-22T08:54:30Z",
+      "side": 1,
+      "message": "This needs to updated as well.",
+      "range": {
+        "startLine": 282,
+        "startChar": 81,
+        "endLine": 282,
+        "endChar": 89
+      },
+      "revId": "867a8de31b42ccfba2bf4d027ae3ed6c4d300281",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
