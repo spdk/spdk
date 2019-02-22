@@ -424,6 +424,13 @@ uint32_t spdk_env_get_core_count(void);
 uint32_t spdk_env_get_current_core(void);
 
 /**
+ * Get the CPU core index of the master thread.
+ *
+ * \return the CPU core index of the master CPU core.
+ */
+uint32_t spdk_env_get_master_core(void);
+
+/**
  * Get the index of the first dedicated CPU core for this application.
  *
  * \return the index of the first dedicated CPU core.
