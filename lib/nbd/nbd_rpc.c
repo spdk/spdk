@@ -162,10 +162,6 @@ spdk_rpc_start_nbd_done(void *cb_arg, struct spdk_nbd_disk *nbd, int rc)
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_string(w, spdk_nbd_get_path(nbd));
 	spdk_jsonrpc_end_result(request, w);
 
@@ -261,14 +257,9 @@ nbd_disconnect_thread(void *arg)
 	nbd_disconnect(thd_arg->nbd);
 
 	w = spdk_jsonrpc_begin_result(thd_arg->request);
-	if (w == NULL) {
-		goto out;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(thd_arg->request, w);
 
-out:
 	free(thd_arg);
 	pthread_exit(NULL);
 }
@@ -399,10 +390,6 @@ spdk_rpc_get_nbd_disks(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	if (nbd != NULL) {
