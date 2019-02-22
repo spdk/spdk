@@ -16,6 +16,24 @@
       "revId": "1112b35e8e6c650a22f408509d4f9281f89b2fd3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d4c1c57_e40912ba",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-22T07:23:07Z",
+      "side": 1,
+      "message": "Yes, you are right. Thanks for that!",
+      "parentUuid": "941bff38_9111bcf8",
+      "revId": "1112b35e8e6c650a22f408509d4f9281f89b2fd3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
