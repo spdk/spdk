@@ -268,6 +268,15 @@ uint64_t spdk_thread_next_poller_expiration(struct spdk_thread *thread);
 int spdk_thread_has_active_pollers(struct spdk_thread *thread);
 
 /**
+ * Returns whether there are scheduled operations to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return true if there is any scheduled operation, false otherwise.
+ */
+bool spdk_thread_has_scheduled_ops(struct spdk_thread *thread);
+
+/**
  * Get count of allocated threads.
  */
 uint32_t spdk_thread_get_count(void);
