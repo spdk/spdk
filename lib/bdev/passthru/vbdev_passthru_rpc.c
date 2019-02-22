@@ -81,11 +81,6 @@ spdk_rpc_construct_passthru_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_construct_passthru(&req);
-		return;
-	}
-
 	spdk_json_write_string(w, req.name);
 	spdk_jsonrpc_end_result(request, w);
 	free_rpc_construct_passthru(&req);
@@ -115,12 +110,7 @@ static void
 _spdk_rpc_delete_passthru_bdev_cb(void *cb_arg, int bdeverrno)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
-	struct spdk_json_write_ctx *w;
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
+	struct spdk_json_write_ctx *w = spdk_jsonrpc_begin_result(request);
 
 	spdk_json_write_bool(w, bdeverrno == 0);
 	spdk_jsonrpc_end_result(request, w);
