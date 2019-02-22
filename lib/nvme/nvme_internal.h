@@ -116,6 +116,13 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_INTEL_QUIRK_NO_LOG_PAGES 0x100
 
+/*
+ * The controller does not set SHST_COMPLETE in a reasonable amount of time.  This
+ * is primarily seen in virtual VMWare NVMe SSDs.  This quirk merely adds an additional
+ * error message that on VMWare NVMe SSDs, the shutdown timeout may be expected.
+ */
+#define NVME_QUIRK_SHST_COMPLETE 0x200
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
 #define NVME_MAX_TIMEOUT_PERIOD		(120)
