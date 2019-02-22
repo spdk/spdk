@@ -57,10 +57,6 @@ spdk_rpc_get_initiator_groups(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	spdk_iscsi_init_grps_info_json(w);
 	spdk_json_write_array_end(w);
@@ -166,10 +162,6 @@ spdk_rpc_add_initiator_group(struct spdk_jsonrpc_request *request,
 	free_rpc_initiator_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -211,10 +203,6 @@ spdk_rpc_add_initiators_to_initiator_group(struct spdk_jsonrpc_request *request,
 	free_rpc_initiator_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -251,10 +239,6 @@ spdk_rpc_delete_initiators_from_initiator_group(struct spdk_jsonrpc_request *req
 	free_rpc_initiator_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -297,10 +281,6 @@ spdk_rpc_delete_initiator_group(struct spdk_jsonrpc_request *request,
 	spdk_iscsi_init_grp_destroy(ig);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -323,10 +303,6 @@ spdk_rpc_get_target_nodes(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	spdk_iscsi_tgt_nodes_info_json(w);
 	spdk_json_write_array_end(w);
@@ -511,10 +487,6 @@ spdk_rpc_construct_target_node(struct spdk_jsonrpc_request *request,
 	free_rpc_target_node(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -574,10 +546,8 @@ spdk_rpc_add_pg_ig_maps(struct spdk_jsonrpc_request *request,
 	free(req.name);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w != NULL) {
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
@@ -626,10 +596,8 @@ spdk_rpc_delete_pg_ig_maps(struct spdk_jsonrpc_request *request,
 	free(req.name);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w != NULL) {
-		spdk_json_write_bool(w, true);
-		spdk_jsonrpc_end_result(request, w);
-	}
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
 	return;
 
 invalid:
@@ -680,10 +648,6 @@ spdk_rpc_delete_target_node(struct spdk_jsonrpc_request *request,
 	free_rpc_delete_target_node(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -707,10 +671,6 @@ spdk_rpc_get_portal_groups(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	spdk_iscsi_portal_grps_info_json(w);
 	spdk_json_write_array_end(w);
@@ -838,10 +798,8 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 out:
 	if (rc == 0) {
 		w = spdk_jsonrpc_begin_result(request);
-		if (w != NULL) {
-			spdk_json_write_bool(w, true);
-			spdk_jsonrpc_end_result(request, w);
-		}
+		spdk_json_write_bool(w, true);
+		spdk_jsonrpc_end_result(request, w);
 	} else {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 
@@ -885,10 +843,6 @@ spdk_rpc_delete_portal_group(struct spdk_jsonrpc_request *request,
 	spdk_iscsi_portal_grp_release(pg);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -914,10 +868,6 @@ spdk_rpc_get_iscsi_connections(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 
 	for (i = 0; i < MAX_ISCSI_CONNECTIONS; i++) {
@@ -1013,10 +963,6 @@ spdk_rpc_target_node_add_lun(struct spdk_jsonrpc_request *request,
 	free_rpc_target_lun(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -1085,10 +1031,6 @@ spdk_rpc_set_iscsi_target_node_auth(struct spdk_jsonrpc_request *request,
 	free_rpc_target_auth(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 	return;
@@ -1112,10 +1054,6 @@ spdk_rpc_get_iscsi_global_params(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_iscsi_opts_info_json(w);
 
 	spdk_jsonrpc_end_result(request, w);
@@ -1161,10 +1099,6 @@ spdk_rpc_set_iscsi_discovery_auth(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1300,10 +1234,6 @@ spdk_rpc_add_iscsi_auth_group(struct spdk_jsonrpc_request *request,
 	free_rpc_auth_group(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1349,10 +1279,6 @@ spdk_rpc_delete_iscsi_auth_group(struct spdk_jsonrpc_request *request,
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1429,10 +1355,6 @@ spdk_rpc_add_secret_to_iscsi_auth_group(struct spdk_jsonrpc_request *request,
 	free_rpc_add_auth_secret(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1501,10 +1423,6 @@ spdk_rpc_delete_secret_from_iscsi_auth_group(struct spdk_jsonrpc_request *reques
 	free_rpc_delete_auth_secret(&req);
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
@@ -1524,10 +1442,6 @@ spdk_rpc_get_iscsi_auth_groups(struct spdk_jsonrpc_request *request,
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_array_begin(w);
 	spdk_iscsi_auth_groups_info_json(w);
 	spdk_json_write_array_end(w);

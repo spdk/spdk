@@ -87,10 +87,6 @@ spdk_rpc_set_bdev_opts(struct spdk_jsonrpc_request *request, const struct spdk_j
 	}
 
 	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		return;
-	}
-
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
 }
