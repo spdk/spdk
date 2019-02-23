@@ -524,7 +524,7 @@ spdk_vhost_session_find_by_id(struct spdk_vhost_dev *vdev, unsigned id)
 	return NULL;
 }
 
-static struct spdk_vhost_session *
+struct spdk_vhost_session *
 spdk_vhost_session_find_by_vid(int vid)
 {
 	struct spdk_vhost_dev *vdev;
@@ -1015,7 +1015,7 @@ stop_device(int vid)
 
 	vdev = vsession->vdev;
 	if (vsession->lcore == -1) {
-		SPDK_ERRLOG("Controller %s is not loaded.\n", vdev->name);
+		/* already stopped, nothing to do */
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
@@ -1061,7 +1061,7 @@ start_device(int vid)
 
 	vdev = vsession->vdev;
 	if (vsession->lcore != -1) {
-		SPDK_ERRLOG("Controller %s already loaded.\n", vdev->name);
+		/* already started, nothing to do */
 		goto out;
 	}
 
@@ -1297,6 +1297,8 @@ new_connection(int vid)
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
 	TAILQ_INSERT_TAIL(&vdev->vsessions, vsession, tailq);
+
+	spdk_vhost_session_install_rte_compat_hooks(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return 0;
 }
