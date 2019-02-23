@@ -126,6 +126,8 @@ struct spdk_vhost_session {
 
 	int32_t lcore;
 
+	bool needs_restart;
+
 	struct rte_vhost_memory *mem;
 
 	int task_cnt;
@@ -344,6 +346,9 @@ int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
  * \param response return code
  */
 void spdk_vhost_session_event_done(void *event_ctx, int response);
+
+struct spdk_vhost_session *spdk_vhost_session_find_by_vid(int vid);
+void spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);
 
 void spdk_vhost_free_reactor(uint32_t lcore);
 uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
