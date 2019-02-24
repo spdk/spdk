@@ -496,6 +496,43 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
 
 /*
  * brief:
+ * raid_bdev_base_io_submit_fail_process processes IO requests for member disk
+ * which failed to submit
+ * params:
+ * raid_bdev_io - pointer to raid bdev_io
+ * pd_idx - base_dev index in raid_bdev
+ * cb_fn - callback when the spdk_bdev_io for base_bdev becomes available
+ * ret - return code
+ * returns:
+ * none
+ */
+static void
+raid_bdev_base_io_submit_fail_process(struct spdk_bdev_io *raid_bdev_io, uint8_t pd_idx,
+				      spdk_bdev_io_wait_cb cb_fn, int ret)
+{
+	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)raid_bdev_io->driver_ctx;
+	struct raid_bdev_io_channel *raid_ch = spdk_io_channel_get_ctx(raid_io->ch);
+	struct raid_bdev *raid_bdev = (struct raid_bdev *)raid_bdev_io->bdev->ctxt;
+
+	assert(ret != 0);
+
+	if (ret == -ENOMEM) {
+		raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[pd_idx].bdev;
+		raid_io->waitq_entry.cb_fn = cb_fn;
+		raid_io->waitq_entry.cb_arg = raid_bdev_io;
+		spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[pd_idx].bdev,
+					raid_ch->base_channel[pd_idx],
+					&raid_io->waitq_entry);
+		return;
+	}
+
+	SPDK_ERRLOG("bdev io submit error not due to ENOMEM, it should not happen\n");
+	assert(false);
+	spdk_bdev_io_complete(raid_bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+}
+
+/*
+ * brief:
  * _raid_bdev_submit_reset_request_next function submits the next batch of reset requests
  * to member disks; it will submit as many as possible unless a reset fails with -ENOMEM, in
  * which case it will queue it for later submission
@@ -525,17 +562,9 @@ _raid_bdev_submit_reset_request_next(void *_bdev_io)
 				      raid_bdev_base_io_completion, bdev_io);
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
-		} else if (ret == -ENOMEM) {
-			raid_io->waitq_entry.bdev = raid_bdev->base_bdev_info[i].bdev;
-			raid_io->waitq_entry.cb_fn = _raid_bdev_submit_reset_request_next;
-			raid_io->waitq_entry.cb_arg = bdev_io;
-			spdk_bdev_queue_io_wait(raid_bdev->base_bdev_info[i].bdev,
-						raid_ch->base_channel[i],
-						&raid_io->waitq_entry);
-			return;
 		} else {
-			assert(false);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+			raid_bdev_base_io_submit_fail_process(bdev_io, i,
+							      _raid_bdev_submit_reset_request_next, ret);
 			return;
 		}
 	}
