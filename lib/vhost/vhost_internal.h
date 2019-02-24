@@ -95,6 +95,9 @@
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+	uint16_t last_avail_idx;
+	uint16_t last_used_idx;
+
 	void *tasks;
 
 	/* Request count from last stats check */

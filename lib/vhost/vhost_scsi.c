@@ -415,7 +415,7 @@ process_ctrl_request(struct spdk_vhost_scsi_task *task)
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_SCSI_QUEUE,
 		      "Processing controlq descriptor: desc %d/%p, desc_addr %p, len %d, flags %d, last_used_idx %d; kickfd %d; size %d\n",
-		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->vring.last_used_idx,
+		      task->req_idx, desc, (void *)desc->addr, desc->len, desc->flags, task->vq->last_used_idx,
 		      task->vq->vring.kickfd, task->vq->vring.size);
 	SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "Request descriptor", (uint8_t *)ctrl_req, desc->len);
 
