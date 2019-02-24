@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "e4a7864f_c3e574f7",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-24T05:01:44Z",
+      "side": 1,
+      "message": "Agreed, I have another patch https://review.gerrithub.io/#/c/spdk/spdk/+/445656/ removing this, but this breaks the API, nvme-cli is using the API. So keeping it for now, will remove it in the upper patch.",
+      "parentUuid": "8f2682ee_5d0a4ef1",
+      "revId": "f51913a73e571bfbc230d6cb27455c584a3469bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a15ccaed_73072341",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-22T18:13:21Z",
       "side": 1,
       "message": "connect_opts is on the stack and won\u0027t be valid after this function returns",
+      "revId": "f51913a73e571bfbc230d6cb27455c584a3469bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "137173fa_aa27cb7d",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1141,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-24T05:01:44Z",
+      "side": 1,
+      "message": "Yes, this is okay because spdk_nvme_probe_internal() is running in the sync mode.",
+      "parentUuid": "a15ccaed_73072341",
       "revId": "f51913a73e571bfbc230d6cb27455c584a3469bf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
