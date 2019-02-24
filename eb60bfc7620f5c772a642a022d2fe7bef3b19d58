@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f41ffdd_d3f12848",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1649,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-02-24T11:24:47Z",
+      "side": 1,
+      "message": "It\u0027s safe to free(NULL), so the if statement can be removed.",
+      "revId": "eb60bfc7620f5c772a642a022d2fe7bef3b19d58",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
