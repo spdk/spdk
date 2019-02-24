@@ -182,7 +182,7 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_avail *avail = vring->avail;
 	uint16_t size_mask = vring->size - 1;
-	uint16_t last_idx = vring->last_avail_idx, avail_idx = avail->idx;
+	uint16_t last_idx = virtqueue->last_avail_idx, avail_idx = avail->idx;
 	uint16_t count, i;
 
 	count = avail_idx - last_idx;
@@ -198,7 +198,7 @@ spdk_vhost_vq_avail_ring_get(struct spdk_vhost_virtqueue *virtqueue, uint16_t *r
 	}
 
 	count = spdk_min(count, reqs_len);
-	vring->last_avail_idx += count;
+	virtqueue->last_avail_idx += count;
 	for (i = 0; i < count; i++) {
 		reqs[i] = vring->avail->ring[(last_idx + i) & size_mask];
 	}
@@ -259,7 +259,7 @@ spdk_vhost_vq_used_signal(struct spdk_vhost_session *vsession,
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: sending IRQ: last used %"PRIu16"\n",
-		      virtqueue - vsession->virtqueue, virtqueue->vring.last_used_idx);
+		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx);
 
 	eventfd_write(virtqueue->vring.callfd, (eventfd_t)1);
 	return 1;
@@ -401,15 +401,15 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 {
 	struct rte_vhost_vring *vring = &virtqueue->vring;
 	struct vring_used *used = vring->used;
-	uint16_t last_idx = vring->last_used_idx & (vring->size - 1);
+	uint16_t last_idx = virtqueue->last_used_idx & (vring->size - 1);
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RING,
 		      "Queue %td - USED RING: last_idx=%"PRIu16" req id=%"PRIu16" len=%"PRIu32"\n",
-		      virtqueue - vsession->virtqueue, vring->last_used_idx, id, len);
+		      virtqueue - vsession->virtqueue, virtqueue->last_used_idx, id, len);
 
 	spdk_vhost_log_req_desc(vsession, virtqueue, id);
 
-	vring->last_used_idx++;
+	virtqueue->last_used_idx++;
 	used->ring[last_idx].id = id;
 	used->ring[last_idx].len = len;
 
@@ -417,7 +417,7 @@ spdk_vhost_vq_used_ring_enqueue(struct spdk_vhost_session *vsession,
 	spdk_smp_wmb();
 
 	spdk_vhost_log_used_vring_elem(vsession, virtqueue, last_idx);
-	* (volatile uint16_t *) &used->idx = vring->last_used_idx;
+	* (volatile uint16_t *) &used->idx = virtqueue->last_used_idx;
 	spdk_vhost_log_used_vring_idx(vsession, virtqueue);
 
 	/* Ensure all our used ring changes are visible to the guest at the time
@@ -999,7 +999,7 @@ stop_device(int vid)
 {
 	struct spdk_vhost_dev *vdev;
 	struct spdk_vhost_session *vsession;
-	struct rte_vhost_vring *q;
+	struct spdk_vhost_virtqueue *q;
 	int rc;
 	uint16_t i;
 
@@ -1026,11 +1026,11 @@ stop_device(int vid)
 	}
 
 	for (i = 0; i < vsession->max_queues; i++) {
-		q = &vsession->virtqueue[i].vring;
-		if (q->desc == NULL) {
+		q = &vsession->virtqueue[i];
+		if (q->vring.desc == NULL) {
 			continue;
 		}
-		rte_vhost_set_vhost_vring_last_idx(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
+		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
 	}
 
 	spdk_vhost_session_mem_unregister(vsession);
@@ -1066,12 +1066,18 @@ start_device(int vid)
 	vsession->max_queues = 0;
 	memset(vsession->virtqueue, 0, sizeof(vsession->virtqueue));
 	for (i = 0; i < SPDK_VHOST_MAX_VQUEUES; i++) {
-		if (rte_vhost_get_vhost_vring(vid, i, &vsession->virtqueue[i].vring)) {
+		struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+
+		if (rte_vhost_get_vhost_vring(vid, i, &q->vring)) {
 			continue;
 		}
 
-		if (vsession->virtqueue[i].vring.desc == NULL ||
-		    vsession->virtqueue[i].vring.size == 0) {
+		if (q->vring.desc == NULL || q->vring.size == 0) {
+			continue;
+		}
+
+		if (rte_vhost_get_vring_base(vsession->vid, i, &q->last_avail_idx, &q->last_used_idx)) {
+			q->vring.desc = NULL;
 			continue;
 		}
 
