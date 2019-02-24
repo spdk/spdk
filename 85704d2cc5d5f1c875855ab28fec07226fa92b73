@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "3f7b4e8d_91594d0a",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1277,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-24T05:13:25Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "3ab64e43_a88c61eb",
+      "revId": "85704d2cc5d5f1c875855ab28fec07226fa92b73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2e3c04fb_dd765c71",
         "filename": "lib/bdev/nvme/bdev_nvme.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-22T18:08:16Z",
       "side": 1,
       "message": "Can you just register the poller here? The connect used to happen on this thread anyway.",
+      "revId": "85704d2cc5d5f1c875855ab28fec07226fa92b73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6e3d59b9_204d8bf6",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1374,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-24T05:13:25Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "2e3c04fb_dd765c71",
       "revId": "85704d2cc5d5f1c875855ab28fec07226fa92b73",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
