@@ -479,7 +479,6 @@ static void
 raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	struct spdk_bdev_io *parent_io = cb_arg;
-	struct raid_bdev *raid_bdev = (struct raid_bdev *)parent_io->bdev->ctxt;
 	struct raid_bdev_io *raid_io = (struct raid_bdev_io *)parent_io->driver_ctx;
 
 	spdk_bdev_free_io(bdev_io);
@@ -489,7 +488,7 @@ raid_bdev_base_io_completion(struct spdk_bdev_io *bdev_io, bool success, void *c
 	}
 
 	raid_io->base_bdev_io_completed++;
-	if (raid_io->base_bdev_io_completed == raid_bdev->num_base_bdevs) {
+	if (raid_io->base_bdev_io_completed == raid_io->base_bdev_io_expected) {
 		spdk_bdev_io_complete(parent_io, raid_io->base_bdev_io_status);
 	}
 }
@@ -584,11 +583,14 @@ static void
 _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
+	struct raid_bdev		*raid_bdev;
 
+	raid_bdev = (struct raid_bdev *)bdev_io->bdev->ctxt;
 	raid_io = (struct raid_bdev_io *)bdev_io->driver_ctx;
 	raid_io->ch = ch;
 	raid_io->base_bdev_io_submitted = 0;
 	raid_io->base_bdev_io_completed = 0;
+	raid_io->base_bdev_io_expected = raid_bdev->num_base_bdevs;
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 	_raid_bdev_submit_reset_request_next(bdev_io);
 }
