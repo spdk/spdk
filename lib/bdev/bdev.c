@@ -549,7 +549,7 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 		STAILQ_REMOVE_HEAD(stailq, internal.buf_link);
 		tmp->internal.buf = buf;
-		tmp->internal.get_buf_cb(tmp->internal.ch->channel, tmp);
+		tmp->internal.get_buf_cb(tmp->internal.ch->channel, tmp, true);
 	}
 }
 
@@ -591,11 +591,17 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	if (buf_allocated &&
 	    _are_iovs_aligned(bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt, alignment)) {
 		/* Buffer already present and aligned */
-		cb(bdev_io->internal.ch->channel, bdev_io);
+		cb(bdev_io->internal.ch->channel, bdev_io, true);
 		return;
 	}
 
-	assert(len + alignment <= SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT);
+	if (len + alignment > SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT) {
+		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
+			    len + alignment);
+		cb(bdev_io->internal.ch->channel, bdev_io, false);
+		return;
+	}
+
 	mgmt_ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
 
 	bdev_io->internal.buf_len = len;
@@ -622,7 +628,7 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 			spdk_bdev_io_set_buf(bdev_io, aligned_buf, len);
 		}
 		bdev_io->internal.buf = buf;
-		bdev_io->internal.get_buf_cb(bdev_io->internal.ch->channel, bdev_io);
+		bdev_io->internal.get_buf_cb(bdev_io->internal.ch->channel, bdev_io, true);
 	}
 }
 
@@ -1647,6 +1653,15 @@ _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	_spdk_bdev_io_split_with_payload(bdev_io);
 }
 
+static void
+_spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+			       bool success)
+{
+	assert(success == true);
+
+	_spdk_bdev_io_split(ch, bdev_io);
+}
+
 /* Explicitly mark this inline, since it's used as a function pointer and otherwise won't
  *  be inlined, at least on some compilers.
  */
@@ -1699,7 +1714,7 @@ spdk_bdev_io_submit(struct spdk_bdev_io *bdev_io)
 
 	if (bdev->split_on_optimal_io_boundary && _spdk_bdev_io_should_split(bdev_io)) {
 		if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
-			spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split,
+			spdk_bdev_io_get_buf(bdev_io, _spdk_bdev_io_split_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		} else {
 			_spdk_bdev_io_split(NULL, bdev_io);

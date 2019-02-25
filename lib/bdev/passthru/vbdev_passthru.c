@@ -211,11 +211,13 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
  * if this example were used as a template for something more complex.
  */
 static void
-pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru,
 					 pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
+
+	assert(success == true);
 
 	spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
 			       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
