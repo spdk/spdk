@@ -136,8 +136,6 @@ def case_message(func):
             # destroy_lvol_store - negative tests
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
-            # nested construct_logical_volume - positive tests
-            400: 'nested_construct_logical_volume_positive',
             # construct_lvol_store - negative tests
             450: 'construct_lvs_nonexistent_bdev',
             451: 'construct_lvs_on_bdev_twice',
@@ -1038,36 +1036,6 @@ class TestCases(object):
         # - Error code: ENODEV ("No such device") response printed to stdout
         # - no other operation fails
         return fail_count
-
-    def test_case400(self):
-        print("Test of this feature not yet implemented.")
-        # Name: nested_construct_logical_volume_positive
-        # Positive test for constructing a nested new lvol store.
-        # Call construct_lvol_store with correct base bdev name.
-        # Steps:
-        # - create a malloc bdev
-        # - construct_lvol_store on created malloc bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct_lvol_bdev on correct lvs_uuid and size is
-        #   equal to size malloc bdev
-        # - construct first nested lvol store on created lvol_bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct first nested lvol bdev on correct lvs_uuid and size
-        # - construct second nested lvol store on created first nested lvol bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct second nested lvol bdev on correct first nested lvs uuid and size
-        # - delete nested lvol bdev and lvol store
-        # - delete base lvol bdev and lvol store
-        # - delete malloc bdev
-
-        # Expected result:
-        # - calls successful, return code = 0
-        # - get_lvol_stores: backend used for construct_lvol_store has UUID
-        #   field set with the same UUID as returned from RPC call
-        #   backend used for construct_lvol_bdev has UUID
-        #   field set with the same UUID as returned from RPC call
-        # - no other operation fails
-        return 0
 
     # negative tests
     @case_message
