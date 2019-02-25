@@ -292,7 +292,7 @@ function install_ocf()
 
     if echo $CONF | grep -q ocf; then
         if [ ! -d "$targetdir" ]; then
-            sudo git clone "${GIT_REPO_OCF}" "$targetdir" -b "$version"
+            sudo -E git clone "${GIT_REPO_OCF}" "$targetdir" -b "$version"
         else
             echo "OCF already installed. Skipping"
         fi
