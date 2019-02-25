@@ -40,13 +40,13 @@
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
 
-#define VHOST_MEMORY_MAX_NREGIONS 8
+#define VHOST_USER_MEMORY_MAX_NREGIONS 8
 
 /** Fixed-size vhost_memory struct */
 struct vhost_memory_padded {
 	uint32_t nregions;
 	uint32_t padding;
-	struct vhost_memory_region regions[VHOST_MEMORY_MAX_NREGIONS];
+	struct vhost_memory_region regions[VHOST_USER_MEMORY_MAX_NREGIONS];
 };
 
 struct vhost_user_msg {
@@ -65,7 +65,6 @@ struct vhost_user_msg {
 		struct vhost_memory_padded memory;
 		struct vhost_user_config cfg;
 	} payload;
-	int fds[VHOST_MEMORY_MAX_NREGIONS];
 } __attribute((packed));
 
 #define VHOST_USER_HDR_SIZE offsetof(struct vhost_user_msg, payload.u64)
@@ -142,9 +141,9 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 
 	sz_payload = msg->size;
 
-	if (sizeof(*msg) - sz_hdr < sz_payload) {
+	if (sz_payload > VHOST_USER_PAYLOAD_SIZE) {
 		SPDK_WARNLOG("Received oversized msg: payload size %zu > available space %zu\n",
-			     sz_payload, sizeof(*msg) - sz_hdr);
+			     sz_payload, VHOST_USER_PAYLOAD_SIZE);
 		return -EIO;
 	}
 
@@ -263,9 +262,9 @@ static int
 prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 {
 	int i, num;
-	struct hugepage_file_info huges[VHOST_MEMORY_MAX_NREGIONS];
+	struct hugepage_file_info huges[VHOST_USER_MEMORY_MAX_NREGIONS];
 
-	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
+	num = get_hugepage_file_info(huges, VHOST_USER_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
 		SPDK_ERRLOG("Failed to prepare memory for vhost-user\n");
 		return num;
@@ -312,7 +311,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	struct vhost_user_msg msg;
 	struct vhost_vring_file *file = 0;
 	int need_reply = 0;
-	int fds[VHOST_MEMORY_MAX_NREGIONS];
+	int fds[VHOST_USER_MEMORY_MAX_NREGIONS];
 	int fd_num = 0;
 	int i, len, rc;
 	int vhostfd = dev->vhostfd;
