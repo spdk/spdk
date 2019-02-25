@@ -160,13 +160,6 @@ enum nvme_payload_type {
 	NVME_PAYLOAD_TYPE_SGL,
 };
 
-/*
- * Controller support flags.
- */
-enum spdk_nvme_ctrlr_flags {
-	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
-};
-
 /**
  * Descriptor for a request data payload.
  */

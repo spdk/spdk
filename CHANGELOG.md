@@ -11,6 +11,8 @@ spdk_app_start() now only accepts a single context argument.
 Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
 spdk_nvme_probe_poll_async() were added to enable this feature.
 
+New API spdk_nvme_ctrlr_get_flags() was added.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
