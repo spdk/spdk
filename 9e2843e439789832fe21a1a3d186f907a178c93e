@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5581b43_0e1506cf",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T02:39:40Z",
+      "side": 1,
+      "message": "unaligned start LBA offset ?",
+      "range": {
+        "startLine": 626,
+        "startChar": 28,
+        "endLine": 626,
+        "endChar": 29
+      },
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9f7bdb02_9d6eec08",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 627,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T02:39:40Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 627,
+        "startChar": 26,
+        "endLine": 627,
+        "endChar": 27
+      },
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c006330a_b8cd5ab1",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T02:39:40Z",
+      "side": 1,
+      "message": "Maybe \"Number of base bdevs involved is between 1 and num_base_bdevs. It will be 1 if the first strip and end strip are the same one.\" \n\nThis will never become 0 because it is already rejected in spdk_bdev_unmap_blocks.",
+      "range": {
+        "startLine": 638,
+        "startChar": 4,
+        "endLine": 640,
+        "endChar": 4
+      },
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
