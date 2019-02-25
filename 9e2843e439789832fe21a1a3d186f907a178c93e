@@ -68,6 +68,86 @@
       "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fd05656_c6c36d10",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 913,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T03:37:24Z",
+      "side": 1,
+      "message": "This should be ?\n\nif (base_io_idx \u003d\u003d end_io_idx) {\n  CU_ASSERT(end_offset % g_strip_size \u003d\u003d end_offset_in_strip);\n} else {\n  CU_ASSERT(end_offset % g_strip_size \u003d\u003d g_strip_size - 1);\n}",
+      "range": {
+        "startLine": 911,
+        "startChar": 0,
+        "endLine": 913,
+        "endChar": 3
+      },
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7a04fee_59bf7c74",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 915,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T03:37:24Z",
+      "side": 1,
+      "message": "It\u0027s not clear to me why you have used sign of inequality?\n\nif (offset_in_disk !\u003d g_io_output[base_io_idx].offset_blocks) {\n  CU_ASSERT(g_io_output[base_io_idx].offset_blocks % g_strip_size \u003d\u003d 0)\n}",
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3c30b720_44ed4d88",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 922,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T03:37:24Z",
+      "side": 1,
+      "message": "same as above.",
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7cfdeb78_02e28f17",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1729,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T03:37:24Z",
+      "side": 1,
+      "message": "duplicated.",
+      "range": {
+        "startLine": 1729,
+        "startChar": 49,
+        "endLine": 1729,
+        "endChar": 51
+      },
+      "revId": "9e2843e439789832fe21a1a3d186f907a178c93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
