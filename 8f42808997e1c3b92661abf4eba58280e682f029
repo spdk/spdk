@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "11d35ba1_1eb8840c",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T20:04:14Z",
+      "side": 1,
+      "message": "where is this event header?",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1afdcf4_c0309e22",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T20:04:14Z",
+      "side": 1,
+      "message": "It looks to me like spdk_notify does not need to be exposed in the public API and it could just be implicitly constructed in response to spdk_notify_type_register. I think that solves a few other problems too, like letting you move that TAILQ_ENTRY on line 72 into an internal-only type.",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01aad2dd_052b5e57",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T20:04:14Z",
+      "side": 1,
+      "message": "Not sure what (chance being a global variable) means.\n\nEither way, it would probably be a lot easier for the user if this internally allocated a copy of the required objects, so that the user wasn\u0027t required to keep this around. This isn\u0027t in the performance path anyway.",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ef8b4a3_4e87daff",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T20:04:14Z",
+      "side": 1,
+      "message": "Can this fail? Should it return an error?",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e19ff51_e8be218a",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T20:04:14Z",
+      "side": 1,
+      "message": "What if instead of a pointer, you embed this type here and construct this object implicitly whenever a new type is registered?",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "05427444_e04cad9b",
         "filename": "lib/notify/notify.c",
         "patchSetId": 36
