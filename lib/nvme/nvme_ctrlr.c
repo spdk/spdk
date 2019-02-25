@@ -905,6 +905,11 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
 	}
 
+	if (ctrlr->cdata.oacs.security) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECEIVE_SUPPORTED;
+		/* TODO: Check OPAL support here */
+	}
+
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
 			     ctrlr->opts.admin_timeout_ms);
 }
