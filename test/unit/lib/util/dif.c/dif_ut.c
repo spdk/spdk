@@ -361,7 +361,7 @@ dif_disable_sec_512_md_8_single_iov_test(void)
 {
 	struct iovec iov;
 
-	_iov_alloc_buf(&iov, (512 + 8) * 4);
+	_iov_alloc_buf(&iov, 512 + 8);
 
 	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_DISABLE, 0, 0, 0, 0);
 
@@ -373,7 +373,7 @@ dif_sec_512_md_8_prchk_0_single_iov_test(void)
 {
 	struct iovec iov;
 
-	_iov_alloc_buf(&iov, (512 + 8) * 4);
+	_iov_alloc_buf(&iov, 512 + 8);
 
 	dif_generate_and_verify(&iov, 1, 512 + 8, 8, 1, false, SPDK_DIF_TYPE1, 0, 0, 0, 0);
 
