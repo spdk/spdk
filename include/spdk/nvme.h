@@ -1312,6 +1312,15 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 			      uint16_t spsp, uint8_t nssf, void *payload, size_t size);
 
 /**
+ * Check if the controller supports security send/receive admin commands.
+ *
+ * \param ctrlr NVMe controller to check support.
+ *
+ * \return true if supported, false if not supported.
+ */
+bool spdk_nvme_ctrlr_security_send_recv_supported(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
  * Attach the specified namespace to controllers.
  *
  * This function is thread safe and can be called at any point after spdk_nvme_probe().
