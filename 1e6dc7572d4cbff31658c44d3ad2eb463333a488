@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4288f919_780399e6",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2802,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T19:40:40Z",
+      "side": 1,
+      "message": "This condition will only hit on a completion in the error state, but what if the final send, for example, actually succeeded (it snuck in before the qp was set to error state)?\n\nI think you can move this code to the very end of the function and it should catch everything.\n\nAlso I think the current_recv_depth check should be for full queue depth.",
+      "revId": "1e6dc7572d4cbff31658c44d3ad2eb463333a488",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
