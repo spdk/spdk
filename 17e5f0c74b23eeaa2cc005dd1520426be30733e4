@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4e91f3e6_00952aa4",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-25T08:50:02Z",
+      "side": 1,
+      "message": "to keep the convention:\nbdev_uring_initialize / bdev_uring_finish\nor\nbdev_uring_init / bdev_uring_fini",
+      "range": {
+        "startLine": 93,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 32
+      },
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b07013ba_559e7b20",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-25T08:50:02Z",
+      "side": 1,
+      "message": "ifneq ($(strip $(CONFIG_URING_PATH)),)",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 68,
+        "endChar": 4
+      },
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
