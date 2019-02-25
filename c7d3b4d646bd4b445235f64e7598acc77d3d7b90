@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "699907c0_35909eaa",
+        "filename": "include/spdk/nvme_spec.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 1798,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-25T03:08:20Z",
+      "side": 1,
+      "message": "0x06 can be added when needed.",
+      "parentUuid": "f77d1811_07af70e6",
+      "range": {
+        "startLine": 1798,
+        "startChar": 4,
+        "endLine": 1798,
+        "endChar": 13
+      },
+      "revId": "c7d3b4d646bd4b445235f64e7598acc77d3d7b90",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e9120e39_529e5eb2",
         "filename": "include/spdk/nvme_spec.h",
         "patchSetId": 3
