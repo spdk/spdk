@@ -544,6 +544,8 @@ invalid:
 SPDK_RPC_REGISTER("set_vhost_controller_coalescing", spdk_rpc_set_vhost_controller_coalescing,
 		  SPDK_RPC_RUNTIME)
 
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+
 struct rpc_vhost_nvme_ctrlr {
 	char *ctrlr;
 	uint32_t io_queues;
@@ -668,5 +670,6 @@ invalid:
 }
 SPDK_RPC_REGISTER("add_vhost_nvme_ns", spdk_rpc_add_vhost_nvme_ns, SPDK_RPC_RUNTIME)
 
+#endif /* SPDK_CONFIG_VHOST_INTERNAL_LIB */
 
 SPDK_LOG_REGISTER_COMPONENT("vhost_rpc", SPDK_LOG_VHOST_RPC)
