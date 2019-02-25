@@ -36,45 +36,9 @@
 
 #include "spdk/stdinc.h"
 
-#include <linux/vhost.h>
-
 #include "spdk_internal/log.h"
 #include "spdk_internal/virtio.h"
-
-#define VHOST_USER_MAX_CONFIG_SIZE 256
-
-#ifndef VHOST_USER_PROTOCOL_F_MQ
-#define VHOST_USER_PROTOCOL_F_MQ	0
-#endif
-
-#ifndef VHOST_USER_PROTOCOL_F_CONFIG
-#define VHOST_USER_PROTOCOL_F_CONFIG	9
-#endif
-
-enum vhost_user_request {
-	VHOST_USER_NONE = 0,
-	VHOST_USER_GET_FEATURES = 1,
-	VHOST_USER_SET_FEATURES = 2,
-	VHOST_USER_SET_OWNER = 3,
-	VHOST_USER_RESET_OWNER = 4,
-	VHOST_USER_SET_MEM_TABLE = 5,
-	VHOST_USER_SET_LOG_BASE = 6,
-	VHOST_USER_SET_LOG_FD = 7,
-	VHOST_USER_SET_VRING_NUM = 8,
-	VHOST_USER_SET_VRING_ADDR = 9,
-	VHOST_USER_SET_VRING_BASE = 10,
-	VHOST_USER_GET_VRING_BASE = 11,
-	VHOST_USER_SET_VRING_KICK = 12,
-	VHOST_USER_SET_VRING_CALL = 13,
-	VHOST_USER_SET_VRING_ERR = 14,
-	VHOST_USER_GET_PROTOCOL_FEATURES = 15,
-	VHOST_USER_SET_PROTOCOL_FEATURES = 16,
-	VHOST_USER_GET_QUEUE_NUM = 17,
-	VHOST_USER_SET_VRING_ENABLE = 18,
-	VHOST_USER_GET_CONFIG = 24,
-	VHOST_USER_SET_CONFIG = 25,
-	VHOST_USER_MAX
-};
+#include "spdk_internal/vhost_user.h"
 
 struct virtio_user_backend_ops;
 
@@ -98,14 +62,6 @@ struct virtio_user_backend_ops {
 	int (*send_request)(struct virtio_user_dev *dev,
 			    enum vhost_user_request req,
 			    void *arg);
-};
-
-/* get/set config msg */
-struct vhost_user_config {
-	uint32_t offset;
-	uint32_t size;
-	uint32_t flags;
-	uint8_t region[VHOST_USER_MAX_CONFIG_SIZE];
 };
 
 extern struct virtio_user_backend_ops ops_user;
