@@ -379,7 +379,10 @@ bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 {
 	int ret;
 
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
 			      ch,
