@@ -296,7 +296,7 @@ static void
 io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct vbdev_ocf *vbdev = bdev_io->bdev->ctxt;
-	struct ocf_io *io;
+	struct ocf_io *io = NULL;
 	struct bdev_ocf_data *data = NULL;
 	struct vbdev_ocf_qcxt *qctx = spdk_io_channel_get_ctx(ch);
 	int err;
@@ -345,7 +345,10 @@ static void
 vbdev_ocf_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		     bool success)
 {
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	io_handle(ch, bdev_io);
 }
