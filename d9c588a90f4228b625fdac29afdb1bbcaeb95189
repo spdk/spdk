@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "22a477a2_8d3209a0",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1293,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-25T03:15:47Z",
+      "side": 1,
+      "message": "good catch.",
+      "parentUuid": "853c331c_64300d64",
+      "revId": "d9c588a90f4228b625fdac29afdb1bbcaeb95189",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9e661efe_83a1fae1",
         "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
         "patchSetId": 8
@@ -30,6 +48,30 @@
       "writtenOn": "2019-02-24T11:18:12Z",
       "side": 1,
       "message": "spdk_strerror(ENOMEM)",
+      "range": {
+        "startLine": 255,
+        "startChar": 79,
+        "endLine": 255,
+        "endChar": 87
+      },
+      "revId": "d9c588a90f4228b625fdac29afdb1bbcaeb95189",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "142d3181_1d50a131",
+        "filename": "lib/bdev/nvme/bdev_nvme_rpc.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-25T03:15:47Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "9e661efe_83a1fae1",
       "range": {
         "startLine": 255,
         "startChar": 79,
