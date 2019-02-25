@@ -396,8 +396,12 @@ bdev_iscsi_no_master_ch_poll(void *arg)
 	return rc;
 }
 
-static void bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		      bool success)
 {
+	assert(success == true);
+
 	bdev_iscsi_readv((struct bdev_iscsi_lun *)bdev_io->bdev->ctxt,
 			 (struct bdev_iscsi_io *)bdev_io->driver_ctx,
 			 bdev_io->u.bdev.iovs,

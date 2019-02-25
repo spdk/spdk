@@ -231,7 +231,7 @@ rte_cryptodev_sym_get_private_session_size(uint8_t dev_id)
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
-	cb(g_io_ch, g_bdev_io);
+	cb(g_io_ch, g_bdev_io, true);
 }
 
 /* Mock these functions to call the callback and then return the value we require */

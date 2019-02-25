@@ -374,9 +374,12 @@ bdev_nvme_unmap(struct nvme_bdev *nbdev, struct spdk_io_channel *ch,
 		uint64_t num_blocks);
 
 static void
-bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_nvme_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		     bool success)
 {
 	int ret;
+
+	assert(success == true);
 
 	ret = bdev_nvme_readv((struct nvme_bdev *)bdev_io->bdev->ctxt,
 			      ch,
