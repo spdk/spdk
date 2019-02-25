@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a409a99c_526d904d",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-25T08:50:13Z",
+      "side": 1,
+      "message": "Is this change relevant?",
+      "range": {
+        "startLine": 300,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 5
+      },
+      "revId": "07bddf954df7c4ac56d27c69ce2c0ea57543b141",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87d3f72b_163aa464",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 428,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-25T08:50:13Z",
+      "side": 1,
+      "message": "Is this change relevant?",
+      "range": {
+        "startLine": 428,
+        "startChar": 0,
+        "endLine": 428,
+        "endChar": 93
+      },
+      "revId": "07bddf954df7c4ac56d27c69ce2c0ea57543b141",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
