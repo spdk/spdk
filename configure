@@ -48,6 +48,8 @@ function usage()
 	echo "                           example: /usr/src/fio"
 	echo " vhost                     Required to build vhost target."
 	echo "                           No path required."
+	echo " internal-vhost-lib        Use the internal copy of rte_vhost."
+	echo "                           No path required."
 	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
 	echo "                           No path required."
 	echo " pmdk                      Required to build persistent memory bdev."
@@ -219,6 +221,12 @@ for i in "$@"; do
 			;;
 		--without-vhost)
 			CONFIG[VHOST]=n
+			;;
+		--with-internal-vhost-lib)
+			CONFIG[VHOST_INTERNAL_LIB]=y
+			;;
+		--without-internal-vhost-lib)
+			CONFIG[VHOST_INTERNAL_LIB]=n
 			;;
 		--with-virtio)
 			CONFIG[VIRTIO]=y
