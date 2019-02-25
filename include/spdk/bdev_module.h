@@ -396,7 +396,17 @@ struct spdk_bdev {
 	} internal;
 };
 
-typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+/**
+ * Callback when buffer is allocated for the bdev I/O.
+ *
+ * \param ch The I/O channel the bdev I/O was handled on.
+ * \param bdev_io The bdev I/O
+ * \param success True if buffer is allocated successfully or the bdev I/O has an SGL
+ * assigned already, or false if it failed. The possible reason of failure is the size
+ * of the buffer to allocate is greater than the permitted maximum.
+ */
+typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+					bool success);
 
 #define BDEV_IO_NUM_CHILD_IOV 32
 

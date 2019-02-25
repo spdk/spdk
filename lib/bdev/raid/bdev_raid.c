@@ -566,6 +566,25 @@ _raid_bdev_submit_reset_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 
 /*
  * brief:
+ * Callback function to spdk_bdev_io_get_buf.
+ * params:
+ * ch - pointer to raid bdev io channel
+ * bdev_io - pointer to parent bdev_io on raid bdev device
+ * success - True if buffer is allocated or false otherwise.
+ * returns:
+ * none
+ */
+static void
+raid_bdev_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		     bool success)
+{
+	assert(success == true);
+
+	raid_bdev_start_rw_request(ch, bdev_io);
+}
+
+/*
+ * brief:
  * raid_bdev_submit_request function is the submit_request function pointer of
  * raid bdev function table. This is used to submit the io on raid_bdev to below
  * layers.
@@ -581,7 +600,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
-			spdk_bdev_io_get_buf(bdev_io, raid_bdev_start_rw_request,
+			spdk_bdev_io_get_buf(bdev_io, raid_bdev_get_buf_cb,
 					     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		} else {
 			/* Just call it directly if iov_base is already populated. */

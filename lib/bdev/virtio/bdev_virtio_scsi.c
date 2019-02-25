@@ -578,7 +578,7 @@ bdev_virtio_reset(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 }
 
 static void
-bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	struct virtio_scsi_io_ctx *io_ctx = bdev_virtio_init_io_vreq(ch, bdev_io);
 	struct virtio_scsi_cmd_req *req = &io_ctx->req;
@@ -586,6 +586,8 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	uint8_t *buf;
 	uint64_t offset_blocks, num_blocks;
 	uint16_t cmd_len;
+
+	assert(success == true);
 
 	buf = bdev_io->u.bdev.iovs[0].iov_base;
 
@@ -622,13 +624,22 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	bdev_virtio_send_io(ch, bdev_io);
 }
 
+static void
+bdev_virtio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		       bool success)
+{
+	assert(success == true);
+
+	bdev_virtio_rw(ch, bdev_io);
+}
+
 static int _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct virtio_scsi_disk *disk = SPDK_CONTAINEROF(bdev_io->bdev, struct virtio_scsi_disk, bdev);
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_rw,
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:

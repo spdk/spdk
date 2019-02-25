@@ -373,9 +373,13 @@ bdev_rbd_destruct(void *ctx)
 	return 0;
 }
 
-static void bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
 {
 	int ret;
+
+	assert(success == true);
 
 	ret = bdev_rbd_rw(bdev_io->bdev->ctxt,
 			  ch,

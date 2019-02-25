@@ -151,7 +151,7 @@ pmemblk_open(const char *path, size_t bsize)
 void
 spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, uint64_t len)
 {
-	cb(NULL, bdev_io);
+	cb(NULL, bdev_io, true);
 }
 
 static void

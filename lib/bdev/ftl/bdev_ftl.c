@@ -312,8 +312,11 @@ bdev_ftl_writev(struct ftl_bdev *ftl_bdev, struct spdk_io_channel *ch,
 }
 
 static void
-bdev_ftl_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+bdev_ftl_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
 {
+	assert(success == true);
+
 	int rc = bdev_ftl_readv((struct ftl_bdev *)bdev_io->bdev->ctxt,
 				ch, (struct ftl_bdev_io *)bdev_io->driver_ctx);
 

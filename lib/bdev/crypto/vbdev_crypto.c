@@ -905,12 +905,15 @@ _complete_internal_read(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg
  * beneath us before we're done with it.
  */
 static void
-crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		       bool success)
 {
 	struct vbdev_crypto *crypto_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_crypto,
 					   crypto_bdev);
 	struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
+
+	assert(success == true);
 
 	rc = spdk_bdev_readv_blocks(crypto_bdev->base_desc, crypto_ch->base_ch, bdev_io->u.bdev.iovs,
 				    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
