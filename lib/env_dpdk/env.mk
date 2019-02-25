@@ -37,6 +37,8 @@
 # ENV_LIBS
 # ENV_LINKER_ARGS
 
+include $(SPDK_ROOT_DIR)/mk/config.mk
+
 DPDK_DIR = $(CONFIG_DPDK_DIR)
 
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))
@@ -98,6 +100,15 @@ endif
 
 ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_kvargs.*))
 DPDK_LIB_LIST += rte_kvargs
+endif
+
+ifneq ($(CONFIG_VHOST_INTERNAL_LIB),y)
+ifneq (, $(wildcard $(DPDK_ABS_DIR)/lib/librte_vhost.*))
+DPDK_LIB_LIST += rte_vhost rte_net rte_hash rte_mbuf
+ifneq ($(DPDK_FRAMEWORK),y)
+DPDK_LIB_LIST += rte_cryptodev
+endif
+endif
 endif
 
 DPDK_LIB = $(DPDK_LIB_LIST:%=$(DPDK_ABS_DIR)/lib/lib%$(DPDK_LIB_EXT))
