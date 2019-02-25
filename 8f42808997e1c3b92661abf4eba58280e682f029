@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "05427444_e04cad9b",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 211,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-25T13:41:44Z",
+      "side": 1,
+      "message": "Unnecessary line. You can also add empty line between lines 212 and 213.",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
