@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5bc5426e_8bc55ed9",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 736,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-25T18:31:37Z",
+      "side": 1,
+      "message": "I\u0027m nitpicking, but probably simpler and easier to extend later if you flip these around\n\nif (rc \u003d\u003d -ENOMEM) {\n...\n} else if (rc) {\n...\n}",
+      "revId": "ca41ffa0b65b6b61048ff50e048023a6e78fca42",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
