@@ -164,7 +164,6 @@ bdev_virtio_command(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	struct virtio_blk_outhdr *req = &io_ctx->req;
 	struct virtio_blk_discard_write_zeroes *desc = &io_ctx->unmap;
 
-
 	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
 		req->type = VIRTIO_BLK_T_IN;
 	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
@@ -184,6 +183,15 @@ bdev_virtio_command(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 	bdev_virtio_blk_send_io(ch, bdev_io);
 }
 
+static void
+bdev_virtio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		       bool success)
+{
+	assert(success == true);
+
+	bdev_virtio_command(ch, bdev_io);
+}
+
 static int
 _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
@@ -191,7 +199,7 @@ _bdev_virtio_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bde
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_command,
+		spdk_bdev_io_get_buf(bdev_io, bdev_virtio_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		return 0;
 	case SPDK_BDEV_IO_TYPE_WRITE:

@@ -341,6 +341,15 @@ fail:
 	}
 }
 
+static void
+vbdev_ocf_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		     bool success)
+{
+	assert(success == true);
+
+	io_handle(ch, bdev_io);
+}
+
 /* Called from bdev layer when an io to Cache vbdev is submitted */
 static void
 vbdev_ocf_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
@@ -349,7 +358,7 @@ vbdev_ocf_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 	case SPDK_BDEV_IO_TYPE_READ:
 		/* User does not have to allocate io vectors for the request,
 		 * so in case they are not allocated, we allocate them here */
-		spdk_bdev_io_get_buf(bdev_io, io_handle,
+		spdk_bdev_io_get_buf(bdev_io, vbdev_ocf_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:

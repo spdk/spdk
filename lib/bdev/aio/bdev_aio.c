@@ -394,8 +394,12 @@ bdev_aio_reset(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 	bdev_aio_reset_retry_timer(fdisk);
 }
 
-static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
 {
+	assert(success == true);
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		bdev_aio_readv((struct file_disk *)bdev_io->bdev->ctxt,

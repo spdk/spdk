@@ -184,8 +184,11 @@ bdev_pmem_write_zeros(struct spdk_bdev_io *bdev_io, struct pmem_disk *pdisk,
 }
 
 static void
-bdev_pmem_io_get_buf_cb(struct spdk_io_channel *channel, struct spdk_bdev_io *bdev_io)
+bdev_pmem_io_get_buf_cb(struct spdk_io_channel *channel, struct spdk_bdev_io *bdev_io,
+			bool success)
 {
+	assert(success == true);
+
 	bdev_pmem_submit_io(bdev_io,
 			    bdev_io->bdev->ctxt,
 			    channel,
