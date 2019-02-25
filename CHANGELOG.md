@@ -7,6 +7,9 @@
 Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
 spdk_nvme_probe_poll_async() were added to enable this feature.
 
+New APIs spdk_nvme_ctrlr_is_security_send_recv_supported() and spdk_nvme_ctrlr_get_flags()
+were added.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
