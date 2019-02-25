@@ -329,6 +329,18 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		return -1;
 	}
 
+	/* --match-allocation prevents DPDK from merging or splitting system memory allocations under the hood.
+	 * This is critical for RDMA when attempting to use an rte_mempool based buffer pool. If DPDK merges two
+	 * physically or IOVA contiguous memory regions, then when we go to allocate a buffer pool, it can split
+	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
+	 */
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
+	if (args == NULL) {
+		return -1;
+	}
+#endif
+
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
 				     getpid()));
