@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5dd7506a_e4804862",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1639,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T07:42:17Z",
+      "side": 1,
+      "message": "reaped \u003d -1 here?",
+      "revId": "71f09a4fe7ac02584d7fed93acbae6d00c21b405",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "20451ff8_1373def4",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1787,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-25T07:42:17Z",
+      "side": 1,
+      "message": "Is it OK not to call pdu-\u003ecb_fn() ?",
+      "revId": "71f09a4fe7ac02584d7fed93acbae6d00c21b405",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
