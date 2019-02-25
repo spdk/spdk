@@ -913,7 +913,10 @@ crypto_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 	struct crypto_io_channel *crypto_ch = spdk_io_channel_get_ctx(ch);
 	int rc;
 
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	rc = spdk_bdev_readv_blocks(crypto_bdev->base_desc, crypto_ch->base_ch, bdev_io->u.bdev.iovs,
 				    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
