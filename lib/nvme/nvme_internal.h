@@ -164,7 +164,8 @@ enum nvme_payload_type {
  * Controller support flags.
  */
 enum spdk_nvme_ctrlr_flags {
-	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_SECURITY_SEND_RECEIVE_SUPPORTED = 0x2, /**< security send/receive is supported */
 };
 
 /**
