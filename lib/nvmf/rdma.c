@@ -197,8 +197,6 @@ enum spdk_nvmf_rdma_wr_type {
 	RDMA_WR_TYPE_RECV,
 	RDMA_WR_TYPE_SEND,
 	RDMA_WR_TYPE_DATA,
-	RDMA_WR_TYPE_DRAIN_SEND,
-	RDMA_WR_TYPE_DRAIN_RECV
 };
 
 struct spdk_nvmf_rdma_wr {
@@ -343,8 +341,6 @@ struct spdk_nvmf_rdma_qpair {
 	struct ibv_qp_attr			ibv_attr;
 
 	uint32_t				disconnect_flags;
-	struct spdk_nvmf_rdma_wr		drain_send_wr;
-	struct spdk_nvmf_rdma_wr		drain_recv_wr;
 
 	/* Poller registered in case the qpair doesn't properly
 	 * complete the qpair destruct process and becomes defunct.
@@ -2686,11 +2682,6 @@ static void
 spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair = SPDK_CONTAINEROF(qpair, struct spdk_nvmf_rdma_qpair, qpair);
-	struct ibv_recv_wr recv_wr = {};
-	struct ibv_recv_wr *bad_recv_wr;
-	struct ibv_send_wr send_wr = {};
-	struct ibv_send_wr *bad_send_wr;
-	int rc;
 
 	if (rqpair->disconnect_flags & RDMA_QP_DISCONNECTING) {
 		return;
@@ -2711,26 +2702,6 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
-
-	rqpair->drain_recv_wr.type = RDMA_WR_TYPE_DRAIN_RECV;
-	recv_wr.wr_id = (uintptr_t)&rqpair->drain_recv_wr;
-	rc = ibv_post_recv(rqpair->cm_id->qp, &recv_wr, &bad_recv_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failed to post dummy receive WR, errno %d\n", errno);
-		assert(false);
-		return;
-	}
-
-	rqpair->drain_send_wr.type = RDMA_WR_TYPE_DRAIN_SEND;
-	send_wr.wr_id = (uintptr_t)&rqpair->drain_send_wr;
-	send_wr.opcode = IBV_WR_SEND;
-	rc = ibv_post_send(rqpair->cm_id->qp, &send_wr, &bad_send_wr);
-	if (rc) {
-		SPDK_ERRLOG("Failed to post dummy send WR, errno %d\n", errno);
-		assert(false);
-		return;
-	}
-	rqpair->current_send_depth++;
 
 	rqpair->destruct_poller = spdk_poller_register(spdk_nvmf_rdma_destroy_defunct_qpair, (void *)rqpair,
 				  NVMF_RDMA_QPAIR_DESTROY_TIMEOUT_US);
@@ -2821,31 +2792,6 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				}
 				rqpair->current_send_depth--;
 				break;
-			case RDMA_WR_TYPE_DRAIN_RECV:
-				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_recv_wr);
-				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
-				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP RECV %u (%p)\n", rqpair->qpair.qid, rqpair);
-				rqpair->disconnect_flags |= RDMA_QP_RECV_DRAINED;
-				assert(rqpair->current_recv_depth == rqpair->max_queue_depth);
-				/* Don't worry about responding to recv overflow, we are disconnecting anyways */
-				if (rqpair->disconnect_flags & RDMA_QP_SEND_DRAINED) {
-					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
-					spdk_nvmf_rdma_qpair_destroy(rqpair);
-				}
-				/* Continue so that this does not trigger the disconnect path below. */
-				continue;
-			case RDMA_WR_TYPE_DRAIN_SEND:
-				rqpair = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_qpair, drain_send_wr);
-				assert(rqpair->disconnect_flags & RDMA_QP_DISCONNECTING);
-				SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Drained QP SEND %u (%p)\n", rqpair->qpair.qid, rqpair);
-				rqpair->disconnect_flags |= RDMA_QP_SEND_DRAINED;
-				rqpair->current_send_depth--;
-				if (rqpair->disconnect_flags & RDMA_QP_RECV_DRAINED) {
-					spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
-					spdk_nvmf_rdma_qpair_destroy(rqpair);
-				}
-				/* Continue so that this does not trigger the disconnect path below. */
-				continue;
 			default:
 				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
 				continue;
@@ -2854,6 +2800,11 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
 				spdk_nvmf_rdma_start_disconnect(rqpair);
+			} else if (rqpair->current_send_depth == 0 &&
+				   rqpair->current_recv_depth == rqpair->max_queue_depth) {
+				/* The qpair has been drained. Free the resources. */
+				spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+				spdk_nvmf_rdma_qpair_destroy(rqpair);
 			}
 			continue;
 		}
@@ -2926,6 +2877,13 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		default:
 			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
 			continue;
+		}
+
+		if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE && rqpair->current_send_depth == 0 &&
+		    rqpair->current_recv_depth == rqpair->max_queue_depth) {
+			/* The qpair has been drained. Free the resources. */
+			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+			spdk_nvmf_rdma_qpair_destroy(rqpair);
 		}
 	}
 
