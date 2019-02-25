@@ -1235,6 +1235,7 @@ class TestCases(object):
 
         return fail_count
 
+    @case_message
     def test_case500(self):
         """
         nested_construct_lvol_bdev_on_full_lvol_store
@@ -1242,31 +1243,51 @@ class TestCases(object):
         Negative test for constructing a new nested lvol bdev.
         Call construct_lvol_bdev on a full lvol store.
         """
-        # Steps:
-        # - create a malloc bdev
-        # - construct_lvol_store on created malloc bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct_lvol_bdev on correct lvs_uuid and size is
-        #   equal to size malloc bdev
-        # - construct nested lvol store on previously created lvol_bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct nested lvol bdev on previously created nested lvol store
-        #   and size is equal to size lvol store
-        # - try construct another lvol bdev as in previous step; this call should fail
-        #   as nested lvol store space is already claimed by lvol bdev
-        # - delete nested lvol bdev
-        # - destroy nested lvol_store
-        # - delete base lvol bdev
-        # - delete base lvol store
-        # - delete malloc bdev
-        #
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        # Construct_lvol_store on correct, exisitng malloc bdev
+        uuid_store = self.c.construct_lvol_store(base_name,
+                                                 self.lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        # Construct lvol bdev
+        size = self.get_lvs_size()
+        uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                               self.lbd_name, size)
+        # Construct nested lvol store on created lvol_bdev
+        nested_lvs_name = self.lvs_name + "_nested"
+        nested_lvs_uuid = self.c.construct_lvol_store(uuid_bdev,
+                                                      nested_lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count += self.c.check_get_lvol_stores(uuid_bdev, nested_lvs_uuid,
+                                                   self.cluster_size)
+        # Construct nested lvol bdev on previously created nested lvol store
+        # and size is equal to size lvol store
+        nested_size = self.get_lvs_size(nested_lvs_name)
+        nested_lbd_name = self.lbd_name + "_nested"
+        nested_uuid_bdev = self.c.construct_lvol_bdev(nested_lvs_uuid,
+                                                      nested_lbd_name, nested_size)
+        fail_count += self.c.check_get_bdevs_methods(nested_uuid_bdev, nested_size)
+
+        # Try construct another lvol bdev as in previous step; this call should fail
+        # as nested lvol store space is already claimed by lvol bdev
+        nested_lbd_name = self.lbd_name + "_nested2"
+        if self.c.construct_lvol_bdev(nested_lvs_uuid, nested_lbd_name, nested_size) == 0:
+            fail_count += 1
+
+        self.c.destroy_lvol_bdev(nested_uuid_bdev)
+        self.c.destroy_lvol_store(nested_lvs_uuid)
+        self.c.destroy_lvol_bdev(uuid_bdev)
+        self.c.destroy_lvol_store(uuid_store)
+        self.c.delete_malloc_bdev(base_name)
+
         # Expected result:
         # - second construct_lvol_bdev call on nested lvol store return code != 0
         # - EEXIST response printed to stdout
         # - no other operation fails
-        print("Test of this feature not yet implemented.")
-        pass
-        return 0
+        return fail_count
 
     @case_message
     def test_case550(self):
