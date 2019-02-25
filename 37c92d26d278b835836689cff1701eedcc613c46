@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "052a7c6e_de409e1e",
+        "filename": "test/common/autotest_common.sh",
+        "patchSetId": 8
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-02-25T12:22:41Z",
+      "side": 1,
+      "message": "This change is not necessary",
+      "range": {
+        "startLine": 97,
+        "startChar": 29,
+        "endLine": 97,
+        "endChar": 42
+      },
+      "revId": "37c92d26d278b835836689cff1701eedcc613c46",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
