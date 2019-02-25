@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68ac89cc_54fc248d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 3750,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-25T12:47:52Z",
+      "side": 1,
+      "message": "If I may, I\u0027d suggest rewriting it not to unlock the mutex inside this function. It looks hacky now.\n\n/* must be called under mutex. returns 0 if bdev was unregistered and can be removed, 1 if unregistration was deferred */\nint spdk_bdev_unregister_continue(bdev) {\n  ...\n  if (!do_destruct) return 1;\n  TAILQ_REMOVE(\u0026g_bdev_mgr.bdevs, bdev, internal.link);\n  return 0;\n}\n\n...\nlock();\nrc \u003d spdk_bdev_unregister_continue(bdev);\nunlock();\nif (rc \u003d\u003d 0) spdk_bdev_fini(bdev);",
+      "range": {
+        "startLine": 3750,
+        "startChar": 0,
+        "endLine": 3750,
+        "endChar": 40
+      },
+      "revId": "ed343e7590d3f71cd5d97b1c6f77f30f4798a303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
