@@ -1086,26 +1086,64 @@ class TestCases(object):
         # - destroy_lvol_bdev ends with success
         return fail_count
 
+    @case_message
     def test_case400(self):
-        print("Test of this feature not yet implemented.")
-        # Name: nested_construct_logical_volume_positive
-        # Positive test for constructing a nested new lvol store.
-        # Call construct_lvol_store with correct base bdev name.
-        # Steps:
-        # - create a malloc bdev
-        # - construct_lvol_store on created malloc bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct_lvol_bdev on correct lvs_uuid and size is
-        #   equal to size malloc bdev
-        # - construct first nested lvol store on created lvol_bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct first nested lvol bdev on correct lvs_uuid and size
-        # - construct second nested lvol store on created first nested lvol bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct second nested lvol bdev on correct first nested lvs uuid and size
-        # - delete nested lvol bdev and lvol store
-        # - delete base lvol bdev and lvol store
-        # - delete malloc bdev
+        """
+        nested_construct_logical_volume_positive
+
+        Positive test for constructing a nested new lvol store.
+        Call construct_lvol_store with correct base bdev name.
+        """
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        # Construct lvol store on created malloc bdev
+        lvs_uuid = self.c.construct_lvol_store(base_name,
+                                               self.lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count = self.c.check_get_lvol_stores(base_name, lvs_uuid,
+                                                  self.cluster_size)
+        # Construct_lvol_bdev on correct lvs_uuid and size is
+        # equal to size malloc bdev
+        size = self.get_lvs_size()
+        uuid_bdev = self.c.construct_lvol_bdev(lvs_uuid,
+                                               self.lbd_name, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Construct first nested lvol store on created lvol_bdev
+        nested_lvs_name = self.lvs_name + "_nested"
+        nested_lvs_uuid = self.c.construct_lvol_store(uuid_bdev,
+                                                      nested_lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count += self.c.check_get_lvol_stores(uuid_bdev, nested_lvs_uuid,
+                                                   self.cluster_size)
+        # Construct first nested lvol bdev on correct lvs_uuid
+        nested_size = self.get_lvs_size(nested_lvs_name)
+        nested_lbd_name = self.lbd_name + "_nested"
+        nested_uuid_bdev = self.c.construct_lvol_bdev(nested_lvs_uuid,
+                                                      nested_lbd_name, nested_size)
+        lvol_bdev = self.c.check_get_bdevs_methods(nested_uuid_bdev, nested_size)
+        # Construct second nested lvol store on created first nested lvol bdev
+        nested_lvs_name2 = self.lvs_name + "_nested2"
+        nested_lvs_uuid2 = self.c.construct_lvol_store(nested_uuid_bdev,
+                                                       nested_lvs_name2)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count += self.c.check_get_lvol_stores(nested_uuid_bdev, nested_lvs_uuid2,
+                                                   self.cluster_size)
+
+        # Construct second nested lvol bdev on correct lvs_uuid and size
+        nested_size2 = self.get_lvs_size(nested_lvs_name2)
+        nested_lbd_name2 = self.lbd_name + "_nested2"
+        nested_uuid_bdev2 = self.c.construct_lvol_bdev(nested_lvs_uuid2,
+                                                       nested_lbd_name2, nested_size2)
+        fail_count += self.c.check_get_bdevs_methods(nested_uuid_bdev2, nested_size2)
+
+        fail_count += self.c.destroy_lvol_bdev(nested_uuid_bdev2)
+        fail_count += self.c.destroy_lvol_store(nested_lvs_uuid2)
+        fail_count += self.c.destroy_lvol_bdev(nested_uuid_bdev)
+        fail_count += self.c.destroy_lvol_store(nested_lvs_uuid)
+        fail_count += self.c.destroy_lvol_bdev(uuid_bdev)
+        fail_count += self.c.destroy_lvol_store(lvs_uuid)
+        fail_count += self.c.delete_malloc_bdev(base_name)
 
         # Expected result:
         # - calls successful, return code = 0
@@ -1114,7 +1152,7 @@ class TestCases(object):
         #   backend used for construct_lvol_bdev has UUID
         #   field set with the same UUID as returned from RPC call
         # - no other operation fails
-        return 0
+        return fail_count
 
     # negative tests
     @case_message
