@@ -348,6 +348,8 @@ void spdk_vhost_free_reactor(uint32_t lcore);
 uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
 
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
+
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
 int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
 int spdk_vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size);
@@ -357,5 +359,6 @@ int spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_
 int spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev);
 int spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev,
 			       const char *bdev_name);
+#endif
 
 #endif /* SPDK_VHOST_INTERNAL_H */
