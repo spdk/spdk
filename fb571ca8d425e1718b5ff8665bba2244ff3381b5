@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ebd660c4_11e6f960",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-25T01:43:45Z",
+      "side": 1,
+      "message": "it is too long, will exceed 50 characters.\nApplied: bdev/raid: add io_expected in struct raid_bdev_io",
+      "parentUuid": "9d5e36cd_42ded978",
+      "range": {
+        "startLine": 7,
+        "startChar": 11,
+        "endLine": 7,
+        "endChar": 44
+      },
+      "revId": "fb571ca8d425e1718b5ff8665bba2244ff3381b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f9a9ab1_6f972f92",
         "filename": "/COMMIT_MSG",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-24T10:27:45Z",
       "side": 1,
       "message": "uncertain",
+      "range": {
+        "startLine": 10,
+        "startChar": 30,
+        "endLine": 10,
+        "endChar": 39
+      },
+      "revId": "fb571ca8d425e1718b5ff8665bba2244ff3381b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "984eb1c7_bbda1401",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-25T01:43:45Z",
+      "side": 1,
+      "message": "Good catch, thanks, Zhouhui",
+      "parentUuid": "9f9a9ab1_6f972f92",
       "range": {
         "startLine": 10,
         "startChar": 30,
