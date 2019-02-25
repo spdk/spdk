@@ -136,8 +136,8 @@ def case_message(func):
             # destroy_lvol_store - negative tests
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
-            # nested destroy_lvol_bdev - negative tests
-            350: 'nested_destroy_logical_volume_negative',
+            # nested destroy_lvol_bdev - positive tests
+            350: 'nested_destroy_logical_volume_positive',
             # nested construct_logical_volume - positive tests
             400: 'nested_construct_logical_volume_positive',
             # construct_lvol_store - negative tests
@@ -1040,28 +1040,51 @@ class TestCases(object):
         # - no other operation fails
         return fail_count
 
+    @case_message
     def test_case350(self):
-        print("Test of this feature not yet implemented.")
-        # Name: nested_destroy_logical_volume_negative
-        # Negative test for destroying a nested first lvol store.
-        # all destroy_lvol_store with correct base bdev name.
-        # Steps:
-        # - create a malloc bdev
-        # - construct_lvol_store on created malloc bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct_lvol_bdev on correct lvs_uuid and size is
-        #   equal to size malloc bdev
-        # - construct first nested lvol store on created lvol_bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct first nested lvol bdev on correct lvs_uuid and size
-        # - check size of the lvol bdev by command RPC : get_bdevs
-        # - destroy first lvol_store
-        # - delete malloc bdev
+        """
+        nested_destroy_logical_volume_positive
+
+        Positive test for destroying lvol bdev with nested lvol store.
+        All destroy_lvol_bdev with correct base lvol bdev name.
+        """
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        # Construct lvol store on created malloc bdev
+        lvs_uuid = self.c.construct_lvol_store(base_name,
+                                               self.lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count = self.c.check_get_lvol_stores(base_name, lvs_uuid,
+                                                  self.cluster_size)
+        # Construct_lvol_bdev on correct lvs_uuid and size is
+        # equal to size malloc bdev
+        size = self.get_lvs_size()
+        uuid_bdev = self.c.construct_lvol_bdev(lvs_uuid,
+                                               self.lbd_name, size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Construct first nested lvol store on created lvol_bdev
+        nested_lvs_name = self.lvs_name + "_nested"
+        nested_lvs_uuid = self.c.construct_lvol_store(uuid_bdev,
+                                                      nested_lvs_name)
+        # Check correct uuid values in response get_lvol_stores command
+        fail_count += self.c.check_get_lvol_stores(uuid_bdev, nested_lvs_uuid,
+                                                  self.cluster_size)
+        # Construct first nested lvol bdev on correct lvs_uuid
+        nested_size = self.get_lvs_size(nested_lvs_name)
+        nested_lbd_name = self.lbd_name + "_nested"
+        uuid_bdev_nested = self.c.construct_lvol_bdev(nested_lvs_uuid,
+                                                      nested_lbd_name, nested_size)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev_nested, nested_size)
+
+        if self.c.destroy_lvol_bdev(uuid_bdev) == 1:
+            fail_count += 1
+        fail_count += self.c.delete_malloc_bdev(base_name)
 
         # Expected result:
-        # - Error code: ENODEV ("the device is busy") response printed to stdout
-        # - no other operation fails
-        return 0
+        # - calls successfull, return code = 0
+        # - destroy_lvol_bdev ends with success
+        return fail_count
 
     def test_case400(self):
         print("Test of this feature not yet implemented.")
