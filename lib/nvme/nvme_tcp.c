@@ -472,6 +472,7 @@ nvme_tcp_qpair_write_pdu(struct nvme_tcp_qpair *tqpair,
 	pdu->cb_fn = cb_fn;
 	pdu->cb_arg = cb_arg;
 	TAILQ_INSERT_TAIL(&tqpair->send_queue, pdu, tailq);
+	nvme_tcp_qpair_process_send_queue(tqpair);
 	return 0;
 }
 
