@@ -65,6 +65,14 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg, uint32_t *skip_master)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_SET_VRING_BASE:
+	case VHOST_USER_SET_VRING_ADDR:
+	case VHOST_USER_SET_VRING_NUM:
+		/* We might be forcefully polling the session, so stop it now */
+		if (vsession->lcore != -1) {
+			g_spdk_vhost_ops.destroy_device(vid);
+		}
+		return RTE_VHOST_MSG_RESULT_OK;
 	case VHOST_USER_SET_MEM_TABLE:
 		if (vsession->lcore != -1) {
 			g_spdk_vhost_ops.destroy_device(vid);
@@ -81,6 +89,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg, uint32_t *skip_master)
 static enum rte_vhost_msg_result
 spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 {
+	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
 
 	vsession = spdk_vhost_session_find_by_vid(vid);
@@ -93,6 +102,22 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 	if (vsession->needs_restart) {
 		g_spdk_vhost_ops.new_device(vid);
 		vsession->needs_restart = false;
+	}
+
+	switch (msg->request) {
+	case VHOST_USER_SET_MEM_TABLE:
+		return RTE_VHOST_MSG_RESULT_OK;
+	case VHOST_USER_SET_OWNER:
+		vsession->needs_forced_poll = true;
+		return RTE_VHOST_MSG_RESULT_OK;
+	case VHOST_USER_SET_VRING_KICK:
+		if (vsession->needs_forced_poll) {
+			g_spdk_vhost_ops.new_device(vid);
+			vsession->needs_forced_poll = false;
+		}
+		return RTE_VHOST_MSG_RESULT_OK;
+	default:
+		return RTE_VHOST_MSG_RESULT_OK;
 	}
 
 	return RTE_VHOST_MSG_RESULT_OK;
