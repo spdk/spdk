@@ -587,7 +587,10 @@ bdev_virtio_unmap(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool
 	uint64_t offset_blocks, num_blocks;
 	uint16_t cmd_len;
 
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	buf = bdev_io->u.bdev.iovs[0].iov_base;
 
@@ -628,7 +631,10 @@ static void
 bdev_virtio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 		       bool success)
 {
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	bdev_virtio_rw(ch, bdev_io);
 }

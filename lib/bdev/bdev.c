@@ -1634,8 +1634,6 @@ _spdk_bdev_io_split_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 static void
 _spdk_bdev_io_split(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
-	assert(_spdk_bdev_io_type_can_split(bdev_io->type));
-
 	bdev_io->u.bdev.split_current_offset_blocks = bdev_io->u.bdev.offset_blocks;
 	bdev_io->u.bdev.split_remaining_num_blocks = bdev_io->u.bdev.num_blocks;
 	bdev_io->u.bdev.split_outstanding = 0;
@@ -1648,7 +1646,10 @@ static void
 _spdk_bdev_io_split_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
 			       bool success)
 {
-	assert(success == true);
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	_spdk_bdev_io_split(ch, bdev_io);
 }
