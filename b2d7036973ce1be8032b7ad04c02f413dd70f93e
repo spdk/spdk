@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "efae94cf_2c9ea28b",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-25T17:03:45Z",
+      "side": 1,
+      "message": "Doesn\u0027t this add waiting for clear to perform its work ? If done RPC is performed on same core, it won\u0027t finish. This applies only to WB.\nIs this necessary here ?",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 34
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7b06cbc7_ab955558",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-25T17:03:45Z",
+      "side": 1,
+      "message": "This comment applies to both ocf_mngt_cache_lock() and ocf_mngt_cache_stop() right ?\n\nShould be moved up ?",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 28
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93cc09ae_5c0429a4",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-25T17:03:45Z",
+      "side": 1,
+      "message": "Same concern on processing the cache IO.",
+      "range": {
+        "startLine": 136,
+        "startChar": 8,
+        "endLine": 136,
+        "endChar": 27
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f56a1968_e8456ad0",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-25T17:03:45Z",
+      "side": 1,
+      "message": "I realize that at this time there is only 1 core per cache (multi core setup is added in later patches).\n\nYet why is it changed from vbdev-\u003ecore.id to 0 ? Shouldn\u0027t this already be 0 ?",
+      "range": {
+        "startLine": 203,
+        "startChar": 48,
+        "endLine": 203,
+        "endChar": 49
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "25f58c62_01c00b85",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-25T17:03:45Z",
+      "side": 1,
+      "message": "This magic number is based on what ? Shouldn\u0027t it be based on something rather than arbitrarily set.\n\nStill working out on what this number affects in OCF.\n\nMaybe a good candidate would be bdev-\u003eoptimal_io_boundary ? I know its not max, but bdev might handle splitting if necessary for values above it.",
+      "range": {
+        "startLine": 387,
+        "startChar": 1,
+        "endLine": 387,
+        "endChar": 15
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
