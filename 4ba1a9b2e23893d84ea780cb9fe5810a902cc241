@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1b5f821c_369a5b4e",
+        "filename": "autopackage.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-25T21:14:48Z",
+      "side": 1,
+      "message": "%",
+      "range": {
+        "startLine": 31,
+        "startChar": 19,
+        "endLine": 31,
+        "endChar": 20
+      },
+      "revId": "4ba1a9b2e23893d84ea780cb9fe5810a902cc241",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
