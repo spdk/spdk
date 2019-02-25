@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b3b1cfb1_1f35c907",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-25T16:10:16Z",
+      "side": 1,
+      "message": "duh, thanks :)",
+      "parentUuid": "dc6ba03a_5fe59d03",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "eb67efba_0e66d98f",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 37
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-21T20:07:00Z",
       "side": 1,
       "message": "each reduce vol funnels its IO to a single thread - but if we have 20 reduce vols, they will likely not all funnel to the same thread (could be 20 different threads)",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6421200f_975805b1",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-25T16:10:16Z",
+      "side": 1,
+      "message": "OK, your comment is on the comment, I thought I had implemented it incorrectly but reviewing I think its OK.  Fixed the comment though, thanks.",
+      "parentUuid": "eb67efba_0e66d98f",
       "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "6120e8e0_22a56e3c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 558,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-25T16:10:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a0da909_71f2a6e5",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a27be320_95b9f18e",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 37
@@ -64,6 +118,24 @@
       "writtenOn": "2019-02-21T20:07:00Z",
       "side": 1,
       "message": "see comment on previous revision",
+      "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f464980_93ef37a6",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 37
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-25T16:10:16Z",
+      "side": 1,
+      "message": "Here was the comment: \"I\u0027m just thinking about the case where a compressed volume is moved from one system to another.  We could save the PMD info in the metadata, but there\u0027s no guarantee that PMD will be available next time user loads that bdev.\"\n\nQuestion though, is the create RPC so there\u0027s no metadata to read, the PMD has to be specified here right? If one is created and then moved, that would only affect load and I already have a TODO for that here line 680 of the C file\n\n\t/* TODO: need to persist either PMD name or ALGO and a bunch of\n\t * other parms to reduce via init and read them back in the load path.\n\t */\n\tcomp_bdev-\u003edrv_name \u003d ISAL;",
+      "parentUuid": "a27be320_95b9f18e",
       "revId": "74bd915248a6b16ad9802ae1ca8d60eae2d28ad1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
