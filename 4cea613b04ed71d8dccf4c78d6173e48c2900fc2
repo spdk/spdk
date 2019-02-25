@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6600bc4f_769f9b7a",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-02-25T14:00:20Z",
+      "side": 1,
+      "message": "Compression bdev name?\n\nI think naming bdev/vbdev is a little bit confusing here as well as in other virtual bdev modules.",
+      "range": {
+        "startLine": 47,
+        "startChar": 21,
+        "endLine": 47,
+        "endChar": 31
+      },
+      "revId": "4cea613b04ed71d8dccf4c78d6173e48c2900fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
