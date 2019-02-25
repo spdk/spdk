@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7bdc9f6_86f505af",
+        "filename": "lib/bdev/ocf/env/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-02-25T21:35:32Z",
+      "side": 1,
+      "message": "Should there be an `install` target defined? Currently there\u0027s none.",
+      "range": {
+        "startLine": 52,
+        "startChar": 18,
+        "endLine": 52,
+        "endChar": 25
+      },
+      "revId": "3e0269c87515cd496ee8ad8d68650b0363549906",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
