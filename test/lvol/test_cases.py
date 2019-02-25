@@ -136,8 +136,6 @@ def case_message(func):
             # destroy_lvol_store - negative tests
             300: 'destroy_lvol_store_nonexistent_lvs_uuid',
             301: 'delete_lvol_store_underlying_bdev',
-            # nested destroy_lvol_bdev - negative tests
-            350: 'nested_destroy_logical_volume_negative',
             # nested construct_logical_volume - positive tests
             400: 'nested_construct_logical_volume_positive',
             # construct_lvol_store - negative tests
@@ -1040,29 +1038,6 @@ class TestCases(object):
         # - Error code: ENODEV ("No such device") response printed to stdout
         # - no other operation fails
         return fail_count
-
-    def test_case350(self):
-        print("Test of this feature not yet implemented.")
-        # Name: nested_destroy_logical_volume_negative
-        # Negative test for destroying a nested first lvol store.
-        # all destroy_lvol_store with correct base bdev name.
-        # Steps:
-        # - create a malloc bdev
-        # - construct_lvol_store on created malloc bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct_lvol_bdev on correct lvs_uuid and size is
-        #   equal to size malloc bdev
-        # - construct first nested lvol store on created lvol_bdev
-        # - check correct uuid values in response get_lvol_stores command
-        # - construct first nested lvol bdev on correct lvs_uuid and size
-        # - check size of the lvol bdev by command RPC : get_bdevs
-        # - destroy first lvol_store
-        # - delete malloc bdev
-
-        # Expected result:
-        # - Error code: ENODEV ("the device is busy") response printed to stdout
-        # - no other operation fails
-        return 0
 
     def test_case400(self):
         print("Test of this feature not yet implemented.")
