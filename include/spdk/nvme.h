@@ -308,6 +308,16 @@ struct spdk_nvme_host_id {
 	char hostsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
 
+/*
+ * Controller support flags
+ *
+ * Used for identifying if the controller supports these flags.
+ */
+enum spdk_nvme_ctrlr_flags {
+	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 0x2, /**< security send/receive is supported */
+};
+
 /**
  * Parse the string representation of a transport ID.
  *
@@ -1308,6 +1318,15 @@ int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp
  */
 int spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 				  uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+
+/**
+ * Get supported flags of the controller.
+ *
+ * \param ctrlr NVMe controller to get flags.
+ *
+ * \return supported flags of this controller.
+ */
+uint64_t spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Attach the specified namespace to controllers.
