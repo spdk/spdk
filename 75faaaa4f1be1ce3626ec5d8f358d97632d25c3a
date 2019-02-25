@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "4d3afa37_85b0b341",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 852,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-25T02:02:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bcc4af67_50febfae",
+      "revId": "75faaaa4f1be1ce3626ec5d8f358d97632d25c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bc5c10f3_c1931393",
         "filename": "lib/bdev/raid/bdev_raid.c",
         "patchSetId": 15
@@ -65,6 +83,24 @@
       "writtenOn": "2019-02-21T18:01:34Z",
       "side": 1,
       "message": "Hi Xiaodong,\n\nPlease - I don\u0027t want to use rand() here.  Let\u0027s take time and pick the best set of test cases.  Using rand() here means that we will be testing different values every time this test is run.  It leads to intermittent test failures.\n\nWe will be removing rand() from the rest of this file at some point.  Let\u0027s not add more uses of it.  Note that this is the *only* unit test file in all of SPDK that is using rand().\n\nThanks,\n\n-Jim",
+      "revId": "75faaaa4f1be1ce3626ec5d8f358d97632d25c3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29d26c6e_f2eb73b3",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1712,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-25T02:02:08Z",
+      "side": 1,
+      "message": "Yes, it\u0027s ture, Jim, only this bdev raid UT has rand() inside.\n\nRemoved rand(), and use the middlemost value of offsets and drive numbers.\nThen both corner cases and common case are covered.",
+      "parentUuid": "a4da7752_90625d61",
       "revId": "75faaaa4f1be1ce3626ec5d8f358d97632d25c3a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
