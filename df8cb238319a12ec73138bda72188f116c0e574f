@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "57c0ab07_731b500e",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-25T08:21:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c6142bc1_e7ecabb5",
+      "range": {
+        "startLine": 20,
+        "startChar": 7,
+        "endLine": 20,
+        "endChar": 20
+      },
+      "revId": "df8cb238319a12ec73138bda72188f116c0e574f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f16a9646_2e43002d",
         "filename": "test/vhost/windows/windows.sh",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-25T08:00:19Z",
       "side": 1,
       "message": "\u003dPATH ?",
+      "range": {
+        "startLine": 21,
+        "startChar": 7,
+        "endLine": 21,
+        "endChar": 18
+      },
+      "revId": "df8cb238319a12ec73138bda72188f116c0e574f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c53a0463_1b728b17",
+        "filename": "test/vhost/windows/windows.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-02-25T08:21:43Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f16a9646_2e43002d",
       "range": {
         "startLine": 21,
         "startChar": 7,
