@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1eaa1631_bca30961",
+        "filename": "lib/bdev/nvme/common_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:45:09Z",
+      "side": 1,
+      "message": "I like this \"mode\" parameter.  But I\u0027d like us to check the mode parameter first, and then based on that, pick one of two different arrays of object decoders.\n\nFor example, punits is *only* available for mode\u003dftl.  We want to fail an RPC that specifies punits to a normal mode SSD.\n\nBut spdk_json_decode_object doesn\u0027t really support that.  We may need to add a new spdk_json function that specifically looks for one key rather than trying to decode all of them.  Maybe we need a version of this function that doesn\u0027t fail if it finds keys that aren\u0027t specified in the array of decoders.\n\nYou could have the generic parse function check that punits isn\u0027t defined - but that\u0027s not really extensible if we add more modes in the future (each mode would need to know details about every other mode).\n\nIdeally, each mode is responsible for its own object decoding - but for now I think it would be fine to just have two separate arrays of decoders here - one for \"normal\" another for \"ftl\".  We can do further refactoring on this in the future if needed.",
+      "revId": "17acfcfa12be26b0c229390e9f2abf75dc9a8aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
