@@ -172,6 +172,31 @@ spdk_ut_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
+spdk_ut_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+{
+	struct spdk_ut_sock *sock = __ut_sock(_sock);
+	size_t len;
+	char tmp[256];
+
+	/* Test implementation only supports single iov for now. */
+	CU_ASSERT(iovcnt == 1);
+
+	len = spdk_min(iov[0].iov_len, sock->bytes_avail);
+
+	if (len == 0) {
+		errno = EAGAIN;
+		return -1;
+	}
+
+	memcpy(iov[0].iov_base, sock->buf, len);
+	memcpy(tmp, &sock->buf[len], sock->bytes_avail - len);
+	memcpy(sock->buf, tmp, sock->bytes_avail - len);
+	sock->bytes_avail -= len;
+
+	return len;
+}
+
+static ssize_t
 spdk_ut_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_ut_sock *sock = __ut_sock(_sock);
@@ -285,6 +310,7 @@ static struct spdk_net_impl g_ut_net_impl = {
 	.accept		= spdk_ut_sock_accept,
 	.close		= spdk_ut_sock_close,
 	.recv		= spdk_ut_sock_recv,
+	.readv		= spdk_ut_sock_readv,
 	.writev		= spdk_ut_sock_writev,
 	.set_recvlowat	= spdk_ut_sock_set_recvlowat,
 	.set_recvbuf	= spdk_ut_sock_set_recvbuf,
@@ -331,6 +357,7 @@ _sock(const char *ip, int port)
 	server_sock = spdk_sock_accept(listen_sock);
 	SPDK_CU_ASSERT_FATAL(server_sock != NULL);
 
+	/* Test spdk_sock_recv */
 	iov.iov_base = test_string;
 	iov.iov_len = 7;
 	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
@@ -345,6 +372,30 @@ _sock(const char *ip, int port)
 
 	bytes_read += spdk_sock_recv(server_sock, buffer + 2, 5);
 	CU_ASSERT(bytes_read == 7);
+
+	CU_ASSERT(strncmp(test_string, buffer, 7) == 0);
+
+	/* Test spdk_sock_readv */
+	iov.iov_base = test_string;
+	iov.iov_len = 7;
+	bytes_written = spdk_sock_writev(client_sock, &iov, 1);
+	CU_ASSERT(bytes_written == 7);
+
+	usleep(1000);
+
+	iov.iov_base = buffer;
+	iov.iov_len = 2;
+	bytes_read = spdk_sock_readv(server_sock, &iov, 1);
+	CU_ASSERT(bytes_read == 2);
+
+	usleep(1000);
+
+	iov.iov_base = buffer + 2;
+	iov.iov_len = 5;
+	bytes_read += spdk_sock_readv(server_sock, &iov, 1);
+	CU_ASSERT(bytes_read == 7);
+
+	usleep(1000);
 
 	CU_ASSERT(strncmp(test_string, buffer, 7) == 0);
 
