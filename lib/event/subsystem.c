@@ -116,6 +116,12 @@ subsystem_sort(void)
 void
 spdk_subsystem_init_next(int rc)
 {
+	/* the initialization is broken by the spdk_subsystem_fini, so just return */
+	if (g_subsystems_initialized) {
+		free(g_app_start_event);
+		return;
+	}
+
 	if (rc) {
 		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
 		spdk_app_stop(rc);
@@ -190,11 +196,12 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 			g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 		}
 	} else {
-		/* We rewind the g_next_subsystem unconditionally - even when some subsystem failed
-		 * to initialize. It is assumed that subsystem which failed to initialize does not
-		 * need to be deinitialized.
-		 */
-		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+		if (g_subsystems_initialized) {
+			g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+		} else {
+			g_subsystems_initialized = true;
+		}
+
 	}
 
 	while (g_next_subsystem) {
