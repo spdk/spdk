@@ -257,4 +257,33 @@ int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			  uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 			  uint32_t inject_flags, uint32_t *inject_offset);
+
+/**
+ * Setup iovec array to leave a space for metadata for each block.
+ *
+ * This function is used to leave a space for metadata for each block when
+ * the network socket reads data, or to make the network socket ignore a
+ * space for metadata for each block when the network socket writes data.
+ * This function removes the necessity of data copy in the SPDK application
+ * during DIF insertion and strip.
+ *
+ * \param iovs iovec array set by this function.
+ * \param num_iovs Number of elements in the iovec array.
+ * \param buf Buffer to create extended LBA payload.
+ * \param buf_len Length of the buffer to create extended LBA payload.
+ * If zero, buffer overflow is not checked.
+ * \param data_offset Offset to store the next incoming data.
+ * \param data_len Expected data length of the payload.
+ * \param mapped_len Output parameter that will contani data length mapped by
+ * the iovec array.
+ * \param ctx DIF context.
+ *
+ * \return Number of used elements in the iovec array on success or negated
+ * errno otherwise.
+ */
+int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
+				    void *buf, uint32_t buf_len,
+				    uint32_t data_offset, uint32_t data_len,
+				    uint32_t *mapped_len,
+				    const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */
