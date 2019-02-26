@@ -104,13 +104,7 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 static void
 spdk_nvmf_subsystem_fini(void)
 {
-	/* Always let the first core to handle the case */
-	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
-		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
-						    _spdk_nvmf_shutdown_cb, NULL, NULL));
-	} else {
-		_spdk_nvmf_shutdown_cb(NULL, NULL);
-	}
+	_spdk_nvmf_shutdown_cb(NULL, NULL);
 }
 
 static void
