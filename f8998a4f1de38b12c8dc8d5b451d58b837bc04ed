@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "aa236817_0e000c15",
+        "filename": "test/notify/notify.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 240,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-26T13:17:26Z",
+      "side": 1,
+      "message": "Shouldn\u0027t be: return 1 ?",
+      "range": {
+        "startLine": 240,
+        "startChar": 12,
+        "endLine": 240,
+        "endChar": 23
+      },
+      "revId": "f8998a4f1de38b12c8dc8d5b451d58b837bc04ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a4ccf1b8_80f97df9",
+        "filename": "test/notify/notify.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-26T13:17:26Z",
+      "side": 1,
+      "message": "I think it shouldn\u0027t be here ? We write to socket in correct order (first notification requests then requests).",
+      "range": {
+        "startLine": 317,
+        "startChar": 8,
+        "endLine": 318,
+        "endChar": 21
+      },
+      "revId": "f8998a4f1de38b12c8dc8d5b451d58b837bc04ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
