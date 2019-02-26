@@ -41,6 +41,7 @@
 #include "spdk/scsi.h"
 #include "spdk/scsi_spec.h"
 #include "spdk/trace.h"
+#include "spdk/dif.h"
 
 #include "spdk_internal/log.h"
 
@@ -167,6 +168,9 @@ void spdk_scsi_port_destruct(struct spdk_scsi_port *port);
 
 int spdk_bdev_scsi_execute(struct spdk_scsi_task *task);
 void spdk_bdev_scsi_reset(struct spdk_scsi_task *task);
+
+bool spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
+				struct spdk_dif_ctx *dif_ctx);
 
 struct spdk_scsi_globals {
 	pthread_mutex_t mutex;
