@@ -41,7 +41,8 @@
 struct spdk_subsystem_list g_subsystems = TAILQ_HEAD_INITIALIZER(g_subsystems);
 struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_subsystems_deps);
 static struct spdk_subsystem *g_next_subsystem;
-static bool g_subsystems_initialized = false;
+static bool g_subsystems_initialized;
+static bool g_subsystems_fini_started;
 static struct spdk_event *g_app_start_event;
 static struct spdk_event *g_app_stop_event;
 static uint32_t g_fini_core;
@@ -116,6 +117,11 @@ subsystem_sort(void)
 void
 spdk_subsystem_init_next(int rc)
 {
+	/* The initialization is broken by the spdk_subsystem_fini, so just return */
+	if (g_subsystems_fini_started) {
+		return;
+	}
+
 	if (rc) {
 		SPDK_ERRLOG("Init subsystem %s failed\n", g_next_subsystem->name);
 		spdk_app_stop(rc);
@@ -172,6 +178,9 @@ spdk_subsystem_init(struct spdk_event *app_start_event)
 	struct spdk_event *verify_event;
 
 	g_app_start_event = app_start_event;
+	/* For UT purpose */
+	g_subsystems_initialized = false;
+	g_subsystems_fini_started = false;
 
 	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
 	spdk_event_call(verify_event);
@@ -190,11 +199,11 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 			g_next_subsystem = TAILQ_LAST(&g_subsystems, spdk_subsystem_list);
 		}
 	} else {
-		/* We rewind the g_next_subsystem unconditionally - even when some subsystem failed
-		 * to initialize. It is assumed that subsystem which failed to initialize does not
-		 * need to be deinitialized.
-		 */
-		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+		if (g_subsystems_fini_started) {
+			g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
+		} else {
+			g_subsystems_fini_started = true;
+		}
 	}
 
 	while (g_next_subsystem) {
