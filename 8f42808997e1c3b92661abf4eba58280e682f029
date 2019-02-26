@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "dbf2f98c_05b29486",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T12:35:06Z",
+      "side": 1,
+      "message": "yep. artifact, will remove",
+      "parentUuid": "11d35ba1_1eb8840c",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f1afdcf4_c0309e22",
         "filename": "include/spdk/notify.h",
         "patchSetId": 36
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-25T20:04:14Z",
       "side": 1,
       "message": "It looks to me like spdk_notify does not need to be exposed in the public API and it could just be implicitly constructed in response to spdk_notify_type_register. I think that solves a few other problems too, like letting you move that TAILQ_ENTRY on line 72 into an internal-only type.",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16a38f80_6f829c90",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T12:35:06Z",
+      "side": 1,
+      "message": "\u003e spdk_notify\n\nspdk_notify or spdk_notify_type?\n\nSure I can move it and add another malloc. But have in mind that there is no way to free it so running ASAN/valgring will always fail at exit do to memory leak.\n\nFrom other hand we are doing the same things with exposing structures all over SPDK so why this case is different?",
+      "parentUuid": "f1afdcf4_c0309e22",
       "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "7a77e10e_190e23be",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T12:35:06Z",
+      "side": 1,
+      "message": "see previous comment",
+      "parentUuid": "01aad2dd_052b5e57",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9ef8b4a3_4e87daff",
         "filename": "include/spdk/notify.h",
         "patchSetId": 36
@@ -64,6 +118,24 @@
       "writtenOn": "2019-02-25T20:04:14Z",
       "side": 1,
       "message": "Can this fail? Should it return an error?",
+      "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fa7db6d_d1fb9ce5",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T12:35:06Z",
+      "side": 1,
+      "message": "if struct spdk_notify_type is provided by user is shouldn\u0027t. Only way this could fail is trying to register two types with the same name (this is covered by assert). I can make this function to fail in this if you wish.",
+      "parentUuid": "9ef8b4a3_4e87daff",
       "revId": "8f42808997e1c3b92661abf4eba58280e682f029",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
