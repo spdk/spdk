@@ -185,6 +185,7 @@ _ftl_band_set_free(struct ftl_band *band)
 
 	/* Verify band's previous state */
 	assert(band->state == FTL_BAND_STATE_CLOSED);
+	band->state = FTL_BAND_STATE_FREE;
 
 	if (band == dev->df_band) {
 		dev->df_band = NULL;
@@ -231,6 +232,7 @@ _ftl_band_set_preparing(struct ftl_band *band)
 
 	/* Verify band's previous state */
 	assert(band->state == FTL_BAND_STATE_FREE);
+	band->state = FTL_BAND_STATE_PREP;
 	/* Remove band from free list */
 	LIST_REMOVE(band, list_entry);
 
