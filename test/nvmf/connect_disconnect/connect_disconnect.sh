@@ -43,7 +43,7 @@ $rpc_py nvmf_subsystem_create nqn.2016-06.io.spdk:cnode1 -a -s SPDK0000000000000
 $rpc_py nvmf_subsystem_add_ns nqn.2016-06.io.spdk:cnode1 $bdev
 $rpc_py nvmf_subsystem_add_listener nqn.2016-06.io.spdk:cnode1 -t rdma -a $NVMF_FIRST_TARGET_IP -s 4420
 
-if [ $RUN_NIGHTLY_FAILING -eq 1 ]; then
+if [ $RUN_NIGHTLY -eq 1 ]; then
 	num_iterations=200
 else
 	num_iterations=10
