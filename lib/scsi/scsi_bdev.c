@@ -2093,3 +2093,59 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 		spdk_bdev_scsi_queue_io(task, spdk_bdev_scsi_reset_resubmit, task);
 	}
 }
+
+int
+spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
+			   struct spdk_dif_ctx *dif_ctx)
+{
+	uint32_t lba = 0, dif_check_flags = 0, block_size, md_size;
+	int rc;
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+
+	rc = spdk_dif_ctx_init(dif_ctx,
+			       block_size, md_size,
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       0, 0, 0, 0, 0);
+	if (rc != 0) {
+		return rc;
+	}
+
+	switch (cdb[0]) {
+	case SPDK_SBC_READ_6:
+	case SPDK_SBC_WRITE_6:
+		lba = (uint64_t)cdb[1] << 16;
+		lba |= (uint64_t)cdb[2] << 8;
+		lba |= (uint64_t)cdb[3];
+		break;
+	case SPDK_SBC_READ_10:
+	case SPDK_SBC_WRITE_10:
+	case SPDK_SBC_READ_12:
+	case SPDK_SBC_WRITE_12:
+		lba = from_be32(&cdb[2]);
+		break;
+	case SPDK_SBC_READ_16:
+	case SPDK_SBC_WRITE_16:
+		lba = from_be64(&cdb[2]);
+		break;
+	default:
+		return -1;
+	}
+
+	dif_ctx->init_ref_tag = lba + offset / (block_size - md_size);
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
+
+	dif_ctx->dif_flags = dif_check_flags;
+
+	return 0;
+}
