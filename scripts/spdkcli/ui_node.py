@@ -27,6 +27,11 @@ class UINode(ConfigNode):
     def ui_command_refresh(self):
         self.refresh()
 
+    def ui_command_ls(self, path=None, depth=None):
+        node = self.get_node(path)
+        node.refresh()
+        ConfigNode.ui_command_ls(self, path, depth)
+
     def ui_command_ll(self, path=None, depth=None):
         """
         Alias for ls.
