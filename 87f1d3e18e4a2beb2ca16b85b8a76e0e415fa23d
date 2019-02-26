@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a793b3c5_1612663c",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T13:54:10Z",
+      "side": 1,
+      "message": "nope, duno why ide placed it here. will remove",
+      "parentUuid": "5bf27105_0e9c91e2",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "87f1d3e18e4a2beb2ca16b85b8a76e0e415fa23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53306036_591c4c0c",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 27
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-26T08:46:59Z",
       "side": 1,
       "message": "default should be None",
+      "range": {
+        "startLine": 20,
+        "startChar": 79,
+        "endLine": 20,
+        "endChar": 84
+      },
+      "revId": "87f1d3e18e4a2beb2ca16b85b8a76e0e415fa23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42e77f85_e02b7124",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-02-26T13:54:10Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "53306036_591c4c0c",
       "range": {
         "startLine": 20,
         "startChar": 79,
