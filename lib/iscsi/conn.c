@@ -1148,10 +1148,10 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 static int
 spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
-	const int array_size = 32;
-	struct iovec	iovec_array[array_size];
-	struct iovec	*iov = iovec_array;
-	int iovec_cnt = 0;
+	const int num_iovs = 32;
+	struct iovec iovs[num_iovs];
+	struct iovec *iov = iovs;
+	int iovcnt = 0;
 	int bytes = 0;
 	int total_length = 0;
 	uint32_t writev_offset;
@@ -1168,13 +1168,11 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 * Build up a list of iovecs for the first few PDUs in the
 	 *  connection's write_pdu_list.
 	 */
-	while (pdu != NULL && ((array_size - iovec_cnt) >= 5)) {
+	while (pdu != NULL && ((num_iovs - iovcnt) >= 5)) {
 		pdu_length = spdk_iscsi_get_pdu_length(pdu,
 						       conn->header_digest,
 						       conn->data_digest);
-		iovec_cnt += spdk_iscsi_build_iovecs(conn,
-						     &iovec_array[iovec_cnt],
-						     pdu);
+		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], pdu);
 		total_length += pdu_length;
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
@@ -1190,7 +1188,7 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		if (writev_offset >= iov->iov_len) {
 			writev_offset -= iov->iov_len;
 			iov++;
-			iovec_cnt--;
+			iovcnt--;
 		} else {
 			iov->iov_len -= writev_offset;
 			iov->iov_base = (char *)iov->iov_base + writev_offset;
@@ -1198,9 +1196,9 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		}
 	}
 
-	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovec_cnt);
+	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
 
-	bytes = spdk_sock_writev(conn->sock, iov, iovec_cnt);
+	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
