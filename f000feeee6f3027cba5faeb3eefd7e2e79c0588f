@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7d503198_c22f0a7c",
+        "filename": "Makefile",
+        "patchSetId": 7
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T17:43:35Z",
+      "side": 1,
+      "message": "should be able to remove all of the changes in this file\n\nI don\u0027t see any changes in isalbuild/Makefile though - note I didn\u0027t put the symlink in my patch - I was assuming you\u0027d still do that in your patch\n\nthen isalbuild/Makefile is responsible for both creating the symlink and cleaning it up",
+      "revId": "f000feeee6f3027cba5faeb3eefd7e2e79c0588f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
