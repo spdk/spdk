@@ -34,6 +34,24 @@
       "revId": "f8a2e4992e69c75b1de6192dfd4f9a0341dec73f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e0661e8a_fea25b46",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-26T19:01:10Z",
+      "side": 1,
+      "message": "How about instead of adding this to the env API, we track the initialization core in the app framework (i.e. g_init_lcore) and just add an accessor there.",
+      "parentUuid": "1cafcd9b_3de0b79e",
+      "revId": "f8a2e4992e69c75b1de6192dfd4f9a0341dec73f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
