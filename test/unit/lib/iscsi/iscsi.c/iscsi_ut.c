@@ -1209,6 +1209,7 @@ build_iovs_test(void)
 	struct spdk_iscsi_pdu pdu = {};
 	struct iovec iovs[5] = {};
 	uint8_t *data;
+	uint32_t mapped_length = 0;
 	int rc;
 
 	conn.header_digest = true;
@@ -1223,7 +1224,7 @@ build_iovs_test(void)
 	pdu.bhs.opcode = ISCSI_OP_SCSI;
 
 	pdu.writev_offset = 0;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(iovs[0].iov_base == (void *)&pdu.bhs);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN);
@@ -1233,9 +1234,10 @@ build_iovs_test(void)
 	CU_ASSERT(iovs[2].iov_len == 512);
 	CU_ASSERT(iovs[3].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[3].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
 	CU_ASSERT(iovs[0].iov_base == (void *)((uint8_t *)&pdu.bhs + ISCSI_BHS_LEN / 2));
 	CU_ASSERT(iovs[0].iov_len == ISCSI_BHS_LEN / 2);
@@ -1245,9 +1247,10 @@ build_iovs_test(void)
 	CU_ASSERT(iovs[2].iov_len == 512);
 	CU_ASSERT(iovs[3].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[3].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN / 2 + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
 	CU_ASSERT(iovs[0].iov_base == (void *)pdu.header_digest);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_DIGEST_LEN);
@@ -1255,9 +1258,10 @@ build_iovs_test(void)
 	CU_ASSERT(iovs[1].iov_len == 512);
 	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[2].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
 	CU_ASSERT(iovs[0].iov_base == (void *)((uint8_t *)pdu.header_digest + ISCSI_DIGEST_LEN / 2));
 	CU_ASSERT(iovs[0].iov_len == ISCSI_DIGEST_LEN / 2);
@@ -1265,30 +1269,35 @@ build_iovs_test(void)
 	CU_ASSERT(iovs[1].iov_len == 512);
 	CU_ASSERT(iovs[2].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[2].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN / 2 + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 2);
 	CU_ASSERT(iovs[0].iov_base == (void *)pdu.data);
 	CU_ASSERT(iovs[0].iov_len == 512);
 	CU_ASSERT(iovs[1].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[1].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(iovs[0].iov_base == (void *)pdu.data_digest);
 	CU_ASSERT(iovs[0].iov_len == ISCSI_DIGEST_LEN);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 1);
 	CU_ASSERT(iovs[0].iov_base == (void *)((uint8_t *)pdu.data_digest + ISCSI_DIGEST_LEN / 2));
 	CU_ASSERT(iovs[0].iov_len == ISCSI_DIGEST_LEN / 2);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN / 2);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(mapped_length == 0);
 
 	free(data);
 }
