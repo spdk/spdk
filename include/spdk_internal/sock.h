@@ -75,6 +75,7 @@ struct spdk_net_impl {
 	struct spdk_sock *(*accept)(struct spdk_sock *sock);
 	int (*close)(struct spdk_sock *sock);
 	ssize_t (*recv)(struct spdk_sock *sock, void *buf, size_t len);
+	ssize_t (*readv)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 	ssize_t (*writev)(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 	int (*set_recvlowat)(struct spdk_sock *sock, int nbytes);
