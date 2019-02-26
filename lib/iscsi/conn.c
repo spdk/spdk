@@ -1166,7 +1166,11 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 
 	/*
 	 * Build up a list of iovecs for the first few PDUs in the
-	 *  connection's write_pdu_list.
+	 *  connection's write_pdu_list. For the first PDU, check if it was
+	 *  partially written out the last time this function was called, and
+	 *  if so adjust the iovec array accordingly. This check is done in
+	 *  spdk_iscsi_build_iovs() and so applied to remaining PDUs too.
+	 *  But extra overhead is negligible.
 	 */
 	while (pdu != NULL && ((num_iovs - iovcnt) >= 5)) {
 		pdu_length = spdk_iscsi_get_pdu_length(pdu,
@@ -1177,24 +1181,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	/*
-	 * Check if the first PDU was partially written out the last time
-	 *  this function was called, and if so adjust the iovec array
-	 *  accordingly.
-	 */
 	writev_offset = TAILQ_FIRST(&conn->write_pdu_list)->writev_offset;
 	total_length -= writev_offset;
-	while (writev_offset > 0) {
-		if (writev_offset >= iov->iov_len) {
-			writev_offset -= iov->iov_len;
-			iov++;
-			iovcnt--;
-		} else {
-			iov->iov_len -= writev_offset;
-			iov->iov_base = (char *)iov->iov_base + writev_offset;
-			writev_offset = 0;
-		}
-	}
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
 
