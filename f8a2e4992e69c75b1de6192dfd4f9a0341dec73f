@@ -16,6 +16,24 @@
       "revId": "f8a2e4992e69c75b1de6192dfd4f9a0341dec73f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1cafcd9b_3de0b79e",
+        "filename": "lib/event/app.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 706,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-02-26T14:51:00Z",
+      "side": 1,
+      "message": "That works for app.c, but I also need to access the same core from nvmf_tgt.c. Should I just make g_init_lcore non-static?",
+      "parentUuid": "8745f3c0_30e13774",
+      "revId": "f8a2e4992e69c75b1de6192dfd4f9a0341dec73f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
