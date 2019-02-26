@@ -95,3 +95,7 @@ Blocksize should be set as the sum of data and metadata. For example, if data bl
 PI metadata is 8 Byte, then blocksize in fio configure file should be 520 Byte:
 
     bs=520
+
+Users may format the drive with separate metadata support, fio_plugin can't get the exactly size of metadata for
+one request before the real workloads, so export one option here 'md_size', users can add it in the configuration
+file when the metadata size for one request is larger than 4096 bytes.
