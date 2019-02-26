@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "139a2ba3_cc6b020c",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-02-26T11:58:47Z",
+      "side": 1,
+      "message": "This is for parsing the ut test since spdk_subsystem_init is called multiple times.",
+      "range": {
+        "startLine": 180,
+        "startChar": 1,
+        "endLine": 180,
+        "endChar": 34
+      },
+      "revId": "de6bfab10d01e2876142d99d7a8c237c1d20a777",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
