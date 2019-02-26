@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "53306036_591c4c0c",
+        "filename": "scripts/rpc/notify.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-26T08:46:59Z",
+      "side": 1,
+      "message": "default should be None",
+      "range": {
+        "startLine": 20,
+        "startChar": 79,
+        "endLine": 20,
+        "endChar": 84
+      },
+      "revId": "87f1d3e18e4a2beb2ca16b85b8a76e0e415fa23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
