@@ -1391,7 +1391,7 @@ set_md_interleave_iovs_test(void)
 	struct iovec iov1, iov2, dif_iovs[4];
 	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
 	uint8_t *buf1, *buf2;
-	int i, rc;
+	int rc;
 
 	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
 			  SPDK_DIF_FLAGS_REFTAG_CHECK;
