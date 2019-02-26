@@ -736,11 +736,22 @@ print_namespace(struct spdk_nvme_ns *ns)
 	       nsdata->nsfeat.thin_prov ? "Supported" : "Not Supported");
 	printf("Per-NS Atomic Units:         %s\n",
 	       nsdata->nsfeat.ns_atomic_write_unit ? "Yes" : "No");
-	if (nsdata->nawun) {
-		printf("Atomic Write Unit (Normal):  %d\n", nsdata->nawun + 1);
-	}
-	if (nsdata->nawupf) {
-		printf("Atomic Write Unit (PFail):   %d\n", nsdata->nawupf + 1);
+	if (nsdata->nsfeat.ns_atomic_write_unit) {
+		if (nsdata->nawun) {
+			printf("  Atomic Write Unit (Normal):    %d\n", nsdata->nawun + 1);
+		}
+
+		if (nsdata->nawupf) {
+			printf("  Atomic Write Unit (PFail):     %d\n", nsdata->nawupf + 1);
+		}
+
+		if (nsdata->nacwu) {
+			printf("  Atomic Compare & Write Unit:   %d\n", nsdata->nacwu + 1);
+		}
+
+		printf("  Atomic Boundary Size (Normal): %d\n", nsdata->nabsn);
+		printf("  Atomic Boundary Size (PFail):  %d\n", nsdata->nabspf);
+		printf("  Atomic Boundary Offset:        %d\n", nsdata->nabo);
 	}
 
 	printf("NGUID/EUI64 Never Reused:    %s\n",
@@ -1110,6 +1121,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);
 	printf("Atomic Write Unit (PFail):   %d\n", cdata->awupf + 1);
+	printf("Atomic Compare & Write Unit: %d\n", cdata->acwu + 1);
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported == SPDK_NVME_SGLS_SUPPORTED ? "Supported" :
