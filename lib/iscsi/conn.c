@@ -1153,8 +1153,8 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	struct iovec *iov = iovs;
 	int iovcnt = 0;
 	int bytes = 0;
-	int total_length = 0;
-	uint32_t writev_offset;
+	uint32_t total_length = 0;
+	uint32_t mapped_length = 0;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
 
@@ -1173,16 +1173,11 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 *  But extra overhead is negligible.
 	 */
 	while (pdu != NULL && ((num_iovs - iovcnt) >= 5)) {
-		pdu_length = spdk_iscsi_get_pdu_length(pdu,
-						       conn->header_digest,
-						       conn->data_digest);
-		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], pdu);
-		total_length += pdu_length;
+		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], pdu,
+						&mapped_length);
+		total_length += mapped_length;
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
-
-	writev_offset = TAILQ_FIRST(&conn->write_pdu_list)->writev_offset;
-	total_length -= writev_offset;
 
 	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
 
