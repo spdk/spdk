@@ -178,7 +178,8 @@ to_nvme_dev(struct spdk_vhost_dev *vdev)
 	return SPDK_CONTAINEROF(vdev, struct spdk_vhost_nvme_dev, vdev);
 }
 
-static TAILQ_HEAD(, spdk_vhost_nvme_dev) g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(g_nvme_ctrlrs);
+static TAILQ_HEAD(, spdk_vhost_nvme_dev) g_nvme_ctrlrs = TAILQ_HEAD_INITIALIZER(
+			g_nvme_ctrlrs);
 
 static inline unsigned int sq_offset(unsigned int qid, uint32_t db_stride)
 {
