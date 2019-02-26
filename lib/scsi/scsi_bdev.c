@@ -2093,3 +2093,59 @@ spdk_bdev_scsi_reset(struct spdk_scsi_task *task)
 		spdk_bdev_scsi_queue_io(task, spdk_bdev_scsi_reset_resubmit, task);
 	}
 }
+
+bool
+spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset,
+			   struct spdk_dif_ctx *dif_ctx)
+{
+	uint32_t ref_tag = 0, dif_check_flags = 0;
+	int rc;
+
+	/* If there is no metadata, return immediately. */
+	if (spdk_bdev_get_md_size(bdev) == 0) {
+		return false;
+	}
+
+	/* We use lower 32 bits of LBA as Reference. Tag */
+	switch (cdb[0]) {
+	case SPDK_SBC_READ_6:
+	case SPDK_SBC_WRITE_6:
+		ref_tag = (uint32_t)cdb[1] << 16;
+		ref_tag |= (uint32_t)cdb[2] << 8;
+		ref_tag |= (uint32_t)cdb[3];
+		break;
+	case SPDK_SBC_READ_10:
+	case SPDK_SBC_WRITE_10:
+	case SPDK_SBC_READ_12:
+	case SPDK_SBC_WRITE_12:
+		ref_tag = from_be32(&cdb[2]);
+		break;
+	case SPDK_SBC_READ_16:
+	case SPDK_SBC_WRITE_16:
+		ref_tag = (uint32_t)from_be64(&cdb[2]);
+		break;
+	default:
+		return false;
+	}
+
+	ref_tag += offset / spdk_bdev_get_data_block_size(bdev);
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
+
+	rc = spdk_dif_ctx_init(dif_ctx,
+			       spdk_bdev_get_block_size(bdev),
+			       spdk_bdev_get_md_size(bdev),
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       dif_check_flags,
+			       ref_tag, 0, 0, 0);
+
+	return (rc == 0) ? true : false;
+}
