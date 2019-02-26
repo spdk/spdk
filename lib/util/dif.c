@@ -1297,3 +1297,74 @@ spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 
 	return 0;
 }
+
+int
+spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
+				uint8_t *buf, uint32_t buf_len,
+				uint32_t data_offset, uint32_t data_len,
+				uint32_t *_mapped_len,
+				const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, head_unalign, mapped_len = 0;
+	uint32_t num_blocks, offset_blocks;
+	struct iovec *iov = iovs;
+	int iovcnt = 0;
+
+	if (iovs == NULL || num_iovs == 0) {
+		return -EINVAL;
+	}
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	if ((data_len % data_block_size) != 0) {
+		SPDK_ERRLOG("Data length must be a multiple of data block size\n");
+		return -EINVAL;
+	}
+
+	if (data_offset >= data_len) {
+		SPDK_ERRLOG("Data offset must be smaller than data length\n");
+		return -ERANGE;
+	}
+
+	num_blocks = data_len / data_block_size;
+
+	if (buf_len < num_blocks * ctx->block_size) {
+		SPDK_ERRLOG("Buffer overflow will occur. Buffer size is %" PRIu32 " but"
+			    " necessary size is %" PRIu32 "\n",
+			    buf_len, num_blocks * ctx->block_size);
+		return -ERANGE;
+	}
+
+	offset_blocks = data_offset / data_block_size;
+	head_unalign = data_offset % data_block_size;
+
+	buf += offset_blocks * ctx->block_size;
+
+	if (head_unalign != 0) {
+		buf += head_unalign;
+
+		iov->iov_base = buf;
+		iov->iov_len = data_block_size - head_unalign;
+		mapped_len += data_block_size - head_unalign;
+		iov++;
+		iovcnt++;
+
+		buf += ctx->block_size - head_unalign;
+		offset_blocks++;
+	}
+
+	while (offset_blocks < num_blocks && iovcnt < num_iovs) {
+		iov->iov_base = buf;
+		iov->iov_len = data_block_size;
+		mapped_len += data_block_size;
+		iov++;
+		iovcnt++;
+
+		buf += ctx->block_size;
+		offset_blocks++;
+	}
+
+	*_mapped_len = mapped_len;
+
+	return iovcnt;
+}
