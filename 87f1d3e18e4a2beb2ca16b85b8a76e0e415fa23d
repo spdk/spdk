@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "5bf27105_0e9c91e2",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 27
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-02-26T08:48:43Z",
+      "side": 1,
+      "message": "Is this import used?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "87f1d3e18e4a2beb2ca16b85b8a76e0e415fa23d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "53306036_591c4c0c",
         "filename": "scripts/rpc/notify.py",
         "patchSetId": 27
