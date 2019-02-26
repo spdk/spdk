@@ -1734,27 +1734,63 @@ class TestCases(object):
         """
         thin_provisioning_resize
 
-        Check thin provisioned bdev resize. To be implemented.
+        Check thin provisioned bdev resize.
         """
-        # TODO
-        # create malloc bdev
-        # construct lvol store on malloc bdev
-        # construct thin provisioned lvol bdevs on created lvol store
+        # Create malloc bdev
+        base_name = self.c.construct_malloc_bdev(self.total_size,
+                                                 self.block_size)
+        # Construct lvol store on malloc bdev
+        uuid_store = self.c.construct_lvol_store(base_name, self.lvs_name)
+        fail_count = self.c.check_get_lvol_stores(base_name, uuid_store,
+                                                  self.cluster_size)
+        # Construct thin provisioned lvol bdevs on created lvol store
         # with size equal to 50% of lvol store
-        # fill all free space of lvol bdev with data
-        # save number of free clusters for lvs
-        # resize bdev to full size of lvs
-        # check if bdev size changed (total_data_clusters*cluster_size
-        # equal to num_blocks*block_size)
-        # check if free_clusters on lvs remain unaffected
-        # perform write operation with verification
+        size = self.get_lvs_divided_size(2)
+        uuid_bdev = self.c.construct_lvol_bdev(uuid_store,
+                                               self.lbd_name, size, thin=True)
+        fail_count += self.c.check_get_bdevs_methods(uuid_bdev, size)
+        # Fill all free space of lvol bdev with data
+        nbd_name = "/dev/nbd0"
+        fail_count += self.c.start_nbd_disk(uuid_bdev, nbd_name)
+        fail_count += self.run_fio_test(nbd_name, 0, size*MEGABYTE, "write", "0xcc", 0)
+        fail_count += self.c.stop_nbd_disk(nbd_name)
+        # Save number of free clusters for lvs
+        lvs = self.c.get_lvol_stores()[0]
+        free_clusters_start = int(lvs['free_clusters'])
+        # Resize bdev to full size of lvs
+        full_size = size + self.get_lvs_size()
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, full_size)
+        # Check if bdev size changed (total_data_clusters*cluster_size
+        # equals to num_blocks*block_size)
+        lvol_bdev = self.c.get_lvol_bdev_with_name(uuid_bdev)
+        lbd_size = int(lvol_bdev['num_blocks'] * lvol_bdev['block_size'] / MEGABYTE)
+        if full_size != lbd_size:
+            fail_count += 1
+        # Check if free_clusters on lvs remain unaffected
+        lvs = self.c.get_lvol_stores()[0]
+        free_clusters_resize = int(lvs['free_clusters'])
+        if free_clusters_start != free_clusters_resize:
+            fail_count += 1
+        # Perform write operation with verification
         # to newly created free space of lvol bdev
-        # resize bdev to 30M and check if it ended with success
-        # check if free clusters on lvs equals to saved counter
-        # destroy thin provisioned lvol bdev
-        # destroy lvol store
-        # destroy malloc bdev
-        fail_count = 0
+        nbd_name = "/dev/nbd0"
+        fail_count += self.c.start_nbd_disk(uuid_bdev, nbd_name)
+        fail_count += self.run_fio_test(nbd_name, int(lbd_size * MEGABYTE / 2),
+                                        int(lbd_size * MEGABYTE / 2), "write", "0xcc", 0)
+        fail_count += self.c.stop_nbd_disk(nbd_name)
+        # Resize bdev to 30M and check if it ended with success
+        fail_count += self.c.resize_lvol_bdev(uuid_bdev, 30)
+        # Check free clusters on lvs
+        lvs = self.c.get_lvol_stores()[0]
+        free_clusters_resize2 = int(lvs['free_clusters'])
+        free_clusters_expected = int((full_size - 30) * MEGABYTE / lvs['cluster_size'])
+        if free_clusters_expected != free_clusters_resize2:
+            fail_count += 1
+
+        self.c.destroy_lvol_bdev(uuid_bdev)
+        self.c.destroy_lvol_store(uuid_store)
+        self.c.delete_malloc_bdev(base_name)
+
         # Expected result:
         # - calls successful, return code = 0
         # - no other operation fails
