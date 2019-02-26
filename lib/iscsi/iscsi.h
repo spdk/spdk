@@ -407,6 +407,8 @@ int spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
 			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
 int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu);
+int spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct iscsi_bhs *bhs,
+			   bool is_read, struct spdk_dif_ctx *dif_ctx);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 
