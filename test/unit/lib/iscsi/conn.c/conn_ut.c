@@ -138,7 +138,7 @@ DEFINE_STUB_V(spdk_clear_all_transfer_task,
 	       struct spdk_iscsi_pdu *pdu));
 
 DEFINE_STUB(spdk_iscsi_build_iovs, int,
-	    (struct spdk_iscsi_conn *conn, struct iovec *iov,
+	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int num_iovs,
 	     struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length),
 	    0);
 
