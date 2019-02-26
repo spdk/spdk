@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4afdc8e5_955ba464",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-26T01:49:49Z",
+      "side": 1,
+      "message": "use",
+      "range": {
+        "startLine": 12,
+        "startChar": 35,
+        "endLine": 12,
+        "endChar": 37
+      },
+      "revId": "9d55442edcd524936f46c2f89eeb6eb9b21131ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d60d0bee_903a8c2f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-26T01:49:49Z",
+      "side": 1,
+      "message": "It may be better to add \"The original algorithm is not necessary to maintain and is replaced by the table-based algorithm.\" or something like that.",
+      "revId": "9d55442edcd524936f46c2f89eeb6eb9b21131ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "380e3877_308d5dc7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-26T01:49:49Z",
+      "side": 1,
+      "message": "Please remove this as Changpeng said.",
+      "range": {
+        "startLine": 29,
+        "startChar": 0,
+        "endLine": 29,
+        "endChar": 57
+      },
+      "revId": "9d55442edcd524936f46c2f89eeb6eb9b21131ab",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
