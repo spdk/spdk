@@ -300,14 +300,14 @@ SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_
 
 static void
 spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
-				   struct nvme_ctrlr *nvme_ctrlr)
+				   struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 {
 	struct spdk_nvme_transport_id	*trid;
 
-	trid = &nvme_ctrlr->trid;
+	trid = &nvme_bdev_ctrlr->trid;
 
 	spdk_json_write_object_begin(w);
-	spdk_json_write_named_string(w, "name", nvme_ctrlr->name);
+	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
 
 	spdk_json_write_named_object_begin(w, "trid");
 	spdk_bdev_nvme_dump_trid_json(trid, w);
@@ -336,7 +336,7 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 {
 	struct rpc_get_nvme_controllers req = {};
 	struct spdk_json_write_ctx *w;
-	struct nvme_ctrlr *ctrlr = NULL;
+	struct nvme_bdev_ctrlr *ctrlr = NULL;
 
 	if (params && spdk_json_decode_object(params, rpc_get_nvme_controllers_decoders,
 					      SPDK_COUNTOF(rpc_get_nvme_controllers_decoders),
