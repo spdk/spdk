@@ -136,6 +136,12 @@ _iov_free_buf(struct iovec *iov)
 	free(iov->iov_base);
 }
 
+static bool
+_iov_check(struct iovec *iov, void *iov_base, uint32_t iov_len)
+{
+	return (iov->iov_base == iov_base && iov->iov_len == iov_len);
+}
+
 static void
 _dif_generate_and_verify(struct iovec *iov,
 			 uint32_t block_size, uint32_t md_size, bool dif_loc,
@@ -1349,6 +1355,130 @@ dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test(void)
 	_iov_free_buf(&md_iov);
 }
 
+static int
+ut_readv(uint32_t read_base, uint32_t read_len, struct iovec *iovs, int iovcnt)
+{
+	int i;
+	uint32_t j, offset;
+	uint8_t *buf;
+
+	offset = 0;
+	for (i = 0; i < iovcnt; i++) {
+		buf = iovs[i].iov_base;
+		for (j = 0; j < iovs[i].iov_len; j++, offset++) {
+			if (offset >= read_len) {
+				return offset;
+			}
+			buf[j] = DATA_PATTERN(read_base + offset);
+		}
+	}
+
+	return offset;
+}
+
+static void
+set_md_interleave_iovs_test(void)
+{
+	struct spdk_dif_ctx ctx = {};
+	struct spdk_dif_error err_blk = {};
+	struct iovec iov1, iov2, dif_iovs[4];
+	uint32_t dif_check_flags, mapped_len = 0, read_base = 0;
+	uint8_t *buf1, *buf2;
+	bool is_equal = true;
+	int i, rc;
+
+	dif_check_flags = SPDK_DIF_FLAGS_GUARD_CHECK | SPDK_DIF_FLAGS_APPTAG_CHECK |
+			  SPDK_DIF_FLAGS_REFTAG_CHECK;
+
+	rc = spdk_dif_ctx_init(&ctx, 4096 + 128, 128, true, false, SPDK_DIF_TYPE1,
+			       dif_check_flags, 22, 0xFFFF, 0x22, GUARD_SEED);
+	CU_ASSERT(rc == 0);
+
+	/* The first data buffer:
+	 * - Create iovec array to Leave a space for metadata for each block
+	 * - Split vectored read and so creating iovec array is done before every vectored read.
+	 */
+	_iov_alloc_buf(&iov1, (4096 + 128) * 4);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, iov1.iov_base, (4096 + 128) * 4,
+					     0, 4096 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 4096 * 4);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iov1.iov_base, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iov1.iov_base + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iov1.iov_base + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iov1.iov_base + (4096 + 128) * 3, 4096) == true);
+
+	read_base = ut_readv(0, 1024, dif_iovs, 4);
+	CU_ASSERT(read_base == 1024);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, iov1.iov_base, (4096 + 128) * 4,
+					     read_base, 4096 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 3072 + 4096 * 3);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iov1.iov_base + 1024, 3072) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iov1.iov_base + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iov1.iov_base + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iov1.iov_base + (4096 + 128) * 3, 4096) == true);
+
+	read_base += ut_readv(read_base, 3071, dif_iovs, 4);
+	CU_ASSERT(read_base == 4095);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, iov1.iov_base, (4096 + 128) * 4,
+					     read_base, 4096 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_len == 1 + 4096 * 3);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iov1.iov_base + 4095, 1) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[1], iov1.iov_base + 4096 + 128, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[2], iov1.iov_base + (4096 + 128) * 2, 4096) == true);
+	CU_ASSERT(_iov_check(&dif_iovs[3], iov1.iov_base + (4096 + 128) * 3, 4096) == true);
+
+	read_base += ut_readv(read_base, 1 + 4096 * 2 + 512, dif_iovs, 4);
+	CU_ASSERT(read_base == 4096 * 3 + 512);
+
+	rc = spdk_dif_set_md_interleave_iovs(dif_iovs, 4, iov1.iov_base, (4096 + 128) * 4,
+					     read_base, 4096 * 4, &mapped_len, &ctx);
+	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_len == 3584);
+	CU_ASSERT(_iov_check(&dif_iovs[0], iov1.iov_base + (4096 + 128) * 3 + 512, 3584) == true);
+
+	read_base += ut_readv(read_base, 3584, dif_iovs, 1);
+	CU_ASSERT(read_base == 4096 * 4);
+
+	rc = spdk_dif_generate(&iov1, 1, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	/* The second data buffer:
+	 * - Set data pattern with a space for metadata for each block.
+	 */
+	_iov_alloc_buf(&iov2, (4096 + 128) * 4);
+
+	rc = ut_data_pattern_generate(&iov2, 1, 4096 + 128, 128, 4);
+	CU_ASSERT(rc == 0);
+	rc = spdk_dif_generate(&iov2, 1, 4, &ctx);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov1, 1, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	rc = spdk_dif_verify(&iov2, 1, 4, &ctx, &err_blk);
+	CU_ASSERT(rc == 0);
+
+	/* Compare the first and the second data buffer by byte. */
+	buf1 = (uint8_t *)iov1.iov_base;
+	buf2 = (uint8_t *)iov2.iov_base;
+	for (i = 0; i < (4096 + 128) * 4; i++) {
+		if (buf1[i] != buf2[i]) {
+			is_equal = false;
+			break;
+		}
+	}
+	CU_ASSERT(is_equal == true);
+
+	_iov_free_buf(&iov1);
+	_iov_free_buf(&iov2);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -1432,7 +1562,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test",
 			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_test) == NULL ||
 		CU_add_test(suite, "dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test",
-			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL
+			    dix_sec_4096_md_128_inject_1_2_4_8_multi_iovs_split_test) == NULL ||
+		CU_add_test(suite, "set_md_interleave_iovs_test", set_md_interleave_iovs_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
