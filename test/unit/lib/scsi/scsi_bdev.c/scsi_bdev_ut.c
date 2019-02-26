@@ -53,6 +53,8 @@ int g_scsi_cb_called = 0;
 TAILQ_HEAD(, spdk_bdev_io_wait_entry) g_io_wait_queue;
 bool g_bdev_io_pool_full = false;
 
+static uint32_t g_test_dif_init_ref_tag = 0;
+
 bool
 spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_type)
 {
@@ -83,6 +85,21 @@ DEFINE_STUB(spdk_bdev_get_product_name, const char *,
 
 DEFINE_STUB(spdk_bdev_has_write_cache, bool,
 	    (const struct spdk_bdev *bdev), false);
+
+DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 8);
+
+DEFINE_STUB(spdk_bdev_is_md_interleaved, bool,
+	    (const struct spdk_bdev *bdev), true);
+
+DEFINE_STUB(spdk_bdev_get_dif_type, enum spdk_dif_type,
+	    (const struct spdk_bdev *bdev), SPDK_DIF_DISABLE);
+
+DEFINE_STUB(spdk_bdev_is_dif_head_of_md, bool,
+	    (const struct spdk_bdev *bdev), false);
+
+DEFINE_STUB(spdk_bdev_is_dif_check_enabled, bool,
+	    (const struct spdk_bdev *bdev, enum spdk_dif_check_type check_type), false);
 
 void
 spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
@@ -241,6 +258,22 @@ spdk_bdev_queue_io_wait(struct spdk_bdev *bdev, struct spdk_io_channel *ch,
 	TAILQ_INSERT_TAIL(&g_io_wait_queue, entry, link);
 	return 0;
 }
+
+int
+spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
+		  bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
+		  uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		  uint16_t guard_seed)
+{
+	CU_ASSERT(block_size == 512);
+	CU_ASSERT(md_size == 8);
+	CU_ASSERT(md_interleave == true);
+	CU_ASSERT(dif_loc == false);
+	CU_ASSERT(dif_type == SPDK_DIF_DISABLE);
+	CU_ASSERT(dif_flags == 0);
+	g_test_dif_init_ref_tag = init_ref_tag;
+	return 0;
+}	
 
 /*
  * This test specifically tests a mode select 6 command from the
@@ -926,6 +959,48 @@ xfer_test(void)
 	_xfer_test(true);
 }
 
+static void
+get_dif_ctx_test(void)
+{
+	struct spdk_bdev bdev = {};
+	struct spdk_dif_ctx dif_ctx = {};
+	uint8_t cdb[16];
+	uint32_t offset;
+	int rc;
+
+	g_test_dif_init_ref_tag = 0;
+
+	cdb[0] = SPDK_SBC_READ_6;
+	cdb[1] = 0x12;
+	cdb[2] = 0x34;
+	cdb[3] = 0x50;
+	offset = 0x6 * 512;
+
+	rc = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, offset, &dif_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_test_dif_init_ref_tag == 0x123456);
+
+	g_test_dif_init_ref_tag = 0;
+
+	cdb[0] = SPDK_SBC_WRITE_12;
+	to_be32(&cdb[2], 0x12345670);
+	offset = 0x8 * 512;
+
+	rc = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, offset, &dif_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_test_dif_init_ref_tag == 0x12345678);
+
+	g_test_dif_init_ref_tag = 0;
+
+	cdb[0] = SPDK_SBC_WRITE_16;
+	to_be64(&cdb[2], 0x0000000012345670);
+	offset = 0x8 * 512;
+
+	rc = spdk_scsi_bdev_get_dif_ctx(&bdev, cdb, offset, &dif_ctx);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_test_dif_init_ref_tag == 0x12345678);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -958,6 +1033,7 @@ main(int argc, char **argv)
 		|| CU_add_test(suite, "transfer length test", xfer_len_test) == NULL
 		|| CU_add_test(suite, "transfer test", xfer_test) == NULL
 		|| CU_add_test(suite, "scsi name padding test", scsi_name_padding_test) == NULL
+		|| CU_add_test(suite, "get dif context test", get_dif_ctx_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
