@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d3b09b7_db243c6c",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:33:35Z",
+      "side": 1,
+      "message": "should the g_bdev_nvme_mutex be used for locking this FTL-specific g_ftl_bdevs list?",
+      "revId": "5da36a32c840d3d6b050aca543f388ad8dd21587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7202e19_e54bd0d4",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:33:35Z",
+      "side": 1,
+      "message": "let\u0027s do one patch that just moves these definitions\n\nthen the next patch can make the changes to allow FTL to use it\n\nit\u0027s all about breaking the patches up as much as possible :-)",
+      "revId": "5da36a32c840d3d6b050aca543f388ad8dd21587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e81c5558_5bab75db",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:33:35Z",
+      "side": 1,
+      "message": "let\u0027s not add spdk_ to the beginning of these names - we should really only use spdk_ for public API functions (although that\u0027s not the case everywhere)\n\nit should also be nvme_bdev_ctrlr_get instead of bdev_nvme_ctrlr_get, to match the struct name (but these function names should be changed in the previous patch)",
+      "revId": "5da36a32c840d3d6b050aca543f388ad8dd21587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3ad8fba_2d4cd213",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:33:35Z",
+      "side": 1,
+      "message": "for now, I would add the externs for the TAILQ and mutex here, rather than both the normal and ftl code needed to do the externs themselves",
+      "revId": "5da36a32c840d3d6b050aca543f388ad8dd21587",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
