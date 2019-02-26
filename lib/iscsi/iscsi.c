@@ -4563,6 +4563,91 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	return 0;
 }
 
+int
+spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn,
+		       struct spdk_iscsi_pdu *pdu,
+		       bool is_read, struct spdk_dif_ctx *dif_ctx)
+{
+	struct iscsi_bhs *bhs;
+	uint32_t offset = 0;
+	uint8_t *cdb = NULL;
+	int lun_id = 0;
+	struct spdk_scsi_lun *lun_dev;
+
+	bhs = &pdu->bhs;
+
+	switch (bhs->opcode) {
+	case ISCSI_OP_SCSI: {
+		struct iscsi_bhs_scsi_req *reqh;
+
+		reqh = (struct iscsi_bhs_scsi_req *)bhs;
+
+		if ((is_read && !reqh->read_bit) || (!is_read && !reqh->write_bit)) {
+			return -1;
+		}
+
+		offset = 0;
+		cdb = reqh->cdb;
+		lun_id = from_be64(&reqh->lun);
+		lun_id = spdk_islun2lun(lun_id);
+		break;
+	}
+	case ISCSI_OP_SCSI_DATAOUT: {
+		struct iscsi_bhs_data_out *reqh;
+		struct spdk_iscsi_task *task;
+		int transfer_tag;
+
+		if (is_read) {
+			return -1;
+		}
+
+		reqh = (struct iscsi_bhs_data_out *)bhs;
+		offset = from_be32(&reqh->buffer_offset);
+
+		transfer_tag = from_be32(&reqh->ttt);
+		task = spdk_get_transfer_task(conn, transfer_tag);
+		if (task == NULL) {
+			return -EINVAL;
+		}
+
+		cdb = task->scsi.cdb;
+		lun_id = task->lun_id;
+		break;
+	}
+	case ISCSI_OP_SCSI_DATAIN: {
+		struct iscsi_bhs_data_in *rsph;
+		struct spdk_iscsi_task *task;
+		int transfer_tag;
+
+		if (!is_read) {
+			return -1;
+		}
+
+		rsph = (struct iscsi_bhs_data_in *)bhs;
+		offset = from_be32(&rsph->buffer_offset);
+
+		transfer_tag = from_be32(&rsph->ttt);
+		task = spdk_get_transfer_task(conn, transfer_tag);
+		if (task == NULL) {
+			return -EINVAL;
+		}
+
+		cdb = task->scsi.cdb;
+		lun_id = task->lun_id;
+		break;
+	}
+	default:
+		return -1;
+	}
+
+	lun_dev = spdk_scsi_dev_get_lun(conn->dev, lun_id);
+	if (lun_dev == NULL) {
+		return -EINVAL;
+	}
+
+	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, offset, dif_ctx);
+}
+
 void spdk_free_sess(struct spdk_iscsi_sess *sess)
 {
 	if (sess == NULL) {
