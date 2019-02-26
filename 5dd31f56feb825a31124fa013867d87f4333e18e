@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a74e3c14_5844538b",
+        "filename": "CONFIG",
+        "patchSetId": 10
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T17:08:21Z",
+      "side": 1,
+      "message": "is this still needed?\n\nthis patch is just replacing the existing \"slow\" method now - I think it would be better to avoid any configuration options around it to avoid confusion",
+      "revId": "5dd31f56feb825a31124fa013867d87f4333e18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11f34bc3_31c7e2e2",
+        "filename": "configure",
+        "patchSetId": 10
+      },
+      "lineNbr": 75,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T17:08:21Z",
+      "side": 1,
+      "message": "I think the changes in this file can be removed now that we are just replacing the existing method",
+      "revId": "5dd31f56feb825a31124fa013867d87f4333e18e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
