@@ -147,7 +147,6 @@ test_wptr(void)
 	for (i = 0; i < ftl_dev_num_bands(dev); ++i) {
 		wptr = LIST_FIRST(&dev->wptr_list);
 		band = wptr->band;
-		ftl_band_set_state(band, FTL_BAND_STATE_PREP);
 		ftl_band_set_state(band, FTL_BAND_STATE_OPENING);
 		ftl_band_set_state(band, FTL_BAND_STATE_OPEN);
 		io.band = band;
