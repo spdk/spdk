@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "561cd4bf_cb13cf28",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 188,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-26T07:43:37Z",
+      "side": 1,
+      "message": "This state is set in ftl_band_set_state",
+      "revId": "b0f99a6bde193d3b3be58f5801f3eec8e42152cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "151f3608_2fa018a5",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 235,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-02-26T07:43:37Z",
+      "side": 1,
+      "message": "Same here, we have saparate function for this.",
+      "revId": "b0f99a6bde193d3b3be58f5801f3eec8e42152cc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
