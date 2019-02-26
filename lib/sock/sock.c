@@ -130,6 +130,17 @@ spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len)
 }
 
 ssize_t
+spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
+{
+	if (sock == NULL) {
+		errno = EBADF;
+		return -1;
+	}
+
+	return sock->net_impl->readv(sock, iov, iovcnt);
+}
+
+ssize_t
 spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	if (sock == NULL) {
@@ -139,7 +150,6 @@ spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 
 	return sock->net_impl->writev(sock, iov, iovcnt);
 }
-
 
 int
 spdk_sock_set_recvlowat(struct spdk_sock *sock, int nbytes)
