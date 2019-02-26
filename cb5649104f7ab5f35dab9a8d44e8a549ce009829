@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a01eff7_5a8d99e1",
+        "filename": "lib/bdev/nvme/nvme_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 464,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-26T21:36:49Z",
+      "side": 1,
+      "message": "let\u0027s get rid of this lookup_ctrlr function in a separate cleanup patch before this one",
+      "revId": "cb5649104f7ab5f35dab9a8d44e8a549ce009829",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
