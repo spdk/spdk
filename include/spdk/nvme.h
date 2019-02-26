@@ -1284,9 +1284,8 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int
-spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-				 uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				     uint16_t spsp, uint8_t nssf, void *payload, size_t size);
 
 /**
  * Send security protocol data to controller.
@@ -1307,9 +1306,8 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int
-spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-			      uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+int spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				  uint16_t spsp, uint8_t nssf, void *payload, size_t size);
 
 /**
  * Attach the specified namespace to controllers.
