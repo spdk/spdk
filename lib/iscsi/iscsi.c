@@ -569,11 +569,13 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 {
 	int iovcnt = 0;
 	int enable_digest;
-	int total_ahs_len;
-	int data_len;
+	uint32_t total_ahs_len;
+	uint32_t data_len;
+	uint32_t iov_offset;
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = DGET24(pdu->bhs.data_segment_len);
+	data_len = ISCSI_ALIGN(data_len);
 
 	enable_digest = 1;
 	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
@@ -581,37 +583,60 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		enable_digest = 0;
 	}
 
-	/* BHS */
-	iovs[iovcnt].iov_base = &pdu->bhs;
-	iovs[iovcnt].iov_len = ISCSI_BHS_LEN;
-	iovcnt++;
+	iov_offset = pdu->writev_offset;
 
+	/* BHS */
+	if (iov_offset >= ISCSI_BHS_LEN) {
+		iov_offset -= ISCSI_BHS_LEN;
+	} else {
+		iovs[iovcnt].iov_base = &pdu->bhs;
+		iovs[iovcnt].iov_len = ISCSI_BHS_LEN - iov_offset;
+		iov_offset = 0;
+		iovcnt++;
+	}
 	/* AHS */
 	if (total_ahs_len > 0) {
-		iovs[iovcnt].iov_base = pdu->ahs;
-		iovs[iovcnt].iov_len = 4 * total_ahs_len;
-		iovcnt++;
+		if (iov_offset >= 4 * total_ahs_len) {
+			iov_offset -= 4 * total_ahs_len;
+		} else {
+			iovs[iovcnt].iov_base = pdu->ahs;
+			iovs[iovcnt].iov_len = 4 * total_ahs_len - iov_offset;
+			iov_offset = 0;
+			iovcnt++;
+		}
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		iovs[iovcnt].iov_base = pdu->header_digest;
-		iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN;
-		iovcnt++;
+		if (iov_offset >= ISCSI_DIGEST_LEN) {
+			iov_offset -= ISCSI_DIGEST_LEN;
+		} else {
+			iovs[iovcnt].iov_base = pdu->header_digest;
+			iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN - iov_offset;
+			iov_offset = 0;
+			iovcnt++;
+		}
 	}
 
 	/* Data Segment */
 	if (data_len > 0) {
-		iovs[iovcnt].iov_base = pdu->data;
-		iovs[iovcnt].iov_len = ISCSI_ALIGN(data_len);
-		iovcnt++;
+		if (iov_offset >= data_len) {
+			iov_offset -= data_len;
+		} else {
+			iovs[iovcnt].iov_base = pdu->data;
+			iovs[iovcnt].iov_len = data_len - iov_offset;
+			iov_offset = 0;
+			iovcnt++;
+		}
 	}
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		iovs[iovcnt].iov_base = pdu->data_digest;
-		iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN;
-		iovcnt++;
+		if (iov_offset < ISCSI_DIGEST_LEN) {
+			iovs[iovcnt].iov_base = pdu->data_digest;
+			iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN - iov_offset;
+			iovcnt++;
+		}
 	}
 
 	return iovcnt;
