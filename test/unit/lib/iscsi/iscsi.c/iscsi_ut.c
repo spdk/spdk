@@ -1208,6 +1208,7 @@ build_iovs_test(void)
 	struct spdk_iscsi_conn conn = {};
 	struct spdk_iscsi_pdu pdu = {};
 	struct iovec iovs[5] = {};
+	uint32_t mapped_length = 0;
 	int rc;
 
 	conn.header_digest = true;
@@ -1218,36 +1219,44 @@ build_iovs_test(void)
 	pdu.bhs.opcode = ISCSI_OP_SCSI;
 
 	pdu.writev_offset = 0;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 4);
+	CU_ASSERT(mapped_length == ISCSI_BHS_LEN / 2 + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 3);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN / 2 + 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 2);
+	CU_ASSERT(mapped_length == 512 + ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN / 2;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 1);
+	CU_ASSERT(mapped_length == ISCSI_DIGEST_LEN / 2);
 
 	pdu.writev_offset = ISCSI_BHS_LEN + ISCSI_DIGEST_LEN + 512 + ISCSI_DIGEST_LEN;
-	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu);
+	rc = spdk_iscsi_build_iovs(&conn, iovs, &pdu, &mapped_length);
 	CU_ASSERT(rc == 0);
+	CU_ASSERT(mapped_length == 0);
 }
 
 int

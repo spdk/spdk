@@ -565,13 +565,14 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 int
 spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
-		      struct spdk_iscsi_pdu *pdu)
+		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
 {
 	int iovcnt = 0;
 	int enable_digest;
 	uint32_t total_ahs_len;
 	uint32_t data_len;
 	uint32_t iov_offset;
+	uint32_t mapped_length = 0;
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = DGET24(pdu->bhs.data_segment_len);
@@ -591,6 +592,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 	} else {
 		iovs[iovcnt].iov_base = &pdu->bhs;
 		iovs[iovcnt].iov_len = ISCSI_BHS_LEN - iov_offset;
+		mapped_length += ISCSI_BHS_LEN - iov_offset;
 		iov_offset = 0;
 		iovcnt++;
 	}
@@ -601,6 +603,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		} else {
 			iovs[iovcnt].iov_base = pdu->ahs;
 			iovs[iovcnt].iov_len = 4 * total_ahs_len - iov_offset;
+			mapped_length += 4 * total_ahs_len - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
 		}
@@ -613,6 +616,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		} else {
 			iovs[iovcnt].iov_base = pdu->header_digest;
 			iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN - iov_offset;
+			mapped_length += ISCSI_DIGEST_LEN - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
 		}
@@ -625,6 +629,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		} else {
 			iovs[iovcnt].iov_base = pdu->data;
 			iovs[iovcnt].iov_len = data_len - iov_offset;
+			mapped_length += data_len - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
 		}
@@ -635,9 +640,12 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		if (iov_offset < ISCSI_DIGEST_LEN) {
 			iovs[iovcnt].iov_base = pdu->data_digest;
 			iovs[iovcnt].iov_len = ISCSI_DIGEST_LEN - iov_offset;
+			mapped_length += ISCSI_DIGEST_LEN - iov_offset;
 			iovcnt++;
 		}
 	}
+
+	*_mapped_length = mapped_length;
 
 	return iovcnt;
 }
