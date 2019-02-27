@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "692a0673_fa48c086",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1839,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:45:18Z",
+      "side": 1,
+      "message": "I think you can eliminate a couple of layers here. Instead of line 1856 below, you can probably just call:\n\nspdk_nvmf_subsystem_update_ns(subsystem, _nvmf_subsys_reservation_update_done, req);",
+      "revId": "a380f4d8419b41aac5da055e440b622deef1b735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef11f924_44475e9d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1844,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:45:18Z",
+      "side": 1,
+      "message": "Is this funciton only called from spdk_nvmf_subsystem_reservation_request? Can just move it to the bottom there.",
+      "revId": "a380f4d8419b41aac5da055e440b622deef1b735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
