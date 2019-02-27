@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "727fb3e8_374ff087",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-27T19:14:14Z",
+      "side": 1,
+      "message": "is it ok to use the ftl lock here?\n\nI think we need to use the common lock for the g_nvme_bdev_ctrlrs list.  We should only use the ftl lock for anything that is specific to ftl.",
+      "revId": "3d3470e651bcdd0636c63e0574f0d26d3fb9040c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
