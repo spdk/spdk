@@ -101,6 +101,24 @@
       "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f5d2a8b1_de560d34",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:02:37Z",
+      "side": 1,
+      "message": "Actually, to support multiple different types of reservations, it does need to be a little bit more complex. Maybe put a list of reservation holders on the namespace though, instead of having a list of namespaces on the reservation registrant.",
+      "parentUuid": "959788f2_b8fb4e85",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
