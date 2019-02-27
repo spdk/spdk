@@ -183,8 +183,9 @@ int spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn,
 void spdk_iscsi_conn_set_min_per_core(int count);
 int spdk_iscsi_conn_get_min_per_core(void);
 
-int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len,
-			      void *buf);
+int spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int len, void *buf);
+int spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
+			       struct iovec *iov, int iovcnt);
 void spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
 
 void spdk_iscsi_conn_free_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
