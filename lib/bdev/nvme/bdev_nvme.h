@@ -57,7 +57,6 @@ void spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid,
 				   struct spdk_json_write_ctx *w);
 
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-struct nvme_bdev_ctrlr *spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name);
 struct nvme_bdev_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
 struct nvme_bdev_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_bdev_ctrlr *prev);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);

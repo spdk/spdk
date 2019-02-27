@@ -151,20 +151,6 @@ spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 }
 
 struct nvme_bdev_ctrlr *
-spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name)
-{
-	struct nvme_bdev_ctrlr *_nvme_ctrlr;
-
-	TAILQ_FOREACH(_nvme_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (strcmp(ctrlr_name, _nvme_ctrlr->name) == 0) {
-			return _nvme_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
-struct nvme_bdev_ctrlr *
 spdk_bdev_nvme_first_ctrlr(void)
 {
 	return TAILQ_FIRST(&g_nvme_bdev_ctrlrs);
