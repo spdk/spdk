@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "common.h"
 
 #include "spdk/config.h"
 #include "spdk/conf.h"
@@ -116,9 +117,6 @@ static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
 static char *g_nvme_hostnqn = NULL;
 static pthread_mutex_t g_bdev_nvme_mutex = PTHREAD_MUTEX_INITIALIZER;
-
-static TAILQ_HEAD(, nvme_bdev_ctrlr) g_nvme_bdev_ctrlrs = TAILQ_HEAD_INITIALIZER(
-			g_nvme_bdev_ctrlrs);
 
 static void nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
 static int bdev_nvme_library_init(void);
@@ -829,38 +827,6 @@ hotplug_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	return true;
 }
 
-static struct nvme_bdev_ctrlr *
-nvme_ctrlr_get(const struct spdk_nvme_transport_id *trid)
-{
-	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
-
-	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (spdk_nvme_transport_id_compare(trid, &nvme_bdev_ctrlr->trid) == 0) {
-			return nvme_bdev_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
-static struct nvme_bdev_ctrlr *
-nvme_ctrlr_get_by_name(const char *name)
-{
-	struct nvme_bdev_ctrlr *nvme_bdev_ctrlr;
-
-	if (name == NULL) {
-		return NULL;
-	}
-
-	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
-		if (strcmp(name, nvme_bdev_ctrlr->name) == 0) {
-			return nvme_bdev_ctrlr;
-		}
-	}
-
-	return NULL;
-}
-
 static bool
 probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	 struct spdk_nvme_ctrlr_opts *opts)
@@ -869,7 +835,7 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_NVME, "Probing device %s\n", trid->traddr);
 
-	if (nvme_ctrlr_get(trid)) {
+	if (nvme_bdev_ctrlr_get(trid)) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
 			    trid->traddr);
 		return false;
@@ -1229,12 +1195,12 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 	size_t				j;
 	struct nvme_probe_skip_entry	*entry, *tmp;
 
-	if (nvme_ctrlr_get(trid) != NULL) {
+	if (nvme_bdev_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
 		return -1;
 	}
 
-	if (nvme_ctrlr_get_by_name(base_name)) {
+	if (nvme_bdev_ctrlr_get_by_name(base_name)) {
 		SPDK_ERRLOG("A controller with the provided name (%s) already exists.\n", base_name);
 		return -1;
 	}
@@ -1274,7 +1240,7 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	nvme_bdev_ctrlr = nvme_ctrlr_get(trid);
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
 	if (!nvme_bdev_ctrlr) {
 		SPDK_ERRLOG("Failed to find new NVMe controller\n");
 		return -1;
@@ -1317,7 +1283,7 @@ spdk_bdev_nvme_delete(const char *name)
 		return -EINVAL;
 	}
 
-	nvme_bdev_ctrlr = nvme_ctrlr_get_by_name(name);
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(name);
 	if (nvme_bdev_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed to find NVMe controller\n");
 		return -ENODEV;
@@ -1471,7 +1437,7 @@ bdev_nvme_library_init(void)
 			struct spdk_nvme_ctrlr *ctrlr;
 			struct spdk_nvme_ctrlr_opts opts;
 
-			if (nvme_ctrlr_get(&probe_ctx->trids[i])) {
+			if (nvme_bdev_ctrlr_get(&probe_ctx->trids[i])) {
 				SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n",
 					    probe_ctx->trids[i].traddr);
 				rc = -1;
@@ -1527,7 +1493,7 @@ bdev_nvme_library_init(void)
 				continue;
 			}
 
-			if (!nvme_ctrlr_get(&probe_ctx->trids[i])) {
+			if (!nvme_bdev_ctrlr_get(&probe_ctx->trids[i])) {
 				SPDK_ERRLOG("NVMe SSD \"%s\" could not be found.\n", probe_ctx->trids[i].traddr);
 				SPDK_ERRLOG("Check PCIe BDF and that it is attached to UIO/VFIO driver.\n");
 			}
