@@ -129,6 +129,7 @@ struct spdk_iscsi_conn {
 	int header_digest;
 	int data_digest;
 	int full_feature;
+	bool auto_dif;
 
 	struct iscsi_param *params;
 	bool sess_param_state_negotiated[MAX_SESSION_PARAMS];
