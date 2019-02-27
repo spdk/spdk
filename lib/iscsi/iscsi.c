@@ -369,6 +369,10 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 		pdu->data_buf = pdu->mobj->buf;
 	}
 
+	if (conn->auto_dif) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DIF generation for write I/Os will be done here\n");
+	}
+
 	return spdk_iscsi_conn_read_data(conn,
 					 data_len - pdu->data_valid_bytes,
 					 pdu->data_buf + pdu->data_valid_bytes);
@@ -658,6 +662,12 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 		if (iov_offset >= data_len) {
 			iov_offset -= data_len;
 		} else {
+			if (conn->auto_dif) {
+				SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
+					      "Setup iovs to leave DIF space in data buffer"
+					      " will be done here\n");
+			}
+
 			iovs[iovcnt].iov_base = pdu->data + iov_offset;
 			iovs[iovcnt].iov_len = data_len - iov_offset;
 			mapped_length += data_len - iov_offset;

@@ -277,6 +277,7 @@ spdk_iscsi_conn_construct(struct spdk_iscsi_portal *portal,
 	conn->portal_port = strdup(portal->port);
 	conn->portal_cpumask = portal->cpumask;
 	conn->sock = sock;
+	conn->auto_dif = portal->group->auto_dif;
 
 	conn->state = ISCSI_CONN_STATE_INVALID;
 	conn->login_phase = ISCSI_SECURITY_NEGOTIATION_PHASE;
@@ -1324,6 +1325,10 @@ void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
+
+	if (conn->auto_dif) {
+		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DIF verification for read I/Os will be done here\n");
+	}
 
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
 		/* Header Digest */
