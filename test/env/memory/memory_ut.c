@@ -34,6 +34,7 @@
 #include "env_dpdk/memory.c"
 
 #define UNIT_TEST_NO_VTOPHYS
+#define UNIT_TEST_NO_PCI_ADDR
 #include "common/lib/test_env.c"
 #include "spdk_cunit.h"
 
