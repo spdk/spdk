@@ -252,7 +252,7 @@ spdk_rpc_construct_raid_bdev(struct spdk_jsonrpc_request *request,
 		free_rpc_construct_raid_bdev(&req);
 		return;
 	} else if (req.strip_size > 0 && req.strip_size_kb == 0) {
-		SPDK_ERRLOG("the rpc param strip_size is depretaced.");
+		SPDK_ERRLOG("the rpc param strip_size is deprecated.\n");
 		req.strip_size_kb = req.strip_size;
 	}
 
