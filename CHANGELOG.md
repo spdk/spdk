@@ -12,6 +12,11 @@ spdk_nvme_probe_poll_async() were added to enable this feature.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### iscsi target
+
+Python script for add_portal_group RPC changed so that portal list is made of a
+single argument and portals are separated by whitespace.
+
 ## v19.01:
 
 ### ocf bdev
