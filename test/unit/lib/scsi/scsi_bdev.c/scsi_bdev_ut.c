@@ -489,7 +489,7 @@ inquiry_evpd_test(void)
 static void
 inquiry_standard_test(void)
 {
-	struct spdk_bdev bdev = { .blocklen = 512 };
+	struct spdk_bdev bdev = { .blocklen = 512, .md_len = 0 };
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
@@ -527,7 +527,7 @@ inquiry_standard_test(void)
 static void
 _inquiry_overflow_test(uint8_t alloc_len)
 {
-	struct spdk_bdev bdev = { .blocklen = 512 };
+	struct spdk_bdev bdev = { .blocklen = 512, .md_len = 0 };
 	struct spdk_scsi_task task;
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_dev dev;
@@ -662,7 +662,7 @@ task_complete_test(void)
 static void
 lba_range_test(void)
 {
-	struct spdk_bdev bdev = { .blocklen = 512 };
+	struct spdk_bdev bdev = { .blocklen = 512, .md_len = 0 };
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_task task;
 	uint8_t cdb[16];
@@ -743,7 +743,7 @@ lba_range_test(void)
 static void
 xfer_len_test(void)
 {
-	struct spdk_bdev bdev = { .blocklen = 512 };
+	struct spdk_bdev bdev = { .blocklen = 512, .md_len = 0 };
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_task task;
 	uint8_t cdb[16];
@@ -837,7 +837,7 @@ xfer_len_test(void)
 static void
 _xfer_test(bool bdev_io_pool_full)
 {
-	struct spdk_bdev bdev = { .blocklen = 512 };
+	struct spdk_bdev bdev = { .blocklen = 512, .md_len = 0 };
 	struct spdk_scsi_lun lun;
 	struct spdk_scsi_task task;
 	uint8_t cdb[16];

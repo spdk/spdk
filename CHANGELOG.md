@@ -12,6 +12,11 @@ spdk_nvme_probe_poll_async() were added to enable this feature.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### bdev
+
+An new API `spdk_bdev_get_data_block_size` has been added to get size of data
+block except for metadata.
+
 ## v19.01:
 
 ### ocf bdev
