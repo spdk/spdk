@@ -4,6 +4,7 @@ from .ui_node_iscsi import UIISCSI
 import rpc.client
 import rpc
 from functools import wraps
+import threading
 
 
 class UIRoot(UINode):
@@ -21,6 +22,7 @@ class UIRoot(UINode):
         self.verbose = False
         self.is_init = self.check_init()
         self.methods = []
+        self.lock = threading.Lock()
 
     def refresh(self):
         self.methods = self.get_rpc_methods(current=True)

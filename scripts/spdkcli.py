@@ -2,10 +2,11 @@
 import sys
 import argparse
 import configshell_fb
+import threading
 from os import getuid
 from rpc.client import JSONRPCException
 from configshell_fb import ConfigShell, shell, ExecutionError
-from spdkcli import UIRoot
+from spdkcli import UIRoot, UIBdevObj, Bdev
 import rpc.client
 from pyparsing import (alphanums, Optional, Suppress, Word, Regex,
                        removeQuotes, dblQuotedString, OneOrMore)
@@ -25,6 +26,80 @@ def add_quotes_to_shell(spdk_shell):
         | '..' | '.'
     path = shell.locatedExpr(bookmark | pathstd | '*')('path')
     spdk_shell._parser = Optional(path) + Optional(command) + Optional(parameters)
+
+
+class NotificationThread(threading.Thread):
+
+    def __init__(self, args, root_node):
+        threading.Thread.__init__(self)
+        self.args = args
+        self.root_node = root_node
+        self.is_notify_listen = False
+        self.verbose = False
+
+    """
+    Supported notification list
+    
+    def _notify_<notification_method>(self, notification)
+
+    """
+    def _notify_delete_malloc_bdev(self, notification):
+
+        if self.verbose:
+            print("Received notification:")
+            print(notification['params'])
+
+        node = self.root_node.get_node("/bdevs/malloc/" + notification['params']['name'])
+        node.parent.remove_child(node)
+
+    def _notify_construct_malloc_bdev(self, notification):
+
+        if self.verbose:
+            print("Received notification:")
+            print(notification['params'])
+
+        node = self.root_node.get_node("/bdevs/malloc/")
+
+        # FIXIT: This is stub, propably notification should be extended with
+        #        undefined parameters or we should to fetch full information
+        #        about bdev with get_bdevs(name)
+        notification['params']['claimed'] = False
+        notification['params']['aliases'] = []
+
+        UIBdevObj(Bdev(notification['params']), node)
+
+    def process_notification(self, notification):
+        with self.root_node.lock:
+            try:
+                getattr(self, "_notify_" + notification['method'])(notification)
+            except AttributeError as e:
+                print("Unsupported notification: %s" % notification)
+            except Exception as e:
+                print(e)
+
+    def run(self):
+        global is_notify_listen
+        notify_ids = set()
+        self.is_notify_listen = True
+        with rpc.client.JSONRPCClient(self.args.socket) as client:
+            notify_ids.add(client.add_request("get_notifications", {'max_count': 10, 'timeout_ms': 10000}))
+            while self.is_notify_listen:
+                notify_ids.add(client.add_request("get_notifications", {'max_count': 10, 'timeout_ms': 5000}))
+                client.flush()
+                try:
+                    response = client.recv()
+                    if response['id'] not in notify_ids:
+                        # We didn't should to receive here responses for other
+                        # requests than get_notifications
+                        print("Wrong notification id %s" % response['id'])
+                        if self.verbose:
+                            print(response)
+                    else:
+                        for notification in response['result']:
+                            self.process_notification(notification)
+                    # TODO: remove id from the list
+                except Exception as e:
+                    print(e)
 
 
 def main():
@@ -61,6 +136,10 @@ def main():
                 sys.exit(1)
             sys.exit(0)
 
+        thread = NotificationThread(args, root_node)
+        thread.verbose = args.verbose
+        thread.start()
+
         spdk_shell.con.display("SPDK CLI v0.1")
         spdk_shell.con.display("")
         while not spdk_shell._exit:
@@ -68,6 +147,9 @@ def main():
                 spdk_shell.run_interactive()
             except (JSONRPCException, ExecutionError) as e:
                 spdk_shell.log.error("%s" % e)
+
+        thread.is_notify_listen = False
+        thread.join()
 
 
 if __name__ == "__main__":
