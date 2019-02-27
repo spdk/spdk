@@ -815,7 +815,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def add_portal_group(args):
         portals = []
-        for p in args.portal_list:
+        for p in args.portal_list.strip().split(' '):
             ip, separator, port_cpumask = p.rpartition(':')
             split_port_cpumask = port_cpumask.split('@')
             if len(split_port_cpumask) == 1:
@@ -833,9 +833,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('portal_list', nargs=argparse.REMAINDER, help="""List of portals in 'host:port@cpumask' format, separated by whitespace
+    p.add_argument('portal_list', help="""List of portals in host:port@cpumask format, separated by whitespace
     (cpumask is optional and can be skipped)
-    Example: '192.168.100.100:3260' '192.168.100.100:3261' '192.168.100.100:3262@0x1""")
+    Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262@0x1""")
     p.set_defaults(func=add_portal_group)
 
     def add_initiator_group(args):
