@@ -172,6 +172,7 @@ struct spdk_iscsi_pdu {
 	struct spdk_iscsi_task *task; /* data tied to a task buffer */
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
+	uint32_t data_buf_len;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
