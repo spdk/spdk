@@ -103,7 +103,7 @@ set_test_opts(void)
 	g_max_qd = g_max_qd_opts[rand() % SPDK_COUNTOF(g_max_qd_opts)];
 
 	printf("Test Options, seed = %u\n", seed);
-	printf("blocklen = %u, strip_size = %u, max_io_size = %u, max_qd = %u, g_max_base_drives = %u, g_max_raids = %u\n",
+	printf("blocklen = %u, strip_size_kb = %u, max_io_size = %u, max_qd = %u, g_max_base_drives = %u, g_max_raids = %u\n",
 	       g_block_len, g_strip_size, g_max_io_size, g_max_qd, g_max_base_drives, g_max_raids);
 }
 
@@ -333,8 +333,8 @@ spdk_json_write_name(struct spdk_json_write_ctx *w, const char *name)
 int spdk_json_write_named_uint32(struct spdk_json_write_ctx *w, const char *name, uint32_t val)
 {
 	struct rpc_construct_raid_bdev *req = rpc_req;
-	if (strcmp(name, "strip_size") == 0) {
-		CU_ASSERT(req->strip_size * 1024 / g_block_len == val);
+	if (strcmp(name, "strip_size_kb") == 0) {
+		CU_ASSERT(req->strip_size_kb == val);
 	} else if (strcmp(name, "blocklen_shift") == 0) {
 		CU_ASSERT(spdk_u32log2(g_block_len) == val);
 	} else if (strcmp(name, "raid_level") == 0) {
@@ -521,7 +521,7 @@ spdk_conf_section_get_intval(struct spdk_conf_section *sp, const char *key)
 
 	if (g_config_level_create) {
 		if (strcmp(key, "StripSize") == 0) {
-			return req->strip_size;
+			return req->strip_size_kb;
 		} else if (strcmp(key, "NumDevices") == 0) {
 			return req->base_bdevs.num_base_bdevs;
 		} else if (strcmp(key, "RaidLevel") == 0) {
@@ -604,7 +604,7 @@ spdk_json_decode_object(const struct spdk_json_val *values,
 
 		_out->name = strdup(req->name);
 		SPDK_CU_ASSERT_FATAL(_out->name != NULL);
-		_out->strip_size = req->strip_size;
+		_out->strip_size_kb = req->strip_size_kb;
 		_out->raid_level = req->raid_level;
 		_out->base_bdevs.num_base_bdevs = req->base_bdevs.num_base_bdevs;
 		for (i = 0; i < req->base_bdevs.num_base_bdevs; i++) {
@@ -871,7 +871,7 @@ verify_raid_config(struct rpc_construct_raid_bdev *r, bool presence)
 				break;
 			}
 			CU_ASSERT(raid_cfg->raid_bdev != NULL);
-			CU_ASSERT(raid_cfg->strip_size == r->strip_size);
+			CU_ASSERT(raid_cfg->strip_size == r->strip_size_kb);
 			CU_ASSERT(raid_cfg->num_base_bdevs == r->base_bdevs.num_base_bdevs);
 			CU_ASSERT(raid_cfg->raid_level == r->raid_level);
 			if (raid_cfg->base_bdev != NULL) {
@@ -909,8 +909,8 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 			}
 			CU_ASSERT(pbdev->config->raid_bdev == pbdev);
 			CU_ASSERT(pbdev->base_bdev_info != NULL);
-			CU_ASSERT(pbdev->strip_size == ((r->strip_size * 1024) / g_block_len));
-			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size * 1024) / g_block_len)));
+			CU_ASSERT(pbdev->strip_size == ((r->strip_size_kb * 1024) / g_block_len));
+			CU_ASSERT(pbdev->strip_size_shift == spdk_u32log2(((r->strip_size_kb * 1024) / g_block_len)));
 			CU_ASSERT(pbdev->blocklen_shift == spdk_u32log2(g_block_len));
 			CU_ASSERT(pbdev->state == raid_state);
 			CU_ASSERT(pbdev->num_base_bdevs == r->base_bdevs.num_base_bdevs);
@@ -930,7 +930,7 @@ verify_raid_bdev(struct rpc_construct_raid_bdev *r, bool presence, uint32_t raid
 					min_blockcnt = bdev->blockcnt;
 				}
 			}
-			CU_ASSERT((((min_blockcnt / (r->strip_size * 1024 / g_block_len)) * (r->strip_size * 1024 /
+			CU_ASSERT((((min_blockcnt / (r->strip_size_kb * 1024 / g_block_len)) * (r->strip_size_kb * 1024 /
 					g_block_len)) * r->base_bdevs.num_base_bdevs) == pbdev->bdev.blockcnt);
 			CU_ASSERT(strcmp(pbdev->bdev.product_name, "Pooled Device") == 0);
 			CU_ASSERT(pbdev->bdev.write_cache == 0);
@@ -1075,7 +1075,7 @@ create_test_req(struct rpc_construct_raid_bdev *r, const char *raid_name, uint32
 
 	r->name = strdup(raid_name);
 	SPDK_CU_ASSERT_FATAL(r->name != NULL);
-	r->strip_size = (g_strip_size * g_block_len) / 1024;
+	r->strip_size_kb = (g_strip_size * g_block_len) / 1024;
 	r->raid_level = 0;
 	r->base_bdevs.num_base_bdevs = g_max_base_drives;
 	for (i = 0; i < g_max_base_drives; i++, bbdev_idx++) {
@@ -1208,7 +1208,7 @@ test_construct_raid_invalid_args(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_test_req(&req, "raid1", 0, false);
-	req.strip_size = 1231;
+	req.strip_size_kb = 1231;
 	g_rpc_err = 0;
 	g_json_decode_obj_construct = 1;
 	spdk_rpc_construct_raid_bdev(NULL, NULL);
@@ -2158,7 +2158,7 @@ test_create_raid_from_config_invalid_params(void)
 	verify_raid_bdev_present("raid1", false);
 
 	create_test_req(&req, "raid1", 0, false);
-	req.strip_size = 1234;
+	req.strip_size_kb = 1234;
 	CU_ASSERT(raid_bdev_init() != 0);
 	free_test_req(&req);
 	verify_raid_config_present("raid1", false);
