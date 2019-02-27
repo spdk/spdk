@@ -16,6 +16,24 @@
       "revId": "ffa1c88d8a39461f170135d62c6608e71e52f31a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2402e3a4_656ff81b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-27T23:25:48Z",
+      "side": 1,
+      "message": "So the problem is that I open, then call reduce_init, and then in that callback do the claim. So, if I open early with RO reduce_init will fail and I don\u0027t want to claim before reduce_init completed OK.... looking at lvol it opens the base dev with RW.  I can either leave it as is (well, I have an extra open in there right now to fix) or I can close it in the reduce init CB and leave the open RW that\u0027s in my claim function.  The latter seems better so is what I\u0027ll implement, let me know what you think,",
+      "parentUuid": "e123553d_d728ec57",
+      "revId": "ffa1c88d8a39461f170135d62c6608e71e52f31a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
