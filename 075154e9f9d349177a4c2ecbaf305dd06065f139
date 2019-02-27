@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ef3dade8_2ad66122",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4594,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-27T20:15:59Z",
+      "side": 1,
+      "message": "we can cache it into pdu and refer it from pdu later.\nThen we can remove the extra overhead and remove the per portal group option.",
+      "range": {
+        "startLine": 4594,
+        "startChar": 2,
+        "endLine": 4594,
+        "endChar": 8
+      },
+      "revId": "075154e9f9d349177a4c2ecbaf305dd06065f139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "592eebab_2e1197f9",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4616,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-27T20:15:59Z",
+      "side": 1,
+      "message": "we can cache it into pdu and refer it from pdu later. Then we can remove the per-pg-option auto_dif.",
+      "range": {
+        "startLine": 4615,
+        "startChar": 2,
+        "endLine": 4616,
+        "endChar": 24
+      },
+      "revId": "075154e9f9d349177a4c2ecbaf305dd06065f139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e1e65c63_62366970",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 4638,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-27T20:15:59Z",
+      "side": 1,
+      "message": "same as above",
+      "range": {
+        "startLine": 4637,
+        "startChar": 0,
+        "endLine": 4638,
+        "endChar": 24
+      },
+      "revId": "075154e9f9d349177a4c2ecbaf305dd06065f139",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
