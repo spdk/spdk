@@ -404,9 +404,8 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
 int spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
-int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn,
-			  struct iovec *iovs, struct spdk_iscsi_pdu *pdu,
-			  uint32_t *mapped_length);
+int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
+			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
 int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
