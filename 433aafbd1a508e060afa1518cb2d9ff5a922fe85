@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb63e9e3_0c8f9a11",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T07:59:30Z",
+      "side": 1,
+      "message": "you don\u0027t need to call spdk_init_opal_dev() if the drive can\u0027t support security send/receive command, you can rebase after your NVMe driver patch.",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de977a3a_fc5718b7",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T07:59:30Z",
+      "side": 1,
+      "message": "if (iter-\u003eopal_dev !\u003d NULL) {\n    continue;\n}",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "979c8d24_c10f577a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T07:59:30Z",
+      "side": 1,
+      "message": "This should not an error message, SPDK_INFOLOG is ok.",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0a386f2f_9e2b17a2",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T07:59:30Z",
+      "side": 1,
+      "message": "You don\u0027t need to return a dev structure here for the devices which can\u0027t support OPAL.",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0f6f19eb_b603c0e5",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T07:59:30Z",
+      "side": 1,
+      "message": "Can we rename to dev_handler too, actually I think using spdk_nvme_ctrlr maybe more straightforward.",
+      "range": {
+        "startLine": 310,
+        "startChar": 1,
+        "endLine": 310,
+        "endChar": 12
+      },
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
