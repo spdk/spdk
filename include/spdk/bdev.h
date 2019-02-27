@@ -427,6 +427,19 @@ uint32_t spdk_bdev_get_md_size(const struct spdk_bdev *bdev);
 bool spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev);
 
 /**
+ * Get block device data block size.
+ *
+ * Data block size is equal to block size if there is no metadata or
+ * metadata is separated with block data, or equal to block size minus
+ * metadata size if there is metadata and it is interleaved with
+ * block data.
+ *
+ * \param bdev Block device to query.
+ * \return Size of data block for this bdev in bytes.
+ */
+uint32_t spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev);
+
+/**
  * Get DIF type of the block device.
  *
  * \param bdev Block device to query.
