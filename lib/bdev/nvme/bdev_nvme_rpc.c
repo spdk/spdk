@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "bdev_nvme.h"
+#include "common.h"
 
 #include "spdk/string.h"
 #include "spdk/rpc.h"

@@ -10,6 +10,7 @@
 	g_spdk_iscsi_opts;
 	_spdk_trace_record;
 	g_trace_histories;
+	g_nvme_bdev_ctrlrs;
 
 	local: *;
 };
