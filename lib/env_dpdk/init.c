@@ -50,6 +50,7 @@
 
 static char **g_eal_cmdline;
 static int g_eal_cmdline_argcount;
+static bool g_external_init = true;
 
 static char *
 _sprintf_alloc(const char *format, ...)
@@ -395,6 +396,8 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	int i, rc;
 	int orig_optind;
 
+	g_external_init = false;
+
 	rc = spdk_build_eal_cmdline(opts);
 	if (rc < 0) {
 		fprintf(stderr, "Invalid arguments to initialize DPDK\n");
@@ -444,4 +447,10 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	return spdk_env_dpdk_post_init();
+}
+
+bool
+spdk_env_dpdk_external_init(void)
+{
+	return g_external_init;
 }

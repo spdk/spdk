@@ -52,6 +52,14 @@ extern "C" {
  */
 int spdk_env_dpdk_post_init(void);
 
+/**
+ * Check if DPDK was initialized external to the SPDK env_dpdk library.
+ *
+ * \return true if DPDK was initialized external to the SPDK env_dpdk library.
+ * \return false otherwise
+ */
+bool spdk_env_dpdk_external_init(void);
+
 #ifdef __cplusplus
 }
 #endif
