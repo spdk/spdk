@@ -100,3 +100,6 @@ Users may format the drive with separate metadata, fio_plugin can't get the exac
 before starting FIO, so export one option here 'md_per_io_size'.  Users can add it in the configuration
 file when the metadata size for per I/O is larger than 4096 bytes.  If I/O size was larger than 128KiB and
 the drive was formatted with 512 + 16 or 4096 + 128, metadata size per I/O will be larger than 4096 bytes.
+
+Expose two options 'apptag' and 'apptag_mask', users can add them in the configuration file when using
+application tag and application tag mask in end-to-end data protection.
