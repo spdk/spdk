@@ -347,7 +347,7 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.name) {
-		ctrlr = spdk_bdev_nvme_lookup_ctrlr(req.name);
+		ctrlr = nvme_bdev_ctrlr_get_by_name(req.name);
 		if (ctrlr == NULL) {
 			SPDK_ERRLOG("ctrlr '%s' does not exist\n", req.name);
 			goto invalid;
