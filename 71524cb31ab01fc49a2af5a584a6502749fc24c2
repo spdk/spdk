@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "86a09d2d_a5038337",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T17:52:33Z",
+      "side": 1,
+      "message": "If the value is 0, then the field is considered invalid and the controller-level property (AWUN in this case) should be used instead. I debated whether to do an else here that printed out the AWUN value (which may not be 0) when NAWUN is 0, but instead I opted to just not print out the value at all.",
+      "parentUuid": "2c678634_93f0d54b",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 22
+      },
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b50669b6_d723ec38",
         "filename": "examples/nvme/identify/identify.c",
         "patchSetId": 1
