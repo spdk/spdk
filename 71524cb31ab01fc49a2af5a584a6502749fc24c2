@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c678634_93f0d54b",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T10:02:22Z",
+      "side": 1,
+      "message": "I think this line is not required.",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 22
+      },
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b50669b6_d723ec38",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T10:02:22Z",
+      "side": 1,
+      "message": "same here.",
+      "range": {
+        "startLine": 744,
+        "startChar": 2,
+        "endLine": 744,
+        "endChar": 23
+      },
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e8c4841_5c70d536",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 748,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T10:02:22Z",
+      "side": 1,
+      "message": "same here.",
+      "range": {
+        "startLine": 748,
+        "startChar": 2,
+        "endLine": 748,
+        "endChar": 22
+      },
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
