@@ -45,6 +45,7 @@
 #include "spdk/likely.h"
 #include "spdk/queue.h"
 #include "spdk/util.h"
+#include "spdk/env_dpdk.h"
 
 #ifdef __FreeBSD__
 #define SPDK_VFIO_ENABLED 0
@@ -702,9 +703,25 @@ memory_hotplug_cb(enum rte_mem_event event_type,
 	if (event_type == RTE_MEM_EVENT_ALLOC) {
 		spdk_mem_register((void *)addr, len);
 
-		/* Now mark each segment so that DPDK won't later free it.
-		 * This ensures we don't have to deal with the memory
-		 * getting freed in different units than it was allocated.
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+		if (!spdk_env_dpdk_external_init()) {
+			return;
+		}
+#endif
+
+		/* Prior to DPDK 19.02, we have to worry about DPDK
+		 * freeing memory in different units than it was allocated.
+		 * That doesn't work with things like RDMA MRs.  So for
+		 * those versions of DPDK, mark each segment so that DPDK
+		 * won't later free it.  That ensures we don't have to deal
+		 * with that scenario.
+		 *
+		 * DPDK 19.02 added the --match-allocations RTE flag to
+		 * avoid this condition.
+		 *
+		 * Note: if the user initialized DPDK separately, we can't
+		 * be sure that --match-allocations was specified, so need
+		 * to still mark the segments so they aren't freed.
 		 */
 		while (len > 0) {
 			struct rte_memseg *seg;
