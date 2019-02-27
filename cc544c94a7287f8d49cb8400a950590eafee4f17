@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bef37923_f49a1dfc",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:16:17Z",
+      "side": 1,
+      "message": "Actually, none of these fields are used in this patch. Let\u0027s add them in the patch that adds reservation acquire support.",
+      "parentUuid": "ee4029bd_30e47445",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "19bc313d_fba59ea9",
         "filename": "lib/nvmf/nvmf_internal.h",
         "patchSetId": 11
@@ -64,6 +82,23 @@
       "writtenOn": "2019-02-27T19:56:15Z",
       "side": 1,
       "message": "Maybe just call the list \u0027registrants\u0027",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f1e2ced_ae9696ae",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:16:17Z",
+      "side": 1,
+      "message": "Now that I look at the spec - creating a registrant is done on a per-namespace level. So these 3 fields all need to move to spdk_nvmf_ns.",
       "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -116,6 +151,24 @@
       "side": 1,
       "message": "Actually, to support multiple different types of reservations, it does need to be a little bit more complex. Maybe put a list of reservation holders on the namespace though, instead of having a list of namespaces on the reservation registrant.",
       "parentUuid": "959788f2_b8fb4e85",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7098d05f_7108f7d8",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:16:17Z",
+      "side": 1,
+      "message": "In order to simplify things, I say for this first series of patches we only support 4 of the reservation types.\nWRITE_EXCLUSIVE,\nEXCLUSIVE_ACCESS,\nEXCLUSIVE_REG_ONLY,\nEXCLUSIVE_ACCESS_REG_ONLY.\n\nFail these two for now:\nWRITE_EXCLUSIVE_ALL_REGS\nEXCLUSVIE_ACCESS_ALL_REGS\n\nBy doing this, we guarantee that there is only a single reservation holder at any time. Then you can simply point at the registrant from the namespace, drop the list of namespaces from the registrant, and here just loop over the namespaces in the subsystem and look for ones where the holder points at this registrant.",
+      "parentUuid": "f5d2a8b1_de560d34",
       "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
