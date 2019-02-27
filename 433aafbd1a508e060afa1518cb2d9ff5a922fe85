@@ -36,6 +36,29 @@
     },
     {
       "key": {
+        "uuid": "488d0ce0_82726285",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T08:02:43Z",
+      "side": 1,
+      "message": "Let\u0027s rename all the APIs with spdk_opal_ prefix, you need to apply for all your other functions.",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 54
+      },
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "979c8d24_c10f577a",
         "filename": "lib/opal/opal.c",
         "patchSetId": 23
