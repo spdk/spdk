@@ -101,6 +101,10 @@ spdk_scsi_lun_get_id(const struct spdk_scsi_lun *lun)
 DEFINE_STUB(spdk_scsi_lun_is_removing, bool, (const struct spdk_scsi_lun *lun),
 	    true);
 
+DEFINE_STUB(spdk_scsi_lun_get_dif_ctx, int,
+	    (struct spdk_scsi_lun *lun, uint8_t *cdb, uint32_t offset,
+	     struct spdk_dif_ctx *dif_ctx), -1);
+
 struct spdk_scsi_lun *
 spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 {

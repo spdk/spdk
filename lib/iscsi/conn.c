@@ -1325,9 +1325,15 @@ void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
+	int rc;
 
 	if (conn->auto_dif) {
-		SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "DIF verification for read I/Os will be done here\n");
+		rc = spdk_iscsi_get_dif_ctx(conn, pdu, true, &pdu->dif_ctx);
+		if (rc == 0) {
+			pdu->dif_strip = true;
+		} else {
+			pdu->dif_strip = false;
+		}
 	}
 
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {

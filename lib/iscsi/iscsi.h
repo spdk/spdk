@@ -47,6 +47,7 @@
 
 #include "spdk/assert.h"
 #include "spdk/util.h"
+#include "spdk/dif.h"
 
 #define SPDK_ISCSI_DEFAULT_NODEBASE "iqn.2016-06.io.spdk"
 
@@ -173,6 +174,8 @@ struct spdk_iscsi_pdu {
 	struct spdk_iscsi_task *task; /* data tied to a task buffer */
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
+	struct spdk_dif_ctx dif_ctx;
+	bool dif_strip;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
