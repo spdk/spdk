@@ -22,6 +22,30 @@
       "revId": "4cea613b04ed71d8dccf4c78d6173e48c2900fc2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5ff6890_cd86e1de",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-27T16:28:26Z",
+      "side": 1,
+      "message": "ya sure, easy enough.  Note that the passthru module is intended to be the template for new vbdevs and it\u0027s how I started both crypto and this one so that comment is there in the others as well.  I\u0027ll get those updated too",
+      "parentUuid": "6600bc4f_769f9b7a",
+      "range": {
+        "startLine": 47,
+        "startChar": 21,
+        "endLine": 47,
+        "endChar": 31
+      },
+      "revId": "4cea613b04ed71d8dccf4c78d6173e48c2900fc2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
