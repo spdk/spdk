@@ -191,6 +191,9 @@ DEFINE_STUB_V(spdk_iscsi_task_mgmt_cpl, (struct spdk_scsi_task *scsi_task));
 DEFINE_STUB(spdk_iscsi_conn_read_data, int,
 	    (struct spdk_iscsi_conn *conn, int bytes, void *buf), 0);
 
+DEFINE_STUB(spdk_iscsi_conn_readv_data, int,
+	    (struct spdk_iscsi_conn *conn, struct iovec *iov, int iovcnt), 0);
+
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
