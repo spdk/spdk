@@ -564,7 +564,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 }
 
 int
-spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
+spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
 		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
 {
 	int iovcnt = 0;
@@ -573,6 +573,10 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 	uint32_t data_len;
 	uint32_t iov_offset;
 	uint32_t mapped_length = 0;
+
+	if (num_iovs == 0) {
+		return 0;
+	}
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = DGET24(pdu->bhs.data_segment_len);
@@ -595,6 +599,9 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		mapped_length += ISCSI_BHS_LEN - iov_offset;
 		iov_offset = 0;
 		iovcnt++;
+		if (iovcnt == num_iovs) {
+			goto end;
+		}
 	}
 	/* AHS */
 	if (total_ahs_len > 0) {
@@ -606,6 +613,9 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 			mapped_length += 4 * total_ahs_len - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
+			if (iovcnt == num_iovs) {
+				goto end;
+			}
 		}
 	}
 
@@ -619,6 +629,9 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 			mapped_length += ISCSI_DIGEST_LEN - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
+			if (iovcnt == num_iovs) {
+				goto end;
+			}
 		}
 	}
 
@@ -632,6 +645,9 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 			mapped_length += data_len - iov_offset;
 			iov_offset = 0;
 			iovcnt++;
+			if (iovcnt == num_iovs) {
+				goto end;
+			}
 		}
 	}
 
@@ -645,6 +661,7 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs,
 		}
 	}
 
+end:
 	if (_mapped_length != NULL) {
 		*_mapped_length = mapped_length;
 	}
