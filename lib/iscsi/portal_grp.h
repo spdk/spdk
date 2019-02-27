@@ -54,6 +54,7 @@ struct spdk_iscsi_portal {
 struct spdk_iscsi_portal_grp {
 	int ref;
 	int tag;
+	bool auto_dif;
 	TAILQ_ENTRY(spdk_iscsi_portal_grp)	tailq;
 	TAILQ_HEAD(, spdk_iscsi_portal)		head;
 };
@@ -64,7 +65,7 @@ struct spdk_iscsi_portal *spdk_iscsi_portal_create(const char *host, const char 
 		const char *cpumask);
 void spdk_iscsi_portal_destroy(struct spdk_iscsi_portal *p);
 
-struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag);
+struct spdk_iscsi_portal_grp *spdk_iscsi_portal_grp_create(int tag, bool auto_dif);
 void spdk_iscsi_portal_grp_add_portal(struct spdk_iscsi_portal_grp *pg,
 				      struct spdk_iscsi_portal *p);
 void spdk_iscsi_portal_grp_destroy(struct spdk_iscsi_portal_grp *pg);

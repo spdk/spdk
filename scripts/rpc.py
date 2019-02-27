@@ -831,7 +831,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.iscsi.add_portal_group(
             args.client,
             portals=portals,
-            tag=args.tag)
+            tag=args.tag,
+            auto_dif=args.auto_dif)
 
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
@@ -839,6 +840,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('portal_list', help="""List of portals in host:port@cpumask format, separated by whitespace
     (cpumask is optional and can be skipped)
     Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262@0x1""")
+    p.add_argument('-d', '--auto-dif', help='Enable DIF insert and strip for I/Os through this portal group.',
+                   action='store_true')
     p.set_defaults(func=add_portal_group)
 
     def add_initiator_group(args):

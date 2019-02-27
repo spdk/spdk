@@ -362,17 +362,18 @@ def add_pg_ig_maps(client, pg_ig_maps, name):
     return client.call('add_pg_ig_maps', params)
 
 
-def add_portal_group(client, portals, tag):
+def add_portal_group(client, portals, tag, auto_dif):
     """Add a portal group.
 
     Args:
         portals: List of portals, e.g. [{'host': ip, 'port': port}] or [{'host': ip, 'port': port, 'cpumask': cpumask}]
         tag: Initiator group tag (unique, integer > 0)
+        auto_dif: Enable DIF insert and strip for I/Os through this portal group.
 
     Returns:
         True or False
     """
-    params = {'tag': tag, 'portals': portals}
+    params = {'tag': tag, 'portals': portals, 'auto_dif': auto_dif}
     return client.call('add_portal_group', params)
 
 
