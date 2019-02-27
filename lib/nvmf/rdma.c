@@ -2784,9 +2784,9 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
+				assert(rdma_req->num_outstanding_data_wr > 0);
 				rdma_req->num_outstanding_data_wr--;
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
-					assert(rdma_req->num_outstanding_data_wr > 0);
 					rqpair->current_read_depth--;
 					if (rdma_req->num_outstanding_data_wr == 0) {
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
