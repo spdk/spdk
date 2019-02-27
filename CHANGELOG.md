@@ -18,6 +18,7 @@ New API spdk_nvme_ctrlr_get_flags() was added.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+
 ### thread
 
 Added spdk_thread_has_pollers() function to verify if there are
@@ -30,6 +31,11 @@ to be performed on the thread at given time.
 
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
+
+### iscsi target
+
+Python script for add_portal_group RPC has been changed so that portal list is
+made of a single argument and portals are separated by whitespace.
 
 ## v19.01:
 
