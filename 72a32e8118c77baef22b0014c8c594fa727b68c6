@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9d2af40_d70114d8",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1112,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T08:13:40Z",
+      "side": 1,
+      "message": "definition and calloc should be in different lines.",
+      "revId": "72a32e8118c77baef22b0014c8c594fa727b68c6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
