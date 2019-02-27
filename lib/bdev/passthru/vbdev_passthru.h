@@ -43,7 +43,7 @@
  * Create new pass through bdev.
  *
  * \param bdev_name Bdev on which pass through vbdev will be created.
- * \param vbdev_name Vbdev name.
+ * \param vbdev_name Name of the pass through bdev.
  * \return 0 on success, other on failure.
  */
 int create_passthru_disk(const char *bdev_name, const char *vbdev_name);
