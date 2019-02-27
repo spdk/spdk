@@ -164,6 +164,7 @@ struct spdk_iscsi_pdu {
 	size_t data_segment_len;
 	int bhs_valid_bytes;
 	int ahs_valid_bytes;
+	int data_buf_len;
 	int data_valid_bytes;
 	int hdigest_valid_bytes;
 	int ddigest_valid_bytes;
