@@ -1172,9 +1172,9 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 	 *  spdk_iscsi_build_iovs() and so applied to remaining PDUs too.
 	 *  But extra overhead is negligible.
 	 */
-	while (pdu != NULL && ((num_iovs - iovcnt) >= 5)) {
-		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], pdu,
-						&mapped_length);
+	while (pdu != NULL && ((num_iovs - iovcnt) > 0)) {
+		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], num_iovs - iovcnt,
+						pdu, &mapped_length);
 		total_length += mapped_length;
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
