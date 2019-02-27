@@ -46,13 +46,14 @@
 #include "optgroup.h"
 
 #define NVME_IO_ALIGN		4096
-#define FIO_NVME_PI_APPTAG	0x1234
 
 static bool g_spdk_env_initialized;
 static int g_spdk_enable_sgl = 0;
 static uint32_t g_spdk_pract_flag;
 static uint32_t g_spdk_prchk_flags;
 static uint32_t g_spdk_md_per_io_size = 4096;
+static uint16_t g_spdk_apptag;
+static uint16_t g_spdk_apptag_mask = 0xffff;
 
 struct spdk_fio_options {
 	void	*pad;	/* off1 used in option descriptions may not be 0 */
@@ -63,6 +64,8 @@ struct spdk_fio_options {
 	int	pi_act;
 	char	*pi_chk;
 	int	md_per_io_size;
+	int	apptag;
+	int	apptag_mask;
 	char	*digest_enable;
 };
 
@@ -399,6 +402,8 @@ static int spdk_fio_setup(struct thread_data *td)
 		g_spdk_enable_sgl = fio_options->enable_sgl;
 		parse_pract_flag(fio_options->pi_act);
 		g_spdk_md_per_io_size = spdk_max(fio_options->md_per_io_size, 4096);
+		g_spdk_apptag = (uint16_t)fio_options->apptag;
+		g_spdk_apptag_mask = (uint16_t)fio_options->apptag_mask;
 		parse_prchk_flags(fio_options->pi_chk);
 		if (spdk_env_init(&opts) < 0) {
 			SPDK_ERRLOG("Unable to initialize SPDK env\n");
@@ -575,7 +580,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
 			       true, false,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
-			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG, 0);
+			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return;
@@ -611,7 +616,7 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, block_size, md_size,
 			       false, false,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
-			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG, 0);
+			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
 		return;
@@ -992,6 +997,26 @@ static struct fio_option options[] = {
 		.off1		= offsetof(struct spdk_fio_options, md_per_io_size),
 		.def		= "4096",
 		.help		= "Size of separate metadata buffer per I/O (Default: 4096)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "apptag",
+		.lname		= "Application Tag used in Protection Information",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, apptag),
+		.def		= "0",
+		.help		= "Application Tag used in Protection Information field (Default: 0)",
+		.category	= FIO_OPT_C_ENGINE,
+		.group		= FIO_OPT_G_INVALID,
+	},
+	{
+		.name		= "apptag_mask",
+		.lname		= "Application Tag Mask",
+		.type		= FIO_OPT_INT,
+		.off1		= offsetof(struct spdk_fio_options, apptag_mask),
+		.def		= "0xffff",
+		.help		= "Application Tag Mask used with Application Tag (Default: 0xffff)",
 		.category	= FIO_OPT_C_ENGINE,
 		.group		= FIO_OPT_G_INVALID,
 	},
