@@ -78,6 +78,9 @@ spdk_sock_close(struct spdk_sock **sock)
 DEFINE_STUB(spdk_sock_recv, ssize_t,
 	    (struct spdk_sock *sock, void *buf, size_t len), 0);
 
+DEFINE_STUB(spdk_sock_readv, ssize_t,
+	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
+
 DEFINE_STUB(spdk_sock_writev, ssize_t,
 	    (struct spdk_sock *sock, struct iovec *iov, int iovcnt), 0);
 
