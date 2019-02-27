@@ -910,6 +910,42 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
+int
+spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
+			   struct iovec *iov, int iovcnt)
+{
+	int ret;
+
+	if (iov == NULL || iovcnt == 0) {
+		return 0;
+	}
+
+	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
+
+	if (ret > 0) {
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
+		return ret;
+	}
+
+	if (ret < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (errno == ECONNRESET) {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_readv() failed, errno %d: %s\n",
+				      errno, spdk_strerror(errno));
+		} else {
+			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
+		}
+	}
+
+	/* connection closed */
+	return SPDK_ISCSI_CONNECTION_FATAL;
+}
+
 void
 spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
