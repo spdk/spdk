@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7086387c_e297d95c",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-27T08:08:40Z",
+      "side": 1,
+      "message": "static size_t\nspdk_response_parse_tiny(), this is SPDK\u0027s code style.",
+      "revId": "ddc25b683cc6becf8ae9b6489d6faae8f3d4e900",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
