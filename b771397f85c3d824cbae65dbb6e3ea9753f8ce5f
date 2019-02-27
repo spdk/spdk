@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8ab9640_d4fc6592",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:40:45Z",
+      "side": 1,
+      "message": "Maybe create a struct that holds a channel and the reservation information, and allocate an array of those? We\u0027ll likely need to store more information per-namespace here eventually, so that would set us up for the future.",
+      "revId": "b771397f85c3d824cbae65dbb6e3ea9753f8ce5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
