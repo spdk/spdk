@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2326c771_539788b6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 11
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:38:24Z",
+      "side": 1,
+      "message": "The specification says that registration is per-namespace in section 8.8.2.",
+      "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6355da6f_50367355",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1582,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:38:24Z",
+      "side": 1,
+      "message": "I think this logic should be:\n\nif (ns-\u003eholder \u003d\u003d reg \u0026\u0026 ns-\u003ertype \u003d\u003d rtype) {\n  /* No-op */\n} else if (ns-\u003eholder \u003d\u003d NULL) {\n  nvmf_ns_acquire_reservation(...);\n} else {\n  status \u003d SPDK_NVME_SC_RESERVATION_CONFLICT;\n}",
+      "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "162a838d_33d9cfed",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1603,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T20:38:24Z",
+      "side": 1,
+      "message": "I suggested in the earlier patch to drop support temporarily for the ALL_REGS versions of these reservations, which I think makes things much, much simpler. I think this part in particular will get a lot easier to manage.",
+      "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
