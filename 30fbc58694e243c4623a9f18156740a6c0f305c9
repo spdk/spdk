@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5e1bdb93_37f57723",
+        "filename": "lib/bdev/nvme/common_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-27T19:22:07Z",
+      "side": 1,
+      "message": "Hi Maciek,\n\nI think the code you\u0027ve moved to common.c in this patch makes sense.  I\u0027m not as sure about this new common_rpc.c file though.  I was thinking that eventually, all of the RPCs in bdev_nvme_rpc.c would be \"common\".  I\u0027m just wondering if we should just keep this code in bdev_nvme_rpc.c for now.\n\nWe needed to separate out code into common.c/common.h, because both standard and ftl .c files needed to call functions there.  But RPCs are different - they aren\u0027t called by the standard and ftl .c files.\n\nWhat do you think?\n\n-Jim",
+      "revId": "30fbc58694e243c4623a9f18156740a6c0f305c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
