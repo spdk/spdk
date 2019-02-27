@@ -353,8 +353,10 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 	if (pdu->data_buf == NULL) {
 		if (data_len <= spdk_get_immediate_data_buffer_size()) {
 			pool = g_spdk_iscsi.pdu_immediate_data_pool;
+			pdu->data_buf_len = spdk_get_immediate_data_buffer_size();
 		} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 			pool = g_spdk_iscsi.pdu_data_out_pool;
+			pdu->data_buf_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 		} else {
 			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
