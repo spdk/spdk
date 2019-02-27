@@ -34,25 +34,26 @@ class UINode(ConfigNode):
         self.ui_command_ls(path, depth)
 
     def execute_command(self, command, pparams=[], kparams={}):
-        try:
-            result = ConfigNode.execute_command(self, command,
+        with self.get_root().lock:
+            try:
+                result = ConfigNode.execute_command(self, command,
                                                 pparams, kparams)
-        except Exception as e:
-            raise e
-        else:
-            self.shell.log.debug("Command %s succeeded." % command)
-            return result
-        finally:
-            if self.shell.interactive and\
-                command in ["create", "delete", "delete_all", "add_initiator",
-                            "allow_any_host", "split_bdev", "add_lun",
-                            "add_pg_ig_maps", "remove_target", "add_secret",
-                            "destruct_split_bdev", "delete_pmem_pool",
-                            "create_pmem_pool", "delete_secret_all",
-                            "delete_initiator", "set_auth", "delete_secret",
-                            "delete_pg_ig_maps"]:
-                self.get_root().refresh()
-                self.refresh_node()
+            except Exception as e:
+                raise e
+            else:
+                self.shell.log.debug("Command %s succeeded." % command)
+                return result
+            finally:
+                if self.shell.interactive and\
+                    command in ["create", "delete", "delete_all", "add_initiator",
+                                "allow_any_host", "split_bdev", "add_lun",
+                                "add_pg_ig_maps", "remove_target", "add_secret",
+                                "destruct_split_bdev", "delete_pmem_pool",
+                                "create_pmem_pool", "delete_secret_all",
+                                "delete_initiator", "set_auth", "delete_secret",
+                                "delete_pg_ig_maps"]:
+                    self.get_root().refresh()
+                    self.refresh_node()
 
 
 class UIBdevs(UINode):
@@ -194,6 +195,16 @@ class UIMallocBdev(UIBdev):
         name - Is a unique identifier of the malloc bdev to be deleted - UUID number or name alias.
         """
         self.delete(name)
+
+    def execute_command(self, command, pparams=[], kparams={}):
+        try:
+            result = ConfigNode.execute_command(self, command,
+                                                pparams, kparams)
+        except Exception as e:
+            raise e
+        else:
+            self.shell.log.debug("Command %s succeeded." % command)
+            return result
 
 
 class UIAIOBdev(UIBdev):
