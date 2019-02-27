@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ee4029bd_30e47445",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "This crkey isn\u0027t actually used in this patch. Can you add it when you need it?",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19bc313d_fba59ea9",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 290,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "Align these data members",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8e428a6_49103685",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "num_registrants? or num_reg?",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "05fd3069_f1708eb5",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 295,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "Maybe just call the list \u0027registrants\u0027",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d00d12f8_db7a1d48",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1286,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "Instead of starting all of these function names with \"nvmf_subsys\" can you start them all with \"nvmf_subsystem_reservation_***\"? I\u0027m thinking:\n\nnvmf_subsystem_reservation_get_registrant\nnvmf_subsystem_reservation_add_registrant\nnvmf_subsystem_reservation_remove_registrant\nnvmf_subsystem_reservation_update_registrant\n\nI know these are really long function names, but they\u0027re nicely descriptive.",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "959788f2_b8fb4e85",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1364,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-27T19:56:15Z",
+      "side": 1,
+      "message": "I don\u0027t think you need the list of namespaces in the registrant - just loop over the list of namespaces in the subsystem here and check if the holder is this registrant.",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
