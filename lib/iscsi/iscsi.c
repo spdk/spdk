@@ -344,11 +344,38 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+static int
+spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
+				 struct spdk_iscsi_pdu *pdu, int data_len)
+{
+	struct spdk_mempool *pool;
+
+	if (pdu->data_buf == NULL) {
+		if (data_len <= spdk_get_immediate_data_buffer_size()) {
+			pool = g_spdk_iscsi.pdu_immediate_data_pool;
+		} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
+			pool = g_spdk_iscsi.pdu_data_out_pool;
+		} else {
+			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
+				    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
+			return SPDK_ISCSI_CONNECTION_FATAL;
+		}
+		pdu->mobj = spdk_mempool_get(pool);
+		if (pdu->mobj == NULL) {
+			return 0;
+		}
+		pdu->data_buf = pdu->mobj->buf;
+	}
+
+	return spdk_iscsi_conn_read_data(conn,
+					 data_len - pdu->data_valid_bytes,
+					 pdu->data_buf + pdu->data_valid_bytes);
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
 	struct spdk_iscsi_pdu *pdu;
-	struct spdk_mempool *pool;
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
@@ -426,30 +453,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	/* copy the actual data into local buffer */
 	if (pdu->data_valid_bytes < data_len) {
-		if (pdu->data_buf == NULL) {
-			if (data_len <= spdk_get_immediate_data_buffer_size()) {
-				pool = g_spdk_iscsi.pdu_immediate_data_pool;
-			} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
-				pool = g_spdk_iscsi.pdu_data_out_pool;
-			} else {
-				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
-				*_pdu = NULL;
-				spdk_put_pdu(pdu);
-				conn->pdu_in_progress = NULL;
-				return SPDK_ISCSI_CONNECTION_FATAL;
-			}
-			pdu->mobj = spdk_mempool_get(pool);
-			if (pdu->mobj == NULL) {
-				*_pdu = NULL;
-				return SPDK_SUCCESS;
-			}
-			pdu->data_buf = pdu->mobj->buf;
-		}
-
-		rc = spdk_iscsi_conn_read_data(conn,
-					       data_len - pdu->data_valid_bytes,
-					       pdu->data_buf + pdu->data_valid_bytes);
+		rc = spdk_iscsi_read_pdu_data_segment(conn, pdu, data_len);
 		if (rc < 0) {
 			*_pdu = NULL;
 			spdk_put_pdu(pdu);
