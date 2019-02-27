@@ -99,3 +99,6 @@ PI metadata is 8 Byte, then blocksize in fio configure file should be 520 Byte:
 Users may format the drive with separate metadata support, fio_plugin can't get the exactly size of metadata for
 one request before the real workloads, so export one option here 'md_size', users can add it in the configuration
 file when the metadata size for one request is larger than 4096 bytes.
+
+Application Tag and Application Tag Mask can be used with end-to-end data protection, so 'apptag' and 'apptag_mask'
+can be set via the configuration file.
