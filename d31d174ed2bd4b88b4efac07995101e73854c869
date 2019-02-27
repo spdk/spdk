@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "521a988e_3775f076",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-27T00:13:21Z",
+      "side": 1,
+      "message": "a cleaner way to do this would be:\n\n$(ISAL_DIR)/isa-l:\n  @ln -s $(ISAL_DIR)/include $(ISAL_DIR)/isa-l\n\nall: $(ISAL_DIR)/isa-l\n  $(Q)$(MAKE)...\n\nThen you can avoid the -f flag.  If you make again, it will see that $(ISAL_DIR)/isa-l already exists and won\u0027t try to do the symlink again.",
+      "revId": "d31d174ed2bd4b88b4efac07995101e73854c869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28ebbee5_61d846e5",
+        "filename": "isalbuild/Makefile",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-27T00:13:21Z",
+      "side": 1,
+      "message": "do you still want to remove the symlink here?  you had this in the main Makefile\u0027s clean target in the earlier patch - I liked the idea of cleaning it up",
+      "revId": "d31d174ed2bd4b88b4efac07995101e73854c869",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
