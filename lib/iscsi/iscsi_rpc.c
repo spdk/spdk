@@ -733,6 +733,7 @@ struct rpc_portal_list {
 struct rpc_portal_group {
 	int32_t tag;
 	struct rpc_portal_list portal_list;
+	bool auto_dif;
 };
 
 static void
@@ -788,6 +789,7 @@ decode_rpc_portal_list(const struct spdk_json_val *val, void *out)
 static const struct spdk_json_object_decoder rpc_portal_group_decoders[] = {
 	{"tag", offsetof(struct rpc_portal_group, tag), spdk_json_decode_int32},
 	{"portals", offsetof(struct rpc_portal_group, portal_list), decode_rpc_portal_list},
+	{"auto_dif", offsetof(struct rpc_portal_group, auto_dif), spdk_json_decode_bool, true},
 };
 
 static void
@@ -808,7 +810,7 @@ spdk_rpc_add_portal_group(struct spdk_jsonrpc_request *request,
 		goto out;
 	}
 
-	pg = spdk_iscsi_portal_grp_create(req.tag);
+	pg = spdk_iscsi_portal_grp_create(req.tag, req.auto_dif);
 	if (pg == NULL) {
 		SPDK_ERRLOG("portal_grp_create failed\n");
 		goto out;
