@@ -414,6 +414,8 @@ int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_p
 int spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn,
 			   struct spdk_iscsi_pdu *pdu,
 			   bool is_read, struct spdk_dif_ctx *dif_ctx);
+int spdk_iscsi_dif_verify(void *buf, uint32_t data_len, uint32_t read_len,
+			  struct spdk_dif_ctx *dif_ctx);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 

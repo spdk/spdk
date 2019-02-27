@@ -1330,6 +1330,13 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 	if (conn->auto_dif) {
 		rc = spdk_iscsi_get_dif_ctx(conn, pdu, true, &pdu->dif_ctx);
 		if (rc == 0) {
+			rc = spdk_iscsi_dif_verify(pdu->data, 0, pdu->data_buf_len,
+						   &pdu->dif_ctx);
+			if (rc != 0) {
+				spdk_iscsi_conn_free_pdu(conn, pdu);
+				conn->state = ISCSI_CONN_STATE_EXITING;
+				return;
+			}
 			pdu->dif_strip = true;
 		} else {
 			pdu->dif_strip = false;

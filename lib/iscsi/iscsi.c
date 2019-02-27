@@ -344,6 +344,34 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+int
+spdk_iscsi_dif_verify(void *buf, uint32_t data_len, uint32_t read_len,
+		      struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iov;
+	struct spdk_dif_error err_blk = {};
+	uint32_t data_block_size, offset, num_blocks;
+	int rc;
+
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+
+	offset = (data_len / data_block_size) * dif_ctx->block_size;
+	read_len += data_len % data_block_size;
+
+	iov.iov_base = buf + offset;
+	iov.iov_len = read_len;
+
+	num_blocks = read_len / dif_ctx->block_size;
+
+	rc = spdk_dif_verify(&iov, 1, num_blocks, dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 static int
 spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 				 struct spdk_iscsi_pdu *pdu, int data_len)
@@ -352,7 +380,7 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 	struct iovec iovs[32];
 	struct spdk_dif_ctx dif_ctx;
 	bool dif_insert = false;
-	int rc;
+	int read_len, rc;
 
 	if (pdu->data_buf == NULL) {
 		if (data_len <= spdk_get_immediate_data_buffer_size()) {
@@ -381,9 +409,9 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 	}
 
 	if (!dif_insert) {
-		return spdk_iscsi_conn_read_data(conn,
-						 data_len - pdu->data_valid_bytes,
-						 pdu->data_buf + pdu->data_valid_bytes);
+		read_len = spdk_iscsi_conn_read_data(conn,
+						     data_len - pdu->data_valid_bytes,
+						     pdu->data_buf + pdu->data_valid_bytes);
 	} else {
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
 						     pdu->data_buf, pdu->data_buf_len,
@@ -393,8 +421,17 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 			SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
 			return rc;
 		}
-		return spdk_iscsi_conn_readv_data(conn, iovs, rc);
+		read_len = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+		if (read_len > 0) {
+			rc = spdk_iscsi_dif_verify(pdu->data_buf, pdu->data_valid_bytes, read_len,
+						   &dif_ctx);
+			if (rc != 0) {
+				return rc;
+			}
+		}
 	}
+
+	return read_len;
 }
 
 static bool
