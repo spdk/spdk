@@ -34,6 +34,24 @@
       "revId": "ffa1c88d8a39461f170135d62c6608e71e52f31a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb5cd3a6_ee4b3d60",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 35
+      },
+      "lineNbr": 696,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-02-27T23:28:30Z",
+      "side": 1,
+      "message": "didn\u0027t type what was going on in my head correctly... I mean I\u0027ll open RO unless doing an init then open RW",
+      "parentUuid": "2402e3a4_656ff81b",
+      "revId": "ffa1c88d8a39461f170135d62c6608e71e52f31a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
