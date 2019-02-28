@@ -236,8 +236,8 @@ struct spdk_nvmf_tcp_qpair {
 	 */
 	void					*buf;
 	void					*bufs;
-	struct spdk_nvmf_tcp_req			*req;
-	struct spdk_nvmf_tcp_req			*reqs;
+	struct spdk_nvmf_tcp_req		*req;
+	struct spdk_nvmf_tcp_req		*reqs;
 
 	bool					host_hdgst_enable;
 	bool					host_ddgst_enable;
