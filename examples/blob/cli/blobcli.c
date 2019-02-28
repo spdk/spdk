@@ -1561,7 +1561,7 @@ main(int argc, char **argv)
 	opts.config_file = cli_context->config_file;
 
 	cli_context->app_started = true;
-	rc = spdk_app_start(&opts, cli_start, cli_context, NULL);
+	rc = spdk_app_start(&opts, cli_start, cli_context);
 	if (rc) {
 		printf("ERROR!\n");
 	}

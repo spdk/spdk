@@ -140,7 +140,7 @@ main(int argc, char **argv)
 
 	opts.shutdown_cb = test_cleanup;
 
-	rc = spdk_app_start(&opts, test_start, NULL, NULL);
+	rc = spdk_app_start(&opts, test_start, NULL);
 
 	spdk_app_fini();
 

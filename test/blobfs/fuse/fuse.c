@@ -340,7 +340,7 @@ int main(int argc, char **argv)
 	g_fuse_argc = argc - 2;
 	g_fuse_argv = &argv[2];
 
-	rc = spdk_app_start(&opts, spdk_fuse_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_fuse_run, NULL);
 	spdk_app_fini();
 
 	return rc;

@@ -155,7 +155,7 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
  * \return 0 on success or non-zero on failure.
  */
 int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
-		   void *arg1, void *arg2);
+		   void *arg1);
 
 /**
  * Perform final shutdown operations on an application using the event framework.

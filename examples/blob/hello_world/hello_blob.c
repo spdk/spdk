@@ -477,7 +477,7 @@ main(int argc, char **argv)
 		 * hello_start() returns), or if an error occurs during
 		 * spdk_app_start() before hello_start() runs.
 		 */
-		rc = spdk_app_start(&opts, hello_start, hello_context, NULL);
+		rc = spdk_app_start(&opts, hello_start, hello_context);
 		if (rc) {
 			SPDK_NOTICELOG("ERROR!\n");
 		} else {

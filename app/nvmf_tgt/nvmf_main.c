@@ -72,7 +72,7 @@ main(int argc, char **argv)
 	}
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL, NULL);
+	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL);
 	spdk_app_fini();
 	return rc;
 }
