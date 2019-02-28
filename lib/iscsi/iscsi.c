@@ -345,10 +345,31 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+spdk_iscsi_conn_read_data_dif_insert(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_pdu *pdu, uint32_t data_len,
+				     struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iovs[32];
+	int rc;
+
+	rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
+					     pdu->data_buf, pdu->data_buf_len,
+					     pdu->data_valid_bytes, data_len, NULL,
+					     dif_ctx);
+	if (rc < 0) {
+		SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
+		return rc;
+	}
+
+	return spdk_iscsi_conn_readv_data(conn, iovs, rc);
+}
+
+static int
 spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 				 struct spdk_iscsi_pdu *pdu, int data_len)
 {
 	struct spdk_mempool *pool;
+	struct spdk_dif_ctx dif_ctx;
 
 	if (pdu->data_buf == NULL) {
 		if (data_len <= spdk_get_immediate_data_buffer_size()) {
@@ -369,9 +390,13 @@ spdk_iscsi_read_pdu_data_segment(struct spdk_iscsi_conn *conn,
 		pdu->data_buf = pdu->mobj->buf;
 	}
 
-	return spdk_iscsi_conn_read_data(conn,
-					 data_len - pdu->data_valid_bytes,
-					 pdu->data_buf + pdu->data_valid_bytes);
+	if (!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx)) {
+		return spdk_iscsi_conn_read_data(conn,
+						 data_len - pdu->data_valid_bytes,
+						 pdu->data_buf + pdu->data_valid_bytes);
+	} else {
+		return spdk_iscsi_conn_read_data_dif_insert(conn, pdu, data_len, &dif_ctx);
+	}
 }
 
 static bool
@@ -590,7 +615,8 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 	uint32_t total_ahs_len;
 	uint32_t data_len;
 	uint32_t iov_offset;
-	uint32_t mapped_length = 0;
+	uint32_t mapped_length = 0, mapped_data_len = 0;
+	int rc;
 
 	if (num_iovs == 0) {
 		return 0;
@@ -658,13 +684,24 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 		if (iov_offset >= data_len) {
 			iov_offset -= data_len;
 		} else {
-			iovs[iovcnt].iov_base = pdu->data + iov_offset;
-			iovs[iovcnt].iov_len = data_len - iov_offset;
-			mapped_length += data_len - iov_offset;
-			iov_offset = 0;
-			iovcnt++;
-			if (iovcnt == num_iovs) {
-				goto end;
+			if (!pdu->dif_strip) {
+				iovs[iovcnt].iov_base = pdu->data + iov_offset;
+				iovs[iovcnt].iov_len = data_len - iov_offset;
+				mapped_length += data_len - iov_offset;
+				iov_offset = 0;
+				iovcnt++;
+			} else {
+				rc = spdk_dif_set_md_interleave_iovs(&iovs[iovcnt], num_iovs - iovcnt,
+								     pdu->data, pdu->data_buf_len,
+								     iov_offset, data_len, &mapped_data_len,
+								     &pdu->dif_ctx);
+				if (rc < 0) {
+					SPDK_ERRLOG("Failed to setup iovs for DIF strip\n");
+					goto end;
+				}
+				mapped_length += mapped_data_len;
+				iov_offset = 0;
+				iovcnt += rc;
 			}
 		}
 	}
