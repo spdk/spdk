@@ -104,7 +104,7 @@ main(int argc, char **argv)
 		g_unaffinitize_thread = true;
 	}
 
-	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
+	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id);
 
 	spdk_app_fini();
 

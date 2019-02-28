@@ -174,7 +174,7 @@ main(int argc, char **argv)
 	printf("Running I/O for %d seconds...", g_time_in_sec);
 	fflush(stdout);
 
-	rc = spdk_app_start(&opts, event_perf_start, NULL, NULL);
+	rc = spdk_app_start(&opts, event_perf_start, NULL);
 
 	spdk_app_fini();
 	performance_dump(g_time_in_sec);

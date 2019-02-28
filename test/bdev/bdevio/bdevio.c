@@ -967,7 +967,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	rc = spdk_app_start(&opts, test_main, NULL, NULL);
+	rc = spdk_app_start(&opts, test_main, NULL);
 	spdk_app_fini();
 
 	return rc;

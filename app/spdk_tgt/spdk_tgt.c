@@ -122,7 +122,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	rc = spdk_app_start(&opts, spdk_tgt_started, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_tgt_started, NULL);
 	spdk_app_fini();
 
 	return rc;
