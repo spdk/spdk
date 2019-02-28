@@ -162,7 +162,7 @@ main(int argc, char **argv)
 
 	opts.shutdown_cb = stub_shutdown;
 
-	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
+	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id);
 	spdk_app_fini();
 
 	return ch;

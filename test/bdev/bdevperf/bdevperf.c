@@ -1150,7 +1150,7 @@ main(int argc, char **argv)
 		g_zcopy = false;
 	}
 
-	rc = spdk_app_start(&opts, bdevperf_run, NULL, NULL);
+	rc = spdk_app_start(&opts, bdevperf_run, NULL);
 	if (rc) {
 		g_run_failed = true;
 	}

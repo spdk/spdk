@@ -564,7 +564,7 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
-	       void *arg1, void *arg2)
+	       void *arg1)
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
@@ -655,7 +655,7 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
 
 	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
 					      (void *)opts->rpc_addr, NULL);

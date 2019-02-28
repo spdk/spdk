@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 		exit(rc);
 	}
 
-	rc = spdk_app_start(&opts, spdk_mkfs_run, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_mkfs_run, NULL);
 	spdk_app_fini();
 
 	return rc;

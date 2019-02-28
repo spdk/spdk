@@ -434,7 +434,7 @@ main(int argc, char **argv)
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
-	rc = spdk_app_start(&opts, start_net_framework, &hello_context, NULL);
+	rc = spdk_app_start(&opts, start_net_framework, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}
