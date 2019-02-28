@@ -71,6 +71,29 @@
     },
     {
       "key": {
+        "uuid": "5553d7eb_f5aa4e05",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1761,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-28T14:58:38Z",
+      "side": 1,
+      "message": "This sounds like size (half of lvs size - see line 1748) + size of whole lvs which equals 1,5 size of lvs. Am I reading it incorrectly?",
+      "range": {
+        "startLine": 1761,
+        "startChar": 8,
+        "endLine": 1761,
+        "endChar": 46
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23c2fe39_87412a64",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 2
