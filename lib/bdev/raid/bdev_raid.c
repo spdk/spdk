@@ -742,6 +742,13 @@ _raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 						     raid_bdev_base_io_completion, bdev_io);
 			break;
 
+		case SPDK_BDEV_IO_TYPE_FLUSH:
+			ret = spdk_bdev_flush_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
+						     raid_ch->base_channel[disk_idx],
+						     offset_in_disk, nblocks_in_disk,
+						     raid_bdev_base_io_completion, bdev_io);
+			break;
+
 		default:
 			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", bdev_io->type);
 			assert(false);
@@ -835,15 +842,11 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		raid_bdev_start_rw_request(ch, bdev_io);
 		break;
 
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-		/* TODO: support flush if requirement comes */
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
-		break;
-
 	case SPDK_BDEV_IO_TYPE_RESET:
 		_raid_bdev_submit_reset_request(ch, bdev_io);
 		break;
 
+	case SPDK_BDEV_IO_TYPE_FLUSH:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
 		_raid_bdev_submit_null_payload_request(ch, bdev_io);
 		break;
