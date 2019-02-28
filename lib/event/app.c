@@ -66,6 +66,8 @@ struct spdk_app {
 
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_app_start_event = NULL;
+struct spdk_event *g_rpc_start_event = NULL;
+struct spdk_event *g_config_load_event = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_delay_subsystem_init = false;
@@ -562,14 +564,28 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static void
+bootstrap_fn(void *arg1, void *arg2)
+{
+	if (g_config_load_event) {
+		spdk_event_call(g_config_load_event);
+	} else {
+		if (!g_delay_subsystem_init) {
+			spdk_subsystem_init(g_rpc_start_event);
+		} else {
+			spdk_event_call(g_rpc_start_event);
+		}
+	}
+}
+
 int
 spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	       void *arg1)
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
-	struct spdk_event	*rpc_start_event, *config_load_event;
 	char			*tty;
+	struct spdk_event	*event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -655,23 +671,19 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.rc = 0;
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-					      (void *)opts->rpc_addr, NULL);
+	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
+	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
+	g_rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+						(void *)opts->rpc_addr, NULL);
 
 	if (opts->json_config_file) {
 		g_delay_subsystem_init = false;
-		config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
-							opts, rpc_start_event);
-		spdk_event_call(config_load_event);
-	} else {
-		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(rpc_start_event);
-		} else {
-			spdk_event_call(rpc_start_event);
-		}
+		g_config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
+				      opts, g_rpc_start_event);
 	}
+
+	spdk_event_call(event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
