@@ -205,7 +205,7 @@ end:
 
 int
 vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
-		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -221,6 +221,10 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 	spdk_lvs_opts_init(&opts);
 	if (cluster_sz != 0) {
 		opts.cluster_sz = cluster_sz;
+	}
+
+	if (clear_method != 0) {
+		opts.clear_method = clear_method;
 	}
 
 	if (name == NULL) {
