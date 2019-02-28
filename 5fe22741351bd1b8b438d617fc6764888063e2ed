@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "9aab9369_77c0b114",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 4508,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T10:06:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32234eb4_bb6811fa",
+      "revId": "5fe22741351bd1b8b438d617fc6764888063e2ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fa6ef79d_4a8732d6",
         "filename": "include/spdk/lvol.h",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-21T19:43:35Z",
       "side": 1,
       "message": "I would define these as:\n\nLVS_CLEAR_WITH_UNMAP \u003d BS_CLEAR_WITH_UNMAP,\nLVS_CLEAR_WITH_WRITE_ZEROES \u003d BS_CLEAR_WITH_WRITE_ZEROES,\nLVS_CLEAR_WITH_NONE \u003d BS_CLEAR_WITH_NONE\n\nin lvol.c, you assume that the values are equivalent, but it\u0027s only implicit by the fact that you defined the enums in blobstore and lvol the same way - explicitly making sure the values are the same ensures this doesn\u0027t get broken down the road if someone happened to change one of the enums but not the other\n\nI know that means you need to include spdk/blob.h here - I\u0027m fine with that.",
+      "revId": "5fe22741351bd1b8b438d617fc6764888063e2ed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3b20394a_f8d975e3",
+        "filename": "include/spdk/lvol.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T10:06:27Z",
+      "side": 1,
+      "message": "Good point, thanks. I\u0027ve added patch doing the same for lvol clear method: https://review.gerrithub.io/#/c/spdk/spdk/+/446505/",
+      "parentUuid": "fa6ef79d_4a8732d6",
       "revId": "5fe22741351bd1b8b438d617fc6764888063e2ed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
