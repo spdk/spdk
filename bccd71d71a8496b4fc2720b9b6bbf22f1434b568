@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7cad1a0_7574262c",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:39:21Z",
+      "side": 1,
+      "message": "Maybe \"Expose two options \u0027apptag\u0027 and \u0027apptag_mask\u0027. Users can add them in the configuration file when using application tag and application tag mask in end-to-end data protection.\"",
+      "revId": "bccd71d71a8496b4fc2720b9b6bbf22f1434b568",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
