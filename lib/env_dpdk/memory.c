@@ -762,6 +762,12 @@ spdk_mem_map_init(void)
 	return 0;
 }
 
+bool
+spdk_using_vfio_with_iommu(void)
+{
+	return g_vfio.enabled && !g_vfio.noiommu_enabled;
+}
+
 struct spdk_vtophys_pci_device {
 	struct rte_pci_device *pci_device;
 	TAILQ_ENTRY(spdk_vtophys_pci_device) tailq;
