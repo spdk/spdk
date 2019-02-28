@@ -573,6 +573,13 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
  */
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
+/**
+ * Reports whether the SPDK application is using the IOMMU for DMA
+ *
+ * \return True if we are using the IOMMU, false otherwise.
+ */
+bool spdk_using_vfio_with_iommu(void);
+
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 
 /**
