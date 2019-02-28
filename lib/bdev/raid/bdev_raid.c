@@ -861,18 +861,19 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 
 /*
  * brief:
- * raid_bdev_io_type_unmap_supported is check whether unmap is supported in
- * raid bdev module. If anyone among the base_bdevs doesn't support, the
- * raid device doesn't supports. For the base_bdev which is not discovered, by default
- * it is thought supported.
+ * raid_bdev_io_type_iterate_supported checks whether io_type is supported in
+ * all base bdev modules of raid bdev module. If anyone among the base_bdevs
+ * doesn't support, the raid device doesn't supports.
+ *
  * params:
  * raid_bdev - pointer to raid bdev context
+ * io_type - io type
  * returns:
  * true - io_type is supported
  * false - io_type is not supported
  */
 static bool
-raid_bdev_io_type_unmap_supported(struct raid_bdev *raid_bdev)
+raid_bdev_io_type_iterate_supported(struct raid_bdev *raid_bdev, enum spdk_bdev_io_type io_type)
 {
 	uint16_t i;
 
@@ -883,7 +884,7 @@ raid_bdev_io_type_unmap_supported(struct raid_bdev *raid_bdev)
 		}
 
 		if (spdk_bdev_io_type_supported(raid_bdev->base_bdev_info[i].bdev,
-						SPDK_BDEV_IO_TYPE_UNMAP) == false) {
+						io_type) == false) {
 			return false;
 		}
 	}
@@ -909,12 +910,12 @@ raid_bdev_io_type_supported(void *ctx, enum spdk_bdev_io_type io_type)
 	switch (io_type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
-	case SPDK_BDEV_IO_TYPE_FLUSH:
-	case SPDK_BDEV_IO_TYPE_RESET:
 		return true;
 
+	case SPDK_BDEV_IO_TYPE_FLUSH:
+	case SPDK_BDEV_IO_TYPE_RESET:
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		return raid_bdev_io_type_unmap_supported(ctx);
+		return raid_bdev_io_type_iterate_supported(ctx, io_type);
 
 	default:
 		return false;
