@@ -16,6 +16,24 @@
       "revId": "17acfcfa12be26b0c229390e9f2abf75dc9a8aee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c801ede_67bbab2d",
+        "filename": "lib/bdev/nvme/common_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-28T13:03:29Z",
+      "side": 1,
+      "message": "Jim, I\u0027ve uploaded new patch implementing your comments. Instead of creating new function / modifying function for getting mode I\u0027ve added one more decoder just to read mode. Let me know if current solution looks OK for you.\n\nI\u0027ll also split this patch into few smaller ones, so this is still WIP.",
+      "parentUuid": "1eaa1631_bca30961",
+      "revId": "17acfcfa12be26b0c229390e9f2abf75dc9a8aee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
