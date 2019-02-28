@@ -3386,6 +3386,12 @@ spdk_bdev_io_complete(struct spdk_bdev_io *bdev_io, enum spdk_bdev_io_status sta
 			 */
 			shared_resource->nomem_threshold = spdk_max((int64_t)shared_resource->io_outstanding / 2,
 							   (int64_t)shared_resource->io_outstanding - NOMEM_THRESHOLD_COUNT);
+
+			/* Retry immediately if there is no outstanding I/O */
+			if (shared_resource->io_outstanding == 0) {
+				_spdk_bdev_ch_retry_io(bdev_ch);
+			}
+
 			return;
 		}
 
