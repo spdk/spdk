@@ -105,6 +105,24 @@
     },
     {
       "key": {
+        "uuid": "7513bf77_9631ad74",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 11
+      },
+      "lineNbr": 296,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-02-28T02:02:40Z",
+      "side": 1,
+      "message": "Actually I compared with SCSI reservations, the LIO and SCST both implement the registration to the device level but not based on LUN, although the SCSI specification says register to a LUN.  So same here, I can move this part to the Namespace data structure, this can simplify a lot of code.",
+      "parentUuid": "7f1e2ced_ae9696ae",
+      "revId": "cc544c94a7287f8d49cb8400a950590eafee4f17",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d00d12f8_db7a1d48",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 11
