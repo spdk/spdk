@@ -171,6 +171,13 @@ struct spdk_nvmf_request {
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 
+struct spdk_nvmf_registrant {
+	TAILQ_ENTRY(spdk_nvmf_registrant) link;
+	struct spdk_uuid hostid;
+	/* Registration key */
+	uint64_t rkey;
+};
+
 struct spdk_nvmf_ns {
 	uint32_t nsid;
 	struct spdk_nvmf_subsystem *subsystem;
@@ -179,6 +186,10 @@ struct spdk_nvmf_ns {
 	struct spdk_nvmf_ns_opts opts;
 	/* reservation notificaton mask */
 	uint32_t mask;
+	/* generation code */
+	uint32_t gen;
+	/* registrants head */
+	TAILQ_HEAD(, spdk_nvmf_registrant) registrants;
 };
 
 struct spdk_nvmf_qpair {
@@ -327,6 +338,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_ns_reservation_request(void *ctx);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.
