@@ -1063,12 +1063,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print(rpc.lvol.construct_lvol_store(args.client,
                                             bdev_name=args.bdev_name,
                                             lvs_name=args.lvs_name,
-                                            cluster_sz=args.cluster_sz))
+                                            cluster_sz=args.cluster_sz,
+                                            clear_method=args.clear_method))
 
     p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
     p.add_argument('lvs_name', help='name for lvol store')
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
+    p.add_argument('--clear-method', help="""Change clear method for data region.
+        Available: none, unmap, write_zeroes""", required=False)
     p.set_defaults(func=construct_lvol_store)
 
     def rename_lvol_store(args):

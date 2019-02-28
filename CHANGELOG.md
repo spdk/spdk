@@ -2,6 +2,11 @@
 
 ## v19.01.1: (Upcoming Release)
 
+### logical volumes
+
+Added option to change method for erasing data region on lvol store creation.
+Default of unmapping can now be changed to writing zeroes or no operation.
+
 ## v19.01:
 
 ### ocf bdev
