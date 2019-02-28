@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "16296ea7_ee932d7b",
+        "filename": "lib/bdev/uring/Makefile",
+        "patchSetId": 4
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:36:35Z",
+      "side": 1,
+      "message": "just use ifneq?",
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09ebb061_a5487931",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:36:35Z",
+      "side": 1,
+      "message": "I hate this name in the bdev/aio driver.  And hate it here too.  :-). How about uring_bdev or bdev_uring?",
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4e91f3e6_00952aa4",
         "filename": "lib/bdev/uring/bdev_uring.c",
         "patchSetId": 4
@@ -19,6 +53,57 @@
         "endLine": 94,
         "endChar": 32
       },
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c9b181c_e0d7b172",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 258,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:36:35Z",
+      "side": 1,
+      "message": "I think you should return 1 here.  If there\u0027s an error, let\u0027s just count it as \"work\".",
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c606ffd_e2020f91",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 266,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:36:35Z",
+      "side": 1,
+      "message": "count + to_submit?\n\notherwise if we submit 10 I/O but don\u0027t complete any, this will indicate that we did no real work",
+      "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2ea8aa63_fb8f535c",
+        "filename": "lib/bdev/uring/bdev_uring.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:36:35Z",
+      "side": 1,
+      "message": "bdev_aio.h has this include too, but it doesn\u0027t really belong here since the header doesn\u0027t use any queue-related stuff",
       "revId": "17e5f0c74b23eeaa2cc005dd1520426be30733e4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
