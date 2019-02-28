@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8632284_441075ab",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 8
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:51:58Z",
+      "side": 1,
+      "message": "let\u0027s move this above spdk_scsi_port_set_iscsi_transport_id, to keep it with other spdk_scsi_lun functions",
+      "revId": "a8ffc9cb35675e5e736c18e6b123e8e65bc4a63c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
