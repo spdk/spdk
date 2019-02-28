@@ -601,6 +601,11 @@ static void SpdkStartThreadWrapper(void *arg)
 
 	SpdkInitializeThread();
 	state->user_function(state->arg);
+
+	if (g_sync_args.channel) {
+		spdk_fs_free_io_channel(g_sync_args.channel);
+	}
+
 	delete state;
 }
 
@@ -728,6 +733,8 @@ SpdkEnv::~SpdkEnv()
 			spdk_file_close(file, g_sync_args.channel);
 			iter = spdk_fs_iter_next(iter);
 		}
+
+		spdk_fs_free_io_channel(g_sync_args.channel);
 	}
 
 	spdk_app_start_shutdown();
