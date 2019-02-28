@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4fe18a07_b53f16d8",
+        "filename": "include/spdk/json.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:07:47Z",
+      "side": 1,
+      "message": "see comments on json_util.c\n\nlet\u0027s put these json library changes in a separate patch - and please add unit tests to that patch :-)",
+      "revId": "29adaafdc732e9382144edd17c5c8c82b2c9b8fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5cd4a062_74db6a5e",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:07:47Z",
+      "side": 1,
+      "message": "let\u0027s just name this _json_decode_object\n\nRemoving the \"spdk_\" is good here, since this function is no longer in the public API.  And adding the _ prefix makes it clear this is an internal function.  Then you can also remove the \"_ex\".",
+      "revId": "29adaafdc732e9382144edd17c5c8c82b2c9b8fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "111843aa_9ca38739",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:07:47Z",
+      "side": 1,
+      "message": "how about \"strict\" instead of \"as_optional\"?",
+      "revId": "29adaafdc732e9382144edd17c5c8c82b2c9b8fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5009b1cb_72bd8ae6",
+        "filename": "lib/json/json_util.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:07:47Z",
+      "side": 1,
+      "message": "hmmm - thinking about a good name for this - how about spdk_json_decode_object_lenient?\n\nhttps://www.thesaurus.com/browse/strict",
+      "revId": "29adaafdc732e9382144edd17c5c8c82b2c9b8fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
