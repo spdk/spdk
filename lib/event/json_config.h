@@ -36,6 +36,7 @@
 
 #include "spdk/event.h"
 
-void spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *done_event);
+void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
+			       struct spdk_event *done_event);
 
 #endif /* SPDK_JSON_CONFIG_H */
