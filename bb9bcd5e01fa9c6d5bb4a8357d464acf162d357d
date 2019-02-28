@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4600cb37_41574024",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 465,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:43:02Z",
+      "side": 1,
+      "message": "ok - I see how this works now.  If spdk_mempool_get(pool) returns NULL, the new function will return 0.  Then here we will add 0 to pdu-\u003edata_valid_bytes, meaning pdu-\u003edata_valid_bytes will still be less than data_len.  Then *_pdu will be set to NULL, just like the code did originally  when pdu-\u003emobj \u003d\u003d NULL.\n\nLooks good!",
+      "revId": "bb9bcd5e01fa9c6d5bb4a8357d464acf162d357d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
