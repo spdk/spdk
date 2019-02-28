@@ -70,7 +70,7 @@ static struct spdk_app g_spdk_app;
 static spdk_msg_fn g_start_fn = NULL;
 static void *g_start_arg = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
-static uint32_t g_init_lcore;
+static struct spdk_thread *g_app_thread = NULL;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
@@ -350,7 +350,7 @@ spdk_app_start_application(void)
 {
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
 
-	assert(spdk_env_get_current_core() == g_init_lcore);
+	assert(spdk_get_thread() == g_app_thread);
 
 	g_start_fn(g_start_arg);
 }
@@ -559,7 +559,7 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 }
 
 static void
-bootstrap_fn(void *arg1, void *arg2)
+bootstrap_fn(void *arg1)
 {
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
@@ -581,7 +581,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	struct spdk_conf	*config = NULL;
 	int			rc;
 	char			*tty;
-	struct spdk_event	*event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -645,6 +644,14 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		goto app_start_log_close_err;
 	}
 
+	/* Now that the reactors have been initialized, we can create an
+	 * initialization thread. */
+	g_app_thread = spdk_thread_create("app_thread");
+	if (!g_app_thread) {
+		SPDK_ERRLOG("Unable to create an spdk_thread for initialization\n");
+		goto app_start_log_close_err;
+	}
+
 	/*
 	 * Note the call to spdk_app_setup_trace() is located here
 	 * ahead of spdk_app_setup_signal_handlers().
@@ -668,14 +675,11 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
 
-	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
 	g_start_fn = start_fn;
 	g_start_arg = arg1;
 
-	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
-
-	spdk_event_call(event);
+	spdk_thread_send_msg(g_app_thread, bootstrap_fn, NULL);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -703,7 +707,7 @@ spdk_app_fini(void)
 }
 
 static void
-_spdk_app_stop(void *arg1, void *arg2)
+_spdk_app_stop(void *arg1)
 {
 	spdk_rpc_finish();
 	spdk_subsystem_fini(spdk_reactors_stop, NULL);
@@ -717,10 +721,10 @@ spdk_app_stop(int rc)
 	}
 	g_spdk_app.rc = rc;
 	/*
-	 * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()
+	 * We want to run spdk_subsystem_fini() from the same thread where spdk_subsystem_init()
 	 * was called.
 	 */
-	spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));
+	spdk_thread_send_msg(g_app_thread, _spdk_app_stop, NULL);
 }
 
 static void
@@ -1052,7 +1056,7 @@ spdk_rpc_start_subsystem_init_cpl(void *arg1)
 	struct spdk_jsonrpc_request *request = arg1;
 	struct spdk_json_write_ctx *w;
 
-	assert(spdk_env_get_current_core() == g_init_lcore);
+	assert(spdk_get_thread() == g_app_thread);
 
 	spdk_app_start_application();
 
