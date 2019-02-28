@@ -345,12 +345,35 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 }
 
 static int
+spdk_iscsi_dif_generate(struct spdk_iscsi_pdu *pdu, uint32_t read_len,
+			struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iov;
+	uint32_t data_block_size, offset, num_blocks;
+
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+
+	offset = (pdu->data_valid_bytes / data_block_size) * dif_ctx->block_size;
+	read_len += pdu->data_valid_bytes % data_block_size;
+	num_blocks = read_len / data_block_size;
+
+	iov.iov_base = pdu->data_buf + offset;
+	iov.iov_len = num_blocks * dif_ctx->block_size;
+
+	if (iov.iov_len > (uint32_t)pdu->data_buf_len) {
+		return -EINVAL;
+	}
+
+	return spdk_dif_generate(&iov, 1, num_blocks, dif_ctx);
+}
+
+static int
 spdk_iscsi_conn_read_data_dif_insert(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_pdu *pdu, uint32_t data_len,
 				     struct spdk_dif_ctx *dif_ctx)
 {
 	struct iovec iovs[32];
-	int rc;
+	int rc, read_len;
 
 	rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
 					     pdu->data_buf, pdu->data_buf_len,
@@ -361,7 +384,14 @@ spdk_iscsi_conn_read_data_dif_insert(struct spdk_iscsi_conn *conn,
 		return rc;
 	}
 
-	return spdk_iscsi_conn_readv_data(conn, iovs, rc);
+	read_len = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+	if (read_len > 0) {
+		rc = spdk_iscsi_dif_generate(pdu, read_len, dif_ctx);
+		if (rc != 0) {
+			return rc;
+		}
+	}
+	return read_len;
 }
 
 static int
