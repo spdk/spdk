@@ -16,6 +16,23 @@
       "revId": "99a89bbec9e7b09c4376c8bb013ee4be65ee2930",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae18c8c0_0e726048",
+        "filename": "lib/bdev/raid/bdev_raid.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 876,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:30:16Z",
+      "side": 1,
+      "message": "I think the name here might be confusing - is it checking if something called \"io_type_iterate\" is supported?\n\nlet\u0027s just do _raid_bdev_io_type_supported - the leading underscore is something we use other places for these kind of helper functions",
+      "revId": "99a89bbec9e7b09c4376c8bb013ee4be65ee2930",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
