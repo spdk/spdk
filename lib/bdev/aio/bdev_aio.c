@@ -37,6 +37,7 @@
 
 #include "spdk/barrier.h"
 #include "spdk/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
@@ -580,7 +581,7 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 }
 
 struct spdk_bdev *
-create_aio_disk(const char *name, const char *filename, uint32_t block_size)
+create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -679,24 +680,24 @@ error_return:
 	return NULL;
 }
 
-struct delete_aio_disk_ctx {
-	spdk_delete_aio_complete cb_fn;
+struct delete_aio_bdev_ctx {
+	delete_aio_bdev_complete cb_fn;
 	void *cb_arg;
 };
 
 static void
 aio_bdev_unregister_cb(void *arg, int bdeverrno)
 {
-	struct delete_aio_disk_ctx *ctx = arg;
+	struct delete_aio_bdev_ctx *ctx = arg;
 
 	ctx->cb_fn(ctx->cb_arg, bdeverrno);
 	free(ctx);
 }
 
 void
-delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg)
+delete_aio_bdev(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
-	struct delete_aio_disk_ctx *ctx;
+	struct delete_aio_bdev_ctx *ctx;
 
 	if (!bdev || bdev->module != &aio_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -762,7 +763,7 @@ bdev_aio_initialize(void)
 			block_size = (uint32_t)tmp;
 		}
 
-		bdev = create_aio_disk(name, file, block_size);
+		bdev = create_aio_bdev(name, file, block_size);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
 			i++;
