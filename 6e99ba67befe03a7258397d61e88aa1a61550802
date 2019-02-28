@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b48bcf27_9d812fd7",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "I think g_filename_optind might be clearer",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d26f3292_6fb374af",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 447,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "is there a write_fixed variation?",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8eef4484_f7c45744",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 457,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "might be simpler to do:\n\nint flag \u003d task-\u003eis_read ? IORING_OP_READ_FIXED : IORING_OP_WRITEV;\n\nthen you don\u0027t need to duplicate the io_pending++ nor the io_uring_submit_single call",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "436882eb_c9d5333c",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 480,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "newline after declarations",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a2e9640b_24f169cb",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "declaration should go at beginning of function",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "27651254_9d0f922e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "declarations should go at beginning of function",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9fdb465_25b3109e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "4096 needs to be replaced with dynamic g_io_size_bytes value",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be1bd45e_aa9cf1a8",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "needs some kind of error message here",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b17352f4_7955eed7",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 619,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "remove this extra newline",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c1d2756_e6e54b5e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:47:33Z",
+      "side": 1,
+      "message": "this seems specific to io_uring - io_uring needs to set up its own setup_payload function and then move this code there",
+      "revId": "6e99ba67befe03a7258397d61e88aa1a61550802",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
