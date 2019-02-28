@@ -1,0 +1,372 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "004de368_75f846c3",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "exact",
+      "range": {
+        "startLine": 99,
+        "startChar": 84,
+        "endLine": 99,
+        "endChar": 91
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d10c2fab_568a1894",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 99,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "maybe not necessary",
+      "range": {
+        "startLine": 99,
+        "startChar": 50,
+        "endLine": 99,
+        "endChar": 57
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be8ad476_17b1c9aa",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "maybe metadata per I/O",
+      "range": {
+        "startLine": 99,
+        "startChar": 100,
+        "endLine": 100,
+        "endChar": 11
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb58c622_6984568f",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "maybe period (.).",
+      "range": {
+        "startLine": 100,
+        "startChar": 74,
+        "endLine": 100,
+        "endChar": 75
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05135455_8fc62739",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "Simply \"starting FIO\" ?",
+      "range": {
+        "startLine": 100,
+        "startChar": 19,
+        "endLine": 100,
+        "endChar": 37
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "47036383_8e2a9dd1",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "(if I/O size (set by io_size) is larger than 128KB and NVMe is formatted with 512+16 or 4096+128, metadata size per I/O will be more than 4096 bytes.",
+      "range": {
+        "startLine": 101,
+        "startChar": 69,
+        "endLine": 101,
+        "endChar": 70
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92226c00_6a37aff8",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 55,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "g_spdk_md_buffer_size, g_spdk_md_buf_size, or g_spdk_md_per_io_size ? This is not a metadata per block but sum of metadata of an I/O. I think we should clarify that.",
+      "range": {
+        "startLine": 55,
+        "startChar": 16,
+        "endLine": 55,
+        "endChar": 34
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78c059a2_70054ac3",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "maybe md_per_io_size ?",
+      "range": {
+        "startLine": 65,
+        "startChar": 5,
+        "endLine": 65,
+        "endChar": 12
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb41dd5b_c2d6665c",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "md_buffer or md_buf ?",
+      "range": {
+        "startLine": 77,
+        "startChar": 9,
+        "endLine": 77,
+        "endChar": 11
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "aaa4174e_e1d7997c",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "Just pi_mode may be fine (PI and DIF are synonyms).",
+      "range": {
+        "startLine": 101,
+        "startChar": 8,
+        "endLine": 101,
+        "endChar": 19
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f86ab63d_ea7f8e83",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "extended",
+      "range": {
+        "startLine": 318,
+        "startChar": 29,
+        "endLine": 318,
+        "endChar": 36
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5dd4b17a_56f34de7",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "you can just call spdk_dma_free without null check.",
+      "range": {
+        "startLine": 553,
+        "startChar": 2,
+        "endLine": 553,
+        "endChar": 20
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "50a88948_176ea2bf",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "This should be replaced by nsdata-\u003edps.md_start ?",
+      "range": {
+        "startLine": 613,
+        "startChar": 17,
+        "endLine": 613,
+        "endChar": 22
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "933037a0_00650362",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "I think this should be replaced by md_iov.iov_len \u003d spdk_min(md_size * lba_count, g_spdk_md_req_size);\n\nspdk_dix_generate() can check overflow of metadata buffer before access.",
+      "range": {
+        "startLine": 628,
+        "startChar": 0,
+        "endLine": 631,
+        "endChar": 2
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a8c82d51_fd0826ff",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 682,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "this should be md_iov.iov_len \u003d spdk_min(md_size * lba_count, g_spdk_md_req_size).",
+      "range": {
+        "startLine": 682,
+        "startChar": 0,
+        "endLine": 682,
+        "endChar": 38
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6d3c1698_a4a68280",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-02-28T23:34:13Z",
+      "side": 1,
+      "message": "Maybe \"size of separate metadata buffer per I/O\" ?",
+      "range": {
+        "startLine": 997,
+        "startChar": 12,
+        "endLine": 997,
+        "endChar": 58
+      },
+      "revId": "e3f7c8512fb80c370111e4b39a715ab89bfad7c1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
