@@ -22,6 +22,30 @@
       "revId": "d34de94fb87e8db48e9b922a92393bb1900a71cd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5124c6e0_665bef68",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011712
+      },
+      "writtenOn": "2019-02-28T08:42:44Z",
+      "side": 1,
+      "message": "Yes, should be virtio_blk.\nThank you for catching and pointing it out, Zhouhui",
+      "parentUuid": "a537f5a3_a8a311dd",
+      "range": {
+        "startLine": 10,
+        "startChar": 35,
+        "endLine": 10,
+        "endChar": 44
+      },
+      "revId": "d34de94fb87e8db48e9b922a92393bb1900a71cd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
