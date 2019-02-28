@@ -190,6 +190,12 @@ struct spdk_nvmf_ns {
 	uint32_t gen;
 	/* registrants head */
 	TAILQ_HEAD(, spdk_nvmf_registrant) registrants;
+	/* current reservation key */
+	uint64_t crkey;
+	/* reservation type */
+	enum spdk_nvme_reservation_type rtype;
+	/* current reservation holder, only valid if reservation type can only have one holder */
+	struct spdk_nvmf_registrant *holder;
 };
 
 struct spdk_nvmf_qpair {
