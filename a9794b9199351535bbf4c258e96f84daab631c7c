@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7a36cbef_2c8eb5fd",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:13:59Z",
+      "side": 1,
+      "message": "\u003c\u003d instead of \u003c",
+      "revId": "a9794b9199351535bbf4c258e96f84daab631c7c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
