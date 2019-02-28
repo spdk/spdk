@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "338d77f6_550ecefa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:16:28Z",
+      "side": 1,
+      "message": "In this case, you can leave out the first sentence (since you just added one function which is clearly named).\n\nAlso, should be \"was added\" instead of \"were added\" since it is just one function.",
+      "revId": "72123c8488dedee978fc439ffc4d7808411693f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3cf6aa90_176d5878",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1321,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:16:28Z",
+      "side": 1,
+      "message": "let\u0027s name this spdk_nvme_ctrlr_is_security_send_recv_supported\n\nadding the \"_is_\" makes it consistent with others like spdk_nvme_ctrlr_is_ocssd_supported, spdk_nvme_ctrlr_is_feature_supported, spdk_nvme_ctrlr_is_log_page_supported",
+      "revId": "72123c8488dedee978fc439ffc4d7808411693f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a7aa5ad_05ebc0d5",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 912,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T21:16:28Z",
+      "side": 1,
+      "message": "RECEIVE \u003d\u003e RECV (to make it consistent with the function name)",
+      "revId": "72123c8488dedee978fc439ffc4d7808411693f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
