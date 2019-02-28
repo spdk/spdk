@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "529660b7_535cf118",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 1321,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-02-28T21:22:10Z",
+      "side": 1,
+      "message": "Should we may do an API like spdk_nvme_ctrlr_get_flags instead? That\u0027s how we report these things for namespaces.",
+      "parentUuid": "3cf6aa90_176d5878",
+      "revId": "72123c8488dedee978fc439ffc4d7808411693f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "3a7aa5ad_05ebc0d5",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 5
