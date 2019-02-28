@@ -634,7 +634,7 @@ _raid_bdev_get_io_range(struct raid_bdev_io_range *io_range,
 	io_range->start_disk = start_strip % num_base_bdevs;
 	io_range->end_disk = end_strip % num_base_bdevs;
 
-	/* Calculate how many base_bdevs are involved in unmap operation.
+	/* Calculate how many base_bdevs are involved in io operation.
 	 * Number of base bdevs involved is between 1 and num_base_bdevs.
 	 * It will be 1 if the first strip and last strip are the same one.
 	 */
@@ -693,16 +693,17 @@ _raid_bdev_split_io_range(struct raid_bdev_io_range *io_range, uint64_t disk_idx
 
 /*
  * brief:
- * _raid_bdev_submit_unmap_request_next function submits the next batch of unmap requests
- * to member disks; it will submit as many as possible unless one unmap fails with -ENOMEM, in
- * which case it will queue it for later submission
+ * _raid_bdev_submit_null_payload_request_next function submits the next batch of
+ * io requests with range but without payload, like FLUSH and UNMAP, to member disks;
+ * it will submit as many as possible unless one base io request fails with -ENOMEM,
+ * in which case it will queue itself for later submission.
  * params:
  * bdev_io - pointer to parent bdev_io on raid bdev device
  * returns:
  * none
  */
 static void
-_raid_bdev_submit_unmap_request_next(void *_bdev_io)
+_raid_bdev_submit_null_payload_request_next(void *_bdev_io)
 {
 	struct spdk_bdev_io		*bdev_io = _bdev_io;
 	struct raid_bdev_io		*raid_io;
@@ -733,15 +734,25 @@ _raid_bdev_submit_unmap_request_next(void *_bdev_io)
 
 		_raid_bdev_split_io_range(&io_range, disk_idx, &offset_in_disk, &nblocks_in_disk);
 
-		ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
-					     raid_ch->base_channel[disk_idx],
-					     offset_in_disk, nblocks_in_disk,
-					     raid_bdev_base_io_completion, bdev_io);
+		switch (bdev_io->type) {
+		case SPDK_BDEV_IO_TYPE_UNMAP:
+			ret = spdk_bdev_unmap_blocks(raid_bdev->base_bdev_info[disk_idx].desc,
+						     raid_ch->base_channel[disk_idx],
+						     offset_in_disk, nblocks_in_disk,
+						     raid_bdev_base_io_completion, bdev_io);
+			break;
+
+		default:
+			SPDK_ERRLOG("submit request, invalid io type with null payload %u\n", bdev_io->type);
+			assert(false);
+			ret = -EIO;
+		}
+
 		if (ret == 0) {
 			raid_io->base_bdev_io_submitted++;
 		} else {
 			raid_bdev_base_io_submit_fail_process(bdev_io, disk_idx,
-							      _raid_bdev_submit_unmap_request_next, ret);
+							      _raid_bdev_submit_null_payload_request_next, ret);
 			return;
 		}
 	}
@@ -749,8 +760,8 @@ _raid_bdev_submit_unmap_request_next(void *_bdev_io)
 
 /*
  * brief:
- * _raid_bdev_submit_unmap_request function is the submit_request function for
- * unmap requests
+ * _raid_bdev_submit_null_payload_request function is the submit_request function
+ * for io requests with range but without payload, like UNMAP and FLUSH.
  * params:
  * ch - pointer to raid bdev io channel
  * bdev_io - pointer to parent bdev_io on raid bdev device
@@ -758,7 +769,7 @@ _raid_bdev_submit_unmap_request_next(void *_bdev_io)
  * none
  */
 static void
-_raid_bdev_submit_unmap_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+_raid_bdev_submit_null_payload_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct raid_bdev_io		*raid_io;
 
@@ -768,10 +779,10 @@ _raid_bdev_submit_unmap_request(struct spdk_io_channel *ch, struct spdk_bdev_io 
 	raid_io->base_bdev_io_completed = 0;
 	raid_io->base_bdev_io_status = SPDK_BDEV_IO_STATUS_SUCCESS;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev unmap (0x%lx, 0x%lx)\n",
-		      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev: type %d, range (0x%lx, 0x%lx)\n",
+		      bdev_io->type, bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks);
 
-	_raid_bdev_submit_unmap_request_next(bdev_io);
+	_raid_bdev_submit_null_payload_request_next(bdev_io);
 }
 
 /*
@@ -834,7 +845,7 @@ raid_bdev_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_i
 		break;
 
 	case SPDK_BDEV_IO_TYPE_UNMAP:
-		_raid_bdev_submit_unmap_request(ch, bdev_io);
+		_raid_bdev_submit_null_payload_request(ch, bdev_io);
 		break;
 
 	default:
