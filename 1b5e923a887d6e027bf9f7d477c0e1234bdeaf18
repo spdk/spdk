@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "52ebb6cb_30f806a9",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:57:46Z",
+      "side": 1,
+      "message": "Should we add spdk_bdev_get_data_block_size to lib/bdev instead - with same contents as this function?\n\nI think maybe this could be useful in the future.  Then scsi_bdev.c could just use that function directly.",
+      "revId": "1b5e923a887d6e027bf9f7d477c0e1234bdeaf18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
