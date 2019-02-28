@@ -91,6 +91,7 @@ struct spdk_vhost_scsi_session {
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+	bool stopping;
 };
 
 struct spdk_vhost_scsi_task {
@@ -908,13 +909,13 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	/* copy the entire device state */
-	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
-
-	if (vsession->lcore == -1) {
+	if (vsession->lcore == -1 || svsession->stopping) {
 		/* All done. */
 		return 0;
 	}
+
+	/* copy the entire device state */
+	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
 
 	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
 	if (rc != 0) {
@@ -1047,7 +1048,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	state->removed = true;
 
 	/* If the session isn't currently polled, unset the dev straight away */
-	if (vsession->lcore == -1) {
+	if (vsession->lcore == -1 || svsession->stopping) {
 		state->dev = NULL;
 		return 0;
 	}
@@ -1316,6 +1317,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 	}
 
 	vsession->lcore = svdev->lcore;
+	svsession->stopping = false;
 	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
 					   3, "start session");
 	if (rc != 0) {
@@ -1393,6 +1395,8 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
 		return -1;
 	}
+
+	svsession->stopping = true;
 	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
 					   3, "stop session");
 	if (rc != 0) {
