@@ -1,0 +1,113 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3f4b820d_855c042b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T14:19:36Z",
+      "side": 1,
+      "message": "Description please",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac7df007_a1e8e44b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1761,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T14:19:36Z",
+      "side": 1,
+      "message": "You are not resizing to what is noted down in line 1763 comment.\nThe resize should be up to the total_data_clusters*cluster_size",
+      "range": {
+        "startLine": 1761,
+        "startChar": 8,
+        "endLine": 1761,
+        "endChar": 46
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "23c2fe39_87412a64",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1780,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T14:19:36Z",
+      "side": 1,
+      "message": "Lets check if free_clusters is 0 after writing to rest of the device.",
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "094fec0f_4f5b5dab",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1782,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T14:19:36Z",
+      "side": 1,
+      "message": "Can this be resized down to some relative value, rather than hardcoded 30 ? How about 1/4 of lvol_store or some other number ?",
+      "range": {
+        "startLine": 1782,
+        "startChar": 57,
+        "endLine": 1782,
+        "endChar": 59
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6b6e6943_40e95b30",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1791,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T14:19:36Z",
+      "side": 1,
+      "message": "Lets just leave delete_malloc_bdev().",
+      "range": {
+        "startLine": 1790,
+        "startChar": 0,
+        "endLine": 1791,
+        "endChar": 45
+      },
+      "revId": "5a6d07df9f33e23dab7424dd2d965a63730e524d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
