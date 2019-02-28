@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24ae4cb0_3d9b9320",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T13:36:33Z",
+      "side": 1,
+      "message": "Please add more descriptive commit message",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15d3efe6_0c6d8524",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-02-28T13:36:33Z",
+      "side": 1,
+      "message": "You shouldn\u0027t need to destroy all the underlying parts, just delete_malloc_bdev should be fine.",
+      "range": {
+        "startLine": 1280,
+        "startChar": 0,
+        "endLine": 1283,
+        "endChar": 59
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
