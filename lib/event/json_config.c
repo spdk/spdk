@@ -562,10 +562,10 @@ err:
 }
 
 void
-spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *done_event)
+spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
+			  struct spdk_event *done_event)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
-	const char *rpc_addr;
 	int rc;
 
 	assert(done_event);
@@ -577,7 +577,7 @@ spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *d
 	ctx->done_event = done_event;
 	ctx->thread = spdk_get_thread();
 
-	rc = spdk_app_json_config_read(opts->json_config_file, ctx);
+	rc = spdk_app_json_config_read(json_config_file, ctx);
 	if (rc) {
 		goto fail;
 	}
@@ -594,7 +594,6 @@ spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *d
 		}
 	}
 
-	rpc_addr = opts->rpc_addr;
 	/* If rpc_addr is not an Unix socket use default address as prefix. */
 	if (rpc_addr == NULL || rpc_addr[0] != '/') {
 		rpc_addr = SPDK_DEFAULT_RPC_ADDR;
