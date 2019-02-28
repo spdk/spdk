@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "50ca7f73_61219f0e",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 941,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-28T08:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb63e9e3_0c8f9a11",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "de977a3a_fc5718b7",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 23
@@ -59,6 +77,30 @@
     },
     {
       "key": {
+        "uuid": "bfcaafd3_3a1fa075",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-28T08:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "488d0ce0_82726285",
+      "range": {
+        "startLine": 121,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 54
+      },
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "979c8d24_c10f577a",
         "filename": "lib/opal/opal.c",
         "patchSetId": 23
@@ -70,6 +112,24 @@
       "writtenOn": "2019-02-27T07:59:30Z",
       "side": 1,
       "message": "This should not an error message, SPDK_INFOLOG is ok.",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "22aa47a3_bb8ad86d",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 541,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-28T08:29:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "979c8d24_c10f577a",
       "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -93,6 +153,24 @@
     },
     {
       "key": {
+        "uuid": "bd587c26_ed9ce4c1",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-28T08:29:06Z",
+      "side": 1,
+      "message": "Hi Changpeng, thank you for your review. This init function will remain returning a \"dev\" structure with \"supported\" element being set to false. And outside of this, there will be checking function (spdk_get_opal_support()) and free source operations. And so, I will just keep return \"dev\" here.",
+      "parentUuid": "0a386f2f_9e2b17a2",
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f6f19eb_b603c0e5",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 23
@@ -104,6 +182,30 @@
       "writtenOn": "2019-02-27T07:59:30Z",
       "side": 1,
       "message": "Can we rename to dev_handler too, actually I think using spdk_nvme_ctrlr maybe more straightforward.",
+      "range": {
+        "startLine": 310,
+        "startChar": 1,
+        "endLine": 310,
+        "endChar": 12
+      },
+      "revId": "433aafbd1a508e060afa1518cb2d9ff5a922fe85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c1e8c095_54907c43",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 23
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-02-28T08:29:06Z",
+      "side": 1,
+      "message": "Yes. Thank you Changpeng. I think I will rename it to dev_handler just for scalability consideration as we might add support for scsi/ata interface also in the future (if we need).",
+      "parentUuid": "0f6f19eb_b603c0e5",
       "range": {
         "startLine": 310,
         "startChar": 1,
