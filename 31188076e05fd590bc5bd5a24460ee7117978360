@@ -25,6 +25,29 @@
     },
     {
       "key": {
+        "uuid": "611ca705_b620e77c",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-28T14:52:08Z",
+      "side": 1,
+      "message": "\"...check if...\"",
+      "range": {
+        "startLine": 1267,
+        "startChar": 13,
+        "endLine": 1267,
+        "endChar": 14
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15d3efe6_0c6d8524",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 4
@@ -36,6 +59,30 @@
       "writtenOn": "2019-02-28T13:36:33Z",
       "side": 1,
       "message": "You shouldn\u0027t need to destroy all the underlying parts, just delete_malloc_bdev should be fine.",
+      "range": {
+        "startLine": 1280,
+        "startChar": 0,
+        "endLine": 1283,
+        "endChar": 59
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "584085b2_f03c3af5",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-28T14:52:08Z",
+      "side": 1,
+      "message": "Going with Tomek\u0027s proposal would create event better test for this case.",
+      "parentUuid": "15d3efe6_0c6d8524",
       "range": {
         "startLine": 1280,
         "startChar": 0,
