@@ -223,24 +223,9 @@ static int
 _spdk_reactor_run(void *arg)
 {
 	struct spdk_reactor	*reactor = arg;
-	struct spdk_thread	*orig_thread, *thread;
+	struct spdk_thread	*thread;
 	uint64_t		last_rusage = 0;
 	struct spdk_lw_thread	*lw_thread, *tmp;
-	char			thread_name[32];
-
-	snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
-	orig_thread = spdk_thread_create(thread_name);
-	if (!orig_thread) {
-		return -1;
-	}
-
-	lw_thread = (struct spdk_lw_thread *)spdk_thread_get_ctx(orig_thread);
-	if (!lw_thread) {
-		spdk_thread_exit(orig_thread);
-		return -ENOMEM;
-	}
-
-	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
 
 	SPDK_NOTICELOG("Reactor started on core %u\n", reactor->lcore);
 
@@ -271,11 +256,11 @@ _spdk_reactor_run(void *arg)
 		}
 	}
 
-	lw_thread = spdk_thread_get_ctx(orig_thread);
-	TAILQ_REMOVE(&reactor->threads, lw_thread, link);
-	assert(TAILQ_EMPTY(&reactor->threads));
-
-	spdk_thread_exit(orig_thread);
+	TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
+		thread = spdk_thread_get_from_ctx(lw_thread);
+		TAILQ_REMOVE(&reactor->threads, lw_thread, link);
+		spdk_thread_exit(thread);
+	}
 
 	return 0;
 }
@@ -320,6 +305,7 @@ spdk_reactors_start(void)
 	struct spdk_reactor *reactor;
 	uint32_t i, current_core;
 	int rc;
+	char thread_name[32];
 
 	g_reactor_state = SPDK_REACTOR_STATE_RUNNING;
 	g_spdk_app_core_mask = spdk_cpuset_alloc();
@@ -334,6 +320,10 @@ spdk_reactors_start(void)
 				assert(false);
 				return;
 			}
+
+			/* For now, for each reactor spawn one thread. */
+			snprintf(thread_name, sizeof(thread_name), "reactor_%u", reactor->lcore);
+			spdk_thread_create(thread_name);
 		}
 		spdk_cpuset_set_cpu(g_spdk_app_core_mask, i, true);
 	}
@@ -353,6 +343,43 @@ void
 spdk_reactors_stop(void *arg1)
 {
 	g_reactor_state = SPDK_REACTOR_STATE_EXITING;
+}
+
+static pthread_mutex_t g_scheduler_mtx = PTHREAD_MUTEX_INITIALIZER;
+static uint32_t g_next_core = UINT32_MAX;
+
+static void
+_schedule_thread(void *arg1, void *arg2)
+{
+	struct spdk_lw_thread *lw_thread = arg1;
+	struct spdk_reactor *reactor;
+
+	reactor = spdk_reactor_get(spdk_env_get_current_core());
+
+	TAILQ_INSERT_TAIL(&reactor->threads, lw_thread, link);
+}
+
+static void
+spdk_reactor_schedule_thread(struct spdk_thread *thread)
+{
+	uint32_t core;
+	struct spdk_lw_thread *lw_thread;
+	struct spdk_event *evt;
+
+	lw_thread = spdk_thread_get_ctx(thread);
+	assert(lw_thread != NULL);
+	memset(lw_thread, 0, sizeof(*lw_thread));
+
+	pthread_mutex_lock(&g_scheduler_mtx);
+	if (g_next_core > spdk_env_get_core_count()) {
+		g_next_core = spdk_env_get_first_core();
+	}
+	core = g_next_core;
+	g_next_core = spdk_env_get_next_core(g_next_core);
+	pthread_mutex_unlock(&g_scheduler_mtx);
+
+	evt = spdk_event_allocate(core, _schedule_thread, lw_thread, NULL);
+	spdk_event_call(evt);
 }
 
 int
@@ -388,7 +415,7 @@ spdk_reactors_init(void)
 
 	memset(g_reactors, 0, (last_core + 1) * sizeof(struct spdk_reactor));
 
-	spdk_thread_lib_init(NULL, sizeof(struct spdk_lw_thread));
+	spdk_thread_lib_init(spdk_reactor_schedule_thread, sizeof(struct spdk_lw_thread));
 
 	SPDK_ENV_FOREACH_CORE(i) {
 		reactor = spdk_reactor_get(i);
