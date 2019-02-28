@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf2feff8_4544a7fe",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:04:02Z",
+      "side": 1,
+      "message": "how about spdk_thread_is_idle?\n\nso then it is:\n\nwhile (!spdk_thread_is_idle(fio_thread-\u003ethread)) {\n  spdk_fio_poll_thread(fio_thread);\n}",
+      "revId": "75a679fca8a6c70497d03ade087d42bc1cf22642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc8cb65b_eb187355",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T22:04:02Z",
+      "side": 1,
+      "message": "let\u0027s make this even more clear and just create a new spdk_thread_has_pollers() function that checks both the active_pollers and timer_pollers TAILQs",
+      "revId": "75a679fca8a6c70497d03ade087d42bc1cf22642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
