@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d41a25b_46e24935",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1631,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T14:40:52Z",
+      "side": 1,
+      "message": "This comment would be better put in the commit message.  \"old\" is relevant today, but 2 years from now, it won\u0027t be so clear.",
+      "revId": "bf3cd9fe525ad40c9e44f4643f065e7e9fefbaba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
