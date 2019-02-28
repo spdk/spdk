@@ -59,6 +59,8 @@
 
 struct spdk_app {
 	struct spdk_conf		*config;
+	const char			*json_config_file;
+	const char			*rpc_addr;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
@@ -354,21 +356,18 @@ spdk_app_start_application(void)
 static void
 spdk_app_start_rpc(void *arg1, void *arg2)
 {
-	const char *rpc_addr = arg1;
-
-	spdk_rpc_initialize(rpc_addr);
+	spdk_rpc_initialize(g_spdk_app.rpc_addr);
 	if (!g_delay_subsystem_init) {
 		spdk_app_start_application();
 	}
 }
 
 static void
-_spdk_app_json_config_load(void *_app_opts, void *_event_done)
+_spdk_app_json_config_load(void *arg1, void *arg2)
 {
-	struct spdk_app_opts *app_opts = _app_opts;
-	struct spdk_event *event_done = _event_done;
+	struct spdk_event *event_done = arg1;
 
-	spdk_app_json_config_load(app_opts, event_done);
+	spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, event_done);
 }
 
 static struct spdk_conf *
@@ -666,6 +665,8 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
+	g_spdk_app.json_config_file = opts->json_config_file;
+	g_spdk_app.rpc_addr = opts->rpc_addr;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
@@ -675,12 +676,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
 	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
 	g_rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-						(void *)opts->rpc_addr, NULL);
+						NULL, NULL);
 
 	if (opts->json_config_file) {
 		g_delay_subsystem_init = false;
 		g_config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
-				      opts, g_rpc_start_event);
+				      g_rpc_start_event, NULL);
 	}
 
 	spdk_event_call(event);
