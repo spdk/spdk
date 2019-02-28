@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bb4af6b0_ad976c68",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:49:16Z",
+      "side": 1,
+      "message": "maybe just add these details to the first entry you added below",
+      "revId": "371a59de9f393ef4eee372601a0fc5f3d2a472e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4da5693b_9d2b73a6",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T23:49:16Z",
+      "side": 1,
+      "message": "talked with Ben on this - we usually try to avoid cases where SPDK allocates the memory and then requires user to free it\n\nwhat if instead, SPDK frees the context once controller is in READY state?\n\nsame applies to spdk_nvme_probe_async\n\nprobably the comment should just say \"until spdk_nvme_probe_poll_async() returns TRUE\" - there is no guarantee controller will ever become READY - it could fail initialization",
+      "revId": "371a59de9f393ef4eee372601a0fc5f3d2a472e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
