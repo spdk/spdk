@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d864ea2b_d1c02341",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 21
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T20:58:29Z",
+      "side": 1,
+      "message": "nvme_bdev_dump_trid_json",
+      "revId": "efb2221632916bd90a69bf343af5085c7d983a12",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
