@@ -16,6 +16,24 @@
       "revId": "30fbc58694e243c4623a9f18156740a6c0f305c9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2d52ba7_75e17da9",
+        "filename": "lib/bdev/nvme/common_rpc.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 76,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-02-28T08:35:07Z",
+      "side": 1,
+      "message": "That makes sense. I added separate file for RPC in version, where common code was separate library, but now - with common code in nvme bdev location - it makes more sense to just leave it in bdev_nvme_rpc.c.",
+      "parentUuid": "5e1bdb93_37f57723",
+      "revId": "30fbc58694e243c4623a9f18156740a6c0f305c9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
