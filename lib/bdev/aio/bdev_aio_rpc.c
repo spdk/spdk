@@ -75,7 +75,7 @@ spdk_rpc_construct_aio_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	bdev = create_aio_disk(req.name, req.filename, req.block_size);
+	bdev = create_aio_bdev(req.name, req.filename, req.block_size);
 	if (bdev == NULL) {
 		goto invalid;
 	}
@@ -147,7 +147,7 @@ spdk_rpc_delete_aio_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	delete_aio_disk(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
+	delete_aio_bdev(bdev, _spdk_rpc_delete_aio_bdev_cb, request);
 
 	free_rpc_delete_aio(&req);
 
