@@ -92,6 +92,57 @@
       "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8711535d_9c555938",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 752,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T16:22:16Z",
+      "side": 1,
+      "message": "are these fields (this one and next two) governed by nsfeat.ns_atomic_write_unit?  description of this bit in the 1.3 spec indicates it only governs NAWUN, NAWUPF and NACWU\n\nbut reading NABSN/NABO/NABSPF, these definitely refer only to the namespace-specific write unit parameters - so this is probably correct as you have it (seems like the ns_atomic_write_unit bit could be documented a bit more clearly)",
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2473084c_290039b9",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 753,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T16:22:16Z",
+      "side": 1,
+      "message": "is this 0-based?  NABSN description in the 1.3 spec doesn\u0027t say that it is",
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5c18de5_7e7d33c9",
+        "filename": "examples/nvme/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 763,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-02-28T16:22:16Z",
+      "side": 1,
+      "message": "not sure this is 0-based either\n\nthe spec actually says that if NABSN and NABSPF are 0, then NABO must also be 0 - I think that\u0027s probably another hint that none of these boundary values are 0-based",
+      "revId": "71524cb31ab01fc49a2af5a584a6502749fc24c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
