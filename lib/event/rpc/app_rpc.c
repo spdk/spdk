@@ -193,6 +193,12 @@ rpc_get_threads_stat_done(void *arg)
 				spdk_json_write_named_uint64(ctx->w, "busy", stat_entry->stats.busy_tsc);
 				spdk_json_write_named_uint64(ctx->w, "idle", stat_entry->stats.idle_tsc);
 				spdk_json_write_named_uint64(ctx->w, "unknown", stat_entry->stats.unknown_tsc);
+				spdk_json_write_named_string_fmt(ctx->w, "busy_sec", "%.3f",
+								 (double)stat_entry->stats.busy_tsc / spdk_get_ticks_hz());
+				spdk_json_write_named_string_fmt(ctx->w, "idle_sec", "%.3f",
+								 (double)stat_entry->stats.idle_tsc / spdk_get_ticks_hz());
+				spdk_json_write_named_string_fmt(ctx->w, "unknown_sec", "%.3f",
+								 (double)stat_entry->stats.unknown_tsc / spdk_get_ticks_hz());
 				spdk_json_write_object_end(ctx->w);
 			}
 			spdk_json_write_array_end(ctx->w);
