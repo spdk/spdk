@@ -78,6 +78,9 @@ DEFINE_STUB(spdk_bdev_get_md_size, uint32_t,
 DEFINE_STUB(spdk_bdev_is_md_interleaved, bool,
 	    (const struct spdk_bdev *bdev), false);
 
+DEFINE_STUB(spdk_bdev_get_data_block_size, uint32_t,
+	    (const struct spdk_bdev *bdev), 512);
+
 uint64_t
 spdk_bdev_get_num_blocks(const struct spdk_bdev *bdev)
 {
