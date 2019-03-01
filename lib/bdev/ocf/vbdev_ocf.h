@@ -130,13 +130,6 @@ struct vbdev_ocf {
 
 	/* Link to global list of this type structures */
 	TAILQ_ENTRY(vbdev_ocf)       tailq;
-
-	/* List of queues contexts
-	 * New items are added at io_channel creation */
-	TAILQ_HEAD(, vbdev_ocf_qcxt) queues;
-
-	/* Private per-bdev lock */
-	pthread_mutex_t              _lock;
 };
 
 int vbdev_ocf_construct(

@@ -50,10 +50,6 @@
 
 static struct spdk_bdev_module ocf_if;
 
-/* Set number of OCF queues to maximum numbers of cores
- * that SPDK supports, so we never run out of them */
-static int g_queues_count = SPDK_CPUSET_SIZE;
-
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_vbdev_head);
 
@@ -66,7 +62,6 @@ free_vbdev(struct vbdev_ocf *vbdev)
 		return;
 	}
 
-	pthread_mutex_destroy(&vbdev->_lock);
 	free(vbdev->name);
 	free(vbdev->cache.name);
 	free(vbdev->core.name);
@@ -327,7 +322,7 @@ io_handle(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 		goto fail;
 	}
 
-	ocf_io_set_queue(io, ocf_queue_get_id(qctx->queue));
+	ocf_io_set_queue(io, qctx->queue);
 
 	data = vbdev_ocf_data_from_spdk_io(bdev_io);
 	if (!data) {
@@ -537,58 +532,40 @@ static int queue_poll(void *opaque)
 	}
 }
 
-/* Find queue index that is not taken */
-static int
-get_free_queue_id(struct vbdev_ocf *vbdev)
+/* Called during ocf_submit_io, ocf_purge*
+ * and any other requests that need to submit io */
+static void
+vbdev_ocf_ctx_queue_kick(ocf_queue_t q)
 {
-	struct vbdev_ocf_qcxt *qctx;
-	int i, tmp;
-
-	for (i = 1; i < (int)vbdev->cfg.cache.io_queues; i++) {
-		tmp = i;
-		TAILQ_FOREACH(qctx, &vbdev->queues, tailq) {
-			tmp = ocf_queue_get_id(qctx->queue);
-			if (tmp == i) {
-				tmp = -1;
-				break;
-			}
-		}
-		if (tmp > 0) {
-			return i;
-		}
-	}
-
-	return -1;
 }
 
+/* OCF queue deinitialization
+ * Called at ocf_cache_stop */
+static void
+vbdev_ocf_ctx_queue_stop(ocf_queue_t q)
+{
+}
+
+/* Queue ops is an interface for running queue thread
+ * stop() operation in called just before queue gets destroyed */
+const struct ocf_queue_ops queue_ops = {
+	.kick_sync = vbdev_ocf_ctx_queue_kick,
+	.kick = vbdev_ocf_ctx_queue_kick,
+	.stop = vbdev_ocf_ctx_queue_stop,
+};
+
 /* Called on cache vbdev creation at every thread
- * We determine on which OCF queue IOs from this thread will be running
- * and allocate resources for that queue
- * This is also where queue poller gets registered */
+ * We allocate OCF queues here and SPDK poller for it */
 static int
 io_device_create_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_ocf *vbdev = io_device;
 	struct vbdev_ocf_qcxt *qctx = ctx_buf;
-	int queue_id = 0, rc;
+	int rc;
 
-	/* Modifying state of vbdev->queues needs to be synchronous
-	 * We use vbdev private lock to achive that */
-	pthread_mutex_lock(&vbdev->_lock);
-
-	queue_id = get_free_queue_id(vbdev);
-
-	if (queue_id < 0) {
-		SPDK_ERRLOG("OCF queues count is too small, try to allocate more than %d\n",
-			    vbdev->cfg.cache.io_queues);
-		rc = -EINVAL;
-		goto end;
-	}
-
-	rc = ocf_cache_get_queue(vbdev->ocf_cache, queue_id, &qctx->queue);
+	rc = ocf_queue_create(vbdev->ocf_cache, &qctx->queue, &queue_ops);
 	if (rc) {
-		SPDK_ERRLOG("Could not get OCF queue #%d\n", queue_id);
-		goto end;
+		return rc;
 	}
 
 	ocf_queue_set_priv(qctx->queue, qctx);
@@ -598,10 +575,6 @@ io_device_create_cb(void *io_device, void *ctx_buf)
 	qctx->core_ch    = spdk_bdev_get_io_channel(vbdev->core.desc);
 	qctx->poller     = spdk_poller_register(queue_poll, qctx, 0);
 
-	TAILQ_INSERT_TAIL(&vbdev->queues, qctx, tailq);
-
-end:
-	pthread_mutex_unlock(&vbdev->_lock);
 	return rc;
 }
 
@@ -616,10 +589,7 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_put_io_channel(qctx->cache_ch);
 	spdk_put_io_channel(qctx->core_ch);
 	spdk_poller_unregister(&qctx->poller);
-
-	pthread_mutex_lock(&qctx->vbdev->_lock);
-	TAILQ_REMOVE(&qctx->vbdev->queues, qctx, tailq);
-	pthread_mutex_unlock(&qctx->vbdev->_lock);
+	ocf_queue_put(qctx->queue);
 }
 
 /* Start OCF cache and register vbdev_ocf at bdev layer */
@@ -697,11 +667,6 @@ init_vbdev_config(struct vbdev_ocf *vbdev)
 	cfg->cache.backfill.max_queue_size = 65536;
 	cfg->cache.backfill.queue_unblock_size = 60000;
 
-	/* At this moment OCF queues count is static
-	 * so we choose some value for it
-	 * It has to be bigger than SPDK thread count */
-	cfg->cache.io_queues = g_queues_count;
-
 	/* TODO [cache line size] */
 	cfg->device.cache_line_size = ocf_cache_line_size_4;
 	cfg->device.force = true;
@@ -744,8 +709,6 @@ init_vbdev(const char *vbdev_name,
 	vbdev->core.parent = vbdev;
 	vbdev->cache.is_cache = true;
 	vbdev->core.is_cache = false;
-	pthread_mutex_init(&vbdev->_lock, NULL);
-	TAILQ_INIT(&vbdev->queues);
 
 	if (cache_mode_name) {
 		vbdev->cfg.cache.cache_mode
