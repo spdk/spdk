@@ -1222,6 +1222,7 @@ build_iovs_test(void)
 
 	pdu.bhs.total_ahs_len = 0;
 	pdu.bhs.opcode = ISCSI_OP_SCSI;
+	pdu.dif_strip = false;
 
 	pdu.writev_offset = 0;
 	rc = spdk_iscsi_build_iovs(&conn, iovs, 5, &pdu, &mapped_length);
