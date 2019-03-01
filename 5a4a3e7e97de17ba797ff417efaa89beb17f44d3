@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8d09b676_81bf5885",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4581,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T04:55:17Z",
+      "side": 1,
+      "message": "OK, I\u0027ll shrink. (This was for readability.)",
+      "parentUuid": "eb3653ca_cbc3df95",
+      "revId": "5a4a3e7e97de17ba797ff417efaa89beb17f44d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8dcff004_7dc70204",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 8
@@ -30,6 +48,30 @@
       "writtenOn": "2019-03-01T04:36:05Z",
       "side": 1,
       "message": "For the data in and data out, can we merge two cases into one.\nI think that the only different is using reqh or rsph, then we can reduce lots of duplicated code.",
+      "range": {
+        "startLine": 4588,
+        "startChar": 1,
+        "endLine": 4588,
+        "endChar": 30
+      },
+      "revId": "5a4a3e7e97de17ba797ff417efaa89beb17f44d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b3ba0870_7049a030",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4588,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T04:55:17Z",
+      "side": 1,
+      "message": "OK, I merge data out and in.",
+      "parentUuid": "8dcff004_7dc70204",
       "range": {
         "startLine": 4588,
         "startChar": 1,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "ea469c3e_7eeed835",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4595,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T04:55:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dd2787c4_733c97ef",
+      "revId": "5a4a3e7e97de17ba797ff417efaa89beb17f44d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46e8df3e_c83b09d0",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 8
@@ -70,6 +130,24 @@
       "writtenOn": "2019-03-01T04:36:05Z",
       "side": 1,
       "message": "unnecessary empty line",
+      "revId": "5a4a3e7e97de17ba797ff417efaa89beb17f44d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "09e753e6_127044e4",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 4613,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T04:55:17Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46e8df3e_c83b09d0",
       "revId": "5a4a3e7e97de17ba797ff417efaa89beb17f44d3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
