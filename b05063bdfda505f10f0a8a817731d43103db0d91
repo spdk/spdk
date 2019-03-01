@@ -22,6 +22,30 @@
       "revId": "b05063bdfda505f10f0a8a817731d43103db0d91",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "03687637_e51f24f8",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2138,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T06:27:51Z",
+      "side": 1,
+      "message": "I change the order of the patch series and use spdk_bdev_get_data_block_size() here.",
+      "parentUuid": "da84ef44_1f8990a6",
+      "range": {
+        "startLine": 2138,
+        "startChar": 40,
+        "endLine": 2138,
+        "endChar": 62
+      },
+      "revId": "b05063bdfda505f10f0a8a817731d43103db0d91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
