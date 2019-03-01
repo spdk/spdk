@@ -112,14 +112,18 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
+struct spdk_nvmf_subsystem_pg_ns_info {
+	struct spdk_io_channel	*channel;
+};
+
 struct spdk_nvmf_subsystem_poll_group {
-	/* Array of channels for each namespace indexed by nsid - 1 */
-	struct spdk_io_channel	**channels;
-	uint32_t		num_channels;
+	/* Array of namespace information for each namespace indexed by nsid - 1 */
+	struct spdk_nvmf_subsystem_pg_ns_info	*ns_info;
+	uint32_t				num_ns;
 
-	enum spdk_nvmf_subsystem_state state;
+	enum spdk_nvmf_subsystem_state		state;
 
-	TAILQ_HEAD(, spdk_nvmf_request)	queued;
+	TAILQ_HEAD(, spdk_nvmf_request)		queued;
 };
 
 struct spdk_nvmf_poll_group {
