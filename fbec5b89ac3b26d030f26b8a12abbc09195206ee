@@ -22,6 +22,30 @@
       "revId": "fbec5b89ac3b26d030f26b8a12abbc09195206ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "190f91d9_ef6dd2fc",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2365,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T17:33:06Z",
+      "side": 1,
+      "message": "This kind of assert should probably be added when the bdev is registered (instead of waiting until here).  But let\u0027s do that in a separate patch.",
+      "parentUuid": "b7d01f53_d9ad0266",
+      "range": {
+        "startLine": 2365,
+        "startChar": 2,
+        "endLine": 2365,
+        "endChar": 39
+      },
+      "revId": "fbec5b89ac3b26d030f26b8a12abbc09195206ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
