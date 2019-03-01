@@ -35,6 +35,7 @@
 
 #include <linux/virtio_scsi.h>
 
+#include "spdk_internal/assert.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/scsi.h"
@@ -67,9 +68,20 @@
 #define VIRTIO_SCSI_EVENTQ   1
 #define VIRTIO_SCSI_REQUESTQ   2
 
+enum spdk_scsi_dev_vhost_status {
+	VHOST_SCSI_DEV_EMPTY,
+	VHOST_SCSI_DEV_PRESENT,
+
+	/* Only used on device, not in session. */
+	VHOST_SCSI_DEV_REMOVING,
+
+	/* This status is used only in session to report proper SCSI sense code. */
+	VHOST_SCSI_DEV_SESSION_REMOVED,
+};
+
 struct spdk_scsi_dev_vhost_state {
 	struct spdk_scsi_dev *dev;
-	bool removed;
+	enum spdk_scsi_dev_vhost_status status;
 	spdk_vhost_event_fn remove_cb;
 	void *remove_ctx;
 };
@@ -158,80 +170,23 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 		unsigned scsi_tgt_num)
 {
 	struct spdk_scsi_dev_vhost_state *state;
-	struct spdk_scsi_dev *dev;
 
 	state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (state->dev == NULL) {
-		/* we've been already removed in the meantime */
-		return 0;
-	}
-
-	dev = state->dev;
+	assert(state->status == VHOST_SCSI_DEV_REMOVING);
+	assert(state->dev != NULL);
+	spdk_scsi_dev_destruct(state->dev);
 	state->dev = NULL;
-	spdk_scsi_dev_destruct(dev);
+
+	/* For device set to empty as REMOVED state is only useful for sessions */
+	state->status = VHOST_SCSI_DEV_EMPTY;
 	if (state->remove_cb) {
 		state->remove_cb(&svdev->vdev, state->remove_ctx);
 		state->remove_cb = NULL;
 	}
+
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "%s: removed target 'Target %u'\n",
 		     svdev->vdev.name, scsi_tgt_num);
 	return 0;
-}
-
-static int
-spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
-					struct spdk_vhost_session *vsession, void *ctx)
-{
-	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
-	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_vhost_state *state;
-
-	if (vsession == NULL) {
-		/* all sessions have already detached the device */
-		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
-						    struct spdk_vhost_scsi_dev, vdev);
-
-		return remove_scsi_tgt(svdev, scsi_tgt_num);
-	}
-
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
-
-	if (state->dev != NULL) {
-		/* there's still a session that references this device,
-		 * so abort our foreach chain here. We'll be called
-		 * again from this session's management poller after it
-		 * is removed in there
-		 */
-		return -1;
-	}
-
-	return 0;
-}
-
-static void
-process_removed_devs(struct spdk_vhost_scsi_session *svsession)
-{
-	struct spdk_scsi_dev *dev;
-	struct spdk_scsi_dev_vhost_state *state;
-	int i;
-
-	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
-		state = &svsession->scsi_dev_state[i];
-		dev = state->dev;
-
-		if (dev && state->removed && !spdk_scsi_dev_has_pending_tasks(dev)) {
-			/* detach the device from this session */
-			spdk_scsi_dev_free_io_channels(dev);
-			state->dev = NULL;
-			/* try to detach it globally */
-			spdk_vhost_lock();
-			spdk_vhost_dev_foreach_session(&svsession->svdev->vdev,
-						       spdk_vhost_scsi_session_process_removed,
-						       (void *)(uintptr_t)i);
-			spdk_vhost_unlock();
-		}
-	}
 }
 
 static void
@@ -374,14 +329,25 @@ spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *
 	}
 
 	state = &svsession->scsi_dev_state[lun[1]];
-	task->scsi_dev = state->dev;
-	if (state->dev == NULL || svsession->scsi_dev_state[lun[1]].removed) {
+	switch (state->status) {
+	case VHOST_SCSI_DEV_EMPTY:
+		return -1;
+	case VHOST_SCSI_DEV_PRESENT:
+		break;
+	case VHOST_SCSI_DEV_REMOVING:
+	case VHOST_SCSI_DEV_SESSION_REMOVED:
 		/* If dev has been hotdetached, return 0 to allow sending
 		 * additional hotremove event via sense codes.
 		 */
-		return svsession->scsi_dev_state[lun[1]].removed ? 0 : -1;
+		task->scsi_dev = NULL;
+		return 0;
+	default:
+		SPDK_UNREACHABLE();
+		assert(false);
 	}
 
+	assert(state->dev != NULL);
+	task->scsi_dev = state->dev;
 	task->scsi.target_port = spdk_scsi_dev_find_port_by_id(task->scsi_dev, 0);
 	task->scsi.lun = spdk_scsi_dev_get_lun(state->dev, lun_id);
 	return 0;
@@ -747,7 +713,6 @@ vdev_mgmt_worker(void *arg)
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 
-	process_removed_devs(svsession);
 	spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[VIRTIO_SCSI_EVENTQ]);
 
 	process_controlq(svsession, &vsession->virtqueue[VIRTIO_SCSI_CONTROLQ]);
@@ -836,7 +801,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
-		if (svdev->scsi_dev_state[i].dev) {
+		if (svdev->scsi_dev_state[i].status != VHOST_SCSI_DEV_EMPTY) {
 			if (vdev->registered) {
 				SPDK_ERRLOG("Trying to remove non-empty controller: %s.\n", vdev->name);
 				return -EBUSY;
@@ -867,7 +832,11 @@ spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 	assert(num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 	svdev = to_scsi_dev(vdev);
 
-	return svdev ? svdev->scsi_dev_state[num].dev : NULL;
+	if (!svdev || svdev->scsi_dev_state[num].status != VHOST_SCSI_DEV_PRESENT) {
+		return NULL;
+	}
+
+	return svdev->scsi_dev_state[num].dev;
 }
 
 static void
@@ -891,8 +860,10 @@ spdk_vhost_scsi_lun_hotremove(const struct spdk_scsi_lun *lun, void *arg)
 		return;
 	}
 
-	/* remove entire device */
-	spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, scsi_dev_num, NULL, NULL);
+	if (svdev->scsi_dev_state[scsi_dev_num].status == VHOST_SCSI_DEV_PRESENT) {
+		/* remove entire device */
+		spdk_vhost_scsi_dev_remove_tgt(&svdev->vdev, scsi_dev_num, NULL, NULL);
+	}
 }
 
 static int
@@ -901,6 +872,7 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_scsi_dev_vhost_state *state;
 	int rc;
 
 	if (vsession == NULL) {
@@ -914,28 +886,16 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
-	/* copy the entire device state */
-	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
-
-	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
+	state = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
+	rc = spdk_scsi_dev_allocate_io_channels(state->dev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't allocate io channnel for SCSI target %u in device %s\n",
 			    scsi_tgt_num, vdev->name);
-
-		/* unset the SCSI target so that all I/O to it will be rejected */
-		svsession->scsi_dev_state[scsi_tgt_num].dev = NULL;
-		/* unset the removed flag so that we won't reply with SCSI hotremove
-		 * sense codes - the device hasn't ever been added.
-		 */
-		svsession->scsi_dev_state[scsi_tgt_num].removed = false;
-
-		/* Return with no error. We'll continue allocating io_channels for
-		 * other sessions on this device in hopes they succeed. The sessions
-		 * that failed to allocate io_channels simply won't be able to
-		 * detect the SCSI target, nor do any I/O to it.
-		 */
 		return 0;
 	}
+
+	/* copy the entire device state */
+	svsession->scsi_dev_state[scsi_tgt_num] = *state;
 
 	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
@@ -966,7 +926,8 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 
 	if (scsi_tgt_num < 0) {
 		for (scsi_tgt_num = 0; scsi_tgt_num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; scsi_tgt_num++) {
-			if (svdev->scsi_dev_state[scsi_tgt_num].dev == NULL) {
+			state = &svdev->scsi_dev_state[scsi_tgt_num];
+			if (state->status == VHOST_SCSI_DEV_EMPTY) {
 				break;
 			}
 		}
@@ -981,17 +942,17 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 				    SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 			return -EINVAL;
 		}
+
+		state = &svdev->scsi_dev_state[scsi_tgt_num];
+		if (state->status != VHOST_SCSI_DEV_EMPTY) {
+			SPDK_ERRLOG("Controller %s target %u already occupied\n", vdev->name, scsi_tgt_num);
+			return -EEXIST;
+		}
 	}
 
 	if (bdev_name == NULL) {
 		SPDK_ERRLOG("No lun name specified\n");
 		return -EINVAL;
-	}
-
-	state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (state->dev != NULL) {
-		SPDK_ERRLOG("Controller %s target %u already occupied\n", vdev->name, scsi_tgt_num);
-		return -EEXIST;
 	}
 
 	/*
@@ -1001,7 +962,6 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	lun_id_list[0] = 0;
 	bdev_names_list[0] = (char *)bdev_name;
 
-	state->removed = false;
 	state->dev = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list, 1,
 					     SPDK_SPC_PROTOCOL_IDENTIFIER_SAS,
 					     spdk_vhost_scsi_lun_hotremove, svdev);
@@ -1016,9 +976,40 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: defined target '%s' using bdev '%s'\n",
 		     vdev->name, target_name, bdev_name);
 
+	state->status = VHOST_SCSI_DEV_PRESENT;
 	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_add_tgt,
 				       (void *)(uintptr_t)scsi_tgt_num);
 	return scsi_tgt_num;
+}
+
+static void
+_spdk_vhost_scsi_session_detach_tgt(struct spdk_vhost_scsi_session *svsession,
+				    unsigned scsi_tgt_num)
+{
+	struct spdk_scsi_dev_vhost_state *state = &svsession->scsi_dev_state[scsi_tgt_num];
+
+	/* Session stop poller might race here with target remove request. */
+	if (state->status != VHOST_SCSI_DEV_PRESENT) {
+		return;
+	}
+
+	state->status = VHOST_SCSI_DEV_SESSION_REMOVED;
+
+	/* If this session isn't polled or stopping don't notify initiator. */
+	if (svsession->vsession.lcore != -1 && svsession->stopping == false) {
+		/* Otherwise, send a hotremove Virtio event and wait for the session's
+		 * management poller to remove the target after all its pending I/O
+		 * has finished.
+		 */
+		if (spdk_vhost_dev_has_feature(&svsession->vsession, VIRTIO_SCSI_F_HOTPLUG)) {
+			eventq_enqueue(svsession, scsi_tgt_num,
+				       VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
+		}
+
+	}
+
+
+	spdk_scsi_dev_free_io_channels(state->dev);
 }
 
 static int
@@ -1026,42 +1017,17 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 				   struct spdk_vhost_session *vsession, void *ctx)
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
-	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_vhost_state *state;
-	int rc = 0;
+	struct spdk_vhost_scsi_session *svsession = (struct spdk_vhost_scsi_session *)vsession;
 
 	if (vsession == NULL) {
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
 						    struct spdk_vhost_scsi_dev, vdev);
 
-		if (vdev->active_session_num == 0) {
-			/* there aren't any active sessions, so remove the dev and exit */
-			rc = remove_scsi_tgt(svdev, scsi_tgt_num);
-		}
-		return rc;
+		/* Each session removed itself so remove the target and exit */
+		return remove_scsi_tgt(svdev, scsi_tgt_num);
 	}
 
-	/* Mark the target for removal */
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
-	assert(!state->removed);
-	state->removed = true;
-
-	/* If the session isn't currently polled, unset the dev straight away */
-	if (vsession->lcore == -1 || svsession->stopping) {
-		state->dev = NULL;
-		return 0;
-	}
-
-	/* Otherwise, send a hotremove Virtio event and wait for the session's
-	 * management poller to remove the target after all its pending I/O
-	 * has finished.
-	 */
-	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
-		eventq_enqueue(svsession, scsi_tgt_num,
-			       VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
-	}
-
+	_spdk_vhost_scsi_session_detach_tgt(svsession, scsi_tgt_num);
 	return 0;
 }
 
@@ -1083,20 +1049,22 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	}
 
 	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (scsi_dev_state->dev == NULL) {
+	if (scsi_dev_state->status == VHOST_SCSI_DEV_EMPTY) {
 		SPDK_ERRLOG("Controller %s target %u is not occupied\n", vdev->name, scsi_tgt_num);
 		return -ENODEV;
 	}
 
-	if (scsi_dev_state->removed) {
+	if (scsi_dev_state->status != VHOST_SCSI_DEV_PRESENT) {
 		SPDK_WARNLOG("%s: 'Target %u' has been already marked to hotremove.\n",
 			     vdev->name, scsi_tgt_num);
 		return -EBUSY;
 	}
 
+	assert(scsi_dev_state->remove_cb == NULL);
 	scsi_dev_state->remove_cb = cb_fn;
 	scsi_dev_state->remove_ctx = cb_arg;
-	scsi_dev_state->removed = true;
+	scsi_dev_state->status = VHOST_SCSI_DEV_REMOVING;
+
 
 	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_remove_tgt,
 				       (void *)(uintptr_t)scsi_tgt_num);
@@ -1265,21 +1233,21 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
 		state = &svdev->scsi_dev_state[i];
-		if (state->dev == NULL) {
+		if (state->status != VHOST_SCSI_DEV_PRESENT) {
 			continue;
 		}
-		svsession->scsi_dev_state[i] = *state;
+
+		/* Assert all calbacks has been called for this device. */
+		assert(state->remove_cb == NULL);
+
 		rc = spdk_scsi_dev_allocate_io_channels(state->dev);
 		if (rc != 0) {
 			SPDK_ERRLOG("%s: failed to alloc io_channel for SCSI target %"PRIu32"\n", vdev->name, i);
-			/* unset the SCSI target so that all I/O to it will be rejected */
-			svsession->scsi_dev_state[i].dev = NULL;
-			/* unset the removed flag so that we won't reply with SCSI hotremove
-			 * sense codes - the device hasn't ever been added.
-			 */
-			svsession->scsi_dev_state[i].removed = false;
+			svsession->scsi_dev_state[i].status = VHOST_SCSI_DEV_EMPTY;
 			continue;
 		}
+
+		svsession->scsi_dev_state[i] = *state;
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vsession->lcore);
@@ -1290,6 +1258,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		svsession->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svsession,
 					 MGMT_POLL_PERIOD_US);
 	}
+
 out:
 	spdk_vhost_session_event_done(event_ctx, rc);
 	return rc;
@@ -1349,11 +1318,7 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svsession->scsi_dev_state[i].dev == NULL) {
-			continue;
-		}
-
-		spdk_scsi_dev_free_io_channels(svsession->scsi_dev_state[i].dev);
+		_spdk_vhost_scsi_session_detach_tgt(svsession, i);
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n",
@@ -1462,12 +1427,11 @@ spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
 static void
 spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_scsi_lun *lun;
 	uint32_t i;
 
-	svdev = to_scsi_dev(vdev);
-	if (!svdev) {
+	if (to_scsi_dev(vdev) == NULL) {
 		return;
 	}
 
@@ -1481,12 +1445,13 @@ spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 
 	spdk_json_write_object_end(w);
 
-	for (i = 0; i < SPDK_COUNTOF(svdev->scsi_dev_state); i++) {
-		if (svdev->scsi_dev_state[i].dev == NULL || svdev->scsi_dev_state[i].removed) {
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		scsi_dev = spdk_vhost_scsi_dev_get_tgt(vdev, i);
+		if (scsi_dev == NULL) {
 			continue;
 		}
 
-		lun = spdk_scsi_dev_get_lun(svdev->scsi_dev_state[i].dev, 0);
+		lun = spdk_scsi_dev_get_lun(scsi_dev, 0);
 
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "add_vhost_scsi_lun");
