@@ -2116,7 +2116,7 @@ spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
 
 	bdev = ns->bdev;
 	desc = ns->desc;
-	ch = group->sgroups[ctrlr->subsys->id].channels[nsid - 1];
+	ch = group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1].channel;
 	switch (cmd->opc) {
 	case SPDK_NVME_OPC_READ:
 		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
