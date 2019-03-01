@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "492cf114_f817b3b2",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T18:01:33Z",
+      "side": 1,
+      "message": "Could you details about why?",
+      "revId": "f4d8b7f1a24f3f27fed55717527766ea7ab13ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5af6fb2b_a3dab9c5",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 581,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T18:01:33Z",
+      "side": 1,
+      "message": "would \"spdk_is_iommu_enabled\" be sufficient?\n\nvfio is a Linux-specific thing.  Plus the description in the comment doesn\u0027t mention vfio, so you probably don\u0027t need it in the name either.",
+      "revId": "f4d8b7f1a24f3f27fed55717527766ea7ab13ff7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
