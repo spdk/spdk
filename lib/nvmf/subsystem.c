@@ -1303,6 +1303,75 @@ nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
 	return NULL;
 }
 
+static void
+nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
+				  struct spdk_nvmf_ns *ns,
+				  enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	struct spdk_nvmf_reservation_log *log;
+
+	switch (type) {
+	case SPDK_NVME_RESERVATION_LOG_PAGE_EMPTY:
+		return;
+	case SPDK_NVME_REGISTRATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_REGISTRATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_RELEASED:
+		if (ns->mask & SPDK_NVME_RESERVATION_RELEASED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_RESERVATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	default:
+		return;
+	}
+
+	ctrlr->log_page_count++;
+
+	/* Maximum number of queued log pages is 255 */
+	if (ctrlr->num_avail_log_pages == 0xff) {
+		log = TAILQ_LAST(&ctrlr->log_head, log_page_head);
+		log->log.log_page_count = ctrlr->log_page_count;
+		return;
+	}
+
+	log = calloc(1, sizeof(*log));
+	if (!log) {
+		return;
+	}
+
+	log->log.log_page_count = ctrlr->log_page_count;
+	log->log.type = type;
+	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
+	log->log.nsid = ns->nsid;
+	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
+
+	return;
+}
+
+static void
+nvmf_ctrlr_reservation_notice_all_other_ctrlrs(struct spdk_nvmf_ctrlr *ctrlr,
+		struct spdk_nvmf_ns *ns,
+		enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr_tmp;
+
+	TAILQ_FOREACH(ctrlr_tmp, &subsystem->ctrlrs, link) {
+		if (ctrlr_tmp != ctrlr &&
+		    spdk_uuid_compare(&ctrlr->hostid, &ctrlr_tmp->hostid) &&
+		    nvmf_ns_reservation_get_registrant(ns, &ctrlr_tmp->hostid)) {
+			nvmf_ctrlr_reservation_notice_log(ctrlr_tmp, ns, type);
+		}
+	}
+}
+
 /* current reservation type is all registrants or not */
 static bool
 nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns)
@@ -1349,16 +1418,27 @@ nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
 }
 
 static void
-nvmf_ns_reservation_release_reservation(struct spdk_nvmf_ns *ns)
+nvmf_ns_reservation_release_reservation(struct spdk_nvmf_ns *ns,
+					struct spdk_nvmf_ctrlr *ctrlr)
 {
+	enum spdk_nvme_reservation_type rtype = ns->rtype;
+
 	ns->rtype = 0;
 	ns->crkey = 0;
 	ns->holder = NULL;
+
+	if (rtype != SPDK_NVME_RESERVE_WRITE_EXCLUSIVE ||
+	    rtype != SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+		/* reservation released notification */
+		nvmf_ctrlr_reservation_notice_all_other_ctrlrs(ctrlr, ns,
+				SPDK_NVME_RESERVATION_RELEASED);
+	}
 }
 
 /* release the reservation if the last registrant was removed */
 static void
 nvmf_ns_reservation_check_release_on_remove_registrant(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_registrant *reg)
 {
 	struct spdk_nvmf_registrant *next_reg;
@@ -1375,16 +1455,22 @@ nvmf_ns_reservation_check_release_on_remove_registrant(struct spdk_nvmf_ns *ns,
 		ns->holder = next_reg;
 	} else if (nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
 		/* release the reservation */
-		nvmf_ns_reservation_release_reservation(ns);
+		nvmf_ns_reservation_release_reservation(ns, ctrlr);
 	}
 }
 
 static void
 nvmf_ns_reservation_remove_registrant(struct spdk_nvmf_ns *ns,
-				      struct spdk_nvmf_registrant *reg)
+				      struct spdk_nvmf_ctrlr *ctrlr,
+				      struct spdk_nvmf_registrant *reg,
+				      bool preempt_notification,
+				      enum spdk_nvme_reservation_notification_log_page_type type)
 {
+	if (preempt_notification) {
+		nvmf_ctrlr_reservation_notice_all_other_ctrlrs(ctrlr, ns, type);
+	}
 	TAILQ_REMOVE(&ns->registrants, reg, link);
-	nvmf_ns_reservation_check_release_on_remove_registrant(ns, reg);
+	nvmf_ns_reservation_check_release_on_remove_registrant(ns, ctrlr, reg);
 	free(reg);
 	ns->gen++;
 	return;
@@ -1392,6 +1478,7 @@ nvmf_ns_reservation_remove_registrant(struct spdk_nvmf_ns *ns,
 
 static uint32_t
 nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_ctrlr *ctrlr,
 		uint64_t rkey)
 {
 	struct spdk_nvmf_registrant *reg, *tmp;
@@ -1399,7 +1486,8 @@ nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
 		if (reg->rkey == rkey) {
-			nvmf_ns_reservation_remove_registrant(ns, reg);
+			nvmf_ns_reservation_remove_registrant(ns, ctrlr, reg,
+							      true, SPDK_NVME_REGISTRATION_PREEMPTED);
 			count++;
 		}
 	}
@@ -1408,6 +1496,7 @@ nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
 
 static uint32_t
 nvmf_ns_reservation_remove_all_other_registrants(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_registrant *reg)
 {
 	struct spdk_nvmf_registrant *reg_tmp, *reg_tmp2;
@@ -1415,7 +1504,8 @@ nvmf_ns_reservation_remove_all_other_registrants(struct spdk_nvmf_ns *ns,
 
 	TAILQ_FOREACH_SAFE(reg_tmp, &ns->registrants, link, reg_tmp2) {
 		if (reg_tmp != reg) {
-			nvmf_ns_reservation_remove_registrant(ns, reg_tmp);
+			nvmf_ns_reservation_remove_registrant(ns, ctrlr, reg_tmp,
+							      true, SPDK_NVME_REGISTRATION_PREEMPTED);
 			count++;
 		}
 	}
@@ -1423,13 +1513,15 @@ nvmf_ns_reservation_remove_all_other_registrants(struct spdk_nvmf_ns *ns,
 }
 
 static uint32_t
-nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns)
+nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_ctrlr *ctrlr)
 {
 	struct spdk_nvmf_registrant *reg, *reg_tmp;
 	uint32_t count = 0;
 
 	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, reg_tmp) {
-		nvmf_ns_reservation_remove_registrant(ns, reg);
+		nvmf_ns_reservation_remove_registrant(ns, ctrlr, reg,
+						      true, SPDK_NVME_RESERVATION_PREEMPTED);
 		count++;
 	}
 	return count;
@@ -1510,7 +1602,7 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
 		}
-		nvmf_ns_reservation_remove_registrant(ns, reg);
+		nvmf_ns_reservation_remove_registrant(ns, ctrlr, reg, false, 0);
 		update_sgroup = true;
 		break;
 	case SPDK_NVME_RESERVE_REPLACE_KEY:
@@ -1600,7 +1692,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		/* no reservation holder */
 		if (!ns->holder) {
 			/* unregister with PRKEY */
-			nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+			nvmf_ns_reservation_remove_registrants_by_key(ns, ctrlr, key.prkey);
 			break;
 		}
 		/* only 1 reservation holder and reservation key is valid */
@@ -1613,10 +1705,11 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			}
 
 			if (ns->crkey == key.prkey) {
-				nvmf_ns_reservation_remove_registrant(ns, ns->holder);
+				nvmf_ns_reservation_remove_registrant(ns, ctrlr, ns->holder,
+								      true, SPDK_NVME_REGISTRATION_PREEMPTED);
 				nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
 			} else if (key.prkey != 0) {
-				nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+				nvmf_ns_reservation_remove_registrants_by_key(ns, ctrlr, key.prkey);
 			} else {
 				/* PRKEY is zero */
 				SPDK_ERRLOG("Current PRKEY is zero\n");
@@ -1627,10 +1720,10 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		} else {
 			/* release all other registrants except for the current one */
 			if (key.prkey == 0) {
-				nvmf_ns_reservation_remove_all_other_registrants(ns, reg);
+				nvmf_ns_reservation_remove_all_other_registrants(ns, ctrlr, reg);
 				assert(ns->holder == reg);
 			} else {
-				count = nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+				count = nvmf_ns_reservation_remove_registrants_by_key(ns, ctrlr, key.prkey);
 				if (count == 0) {
 					SPDK_ERRLOG("PRKEY doesn't match any registrant\n");
 					status = SPDK_NVME_SC_RESERVATION_CONFLICT;
@@ -1705,10 +1798,10 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 			update_sgroup = false;
 			goto exit;
 		}
-		nvmf_ns_reservation_release_reservation(ns);
+		nvmf_ns_reservation_release_reservation(ns, ctrlr);
 		break;
 	case SPDK_NVME_RESERVE_CLEAR:
-		nvmf_ns_reservation_clear_all_registrants(ns);
+		nvmf_ns_reservation_clear_all_registrants(ns, ctrlr);
 		break;
 	default:
 		status = SPDK_NVME_SC_INVALID_FIELD;
