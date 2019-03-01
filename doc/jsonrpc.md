@@ -4061,8 +4061,21 @@ Example response:
                 "pending_free_request": 0,
                 "pending_data_buffer": 0,
                 "pending_transfer": 0
-                "request_completion_latency": 0,
-                "request_completion_latency_us": 0
+                "request_state_latencies_us": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ]
               },
               {
                 "name": "mlx5_0",
@@ -4072,8 +4085,21 @@ Example response:
                 "pending_free_request": 0,
                 "pending_data_buffer": 0,
                 "pending_transfer": 337602
-                "request_completion_latency": 116811,
-                "request_completion_latency_us": 48.67
+                "request_state_latencies_us": [
+                  0.0,
+                  5.97,
+                  6.07,
+                  6.28,
+                  0.0,
+                  24.95,
+                  0.0,
+                  30.14,
+                  0.0,
+                  30.33,
+                  0.0,
+                  0.0,
+                  50.61
+                ]
               }
             ]
           },
