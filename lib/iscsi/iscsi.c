@@ -469,8 +469,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		if (pdu->data_buf == NULL) {
 			if (data_len <= spdk_get_immediate_data_buffer_size()) {
 				pool = g_spdk_iscsi.pdu_immediate_data_pool;
+				pdu->data_buf_len = spdk_get_immediate_data_buffer_size();
 			} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 				pool = g_spdk_iscsi.pdu_data_out_pool;
+				pdu->data_buf_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 			} else {
 				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
 					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
@@ -2596,6 +2598,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.iovs[0].iov_base + offset;
+	rsp_pdu->data_buf_len = task->scsi.iovs[0].iov_len - offset;
 	rsp_pdu->data_from_mempool = true;
 
 	task_tag = task->tag;
