@@ -269,6 +269,7 @@ spdk_nvmf_ctrlr_create(struct spdk_nvmf_subsystem *subsystem,
 		return NULL;
 	}
 
+	TAILQ_INIT(&ctrlr->log_head);
 	ctrlr->subsys = subsystem;
 	ctrlr->thread = req->qpair->group->thread;
 
@@ -361,8 +362,14 @@ static void
 _spdk_nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+
+	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
+		TAILQ_REMOVE(&ctrlr->log_head, log, link);
+		free(log);
+	}
 	free(ctrlr);
 }
 
@@ -2078,6 +2085,56 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 
 	spdk_nvmf_request_complete(ctrlr->aer_req);
 	ctrlr->aer_req = NULL;
+}
+
+void
+spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
+				       struct spdk_nvmf_ns *ns,
+				       enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	struct spdk_nvmf_reservation_log *log;
+
+	switch (type) {
+	case SPDK_NVME_RESERVATION_LOG_PAGE_EMPTY:
+		return;
+	case SPDK_NVME_REGISTRATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_REGISTRATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_RELEASED:
+		if (ns->mask & SPDK_NVME_RESERVATION_RELEASED_MASK) {
+			return;
+		}
+		break;
+	case SPDK_NVME_RESERVATION_PREEMPTED:
+		if (ns->mask & SPDK_NVME_RESERVATION_PREEMPTED_MASK) {
+			return;
+		}
+		break;
+	default:
+		return;
+	}
+
+	ctrlr->log_page_count++;
+
+	/* Maximum number of queued log pages is 255 */
+	if (ctrlr->num_avail_log_pages == 0xff) {
+		log = TAILQ_LAST(&ctrlr->log_head, log_page_head);
+		log->log.log_page_count = ctrlr->log_page_count;
+		return;
+	}
+
+	log = calloc(1, sizeof(*log));
+	if (!log) {
+		return;
+	}
+
+	log->log.log_page_count = ctrlr->log_page_count;
+	log->log.type = type;
+	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
+	log->log.nsid = ns->nsid;
+	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
 }
 
 /* Check from subsystem poll group's namespace information data structure */
