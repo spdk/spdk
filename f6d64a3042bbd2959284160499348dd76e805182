@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25e37444_2fcf62d6",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-01T22:09:07Z",
+      "side": 1,
+      "message": "while here, you can also add the missing newline at the end.",
+      "revId": "f6d64a3042bbd2959284160499348dd76e805182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
