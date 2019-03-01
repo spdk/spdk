@@ -191,7 +191,7 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 			      "base returned error on io submission: %d\n", io_ctx->error);
 	}
 
-	if (io->io_queue == 0 && io_ctx->ch != NULL) {
+	if (io->io_queue == NULL && io_ctx->ch != NULL) {
 		spdk_put_io_channel(io_ctx->ch);
 	}
 
@@ -211,8 +211,8 @@ prepare_submit(struct ocf_io *io)
 	struct ocf_io_ctx *io_ctx = ocf_get_io_ctx(io);
 	struct vbdev_ocf_qcxt *qctx;
 	struct vbdev_ocf_base *base;
-	ocf_queue_t q;
-	int rc;
+	ocf_queue_t q = io->io_queue;
+	int rc = 0;
 
 	io_ctx->rq_cnt++;
 	if (io_ctx->rq_cnt != 1) {
@@ -222,12 +222,9 @@ prepare_submit(struct ocf_io *io)
 	vbdev_ocf_volume_io_get(io);
 	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 
-	if (io->io_queue == 0) {
-		/* In SPDK we never set queue id to 0
-		 * but OCF sometimes gives it to us (not a bug)
-		 * In such cases we cannot determine on which queue we are now
-		 * So to get io channel that is usually passed as queue context
-		 * we have to reallocate it using global method */
+	if (io->io_queue == NULL) {
+		/* In case IO is initiated by OCF, queue is unknown
+		 * so we have to get io channel ourselves */
 		io_ctx->ch = spdk_bdev_get_io_channel(base->desc);
 		if (io_ctx->ch == NULL) {
 			return -EPERM;
@@ -235,13 +232,11 @@ prepare_submit(struct ocf_io *io)
 		return 0;
 	}
 
-	rc = ocf_cache_get_queue(base->parent->ocf_cache, io->io_queue, &q);
-	if (rc) {
-		SPDK_ERRLOG("Could not get queue #%d\n", io->io_queue);
-		return rc;
+	qctx = ocf_queue_get_priv(q);
+	if (qctx == NULL) {
+		return -EFAULT;
 	}
 
-	qctx = ocf_queue_get_priv(q);
 	if (base->is_cache) {
 		io_ctx->ch = qctx->cache_ch;
 	} else {
