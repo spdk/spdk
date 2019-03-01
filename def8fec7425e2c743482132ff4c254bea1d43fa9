@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "427305bb_279516b6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:10:11Z",
+      "side": 0,
+      "message": "In the right code, will this statement be set in: \nline: 465- 468\nif (pdu-\u003edata_valid_bytes \u003c data_len) {\n\t\t\t*_pdu \u003d NULL;\n\t\t\treturn SPDK_SUCCESS;\n}\n\nFinally, I finally it should work. But It seems that the code is not easy to read after the refactoring...",
+      "range": {
+        "startLine": 444,
+        "startChar": 4,
+        "endLine": 444,
+        "endChar": 17
+      },
+      "revId": "def8fec7425e2c743482132ff4c254bea1d43fa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
