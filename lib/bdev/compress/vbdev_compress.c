@@ -504,11 +504,10 @@ _device_unregister_cb(void *io_device)
 	free(comp_bdev);
 }
 
-/* Called by reduceLib after performing unload vol actions */
 static void
-spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
+_destroy_cb(void *ctx, int reduce_errno)
 {
-	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
 	if (reduce_errno) {
 		SPDK_ERRLOG("error %d\n", reduce_errno);
@@ -521,11 +520,24 @@ spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 
 	/* Close the underlying bdev. */
-	/* TODO: determine if we want to do this here or let spdk_reduce_vol_unload() do it */
-	/* spdk_bdev_close(comp_bdev->base_desc); */
+	spdk_bdev_close(comp_bdev->base_desc);
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+}
+
+/* Called by reduceLib after performing unload vol actions */
+static void
+spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("error %d\n", reduce_errno);
+	}
+
+	/* Clean the device before we free our resources. */
+	spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _destroy_cb, comp_bdev);
 }
 
 /* Called after we've unregistered following a hot remove callback.
