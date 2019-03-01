@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "46444350_2039e04c",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-01T08:23:43Z",
+      "side": 1,
+      "message": "As you mention, this will only apply to WB which we do not support at this point.\nSolution requires use of new OCF API function \"try_lock\" that is comfirmed to be added during WB implementation. Therefore I suggest to leave this as is, until we introduce WB.\nAnd yes, lock should be used here for safety.",
+      "parentUuid": "efae94cf_2c9ea28b",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 34
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b06cbc7_ab955558",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 12
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-25T17:03:45Z",
       "side": 1,
       "message": "This comment applies to both ocf_mngt_cache_lock() and ocf_mngt_cache_stop() right ?\n\nShould be moved up ?",
+      "range": {
+        "startLine": 100,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 28
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8c5a506_c4965593",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-01T08:23:43Z",
+      "side": 1,
+      "message": "Not in the sense that lock blocks until all requests finished, but it blocks on base of cleaner\u0027s requests.",
+      "parentUuid": "7b06cbc7_ab955558",
       "range": {
         "startLine": 100,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d5f53c20_40745666",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-01T08:23:43Z",
+      "side": 1,
+      "message": "Also same responce here: we should change locking when it is required for WB.",
+      "parentUuid": "93cc09ae_5c0429a4",
+      "range": {
+        "startLine": 136,
+        "startChar": 8,
+        "endLine": 136,
+        "endChar": 27
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f56a1968_e8456ad0",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 12
@@ -82,6 +154,30 @@
       "writtenOn": "2019-02-25T17:03:45Z",
       "side": 1,
       "message": "I realize that at this time there is only 1 core per cache (multi core setup is added in later patches).\n\nYet why is it changed from vbdev-\u003ecore.id to 0 ? Shouldn\u0027t this already be 0 ?",
+      "range": {
+        "startLine": 203,
+        "startChar": 48,
+        "endLine": 203,
+        "endChar": 49
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da9b06f5_f9e214c6",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-01T08:23:43Z",
+      "side": 1,
+      "message": "It is OK both ways in sense that they are functionally equivalent. One might say that constant 0 is more verbose.",
+      "parentUuid": "f56a1968_e8456ad0",
       "range": {
         "startLine": 203,
         "startChar": 48,
@@ -114,6 +210,30 @@
       "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24091131_4b3a10bb",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-01T08:23:43Z",
+      "side": 1,
+      "message": "This number is used by OCF to split IOs when sending it to bottom device.\nRequirement is that this splitted IO size needs to be able to be processed by bottom device,\nbut SPDK bdev modules can handle any sizes.\nSo it would be beneficial to have this number based on optimal_io_boundary, but not required to.",
+      "parentUuid": "25f58c62_01c00b85",
+      "range": {
+        "startLine": 387,
+        "startChar": 1,
+        "endLine": 387,
+        "endChar": 15
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
