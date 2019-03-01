@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e52cb56b_5ee3fe80",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T06:03:12Z",
+      "side": 1,
+      "message": "Can we merge the two if statement into one, since the value provided is same",
+      "range": {
+        "startLine": 373,
+        "startChar": 3,
+        "endLine": 376,
+        "endChar": 60
+      },
+      "revId": "be009c98e326d104dcefc15270492b4904f3ac9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
