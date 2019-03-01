@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "534e0afe_61e6505b",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1267,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-01T14:45:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "611ca705_b620e77c",
+      "range": {
+        "startLine": 1267,
+        "startChar": 13,
+        "endLine": 1267,
+        "endChar": 14
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "15d3efe6_0c6d8524",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 4
@@ -82,6 +106,54 @@
       "writtenOn": "2019-02-28T14:52:08Z",
       "side": 1,
       "message": "Going with Tomek\u0027s proposal would create event better test for this case.",
+      "parentUuid": "15d3efe6_0c6d8524",
+      "range": {
+        "startLine": 1280,
+        "startChar": 0,
+        "endLine": 1283,
+        "endChar": 59
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc7095c_1bdf4df8",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-01T14:45:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "584085b2_f03c3af5",
+      "range": {
+        "startLine": 1280,
+        "startChar": 0,
+        "endLine": 1283,
+        "endChar": 59
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cea6baba_bd17fbcb",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 1283,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-01T14:45:45Z",
+      "side": 1,
+      "message": "Done",
       "parentUuid": "15d3efe6_0c6d8524",
       "range": {
         "startLine": 1280,
