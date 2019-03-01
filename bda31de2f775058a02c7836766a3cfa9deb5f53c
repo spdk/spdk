@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b4b5ab5b_d26e000d",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1240,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:20:14Z",
+      "side": 1,
+      "message": "should this be (void *) ((uint64_t)\u0026pdu.bhs + .....)",
+      "range": {
+        "startLine": 1240,
+        "startChar": 31,
+        "endLine": 1240,
+        "endChar": 68
+      },
+      "revId": "bda31de2f775058a02c7836766a3cfa9deb5f53c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02bfa51f_04db8c33",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:20:14Z",
+      "side": 1,
+      "message": "same here?",
+      "range": {
+        "startLine": 1262,
+        "startChar": 31,
+        "endLine": 1262,
+        "endChar": 79
+      },
+      "revId": "bda31de2f775058a02c7836766a3cfa9deb5f53c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8dbc2f8f_9a532f63",
+        "filename": "test/unit/lib/iscsi/iscsi.c/iscsi_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 1286,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:20:14Z",
+      "side": 1,
+      "message": "same here?",
+      "range": {
+        "startLine": 1286,
+        "startChar": 31,
+        "endLine": 1286,
+        "endChar": 77
+      },
+      "revId": "bda31de2f775058a02c7836766a3cfa9deb5f53c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
