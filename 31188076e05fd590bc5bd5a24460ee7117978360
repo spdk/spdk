@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bd732912_55c77073",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-01T14:46:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24ae4cb0_3d9b9320",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 34
+      },
+      "revId": "31188076e05fd590bc5bd5a24460ee7117978360",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "611ca705_b620e77c",
         "filename": "test/lvol/test_cases.py",
         "patchSetId": 4
