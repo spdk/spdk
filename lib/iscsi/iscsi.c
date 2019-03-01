@@ -344,6 +344,29 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+static int
+spdk_iscsi_dif_generate(struct spdk_iscsi_pdu *pdu, uint32_t read_len,
+			struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iov;
+	uint32_t data_block_size, offset, num_blocks;
+
+	data_block_size = dif_ctx->block_size - dif_ctx->md_size;
+
+	offset = (pdu->data_valid_bytes / data_block_size) * dif_ctx->block_size;
+	read_len += pdu->data_valid_bytes % data_block_size;
+	num_blocks = read_len / data_block_size;
+
+	iov.iov_base = pdu->data_buf + offset;
+	iov.iov_len = num_blocks * dif_ctx->block_size;
+
+	if (iov.iov_len > pdu->data_buf_len) {
+		return -EINVAL;
+	}
+
+	return spdk_dif_generate(&iov, 1, num_blocks, dif_ctx);
+}
+
 static bool
 spdk_iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 				     struct spdk_iscsi_pdu *pdu, int data_len)
@@ -395,7 +418,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	int data_len;
 	struct spdk_dif_ctx dif_ctx;
 	struct iovec iovs[32];
-	int rc;
+	int rc, _rc;
 
 	if (conn->pdu_in_progress == NULL) {
 		conn->pdu_in_progress = spdk_get_pdu();
@@ -502,6 +525,13 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 							     &dif_ctx);
 			if (rc == 0) {
 				rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+				if (rc > 0) {
+					_rc = spdk_iscsi_dif_generate(pdu, rc, &dif_ctx);
+					if (_rc != 0) {
+						SPDK_ERRLOG("DIF generate failed\n");
+						rc = _rc;
+					}
+				}
 			} else {
 				SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
 			}
