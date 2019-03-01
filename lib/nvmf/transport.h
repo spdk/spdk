@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -122,6 +122,13 @@ struct spdk_nvmf_transport_ops {
 	 * Poll the group to process I/O
 	 */
 	int (*poll_group_poll)(struct spdk_nvmf_transport_poll_group *group);
+
+	/**
+	 * Write group statistics in JSON format
+	 */
+	void (*poll_group_write_stat_json)(struct spdk_nvmf_transport_poll_group *group,
+					   struct spdk_json_write_ctx *w,
+					   bool reset);
 
 	/*
 	 * Free the request without sending a response

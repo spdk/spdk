@@ -299,3 +299,18 @@ def delete_nvmf_subsystem(client, nqn):
     """
     params = {'nqn': nqn}
     return client.call('delete_nvmf_subsystem', params)
+
+
+def get_nvmf_stat(client, reset=None):
+    """Query and optionally reset NVMf statistics.
+
+    Args:
+        reset: True to reset statistics (optional)
+
+    Returns:
+        Current NVMf statistics.
+    """
+    params = {}
+    if reset is not None:
+        params['reset'] = reset
+    return client.call('get_nvmf_stat', params)

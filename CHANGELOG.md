@@ -23,7 +23,14 @@ to be performed on the thread at given time.
 Added thread statistics reset function.
 
 ### rpc
+
 Added get_threads_stat RPC method to retrieve existing statistics.
+
+Added get_nvmf_stat RPC method to retrieve NVMf susbsystem statistics.
+
+### nvmf
+
+Added infrastructure to retrieve global and per poll group NVMf statistics.
 
 ## v19.01:
 
