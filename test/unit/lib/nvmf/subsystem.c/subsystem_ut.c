@@ -50,6 +50,10 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
+DEFINE_STUB_V(spdk_nvmf_ctrlr_reservation_notice_log,
+	      (struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_ns *ns,
+	       enum spdk_nvme_reservation_notification_log_page_type type));
+
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
@@ -458,7 +462,7 @@ test_spdk_nvmf_subsystem_set_sn(void)
  *     |            NAMESPACE 1               |
  *      --------------------------------------
  */
-
+static struct spdk_nvmf_subsystem g_subsystem;
 static struct spdk_nvmf_ctrlr g_ctrlr1_A, g_ctrlr2_A, g_ctrlr_B, g_ctrlr_C;
 static struct spdk_nvmf_ns g_ns;
 struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
@@ -466,28 +470,70 @@ struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
 static void
 ut_reservation_init(void)
 {
+
+	TAILQ_INIT(&g_subsystem.ctrlrs);
+
 	memset(&g_ns, 0, sizeof(g_ns));
 	TAILQ_INIT(&g_ns.registrants);
+	g_ns.subsystem = &g_subsystem;
 
 	/* Host A has two controllers */
 	spdk_uuid_generate(&g_ctrlr1_A.hostid);
+	TAILQ_INIT(&g_ctrlr1_A.log_head);
+	g_ctrlr1_A.subsys = &g_subsystem;
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr1_A, link);
 	spdk_uuid_copy(&g_ctrlr2_A.hostid, &g_ctrlr1_A.hostid);
+	TAILQ_INIT(&g_ctrlr2_A.log_head);
+	g_ctrlr2_A.subsys = &g_subsystem;
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr2_A, link);
 
 	/* Host B has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_B.hostid);
+	TAILQ_INIT(&g_ctrlr_B.log_head);
+	g_ctrlr_B.subsys = &g_subsystem;
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_B, link);
 
 	/* Host C has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_C.hostid);
+	TAILQ_INIT(&g_ctrlr_C.log_head);
+	g_ctrlr_C.subsys = &g_subsystem;
+	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_C, link);
 }
 
 static void
 ut_reservation_deinit(void)
 {
 	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
+	struct spdk_nvmf_ctrlr *ctrlr, *ctrlr_tmp;
 
 	TAILQ_FOREACH_SAFE(reg, &g_ns.registrants, link, tmp) {
 		TAILQ_REMOVE(&g_ns.registrants, reg, link);
 		free(reg);
+	}
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr1_A.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr1_A.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr1_A.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr2_A.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr2_A.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr2_A.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr_B.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr_B.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr_B.num_avail_log_pages = 0;
+	TAILQ_FOREACH_SAFE(log, &g_ctrlr_C.log_head, link, log_tmp) {
+		TAILQ_REMOVE(&g_ctrlr_C.log_head, log, link);
+		free(log);
+	}
+	g_ctrlr_C.num_avail_log_pages = 0;
+
+	TAILQ_FOREACH_SAFE(ctrlr, &g_subsystem.ctrlrs, link, ctrlr_tmp) {
+		TAILQ_REMOVE(&g_subsystem.ctrlrs, ctrlr, link);
 	}
 }
 
