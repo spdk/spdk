@@ -22,6 +22,30 @@
       "revId": "96dcf644a532680c1a1c6035ce0b265776cded3b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "97c38d37_5e9d4df3",
+        "filename": "test/unit/lib/bdev/bdev_raid.c/bdev_raid_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T22:15:53Z",
+      "side": 1,
+      "message": "Good catch.  I\u0027ve reverted this patch of the patch.\n\nI would prefer to keep g_strip_size in bytes for now - there is a lot of code in here that depends on it.  I may refactor that in a separate patch.",
+      "parentUuid": "b4b348c0_fd94ea6e",
+      "range": {
+        "startLine": 106,
+        "startChar": 34,
+        "endLine": 106,
+        "endChar": 37
+      },
+      "revId": "96dcf644a532680c1a1c6035ce0b265776cded3b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
