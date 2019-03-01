@@ -287,28 +287,6 @@ vbdev_ocf_ctx_data_secure_erase(ctx_data_t *ctx_data)
 	}
 }
 
-/* OCF queue initialization procedure
- * Called during ocf_cache_start */
-static int
-vbdev_ocf_ctx_queue_init(ocf_queue_t q)
-{
-	return 0;
-}
-
-/* Called during ocf_submit_io, ocf_purge*
- * and any other requests that need to submit io */
-static void
-vbdev_ocf_ctx_queue_kick(ocf_queue_t q)
-{
-}
-
-/* OCF queue deinitialization
- * Called at ocf_cache_stop */
-static void
-vbdev_ocf_ctx_queue_stop(ocf_queue_t q)
-{
-}
-
 static int
 vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
 {
@@ -372,12 +350,6 @@ static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
 			.seek = vbdev_ocf_ctx_data_seek,
 			.copy = vbdev_ocf_ctx_data_cpy,
 			.secure_erase = vbdev_ocf_ctx_data_secure_erase,
-		},
-
-		.queue = {
-			.init = vbdev_ocf_ctx_queue_init,
-			.kick = vbdev_ocf_ctx_queue_kick,
-			.stop = vbdev_ocf_ctx_queue_stop,
 		},
 
 		.metadata_updater = {
