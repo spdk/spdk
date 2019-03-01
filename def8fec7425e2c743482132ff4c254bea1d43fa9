@@ -22,6 +22,30 @@
       "revId": "def8fec7425e2c743482132ff4c254bea1d43fa9",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1354bbb9_cd6c887f",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 444,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T05:31:12Z",
+      "side": 0,
+      "message": "Hi Ziye, Thank you. Your concern is very reasonable. I factored out this part into a function to isolate the change. But now it it is not needed and it degrade readability.\n\nSo I discard this patch and rebases subsequent patches.",
+      "parentUuid": "427305bb_279516b6",
+      "range": {
+        "startLine": 444,
+        "startChar": 4,
+        "endLine": 444,
+        "endChar": 17
+      },
+      "revId": "def8fec7425e2c743482132ff4c254bea1d43fa9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
