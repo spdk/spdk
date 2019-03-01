@@ -195,12 +195,24 @@ close_spdk_dev:
 	return rc;
 }
 
-/* Free OCF resources, close base bdevs */
-static void
-unregister_cb(void *opaque)
+/* Argument for destruct poller fn */
+struct destruct_poll_arg {
+	struct vbdev_ocf   *vbdev;
+	struct spdk_poller *poller;
+};
+
+/* After cache finished all pending requests,
+ * free OCF resources, close base bdevs */
+static int
+destruct_poll(void *opaque)
 {
-	struct vbdev_ocf *vbdev = opaque;
+	struct destruct_poll_arg *arg = opaque;
+	struct vbdev_ocf *vbdev = arg->vbdev;
 	int status = 0;
+
+	if (ocf_cache_has_pending_requests(vbdev->ocf_cache)) {
+		return 0;
+	}
 
 	if (vbdev->state.started) {
 		status = stop_vbdev(vbdev);
@@ -214,6 +226,18 @@ unregister_cb(void *opaque)
 	}
 
 	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+	spdk_poller_unregister(&arg->poller);
+	return 0;
+}
+
+/* Start destruct poller */
+static void
+unregister_cb(void *opaque)
+{
+	struct destruct_poll_arg *arg = malloc(sizeof(*arg));
+
+	arg->vbdev = opaque;
+	arg->poller = spdk_poller_register(destruct_poll, arg, 200);
 }
 
 /* Unregister io device with callback to unregister_cb
