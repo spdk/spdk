@@ -549,6 +549,17 @@ spdk_thread_has_active_pollers(struct spdk_thread *thread)
 	return !TAILQ_EMPTY(&thread->active_pollers);
 }
 
+bool
+spdk_thread_has_pollers(struct spdk_thread *thread)
+{
+	if (TAILQ_EMPTY(&thread->active_pollers) &&
+	    TAILQ_EMPTY(&thread->timer_pollers)) {
+		return false;
+	}
+
+	return true;
+}
+
 uint32_t
 spdk_thread_get_count(void)
 {
