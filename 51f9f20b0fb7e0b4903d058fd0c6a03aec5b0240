@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a6fbdfbc_39febbcc",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-01T21:34:59Z",
+      "side": 1,
+      "message": "don\u0027t we need to wait for pending I/O to complete? This used to be done inside process_removed_devs() via the mgmt poller.",
+      "revId": "51f9f20b0fb7e0b4903d058fd0c6a03aec5b0240",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
