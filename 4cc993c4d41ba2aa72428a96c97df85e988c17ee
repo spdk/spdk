@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f3f59117_a59690bb",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 351,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "When I change this one the destroy_lvol_store call starts failing if many snapshots are created. It looks like there is some issue with order of deletion. I have to look closer at this.",
+      "parentUuid": "54c52e75_b7a38e71",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "19d5f3e6_2f5f1b3f",
         "filename": "lib/bdev/lvol/vbdev_lvol.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-02-21T17:41:46Z",
       "side": 1,
       "message": "should this check go in spdk_lvol_deletable instead?",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f215e0fc_4a73363d",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 584,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "Please see my response to previous comment.",
+      "parentUuid": "19d5f3e6_2f5f1b3f",
       "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "f5db7fb0_9b91e805",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5129,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "83717a14_65c10ed0",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59214fc5_47c9da6d",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
@@ -64,6 +118,24 @@
       "writtenOn": "2019-02-21T17:41:46Z",
       "side": 1,
       "message": "what happens in the following condition?\n\n1) clone A based on snapshot B (it\u0027s the only clone)\n2) delete B\n3) create clone C based on snapshot B\n4) this callback gets invoked\n\nIs it possible for this to happen?  I\u0027m just concerned about race conditions here - this is really tricky code.",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9642152_ba829d70",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5202,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "I will double check this and let you know.",
+      "parentUuid": "59214fc5_47c9da6d",
       "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "1ffbe4f7_ed415868",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5262,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "9c5c78c5_3d56b525",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9e8a32a_291472b4",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 7
@@ -101,6 +191,24 @@
       "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "73161b66_861a4e8b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 904,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c9e8a32a_291472b4",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "ecd33c7a_89488bf9",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5342,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1a7c0f18_6223f6e0",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "363b95e6_9e299cd7",
         "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
         "patchSetId": 7
@@ -132,6 +258,24 @@
       "writtenOn": "2019-02-21T17:41:46Z",
       "side": 1,
       "message": "(just picking a random place to ask this question)\n\nare there any atomicity concerns with these changes?  for example, application dies in the process of deleting this snapshot - I haven\u0027t thought through the full ramifications yet so wanted to ask",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "039b44cc_a73cacbc",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5570,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-01T08:29:12Z",
+      "side": 1,
+      "message": "I\u0027ve tried to do it as safe as possible, but I don\u0027t think that this is entirely possible. Especially because we have to persist metadata for two lvols and something may interrupt this process in between.",
+      "parentUuid": "363b95e6_9e299cd7",
       "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
