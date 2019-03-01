@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "73811f72_fc298279",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T17:45:57Z",
+      "side": 1,
+      "message": "maybe put this before spdk_iscsi_conn_read_data?\n\nthen later you can reduce some code duplication by just having spdk_iscsi_conn_read_data call spdk_iscsi_conn_readv_data with a single struct iovec",
+      "revId": "3d74674153eac125d7cce11b324cbbeffcaf9f1e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
