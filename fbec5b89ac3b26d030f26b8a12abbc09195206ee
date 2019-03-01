@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b7d01f53_d9ad0266",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2365,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T07:48:35Z",
+      "side": 1,
+      "message": "Could we also add assert (bdev-\u003eblocklen \u003e bdev-\u003emd_len); before this statement",
+      "range": {
+        "startLine": 2365,
+        "startChar": 2,
+        "endLine": 2365,
+        "endChar": 39
+      },
+      "revId": "fbec5b89ac3b26d030f26b8a12abbc09195206ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
