@@ -1693,6 +1693,76 @@ exit:
 }
 
 static void
+nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
+			   struct spdk_nvmf_ctrlr *ctrlr,
+			   struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr_tmp;
+	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_nvme_reservation_status_extended_data *status_data;
+	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
+	uint8_t *payload;
+	uint32_t len, count = 0;
+	uint32_t regctl = 0;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+
+	/* NVMeoF uses Extended Data Structure */
+	if ((cmd->cdw11 & 0x00000001u) == 0) {
+		SPDK_ERRLOG("NVMeoF uses extended controller data structure, "
+			    "please set EDS bit in cdw11 and try again\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+	/* Get number of registerd controllers, one Host may have more than
+	 * one controller based on different ports.
+	 */
+	TAILQ_FOREACH(ctrlr_tmp, &subsystem->ctrlrs, link) {
+		reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr_tmp->hostid);
+		if (reg) {
+			regctl++;
+		}
+	}
+
+	len = sizeof(*status_data) + sizeof(*ctrlr_data) * regctl;
+	payload = calloc(1, len);
+	if (!payload) {
+		status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		goto exit;
+	}
+
+	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
+	status_data->data.gen = ns->gen;
+	status_data->data.rtype = ns->rtype;
+	status_data->data.regctl = regctl;
+	/* TODO: Don't support Persist Through Power Loss State for now */
+	status_data->data.ptpls = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		assert(count <= regctl);
+		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
+			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * count);
+		/* Set to 0xffffh for dynamic controller */
+		ctrlr_data->cntlid = 0xffff;
+		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
+		ctrlr_data->rkey = reg->rkey;
+		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
+		count++;
+	}
+
+	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10 + 1) * sizeof(uint32_t)));
+	free(payload);
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
+
+static void
 spdk_nvmf_ns_reservation_complete(void *ctx)
 {
 	struct spdk_nvmf_request *req = ctx;
@@ -1723,6 +1793,9 @@ spdk_nvmf_ns_reservation_request(void *ctx)
 		break;
 	case SPDK_NVME_OPC_RESERVATION_RELEASE:
 		nvmf_ns_reservation_release(ns, ctrlr, req);
+		break;
+	case SPDK_NVME_OPC_RESERVATION_REPORT:
+		nvmf_ns_reservation_report(ns, ctrlr, req);
 		break;
 	default:
 		break;
