@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a660f19_3f223cdd",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1391,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T10:27:41Z",
+      "side": 1,
+      "message": "I should return here if num_blocks is zero",
+      "revId": "7d16b1e3bbe4a20623f50fe4f70bcd539f5c2456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
