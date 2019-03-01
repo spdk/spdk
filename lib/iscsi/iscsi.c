@@ -394,7 +394,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	int data_len;
 	struct spdk_dif_ctx dif_ctx;
 	struct iovec iovs[32];
-	int rc;
+	int rc, _rc;
 
 	if (conn->pdu_in_progress == NULL) {
 		conn->pdu_in_progress = spdk_get_pdu();
@@ -501,6 +501,15 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 							     &dif_ctx);
 			if (rc == 0) {
 				rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+				if (rc > 0) {
+					_rc = spdk_dif_generate_stream(pdu->data_buf, pdu->data_buf_len,
+								       pdu->data_valid_bytes, rc,
+								       &dif_ctx);
+					if (_rc != 0) {
+						SPDK_ERRLOG("DIF generate failed\n");
+						rc = _rc;
+					}
+				}
 			} else {
 				SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
 			}
