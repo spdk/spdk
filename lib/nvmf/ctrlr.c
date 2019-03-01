@@ -250,6 +250,8 @@ _spdk_nvmf_subsystem_add_ctrlr(void *ctx)
 		spdk_thread_send_msg(qpair->group->thread, _spdk_nvmf_request_complete, req);
 		return;
 	}
+	ctrlr->log_page_count = 0;
+	TAILQ_INIT(&ctrlr->log_head);
 
 	spdk_thread_send_msg(ctrlr->thread, _spdk_nvmf_ctrlr_add_admin_qpair, req);
 }
@@ -361,8 +363,14 @@ static void
 _spdk_nvmf_ctrlr_destruct(void *ctx)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = ctx;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
 
 	spdk_nvmf_ctrlr_stop_keep_alive_timer(ctrlr);
+
+	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
+		TAILQ_REMOVE(&ctrlr->log_head, log, link);
+		free(log);
+	}
 	free(ctrlr);
 }
 
