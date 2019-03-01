@@ -947,6 +947,14 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else {
 			/* A namespace was present before and didn't change. */
 		}
+
+		if (ns == NULL) {
+			memset(&sgroup->ns_info[i], 0, sizeof(struct spdk_nvmf_subsystem_pg_ns_info));
+		} else if (ns->rtype && ns->holder) {
+			sgroup->ns_info[i].crkey = ns->crkey;
+			sgroup->ns_info[i].rtype = ns->rtype;
+			sgroup->ns_info[i].hostid = ns->holder->hostid;
+		}
 	}
 
 	return 0;
