@@ -67,7 +67,8 @@ struct spdk_app {
 };
 
 static struct spdk_app g_spdk_app;
-static struct spdk_event *g_app_start_event = NULL;
+static spdk_event_fn g_start_fn = NULL;
+static void *g_start_arg = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_delay_subsystem_init = false;
@@ -348,7 +349,7 @@ static void
 spdk_app_start_application(void)
 {
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	spdk_event_call(g_app_start_event);
+	g_start_fn(g_start_arg, NULL);
 }
 
 static void
@@ -677,11 +678,13 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
+
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
+	g_start_fn = start_fn;
+	g_start_arg = arg1;
 
 	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
 
 	spdk_event_call(event);
 
