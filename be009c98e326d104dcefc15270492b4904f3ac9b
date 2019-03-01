@@ -22,6 +22,30 @@
       "revId": "be009c98e326d104dcefc15270492b4904f3ac9b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6492182_f86131c4",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-01T06:26:53Z",
+      "side": 1,
+      "message": "OK, I\u0027ll do.",
+      "parentUuid": "e52cb56b_5ee3fe80",
+      "range": {
+        "startLine": 373,
+        "startChar": 3,
+        "endLine": 376,
+        "endChar": 60
+      },
+      "revId": "be009c98e326d104dcefc15270492b4904f3ac9b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
