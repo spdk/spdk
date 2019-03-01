@@ -12,6 +12,11 @@ spdk_nvme_probe_poll_async() were added to enable this feature.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### thread
+
+Added spdk_thread_has_pollers() function to verify if there are
+any registered pollers to be run on the thread.
+
 ## v19.01:
 
 ### ocf bdev
