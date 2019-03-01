@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cb381eaf_923a9d93",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T18:26:34Z",
+      "side": 1,
+      "message": "this function looks to be structured a bit differently than detect_mellanox_nics - would it be possible to make them look as similar as possible?",
+      "revId": "d49d3b839f780cff7d2dc51b25263066a1beb831",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
