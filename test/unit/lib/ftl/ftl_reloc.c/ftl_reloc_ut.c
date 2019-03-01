@@ -128,12 +128,14 @@ ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 void
 ftl_io_read(struct ftl_io *io)
 {
+	io->flags &= ~FTL_IO_INITIALIZED;
 	io->cb.fn(io->cb.ctx, 0);
 }
 
 int
 ftl_io_write(struct ftl_io *io)
 {
+	io->flags &= ~FTL_IO_INITIALIZED;
 	io->cb.fn(io->cb.ctx, 0);
 	return 0;
 }
@@ -164,7 +166,7 @@ ftl_io_alloc(struct spdk_io_channel *ch)
 {
 	size_t io_size = sizeof(struct ftl_md_io);
 
-	return malloc(io_size);
+	return calloc(1, io_size);
 }
 
 void

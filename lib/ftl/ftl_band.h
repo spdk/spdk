@@ -71,6 +71,8 @@ enum ftl_md_status {
 	FTL_MD_SUCCESS,
 	/* Metadata read failure */
 	FTL_MD_IO_FAILURE,
+	/* Metadata read failure with ENOMEM */
+	FTL_MD_IO_ENOMEM,
 	/* Invalid version */
 	FTL_MD_INVALID_VER,
 	/* UUID doesn't match */
@@ -102,6 +104,9 @@ struct ftl_md {
 
 	/* LBA map (only valid for open bands) */
 	uint64_t				*lba_map;
+
+	/* Set to true if metadata unpack succeed */
+	bool					valid;
 };
 
 enum ftl_band_state {

@@ -117,6 +117,8 @@ struct ftl_reloc {
 	TAILQ_HEAD(, ftl_band_reloc)		pending_queue;
 };
 
+static void ftl_reloc_release(struct ftl_band_reloc *breloc);
+
 static struct ftl_band_reloc *
 ftl_io_get_band_reloc(struct ftl_io *io)
 {
@@ -171,9 +173,16 @@ ftl_reloc_read_lba_map_cb(void *arg, int status)
 	struct ftl_io *io = arg;
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
 
-	assert(status == 0);
 	spdk_dma_free(breloc->md_buf);
 	ftl_io_free(io);
+
+	if (status == FTL_MD_IO_ENOMEM) {
+		ftl_reloc_release(breloc);
+		return;
+	} else if (status) {
+		assert(0);
+	}
+
 	_ftl_reloc_prep(breloc);
 }
 
@@ -257,16 +266,21 @@ ftl_reloc_read_cb(void *arg, int status)
 	struct ftl_io *io = arg;
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
 
-	/* TODO: We should handle fail on relocation read. We need to inform */
-	/* user that this group of blocks is bad (update l2p with bad block address and */
-	/* put it to lba_map/sector_lba). Maybe we could also retry read with smaller granularity? */
-	if (status) {
+	/* Retry read in case ENOMEM status */
+	if (status == -ENOMEM) {
+		assert(0);
+		io->flags = FTL_IO_INITIALIZED;
+		ftl_reloc_free_io(breloc, io);
+		return;
+	} else if (status) {
+		/* TODO: We should handle fail on relocation read. We need to inform */
+		/* user that this group of blocks is bad (update l2p with bad block address and */
+		/* put it to lba_map/sector_lba). Maybe we could also retry read with smaller granularity? */
 		SPDK_ERRLOG("Reloc read failed with status: %d\n", status);
 		assert(false);
 		return;
 	}
 
-	io->flags &= ~FTL_IO_INITIALIZED;
 	spdk_ring_enqueue(breloc->write_queue, (void **)&io, 1);
 }
 
@@ -465,6 +479,7 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 
 	io = ftl_io_init_internal(&opts);
 	io->ppa = ppa;
+	io->lbas = NULL;
 	return 0;
 }
 
@@ -474,11 +489,16 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 	struct ftl_ppa ppa;
 	size_t num_lbks;
 
-	num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
+	if (spdk_unlikely(io->flags &= FTL_IO_INITIALIZED)) {
+		num_lbks = io->lbk_cnt;
+		ppa = io->ppa;
+	} else {
+		num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
 
-	if (!num_lbks) {
-		spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
-		return 0;
+		if (!num_lbks) {
+			spdk_ring_enqueue(breloc->free_queue, (void **)&io, 1);
+			return 0;
+		}
 	}
 
 	if (ftl_reloc_io_init(breloc, io, ppa, num_lbks)) {
