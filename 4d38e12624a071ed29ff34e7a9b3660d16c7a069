@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "887bc2a5_3b1fdd23",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-01T21:05:51Z",
+      "side": 1,
+      "message": "Ah, I see we can allocate an io_channel via hotplug event after this poller has finished, but before spdk_vhost_scsi_stop has unset vsession-\u003elcore. Would it make the problem go away if we unset vsession-\u003elcore right here?",
+      "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
