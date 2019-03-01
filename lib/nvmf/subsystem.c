@@ -1335,11 +1335,37 @@ nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
 	return 0;
 }
 
+/* release the reservation if the last registrant was removed */
+static void
+nvmf_ns_reservation_check_release_on_remove_registrant(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *next_reg;
+
+	/* no reservation holder */
+	if (!ns->holder) {
+		assert(ns->rtype == 0);
+		return;
+	}
+
+	next_reg = TAILQ_FIRST(&ns->registrants);
+	if (next_reg && nvmf_ns_reservation_all_registrants_type(ns)) {
+		/* the next valid registrant is the new holder now */
+		ns->holder = next_reg;
+	} else if (nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
+		/* release the reservation */
+		ns->rtype = 0;
+		ns->crkey = 0;
+		ns->holder = NULL;
+	}
+}
+
 static void
 nvmf_ns_reservation_remove_registrant(struct spdk_nvmf_ns *ns,
 				      struct spdk_nvmf_registrant *reg)
 {
 	TAILQ_REMOVE(&ns->registrants, reg, link);
+	nvmf_ns_reservation_check_release_on_remove_registrant(ns, reg);
 	free(reg);
 	ns->gen++;
 	return;
