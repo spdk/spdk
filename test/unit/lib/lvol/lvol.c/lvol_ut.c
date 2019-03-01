@@ -74,6 +74,7 @@ int g_lvserrno;
 int g_close_super_status;
 int g_resize_rc;
 int g_inflate_rc;
+int g_remove_rc;
 bool g_lvs_rename_blob_open_error = false;
 struct spdk_lvol_store *g_lvol_store;
 struct spdk_lvol *g_lvol;
@@ -326,7 +327,7 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 		}
 	}
 
-	cb_fn(cb_arg, 0);
+	cb_fn(cb_arg, g_remove_rc);
 }
 
 spdk_blob_id
@@ -858,6 +859,20 @@ lvol_destroy_fail(void)
 	CU_ASSERT(g_lvserrno == 0);
 	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
 	CU_ASSERT(g_lvserrno == 0);
+
+	spdk_lvol_create(g_lvol_store, "lvol", 10, false, LVOL_CLEAR_WITH_DEFAULT,
+			 lvol_op_with_handle_complete, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_lvol != NULL);
+
+	spdk_lvol_close(g_lvol, close_cb, NULL);
+	CU_ASSERT(g_lvserrno == 0);
+
+	g_remove_rc = -1;
+	spdk_lvol_destroy(g_lvol, destroy_cb, NULL);
+	CU_ASSERT(g_lvserrno != 0);
+	CU_ASSERT(TAILQ_EMPTY(&g_lvol_store->lvols));
+	g_remove_rc = 0;
 
 	g_lvserrno = -1;
 	rc = spdk_lvs_unload(g_lvol_store, lvol_store_op_complete, NULL);

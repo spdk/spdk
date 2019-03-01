@@ -902,14 +902,12 @@ _spdk_lvol_delete_blob_cb(void *cb_arg, int lvolerrno)
 	struct spdk_lvol *lvol = req->lvol;
 
 	if (lvolerrno < 0) {
-		SPDK_ERRLOG("Could not delete blob on lvol\n");
-		goto end;
+		SPDK_ERRLOG("Could not remove blob on lvol gracefully - forced removal\n");
+	} else {
+		SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
 	}
 
 	TAILQ_REMOVE(&lvol->lvol_store->lvols, lvol, link);
-	SPDK_INFOLOG(SPDK_LOG_LVOL, "Lvol %s deleted\n", lvol->unique_id);
-
-end:
 	_spdk_lvol_free(lvol);
 	req->cb_fn(req->cb_arg, lvolerrno);
 	free(req);
