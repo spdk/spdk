@@ -1325,6 +1325,10 @@ spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *p
 {
 	uint32_t crc32c;
 
+	if (spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx)) {
+		pdu->dif_strip = true;
+	}
+
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
 		/* Header Digest */
 		if (conn->header_digest) {
