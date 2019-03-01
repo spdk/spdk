@@ -44,11 +44,6 @@ function detect_soft_roce_nics()
 
 function detect_mellanox_nics()
 {
-	if ! hash lspci; then
-		echo "No NICs"
-		return 0
-	fi
-
 	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | awk -F ' ' '{print "0000:"$1}'`
 	mlx_core_driver="mlx4_core"
 	mlx_ib_driver="mlx4_ib"
@@ -76,15 +71,30 @@ function detect_mellanox_nics()
 	if [ -n "$mlx_en_driver" ]; then
 		modprobe $mlx_en_driver
 	fi
+}
 
-	# The mlx4 driver takes an extra few seconds to load after modprobe returns,
-	# otherwise iproute2 operations will do nothing.
+function detect_pci_nics()
+{
+
+	if ! hash lspci; then
+		echo "No NICs"
+		return 0
+	fi
+
+	mellanox_nics=$(detect_mellanox_nics)
+
+	if [ "$mellanox_nics" == "No NICs" ]; then
+		echo "No NICs"
+		return 0
+	fi
+
+	# Provide time for drivers to properly load.
 	sleep 5
 }
 
 function detect_rdma_nics()
 {
-	nics=$(detect_mellanox_nics)
+	nics=$(detect_pci_nics)
 	if [ "$nics" == "No NICs" ]; then
 		detect_soft_roce_nics
 	fi
