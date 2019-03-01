@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "391596e0_8b141549",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 919,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T07:16:43Z",
+      "side": 1,
+      "message": "Will we need to check this?\nIf we want to check, we may check every iov[i] ( 0\u003c\u003d i \u003c iov_cnt)",
+      "range": {
+        "startLine": 919,
+        "startChar": 35,
+        "endLine": 919,
+        "endChar": 54
+      },
+      "revId": "bf3a358b33d210f764afec69f73b3dc508c14a74",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
