@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "932c6826_9c947751",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 399,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T07:30:27Z",
+      "side": 1,
+      "message": "here I have question, if the read is failed, and for the second read call this function? We will still do the read from the first iov.",
+      "range": {
+        "startLine": 399,
+        "startChar": 2,
+        "endLine": 399,
+        "endChar": 70
+      },
+      "revId": "f522c11b2b227c9f9786bbbbab0130df555c388f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "05bc6b93_93a3ae58",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T07:30:27Z",
+      "side": 1,
+      "message": "As stated, if we have 4 iov, and 3 ones are successfully read, and there is still one remain. So Can the upper layer APP be aware of that, and next time, it does not read from the first iov.",
+      "range": {
+        "startLine": 401,
+        "startChar": 3,
+        "endLine": 402,
+        "endChar": 10
+      },
+      "revId": "f522c11b2b227c9f9786bbbbab0130df555c388f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
