@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06706b4d_a0b9afc6",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:56:45Z",
+      "side": 1,
+      "message": "Get data block size from a block device?",
+      "range": {
+        "startLine": 430,
+        "startChar": 3,
+        "endLine": 430,
+        "endChar": 36
+      },
+      "revId": "260781aff08b55de47dfb6d3368451ae0744bb78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "464735c4_84c705e6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2364,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:56:45Z",
+      "side": 1,
+      "message": "This is not necessary since in spdk_bdev_is_md_interleaved(bdev), we already judge this, \njust replace this with:\nspdk_bdev_is_md_interleaved(bdev) here?",
+      "range": {
+        "startLine": 2364,
+        "startChar": 5,
+        "endLine": 2364,
+        "endChar": 26
+      },
+      "revId": "260781aff08b55de47dfb6d3368451ae0744bb78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a159f463_faaef4d0",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:56:45Z",
+      "side": 1,
+      "message": "remove this variable and definition. And directly put the statement in the following if case.",
+      "range": {
+        "startLine": 84,
+        "startChar": 1,
+        "endLine": 84,
+        "endChar": 39
+      },
+      "revId": "260781aff08b55de47dfb6d3368451ae0744bb78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5651f26e_33f906af",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T05:56:45Z",
+      "side": 1,
+      "message": "This statement is unnecessary",
+      "range": {
+        "startLine": 86,
+        "startChar": 5,
+        "endLine": 86,
+        "endChar": 20
+      },
+      "revId": "260781aff08b55de47dfb6d3368451ae0744bb78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
