@@ -68,8 +68,6 @@ struct spdk_app {
 
 static struct spdk_app g_spdk_app;
 static struct spdk_event *g_app_start_event = NULL;
-struct spdk_event *g_rpc_start_event = NULL;
-struct spdk_event *g_config_load_event = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
 static int g_init_lcore;
 static bool g_delay_subsystem_init = false;
@@ -566,13 +564,22 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 static void
 bootstrap_fn(void *arg1, void *arg2)
 {
-	if (g_config_load_event) {
-		spdk_event_call(g_config_load_event);
+	struct spdk_event *rpc_start_event;
+	struct spdk_event *config_load_event;
+
+	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+					      NULL, NULL);
+
+	if (g_spdk_app.json_config_file) {
+		g_delay_subsystem_init = false;
+		config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
+							rpc_start_event, NULL);
+		spdk_event_call(config_load_event);
 	} else {
 		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(g_rpc_start_event);
+			spdk_subsystem_init(rpc_start_event);
 		} else {
-			spdk_event_call(g_rpc_start_event);
+			spdk_event_call(rpc_start_event);
 		}
 	}
 }
@@ -675,14 +682,6 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
 	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, NULL);
-	g_rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-						NULL, NULL);
-
-	if (opts->json_config_file) {
-		g_delay_subsystem_init = false;
-		g_config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
-				      g_rpc_start_event, NULL);
-	}
 
 	spdk_event_call(event);
 
