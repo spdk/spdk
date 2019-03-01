@@ -42,6 +42,36 @@ function detect_soft_roce_nics()
 	fi
 }
 
+# The functionality of cxgb3 NICs has not been verified so only attempt cxgb4
+function detect_chelsio_nics()
+{
+	if ! hash lspci; then
+		echo "No NICs"
+		return 0
+	fi
+
+	chelsio_nic_bdfs=`lspci | grep Ethernet | grep Chelsio | awk -F ' ' '{print "0000:"$1}'`
+
+	cxgb4_nics=""
+	for chelsio_nic_bdf in $chelsio_nic_bdfs; do
+		result=`lspci -vvv -s $chelsio_nic_bdf | grep 'Kernel modules' | awk -F ' ' '{print $3}'`
+		if [ "$result" == "cxgb4" ]; then
+			cxgb4_nics="$cxgb4_nic $chelsio_nic_bdf"
+		fi
+	done
+
+	if [ -z "$cxgb4_nics" ]; then
+		echo "No NICs"
+		return 0
+	fi
+
+	modprobe "cxgb4"
+	modprobe "iw_cxgb4"
+
+	# need time for the sysfs to update
+	sleep 1
+}
+
 function detect_mellanox_nics()
 {
 	if ! hash lspci; then
@@ -84,8 +114,9 @@ function detect_mellanox_nics()
 
 function detect_rdma_nics()
 {
-	nics=$(detect_mellanox_nics)
-	if [ "$nics" == "No NICs" ]; then
+	mellanox_nics=$(detect_mellanox_nics)
+	chelsio_nics=$(detect_chelsio_nics)
+	if [ "$mellanox_nics" == "No NICs" -a "$chelsio_nics" == "No NICs" ]; then
 		detect_soft_roce_nics
 	fi
 }
