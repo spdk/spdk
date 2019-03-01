@@ -392,6 +392,10 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
+#if 0
+	struct spdk_dif_ctx dif_ctx;
+	struct iovec iovs[32];
+#endif
 	int rc;
 
 	if (conn->pdu_in_progress == NULL) {
@@ -491,6 +495,24 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 		rc = spdk_iscsi_conn_read_data(conn,
 					       data_len - pdu->data_valid_bytes,
 					       pdu->data_buf + pdu->data_valid_bytes);
+
+#if 0
+		if (!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx)) {
+			rc = spdk_iscsi_conn_read_data(conn,
+						       data_len - pdu->data_valid_bytes,
+						       pdu->data_buf + pdu->data_valid_bytes);
+		} else {
+			rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
+							     pdu->data_buf, pdu->data_buf_len,
+							     pdu->data_valid_bytes, data_len, NULL,
+							     &dif_ctx);
+			if (rc == 0) {
+				rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+			} else {
+				SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
+			}
+		}
+#endif
 		if (rc < 0) {
 			*_pdu = NULL;
 			spdk_put_pdu(pdu);
@@ -615,6 +637,38 @@ _iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
 	return true;
 }
 
+static inline bool
+_iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
+			       void *buf, uint32_t buf_len, uint32_t data_len,
+			       struct spdk_dif_ctx *dif_ctx)
+{
+	int rc;
+	uint32_t mapped_len = 0;
+
+	if (ctx->iov_offset >= data_len) {
+		ctx->iov_offset -= buf_len;
+	} else {
+		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->num_iovs - ctx->iovcnt,
+						     buf, buf_len,
+						     ctx->iov_offset, data_len, &mapped_len,
+						     dif_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to setup iovs for DIF strip\n");
+			return false;
+		}
+
+		ctx->mapped_len += mapped_len;
+		ctx->iov_offset = 0;
+		ctx->iovcnt += rc;
+
+		if (ctx->iovcnt == ctx->num_iovs) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int
 spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
 		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
@@ -663,6 +717,18 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 		if (!_iov_ctx_set_iov(&ctx, pdu->data, data_len)) {
 			goto end;
 		}
+#if 0
+		if (!pdu->dif_strip) {
+			if (!_iov_ctx_set_iov(&ctx, pdu->data, data_len)) {
+				goto end;
+			}
+		} else {
+			if (!_iov_ctx_set_md_interleave_iov(&ctx, pdu->data, pdu->data_buf_len,
+							    data_len, &pdu->dif_ctx)) {
+				goto end;
+			}
+		}
+#endif
 	}
 
 	/* Data Digest */
