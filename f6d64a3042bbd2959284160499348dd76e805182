@@ -16,6 +16,24 @@
       "revId": "f6d64a3042bbd2959284160499348dd76e805182",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e4a28dc7_09febe5d",
+        "filename": "lib/bdev/raid/bdev_raid_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 255,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-01T22:11:17Z",
+      "side": 1,
+      "message": "thanks!  I was so focused on the misspelling that I didn\u0027t even notice the newline was missing.",
+      "parentUuid": "25e37444_2fcf62d6",
+      "revId": "f6d64a3042bbd2959284160499348dd76e805182",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
