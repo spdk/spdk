@@ -1303,6 +1303,87 @@ nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
 	return NULL;
 }
 
+/* Generate reservation notice log to registered HostID controllers */
+static void
+nvmf_subsystem_gen_ctrlr_notification(struct spdk_nvmf_subsystem *subsystem,
+				      struct spdk_nvmf_ns *ns,
+				      struct spdk_uuid *hostid_list,
+				      uint32_t num_hostid,
+				      enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	struct spdk_nvmf_ctrlr *ctrlr;
+	uint32_t i;
+
+	for (i = 0; i < num_hostid; i++) {
+		TAILQ_FOREACH(ctrlr, &subsystem->ctrlrs, link) {
+			if (!spdk_uuid_compare(&ctrlr->hostid, &hostid_list[i])) {
+				spdk_nvmf_ctrlr_reservation_notice_log(ctrlr, ns, type);
+			}
+		}
+	}
+}
+
+/* Get all registrants' hostid other than the controller who issued the command */
+static uint32_t
+nvmf_ns_reservation_get_all_other_hostid(struct spdk_nvmf_ns *ns,
+		struct spdk_uuid *hostid_list,
+		uint32_t max_num_hostid,
+		struct spdk_uuid *current_hostid)
+{
+	struct spdk_nvmf_registrant *reg, *tmp;
+	uint32_t num_hostid = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		if (spdk_uuid_compare(&reg->hostid, current_hostid)) {
+			if (num_hostid == max_num_hostid) {
+				assert(false);
+				return max_num_hostid;
+			}
+			hostid_list[num_hostid++] = reg->hostid;
+		}
+	}
+
+	return num_hostid;
+}
+
+/* Calculate the unregistered HostID list according to list
+ * prior to execute preempt command and list after executing
+ * preempt command.
+ */
+static uint32_t
+nvmf_ns_reservation_get_unregistered_hostid(struct spdk_uuid *old_hostid_list,
+		uint32_t old_num_hostid,
+		struct spdk_uuid *remaining_hostid_list,
+		uint32_t remaining_num_hostid)
+{
+	struct spdk_uuid temp_hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint32_t i, j, num_hostid = 0;
+	bool found;
+
+	if (!remaining_num_hostid) {
+		return old_num_hostid;
+	}
+
+	for (i = 0; i < old_num_hostid; i++) {
+		found = false;
+		for (j = 0; j < remaining_num_hostid; j++) {
+			if (!spdk_uuid_compare(&old_hostid_list[i], &remaining_hostid_list[j])) {
+				found = true;
+				break;
+			}
+		}
+		if (!found) {
+			spdk_uuid_copy(&temp_hostid_list[num_hostid++], &old_hostid_list[i]);
+		}
+	}
+
+	if (num_hostid) {
+		memcpy(old_hostid_list, temp_hostid_list, sizeof(struct spdk_uuid) * num_hostid);
+	}
+
+	return num_hostid;
+}
+
 /* current reservation type is all registrants or not */
 static bool
 nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns)
@@ -1452,11 +1533,13 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			     struct spdk_nvmf_request *req)
 {
 	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
-	uint8_t rrega, iekey, cptpl;
+	uint8_t rrega, iekey, cptpl, rtype;
 	struct spdk_nvme_reservation_register_data key;
 	struct spdk_nvmf_registrant *reg;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = false;
+	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint32_t num_hostid = 0;
 	int rc;
 
 	rrega = cmd->cdw10 & 0x7u;
@@ -1510,7 +1593,21 @@ nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
 			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
 			goto exit;
 		}
+
+		rtype = ns->rtype;
+		num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, hostid_list,
+				SPDK_NVMF_MAX_NUM_REGISTRANTS,
+				&ctrlr->hostid);
+
 		nvmf_ns_reservation_remove_registrant(ns, reg);
+
+		if (!ns->rtype && num_hostid && (rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY ||
+						 rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY)) {
+			nvmf_subsystem_gen_ctrlr_notification(ns->subsystem, ns,
+							      hostid_list,
+							      num_hostid,
+							      SPDK_NVME_RESERVATION_RELEASED);
+		}
 		update_sgroup = true;
 		break;
 	case SPDK_NVME_RESERVE_REPLACE_KEY:
@@ -1550,6 +1647,11 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	bool all_regs = false;
 	uint32_t count = 0;
 	bool update_sgroup = true;
+	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint32_t num_hostid = 0;
+	struct spdk_uuid new_hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint32_t new_num_hostid = 0;
+	bool reservation_released = false;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 
 	racqa = cmd->cdw10 & 0x7u;
@@ -1603,18 +1705,24 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 			nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
 			break;
 		}
+		num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, hostid_list,
+				SPDK_NVMF_MAX_NUM_REGISTRANTS,
+				&ctrlr->hostid);
+
 		/* only 1 reservation holder and reservation key is valid */
 		if (!all_regs) {
 			/* preempt itself */
 			if (nvmf_ns_reservation_registrant_is_holder(ns, reg) &&
 			    ns->crkey == key.prkey) {
 				ns->rtype = rtype;
+				reservation_released = true;
 				break;
 			}
 
 			if (ns->crkey == key.prkey) {
 				nvmf_ns_reservation_remove_registrant(ns, ns->holder);
 				nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
+				reservation_released = true;
 			} else if (key.prkey != 0) {
 				nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
 			} else {
@@ -1647,6 +1755,36 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	}
 
 exit:
+	if (update_sgroup && racqa == SPDK_NVME_RESERVE_PREEMPT) {
+		new_num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, new_hostid_list,
+				 SPDK_NVMF_MAX_NUM_REGISTRANTS,
+				 &ctrlr->hostid);
+		/* Preempt notification occurs on the unregistered controllers
+		 * other than the controller who issued the command.
+		 */
+		num_hostid = nvmf_ns_reservation_get_unregistered_hostid(hostid_list,
+				num_hostid,
+				new_hostid_list,
+				new_num_hostid);
+		if (num_hostid) {
+			nvmf_subsystem_gen_ctrlr_notification(ns->subsystem, ns,
+							      hostid_list,
+							      num_hostid,
+							      SPDK_NVME_REGISTRATION_PREEMPTED);
+
+		}
+		/* Reservation released notification occurs on the
+		 * controllers which are the remaining registrants other than
+		 * the controller who issued the command.
+		 */
+		if (reservation_released && new_num_hostid) {
+			nvmf_subsystem_gen_ctrlr_notification(ns->subsystem, ns,
+							      new_hostid_list,
+							      new_num_hostid,
+							      SPDK_NVME_RESERVATION_RELEASED);
+
+		}
+	}
 	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 	req->rsp->nvme_cpl.status.sc = status;
 	return update_sgroup;
@@ -1663,6 +1801,8 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 	uint64_t crkey;
 	uint8_t status = SPDK_NVME_SC_SUCCESS;
 	bool update_sgroup = true;
+	struct spdk_uuid hostid_list[SPDK_NVMF_MAX_NUM_REGISTRANTS];
+	uint32_t num_hostid = 0;
 
 	rrela = cmd->cdw10 & 0x7u;
 	iekey = (cmd->cdw10 >> 3) & 0x1u;
@@ -1688,6 +1828,10 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 		goto exit;
 	}
 
+	num_hostid = nvmf_ns_reservation_get_all_other_hostid(ns, hostid_list,
+			SPDK_NVMF_MAX_NUM_REGISTRANTS,
+			&ctrlr->hostid);
+
 	switch (rrela) {
 	case SPDK_NVME_RESERVE_RELEASE:
 		if (!ns->holder) {
@@ -1706,10 +1850,26 @@ nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
 			update_sgroup = false;
 			goto exit;
 		}
+
+		rtype = ns->rtype;
 		nvmf_ns_reservation_release_reservation(ns);
+
+		if (num_hostid && rtype != SPDK_NVME_RESERVE_WRITE_EXCLUSIVE &&
+		    rtype != SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS) {
+			nvmf_subsystem_gen_ctrlr_notification(ns->subsystem, ns,
+							      hostid_list,
+							      num_hostid,
+							      SPDK_NVME_RESERVATION_RELEASED);
+		}
 		break;
 	case SPDK_NVME_RESERVE_CLEAR:
 		nvmf_ns_reservation_clear_all_registrants(ns);
+		if (num_hostid) {
+			nvmf_subsystem_gen_ctrlr_notification(ns->subsystem, ns,
+							      hostid_list,
+							      num_hostid,
+							      SPDK_NVME_RESERVATION_PREEMPTED);
+		}
 		break;
 	default:
 		status = SPDK_NVME_SC_INVALID_FIELD;
