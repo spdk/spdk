@@ -42,6 +42,19 @@ function detect_soft_roce_nics()
 	fi
 }
 
+function detect_intel_x722_nics()
+{
+	X722_nic_bdfs=`lspci | grep Ethernet | grep Intel | grep X722 | awk -F ' ' '{print "0000:"$1}'`
+
+	if [ -z "$X722_nic_bdfs" ]; then
+		echo "No NICs"
+		return 0
+	fi
+
+	modprobe "i40e"
+	modprobe "i40iw"
+}
+
 # The functionality of cxgb3 NICs has not been verified so only attempt cxgb4
 function detect_chelsio_nics()
 {
@@ -109,7 +122,8 @@ function detect_pci_nics()
 
 	mellanox_nics=$(detect_mellanox_nics)
 	chelsio_nics=$(detect_chelsio_nics)
-	if [ "$mellanox_nics" == "No NICs" -a "$chelsio_nics" == "No NICs" ]; then
+	intel_X722_nics=$(detect_intel_x722_nics)
+	if [ "$mellanox_nics" == "No NICs" -a "$chelsio_nics" == "No NICs" -a "$intel_X722_nics" == "No NICs" ]; then
 		echo "No NICs"
 		return 0
 	fi
