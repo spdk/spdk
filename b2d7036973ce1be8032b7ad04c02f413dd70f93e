@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "6d11e38a_7445a28a",
+        "filename": "lib/bdev/ocf/stats.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-01T12:42:37Z",
+      "side": 1,
+      "message": "Yup, \u0027try_lock\u0027 will be added to OCF that we can utilize when implementing write back. I\u0027m fine with merging this patch, since we have a plan going forward for this.",
+      "parentUuid": "46444350_2039e04c",
+      "range": {
+        "startLine": 48,
+        "startChar": 10,
+        "endLine": 48,
+        "endChar": 34
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7b06cbc7_ab955558",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 12
@@ -225,6 +249,30 @@
       "side": 1,
       "message": "This number is used by OCF to split IOs when sending it to bottom device.\nRequirement is that this splitted IO size needs to be able to be processed by bottom device,\nbut SPDK bdev modules can handle any sizes.\nSo it would be beneficial to have this number based on optimal_io_boundary, but not required to.",
       "parentUuid": "25f58c62_01c00b85",
+      "range": {
+        "startLine": 387,
+        "startChar": 1,
+        "endLine": 387,
+        "endChar": 15
+      },
+      "revId": "b2d7036973ce1be8032b7ad04c02f413dd70f93e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7b314bf_05c4bcfb",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 387,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-01T12:42:37Z",
+      "side": 1,
+      "message": "Yup, after discussing this offline with OCF guys lets leave 128K here as is. But add separate patch later, that will set this value to optimal_io_boundary or 128K if not provided.\nWe should also expose optimal_io_boundary of core device to ocf_bdev.",
+      "parentUuid": "24091131_4b3a10bb",
       "range": {
         "startLine": 387,
         "startChar": 1,
