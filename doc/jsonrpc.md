@@ -4046,6 +4046,8 @@ Example response:
     "poll_groups": [
       {
         "name": "reactor_0",
+        "admin_qpairs": 0,
+        "io_qpairs": 0,
         "transports": [
           {
             "type": "RDMA"
