@@ -344,6 +344,46 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+static bool
+spdk_iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_pdu *pdu, int data_len)
+{
+	int max_segment_len;
+
+	/*
+	 * Determine the maximum segment length expected for this PDU.
+	 *  This will be used to make sure the initiator did not send
+	 *  us too much immediate data.
+	 *
+	 * This value is specified separately by the initiator and target,
+	 *  and not negotiated.  So we can use the #define safely here,
+	 *  since the value is not dependent on the initiator's maximum
+	 *  segment lengths (FirstBurstLength/MaxRecvDataSegmentLength),
+	 *  and SPDK currently does not allow configuration of these values
+	 *  at runtime.
+	 */
+	if (conn->sess == NULL) {
+		/*
+		 * If the connection does not yet have a session, then
+		 *  login is not complete and we use the 8KB default
+		 *  FirstBurstLength as our maximum data segment length
+		 *  value.
+		 */
+		max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT ||
+		   pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
+		max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	} else {
+		max_segment_len = spdk_get_immediate_data_buffer_size();
+	}
+	if (data_len <= max_segment_len) {
+		return true;
+	} else {
+		SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n", data_len, max_segment_len);
+		return false;
+	}
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
@@ -352,7 +392,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
-	int max_segment_len;
 	int rc;
 
 	if (conn->pdu_in_progress == NULL) {
@@ -492,35 +531,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	/* Data Segment */
 	if (data_len != 0) {
-		/*
-		 * Determine the maximum segment length expected for this PDU.
-		 *  This will be used to make sure the initiator did not send
-		 *  us too much immediate data.
-		 *
-		 * This value is specified separately by the initiator and target,
-		 *  and not negotiated.  So we can use the #define safely here,
-		 *  since the value is not dependent on the initiator's maximum
-		 *  segment lengths (FirstBurstLength/MaxRecvDataSegmentLength),
-		 *  and SPDK currently does not allow configuration of these values
-		 *  at runtime.
-		 */
-		if (conn->sess == NULL) {
-			/*
-			 * If the connection does not yet have a session, then
-			 *  login is not complete and we use the 8KB default
-			 *  FirstBurstLength as our maximum data segment length
-			 *  value.
-			 */
-			max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
-		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT) {
-			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-		} else if (pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
-			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-		} else {
-			max_segment_len = spdk_get_immediate_data_buffer_size();
-		}
-		if (data_len > max_segment_len) {
-			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n", data_len, max_segment_len);
+		if (!spdk_iscsi_check_data_segment_length(conn, pdu, data_len)) {
 			rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 			spdk_put_pdu(pdu);
 
