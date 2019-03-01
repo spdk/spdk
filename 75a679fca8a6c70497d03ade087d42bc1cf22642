@@ -19,6 +19,23 @@
     },
     {
       "key": {
+        "uuid": "e4429933_c3c55f4f",
+        "filename": "examples/bdev/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 143,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-01T14:40:19Z",
+      "side": 1,
+      "message": "Agreed, I\u0027m not best at naming things :)",
+      "revId": "75a679fca8a6c70497d03ade087d42bc1cf22642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc8cb65b_eb187355",
         "filename": "lib/thread/thread.c",
         "patchSetId": 5
@@ -30,6 +47,24 @@
       "writtenOn": "2019-02-28T22:04:02Z",
       "side": 1,
       "message": "let\u0027s make this even more clear and just create a new spdk_thread_has_pollers() function that checks both the active_pollers and timer_pollers TAILQs",
+      "revId": "75a679fca8a6c70497d03ade087d42bc1cf22642",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01ac1bc7_e9bb7794",
+        "filename": "lib/thread/thread.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 557,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-01T14:40:19Z",
+      "side": 1,
+      "message": "Sure, I\u0027ve added new patch before this one adding spdk_thread_has_pollers().",
+      "parentUuid": "fc8cb65b_eb187355",
       "revId": "75a679fca8a6c70497d03ade087d42bc1cf22642",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
