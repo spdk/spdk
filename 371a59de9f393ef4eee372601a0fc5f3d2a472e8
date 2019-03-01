@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "e8f23746_256b16e8",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 577,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-01T14:48:03Z",
+      "side": 1,
+      "message": "Right, this makes more sense, I will change it accordingly.",
+      "parentUuid": "4da5693b_9d2b73a6",
+      "revId": "371a59de9f393ef4eee372601a0fc5f3d2a472e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d1fe51c_51a27878",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 6
@@ -47,6 +65,24 @@
       "writtenOn": "2019-03-01T00:00:37Z",
       "side": 1,
       "message": "I think connect_async needs to take an attach_cb, just like probe_async - then user only gets access to the ctrlr once it is READY.  This makes polling the same for connect_async or probe_async.",
+      "revId": "371a59de9f393ef4eee372601a0fc5f3d2a472e8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "28ad4c65_94c0bd32",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 592,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-01T14:48:03Z",
+      "side": 1,
+      "message": "Okay, I will add it.",
+      "parentUuid": "4d1fe51c_51a27878",
       "revId": "371a59de9f393ef4eee372601a0fc5f3d2a472e8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
