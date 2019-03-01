@@ -344,6 +344,7 @@ ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn fn, void *ctx, int flags, int type)
 void
 ftl_io_clear(struct ftl_io *io)
 {
+	io->status = 0;
 	io->pos = 0;
 	io->req_cnt = 0;
 	io->iov_pos = 0;

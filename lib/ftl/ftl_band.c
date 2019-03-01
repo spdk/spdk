@@ -169,8 +169,8 @@ ftl_band_free_md(struct ftl_band *band)
 	assert(!band->high_prio);
 
 	/* Verify that band's metadata is consistent with l2p */
-	if (band->num_chunks) {
-		assert(ftl_band_validate_md(band, band->md.lba_map) == true);
+	if (band->num_chunks && md->valid) {
+		assert(ftl_band_validate_md(band, md->lba_map) == true);
 	}
 
 	spdk_mempool_put(dev->lba_pool, md->lba_map);
@@ -683,12 +683,20 @@ ftl_read_md_cb(void *arg, int status)
 {
 	struct ftl_md_io *md_io = arg;
 
+	md_io->md->valid = false;
+
 	if (!status) {
 		status = md_io->pack_fn(md_io->io.dev,
 					md_io->md,
 					md_io->buf);
+	} else if (status == -ENOMEM) {
+		status = FTL_MD_IO_ENOMEM;
 	} else {
 		status = FTL_MD_IO_FAILURE;
+	}
+
+	if (status == FTL_MD_SUCCESS) {
+		md_io->md->valid = true;
 	}
 
 	md_io->cb.fn(md_io->cb.ctx, status);
