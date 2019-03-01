@@ -883,6 +883,12 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			if (!sgroup->channels) {
 				return -ENOMEM;
 			}
+			sgroup->reservations = calloc(new_max_nsid, sizeof(struct spdk_nvmf_ns_reservation_info));
+			if (!sgroup->reservations) {
+				free(sgroup->channels);
+				return -ENOMEM;
+			}
+
 		}
 	} else if (new_max_nsid > old_max_nsid) {
 		void *buf;
@@ -892,12 +898,18 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		if (!buf) {
 			return -ENOMEM;
 		}
-
 		sgroup->channels = buf;
+
+		buf = realloc(sgroup->reservations, new_max_nsid * sizeof(struct spdk_nvmf_ns_reservation_info));
+		if (!buf) {
+			return -ENOMEM;
+		}
+		sgroup->reservations = buf;
 
 		/* Null out the new channels slots */
 		for (i = old_max_nsid; i < new_max_nsid; i++) {
 			sgroup->channels[i] = NULL;
+			memset(&sgroup->reservations[i], 0, sizeof(struct spdk_nvmf_ns_reservation_info));
 		}
 	} else if (new_max_nsid < old_max_nsid) {
 		void *buf;
@@ -907,6 +919,7 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			if (sgroup->channels[i]) {
 				spdk_put_io_channel(sgroup->channels[i]);
 				sgroup->channels[i] = NULL;
+				memset(&sgroup->reservations[i], 0, sizeof(struct spdk_nvmf_ns_reservation_info));
 			}
 		}
 
@@ -917,9 +930,16 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 				return -ENOMEM;
 			}
 			sgroup->channels = buf;
+			buf = realloc(sgroup->reservations, new_max_nsid * sizeof(struct spdk_nvmf_ns_reservation_info));
+			if (!buf) {
+				return -ENOMEM;
+			}
+			sgroup->reservations = buf;
 		} else {
 			free(sgroup->channels);
 			sgroup->channels = NULL;
+			free(sgroup->reservations);
+			sgroup->reservations = NULL;
 		}
 	}
 
@@ -943,6 +963,14 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 			}
 		} else {
 			/* A namespace was present before and didn't change. */
+		}
+
+		if (ns == NULL) {
+			memset(&sgroup->reservations[i], 0, sizeof(struct spdk_nvmf_ns_reservation_info));
+		} else if (ns->rtype && ns->holder) {
+			sgroup->reservations[i].crkey = ns->crkey;
+			sgroup->reservations[i].rtype = ns->rtype;
+			sgroup->reservations[i].hostid = ns->holder->hostid;
 		}
 	}
 

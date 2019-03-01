@@ -112,14 +112,25 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
+struct spdk_nvmf_ns_reservation_info {
+	/* current reservation key, no reservation if the value is 0 */
+	uint64_t			crkey;
+	/* reservation type */
+	enum spdk_nvme_reservation_type	rtype;
+	/* Host ID which holds the reservation */
+	struct spdk_uuid		hostid;
+};
+
 struct spdk_nvmf_subsystem_poll_group {
 	/* Array of channels for each namespace indexed by nsid - 1 */
-	struct spdk_io_channel	**channels;
-	uint32_t		max_nsid;
+	struct spdk_io_channel			**channels;
+	/* Array of reservations for each namespace indexd by nsid - 1 */
+	struct spdk_nvmf_ns_reservation_info	*reservations;
+	uint32_t				max_nsid;
 
-	enum spdk_nvmf_subsystem_state state;
+	enum spdk_nvmf_subsystem_state		state;
 
-	TAILQ_HEAD(, spdk_nvmf_request)	queued;
+	TAILQ_HEAD(, spdk_nvmf_request)		queued;
 };
 
 struct spdk_nvmf_poll_group {
