@@ -47,6 +47,13 @@ struct spdk_bdev {
 	uint64_t blockcnt;
 };
 
+DEFINE_STUB(spdk_nvmf_ns_reservation_request_check,
+	    int,
+	    (struct spdk_nvmf_subsystem_pg_ns_info *ns_info,
+	     struct spdk_nvmf_ctrlr *ctrlr,
+	     struct spdk_nvmf_request *req),
+	    0);
+
 DEFINE_STUB(spdk_nvmf_tgt_find_subsystem,
 	    struct spdk_nvmf_subsystem *,
 	    (struct spdk_nvmf_tgt *tgt, const char *subnqn),

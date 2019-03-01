@@ -56,6 +56,13 @@
 SPDK_LOG_REGISTER_COMPONENT("nvmf", SPDK_LOG_NVMF)
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
 
+DEFINE_STUB(spdk_nvmf_ns_reservation_request_check,
+	    int,
+	    (struct spdk_nvmf_subsystem_pg_ns_info *ns_info,
+	     struct spdk_nvmf_ctrlr *ctrlr,
+	     struct spdk_nvmf_request *req),
+	    0);
+
 DEFINE_STUB(spdk_nvmf_qpair_get_listen_trid,
 	    int,
 	    (struct spdk_nvmf_qpair *qpair, struct spdk_nvme_transport_id *trid),
