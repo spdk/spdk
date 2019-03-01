@@ -1370,3 +1370,42 @@ spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
 
 	return iovcnt;
 }
+
+int
+spdk_dif_generate_stream(uint8_t *buf, uint32_t buf_len,
+			 uint32_t offset, uint32_t read_len,
+			 const struct spdk_dif_ctx *ctx)
+{
+	uint32_t data_block_size, offset_blocks, num_blocks, i;
+	uint16_t guard = 0;
+
+	if (buf == NULL) {
+		return -EINVAL;
+	}
+
+	data_block_size = ctx->block_size - ctx->md_size;
+
+	offset_blocks = offset / data_block_size;
+	offset = offset_blocks * ctx->block_size;
+
+	read_len += read_len + (offset % data_block_size);
+	num_blocks = read_len / data_block_size;
+
+	if (offset + num_blocks * ctx->block_size > buf_len) {
+		return -ERANGE;
+	}
+
+	buf += offset;
+
+	for (i = 0; i < num_blocks; i++) {
+		if (ctx->dif_flags & SPDK_DIF_FLAGS_GUARD_CHECK) {
+			guard = spdk_crc16_t10dif(ctx->guard_seed, buf, ctx->guard_interval);
+		}
+
+		_dif_generate(buf + ctx->guard_interval, guard, offset_blocks + i, ctx);
+
+		buf += ctx->block_size;
+	}
+
+	return 0;
+}
