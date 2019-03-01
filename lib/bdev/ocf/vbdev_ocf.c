@@ -195,11 +195,10 @@ close_spdk_dev:
 	return rc;
 }
 
-/* Free OCF resources, close base bdevs */
+/* Finish unregister operation */
 static void
-unregister_cb(void *opaque)
+unregister_finish(struct vbdev_ocf *vbdev)
 {
-	struct vbdev_ocf *vbdev = opaque;
 	int status;
 
 	status = stop_vbdev(vbdev);
@@ -212,6 +211,46 @@ unregister_cb(void *opaque)
 	}
 
 	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+/* Wait for all OCF requests to finish */
+static void
+wait_for_requests_poll(struct vbdev_ocf *vbdev)
+{
+	if (ocf_cache_has_pending_requests(vbdev->ocf_cache)) {
+		return;
+	}
+
+	vbdev_ocf_mngt_continue(vbdev, 0);
+}
+
+/* Start waiting for OCF requests to finish */
+static void
+wait_for_requests(struct vbdev_ocf *vbdev)
+{
+	vbdev_ocf_mngt_poll(vbdev, wait_for_requests_poll);
+}
+
+/* Procedures called during unregister */
+vbdev_ocf_mngt_fn unregister_path[] = {
+	wait_for_requests,
+	unregister_finish,
+	NULL
+};
+
+/* Start asynchronous management operation using unregister_path */
+static void
+unregister_cb(void *opaque)
+{
+	struct vbdev_ocf *vbdev = opaque;
+	int rc;
+
+	rc = vbdev_ocf_mngt_start(vbdev, unregister_path, NULL, NULL);
+	if (rc) {
+		SPDK_ERRLOG("Unable to unregister OCF bdev: %d\n", rc);
+		spdk_bdev_destruct_done(&vbdev->exp_bdev, rc);
+	}
 }
 
 /* Unregister io device with callback to unregister_cb
