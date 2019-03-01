@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b46e2486_c0b86094",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T04:48:36Z",
+      "side": 1,
+      "message": "do we need to add a spdk_likely() here?Since it is the normal case.",
+      "range": {
+        "startLine": 96,
+        "startChar": 7,
+        "endLine": 96,
+        "endChar": 91
+      },
+      "revId": "931fbd3df43ec09657211d1d6f26c08b3503df1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "04aeb0bc_2c1667e8",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-01T04:48:36Z",
+      "side": 1,
+      "message": "Do we need to have an error message printing SPDK_ERRLOG here?",
+      "range": {
+        "startLine": 100,
+        "startChar": 4,
+        "endLine": 100,
+        "endChar": 63
+      },
+      "revId": "931fbd3df43ec09657211d1d6f26c08b3503df1c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
