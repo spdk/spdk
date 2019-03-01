@@ -1,0 +1,78 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "de80db38_0e9bd5fc",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-01T15:46:12Z",
+      "side": 1,
+      "message": "I don\u0027t fully understand why we are relying on num_ns when creating ftl bdevs array. Open channel assumes that controller has always one namespace. We can have multiple bdevs on single OC controller and this is only depended on user configuration.",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 73
+      },
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "292e0a42_db8b6095",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-01T15:46:12Z",
+      "side": 1,
+      "message": "Maybe use goto pattern for consistency.",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ba400215_2435c9e8",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-01T15:46:12Z",
+      "side": 1,
+      "message": "Ok, I see that we have bdevs array and also ftl_bdevs list - do we need both?",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d0652aad_d898e43d",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-01T15:46:12Z",
+      "side": 1,
+      "message": "We should free ftl_bdev also",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
