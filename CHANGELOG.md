@@ -69,6 +69,10 @@ the ring.
 A new API `spdk_mempool_lookup` has been added to lookup the memory pool created
 by the primary process.
 
+### rpc
+
+Added thread_get_stats RPC method to retrieve existing statistics.
+
 ## v19.04:
 
 ### nvme
