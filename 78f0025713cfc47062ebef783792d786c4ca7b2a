@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6a00a567_1071b1dc",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 316,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe76be36_1e90e9b6",
+      "range": {
+        "startLine": 316,
+        "startChar": 25,
+        "endLine": 316,
+        "endChar": 55
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ebbff119_edb5bf2c",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-19T12:51:42Z",
       "side": 1,
       "message": "There is no need to have separate structure. You can inline rpc_get_reactors_stat here abd use rpc_get_reactors_stat_ctx in decoders.",
+      "range": {
+        "startLine": 171,
+        "startChar": 1,
+        "endLine": 171,
+        "endChar": 34
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "611e3592_19ed2425",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 171,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ebbff119_edb5bf2c",
       "range": {
         "startLine": 171,
         "startChar": 1,
@@ -119,6 +167,30 @@
     },
     {
       "key": {
+        "uuid": "d2cca0e9_fb56deed",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8be1871a_c18eea36",
+      "range": {
+        "startLine": 191,
+        "startChar": 1,
+        "endLine": 191,
+        "endChar": 42
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "eaf19de8_99f3dec0",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -190,6 +262,30 @@
     },
     {
       "key": {
+        "uuid": "507f51e8_9c7f487a",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done\nAt the moment we have no plans to apply this method to individual threads.",
+      "parentUuid": "45a2d7cf_59b8051b",
+      "range": {
+        "startLine": 217,
+        "startChar": 1,
+        "endLine": 217,
+        "endChar": 22
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "dcc111c7_eb9bb2df",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -201,6 +297,30 @@
       "writtenOn": "2019-02-19T12:51:42Z",
       "side": 1,
       "message": "if `ctx-\u003ew \u003d\u003d NULL` user still might want to execute this request (e.g. just to reset stats) but don\u0027t wan\u0027t response.",
+      "range": {
+        "startLine": 229,
+        "startChar": 1,
+        "endLine": 232,
+        "endChar": 2
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4e42f2f4_e06e7405",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dcc111c7_eb9bb2df",
       "range": {
         "startLine": 229,
         "startChar": 1,
@@ -284,6 +404,30 @@
     },
     {
       "key": {
+        "uuid": "38698336_3a352c16",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done\nIt was originally implemented on older SPDK version where it was part of reactors API. Now it is all about threads. So, renamed everywhere to avoid confusion.",
+      "parentUuid": "18b4f6c6_1bd5c1bf",
+      "range": {
+        "startLine": 237,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 37
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0df736d0_63e07793",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -307,6 +451,30 @@
     },
     {
       "key": {
+        "uuid": "b379dde4_93d29853",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0df736d0_63e07793",
+      "range": {
+        "startLine": 228,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 78
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "24404deb_5ff2e1cc",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 1
@@ -318,6 +486,30 @@
       "writtenOn": "2019-02-19T12:51:42Z",
       "side": 1,
       "message": "pls update jsonrpc.md about new RPC call (all patches in this serie).",
+      "range": {
+        "startLine": 242,
+        "startChar": 19,
+        "endLine": 242,
+        "endChar": 36
+      },
+      "revId": "78f0025713cfc47062ebef783792d786c4ca7b2a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1a441699_15ddc5cb",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 242,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:19:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "24404deb_5ff2e1cc",
       "range": {
         "startLine": 242,
         "startChar": 19,
