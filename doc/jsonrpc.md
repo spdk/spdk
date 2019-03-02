@@ -484,6 +484,47 @@ Example response:
 }
 ~~~
 
+## thread_get_stats {#rpc_thread_get_stats}
+
+Retrieve current statistics of all the threads.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is an array of objects containing threads statistics.
+
+### Example
+
+Example request:
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "thread_get_stats",
+  "id": 1
+}
+~~~
+
+Example response:
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tick_rate": 2400000000,
+    "threads": [
+      {
+        "name": "reactor_0",
+        "busy": 139223208,
+        "idle": 8641080608
+      }
+    ]
+  }
+}
+~~~
+
 # Block Device Abstraction Layer {#jsonrpc_components_bdev}
 
 ## set_bdev_options {#rpc_set_bdev_options}
