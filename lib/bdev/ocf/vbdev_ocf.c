@@ -633,8 +633,11 @@ static int queue_poll(void *opaque)
 {
 	struct vbdev_ocf_qcxt *qctx = opaque;
 	uint32_t iono = ocf_queue_pending_io(qctx->queue);
+	int i, max = spdk_min(32, iono);
 
-	ocf_queue_run(qctx->queue);
+	for (i = 0; i < max; i++) {
+		ocf_queue_run_single(qctx->queue);
+	}
 
 	if (iono > 0) {
 		return 1;
