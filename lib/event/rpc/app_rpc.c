@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -37,6 +37,8 @@
 #include "spdk/rpc.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/env.h"
+#include "spdk/thread.h"
 
 #include "spdk_internal/log.h"
 
@@ -153,3 +155,69 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 }
 
 SPDK_RPC_REGISTER("context_switch_monitor", spdk_rpc_context_switch_monitor, SPDK_RPC_RUNTIME)
+
+struct rpc_thread_get_stats_ctx {
+	struct spdk_jsonrpc_request *request;
+	struct spdk_json_write_ctx *w;
+};
+
+static void
+rpc_thread_get_stats_done(void *arg)
+{
+	struct rpc_thread_get_stats_ctx *ctx = arg;
+
+	spdk_json_write_array_end(ctx->w);
+	spdk_json_write_object_end(ctx->w);
+	spdk_jsonrpc_end_result(ctx->request, ctx->w);
+
+	free(ctx);
+}
+
+static void
+rpc_thread_get_stats(void *arg)
+{
+	struct rpc_thread_get_stats_ctx *ctx = arg;
+	struct spdk_thread_stats stats;
+
+	if (0 == spdk_thread_get_stats(&stats)) {
+		spdk_json_write_object_begin(ctx->w);
+		spdk_json_write_named_string(ctx->w, "name", spdk_thread_get_name(spdk_get_thread()));
+		spdk_json_write_named_uint64(ctx->w, "busy", stats.busy_tsc);
+		spdk_json_write_named_uint64(ctx->w, "idle", stats.idle_tsc);
+		spdk_json_write_object_end(ctx->w);
+	}
+}
+
+static void
+spdk_rpc_thread_get_stats(struct spdk_jsonrpc_request *request,
+			  const struct spdk_json_val *params)
+{
+	struct rpc_thread_get_stats_ctx *ctx;
+
+	if (params) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "'thread_get_stats' requires no arguments");
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory allocation error");
+		return;
+	}
+	ctx->request = request;
+
+	ctx->w = spdk_jsonrpc_begin_result(ctx->request);
+	if (NULL == ctx->w) {
+		free(ctx);
+		return;
+	}
+	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
+	spdk_json_write_named_array_begin(ctx->w, "threads");
+
+	spdk_for_each_thread(rpc_thread_get_stats, ctx, rpc_thread_get_stats_done);
+}
+
+SPDK_RPC_REGISTER("thread_get_stats", spdk_rpc_thread_get_stats, SPDK_RPC_RUNTIME)
