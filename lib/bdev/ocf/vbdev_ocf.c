@@ -565,7 +565,7 @@ static int queue_poll(void *opaque)
 	struct vbdev_ocf_qcxt *qctx = opaque;
 	uint32_t iono = ocf_queue_pending_io(qctx->queue);
 
-	ocf_queue_run(qctx->queue);
+	ocf_queue_run_single(qctx->queue);
 
 	if (iono > 0) {
 		return 1;
