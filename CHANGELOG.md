@@ -20,6 +20,11 @@ any registered pollers to be run on the thread.
 Added spdk_thread_is_idle() function to check if there are any scheduled operations
 to be performed on the thread at given time.
 
+Added thread statistics reset function.
+
+### rpc
+Added get_threads_stat RPC method to retrieve existing statistics.
+
 ## v19.01:
 
 ### ocf bdev

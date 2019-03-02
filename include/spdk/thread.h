@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -326,6 +326,16 @@ struct spdk_thread_stats {
  * \param stats User's thread_stats structure.
  */
 int spdk_thread_get_stats(struct spdk_thread_stats *stats);
+
+/**
+ * Reset current thread statistics.
+ *
+ * Reset cumulative thread stats values to zero.
+ *
+ * \retval        0: success
+ * \retval  -EINVAL: current thread is not an SPDK thread
+ */
+int spdk_thread_reset_stats(void);
 
 /**
  * Send a message to the given thread.
