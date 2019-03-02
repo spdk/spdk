@@ -21,3 +21,12 @@ def context_switch_monitor(client, enabled=None):
     if enabled is not None:
         params['enabled'] = enabled
     return client.call('context_switch_monitor', params)
+
+
+def thread_get_stats(client):
+    """Query threads statistics.
+
+    Returns:
+        Current threads statistics.
+    """
+    return client.call('thread_get_stats')

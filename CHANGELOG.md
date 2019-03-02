@@ -95,6 +95,10 @@ sock groups. This API is intended to provide the user with that information.
 spdk_sock_group_get_ctx() was added to return the context of the spdk_sock_group.
 spdk_sock_group_create() is updated to allow input the user provided ctx.
 
+### rpc
+
+Added thread_get_stats RPC method to retrieve existing statistics.
+
 ## v19.04:
 
 ### nvme
