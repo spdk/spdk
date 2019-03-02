@@ -1792,6 +1792,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-n', '--max', help="""Maximum number of notifications to return in response""", type=int)
     p.set_defaults(func=get_notifications)
 
+    def get_threads_stat(args):
+        print_dict(rpc.app.get_threads_stat(args.client))
+
+    p = subparsers.add_parser(
+        'get_threads_stat', help='Display current statistics of all the threads')
+    p.set_defaults(func=get_threads_stat)
+
     args = parser.parse_args()
 
     with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
