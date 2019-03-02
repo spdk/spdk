@@ -4048,21 +4048,28 @@ Example response:
         "name": "reactor_0",
         "admin_qpairs": 1,
         "io_qpairs": 1,
+        "pending_bdev_io": 0,
         "transports": [
           {
             "type": "RDMA",
             "devices": [
               {
                 "name": "mlx5_1",
-                "polls": 1536729,
+                "polls": 488688,
                 "completions": 0,
-                "avg_comps_per_poll": 0.0
+                "avg_comps_per_poll": 0.0,
+                "pending_free_request": 0,
+                "pending_data_buffer": 0,
+                "pending_transfer": 0
               },
               {
                 "name": "mlx5_0",
-                "polls": 1536729,
-                "completions": 18667357,
-                "avg_comps_per_poll": 12.15
+                "polls": 488688,
+                "completions": 15576151,
+                "avg_comps_per_poll": 31.87,
+                "pending_free_request": 0,
+                "pending_data_buffer": 0,
+                "pending_transfer": 337602
               }
             ]
           },
