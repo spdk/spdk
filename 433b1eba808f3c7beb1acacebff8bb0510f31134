@@ -22,6 +22,30 @@
       "revId": "433b1eba808f3c7beb1acacebff8bb0510f31134",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2f1d6983_b882df6b",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-02T20:20:14Z",
+      "side": 1,
+      "message": "This is useful for visual analysis. But I agree that it is redundant for other use cases.\nIf no objections from others I will drop this commit.",
+      "parentUuid": "ab8471f5_ce5cdcda",
+      "range": {
+        "startLine": 197,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 56
+      },
+      "revId": "433b1eba808f3c7beb1acacebff8bb0510f31134",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
