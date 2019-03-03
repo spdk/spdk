@@ -2358,6 +2358,16 @@ spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev)
 	return (bdev->md_len != 0) && bdev->md_interleave;
 }
 
+uint32_t
+spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev)
+{
+	if (spdk_bdev_is_md_interleaved(bdev)) {
+		return bdev->blocklen - bdev->md_len;
+	} else {
+		return bdev->blocklen;
+	}
+}
+
 enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev)
 {
 	if (bdev->md_len != 0) {

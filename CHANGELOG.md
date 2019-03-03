@@ -20,6 +20,11 @@ any registered pollers to be run on the thread.
 Added spdk_thread_is_idle() function to check if there are any scheduled operations
 to be performed on the thread at given time.
 
+### bdev
+
+An new API `spdk_bdev_get_data_block_size` has been added to get size of data
+block except for metadata.
+
 ## v19.01:
 
 ### ocf bdev
