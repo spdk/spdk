@@ -22,6 +22,30 @@
       "revId": "ee30b5e21f216bd851296b2302dbfa337a701e59",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0a1d04a4_572fc2a9",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1484,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T22:36:08Z",
+      "side": 1,
+      "message": "Thank you Zhouhui. I like concise and change to use memcmp.",
+      "parentUuid": "b9e54613_0935f078",
+      "range": {
+        "startLine": 1479,
+        "startChar": 2,
+        "endLine": 1484,
+        "endChar": 2
+      },
+      "revId": "ee30b5e21f216bd851296b2302dbfa337a701e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
