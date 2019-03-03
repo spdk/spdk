@@ -1358,6 +1358,53 @@ spdk_nvmf_get_cmds_and_effects_log_page(void *buffer,
 	}
 }
 
+static void
+spdk_nvmf_get_reservation_notification_log_page(struct spdk_nvmf_ctrlr *ctrlr,
+		void *data, uint64_t offset,
+		uint32_t length)
+{
+	uint32_t unit_log_len, avail_log_len, next_pos, copy_len;
+	struct spdk_nvmf_reservation_log *log, *log_tmp;
+	uint8_t *buf = data;
+
+	unit_log_len = sizeof(struct spdk_nvme_reservation_notification_log);
+	avail_log_len = ctrlr->num_avail_log_pages * unit_log_len;
+	if (!avail_log_len) {
+		avail_log_len = unit_log_len;
+	}
+
+	if (offset >= avail_log_len) {
+		return;
+	}
+
+	/* No available log, return 1 zeroed log page */
+	if (!ctrlr->num_avail_log_pages) {
+		memset(buf, 0, spdk_min(length, unit_log_len));
+		return;
+	}
+
+	next_pos = copy_len = 0;
+	TAILQ_FOREACH_SAFE(log, &ctrlr->log_head, link, log_tmp) {
+		TAILQ_REMOVE(&ctrlr->log_head, log, link);
+		ctrlr->num_avail_log_pages--;
+
+		next_pos += unit_log_len;
+		if (next_pos > offset) {
+			copy_len = spdk_min(next_pos - offset, length);
+			memcpy(buf, &log->log, copy_len);
+			length -= copy_len;
+			offset += copy_len;
+			buf += copy_len;
+		}
+		free(log);
+
+		if (length == 0) {
+			break;
+		}
+	}
+	return;
+}
+
 static int
 spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 {
@@ -1421,6 +1468,9 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		case SPDK_NVME_LOG_CHANGED_NS_LIST:
 			spdk_nvmf_get_changed_ns_list_log_page(ctrlr, req->data, offset, len);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		case SPDK_NVME_LOG_RESERVATION_NOTIFICATION:
+			spdk_nvmf_get_reservation_notification_log_page(ctrlr, req->data, offset, len);
 			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 		default:
 			goto invalid_log_page;
