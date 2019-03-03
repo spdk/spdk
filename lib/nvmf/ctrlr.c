@@ -1236,6 +1236,13 @@ spdk_nvmf_ctrlr_async_event_request(struct spdk_nvmf_request *req)
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
 
+	if (ctrlr->reservation_event.bits.async_event_type ==
+	    SPDK_NVME_ASYNC_EVENT_TYPE_IO) {
+		rsp->cdw0 = ctrlr->reservation_event.raw;
+		ctrlr->reservation_event.raw = 0;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	ctrlr->aer_req = req;
 	return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
 }
@@ -2105,6 +2112,45 @@ spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr->aer_req = NULL;
 
 	return 0;
+}
+
+void
+spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+	union spdk_nvme_async_event_completion event = {0};
+
+	if (!ctrlr->num_avail_log_pages) {
+		return;
+	}
+	event.bits.async_event_type = SPDK_NVME_ASYNC_EVENT_TYPE_IO;
+	event.bits.async_event_info = SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL;
+	event.bits.log_page_identifier = SPDK_NVME_LOG_RESERVATION_NOTIFICATION;
+
+	/* If there is no outstanding AER request, queue the event.  Then
+	 * if an AER is later submitted, this event can be sent as a
+	 * response.
+	 */
+	if (!ctrlr->aer_req) {
+		if (ctrlr->reservation_event.bits.async_event_type ==
+		    SPDK_NVME_ASYNC_EVENT_TYPE_IO) {
+			return;
+		}
+
+		ctrlr->reservation_event.raw = event.raw;
+		return;
+	}
+
+	req = ctrlr->aer_req;
+	rsp = &req->rsp->nvme_cpl;
+
+	rsp->cdw0 = event.raw;
+
+	spdk_nvmf_request_complete(req);
+	ctrlr->aer_req = NULL;
+
+	return;
 }
 
 void
