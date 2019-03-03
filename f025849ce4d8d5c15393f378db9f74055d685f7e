@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bbb7115d_c3895f78",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T23:42:55Z",
+      "side": 1,
+      "message": "Maybe \"True if DIF or false if DIX, and this is valid only if do_nvme_pi is true.\"",
+      "range": {
+        "startLine": 101,
+        "startChar": 4,
+        "endLine": 101,
+        "endChar": 59
+      },
+      "revId": "f025849ce4d8d5c15393f378db9f74055d685f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "55cb47d4_a8d54e58",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 217,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T23:42:55Z",
+      "side": 1,
+      "message": "Oh, we can remove this limitation now? If yes, we can remove this by a separate patch first, and add this patch next.",
+      "range": {
+        "startLine": 212,
+        "startChar": 0,
+        "endLine": 217,
+        "endChar": 2
+      },
+      "revId": "f025849ce4d8d5c15393f378db9f74055d685f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "39b6f1db_bb95a409",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 318,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T23:42:55Z",
+      "side": 1,
+      "message": "Maybe lowercase \u0027t\u0027",
+      "range": {
+        "startLine": 318,
+        "startChar": 22,
+        "endLine": 318,
+        "endChar": 23
+      },
+      "revId": "f025849ce4d8d5c15393f378db9f74055d685f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b84194ac_0fbd0b69",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T23:42:55Z",
+      "side": 1,
+      "message": "I think this should be executed only if fio_qpair-\u003edo_nvme_pi is true. (pi_mode is set to false as default by calloc().)\n\nif (fio_qpair-\u003edo_nvme_pi) {\n  ...\n}",
+      "range": {
+        "startLine": 317,
+        "startChar": 0,
+        "endLine": 319,
+        "endChar": 62
+      },
+      "revId": "f025849ce4d8d5c15393f378db9f74055d685f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
