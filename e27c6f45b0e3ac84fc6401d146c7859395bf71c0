@@ -16,6 +16,24 @@
       "revId": "e27c6f45b0e3ac84fc6401d146c7859395bf71c0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9457ca63_2b5d6c4f",
+        "filename": "lib/sock/sock.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T22:40:36Z",
+      "side": 1,
+      "message": "Yes, this is unrelated but if OK, I want to keep this change.",
+      "parentUuid": "f52b7730_b7faf9db",
+      "revId": "e27c6f45b0e3ac84fc6401d146c7859395bf71c0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
