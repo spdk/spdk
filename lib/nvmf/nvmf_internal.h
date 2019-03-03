@@ -273,6 +273,7 @@ struct spdk_nvmf_ctrlr {
 
 	struct spdk_nvmf_request *aer_req;
 	union spdk_nvme_async_event_completion notice_event;
+	union spdk_nvme_async_event_completion reservation_event;
 	struct spdk_uuid  hostid;
 
 	uint16_t changed_ns_list_count;
@@ -371,6 +372,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ns_reservation_request(void *ctx);
 void spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		struct spdk_nvmf_ns *ns,
