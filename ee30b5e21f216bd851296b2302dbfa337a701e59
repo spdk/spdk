@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b9e54613_0935f078",
+        "filename": "test/unit/lib/util/dif.c/dif_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1484,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-03T11:14:13Z",
+      "side": 1,
+      "message": "Using memcmp() maybe more concise, but using for loop is good as well.",
+      "range": {
+        "startLine": 1479,
+        "startChar": 2,
+        "endLine": 1484,
+        "endChar": 2
+      },
+      "revId": "ee30b5e21f216bd851296b2302dbfa337a701e59",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
