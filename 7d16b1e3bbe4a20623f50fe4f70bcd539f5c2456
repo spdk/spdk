@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b78172c5_3ee17dff",
+        "filename": "include/spdk/dif.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 292,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-03T11:27:58Z",
+      "side": 1,
+      "message": "extended",
+      "range": {
+        "startLine": 292,
+        "startChar": 31,
+        "endLine": 292,
+        "endChar": 38
+      },
+      "revId": "7d16b1e3bbe4a20623f50fe4f70bcd539f5c2456",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "2a660f19_3f223cdd",
         "filename": "lib/util/dif.c",
         "patchSetId": 1
