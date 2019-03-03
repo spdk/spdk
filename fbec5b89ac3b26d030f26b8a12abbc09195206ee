@@ -46,6 +46,30 @@
       "revId": "fbec5b89ac3b26d030f26b8a12abbc09195206ee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7024ba04_b6f31396",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2365,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-03T22:32:17Z",
+      "side": 1,
+      "message": "Thank you Ziye, Jim. Only NVMe bdev exposes metadata and it gets information from NVMe controller. It may not be necessary for NVMe bdev to add this kind of assert. I\u0027ll add this kind of assert to bdev modules that has virtual DIF feature.",
+      "parentUuid": "190f91d9_ef6dd2fc",
+      "range": {
+        "startLine": 2365,
+        "startChar": 2,
+        "endLine": 2365,
+        "endChar": 39
+      },
+      "revId": "fbec5b89ac3b26d030f26b8a12abbc09195206ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
