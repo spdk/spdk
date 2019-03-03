@@ -463,6 +463,11 @@ static struct spdk_nvmf_ctrlr g_ctrlr1_A, g_ctrlr2_A, g_ctrlr_B, g_ctrlr_C;
 static struct spdk_nvmf_ns g_ns;
 struct spdk_nvmf_subsystem_pg_ns_info g_ns_info;
 
+void
+spdk_nvmf_ctrlr_async_event_reservation_notification(struct spdk_nvmf_ctrlr *ctrlr)
+{
+}
+
 static void
 ut_reservation_init(void)
 {
