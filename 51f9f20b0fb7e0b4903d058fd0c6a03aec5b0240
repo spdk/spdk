@@ -16,6 +16,24 @@
       "revId": "51f9f20b0fb7e0b4903d058fd0c6a03aec5b0240",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "23d4586a_a5bb865c",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1030,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-04T11:27:25Z",
+      "side": 1,
+      "message": "Good point. But didn\u0027t observed any issu with this... need to check it.",
+      "parentUuid": "a6fbdfbc_39febbcc",
+      "revId": "51f9f20b0fb7e0b4903d058fd0c6a03aec5b0240",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
