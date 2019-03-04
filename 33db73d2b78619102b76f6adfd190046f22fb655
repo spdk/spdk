@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cabe7886_e5640b9a",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T18:38:57Z",
+      "side": 1,
+      "message": "remove \"supported\" - that makes it consistent with spdk_nvme_ns_get_flags()\n\nmake sure to update the CHANGELOG too",
+      "revId": "33db73d2b78619102b76f6adfd190046f22fb655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
