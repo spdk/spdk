@@ -573,12 +573,11 @@ bootstrap_fn(void *arg1, void *arg2)
 		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, _spdk_app_start_rpc,
 					  NULL);
 	} else {
-		rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-						      NULL, NULL);
-
 		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(rpc_start_event);
+			spdk_subsystem_init(_spdk_app_start_rpc, NULL);
 		} else {
+			rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+							      NULL, NULL);
 			spdk_event_call(rpc_start_event);
 		}
 	}
@@ -1060,7 +1059,7 @@ spdk_app_usage(void)
 }
 
 static void
-spdk_rpc_start_subsystem_init_cpl(void *arg1, void *arg2)
+spdk_rpc_start_subsystem_init_cpl(void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 	struct spdk_json_write_ctx *w;
@@ -1080,17 +1079,13 @@ static void
 spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct spdk_event *cb_event;
-
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "start_subsystem_init requires no parameters");
 		return;
 	}
 
-	cb_event = spdk_event_allocate(g_init_lcore, spdk_rpc_start_subsystem_init_cpl,
-				       request, NULL);
-	spdk_subsystem_init(cb_event);
+	spdk_subsystem_init(spdk_rpc_start_subsystem_init_cpl, request);
 }
 SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
 
