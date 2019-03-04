@@ -48,6 +48,8 @@ DEFINE_STUB(rte_vhost_get_vring_base, int, (int vid, uint16_t queue_id,
 		uint16_t *last_avail_idx, uint16_t *last_used_idx), 0);
 DEFINE_STUB_V(spdk_vhost_session_install_rte_compat_hooks,
 	      (struct spdk_vhost_session *vsession));
+DEFINE_STUB_V(spdk_vhost_dev_install_rte_compat_hooks,
+	      (struct spdk_vhost_dev *vdev));
 DEFINE_STUB(rte_vhost_driver_unregister, int, (const char *path), 0);
 DEFINE_STUB(spdk_event_allocate, struct spdk_event *,
 	    (uint32_t lcore, spdk_event_fn fn, void *arg1, void *arg2), NULL);

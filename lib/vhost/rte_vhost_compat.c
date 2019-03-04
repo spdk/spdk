@@ -110,6 +110,35 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 			vsession->needs_restart = true;
 		}
 		break;
+	case VHOST_USER_GET_CONFIG: {
+		struct vhost_user_config *cfg = &msg->payload.cfg;
+		int rc = 0;
+
+		spdk_vhost_lock();
+		if (vsession->vdev->backend->vhost_get_config) {
+			rc = vsession->vdev->backend->vhost_get_config(vsession->vdev,
+				cfg->region, cfg->size);
+			if (rc != 0) {
+				msg->size = 0;
+			}
+		}
+		spdk_vhost_unlock();
+
+		return RTE_VHOST_MSG_RESULT_REPLY;
+	}
+	case VHOST_USER_SET_CONFIG: {
+		struct vhost_user_config *cfg = &msg->payload.cfg;
+		int rc = 0;
+
+		spdk_vhost_lock();
+		if (vsession->vdev->backend->vhost_set_config) {
+			rc = vsession->vdev->backend->vhost_set_config(vsession->vdev,
+				cfg->region, cfg->offset, cfg->size, cfg->flags);
+		}
+		spdk_vhost_unlock();
+
+		return rc == 0 ? RTE_VHOST_MSG_RESULT_OK : RTE_VHOST_MSG_RESULT_ERR;
+	}
 	default:
 		break;
 	}
@@ -187,10 +216,26 @@ spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 	}
 }
 
+void
+spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
+{
+	uint64_t protocol_features = 0;
+
+	rte_vhost_driver_get_protocol_features(vdev->path, &protocol_features);
+	protocol_features |= (1ULL << VHOST_USER_PROTOCOL_F_CONFIG);
+	rte_vhost_driver_set_protocol_features(vdev->path, protocol_features);
+}
+
 #else /* SPDK_CONFIG_VHOST_INTERNAL_LIB */
 void
 spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession)
 {
 	/* nothing to do. all the changes are already incorporated into rte_vhost */
+}
+
+void
+spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev)
+{
+	/* nothing to do */
 }
 #endif
