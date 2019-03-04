@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/log.h"
+#include "spdk/thread.h"
 
 #include "spdk_internal/event.h"
 #include "spdk/env.h"
@@ -43,7 +44,8 @@ struct spdk_subsystem_depend_list g_subsystems_deps = TAILQ_HEAD_INITIALIZER(g_s
 static struct spdk_subsystem *g_next_subsystem;
 static bool g_subsystems_initialized = false;
 static bool g_subsystems_init_interrupted = false;
-static struct spdk_event *g_app_start_event;
+static spdk_msg_fn g_app_start_fn = NULL;
+static void *g_app_start_arg = NULL;
 static struct spdk_event *g_app_stop_event;
 static uint32_t g_fini_core;
 
@@ -136,7 +138,7 @@ spdk_subsystem_init_next(int rc)
 
 	if (!g_next_subsystem) {
 		g_subsystems_initialized = true;
-		spdk_event_call(g_app_start_event);
+		g_app_start_fn(g_app_start_arg);
 		return;
 	}
 
@@ -173,11 +175,12 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 }
 
 void
-spdk_subsystem_init(struct spdk_event *app_start_event)
+spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg)
 {
 	struct spdk_event *verify_event;
 
-	g_app_start_event = app_start_event;
+	g_app_start_fn = cb_fn;
+	g_app_start_arg = cb_arg;
 
 	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
 	spdk_event_call(verify_event);
