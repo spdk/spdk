@@ -380,7 +380,7 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 	struct iovec	*iov = iovec_array;
 	int iovec_cnt = 0;
 	int bytes = 0;
-	uint32_t writev_offset;
+	uint32_t mapped_length;
 	struct nvme_tcp_pdu *pdu;
 	int pdu_length;
 	TAILQ_HEAD(, nvme_tcp_pdu) completed_pdus_list;
@@ -396,28 +396,10 @@ nvme_tcp_qpair_process_send_queue(struct nvme_tcp_qpair *tqpair)
 	 *  tqpair 's send_queue.
 	 */
 	while (pdu != NULL && ((array_size - iovec_cnt) >= 3)) {
-		iovec_cnt += nvme_tcp_build_iovecs(&iovec_array[iovec_cnt],
+		iovec_cnt += nvme_tcp_build_iovecs(&iovec_array[iovec_cnt], array_size - iovec_cnt,
 						   pdu, tqpair->host_hdgst_enable,
-						   tqpair->host_ddgst_enable);
+						   tqpair->host_ddgst_enable, &mapped_length);
 		pdu = TAILQ_NEXT(pdu, tailq);
-	}
-
-	/*
-	 * Check if the first PDU was partially written out the last time
-	 *  this function was called, and if so adjust the iovec array
-	 *  accordingly.
-	 */
-	writev_offset = TAILQ_FIRST(&tqpair->send_queue)->writev_offset;
-	while ((writev_offset > 0) && (iovec_cnt > 0)) {
-		if (writev_offset >= iov->iov_len) {
-			writev_offset -= iov->iov_len;
-			iov++;
-			iovec_cnt--;
-		} else {
-			iov->iov_len -= writev_offset;
-			iov->iov_base = (char *)iov->iov_base + writev_offset;
-			writev_offset = 0;
-		}
 	}
 
 	bytes = spdk_sock_writev(tqpair->sock, iov, iovec_cnt);
