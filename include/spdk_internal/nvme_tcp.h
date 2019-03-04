@@ -108,7 +108,7 @@ struct nvme_tcp_pdu {
 };
 
 enum nvme_tcp_pdu_recv_state {
-	/* Ready to wait to wait PDU */
+	/* Ready wait PDU */
 	NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_READY,
 
 	/* Active tqpair waiting for any PDU common header */
