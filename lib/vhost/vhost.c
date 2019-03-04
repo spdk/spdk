@@ -752,6 +752,17 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		goto out;
 	}
 
+	vdev->name = strdup(name);
+	vdev->path = strdup(path);
+	vdev->cpumask = cpumask;
+	vdev->registered = true;
+	vdev->backend = backend;
+	TAILQ_INIT(&vdev->vsessions);
+	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
+
+	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
+				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
+
 	/* The following might start a POSIX thread that polls for incoming
 	 * socket connections and calls backend->start/stop_device. These backend
 	 * callbacks are also protected by the global SPDK vhost mutex, so we're
@@ -761,20 +772,12 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 		SPDK_ERRLOG("Failed to start vhost driver for controller %s (%d): %s\n",
 			    name, errno, spdk_strerror(errno));
 		rte_vhost_driver_unregister(path);
+		TAILQ_REMOVE(&g_spdk_vhost_devices, vdev, tailq);
+		free(vdev->name);
+		free(vdev->path);
 		rc = -EIO;
 		goto out;
 	}
-
-	vdev->name = strdup(name);
-	vdev->path = strdup(path);
-	vdev->cpumask = cpumask;
-	vdev->registered = true;
-	vdev->backend = backend;
-	TAILQ_INIT(&vdev->vsessions);
-	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
-				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
-
-	TAILQ_INSERT_TAIL(&g_spdk_vhost_devices, vdev, tailq);
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: new controller added\n", vdev->name);
 	return 0;
