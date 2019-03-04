@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be4b3fa6_644ca23f",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:38:58Z",
+      "side": 1,
+      "message": "would extended_lba be a better name here?\n\nI think this makes it more clear when we check this value later - that extended_lba \u003d\u003d true means do the extended_lba operations",
+      "revId": "a73c23bad59daf5ee0b420f7f6099d01e44a98f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e059832f_dd8696f3",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:38:58Z",
+      "side": 1,
+      "message": "is there a way that we can check if md_buf is big enough here?  and if not, give some kind of meaningful error message and fail the I/O",
+      "revId": "a73c23bad59daf5ee0b420f7f6099d01e44a98f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
