@@ -623,8 +623,7 @@ fs_load_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
-spdk_rocksdb_run(__attribute__((unused)) void *arg1,
-		 __attribute__((unused)) void *arg2)
+spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
 

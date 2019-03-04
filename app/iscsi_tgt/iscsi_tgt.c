@@ -63,7 +63,7 @@ iscsi_usage(void)
 }
 
 static void
-spdk_startup(void *arg1, void *arg2)
+spdk_startup(void *arg1)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
