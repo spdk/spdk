@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f174c1d1_8a162f01",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-04T15:48:52Z",
+      "side": 1,
+      "message": "!strcmp",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 50
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "013f9261_2b4a5e0e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-04T15:48:52Z",
+      "side": 1,
+      "message": "Maybe better name would be ocf_bdev or bdev_ocf ?",
+      "range": {
+        "startLine": 1022,
+        "startChar": 19,
+        "endLine": 1022,
+        "endChar": 30
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
