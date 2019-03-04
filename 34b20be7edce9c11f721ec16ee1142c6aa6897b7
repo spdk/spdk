@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bd11a3c3_aa422ade",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:48:29Z",
+      "side": 1,
+      "message": "Let\u0027s replace the \"The controllers...\" sentence with:\n\n\"spdk_nvme_probe_async() and spdk_nvme_connect_async() return a context associated with the specified controllers.  Users then call spdk_nvme_probe_poll_async() until it returns true, indicating that the operation is complete.\"",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7f8af4fe_1d1168cd",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:48:29Z",
+      "side": 1,
+      "message": "I don\u0027t think we want to return the connected_ctrlr here.  User should get the ctrlr pointer only via attach_cb getting called.",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
