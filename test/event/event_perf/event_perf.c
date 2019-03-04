@@ -85,7 +85,7 @@ event_work_fn(void *arg1, void *arg2)
 }
 
 static void
-event_perf_start(void *arg1, void *arg2)
+event_perf_start(void *arg1)
 {
 	uint32_t i;
 

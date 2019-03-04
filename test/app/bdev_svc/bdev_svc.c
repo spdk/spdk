@@ -51,7 +51,7 @@ bdev_svc_parse_arg(int ch, char *arg)
 }
 
 static void
-bdev_svc_start(void *arg1, void *arg2)
+bdev_svc_start(void *arg1)
 {
 	int fd;
 	int shm_id = (intptr_t)arg1;

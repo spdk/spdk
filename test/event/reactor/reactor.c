@@ -85,7 +85,7 @@ nop(void *arg)
 }
 
 static void
-test_start(void *arg1, void *arg2)
+test_start(void *arg1)
 {
 	printf("test_start\n");
 

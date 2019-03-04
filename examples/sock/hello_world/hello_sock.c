@@ -407,7 +407,7 @@ hello_start(void *arg1, int rc)
 }
 
 static void
-start_net_framework(void *arg1, void *arg2)
+start_net_framework(void *arg1)
 {
 	spdk_net_framework_start(hello_start, arg1);
 }

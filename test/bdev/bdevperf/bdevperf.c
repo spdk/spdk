@@ -862,7 +862,7 @@ ret:
 }
 
 static void
-bdevperf_run(void *arg1, void *arg2)
+bdevperf_run(void *arg1)
 {
 	uint32_t i;
 	struct io_target *target;
