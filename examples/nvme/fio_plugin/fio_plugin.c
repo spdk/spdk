@@ -191,11 +191,7 @@ get_fio_ctrlr(const struct spdk_nvme_transport_id *trid)
 static bool
 fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
 {
-	struct spdk_nvme_ns	*ns = NULL;
-	const struct spdk_nvme_ns_data *nsdata;
-
-	ns = fio_qpair->ns;
-	nsdata = spdk_nvme_ns_get_data(ns);
+	struct spdk_nvme_ns	*ns = fio_qpair->ns;
 
 	if (!spdk_nvme_ns_supports_extended_lba(ns)) {
 		return false;
@@ -203,13 +199,6 @@ fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
 
 	if (spdk_nvme_ns_get_pi_type(ns) ==
 	    SPDK_NVME_FMT_NVM_PROTECTION_DISABLE) {
-		return false;
-	}
-
-	/* PI locates at the first 8 bytes of metadata,
-	 * doesn't support now
-	 */
-	if (nsdata->dps.md_start) {
 		return false;
 	}
 
@@ -531,19 +520,21 @@ static void
 fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 {
 	struct spdk_nvme_ns *ns = fio_qpair->ns;
+	const struct spdk_nvme_ns_data *nsdata;
 	struct spdk_fio_request *fio_req = io_u->engine_data;
 	uint32_t md_size, extended_lba_size, lba_count;
 	uint64_t lba;
 	struct iovec iov;
 	int rc;
 
+	nsdata = spdk_nvme_ns_get_data(ns);
 	extended_lba_size = spdk_nvme_ns_get_extended_sector_size(ns);
 	md_size = spdk_nvme_ns_get_md_size(ns);
 	lba = io_u->offset / extended_lba_size;
 	lba_count = io_u->xfer_buflen / extended_lba_size;
 
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
-			       true, false,
+			       true, nsdata->dps.md_start,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
 			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG, 0);
 	if (rc != 0) {
