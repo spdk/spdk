@@ -700,12 +700,8 @@ spdk_app_fini(void)
 static void
 _spdk_app_stop(void *arg1, void *arg2)
 {
-	struct spdk_event *app_stop_event;
-
 	spdk_rpc_finish();
-
-	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
-	spdk_subsystem_fini(app_stop_event);
+	spdk_subsystem_fini(spdk_reactors_stop, NULL);
 }
 
 void
