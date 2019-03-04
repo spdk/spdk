@@ -2101,6 +2101,11 @@ spdk_scsi_bdev_get_dif_ctx(struct spdk_bdev *bdev, uint8_t *cdb, uint32_t offset
 	uint32_t ref_tag = 0, dif_check_flags = 0;
 	int rc;
 
+	/* If there is no metadata, return immediately. */
+	if (spdk_bdev_get_md_size(bdev) == 0) {
+		return false;
+	}
+
 	/* We use lower 32 bits of LBA as Reference. Tag */
 	switch (cdb[0]) {
 	case SPDK_SBC_READ_6:
