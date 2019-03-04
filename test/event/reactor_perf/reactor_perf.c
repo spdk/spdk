@@ -64,7 +64,7 @@ __submit_next(void *arg1, void *arg2)
 }
 
 static void
-test_start(void *arg1, void *arg2)
+test_start(void *arg1)
 {
 	int i;
 

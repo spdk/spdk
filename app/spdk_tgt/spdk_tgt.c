@@ -96,7 +96,7 @@ spdk_tgt_parse_arg(int ch, char *arg)
 }
 
 static void
-spdk_tgt_started(void *arg1, void *arg2)
+spdk_tgt_started(void *arg1)
 {
 	if (g_pid_path) {
 		spdk_tgt_save_pid(g_pid_path);

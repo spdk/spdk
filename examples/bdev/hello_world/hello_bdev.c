@@ -188,7 +188,7 @@ hello_write(void *arg)
  * Our initial event that kicks off everything from main().
  */
 static void
-hello_start(void *arg1, void *arg2)
+hello_start(void *arg1)
 {
 	struct hello_context_t *hello_context = arg1;
 	uint32_t blk_size, buf_align;
