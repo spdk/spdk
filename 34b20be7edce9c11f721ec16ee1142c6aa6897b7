@@ -33,6 +33,23 @@
       "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5c6e1bca_37fb6100",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T22:51:22Z",
+      "side": 1,
+      "message": "this ends up duplicating a lot of code in spdk_nvme_connect()\n\nBen had a good suggestion earlier - put this code just before the spdk_nvme_connect() definition - then change spdk_nvme_connect() to call spdk_nvme_connect_async() and then spdk_nvme_probe_poll_async() until it returns TRUE\n\nthe benefit here is that it immediately moves all existing code to use your new async path implicitly",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
