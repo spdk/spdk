@@ -38,6 +38,7 @@
 
 #include "spdk/event.h"
 #include "spdk/json.h"
+#include "spdk/thread.h"
 
 struct spdk_event {
 	uint32_t		lcore;
@@ -86,7 +87,7 @@ extern struct spdk_subsystem_depend_list g_subsystems_deps;
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
-void spdk_subsystem_init(struct spdk_event *app_start_event);
+void spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg);
 void spdk_subsystem_fini(struct spdk_event *app_finish_event);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
