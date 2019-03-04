@@ -602,8 +602,8 @@ struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transpo
  *
  * \param probe_ctx Context used to track probe actions.
  *
- * \return true if all probe operations are complete; the probe_ctx may be
- *              discarded at this point.
+ * \return true if all probe operations are complete; the probe_ctx
+ * is also freed and no longer valid.
  * \return false if there are still pending probe operations; user must call
  *               spdk_nvme_probe_poll_async again to continue progress.
  */
