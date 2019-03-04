@@ -16,6 +16,24 @@
       "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ffa60ed_dbe31354",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-04T09:36:54Z",
+      "side": 1,
+      "message": "The main issue is that the spdk_vhost_session_send_event() is unlocking mutex. This is opening a slot for RPC thread to issue eg add or remove target request while this poller is still running (vsession-\u003etask_cnt \u003e 0).\n\nFrom others side: I removed unlocking part from spdk_vhost_session_send_event() to give it a try and hit deadlock :/",
+      "parentUuid": "887bc2a5_3b1fdd23",
+      "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
