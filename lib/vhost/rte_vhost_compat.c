@@ -65,6 +65,28 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_GET_VRING_BASE:
+		if (vsession->forced_polling && vsession->lcore != -1) {
+			/* Our queue is stopped for whatever reason, but we may still
+			 * need to poll it after it's initialized again.
+			 */
+			g_spdk_vhost_ops.destroy_device(vid);
+		}
+		break;
+	case VHOST_USER_SET_VRING_BASE:
+	case VHOST_USER_SET_VRING_ADDR:
+	case VHOST_USER_SET_VRING_NUM:
+	case VHOST_USER_SET_VRING_KICK:
+		if (vsession->forced_polling && vsession->lcore != -1) {
+			/* Additional queues are being initialized, so we either processed
+			 * enough I/Os and are switching from SeaBIOS to the OS now, or
+			 * we were never in SeaBIOS in the first place. Either way, we
+			 * don't need our workaround anymore.
+			 */
+			g_spdk_vhost_ops.destroy_device(vid);
+			vsession->forced_polling = false;
+		}
+		break;
 	case VHOST_USER_SET_VRING_CALL:
 		/* rte_vhost will close the previous callfd and won't notify
 		 * us about any change. This will effectively make SPDK fail
@@ -98,6 +120,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 static enum rte_vhost_msg_result
 spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 {
+	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
 
 	vsession = spdk_vhost_session_find_by_vid(vid);
@@ -110,6 +133,37 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 	if (vsession->needs_restart) {
 		g_spdk_vhost_ops.new_device(vid);
 		vsession->needs_restart = false;
+		return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
+	}
+
+	switch (msg->request) {
+	case VHOST_USER_SET_FEATURES:
+		/* rte_vhost requires all queues to be fully initialized in order
+		 * to start I/O processing. This behavior is not compliant with the
+		 * vhost-user specification and doesn't work with QEMU 2.12+, which
+		 * will only initialize 1 I/O queue for the SeaBIOS boot.
+		 * Theoretically, we should start polling each virtqueue individually
+		 * after receiving its SET_VRING_KICK message, but rte_vhost is not
+		 * designed to poll individual queues. So here we use a workaround
+		 * to detect when the vhost session could be potentially at that SeaBIOS
+		 * stage and we mark it to start polling as soon as its first virtqueue
+		 * gets initialized. This doesn't hurt any non-QEMU vhost slaves
+		 * and allows QEMU 2.12+ to boot correctly. SET_FEATURES could be sent
+		 * at any time, but QEMU will send it at least once on SeaBIOS
+		 * initialization - whenever powered-up or rebooted.
+		 */
+		vsession->forced_polling = true;
+		break;
+	case VHOST_USER_SET_VRING_KICK:
+		/* vhost-user spec tells us to start polling a queue after receiving
+		 * its SET_VRING_KICK message. Let's do it!
+		 */
+		if (vsession->forced_polling && vsession->lcore == -1) {
+			g_spdk_vhost_ops.new_device(vid);
+		}
+		break;
+	default:
+		break;
 	}
 
 	return RTE_VHOST_MSG_RESULT_NOT_HANDLED;
