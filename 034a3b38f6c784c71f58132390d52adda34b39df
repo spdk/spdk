@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f188843e_72731688",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 91,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:23:26Z",
+      "side": 1,
+      "message": "this is fine, but in this case I think $have_pci_nics \u003d\u003d 0 would be simpler",
+      "revId": "034a3b38f6c784c71f58132390d52adda34b39df",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
