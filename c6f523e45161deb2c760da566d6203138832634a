@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24b09784_920948e2",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 21
+      },
+      "lineNbr": 1367,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T09:10:48Z",
+      "side": 1,
+      "message": "I added this.",
+      "range": {
+        "startLine": 1367,
+        "startChar": 1,
+        "endLine": 1367,
+        "endChar": 27
+      },
+      "revId": "c6f523e45161deb2c760da566d6203138832634a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
