@@ -638,13 +638,11 @@ static bool
 spdk_nvme_connect_probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 			   struct spdk_nvme_ctrlr_opts *opts)
 {
-	struct spdk_nvme_ctrlr_connect_opts *requested_opts = cb_ctx;
+	struct spdk_nvme_ctrlr_opts *requested_opts = cb_ctx;
 
-	assert(requested_opts->opts);
+	assert(requested_opts);
 
-	assert(requested_opts->opts_size != 0);
-
-	memcpy(opts, requested_opts->opts, spdk_min(sizeof(*opts), requested_opts->opts_size));
+	memcpy(opts, requested_opts, sizeof(*opts));
 
 	return true;
 }
@@ -654,8 +652,6 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 		  const struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
 	int rc;
-	struct spdk_nvme_ctrlr_connect_opts connect_opts = {};
-	struct spdk_nvme_ctrlr_connect_opts *user_connect_opts = NULL;
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	spdk_nvme_probe_cb probe_cb = NULL;
 	struct spdk_nvme_probe_ctx probe_ctx;
@@ -671,13 +667,11 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (opts && opts_size > 0) {
-		connect_opts.opts = opts;
-		connect_opts.opts_size = opts_size;
-		user_connect_opts = &connect_opts;
+		assert(opts_size == sizeof(*opts));
 		probe_cb = spdk_nvme_connect_probe_cb;
 	}
 
-	spdk_nvme_probe_ctx_init(&probe_ctx, trid, user_connect_opts, probe_cb, NULL, NULL);
+	spdk_nvme_probe_ctx_init(&probe_ctx, trid, (void *)opts, probe_cb, NULL, NULL);
 	spdk_nvme_probe_internal(&probe_ctx, true);
 
 	rc = nvme_init_controllers(&probe_ctx);
@@ -1123,8 +1117,6 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 			struct spdk_nvme_ctrlr **connected_ctrlr)
 {
 	int rc;
-	struct spdk_nvme_ctrlr_connect_opts connect_opts = {};
-	struct spdk_nvme_ctrlr_connect_opts *user_connect_opts = NULL;
 	spdk_nvme_probe_cb probe_cb = NULL;
 	struct spdk_nvme_probe_ctx *probe_ctx;
 
@@ -1139,13 +1131,10 @@ spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
 	}
 
 	if (opts) {
-		connect_opts.opts = opts;
-		connect_opts.opts_size = sizeof(*opts);
-		user_connect_opts = &connect_opts;
 		probe_cb = spdk_nvme_connect_probe_cb;
 	}
 
-	spdk_nvme_probe_ctx_init(probe_ctx, trid, user_connect_opts, probe_cb, attach_cb, NULL);
+	spdk_nvme_probe_ctx_init(probe_ctx, trid, (void *)opts, probe_cb, attach_cb, NULL);
 	rc = spdk_nvme_probe_internal(probe_ctx, true);
 	if (rc != 0 || TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
 		free(probe_ctx);
