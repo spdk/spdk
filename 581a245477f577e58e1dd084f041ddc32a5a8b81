@@ -16,6 +16,24 @@
       "revId": "581a245477f577e58e1dd084f041ddc32a5a8b81",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "51a1f2c7_207105c7",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4566,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T09:23:52Z",
+      "side": 1,
+      "message": "Thank you Changpeng. I follow spdk_iscsi_op_scsi exactly. spdk_iscsi_op_scsi have used uint64_t lun and int lun_i.",
+      "parentUuid": "48f1be98_007b8548",
+      "revId": "581a245477f577e58e1dd084f041ddc32a5a8b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
