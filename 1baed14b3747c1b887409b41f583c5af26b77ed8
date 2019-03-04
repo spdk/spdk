@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2b68de2a_b60dbcd6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 26
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T09:12:01Z",
+      "side": 1,
+      "message": "I changed rc \u003d\u003d 0 to rc \u003e 0",
+      "range": {
+        "startLine": 502,
+        "startChar": 3,
+        "endLine": 502,
+        "endChar": 16
+      },
+      "revId": "1baed14b3747c1b887409b41f583c5af26b77ed8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
