@@ -16,6 +16,24 @@
       "revId": "09542e658d986cb17639911758db1975771c7bb5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3a77b7d7_b7a6e2f9",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4584,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T23:10:37Z",
+      "side": 1,
+      "message": "That is reasonable. I add two checks as common code:\n\n*  check if the connection is in full feature phase\n*  check if the session type is normal",
+      "parentUuid": "7e161638_324ca571",
+      "revId": "09542e658d986cb17639911758db1975771c7bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
