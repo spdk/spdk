@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5a3b22bf_f74c12cf",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 605,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T19:42:11Z",
+      "side": 1,
+      "message": "Let\u0027s make this even more clear:\n\n\\return true if all probe operations are complete; the probe_ctx is also freed and no longer valid",
+      "revId": "116e2702d2de9914ddd5f727cc81d5fc717aa13b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
