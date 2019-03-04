@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e8a64125_c081e817",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2101,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T09:08:24Z",
+      "side": 1,
+      "message": "lba should be uint64_t type.",
+      "revId": "36f226c1ef5d35024f15498afc49a5cd46df3498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
