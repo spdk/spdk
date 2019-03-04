@@ -1098,6 +1098,7 @@ spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	if (!spdk_process_is_primary() && probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+		free(probe_ctx);
 		return true;
 	}
 
@@ -1109,6 +1110,7 @@ spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		g_spdk_nvme_driver->initialized = true;
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+		free(probe_ctx);
 		return true;
 	}
 	return false;
