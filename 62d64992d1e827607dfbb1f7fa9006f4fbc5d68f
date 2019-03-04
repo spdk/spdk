@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "3eba56c5_c69fb4e7",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1319,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-04T02:23:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f22214ed_0f1db372",
+      "range": {
+        "startLine": 1312,
+        "startChar": 0,
+        "endLine": 1319,
+        "endChar": 84
+      },
+      "revId": "62d64992d1e827607dfbb1f7fa9006f4fbc5d68f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b1f96edb_ba818e74",
         "filename": "lib/nvme/nvme_ctrlr.c",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-03T03:30:47Z",
       "side": 1,
       "message": "drop this function.",
+      "range": {
+        "startLine": 2819,
+        "startChar": 0,
+        "endLine": 2823,
+        "endChar": 1
+      },
+      "revId": "62d64992d1e827607dfbb1f7fa9006f4fbc5d68f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9d4f7ce2_25509ff9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2823,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-04T02:23:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b1f96edb_ba818e74",
       "range": {
         "startLine": 2819,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "20149877_582f0f63",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 168,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-04T02:23:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ec0b7497_e90224e4",
+      "range": {
+        "startLine": 168,
+        "startChar": 1,
+        "endLine": 168,
+        "endChar": 51
+      },
+      "revId": "62d64992d1e827607dfbb1f7fa9006f4fbc5d68f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4298ee8d_d4778114",
         "filename": "lib/nvme/nvme_internal.h",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2019-03-03T03:30:47Z",
       "side": 1,
       "message": "The whole section should be moved to nvme.h file.",
+      "range": {
+        "startLine": 163,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 2
+      },
+      "revId": "62d64992d1e827607dfbb1f7fa9006f4fbc5d68f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0b198ef7_46399783",
+        "filename": "lib/nvme/nvme_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-04T02:23:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4298ee8d_d4778114",
       "range": {
         "startLine": 163,
         "startChar": 0,
