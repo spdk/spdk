@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8bb1ac5_d88c7b3b",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 196,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T23:20:39Z",
+      "side": 1,
+      "message": "Hi Eugene,\n\nI agree with Pawel.  I think the longer term solution would be to have more custom Python scripts that collect and display this data.  Then those script can do the tick_rate division instead of calculating and marshaling this data over RPC here.\n\n-Jim",
+      "revId": "aaf57c8b5937748503fab1539e89ae013a91c2f7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
