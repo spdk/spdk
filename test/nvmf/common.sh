@@ -45,38 +45,29 @@ function detect_soft_roce_nics()
 }
 
 
-function detect_mlx_5_nics()
+# args 1 and 2 represent the grep filters for finding our NICS.
+# subsequent args are all drivers that should be loaded if we find these NICs.
+# Those drivers should be supplied in the correct order.
+function detect_nics_and_probe_drivers()
 {
-	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | grep ConnectX-5 | awk -F ' ' '{print "0000:"$1}'`
-	mlx_core_driver="mlx5_core"
-	mlx_ib_driver="mlx5_ib"
+	NIC_PROVIDER="$1"
+	NIC_CLASS="$2"
 
-	if [ -z "$nvmf_nic_bdfs" ]; then
-		echo "No NICs"
-		return 0
-	fi
-
-	have_pci_nics=1
-	modprobe $mlx_core_driver
-	modprobe $mlx_ib_driver
-}
-
-function detect_mlx_4_nics()
-{
-	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox |  grep ConnectX-4 | awk -F ' ' '{print "0000:"$1}'`
-	mlx_core_driver="mlx4_core"
-	mlx_ib_driver="mlx4_ib"
-	mlx_en_driver="mlx4_en"
+	nvmf_nic_bdfs=`lspci | grep Ethernet | grep "$NIC_PROVIDER" | grep "$NIC_CLASS" | awk -F ' ' '{print "0000:"$1}'`
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
 		return 0
 	fi
 
 	have_pci_nics=1
-	modprobe $mlx_core_driver
-	modprobe $mlx_ib_driver
-	modprobe $mlx_en_driver
+	if [ $# -ge 2 ]; then
+		shift 2
+		for i; do
+			modprobe "$i"
+		done
+	fi
 }
+
 
 function detect_pci_nics()
 {
@@ -85,8 +76,8 @@ function detect_pci_nics()
 		return 0
 	fi
 
-	detect_mlx_4_nics
-	detect_mlx_5_nics
+	detect_nics_and_probe_drivers "Mellanox" "ConnectX-4" "mlx4_core" "mlx4_ib" "mlx4_en"
+	detect_nics_and_probe_drivers "Mellanox" "ConnectX-5" "mlx5_core" "mlx5_ib"
 
 	if [ "$have_pci_nics" -eq "0" ]; then
 		return 0
