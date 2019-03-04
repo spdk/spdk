@@ -42,9 +42,25 @@ function detect_soft_roce_nics()
 	fi
 }
 
-function detect_mellanox_nics()
+
+function detect_mlx_5_nics()
 {
-	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | awk -F ' ' '{print "0000:"$1}'`
+	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | grep ConnectX-5 | awk -F ' ' '{print "0000:"$1}'`
+	mlx_core_driver="mlx5_core"
+	mlx_ib_driver="mlx5_ib"
+
+	if [ -z "$nvmf_nic_bdfs" ]; then
+		echo "No NICs"
+		return 0
+	fi
+
+	modprobe $mlx_core_driver
+	modprobe $mlx_ib_driver
+}
+
+function detect_mlx_4_nics()
+{
+	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox |  grep ConnectX-4 | awk -F ' ' '{print "0000:"$1}'`
 	mlx_core_driver="mlx4_core"
 	mlx_ib_driver="mlx4_ib"
 	mlx_en_driver="mlx4_en"
@@ -54,23 +70,9 @@ function detect_mellanox_nics()
 		return 0
 	fi
 
-	# for nvmf target loopback test, suppose we only have one type of card.
-	for nvmf_nic_bdf in $nvmf_nic_bdfs
-	do
-		result=`lspci -vvv -s $nvmf_nic_bdf | grep 'Kernel modules' | awk -F ' ' '{print $3}'`
-		if [ "$result" == "mlx5_core" ]; then
-			mlx_core_driver="mlx5_core"
-			mlx_ib_driver="mlx5_ib"
-			mlx_en_driver=""
-		fi
-		break;
-	done
-
 	modprobe $mlx_core_driver
 	modprobe $mlx_ib_driver
-	if [ -n "$mlx_en_driver" ]; then
-		modprobe $mlx_en_driver
-	fi
+	modprobe $mlx_en_driver
 }
 
 function detect_pci_nics()
@@ -81,9 +83,10 @@ function detect_pci_nics()
 		return 0
 	fi
 
-	mellanox_nics=$(detect_mellanox_nics)
+	mlx_4_nics=$(detect_mlx_4_nics)
+	mlx_5_nics=$(detect_mlx_5_nics)
 
-	if [ "$mellanox_nics" == "No NICs" ]; then
+	if [ "$mlx_4_nics" == "No NICs" -a "$mlx_5_nics" == "No NICs" ]; then
 		echo "No NICs"
 		return 0
 	fi
