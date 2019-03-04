@@ -361,6 +361,15 @@ spdk_app_start_rpc(void *arg1, void *arg2)
 	}
 }
 
+static void
+_spdk_app_start_rpc(void *arg1)
+{
+	spdk_rpc_initialize(g_spdk_app.rpc_addr);
+	if (!g_delay_subsystem_init) {
+		spdk_app_start_application();
+	}
+}
+
 static struct spdk_conf *
 spdk_app_setup_conf(const char *config_file)
 {
@@ -559,13 +568,14 @@ bootstrap_fn(void *arg1, void *arg2)
 {
 	struct spdk_event *rpc_start_event;
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-					      NULL, NULL);
-
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
-		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, rpc_start_event);
+		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, _spdk_app_start_rpc,
+					  NULL);
 	} else {
+		rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
+						      NULL, NULL);
+
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(rpc_start_event);
 		} else {
