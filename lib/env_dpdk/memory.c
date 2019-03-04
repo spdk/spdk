@@ -1045,7 +1045,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 			if (paddr == SPDK_VTOPHYS_ERROR) {
 				/* This is not an address that DPDK is managing. */
 #if SPDK_VFIO_ENABLED
-				if (g_vfio.enabled && !g_vfio.noiommu_enabled) {
+				if (spdk_iommu_is_enabled()) {
 					/* We'll use the virtual address as the iova. DPDK
 					 * currently uses physical addresses as the iovas (or counts
 					 * up from 0 if it can't get physical addresses), so
@@ -1088,7 +1088,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 				 * This is not an address that DPDK is managing. If vfio is enabled,
 				 * we need to unmap the range from the IOMMU
 				 */
-				if (g_vfio.enabled && !g_vfio.noiommu_enabled) {
+				if (spdk_iommu_is_enabled()) {
 					uint64_t buffer_len = VALUE_2MB;
 					paddr = spdk_mem_map_translate(map, (uint64_t)vaddr, &buffer_len);
 					if (buffer_len != VALUE_2MB) {
