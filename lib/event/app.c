@@ -67,7 +67,7 @@ struct spdk_app {
 };
 
 static struct spdk_app g_spdk_app;
-static spdk_event_fn g_start_fn = NULL;
+static spdk_msg_fn g_start_fn = NULL;
 static void *g_start_arg = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
 static uint32_t g_init_lcore;
@@ -352,7 +352,7 @@ spdk_app_start_application(void)
 
 	assert(spdk_env_get_current_core() == g_init_lcore);
 
-	g_start_fn(g_start_arg, NULL);
+	g_start_fn(g_start_arg);
 }
 
 static void
@@ -574,7 +574,7 @@ bootstrap_fn(void *arg1, void *arg2)
 }
 
 int
-spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 	       void *arg1)
 {
 	struct spdk_conf	*config = NULL;

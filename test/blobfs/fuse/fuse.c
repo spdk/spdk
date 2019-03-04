@@ -298,7 +298,7 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_fuse_run(void *arg1, void *arg2)
+spdk_fuse_run(void *arg1)
 {
 	construct_targets();
 	spdk_fs_load(g_bs_dev, __send_request, init_cb, NULL);

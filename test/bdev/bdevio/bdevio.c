@@ -912,7 +912,7 @@ __run_ut_thread(void *arg1, void *arg2)
 }
 
 static void
-test_main(void *arg1, void *arg2)
+test_main(void *arg1)
 {
 	struct spdk_event *event;
 
