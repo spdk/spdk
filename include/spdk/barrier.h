@@ -122,6 +122,10 @@ extern "C" {
 #error Unknown architecture
 #endif
 
+/** SMP read memory barrier for the outer shareable domain. */
+#ifdef __aarch64__
+#define spdk_smp_outer_rmb()    __asm volatile("dmb oshld" ::: "memory")
+#endif
 #ifdef __cplusplus
 }
 #endif
