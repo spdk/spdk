@@ -37,6 +37,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/trace.h"
@@ -1300,6 +1301,10 @@ void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
+
+	if (!spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+		pdu->dif_strip = true;
+	}
 
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
 		/* Header Digest */
