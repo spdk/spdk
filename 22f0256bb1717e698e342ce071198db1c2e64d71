@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "290adac9_554afc91",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 13
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T18:59:04Z",
+      "side": 1,
+      "message": "Hi Chunyang,\n\nI haven\u0027t reviewed the rest of the patch (will let Changpeng continue with his reviews) but noticed that this should say \"library\" instead of \"submodule\".  Submodule usually has a specific meaning - for example, the DPDK or ISA-L git submodule.\n\nThanks,\n\n-Jim",
+      "revId": "22f0256bb1717e698e342ce071198db1c2e64d71",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "235d6163_7b7a9b6a",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 13
