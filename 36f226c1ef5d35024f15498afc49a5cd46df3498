@@ -16,6 +16,24 @@
       "revId": "36f226c1ef5d35024f15498afc49a5cd46df3498",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2636dd8_4ad2a29d",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2101,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T09:19:07Z",
+      "side": 1,
+      "message": "Thank you Changpeng, Reference Tag is 32 bit. So, we should use uint32_t, but the following cast is wrong.",
+      "parentUuid": "e8a64125_c081e817",
+      "revId": "36f226c1ef5d35024f15498afc49a5cd46df3498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
