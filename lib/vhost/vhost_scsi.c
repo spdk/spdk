@@ -1462,12 +1462,11 @@ spdk_vhost_scsi_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_wri
 static void
 spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w)
 {
-	struct spdk_vhost_scsi_dev *svdev;
+	struct spdk_scsi_dev *scsi_dev;
 	struct spdk_scsi_lun *lun;
 	uint32_t i;
 
-	svdev = to_scsi_dev(vdev);
-	if (!svdev) {
+	if (to_scsi_dev(vdev) == NULL) {
 		return;
 	}
 
@@ -1481,12 +1480,13 @@ spdk_vhost_scsi_write_config_json(struct spdk_vhost_dev *vdev, struct spdk_json_
 
 	spdk_json_write_object_end(w);
 
-	for (i = 0; i < SPDK_COUNTOF(svdev->scsi_dev_state); i++) {
-		if (svdev->scsi_dev_state[i].dev == NULL || svdev->scsi_dev_state[i].removed) {
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		scsi_dev = spdk_vhost_scsi_dev_get_tgt(vdev, i);
+		if (scsi_dev == NULL) {
 			continue;
 		}
 
-		lun = spdk_scsi_dev_get_lun(svdev->scsi_dev_state[i].dev, 0);
+		lun = spdk_scsi_dev_get_lun(scsi_dev, 0);
 
 		spdk_json_write_object_begin(w);
 		spdk_json_write_named_string(w, "method", "add_vhost_scsi_lun");
