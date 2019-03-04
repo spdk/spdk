@@ -2070,13 +2070,16 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		if (cpl->status.p != pqpair->phase) {
 			break;
 		}
-#if defined(__PPC64__) || defined(__aarch64__)
+#ifdef __PPC64__
 		/*
+		 * max_completions == 0 means unlimited, but complete at most
 		 * This memory barrier prevents reordering of:
 		 * - load after store from/to tr
 		 * - load after load cpl phase and cpl cid
 		 */
 		spdk_mb();
+#elif defined(__aarch64__)
+		__asm volatile("dmb oshld" ::: "memory");
 #endif
 
 		if (spdk_unlikely(++pqpair->cq_head == pqpair->num_entries)) {
