@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "43254810_5b1c3d84",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1650,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T23:42:33Z",
+      "side": 1,
+      "message": "almost all (if not all) of the other RPCs just return immediately if spdk_jsonrpc_begin_result() returns NULL",
+      "revId": "86e1480ced64607d1620c6f6b0ce239787a8df9a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
