@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2fbcb2a6_ba773b65",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T23:50:46Z",
+      "side": 1,
+      "message": "Is spdk_app_start_application guaranteed to get executed on the g_init_lcore?\n\nMaybe it doesn\u0027t matter - but before we always made sure that the user\u0027s start function would get invoked on the same core as they called spdk_app_start.  I personally feel like we should still make sure there\u0027s that guarantee.\n\nMaybe for now just add an assert that spdk_env_get_current_core() \u003d\u003d g_init_lcore here.  Even if this all moves to threads, I feel like this \"master\" thread shouldn\u0027t have a chance to move before we\u0027ve started the application.",
+      "revId": "5ba5f70271cd8eb501e58cea08b9b7bb4ec1af2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
