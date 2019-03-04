@@ -1,0 +1,147 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "99ef1d12_93f07319",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "You can remove this empty line.",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f33ca4a3_e9f35d9a",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 208,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "you can call free(stat_entry-\u003ethread_name) directly without null check.",
+      "range": {
+        "startLine": 208,
+        "startChar": 2,
+        "endLine": 208,
+        "endChar": 32
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c7241e37_772587bb",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "Please change the line between return type and function name",
+      "range": {
+        "startLine": 216,
+        "startChar": 0,
+        "endLine": 216,
+        "endChar": 12
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bca78389_8d56f4f8",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 219,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "Should we continue resetting even when ctx-\u003estatus is false? Maybe just return here if ctx-\u003estatus is false?",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3cc2191_c048a96a",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 224,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "I think insertion should be done only when spdk_thread_get_stats() completes successfully. (Then ctx-\u003estat_queue will have only valid entries.)",
+      "range": {
+        "startLine": 224,
+        "startChar": 3,
+        "endLine": 224,
+        "endChar": 57
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4711a23f_52578c7c",
+        "filename": "lib/event/rpc/app_rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "Should we return before calling spdk_thread_reset_stats() if ctx-\u003estatus is set to false by the line 228 or 231?",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9be0c633_fa6227a6",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 1741,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T01:37:32Z",
+      "side": 1,
+      "message": "You can remove this.",
+      "range": {
+        "startLine": 1741,
+        "startChar": 80,
+        "endLine": 1741,
+        "endChar": 96
+      },
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
