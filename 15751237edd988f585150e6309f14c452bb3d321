@@ -16,6 +16,24 @@
       "revId": "15751237edd988f585150e6309f14c452bb3d321",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f33fc20_f77fd281",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T23:15:16Z",
+      "side": 1,
+      "message": "If there is no metadata (i.e. block size \u003d\u003d data block size), spdk_dif_ctx_init returns false, and then spdk_iscsi_get_dif_ctx returns false.\n\nBut it may not be good for spdk_dif_ctx_init return false if block size \u003d\u003d data block size.\n\nI will change spdk_scsi_bdev_get_dif_ctx return false immediately without calling spdk_dif_ctx_init if there is no metadata.\n\nBdev doesn\u0027t support separate metadata yet and it will be enough to check only if metedata exists.\n\nDoes this make sense to you?",
+      "parentUuid": "42b0b3d4_09e8f47a",
+      "revId": "15751237edd988f585150e6309f14c452bb3d321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
