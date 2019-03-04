@@ -350,6 +350,7 @@ void spdk_vhost_session_event_done(void *event_ctx, int response);
 
 struct spdk_vhost_session *spdk_vhost_session_find_by_vid(int vid);
 void spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);
+void spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev);
 
 void spdk_vhost_free_reactor(uint32_t lcore);
 uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);

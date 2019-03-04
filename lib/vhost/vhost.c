@@ -763,6 +763,8 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 	spdk_vhost_set_coalescing(vdev, SPDK_VHOST_COALESCING_DELAY_BASE_US,
 				  SPDK_VHOST_VQ_IOPS_COALESCING_THRESHOLD);
 
+	spdk_vhost_dev_install_rte_compat_hooks(vdev);
+
 	/* The following might start a POSIX thread that polls for incoming
 	 * socket connections and calls backend->start/stop_device. These backend
 	 * callbacks are also protected by the global SPDK vhost mutex, so we're
