@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2cbc50fa_dc93c61f",
+        "filename": "configure",
+        "patchSetId": 4
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-04T17:25:29Z",
+      "side": 1,
+      "message": "My text editor made all of the tabs/spaces consistent. I can do that in a separate patch.",
+      "parentUuid": "a409a99c_526d904d",
+      "range": {
+        "startLine": 300,
+        "startChar": 0,
+        "endLine": 304,
+        "endChar": 5
+      },
+      "revId": "07bddf954df7c4ac56d27c69ce2c0ea57543b141",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "87d3f72b_163aa464",
         "filename": "configure",
         "patchSetId": 4
