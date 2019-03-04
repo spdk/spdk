@@ -69,7 +69,7 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 }
 
 static void
-spdk_mkfs_run(void *arg1, void *arg2)
+spdk_mkfs_run(void *arg1)
 {
 	struct spdk_bdev *bdev;
 	struct spdk_blobfs_opts blobfs_opt;

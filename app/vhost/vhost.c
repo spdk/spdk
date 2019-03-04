@@ -79,7 +79,7 @@ vhost_parse_arg(int ch, char *arg)
 }
 
 static void
-vhost_started(void *arg1, void *arg2)
+vhost_started(void *arg1)
 {
 }
 

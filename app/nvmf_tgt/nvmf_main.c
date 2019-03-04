@@ -48,7 +48,7 @@ nvmf_parse_arg(int ch, char *arg)
 }
 
 static void
-nvmf_tgt_started(void *arg1, void *arg2)
+nvmf_tgt_started(void *arg1)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);

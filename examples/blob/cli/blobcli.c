@@ -49,7 +49,7 @@
  * include it here.
  */
 #include "../lib/blob/blobstore.h"
-static void cli_start(void *arg1, void *arg2);
+static void cli_start(void *arg1);
 
 static const char *program_name = "blobcli";
 /* default name for .conf file, any name can be used however with -c switch */
@@ -233,7 +233,7 @@ unload_complete(void *cb_arg, int bserrno)
 		/* when action is CLI_NONE, we know we need to remain in the shell */
 		cli_context->bs = NULL;
 		cli_context->action = CLI_NONE;
-		cli_start(cli_context, NULL);
+		cli_start(cli_context);
 	}
 }
 
@@ -912,7 +912,7 @@ list_bdevs(struct cli_context_t *cli_context)
 		spdk_app_stop(0);
 	} else {
 		cli_context->action = CLI_NONE;
-		cli_start(cli_context, NULL);
+		cli_start(cli_context);
 	}
 }
 
@@ -973,7 +973,7 @@ spdk_bsdump_done(void *arg, int bserrno)
 		spdk_app_stop(0);
 	} else {
 		cli_context->action = CLI_NONE;
-		cli_start(cli_context, NULL);
+		cli_start(cli_context);
 	}
 }
 
@@ -1424,7 +1424,7 @@ cli_shell(void *arg1, void *arg2)
  * called first.
  */
 static void
-cli_start(void *arg1, void *arg2)
+cli_start(void *arg1)
 {
 	struct cli_context_t *cli_context = arg1;
 
