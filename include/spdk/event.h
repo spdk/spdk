@@ -46,6 +46,7 @@
 #include "spdk/cpuset.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
+#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -142,19 +143,19 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
  *
  * Before calling this function, the fields of opts must be initialized by
  * spdk_app_opts_init(). Once started, the framework will call start_fn on the
- * master core with the arguments provided. This call will block until spdk_app_stop()
+ * an spdk_thread with the argument provided. This call will block until spdk_app_stop()
  * is called, or if an error condition occurs during the intialization
  * code within spdk_app_start(), itself, before invoking the caller's
  * supplied function.
  *
  * \param opts Initialization options used for this application.
- * \param start_fn Event function that is called when the framework starts.
- * \param arg1 Argument passed to function start_fn.
- * \param arg2 Argument passed to function start_fn.
+ * \param start_fn Entry point that will execute on an internally created thread
+ *                 once the framework has been started.
+ * \param ctxArgument passed to function start_fn.
  *
  * \return 0 on success or non-zero on failure.
  */
-int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
+int spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
 		   void *arg1);
 
 /**
