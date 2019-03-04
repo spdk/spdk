@@ -8,6 +8,8 @@ NVMF_TCP_IP_ADDRESS="127.0.0.1"
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
 : ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
 
+have_pci_nics=0
+
 function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then
@@ -54,6 +56,7 @@ function detect_mlx_5_nics()
 		return 0
 	fi
 
+	have_pci_nics=1
 	modprobe $mlx_core_driver
 	modprobe $mlx_ib_driver
 }
@@ -66,10 +69,10 @@ function detect_mlx_4_nics()
 	mlx_en_driver="mlx4_en"
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
-		echo "No NICs"
 		return 0
 	fi
 
+	have_pci_nics=1
 	modprobe $mlx_core_driver
 	modprobe $mlx_ib_driver
 	modprobe $mlx_en_driver
@@ -79,15 +82,13 @@ function detect_pci_nics()
 {
 
 	if ! hash lspci; then
-		echo "No NICs"
 		return 0
 	fi
 
-	mlx_4_nics=$(detect_mlx_4_nics)
-	mlx_5_nics=$(detect_mlx_5_nics)
+	detect_mlx_4_nics
+	detect_mlx_5_nics
 
-	if [ "$mlx_4_nics" == "No NICs" -a "$mlx_5_nics" == "No NICs" ]; then
-		echo "No NICs"
+	if [ "$have_pci_nics" -eq "0" ]; then
 		return 0
 	fi
 
@@ -97,8 +98,8 @@ function detect_pci_nics()
 
 function detect_rdma_nics()
 {
-	nics=$(detect_pci_nics)
-	if [ "$nics" == "No NICs" ]; then
+	detect_pci_nics
+	if [ "$have_pci_nics" -eq "0" ]; then
 		detect_soft_roce_nics
 	fi
 }
