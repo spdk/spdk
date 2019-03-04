@@ -16,6 +16,24 @@
       "revId": "b771397f85c3d824cbae65dbb6e3ea9753f8ce5f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1deb543b_6b45e900",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T08:36:42Z",
+      "side": 1,
+      "message": "Yeah, I already used array of this data structure, see the implementation in the source file.",
+      "parentUuid": "d8ab9640_d4fc6592",
+      "revId": "b771397f85c3d824cbae65dbb6e3ea9753f8ce5f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
