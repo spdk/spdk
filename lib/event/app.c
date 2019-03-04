@@ -361,14 +361,6 @@ spdk_app_start_rpc(void *arg1, void *arg2)
 	}
 }
 
-static void
-_spdk_app_json_config_load(void *arg1, void *arg2)
-{
-	struct spdk_event *event_done = arg1;
-
-	spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, event_done);
-}
-
 static struct spdk_conf *
 spdk_app_setup_conf(const char *config_file)
 {
@@ -566,16 +558,13 @@ static void
 bootstrap_fn(void *arg1, void *arg2)
 {
 	struct spdk_event *rpc_start_event;
-	struct spdk_event *config_load_event;
 
 	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
 					      NULL, NULL);
 
 	if (g_spdk_app.json_config_file) {
 		g_delay_subsystem_init = false;
-		config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
-							rpc_start_event, NULL);
-		spdk_event_call(config_load_event);
+		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, rpc_start_event);
 	} else {
 		if (!g_delay_subsystem_init) {
 			spdk_subsystem_init(rpc_start_event);
