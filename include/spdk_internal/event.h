@@ -51,7 +51,7 @@ int spdk_reactors_init(void);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);
-void spdk_reactors_stop(void *arg1, void *arg2);
+void spdk_reactors_stop(void *arg1);
 
 struct spdk_subsystem {
 	const char *name;
@@ -88,7 +88,7 @@ void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
 void spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg);
-void spdk_subsystem_fini(struct spdk_event *app_finish_event);
+void spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);

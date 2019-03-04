@@ -338,7 +338,7 @@ spdk_reactors_start(void)
 }
 
 void
-spdk_reactors_stop(void *arg1, void *arg2)
+spdk_reactors_stop(void *arg1)
 {
 	g_reactor_state = SPDK_REACTOR_STATE_EXITING;
 }

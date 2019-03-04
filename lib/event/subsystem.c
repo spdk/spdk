@@ -46,8 +46,9 @@ static bool g_subsystems_initialized = false;
 static bool g_subsystems_init_interrupted = false;
 static spdk_msg_fn g_app_start_fn = NULL;
 static void *g_app_start_arg = NULL;
-static struct spdk_event *g_app_stop_event;
-static uint32_t g_fini_core;
+static spdk_msg_fn g_app_stop_fn = NULL;
+static void *g_app_stop_arg = NULL;
+static struct spdk_thread *g_fini_thread = NULL;
 
 void
 spdk_add_subsystem(struct spdk_subsystem *subsystem)
@@ -187,9 +188,9 @@ spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg)
 }
 
 static void
-_spdk_subsystem_fini_next(void *arg1, void *arg2)
+_spdk_subsystem_fini_next(void *arg1)
 {
-	assert(g_fini_core == spdk_env_get_current_core());
+	assert(g_fini_thread == spdk_get_thread());
 
 	if (!g_next_subsystem) {
 		/* If the initialized flag is false, then we've failed to initialize
@@ -214,28 +215,27 @@ _spdk_subsystem_fini_next(void *arg1, void *arg2)
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
 
-	spdk_event_call(g_app_stop_event);
+	g_app_stop_fn(g_app_stop_arg);
 	return;
 }
 
 void
 spdk_subsystem_fini_next(void)
 {
-	if (g_fini_core != spdk_env_get_current_core()) {
-		struct spdk_event *event;
-
-		event = spdk_event_allocate(g_fini_core, _spdk_subsystem_fini_next, NULL, NULL);
-		spdk_event_call(event);
+	if (g_fini_thread != spdk_get_thread()) {
+		spdk_thread_send_msg(g_fini_thread, _spdk_subsystem_fini_next, NULL);
 	} else {
-		_spdk_subsystem_fini_next(NULL, NULL);
+		_spdk_subsystem_fini_next(NULL);
 	}
 }
 
 void
-spdk_subsystem_fini(struct spdk_event *app_stop_event)
+spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg)
 {
-	g_app_stop_event = app_stop_event;
-	g_fini_core = spdk_env_get_current_core();
+	g_app_stop_fn = cb_fn;
+	g_app_stop_arg = cb_arg;
+
+	g_fini_thread = spdk_get_thread();
 
 	spdk_subsystem_fini_next();
 }
