@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "b800f2ea_d396ea8b",
+        "filename": "include/spdk/thread.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T23:16:51Z",
+      "side": 1,
+      "message": "Hi Eugene,\n\nI\u0027d prefer to not add a method to reset the statistics.  It makes it difficult to have two separate clients consuming data.  One client resets the stats and impacts other clients.  We put the burden on the client to collect the data now, and then later, and subtract the two to get the delta.  This is consistent with spdk_bdev_get_io_stat() for example.\n\nThanks,\n\n-Jim",
+      "revId": "1601dda86ed30c9ee8db3e84ee6d931b256556b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "99ef1d12_93f07319",
         "filename": "lib/event/rpc/app_rpc.c",
         "patchSetId": 2
