@@ -80,7 +80,7 @@ stub_sleep(void *arg)
 }
 
 static void
-stub_start(void *arg1, void *arg2)
+stub_start(void *arg1)
 {
 	int shm_id = (intptr_t)arg1;
 
