@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13248aef_f0ef9126",
+        "filename": "lib/scsi/scsi_bdev.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 2103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T16:53:52Z",
+      "side": 1,
+      "message": "would it be clearer to change the lba variable to ref_tag?  and then add a comment saying that we use lower 32-bits of the LBA as the ref_tag",
+      "revId": "41b323bde41fb95d083eff5c44381812b2970ec4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
