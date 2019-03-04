@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "810a3b22_0575fb9f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1582,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T08:32:06Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "6355da6f_50367355",
+      "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "162a838d_33d9cfed",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 11
@@ -47,6 +65,24 @@
       "writtenOn": "2019-02-27T20:38:24Z",
       "side": 1,
       "message": "I suggested in the earlier patch to drop support temporarily for the ALL_REGS versions of these reservations, which I think makes things much, much simpler. I think this part in particular will get a lot easier to manage.",
+      "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3220f9ec_7087e748",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 1603,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T08:32:06Z",
+      "side": 1,
+      "message": "I added all registered types with unit test and tested with 2 Hosts with same Namespace, so added the code here, it may a little hard for code review.",
+      "parentUuid": "162a838d_33d9cfed",
       "revId": "ba86b4f1a1e4ff60255bc57b82ff05cb37bed0f3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
