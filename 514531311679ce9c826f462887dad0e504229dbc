@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "441d3b12_6dc23ce5",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T22:52:03Z",
+      "side": 1,
+      "message": "It looks that pdu-\u003ehdr.common.hlen is added twice.\n\nplen +\u003d pdu-\u003epadding_len or plen \u003d hlen is correct?",
+      "range": {
+        "startLine": 254,
+        "startChar": 2,
+        "endLine": 254,
+        "endChar": 14
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e64ae70a_4650fc88",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T22:52:03Z",
+      "side": 1,
+      "message": "we don\u0027t need this check because there are at least 3 iovecs whenever this function is called. (Or should be asserted if false.)",
+      "range": {
+        "startLine": 257,
+        "startChar": 1,
+        "endLine": 257,
+        "endChar": 6
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6efccd6d_2de120a7",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-04T22:52:03Z",
+      "side": 1,
+      "message": "the line 247 and the line 257 point to the same address but length are different.\n\nThe following is possible?\n\n\t_iov_ctx_init(\u0026ctx, iovec, num_iovs, pdu-\u003ewritev_offset);\n\n\thlen \u003d pdu-\u003ehdr.common.hlen;\n\tplen \u003d hlen;\n\n\tif (pdu-\u003epadding_len \u003e 0) {\n\t\thlen +\u003d pdu-\u003epadding_len;\n\t\tplen +\u003d pdu-\u003epadding_len;\n\t}\n\n\t_iov_ctx_set_iov(\u0026ctx, (uint8_t *)\u0026pdu-\u003ehdr.raw, hlen);\n\n\tif (!pdu-\u003edata_len || !pdu-\u003edata) {\n\t\tgoto end;\n\t}",
+      "range": {
+        "startLine": 257,
+        "startChar": 29,
+        "endLine": 257,
+        "endChar": 53
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
