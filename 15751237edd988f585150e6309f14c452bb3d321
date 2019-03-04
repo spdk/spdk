@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42b0b3d4_09e8f47a",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T18:33:46Z",
+      "side": 1,
+      "message": "I think this is OK functionally - but am concerned it may confuse people who are not very familiar with how the DIF routines work.\n\nFor example, in \"normal\" case, with no extended block size, dif_strip will still be set to \"true\".  Later when we build the interleaved IOV array, it will not actually strip out any DIF information (since block size \u003d\u003d data block size) but it will require the reader of the code to investigate this in detail.\n\nShould we consider whether spdk_iscsi_get_dif_ctx should return false, if no DIF operation is needed?\n\nPlease excuse me if I have any misunderstanding on how the code is working here.",
+      "revId": "15751237edd988f585150e6309f14c452bb3d321",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
