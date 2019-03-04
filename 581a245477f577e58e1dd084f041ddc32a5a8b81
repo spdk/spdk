@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48f1be98_007b8548",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 4566,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T09:16:13Z",
+      "side": 1,
+      "message": "uint64_t should be used for LUN ID.",
+      "revId": "581a245477f577e58e1dd084f041ddc32a5a8b81",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
