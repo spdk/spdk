@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7e161638_324ca571",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 4584,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T16:57:14Z",
+      "side": 1,
+      "message": "can this be moved before the switch statement?\n\nI\u0027m just looking to see if we can use common code for OP_SCSI, OP_SCSI_DATAIN, and OP_SCSI_DATAOUT cases.  I think in all cases, session type must be SESSION_TYPE_NORMAL.",
+      "revId": "09542e658d986cb17639911758db1975771c7bb5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
