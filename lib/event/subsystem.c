@@ -150,10 +150,13 @@ spdk_subsystem_init_next(int rc)
 	}
 }
 
-static void
-spdk_subsystem_verify(void *arg1, void *arg2)
+void
+spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg)
 {
 	struct spdk_subsystem_depend *dep;
+
+	g_app_start_fn = cb_fn;
+	g_app_start_arg = cb_arg;
 
 	/* Verify that all dependency name and depends_on subsystems are registered */
 	TAILQ_FOREACH(dep, &g_subsystems_deps, tailq) {
@@ -173,18 +176,6 @@ spdk_subsystem_verify(void *arg1, void *arg2)
 	subsystem_sort();
 
 	spdk_subsystem_init_next(0);
-}
-
-void
-spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg)
-{
-	struct spdk_event *verify_event;
-
-	g_app_start_fn = cb_fn;
-	g_app_start_arg = cb_arg;
-
-	verify_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_subsystem_verify, NULL, NULL);
-	spdk_event_call(verify_event);
 }
 
 static void
