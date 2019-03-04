@@ -34,9 +34,9 @@
 #ifndef SPDK_JSON_CONFIG_H
 #define SPDK_JSON_CONFIG_H
 
-#include "spdk/event.h"
+#include "spdk/thread.h"
 
 void spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
-			       struct spdk_event *done_event);
+			       spdk_msg_fn cb_fn, void *cb_arg);
 
 #endif /* SPDK_JSON_CONFIG_H */
