@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ee9fee3_24c73238",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 940,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-04T06:23:04Z",
+      "side": 1,
+      "message": "You need a rebase here, otherwise the patch is okay to me.",
+      "revId": "0045a83c45a8ebc46b4295e5163f98d269605e95",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
