@@ -882,8 +882,12 @@ spdk_vhost_scsi_dev_get_tgt(struct spdk_vhost_dev *vdev, uint8_t num)
 
 	assert(num < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS);
 	svdev = to_scsi_dev(vdev);
+	if (svdev == NULL || svdev->scsi_dev_state[num].status != VHOST_SCSI_DEV_PRESENT) {
+		return NULL;
+	}
 
-	return svdev ? svdev->scsi_dev_state[num].dev : NULL;
+	assert(svdev->scsi_dev_state[num].dev != NULL);
+	return svdev->scsi_dev_state[num].dev;
 }
 
 static void
