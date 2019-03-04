@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "0999327c_f3859fbc",
+        "filename": "test/app/fuzz/.gitignore",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-04T17:25:33Z",
+      "side": 1,
+      "message": "I was thinking I would place the other fuzzers in this directory as well.",
+      "parentUuid": "08105998_49a863f2",
+      "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "67d57888_dc853dbe",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 15
@@ -33,6 +51,24 @@
       "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41c6b647_71c1c0be",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-04T17:25:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "67d57888_dc853dbe",
+      "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
