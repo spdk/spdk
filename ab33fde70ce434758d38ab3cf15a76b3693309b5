@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2c220ea3_b4473b82",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-04T22:56:41Z",
+      "side": 1,
+      "message": "static functions shouldn\u0027t have spdk_ prefix (we try to only use those for public API)",
+      "revId": "ab33fde70ce434758d38ab3cf15a76b3693309b5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
