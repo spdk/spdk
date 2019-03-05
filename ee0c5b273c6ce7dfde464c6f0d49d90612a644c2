@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c3792acf_96b9772e",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:42:24Z",
+      "side": 1,
+      "message": "This is unrelated to this patch. Could you please add a patch that adds bdev name to get_ocf_bdevs RPC, so it is similar to get_bdevs ?\n(get_bdevs returns single entry when a bdev_name is provided)",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 1
+      },
+      "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ac5074a9_2a42415c",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:42:24Z",
+      "side": 1,
+      "message": "Please rename \u0027cache\u0027 to \u0027vbdev_ocf\u0027 or similar - this is what actually is returned. Besides on line 322 cache is checked if it is cache - doesn\u0027t look proper :)",
+      "range": {
+        "startLine": 315,
+        "startChar": 1,
+        "endLine": 315,
+        "endChar": 6
+      },
+      "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
