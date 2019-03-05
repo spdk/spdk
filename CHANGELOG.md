@@ -31,6 +31,11 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+### NVMe-oF Target
+
+The `configure` options `--with-rdma-srq` and `--without-rdma-srq` have been removed.
+The shared receive queue is now used by default for all RDMA devices that support it.
+
 ## v19.01:
 
 ### ocf bdev
