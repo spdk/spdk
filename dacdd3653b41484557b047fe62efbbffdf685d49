@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1cc4f2ce_457a95c6",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2074,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T21:28:35Z",
+      "side": 1,
+      "message": "Indentation is messed up",
+      "revId": "dacdd3653b41484557b047fe62efbbffdf685d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce66d8b8_72ca20ff",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2080,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T21:28:35Z",
+      "side": 1,
+      "message": "We don\u0027t make DPDK calls directly from SPDK. Instead, can you put an appropriate barrier implementation into include/spdk/barrier.h?",
+      "revId": "dacdd3653b41484557b047fe62efbbffdf685d49",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
