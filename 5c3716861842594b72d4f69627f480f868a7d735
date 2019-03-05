@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c58f24e4_e18e165d",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "It is used in attach_base when we copy descriptor. This function serves dual purpose.",
+      "parentUuid": "857a7a49_3f3fcc72",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f174c1d1_8a162f01",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "18d8e8ed_cf2bebfb",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 82,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "f174c1d1_8a162f01",
+      "range": {
+        "startLine": 82,
+        "startChar": 5,
+        "endLine": 82,
+        "endChar": 50
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6dcf4b4b_c4f8cd14",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -59,6 +107,24 @@
       "writtenOn": "2019-03-05T04:12:05Z",
       "side": 1,
       "message": "As per comment in 919, please add check to verify if cache or core name, is not present already as the opposite.",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d7bd4e54_31a25f07",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6dcf4b4b_c4f8cd14",
       "revId": "5c3716861842594b72d4f69627f480f868a7d735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "9c876e81_ccf7a472",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "b4f486b3_2328f0f7",
+      "range": {
+        "startLine": 919,
+        "startChar": 0,
+        "endLine": 923,
+        "endChar": 3
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "98646843_100c8b40",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -99,6 +189,24 @@
       "writtenOn": "2019-03-05T04:12:05Z",
       "side": 1,
       "message": "Please add comment detailing what happens here.",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f396e211_50e62bed",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "98646843_100c8b40",
       "revId": "5c3716861842594b72d4f69627f480f868a7d735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -125,6 +233,30 @@
       "revId": "5c3716861842594b72d4f69627f480f868a7d735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2b1579d4_c1f1e2e7",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "This cannot be an assert beacase case when check fails is normal. \nI agree that this part is the most hard to understand, I will change it in following patchset.",
+      "parentUuid": "db56cc6e_0d087644",
+      "range": {
+        "startLine": 926,
+        "startChar": 3,
+        "endLine": 926,
+        "endChar": 37
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -174,6 +306,54 @@
     },
     {
       "key": {
+        "uuid": "1d1c75ee_4aa910e5",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "013f9261_2b4a5e0e",
+      "range": {
+        "startLine": 1022,
+        "startChar": 19,
+        "endLine": 1022,
+        "endChar": 30
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e4779ee6_1ba5e2a1",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "210fec50_ef23471c",
+      "range": {
+        "startLine": 1022,
+        "startChar": 33,
+        "endLine": 1022,
+        "endChar": 66
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "df5b15bf_0b859592",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -185,6 +365,30 @@
       "writtenOn": "2019-03-05T04:12:05Z",
       "side": 1,
       "message": "Shouldn\u0027t we just skip break here, since cache can be used in multiple vbdev_ocf ?\nThen lines 1029-1037 could be removed.",
+      "range": {
+        "startLine": 1041,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 9
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb52a9fd_bf03cb01",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:02:24Z",
+      "side": 1,
+      "message": "In current implementation of attach_base, 1028-1037 are required and break is correct here.\nI will try to simplify this as I will change attach_base.",
+      "parentUuid": "df5b15bf_0b859592",
       "range": {
         "startLine": 1041,
         "startChar": 0,
