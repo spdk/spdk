@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11821831_a4e29d9c",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:59:33Z",
+      "side": 1,
+      "message": "Can we choose more obvious names, depending on how it will used below? Will make it more clear when reading through the tests.",
+      "range": {
+        "startLine": 27,
+        "startChar": 41,
+        "endLine": 27,
+        "endChar": 48
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf762bb3_07e7051f",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:59:33Z",
+      "side": 1,
+      "message": "Off-topic\nThis case follows through what is being done right now. Just wondering in general if this is intuitive. Should the vbdev_ocf actually be deleted here ? To recreate this vbdev_ocf one would need to call construct_ocf_bdev again. Instead of deleting we could unregister the ocf bdev, stop the cache and leave it in not started case. What do you think ?",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 10
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5695a152_2ca9608a",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:59:33Z",
+      "side": 1,
+      "message": "Will it work ? Since cache bdev is required to be atleast of 100mb of size ?",
+      "range": {
+        "startLine": 74,
+        "startChar": 33,
+        "endLine": 74,
+        "endChar": 40
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
