@@ -116,6 +116,30 @@
       "revId": "514531311679ce9c826f462887dad0e504229dbc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "dc105f11_d91a85e2",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T01:36:45Z",
+      "side": 1,
+      "message": "This check is not for what you think. For the padding, we will reuse the hdr.raw, since the padding will be no larger than 128. So if there is data, and padding, we can re-use this buffer. For each nvme pdu, there will be at most 3 vector, 1 for hdr (including padding, digest), 1 or data, and 1 or data digest",
+      "parentUuid": "e64ae70a_4650fc88",
+      "range": {
+        "startLine": 257,
+        "startChar": 1,
+        "endLine": 257,
+        "endChar": 6
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
