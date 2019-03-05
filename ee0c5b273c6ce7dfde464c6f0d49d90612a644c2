@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bd7e8dc1_b8ee6b5d",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 227,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:32:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "c3792acf_96b9772e",
+      "range": {
+        "startLine": 226,
+        "startChar": 0,
+        "endLine": 227,
+        "endChar": 1
+      },
+      "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "217b10f2_86a2049b",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-05T09:35:38Z",
       "side": 1,
       "message": "Why not just ctx?",
+      "range": {
+        "startLine": 304,
+        "startChar": 18,
+        "endLine": 304,
+        "endChar": 22
+      },
+      "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "abec1a78_08de5c82",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 304,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:32:29Z",
+      "side": 1,
+      "message": "Because in get_cores_fn it would be then named differently, which I though is bad.",
+      "parentUuid": "217b10f2_86a2049b",
       "range": {
         "startLine": 304,
         "startChar": 18,
@@ -68,6 +116,30 @@
       "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a1b3716b_f5eace3f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:32:29Z",
+      "side": 1,
+      "message": "But this is not vbdev, it is vbdev\u0027s base.\nHow about changing the name to just \"base\"?",
+      "parentUuid": "ac5074a9_2a42415c",
+      "range": {
+        "startLine": 315,
+        "startChar": 1,
+        "endLine": 315,
+        "endChar": 6
+      },
+      "revId": "ee0c5b273c6ce7dfde464c6f0d49d90612a644c2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
