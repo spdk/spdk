@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a64822d1_14569b21",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T20:04:29Z",
+      "side": 1,
+      "message": "NIC_PROVIDER -\u003e NIC_VENDOR",
+      "revId": "51eef88c8fc9664358019010ddb8865c0027d688",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b69deb8d_a6c52540",
+        "filename": "test/nvmf/common.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T20:04:29Z",
+      "side": 1,
+      "message": "Put a comment here on what this is doing",
+      "revId": "51eef88c8fc9664358019010ddb8865c0027d688",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
