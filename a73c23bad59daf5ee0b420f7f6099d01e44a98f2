@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f8d26e57_5941f25c",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 102,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-05T01:50:32Z",
+      "side": 1,
+      "message": "ok.",
+      "parentUuid": "be4b3fa6_644ca23f",
+      "revId": "a73c23bad59daf5ee0b420f7f6099d01e44a98f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e059832f_dd8696f3",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-04T19:38:58Z",
       "side": 1,
       "message": "is there a way that we can check if md_buf is big enough here?  and if not, give some kind of meaningful error message and fail the I/O",
+      "revId": "a73c23bad59daf5ee0b420f7f6099d01e44a98f2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c800dff_5361e4c9",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 774,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-05T01:50:32Z",
+      "side": 1,
+      "message": "spdk_dix_generate() will print the error message first, but we don\u0027t end the IO here, and I assume the NVMe controller will return the command with error status.",
+      "parentUuid": "e059832f_dd8696f3",
       "revId": "a73c23bad59daf5ee0b420f7f6099d01e44a98f2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
