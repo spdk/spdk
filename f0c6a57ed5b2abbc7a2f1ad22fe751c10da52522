@@ -1,0 +1,61 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0eafcaba_a42ca921",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:54:03Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1db0d46a_87db6a0c",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1311,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:54:03Z",
+      "side": 1,
+      "message": "unnecessary empty line",
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5003faf7_985479ab",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:54:03Z",
+      "side": 1,
+      "message": "rc is only used here, we may remove other, and directly call spdk_iscis_dif_verify here",
+      "range": {
+        "startLine": 1329,
+        "startChar": 6,
+        "endLine": 1329,
+        "endChar": 13
+      },
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
