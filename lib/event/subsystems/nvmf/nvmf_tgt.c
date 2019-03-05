@@ -469,7 +469,7 @@ get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
 }
 
 static void
-spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_array_begin(w);
 
@@ -485,8 +485,6 @@ spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk
 
 	spdk_nvmf_tgt_write_config_json(w, g_spdk_nvmf_tgt);
 	spdk_json_write_array_end(w);
-
-	spdk_event_call(done_ev);
 }
 
 static struct spdk_subsystem g_spdk_subsystem_nvmf = {
