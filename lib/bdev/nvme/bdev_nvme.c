@@ -1180,8 +1180,11 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      const char *base_name,
 		      const char **names, size_t *count,
 		      const char *hostnqn,
-		      uint32_t prchk_flags)
+		      uint32_t prchk_flags,
+		      spdk_bdev_nvme_fn cb_fn,
+		      void *cb_ctx)
 {
+	int				rc;
 	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
 	struct nvme_probe_skip_entry	*entry, *tmp;
@@ -1226,8 +1229,13 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	return bdev_nvme_create_and_get_bdev_names(ctrlr, base_name, names,
+	rc = bdev_nvme_create_and_get_bdev_names(ctrlr, base_name, names,
 			count, trid, prchk_flags);
+	if (rc == 0 && cb_fn) {
+		cb_fn(cb_ctx);
+	}
+
+	return rc;
 }
 
 int
