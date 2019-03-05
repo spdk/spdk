@@ -469,25 +469,13 @@ static int
 nvme_init_controllers(struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	int rc = 0;
-	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
-	if (!spdk_process_is_primary() && probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
-		return 0;
-	}
-
-	/* Initialize all new controllers in the probe context init_ctrlrs list in parallel. */
-	while (!TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
-		TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
-			rc = nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
-			if (rc) {
-				break;
-			}
+	while (true) {
+		rc = spdk_nvme_probe_poll_async(probe_ctx);
+		if (rc != -EAGAIN) {
+			return rc;
 		}
 	}
-
-	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-	g_spdk_nvme_driver->initialized = true;
-	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 
 	return rc;
 }
@@ -606,14 +594,8 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		spdk_nvme_probe_cb probe_cb, spdk_nvme_attach_cb attach_cb,
 		spdk_nvme_remove_cb remove_cb)
 {
-	int rc;
 	struct spdk_nvme_transport_id trid_pcie;
-	struct spdk_nvme_probe_ctx probe_ctx;
-
-	rc = nvme_driver_init();
-	if (rc != 0) {
-		return rc;
-	}
+	struct spdk_nvme_probe_ctx *probe_ctx;
 
 	if (trid == NULL) {
 		memset(&trid_pcie, 0, sizeof(trid_pcie));
@@ -621,17 +603,18 @@ spdk_nvme_probe(const struct spdk_nvme_transport_id *trid, void *cb_ctx,
 		trid = &trid_pcie;
 	}
 
-	spdk_nvme_probe_ctx_init(&probe_ctx, trid, cb_ctx, probe_cb, attach_cb, remove_cb);
-	rc = spdk_nvme_probe_internal(&probe_ctx, false);
-	if (rc != 0) {
-		return rc;
+	probe_ctx = spdk_nvme_probe_async(trid, cb_ctx, probe_cb,
+					  attach_cb, remove_cb);
+	if (!probe_ctx) {
+		SPDK_ERRLOG("Create probe context failed\n");
+		return -1;
 	}
 
 	/*
 	 * Keep going even if one or more nvme_attach() calls failed,
 	 *  but maintain the value of rc to signal errors when we return.
 	 */
-	return nvme_init_controllers(&probe_ctx);
+	return nvme_init_controllers(probe_ctx);
 }
 
 static bool
@@ -658,7 +641,7 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 	struct spdk_nvme_ctrlr_connect_opts *user_connect_opts = NULL;
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
 	spdk_nvme_probe_cb probe_cb = NULL;
-	struct spdk_nvme_probe_ctx probe_ctx;
+	struct spdk_nvme_probe_ctx *probe_ctx;
 
 	if (trid == NULL) {
 		SPDK_ERRLOG("No transport ID specified\n");
@@ -677,10 +660,14 @@ spdk_nvme_connect(const struct spdk_nvme_transport_id *trid,
 		probe_cb = spdk_nvme_connect_probe_cb;
 	}
 
-	spdk_nvme_probe_ctx_init(&probe_ctx, trid, user_connect_opts, probe_cb, NULL, NULL);
-	spdk_nvme_probe_internal(&probe_ctx, true);
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	if (!probe_ctx) {
+		return NULL;
+	}
+	spdk_nvme_probe_ctx_init(probe_ctx, trid, user_connect_opts, probe_cb, NULL, NULL);
+	spdk_nvme_probe_internal(probe_ctx, true);
 
-	rc = nvme_init_controllers(&probe_ctx);
+	rc = nvme_init_controllers(probe_ctx);
 	if (rc != 0) {
 		return NULL;
 	}
