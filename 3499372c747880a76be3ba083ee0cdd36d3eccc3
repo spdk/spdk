@@ -45,6 +45,29 @@
       "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2be80de_490964b9",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T09:31:13Z",
+      "side": 1,
+      "message": "If test -t 15 (\u003e10 or without -t), app will reports error and can\u0027t exit normally:\nnvme_rdma.c:1685:nvme_rdma_qpair_process_completions: *ERROR*: CQ error on Queue Pair 0xb6c5e0, Response Index 13238504 (12): transport retry counter exceeded\nnvme_rdma.c:1685:nvme_rdma_qpair_process_completions: *ERROR*: CQ error on Queue Pair 0xb6c5e0, Response Index 18 (5): Work Request Flushed Error",
+      "range": {
+        "startLine": 38,
+        "startChar": 32,
+        "endLine": 38,
+        "endChar": 38
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
