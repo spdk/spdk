@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7a5f817_f4c5bfce",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 16
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:48:42Z",
+      "side": 1,
+      "message": "May I suggest to use ((size) \u003e\u003e9)  here?",
+      "range": {
+        "startLine": 56,
+        "startChar": 39,
+        "endLine": 56,
+        "endChar": 51
+      },
+      "revId": "c131ddfa7304a9409a044c970dd14c4bc7ecb449",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
