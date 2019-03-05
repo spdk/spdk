@@ -142,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "76f279b3_2d35b67b",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 5202,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-05T11:57:06Z",
+      "side": 1,
+      "message": "This is possible and it was actually possible with previous code (but with snapshot that didn\u0027t have any clones at point 1.). In both cases we will have the same race condition. Maybe we should add some kind of flag to blob structure which will indicate that a blob is about to be removed and no other operations should be possible on it.",
+      "parentUuid": "f9642152_ba829d70",
+      "revId": "4cc993c4d41ba2aa72428a96c97df85e988c17ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9c5c78c5_3d56b525",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 7
