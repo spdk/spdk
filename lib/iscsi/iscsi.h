@@ -444,7 +444,7 @@ void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
 
 static inline int
-spdk_get_immediate_data_buffer_size(void)
+spdk_get_max_immediate_data_size(void)
 {
 	/*
 	 * Specify enough extra space in addition to FirstBurstLength to
