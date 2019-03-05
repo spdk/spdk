@@ -86,6 +86,29 @@
       "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5c50680_1a0cbb33",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T08:58:26Z",
+      "side": 1,
+      "message": "I also test without \"-a\". Only testing I/O commands with a lot of times. I don\u0027t know if you noticed why successful cmd.opc is always 0 or 9. It doesn\u0027t seem very random.",
+      "range": {
+        "startLine": 38,
+        "startChar": 67,
+        "endLine": 38,
+        "endChar": 70
+      },
+      "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }

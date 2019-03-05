@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f41b0e34_37dfa7e5",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T08:58:26Z",
+      "side": 1,
+      "message": "I think SPDK_NOTICELOG is more reasonable here. Do you think so?",
+      "range": {
+        "startLine": 490,
+        "startChar": 2,
+        "endLine": 490,
+        "endChar": 14
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b81180e9_a73c5516",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T08:58:26Z",
+      "side": 1,
+      "message": "According to Jenkin\u0027s build log, the app did\u0027t run actually. Other reviewers can\u0027t see the results intuitively. Could you enable IOMMU in nvmf_autotest server or comment out this line temporarily？",
+      "range": {
+        "startLine": 501,
+        "startChar": 1,
+        "endLine": 501,
+        "endChar": 30
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
