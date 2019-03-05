@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "78218952_76a64efc",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your review. For now, I think we can keep it in this style. When this library gets bigger and each part has several items, we can consider breaking them apart. Now, many parts will just have one or two items which doesn\u0027t seem necessary.",
+      "parentUuid": "7e16e2a6_12b90d15",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "263e855b_4593d328",
         "filename": "include/spdk/opal_spec.h",
         "patchSetId": 27
@@ -47,6 +65,24 @@
       "writtenOn": "2019-03-04T18:59:04Z",
       "side": 1,
       "message": "where is SPDK_OPAL_VALUES defined in the spec?",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3da67220_75be92cb",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Hi Jim, I don\u0027t see an explicit definition of this. However, you may refer to \"Alternative_Type\" and \"typeOr\" identifier in the core arch spec. This is actually just the value of the number of types that cellblock column might use/choose. Here, we just use value of 1.",
+      "parentUuid": "263e855b_4593d328",
       "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +106,24 @@
     },
     {
       "key": {
+        "uuid": "2913d310_6b7d2fb5",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Hi Jim, there is no enum here as all these error values corresponds exactly with the spdk_opal_error index values.",
+      "parentUuid": "4c6db86d_9df0e68f",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b9e20b69_ef002bc2",
         "filename": "lib/opal/opal.c",
         "patchSetId": 27
@@ -81,6 +135,24 @@
       "writtenOn": "2019-03-04T18:59:04Z",
       "side": 1,
       "message": "static const char * should be on separate line (same for other functions below)",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d91b7d70_5f63a10a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b9e20b69_ef002bc2",
       "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "b38cd87a_251fdec0",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fdbcb0a5_3e2f2df2",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8e9ca327_f5e9ac8c",
         "filename": "lib/opal/opal.c",
         "patchSetId": 27
@@ -121,6 +211,24 @@
     },
     {
       "key": {
+        "uuid": "10212b30_67d0aa14",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8e9ca327_f5e9ac8c",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98c53245_93bfc5f9",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 27
@@ -132,6 +240,24 @@
       "writtenOn": "2019-03-04T18:59:04Z",
       "side": 1,
       "message": "let\u0027s remove \"spdk_\" prefix from anything in the internal header file\n\nwe should try to only put spdk_ prefix on things that are exposed in the public API (i.e. include/spdk/*.h)",
+      "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "72b60f25_2295bfbc",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 27
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-05T09:44:33Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "98c53245_93bfc5f9",
       "revId": "2b7d1510781b7c306c19c323b09b27d5bb7a5339",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
