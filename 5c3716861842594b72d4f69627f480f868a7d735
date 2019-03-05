@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "efda7fbf_41ef5252",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T20:54:19Z",
+      "side": 1,
+      "message": "Sorry, my bad. You are right about this, it could be simplified. It is in following patchset that I am using the return value.",
+      "parentUuid": "8ec960d6_b446e167",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f174c1d1_8a162f01",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -344,6 +368,30 @@
     },
     {
       "key": {
+        "uuid": "89f0a240_b27a135a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T20:54:19Z",
+      "side": 1,
+      "message": "4) In examine, when ocf bdev with this existing base gets created. We then go this path again, setting descriptor, ocf_cache, but most importantly \u0027attached\u0027 so that this vbdev can be registered.",
+      "parentUuid": "a8c85e92_8adf06a0",
+      "range": {
+        "startLine": 926,
+        "startChar": 3,
+        "endLine": 926,
+        "endChar": 37
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "013f9261_2b4a5e0e",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -497,6 +545,30 @@
       "side": 1,
       "message": "\u003e In current implementation of attach_base, 1028-1037 are required\n \u003e and break is correct here.\n \u003e I will try to simplify this as I will change attach_base.\n\nSince I\u0027ve tried to go in depth on the review, I would appreciate a response other than \u0027required and correct\u0027. If I missed something please let me know.\n\nAnyway awaiting the next patch set with reworked attach_base.",
       "parentUuid": "eb52a9fd_bf03cb01",
+      "range": {
+        "startLine": 1041,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 9
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "de8a9dde_1e4875bf",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T20:54:19Z",
+      "side": 1,
+      "message": "You are right, sorry. I should have said that 1028-1037 is needed because that is the only \"signal\" for vbdevs to know that their OCF cache instance was registered.\nExample case:\n\n    create ocf0 cache1 core0\n    create ocf1 cache1 core1\n\nHaving this, ocf0 will have core1 atached, but ocf1 detached.\n\n    create cache1\n    create core0\n\nocf0 will initialize. But ocf1 will have no idea about this if 1028-1037 is skipped.\nWe need to do attach_base(ocf1, cache0) at line 1034 to set ocf1-\u003eocf_cache \u003d ocf0-\u003eocf_cache\nOtherwise ocf1 will try to start its own cache instance because ocf_cache will be NULL\nThis is how it works in current implementation.\n\n    create core1\n\nAfter this, ocf1 will have both devices attached and will try to register bdev during which it will get -EALREADY because ocf_cache is not NULL and print notice \"Connecting to existing cache\"\n\nHopefully that clarifies.\n\nI will reworks this.",
+      "parentUuid": "c04657b9_2a671886",
       "range": {
         "startLine": 1041,
         "startChar": 0,
