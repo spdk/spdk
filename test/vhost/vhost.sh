@@ -40,6 +40,10 @@ run_test suite $WORKDIR/vhost_boot/vhost_boot.sh --vm_image=$VM_IMAGE
 report_test_completion "vhost_boot"
 timing_exit vhost_boot
 
+timing_enter vhost_hotplug
+run_test suite ./test/vhost/hotplug/scsi_stress_test.sh
+timing_exit vhost_hotplug
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter integrity_blk
 	echo 'Running blk integrity suite...'
@@ -116,6 +120,11 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	run_test case $WORKDIR/readonly/readonly.sh --vm_image=$VM_IMAGE --disk=Nvme0n1 -x
 	report_test_completion "vhost_readonly"
 	timing_exit readonly
+
+	timing_enter hotplug_stress_test
+	echo 'Running vhost hotplug stress test'
+	run_test case $WORKDIR/hotplug/scsi_stress_test.sh
+	timing_exit hotplug_stress_test
 
 	timing_enter vhost_migration
 	echo 'Running migration suite...'
