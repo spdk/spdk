@@ -134,10 +134,12 @@ spdk_event_call(struct spdk_event *event)
 }
 
 static inline uint32_t
-_spdk_event_queue_run_batch(struct spdk_reactor *reactor, struct spdk_thread *thread)
+_spdk_event_queue_run_batch(struct spdk_reactor *reactor)
 {
 	unsigned count, i;
 	void *events[SPDK_EVENT_BATCH_SIZE];
+	struct spdk_thread *thread;
+	struct spdk_lw_thread *lw_thread;
 
 #ifdef DEBUG
 	/*
@@ -151,6 +153,16 @@ _spdk_event_queue_run_batch(struct spdk_reactor *reactor, struct spdk_thread *th
 	count = spdk_ring_dequeue(reactor->events, events, SPDK_EVENT_BATCH_SIZE);
 	if (count == 0) {
 		return 0;
+	}
+
+	/* Execute the events. There are still some remaining events
+	 * that must occur on an SPDK thread. To accomodate those, try to
+	 * run them on the first thread in the list, if it exists. */
+	lw_thread = TAILQ_FIRST(&reactor->threads);
+	if (lw_thread) {
+		thread = spdk_thread_get_from_ctx(lw_thread);
+	} else {
+		thread = NULL;
 	}
 
 	spdk_set_thread(thread);
@@ -239,10 +251,10 @@ _spdk_reactor_run(void *arg)
 		 * is used for all threads. */
 		now = spdk_get_ticks();
 
+		_spdk_event_queue_run_batch(reactor);
+
 		TAILQ_FOREACH_SAFE(lw_thread, &reactor->threads, link, tmp) {
 			thread = spdk_thread_get_from_ctx(lw_thread);
-
-			_spdk_event_queue_run_batch(reactor, thread);
 
 			spdk_thread_poll(thread, 0, now);
 		}
