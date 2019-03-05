@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6007e23b_a4e81752",
+        "filename": "lib/util/crc16.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T08:49:27Z",
+      "side": 1,
+      "message": "May I ask a question:\nWhy we want to used the static table? Could we use the poly polynomial and generate this table via attribute related function, which could be much better to understand.",
+      "range": {
+        "startLine": 66,
+        "startChar": 13,
+        "endLine": 66,
+        "endChar": 46
+      },
+      "revId": "98971348c93d0e8689dc0f06e12bc641c2ea8498",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
