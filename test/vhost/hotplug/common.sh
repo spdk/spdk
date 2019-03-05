@@ -93,6 +93,7 @@ function vms_setup() {
         setup_cmd="vm_setup --disk-type=$test_type --force=${conf[0]}"
         [[ x"${conf[1]}" != x"" ]] && setup_cmd+=" --os=${conf[1]}"
         [[ x"${conf[2]}" != x"" ]] && setup_cmd+=" --disks=${conf[2]}"
+        [[ x"${conf[3]}" != x"" ]] && setup_cmd+=" --vhost-num=${conf[3]}"
         $setup_cmd
     done
 }

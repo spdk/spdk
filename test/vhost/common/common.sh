@@ -423,12 +423,15 @@ function vm_shutdown()
 
 # Kill given VM
 # param $1 virtual machine number
-#
+# param $2 name of signal send to vm
 function vm_kill()
 {
 	vm_num_is_valid $1 || return 1
 	local vm_dir="$VM_BASE_DIR/$1"
-
+	local signal="SIGTERM"
+	if [[ ! -z "$2" ]]; then
+		signal="$2"
+	fi
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 0
 	fi
@@ -437,7 +440,7 @@ function vm_kill()
 
 	notice "Killing virtual machine $vm_dir (pid=$vm_pid)"
 	# First kill should fail, second one must fail
-	if /bin/kill $vm_pid; then
+	if /bin/kill -s $signal $vm_pid; then
 		notice "process $vm_pid killed"
 		rm $vm_dir/qemu.pid
 	elif vm_is_running $1; then
