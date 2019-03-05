@@ -175,7 +175,7 @@ void spdk_app_fini(void);
  * SPDK for a subset of its process threads, this function can be called in lieu
  * of a signal.
  */
-void spdk_app_start_shutdown(void);
+void spdk_app_start_shutdown(void *ctx);
 
 /**
  * Stop the framework.
