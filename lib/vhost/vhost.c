@@ -754,6 +754,14 @@ spdk_vhost_dev_register(struct spdk_vhost_dev *vdev, const char *name, const cha
 
 	vdev->name = strdup(name);
 	vdev->path = strdup(path);
+	if (vdev->name == NULL || vdev->path == NULL) {
+		free(vdev->name);
+		free(vdev->path);
+		rte_vhost_driver_unregister(path);
+		rc = -EIO;
+		goto out;
+	}
+
 	vdev->cpumask = cpumask;
 	vdev->registered = true;
 	vdev->backend = backend;
