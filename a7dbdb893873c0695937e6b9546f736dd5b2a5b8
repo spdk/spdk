@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e0d00e74_e645042f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2803,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T08:42:23Z",
+      "side": 1,
+      "message": "Better to introduce a new static function and put the statements here and the following into the common function, which could reduce duplicated code and easy for the further maintaining.",
+      "revId": "a7dbdb893873c0695937e6b9546f736dd5b2a5b8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
