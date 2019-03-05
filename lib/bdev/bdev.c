@@ -523,7 +523,8 @@ spdk_bdev_io_put_buf(struct spdk_bdev_io *bdev_io)
 
 	bdev_io->internal.buf = NULL;
 
-	if (buf_len + alignment <= SPDK_BDEV_SMALL_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT) {
+	if (buf_len + alignment <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
+	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &ch->need_buf_small;
 	} else {
@@ -595,7 +596,8 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 		return;
 	}
 
-	if (len + alignment > SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT) {
+	if (len + alignment > SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
+	    SPDK_BDEV_POOL_ALIGNMENT) {
 		SPDK_ERRLOG("Length + alignment %" PRIu64 " is larger than allowed\n",
 			    len + alignment);
 		cb(bdev_io->internal.ch->channel, bdev_io, false);
@@ -607,7 +609,8 @@ spdk_bdev_io_get_buf(struct spdk_bdev_io *bdev_io, spdk_bdev_io_get_buf_cb cb, u
 	bdev_io->internal.buf_len = len;
 	bdev_io->internal.get_buf_cb = cb;
 
-	if (len + alignment <= SPDK_BDEV_SMALL_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT) {
+	if (len + alignment <= SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
+	    SPDK_BDEV_POOL_ALIGNMENT) {
 		pool = g_bdev_mgr.buf_small_pool;
 		stailq = &mgmt_ch->need_buf_small;
 	} else {
@@ -942,7 +945,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_small_pool = spdk_mempool_create(mempool_name,
 				    BUF_SMALL_POOL_SIZE,
-				    SPDK_BDEV_SMALL_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT,
+				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_SMALL_BUF_MAX_SIZE) +
+				    SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_small_pool) {
@@ -956,7 +960,8 @@ spdk_bdev_initialize(spdk_bdev_init_cb cb_fn, void *cb_arg)
 
 	g_bdev_mgr.buf_large_pool = spdk_mempool_create(mempool_name,
 				    BUF_LARGE_POOL_SIZE,
-				    SPDK_BDEV_LARGE_BUF_MAX_SIZE + SPDK_BDEV_POOL_ALIGNMENT,
+				    SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_BDEV_LARGE_BUF_MAX_SIZE) +
+				    SPDK_BDEV_POOL_ALIGNMENT,
 				    cache_size,
 				    SPDK_ENV_SOCKET_ID_ANY);
 	if (!g_bdev_mgr.buf_large_pool) {
