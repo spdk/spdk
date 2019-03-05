@@ -12,6 +12,10 @@ timing_enter vhost_boot
 run_test suite ./test/vhost/spdk_vhost.sh --boot
 timing_exit vhost_boot
 
+timing_enter vhost_hotplug
+run_test suite ./test/vhost/hotplug/scsi_stress_test.sh
+timing_exit vhost_hotplug
+
 if [ $RUN_NIGHTLY -eq 1 ]; then
 	timing_enter integrity_blk
 	run_test suite ./test/vhost/spdk_vhost.sh --integrity-blk
