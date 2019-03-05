@@ -53,6 +53,7 @@ extern "C" {
 
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
+#define SPDK_BDEV_BUF_METADATA(size) (((size) / 512) * (512 + 16))
 
 /**
  * Block device remove callback.
