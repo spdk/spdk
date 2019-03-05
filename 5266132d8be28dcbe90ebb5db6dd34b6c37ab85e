@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "124eb18b_099a504c",
+        "filename": "ocf",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-05T12:08:14Z",
+      "side": 0,
+      "message": "is this changed intentionally?",
+      "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
