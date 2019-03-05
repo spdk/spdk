@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4cad329e_4933c666",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:22:18Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "11821831_a4e29d9c",
+      "range": {
+        "startLine": 27,
+        "startChar": 41,
+        "endLine": 27,
+        "endChar": 48
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf762bb3_07e7051f",
         "filename": "test/ocf/management/multicore.sh",
         "patchSetId": 9
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "9d834df1_1bf5893e",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:22:18Z",
+      "side": 1,
+      "message": "I agree in sense that it might be useful in number of cases, but on the other hand, in case when user wants to remove all devices that reference same cache, it would be better to add dedicated RPC call for that, otherwise it would require manual one-by-one removal. Changing this would also complicate logic a bit. I followed path of least resistance here - we had an assumption that for the single OCF bdev if its cache removed -\u003e  vbdev also disapeares, so basically nothing changed except it\u0027s no loger one vbdev. But I also remember we had a debate when I was implementing hotremove and we settled on simpler solution. Overall, I think this is optional and deserves it\u0027s own patch. Do you agree?",
+      "parentUuid": "cf762bb3_07e7051f",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 10
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5695a152_2ca9608a",
         "filename": "test/ocf/management/multicore.sh",
         "patchSetId": 9
@@ -59,6 +107,30 @@
       "writtenOn": "2019-03-05T04:59:33Z",
       "side": 1,
       "message": "Will it work ? Since cache bdev is required to be atleast of 100mb of size ?",
+      "range": {
+        "startLine": 74,
+        "startChar": 33,
+        "endLine": 74,
+        "endChar": 40
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb673629_9e7563ef",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T11:22:18Z",
+      "side": 1,
+      "message": "Yes, because check for 100mb happens during cache start in OCF, but it will never happen.",
+      "parentUuid": "5695a152_2ca9608a",
       "range": {
         "startLine": 74,
         "startChar": 33,
