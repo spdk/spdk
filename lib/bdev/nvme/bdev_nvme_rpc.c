@@ -204,98 +204,124 @@ static const struct spdk_json_object_decoder rpc_construct_nvme_decoders[] = {
 
 #define NVME_MAX_BDEVS_PER_RPC 128
 
+struct rpc_create_nvme_bdev_ctx {
+	struct rpc_construct_nvme req;
+	size_t count;
+	const char *names[NVME_MAX_BDEVS_PER_RPC];
+	struct spdk_jsonrpc_request *request;
+};
+
+static void
+spdk_rpc_construct_nvme_bdev_done(void *cb_ctx)
+{
+	struct rpc_create_nvme_bdev_ctx *ctx = cb_ctx;
+	struct spdk_jsonrpc_request *request = ctx->request;
+	struct spdk_json_write_ctx *w;
+	size_t i;
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		goto exit;
+	}
+
+	if (ctx->count == 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
+		goto exit;
+	}
+
+	spdk_json_write_array_begin(w);
+	for (i = 0; i < ctx->count; i++) {
+		spdk_json_write_string(w, ctx->names[i]);
+	}
+	spdk_json_write_array_end(w);
+	spdk_jsonrpc_end_result(request, w);
+
+exit:
+	free_rpc_construct_nvme(&ctx->req);
+	free(ctx);
+}
+
 static void
 spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 			     const struct spdk_json_val *params)
 {
-	struct rpc_construct_nvme req = {};
-	struct spdk_json_write_ctx *w;
+	struct rpc_create_nvme_bdev_ctx *ctx;
 	struct spdk_nvme_transport_id trid = {};
 	struct spdk_nvme_host_id hostid = {};
-	const char *names[NVME_MAX_BDEVS_PER_RPC];
-	size_t count;
-	size_t i;
 	uint32_t prchk_flags = 0;
 	int rc;
 
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR, spdk_strerror(ENOMEM));
+		return;
+	}
+
 	if (spdk_json_decode_object(params, rpc_construct_nvme_decoders,
 				    SPDK_COUNTOF(rpc_construct_nvme_decoders),
-				    &req)) {
+				    &ctx->req)) {
 		SPDK_ERRLOG("spdk_json_decode_object failed\n");
 		goto invalid;
 	}
 
 	/* Parse trtype */
-	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, req.trtype);
+	rc = spdk_nvme_transport_id_parse_trtype(&trid.trtype, ctx->req.trtype);
 	if (rc < 0) {
-		SPDK_ERRLOG("Failed to parse trtype: %s\n", req.trtype);
+		SPDK_ERRLOG("Failed to parse trtype: %s\n", ctx->req.trtype);
 		goto invalid;
 	}
 
 	/* Parse traddr */
-	snprintf(trid.traddr, sizeof(trid.traddr), "%s", req.traddr);
+	snprintf(trid.traddr, sizeof(trid.traddr), "%s", ctx->req.traddr);
 
 	/* Parse adrfam */
-	if (req.adrfam) {
-		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, req.adrfam);
+	if (ctx->req.adrfam) {
+		rc = spdk_nvme_transport_id_parse_adrfam(&trid.adrfam, ctx->req.adrfam);
 		if (rc < 0) {
-			SPDK_ERRLOG("Failed to parse adrfam: %s\n", req.adrfam);
+			SPDK_ERRLOG("Failed to parse adrfam: %s\n", ctx->req.adrfam);
 			goto invalid;
 		}
 	}
 
 	/* Parse trsvcid */
-	if (req.trsvcid) {
-		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", req.trsvcid);
+	if (ctx->req.trsvcid) {
+		snprintf(trid.trsvcid, sizeof(trid.trsvcid), "%s", ctx->req.trsvcid);
 	}
 
 	/* Parse subnqn */
-	if (req.subnqn) {
-		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", req.subnqn);
+	if (ctx->req.subnqn) {
+		snprintf(trid.subnqn, sizeof(trid.subnqn), "%s", ctx->req.subnqn);
 	}
 
-	if (req.hostaddr) {
-		snprintf(hostid.hostaddr, sizeof(hostid.hostaddr), "%s", req.hostaddr);
+	if (ctx->req.hostaddr) {
+		snprintf(hostid.hostaddr, sizeof(hostid.hostaddr), "%s", ctx->req.hostaddr);
 	}
 
-	if (req.hostsvcid) {
-		snprintf(hostid.hostsvcid, sizeof(hostid.hostsvcid), "%s", req.hostsvcid);
+	if (ctx->req.hostsvcid) {
+		snprintf(hostid.hostsvcid, sizeof(hostid.hostsvcid), "%s", ctx->req.hostsvcid);
 	}
 
-	if (req.prchk_reftag) {
+	if (ctx->req.prchk_reftag) {
 		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_REFTAG;
 	}
 
-	if (req.prchk_guard) {
+	if (ctx->req.prchk_guard) {
 		prchk_flags |= SPDK_NVME_IO_FLAGS_PRCHK_GUARD;
 	}
 
-	count = NVME_MAX_BDEVS_PER_RPC;
-	if (spdk_bdev_nvme_create(&trid, &hostid, req.name, names, &count, req.hostnqn,
-				  prchk_flags)) {
+	ctx->request = request;
+	ctx->count = NVME_MAX_BDEVS_PER_RPC;
+	if (spdk_bdev_nvme_create(&trid, &hostid, ctx->req.name, ctx->names, &ctx->count, ctx->req.hostnqn,
+				  prchk_flags, spdk_rpc_construct_nvme_bdev_done, ctx)) {
 		goto invalid;
 	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		free_rpc_construct_nvme(&req);
-		return;
-	}
-
-	spdk_json_write_array_begin(w);
-	for (i = 0; i < count; i++) {
-		spdk_json_write_string(w, names[i]);
-	}
-	spdk_json_write_array_end(w);
-	spdk_jsonrpc_end_result(request, w);
-
-	free_rpc_construct_nvme(&req);
 
 	return;
 
 invalid:
 	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
-	free_rpc_construct_nvme(&req);
+	free_rpc_construct_nvme(&ctx->req);
+	free(ctx);
 }
 SPDK_RPC_REGISTER("construct_nvme_bdev", spdk_rpc_construct_nvme_bdev, SPDK_RPC_RUNTIME)
 
