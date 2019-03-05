@@ -1183,6 +1183,58 @@ bdev_nvme_create_and_get_bdev_names(struct spdk_nvme_ctrlr *ctrlr,
 	return 0;
 }
 
+struct nvme_async_probe_ctx {
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	const char *base_name;
+	const char **names;
+	size_t *count;
+	uint32_t prchk_flags;
+	struct spdk_poller *poller;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_ctrlr_opts opts;
+	spdk_bdev_nvme_fn cb_fn;
+	void *cb_ctx;
+};
+
+static void
+connect_attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
+		  struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_ctrlr_opts *opts)
+{
+	struct spdk_nvme_ctrlr_opts *user_opts = cb_ctx;
+	struct nvme_async_probe_ctx *ctx;
+	int rc;
+
+	ctx = SPDK_CONTAINEROF(user_opts, struct nvme_async_probe_ctx, opts);
+	rc = bdev_nvme_create_and_get_bdev_names(ctrlr,
+			ctx->base_name,
+			ctx->names, ctx->count,
+			&ctx->trid,
+			ctx->prchk_flags);
+	if (rc < 0) {
+		*(ctx->count) = 0;
+	}
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_ctx);
+	}
+}
+
+static int
+bdev_nvme_async_poll(void *arg)
+{
+	struct nvme_async_probe_ctx	*ctx = arg;
+	int				done;
+
+	done = spdk_nvme_probe_poll_async(ctx->probe_ctx);
+	/* retry again */
+	if (done == -EAGAIN) {
+		return 1;
+	}
+	spdk_poller_unregister(&ctx->poller);
+	free(ctx);
+	return 1;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvme_host_id *hostid,
@@ -1193,10 +1245,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      spdk_bdev_nvme_fn cb_fn,
 		      void *cb_ctx)
 {
-	int				rc;
-	struct spdk_nvme_ctrlr_opts	opts;
-	struct spdk_nvme_ctrlr		*ctrlr;
 	struct nvme_probe_skip_entry	*entry, *tmp;
+	struct nvme_async_probe_ctx	*ctx;
 
 	if (nvme_bdev_ctrlr_get(trid) != NULL) {
 		SPDK_ERRLOG("A controller with the provided trid (traddr: %s) already exists.\n", trid->traddr);
@@ -1218,33 +1268,41 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		}
 	}
 
-	spdk_nvme_ctrlr_get_default_ctrlr_opts(&opts, sizeof(opts));
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return -ENOMEM;
+	}
+	ctx->base_name = base_name;
+	ctx->names = names;
+	ctx->count = count;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_ctx = cb_ctx;
+	ctx->prchk_flags = prchk_flags;
+	ctx->trid = *trid;
+
+	spdk_nvme_ctrlr_get_default_ctrlr_opts(&ctx->opts, sizeof(ctx->opts));
 
 	if (hostnqn) {
-		snprintf(opts.hostnqn, sizeof(opts.hostnqn), "%s", hostnqn);
+		snprintf(ctx->opts.hostnqn, sizeof(ctx->opts.hostnqn), "%s", hostnqn);
 	}
 
 	if (hostid->hostaddr[0] != '\0') {
-		snprintf(opts.src_addr, sizeof(opts.src_addr), "%s", hostid->hostaddr);
+		snprintf(ctx->opts.src_addr, sizeof(ctx->opts.src_addr), "%s", hostid->hostaddr);
 	}
 
 	if (hostid->hostsvcid[0] != '\0') {
-		snprintf(opts.src_svcid, sizeof(opts.src_svcid), "%s", hostid->hostsvcid);
+		snprintf(ctx->opts.src_svcid, sizeof(ctx->opts.src_svcid), "%s", hostid->hostsvcid);
 	}
 
-	ctrlr = spdk_nvme_connect(trid, &opts, sizeof(opts));
-	if (!ctrlr) {
-		SPDK_ERRLOG("Failed to create new device\n");
+	ctx->probe_ctx = spdk_nvme_connect_async(trid, &ctx->opts, connect_attach_cb);
+	if (ctx->probe_ctx == NULL) {
+		SPDK_ERRLOG("No controller was found with provided trid (traddr: %s)\n", trid->traddr);
+		free(ctx);
 		return -1;
 	}
+	ctx->poller = spdk_poller_register(bdev_nvme_async_poll, ctx, 1000);
 
-	rc = bdev_nvme_create_and_get_bdev_names(ctrlr, base_name, names,
-			count, trid, prchk_flags);
-	if (rc == 0 && cb_fn) {
-		cb_fn(cb_ctx);
-	}
-
-	return rc;
+	return 0;
 }
 
 int
