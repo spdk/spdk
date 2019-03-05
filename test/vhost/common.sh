@@ -111,7 +111,7 @@ function vhost_run()
 {
 	local vhost_name="$1"
 
-	shift
+	#shift
 
 	if [[ -z "$vhost_name" ]]; then
 		error "vhost name must be provided to vhost_run"
@@ -134,7 +134,7 @@ function vhost_run()
 	fi
 
 	local cmd="$vhost_app -r $vhost_dir/rpc.sock $2"
-
+	echo "CMD: ffj: $2 gsdgs: $cmd"
 	notice "Loging to:   $vhost_log_file"
 	notice "Socket:      $vhost_socket"
 	notice "Command:     $cmd"
@@ -413,12 +413,16 @@ function vm_shutdown()
 
 # Kill given VM
 # param $1 virtual machine number
-#
+# param $2 name of signal send to vm
 function vm_kill()
 {
 	vm_num_is_valid $1 || return 1
 	local vm_dir="$VM_DIR/$1"
 
+	local signal="SIGTERM"
+	if [[ ! -z "$2" ]]; then
+		signal="$2"
+	fi
 	if [[ ! -r $vm_dir/qemu.pid ]]; then
 		return 0
 	fi
@@ -427,7 +431,7 @@ function vm_kill()
 
 	notice "Killing virtual machine $vm_dir (pid=$vm_pid)"
 	# First kill should fail, second one must fail
-	if /bin/kill $vm_pid; then
+	if /bin/kill -s $signal $vm_pid; then
 		notice "process $vm_pid killed"
 		rm $vm_dir/qemu.pid
 		rm -rf $vm_dir
