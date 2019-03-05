@@ -34,6 +34,8 @@ block except for metadata.
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
+It is enabled by default for any device that supports it.
+
 The size of a shared receive queue is defined by transport configuration file parameter
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
