@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32f0ad0c_06bb1347",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 243,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T01:52:06Z",
+      "side": 1,
+      "message": "I think you can move them to the line 227 and writing like the following may be smooth. But current code is OK.\n\n_iov_ctx_init(\u0026ctx, iovec, num_iovs, pdu-\u003ewritev_offset);\n\nhlen \u003d pdu-\u003ehdr.common.hlen;\nplen \u003d hlen;",
+      "range": {
+        "startLine": 242,
+        "startChar": 0,
+        "endLine": 243,
+        "endChar": 58
+      },
+      "revId": "f949cf3a9a6fb0fdd87c91aed9bdd86b72eb9eac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

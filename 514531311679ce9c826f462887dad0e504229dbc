@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "c4763135_4d64b4a7",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T01:52:06Z",
+      "side": 1,
+      "message": "I confirmed this was fixed. Thanks.",
+      "parentUuid": "5136f646_00d08a94",
+      "range": {
+        "startLine": 254,
+        "startChar": 2,
+        "endLine": 254,
+        "endChar": 14
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e64ae70a_4650fc88",
         "filename": "include/spdk_internal/nvme_tcp.h",
         "patchSetId": 2
@@ -131,6 +155,54 @@
       "side": 1,
       "message": "This check is not for what you think. For the padding, we will reuse the hdr.raw, since the padding will be no larger than 128. So if there is data, and padding, we can re-use this buffer. For each nvme pdu, there will be at most 3 vector, 1 for hdr (including padding, digest), 1 or data, and 1 or data digest",
       "parentUuid": "e64ae70a_4650fc88",
+      "range": {
+        "startLine": 257,
+        "startChar": 1,
+        "endLine": 257,
+        "endChar": 6
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "01661b15_f8445bb7",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T01:52:06Z",
+      "side": 1,
+      "message": "if padding is 0, hlen +\u003d padding is NOP. So I think the above code should be OK. But your code is good and OK.",
+      "parentUuid": "e0d85df3_8aada9cc",
+      "range": {
+        "startLine": 257,
+        "startChar": 29,
+        "endLine": 257,
+        "endChar": 53
+      },
+      "revId": "514531311679ce9c826f462887dad0e504229dbc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fbc008aa_e391c45f",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T01:52:06Z",
+      "side": 1,
+      "message": "Thank you. What I wanted to say is that each nvme pdu uses 3 iovecs at the maximum and spdk_nvmf_tcp_qpair_flush_pdus_internal() and nvme_tcp_qpair_process_send_queue() ensures that 3 iovecs are always available.\n\nHence _iov_ctx_set_iov() should return true except for data digest.\n\nBut you may reduce the availability of iovecs from 3 to 1 later. Hence checking the return code of _iov_ctx_set_iov() is OK.",
+      "parentUuid": "dc105f11_d91a85e2",
       "range": {
         "startLine": 257,
         "startChar": 1,
