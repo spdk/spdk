@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1a9b2855_eb8e6236",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1309,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T04:04:01Z",
+      "side": 1,
+      "message": "OK, I shrink.",
+      "parentUuid": "0eafcaba_a42ca921",
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1db0d46a_87db6a0c",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 18
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "a39f7f9b_6d4d739e",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1311,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T04:04:01Z",
+      "side": 1,
+      "message": "This is personal preference but this space improves readability for me.",
+      "parentUuid": "1db0d46a_87db6a0c",
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5003faf7_985479ab",
         "filename": "lib/iscsi/conn.c",
         "patchSetId": 18
@@ -47,6 +83,30 @@
       "writtenOn": "2019-03-05T02:54:03Z",
       "side": 1,
       "message": "rc is only used here, we may remove other, and directly call spdk_iscis_dif_verify here",
+      "range": {
+        "startLine": 1329,
+        "startChar": 6,
+        "endLine": 1329,
+        "endChar": 13
+      },
+      "revId": "f0c6a57ed5b2abbc7a2f1ad22fe751c10da52522",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "92c3a525_472874f0",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1329,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T04:04:01Z",
+      "side": 1,
+      "message": "In SPDK and DPDK we often see this pattern and want to follow if OK.",
+      "parentUuid": "5003faf7_985479ab",
       "range": {
         "startLine": 1329,
         "startChar": 6,
