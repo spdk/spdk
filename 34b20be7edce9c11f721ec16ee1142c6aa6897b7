@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "25f56e2f_e34daee4",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 7
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-05T02:21:57Z",
+      "side": 1,
+      "message": "Thanks.",
+      "parentUuid": "bd11a3c3_aa422ade",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7f8af4fe_1d1168cd",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "2c4cc921_635e5ef0",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 594,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-05T02:21:57Z",
+      "side": 1,
+      "message": "Adding connected_ctrlr here because I didn\u0027t add another context in the API for attach_cb, or I think we\u0027d better to provide a user context in the API.",
+      "parentUuid": "7f8af4fe_1d1168cd",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5c6e1bca_37fb6100",
         "filename": "lib/nvme/nvme.c",
         "patchSetId": 7
@@ -47,6 +83,24 @@
       "writtenOn": "2019-03-04T22:51:22Z",
       "side": 1,
       "message": "this ends up duplicating a lot of code in spdk_nvme_connect()\n\nBen had a good suggestion earlier - put this code just before the spdk_nvme_connect() definition - then change spdk_nvme_connect() to call spdk_nvme_connect_async() and then spdk_nvme_probe_poll_async() until it returns TRUE\n\nthe benefit here is that it immediately moves all existing code to use your new async path implicitly",
+      "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "84e5070c_c5b27c92",
+        "filename": "lib/nvme/nvme.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1120,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-05T02:21:57Z",
+      "side": 1,
+      "message": "sounds good, I didn\u0027t catch that.",
+      "parentUuid": "5c6e1bca_37fb6100",
       "revId": "34b20be7edce9c11f721ec16ee1142c6aa6897b7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
