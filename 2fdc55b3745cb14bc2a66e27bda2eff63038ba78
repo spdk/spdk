@@ -1,0 +1,395 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "092bd986_ac33c5b0",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "NVMe-oF",
+      "range": {
+        "startLine": 1,
+        "startChar": 11,
+        "endLine": 1,
+        "endChar": 17
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01372ca6_2dd1a08c",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Capitalize the P and T at beginning of performance and testcases",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 29
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1fb5673_62d8466d",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Lets change this to \"follow the following instructions\"",
+      "range": {
+        "startLine": 3,
+        "startChar": 162,
+        "endLine": 3,
+        "endChar": 196
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "841ff709_dfa0ea1d",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Lets change this to [SPDK NVMe-oF Performance Test Cases](link to the report)",
+      "range": {
+        "startLine": 3,
+        "startChar": 22,
+        "endLine": 3,
+        "endChar": 78
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59f1c5f1_660882b5",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Does it matter if its an RDMA NIC or TCP NIC?",
+      "range": {
+        "startLine": 5,
+        "startChar": 10,
+        "endLine": 5,
+        "endChar": 15
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ff2ac2e_e423f76a",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "I would suggest changing this to \"Prepare the configuration file\"",
+      "range": {
+        "startLine": 7,
+        "startChar": 2,
+        "endLine": 7,
+        "endChar": 50
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a16b966_22985462",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "How about changing this to \"Configure the target and initiator in the json configuration file\"",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 122
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e90f2691_dca073ed",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "I don\u0027t think we need this sentence",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 71
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c10b38d3_dbe52d77",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "I would suggest changing this to \"such as\"",
+      "range": {
+        "startLine": 12,
+        "startChar": 60,
+        "endLine": 12,
+        "endChar": 66
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "afd0c47b_a7526a75",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Let\u0027s change this to something like \"Configure the target server information\"",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d657c96b_5d51149c",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Does it have to be an RDMA IP address?",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 12
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "62171f03_4977b514",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "Let\u0027s change this to \"The list of IP addresses that will be used in this test\"",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 77
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9c3f0f3f_96b8fb11",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "I think this is confusing. We can simplify it to \"The NVMe namespaces\"",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 31
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "831f397e_9bed79b2",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "NVMe-oF",
+      "range": {
+        "startLine": 29,
+        "startChar": 45,
+        "endLine": 29,
+        "endChar": 51
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06148678_022a1d07",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "The ave, min and max latency might be sufficient for IOPS test but I think on the latency test we are interested in the tail latency so we should at least collect the p99 latency.",
+      "range": {
+        "startLine": 53,
+        "startChar": 56,
+        "endLine": 53,
+        "endChar": 101
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc6a5d0d_3a96ac58",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "This could be in ns or us. Generally we report in us, so we should have the script convert ns to us",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 75
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "842c9a89_ef707209",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011314
+      },
+      "writtenOn": "2019-03-05T22:15:37Z",
+      "side": 1,
+      "message": "This could be in ns or us. Generally we report in us, so we should have the script convert ns to us",
+      "range": {
+        "startLine": 82,
+        "startChar": 11,
+        "endLine": 85,
+        "endChar": 0
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
