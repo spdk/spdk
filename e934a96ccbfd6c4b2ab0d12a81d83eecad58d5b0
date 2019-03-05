@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f0cae792_5d6a208a",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1066,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-05T00:07:00Z",
+      "side": 1,
+      "message": "add assert(current core \u003d\u003d g_init_lcore) just in case\n\nthis may not actually matter - but it at least somewhat enforces the previous behavior (which specified the executing core based on the event\u0027s lcore parameter)",
+      "revId": "e934a96ccbfd6c4b2ab0d12a81d83eecad58d5b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
