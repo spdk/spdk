@@ -70,6 +70,24 @@
       "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4761e2dc_fc505391",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-05T08:47:57Z",
+      "side": 1,
+      "message": "But foreach_session() iteration (for a particular session) and the session\u0027s stop poller run on the same thread. There can\u0027t be a data race between those two. At the time the stop poller runs, the DPDK thread is waiting on a semaphore doing nothing.",
+      "parentUuid": "7de8dd5a_471ec165",
+      "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
