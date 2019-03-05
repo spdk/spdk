@@ -96,6 +96,10 @@ struct spdk_bdev_nvme_construct_opts {
 	struct spdk_nvme_host_id		hostid;
 	/* Host NQN */
 	const char				*hostnqn;
+	/* Parallel unit range (FTL bdev specific) */
+	struct spdk_ftl_punit_range		range;
+	/* UUID if device is restored from SSD (FTL bdev specific) */
+	struct spdk_uuid			*uuid;
 	uint32_t				prchk_flags;
 };
 
@@ -109,6 +113,8 @@ struct rpc_construct_nvme {
 	char *hostnqn;
 	char *hostaddr;
 	char *hostsvcid;
+	char *punits;
+	char *uuid;
 	char *mode;
 	bool prchk_reftag;
 	bool prchk_guard;
