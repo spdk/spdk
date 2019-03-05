@@ -117,6 +117,7 @@ static uint64_t g_nvme_hotplug_poll_period_us = NVME_HOTPLUG_POLL_PERIOD_DEFAULT
 static bool g_nvme_hotplug_enabled = false;
 static struct spdk_thread *g_bdev_nvme_init_thread;
 static struct spdk_poller *g_hotplug_poller;
+static struct spdk_nvme_probe_ctx *g_hotplug_probe_ctx;
 static char *g_nvme_hostnqn = NULL;
 
 static void nvme_ctrlr_create_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr);
@@ -1059,8 +1060,25 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 static int
 bdev_nvme_hotplug(void *arg)
 {
-	if (spdk_nvme_probe(NULL, NULL, hotplug_probe_cb, attach_cb, remove_cb) != 0) {
-		SPDK_ERRLOG("spdk_nvme_probe() failed\n");
+	struct spdk_nvme_transport_id trid_pcie;
+	int done;
+
+	if (!g_hotplug_probe_ctx) {
+		memset(&trid_pcie, 0, sizeof(trid_pcie));
+		trid_pcie.trtype = SPDK_NVME_TRANSPORT_PCIE;
+
+		g_hotplug_probe_ctx = spdk_nvme_probe_async(&trid_pcie, NULL,
+				      hotplug_probe_cb,
+				      attach_cb, remove_cb);
+		if (!g_hotplug_probe_ctx) {
+			return -1;
+		}
+	}
+
+	done = spdk_nvme_probe_poll_async(g_hotplug_probe_ctx);
+	if (done != -EAGAIN) {
+		g_hotplug_probe_ctx = NULL;
+		return 1;
 	}
 
 	return -1;
@@ -1556,6 +1574,7 @@ bdev_nvme_library_fini(void)
 	struct nvme_probe_skip_entry *entry, *entry_tmp;
 
 	spdk_poller_unregister(&g_hotplug_poller);
+	free(g_hotplug_probe_ctx);
 
 	TAILQ_FOREACH_SAFE(entry, &g_skipped_nvme_ctrlrs, tailq, entry_tmp) {
 		TAILQ_REMOVE(&g_skipped_nvme_ctrlrs, entry, tailq);
