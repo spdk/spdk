@@ -37,8 +37,6 @@
 # ENV_LIBS
 # ENV_LINKER_ARGS
 
-include $(SPDK_ROOT_DIR)/mk/config.mk
-
 DPDK_DIR = $(CONFIG_DPDK_DIR)
 
 export DPDK_ABS_DIR = $(abspath $(DPDK_DIR))

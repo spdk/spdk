@@ -93,7 +93,7 @@ else
 DPDK_CONFIG := $(DPDK_CONFIG)-gcc
 endif
 
-DPDK_CFLAGS += -fPIC
+DPDK_CFLAGS += -fPIC -Wno-implicit-fallthrough
 
 ifeq ($(CONFIG_DEBUG),y)
 DPDK_CFLAGS += -O0 -g
