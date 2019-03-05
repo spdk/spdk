@@ -199,12 +199,6 @@ for i in "$@"; do
 		--without-rdma)
 			CONFIG[RDMA]=n
 			;;
-		--with-rdma-srq)
-			CONFIG[RDMA_SRQ]=y
-			;;
-		--without-rdma-srq)
-			CONFIG[RDMA_SRQ]=n
-			;;
 		--with-shared)
 			CONFIG[SHARED]=y
 			;;
