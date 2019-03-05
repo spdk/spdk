@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "b14072d7_e74721a9",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T10:28:09Z",
+      "side": 1,
+      "message": "With \"-p\", app can\u0027t exit normally.",
+      "range": {
+        "startLine": 452,
+        "startChar": 2,
+        "endLine": 452,
+        "endChar": 11
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e7e578d1_ad74a28b",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-05T10:28:09Z",
+      "side": 1,
+      "message": "For incorrect parameter, I recommend return -1;",
+      "range": {
+        "startLine": 467,
+        "startChar": 3,
+        "endLine": 467,
+        "endChar": 9
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f41b0e34_37dfa7e5",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 16
