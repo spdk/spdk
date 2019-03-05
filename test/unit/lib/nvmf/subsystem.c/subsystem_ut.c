@@ -53,6 +53,11 @@ DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
+DEFINE_STUB(spdk_nvmf_transport_stop_listen,
+	    int,
+	    (struct spdk_nvmf_transport *transport,
+	     const struct spdk_nvme_transport_id *trid), 0);
+
 static void
 subsystem_ns_remove_cb(struct spdk_nvmf_subsystem *subsystem, void *cb_arg, int status)
 {
