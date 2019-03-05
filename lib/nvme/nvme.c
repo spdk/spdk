@@ -1092,28 +1092,33 @@ spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
 	return probe_ctx;
 }
 
-bool
+int
 spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx)
 {
+	int rc = 0;
 	struct spdk_nvme_ctrlr *ctrlr, *ctrlr_tmp;
 
 	if (!spdk_process_is_primary() && probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
 		free(probe_ctx);
-		return true;
+		return 0;
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &probe_ctx->init_ctrlrs, tailq, ctrlr_tmp) {
-		nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
+		rc = nvme_ctrlr_poll_internal(ctrlr, probe_ctx);
+		if (rc != 0) {
+			break;
+		}
 	}
 
-	if (TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
+	if (rc != 0 || TAILQ_EMPTY(&probe_ctx->init_ctrlrs)) {
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 		g_spdk_nvme_driver->initialized = true;
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
 		free(probe_ctx);
-		return true;
+		return rc;
 	}
-	return false;
+
+	return -EAGAIN;
 }
 
 SPDK_LOG_REGISTER_COMPONENT("nvme", SPDK_LOG_NVME)
