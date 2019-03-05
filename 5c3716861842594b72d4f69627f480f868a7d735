@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "8ec960d6_b446e167",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T15:55:14Z",
+      "side": 1,
+      "message": "Sorry, I don\u0027t see it used in attach_base. Its in some other patch  ?",
+      "parentUuid": "c58f24e4_e18e165d",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f174c1d1_8a162f01",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -143,6 +167,24 @@
       "side": 1,
       "message": "I will do it in separate patch as it is not related to multicore. Ok?",
       "parentUuid": "d7bd4e54_31a25f07",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95d0bfa7_318013d6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T15:55:14Z",
+      "side": 1,
+      "message": "Sure, another patch is fine.",
+      "parentUuid": "6b140a63_97f8fc9c",
       "revId": "5c3716861842594b72d4f69627f480f868a7d735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -266,6 +308,30 @@
       "side": 1,
       "message": "This cannot be an assert beacase case when check fails is normal. \nI agree that this part is the most hard to understand, I will change it in following patchset.",
       "parentUuid": "db56cc6e_0d087644",
+      "range": {
+        "startLine": 926,
+        "startChar": 3,
+        "endLine": 926,
+        "endChar": 37
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a8c85e92_8adf06a0",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T15:55:14Z",
+      "side": 1,
+      "message": "1) On line 916 we know \u0027base\u0027 is a cache\n2) On line 917 we get \u0027existing\u0027, which is vbdev_ocf_base with same name as \u0027base\u0027\n3) on line 925 we establish that \u0027existing\u0027 and \u0027base\u0027 is not the same vbdev_ocf_base\n4) when will line 926 fail - meaning when is it a case that cache was not started ? If line 926 fails, when do we copy bdev descriptors again to amend that ?",
+      "parentUuid": "2b1579d4_c1f1e2e7",
       "range": {
         "startLine": 926,
         "startChar": 3,
@@ -407,6 +473,30 @@
       "side": 1,
       "message": "In current implementation of attach_base, 1028-1037 are required and break is correct here.\nI will try to simplify this as I will change attach_base.",
       "parentUuid": "df5b15bf_0b859592",
+      "range": {
+        "startLine": 1041,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 9
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c04657b9_2a671886",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T15:55:14Z",
+      "side": 1,
+      "message": "\u003e In current implementation of attach_base, 1028-1037 are required\n \u003e and break is correct here.\n \u003e I will try to simplify this as I will change attach_base.\n\nSince I\u0027ve tried to go in depth on the review, I would appreciate a response other than \u0027required and correct\u0027. If I missed something please let me know.\n\nAnyway awaiting the next patch set with reworked attach_base.",
+      "parentUuid": "eb52a9fd_bf03cb01",
       "range": {
         "startLine": 1041,
         "startChar": 0,
