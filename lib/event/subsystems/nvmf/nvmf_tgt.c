@@ -85,12 +85,11 @@ static struct spdk_poller *g_acceptor_poller = NULL;
 static void nvmf_tgt_advance_state(void);
 
 static void
-_spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
+_spdk_nvmf_shutdown_cb(void *arg1)
 {
 	/* Still in initialization state, defer shutdown operation */
 	if (g_tgt_state < NVMF_TGT_RUNNING) {
-		spdk_event_call(spdk_event_allocate(spdk_env_get_current_core(),
-						    _spdk_nvmf_shutdown_cb, NULL, NULL));
+		spdk_thread_send_msg(spdk_get_thread(), _spdk_nvmf_shutdown_cb, NULL);
 		return;
 	} else if (g_tgt_state > NVMF_TGT_RUNNING) {
 		/* Already in Shutdown status, ignore the signal */
@@ -104,7 +103,7 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 static void
 spdk_nvmf_subsystem_fini(void)
 {
-	_spdk_nvmf_shutdown_cb(NULL, NULL);
+	_spdk_nvmf_shutdown_cb(NULL);
 }
 
 static void
