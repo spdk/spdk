@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eb950765_dd9272a6",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T03:49:37Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "eac11903_3993379e",
+      "range": {
+        "startLine": 493,
+        "startChar": 6,
+        "endLine": 493,
+        "endChar": 50
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "670196ca_9d988f5a",
         "filename": "lib/iscsi/iscsi.c",
         "patchSetId": 30
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-05T02:45:30Z",
       "side": 1,
       "message": "I think that could be combine the three functions: spdk_iscsi_conn_read_data, spdk_iscsi_connv_readv_data\n  spdk_dif_set_md_interleave_iovs into one calling point in the pdu handling function, will it be clear here in this function invoking point.",
+      "range": {
+        "startLine": 494,
+        "startChar": 7,
+        "endLine": 494,
+        "endChar": 33
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "12cb4490_801b48ea",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T03:49:37Z",
+      "side": 1,
+      "message": "OK, I factored out three into a function spdk_iscsi_read_data_segment.",
+      "parentUuid": "670196ca_9d988f5a",
       "range": {
         "startLine": 494,
         "startChar": 7,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d40e3b98_cf5d5969",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T03:49:37Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "63474a54_be917d2e",
+      "range": {
+        "startLine": 632,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 18
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91a2e961_c4c0d8af",
         "filename": "lib/iscsi/iscsi.h",
         "patchSetId": 30
@@ -82,6 +154,30 @@
       "writtenOn": "2019-03-05T02:38:55Z",
       "side": 1,
       "message": "Can we put bool variable together? For example, move line 172 to line 177, thus the two bool variables will be together for alignment and saves the size of the struct",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 16
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81d420b6_572cd211",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T03:49:37Z",
+      "side": 1,
+      "message": "I tried but size was same. But bool is int and puting dif_strip next to data_buf_len may be better, and I\u0027ll do it. Thank you.",
+      "parentUuid": "91a2e961_c4c0d8af",
       "range": {
         "startLine": 178,
         "startChar": 0,
