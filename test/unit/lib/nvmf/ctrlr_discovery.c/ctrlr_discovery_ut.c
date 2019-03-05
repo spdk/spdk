@@ -48,6 +48,11 @@ DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
+DEFINE_STUB(spdk_nvmf_transport_stop_listen,
+	    int,
+	    (struct spdk_nvmf_transport *transport,
+	     const struct spdk_nvme_transport_id *trid), 0);
+
 uint32_t
 spdk_env_get_current_core(void)
 {
