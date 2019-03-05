@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e2283d1_70705018",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-05T02:41:50Z",
+      "side": 1,
+      "message": "Maybe \"Ready to wait for PDU\" ?",
+      "range": {
+        "startLine": 111,
+        "startChar": 4,
+        "endLine": 111,
+        "endChar": 18
+      },
+      "revId": "f6dba59234e9aaf773577e8b80994023f46e1917",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
