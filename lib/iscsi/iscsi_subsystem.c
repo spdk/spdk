@@ -142,12 +142,18 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
 
+/* Increase the size of  data out buffers to store metadata. Increase is
+ * the amount necessary to store metadata. 16 byte metadata per 512 byte
+ * data block is the current maximum ratio of metadata per data block.
+ */
+#define MAX_DATA_OUT_BUFFER_SIZE	((SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 512) * (512 + 16))
+
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
 	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH +
+	int dout_mobj_size = MAX_DATA_OUT_BUFFER_SIZE +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */

@@ -89,6 +89,14 @@
 #define MAX_DATA_OUT_PER_CONNECTION 16
 
 /*
+ * Increase the size of data out buffers to store metadata. Increase is
+ * the amount necessary to store metadata. 16 byte metadata per 512 byte
+ * data block is the current maximum ratio of metadata per data block.
+ */
+#define MAX_DATA_OUT_BUFFER_SIZE	\
+		((SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 512) * (512 + 16))
+
+/*
  * Defines maximum number of data in buffers each connection can have in
  *  use at any given time. So this limit does not affect I/O smaller than
  *  SPDK_BDEV_SMALL_BUF_MAX_SIZE.
@@ -441,7 +449,7 @@ void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
 
 static inline int
-spdk_get_immediate_data_buffer_size(void)
+spdk_get_max_immediate_data_size(void)
 {
 	/*
 	 * Specify enough extra space in addition to FirstBurstLength to
@@ -457,4 +465,14 @@ spdk_get_immediate_data_buffer_size(void)
 	       52;		   /* extended CDB AHS (for a 64-byte CDB) */
 }
 
+/* Increase the size of immediate data buffers to store metadata.
+ * Increase is the amount necessary to store metadata. 16 byte metadata
+ * per 512 byte data block is the current maximum ratio of metadata per
+ * data block.
+ */
+static inline int
+spdk_get_immediate_data_buffer_size(void)
+{
+	return (spdk_get_max_immediate_data_size() / 512) * (512 + 16);
+}
 #endif /* SPDK_ISCSI_H */
