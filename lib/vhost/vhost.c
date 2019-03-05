@@ -1492,7 +1492,7 @@ spdk_vhost_fini(spdk_vhost_fini_cb fini_cb)
 }
 
 void
-spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+spdk_vhost_config_json(struct spdk_json_write_ctx *w)
 {
 	struct spdk_vhost_dev *vdev;
 	uint32_t delay_base_us;
@@ -1523,7 +1523,6 @@ spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev
 	spdk_vhost_unlock();
 
 	spdk_json_write_array_end(w);
-	spdk_event_call(done_ev);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("vhost", SPDK_LOG_VHOST)
