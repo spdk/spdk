@@ -945,6 +945,15 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
+	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
+	if (rc != 0) {
+		SPDK_ERRLOG("Couldn't allocate io channnel for SCSI target %u in device %s\n",
+			    scsi_tgt_num, vdev->name);
+
+		/* Keep old SCSI target status. */
+		return 0;
+	}
+
 	/* copy device */
 	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 	session_sdev->dev = vhost_sdev->dev;
@@ -952,26 +961,6 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	 * We should receive remove separate request in this case.
 	 */
 	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
-
-	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
-	if (rc != 0) {
-		SPDK_ERRLOG("Couldn't allocate io channnel for SCSI target %u in device %s\n",
-			    scsi_tgt_num, vdev->name);
-
-		/* unset the SCSI target so that all I/O to it will be rejected */
-		session_sdev->dev = NULL;
-		/* unset the removed flag so that we won't reply with SCSI hotremove
-		 * sense codes - the device hasn't ever been added.
-		 */
-		session_sdev->status = VHOST_SCSI_DEV_EMPTY;
-
-		/* Return with no error. We'll continue allocating io_channels for
-		 * other sessions on this device in hopes they succeed. The sessions
-		 * that failed to allocate io_channels simply won't be able to
-		 * detect the SCSI target, nor do any I/O to it.
-		 */
-		return 0;
-	}
 
 	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
