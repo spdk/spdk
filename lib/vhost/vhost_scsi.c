@@ -930,46 +930,35 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	struct spdk_scsi_dev_session_state *session_sdev;
 	int rc;
 
-	if (vsession == NULL) {
+	if (vsession == NULL || vsession->lcore == -1) {
 		/* Nothing more to do */
 		return 0;
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	vhost_sdev = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
-	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 
-	/* copy only device pointer */
-	session_sdev->dev = vhost_sdev->dev;
-	/* Don't copy status as target might get removed just after adding it.
-	 * We should receive remove separate request in this case.
-	 */
-	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
-
-	if (vsession->lcore == -1) {
-		/* All done. */
-		return 0;
-	}
-
-	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
+	rc = spdk_scsi_dev_allocate_io_channels(vhost_sdev->dev);
 	if (rc != 0) {
 		SPDK_ERRLOG("Couldn't allocate io channnel for SCSI target %u in device %s\n",
 			    scsi_tgt_num, vdev->name);
 
-		/* unset the SCSI target so that all I/O to it will be rejected */
-		session_sdev->dev = NULL;
-		/* Set status to EMPTY so that we won't reply with SCSI hotremove
-		 * sense codes - the device hasn't ever been added.
-		 */
-		session_sdev->status = VHOST_SCSI_DEV_EMPTY;
-
-		/* Return with no error. We'll continue allocating io_channels for
+		/* Return with no error but keep old device status so proper SCSI sense code
+		 * will be returned. We'll continue allocatingio_channels for
 		 * other sessions on this device in hopes they succeed. The sessions
 		 * that failed to allocate io_channels simply won't be able to
 		 * detect the SCSI target, nor do any I/O to it.
 		 */
 		return 0;
 	}
+
+	/* copy only device pointer */
+	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
+	session_sdev->dev = vhost_sdev->dev;
+	/* Don't copy status as target might get removed just after adding it.
+	 * We should receive separate remove request in this case.
+	 */
+	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
 
 	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
