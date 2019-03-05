@@ -1297,12 +1297,40 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 	return 1;
 }
 
+static int
+spdk_iscsi_dif_verify(struct spdk_iscsi_pdu *pdu, struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iov;
+	struct spdk_dif_error err_blk = {};
+	uint32_t num_blocks;
+	int rc;
+
+	iov.iov_base = pdu->data;
+	iov.iov_len = pdu->data_buf_len;
+	num_blocks = pdu->data_buf_len / dif_ctx->block_size;
+
+	rc = spdk_dif_verify(&iov, 1, num_blocks, dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
+	int rc;
 
 	if (!spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+		rc = spdk_iscsi_dif_verify(pdu, &pdu->dif_ctx);
+		if (rc != 0) {
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+			conn->state = ISCSI_CONN_STATE_EXITING;
+			return;
+		}
 		pdu->dif_strip = true;
 	}
 
