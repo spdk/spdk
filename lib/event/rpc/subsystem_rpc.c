@@ -86,22 +86,12 @@ static const struct spdk_json_object_decoder rpc_get_subsystem_config[] = {
 };
 
 static void
-rpc_get_subsystem_config_done(void *arg1, void *arg2)
-{
-	struct spdk_jsonrpc_request *request = arg1;
-	struct spdk_json_write_ctx *w = arg2;
-
-	spdk_jsonrpc_end_result(request, w);
-}
-
-static void
 spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
 	struct rpc_get_subsystem_config req = {};
 	struct spdk_json_write_ctx *w;
 	struct spdk_subsystem *subsystem;
-	struct spdk_event *ev;
 
 	if (spdk_json_decode_object(params, rpc_get_subsystem_config,
 				    SPDK_COUNTOF(rpc_get_subsystem_config), &req)) {
@@ -121,8 +111,8 @@ spdk_rpc_get_subsystem_config(struct spdk_jsonrpc_request *request,
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w) {
-		ev = spdk_event_allocate(spdk_env_get_current_core(), rpc_get_subsystem_config_done, request, w);
-		spdk_subsystem_config_json(w, subsystem, ev);
+		spdk_subsystem_config_json(w, subsystem);
+		spdk_jsonrpc_end_result(request, w);
 	}
 }
 
