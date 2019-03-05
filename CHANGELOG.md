@@ -8,8 +8,12 @@ spdk_app_start() now only accepts a single context argument.
 
 ### nvme
 
-Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
-spdk_nvme_probe_poll_async() were added to enable this feature.
+Added asynchronous probe support.  New APIs spdk_nvme_probe_async(),
+spdk_nvme_connect_async() and spdk_nvme_probe_poll_async() were added to
+enable this feature, spdk_nvme_probe_async() and spdk_nvme_connect_async()
+return a context associated with the specified controllers.  Users then call
+spdk_nvme_probe_poll_async() until it returns 0, indicating that the operation
+is completed with success.
 
 New API spdk_nvme_ctrlr_get_flags() was added.
 
