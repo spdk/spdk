@@ -81,6 +81,7 @@ enum spdk_scsi_dev_vhost_status {
 	VHOST_SCSI_DEV_REMOVED,
 };
 
+/** Context for a SCSI target in a vhost device */
 struct spdk_scsi_dev_vhost_state {
 	struct spdk_scsi_dev *dev;
 	enum spdk_scsi_dev_vhost_status status;
@@ -96,12 +97,18 @@ struct spdk_vhost_scsi_dev {
 	int32_t lcore;
 } __rte_cache_aligned;
 
+/** Context for a SCSI target in a vhost session */
+struct spdk_scsi_dev_session_state {
+	struct spdk_scsi_dev *dev;
+	enum spdk_scsi_dev_vhost_status status;
+};
+
 struct spdk_vhost_scsi_session {
 	struct spdk_vhost_session vsession;
 
 	struct spdk_vhost_scsi_dev *svdev;
 	/** Local copy of the device state */
-	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
+	struct spdk_scsi_dev_session_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 	struct spdk_poller *stop_poller;
@@ -199,7 +206,7 @@ spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_vhost_state *state;
+	struct spdk_scsi_dev_session_state *state;
 
 	if (vsession == NULL) {
 		/* all sessions have already detached the device */
@@ -228,7 +235,7 @@ static void
 process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 {
 	struct spdk_scsi_dev *dev;
-	struct spdk_scsi_dev_vhost_state *state;
+	struct spdk_scsi_dev_session_state *state;
 	int i;
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; ++i) {
@@ -379,7 +386,7 @@ static int
 spdk_vhost_scsi_task_init_target(struct spdk_vhost_scsi_task *task, const __u8 *lun)
 {
 	struct spdk_vhost_scsi_session *svsession = task->svsession;
-	struct spdk_scsi_dev_vhost_state *state;
+	struct spdk_scsi_dev_session_state *state;
 	uint16_t lun_id = (((uint16_t)lun[2] << 8) | lun[3]) & 0x3FFF;
 
 	SPDK_LOGDUMP(SPDK_LOG_VHOST_SCSI_QUEUE, "LUN", lun, 8);
@@ -921,6 +928,8 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
+	struct spdk_scsi_dev_vhost_state *vhost_sdev;
+	struct spdk_scsi_dev_session_state *session_sdev;
 	int rc;
 
 	if (vsession == NULL) {
@@ -929,8 +938,11 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	/* copy the entire device state */
-	svsession->scsi_dev_state[scsi_tgt_num] = svsession->svdev->scsi_dev_state[scsi_tgt_num];
+	vhost_sdev = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
+	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
+
+	session_sdev->dev = vhost_sdev->dev;
+	session_sdev->status = vhost_sdev->status;
 
 	if (vsession->lcore == -1) {
 		/* All done. */
@@ -943,11 +955,11 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 			    scsi_tgt_num, vdev->name);
 
 		/* unset the SCSI target so that all I/O to it will be rejected */
-		svsession->scsi_dev_state[scsi_tgt_num].dev = NULL;
+		session_sdev->dev = NULL;
 		/* Set status to EMPTY so that we won't reply with SCSI hotremove
 		 * sense codes - the device hasn't ever been added.
 		 */
-		svsession->scsi_dev_state[scsi_tgt_num].status = VHOST_SCSI_DEV_EMPTY;
+		session_sdev->status = VHOST_SCSI_DEV_EMPTY;
 
 		/* Return with no error. We'll continue allocating io_channels for
 		 * other sessions on this device in hopes they succeed. The sessions
@@ -1048,7 +1060,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 {
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
-	struct spdk_scsi_dev_vhost_state *state;
+	struct spdk_scsi_dev_session_state *state;
 	int rc = 0;
 
 	if (vsession == NULL) {
@@ -1291,7 +1303,8 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		if (state->dev == NULL) {
 			continue;
 		}
-		svsession->scsi_dev_state[i] = *state;
+		svsession->scsi_dev_state[i].dev = state->dev;
+		svsession->scsi_dev_state[i].status = state->status;
 		rc = spdk_scsi_dev_allocate_io_channels(state->dev);
 		if (rc != 0) {
 			SPDK_ERRLOG("%s: failed to alloc io_channel for SCSI target %"PRIu32"\n", vdev->name, i);
@@ -1356,7 +1369,7 @@ destroy_session_poller_cb(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
 	struct spdk_vhost_session *vsession = &svsession->vsession;
-	struct spdk_scsi_dev_vhost_state *state;
+	struct spdk_scsi_dev_session_state *state;
 	uint32_t i;
 
 	if (vsession->task_cnt > 0) {
