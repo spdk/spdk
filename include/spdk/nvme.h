@@ -602,12 +602,13 @@ struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transpo
  *
  * \param probe_ctx Context used to track probe actions.
  *
- * \return true if all probe operations are complete; the probe_ctx
+ * \return 0 if all probe operations are complete; the probe_ctx
  * is also freed and no longer valid.
- * \return false if there are still pending probe operations; user must call
- *               spdk_nvme_probe_poll_async again to continue progress.
+ * \return -EAGAIN if there are still pending probe operations; user must call
+ * spdk_nvme_probe_poll_async again to continue progress.
+ * \return value other than 0 and -EAGAIN probe error with one controller.
  */
-bool spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
+int spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
 
 /**
  * Detach specified device returned by spdk_nvme_probe()'s attach_cb from the
