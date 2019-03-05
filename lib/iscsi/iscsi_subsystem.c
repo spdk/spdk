@@ -138,16 +138,16 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 }
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
-#define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
+#define PDU_POOL_SIZE(iscsi)		(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
 
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
+	int imm_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size()) +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH +
+	int dout_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
