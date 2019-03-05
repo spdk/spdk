@@ -1124,6 +1124,56 @@ spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, voi
 	return 0;
 }
 
+static int
+bdev_nvme_create_and_get_bdev_names(struct spdk_nvme_ctrlr *ctrlr,
+				    const char *base_name,
+				    const char **names, size_t *count,
+				    const struct spdk_nvme_transport_id *trid,
+				    uint32_t prchk_flags)
+{
+	struct nvme_bdev_ctrlr	*nvme_bdev_ctrlr;
+	struct nvme_bdev	*nvme_bdev;
+	uint32_t		i, nsid;
+	size_t			j;
+
+	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags)) {
+		SPDK_ERRLOG("Failed to create new device\n");
+		return -1;
+	}
+
+	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
+	if (!nvme_bdev_ctrlr) {
+		SPDK_ERRLOG("Failed to find new NVMe controller\n");
+		return -1;
+	}
+
+	/*
+	 * Report the new bdevs that were created in this call.
+	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
+	 */
+	j = 0;
+	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
+		nsid = i + 1;
+		nvme_bdev = &nvme_bdev_ctrlr->bdevs[nsid - 1];
+		if (!nvme_bdev->active) {
+			continue;
+		}
+		assert(nvme_bdev->id == nsid);
+		if (j < *count) {
+			names[j] = nvme_bdev->disk.name;
+			j++;
+		} else {
+			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
+				    *count);
+			return -1;
+		}
+	}
+
+	*count = j;
+
+	return 0;
+}
+
 int
 spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		      struct spdk_nvme_host_id *hostid,
@@ -1134,10 +1184,6 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 {
 	struct spdk_nvme_ctrlr_opts	opts;
 	struct spdk_nvme_ctrlr		*ctrlr;
-	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
-	struct nvme_bdev		*nvme_bdev;
-	uint32_t			i, nsid;
-	size_t				j;
 	struct nvme_probe_skip_entry	*entry, *tmp;
 
 	if (nvme_bdev_ctrlr_get(trid) != NULL) {
@@ -1180,42 +1226,8 @@ spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 		return -1;
 	}
 
-	if (create_ctrlr(ctrlr, base_name, trid, prchk_flags)) {
-		SPDK_ERRLOG("Failed to create new device\n");
-		return -1;
-	}
-
-	nvme_bdev_ctrlr = nvme_bdev_ctrlr_get(trid);
-	if (!nvme_bdev_ctrlr) {
-		SPDK_ERRLOG("Failed to find new NVMe controller\n");
-		return -1;
-	}
-
-	/*
-	 * Report the new bdevs that were created in this call.
-	 * There can be more than one bdev per NVMe controller since one bdev is created per namespace.
-	 */
-	j = 0;
-	for (i = 0; i < nvme_bdev_ctrlr->num_ns; i++) {
-		nsid = i + 1;
-		nvme_bdev = &nvme_bdev_ctrlr->bdevs[nsid - 1];
-		if (!nvme_bdev->active) {
-			continue;
-		}
-		assert(nvme_bdev->id == nsid);
-		if (j < *count) {
-			names[j] = nvme_bdev->disk.name;
-			j++;
-		} else {
-			SPDK_ERRLOG("Maximum number of namespaces supported per NVMe controller is %zu. Unable to return all names of created bdevs\n",
-				    *count);
-			return -1;
-		}
-	}
-
-	*count = j;
-
-	return 0;
+	return bdev_nvme_create_and_get_bdev_names(ctrlr, base_name, names,
+			count, trid, prchk_flags);
 }
 
 int
