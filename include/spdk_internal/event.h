@@ -100,10 +100,8 @@ void spdk_subsystem_config(FILE *fp);
  *
  * \param w JSON write context
  * \param subsystem the subsystem to query
- * \param done_ev event to be called when writing is done
  */
-void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
-				struct spdk_event *done_ev);
+void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);
