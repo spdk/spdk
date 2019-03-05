@@ -52,6 +52,24 @@
       "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7de8dd5a_471ec165",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-05T07:18:00Z",
+      "side": 1,
+      "message": "When you send events to session using foreach_session() it might be \"perfectly usable\" but when you wake up in this add/remove target event handler the session might be already dead because stop handler just got executed. In JSON RPC reactor thread you don\u0027t know  if session isn\u0027t stopping from DPDK thread, aren\u0027t you?\n\nThis why you need to mark it as stopping before releasing mutex in spdk_vhost_session_send_event().",
+      "parentUuid": "55d5457f_ad1720a1",
+      "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
