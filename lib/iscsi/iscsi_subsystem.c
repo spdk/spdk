@@ -145,9 +145,9 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
+	int imm_mobj_size = (spdk_get_max_immediate_data_size() / 512) * (512 + 16) +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH +
+	int dout_mobj_size = (SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH / 512) * (512 + 16) +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
