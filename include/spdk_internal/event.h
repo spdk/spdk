@@ -64,9 +64,8 @@ struct spdk_subsystem {
 	 * Write JSON configuration handler.
 	 *
 	 * \param w JSON write context
-	 * \param done_ev Done event to be called when writing is done.
 	 */
-	void (*write_config_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+	void (*write_config_json)(struct spdk_json_write_ctx *w);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 

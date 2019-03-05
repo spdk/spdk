@@ -62,11 +62,9 @@ spdk_iscsi_subsystem_fini(void)
 }
 
 static void
-spdk_iscsi_subsystem_config_json(struct spdk_json_write_ctx *w,
-				 struct spdk_event *done_ev)
+spdk_iscsi_subsystem_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_iscsi_config_json(w);
-	spdk_event_call(done_ev);
 }
 
 static struct spdk_subsystem g_spdk_subsystem_iscsi = {
