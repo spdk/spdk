@@ -213,7 +213,7 @@ struct rpc_create_nvme_bdev_ctx {
 };
 
 static void
-spdk_rpc_construct_nvme_bdev_done(void *cb_ctx)
+spdk_rpc_construct_nvme_bdev_done(void *cb_ctx, int rc)
 {
 	struct rpc_create_nvme_bdev_ctx *ctx = cb_ctx;
 	struct spdk_jsonrpc_request *request = ctx->request;
@@ -225,7 +225,7 @@ spdk_rpc_construct_nvme_bdev_done(void *cb_ctx)
 		goto exit;
 	}
 
-	if (ctx->count == 0) {
+	if (rc < 0) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS, "Invalid parameters");
 		goto exit;
 	}
