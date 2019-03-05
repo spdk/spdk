@@ -267,6 +267,8 @@ free_rpc_construct_nvme(struct rpc_construct_nvme *req)
 	free(req->hostaddr);
 	free(req->hostsvcid);
 	free(req->mode);
+	free(req->uuid);
+	free(req->mode);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_nvme_mode_decoder[] = {
@@ -288,6 +290,15 @@ static const struct spdk_json_object_decoder rpc_construct_basic_nvme_decoders[]
 	{"prchk_reftag", offsetof(struct rpc_construct_nvme, prchk_reftag), spdk_json_decode_bool, true},
 	{"prchk_guard", offsetof(struct rpc_construct_nvme, prchk_guard), spdk_json_decode_bool, true},
 	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string, true}
+};
+
+static const struct spdk_json_object_decoder rpc_construct_ftl_nvme_decoders[] = {
+	{"name", offsetof(struct rpc_construct_nvme, name), spdk_json_decode_string},
+	{"trtype", offsetof(struct rpc_construct_nvme, trtype), spdk_json_decode_string},
+	{"traddr", offsetof(struct rpc_construct_nvme, traddr), spdk_json_decode_string},
+	{"punits", offsetof(struct rpc_construct_nvme, punits), spdk_json_decode_string},
+	{"uuid", offsetof(struct rpc_construct_nvme, uuid), spdk_json_decode_string, true},
+	{"mode", offsetof(struct rpc_construct_nvme, mode), spdk_json_decode_string}
 };
 
 static void
@@ -339,6 +350,13 @@ spdk_rpc_construct_nvme_bdev(struct spdk_jsonrpc_request *request,
 	if (mode_req.mode == NULL || !strcasecmp(mode_req.mode, "generic")) {
 		if (spdk_json_decode_object(params, rpc_construct_basic_nvme_decoders,
 					    SPDK_COUNTOF(rpc_construct_basic_nvme_decoders),
+					    &req)) {
+			SPDK_ERRLOG("spdk_json_decode_object failed\n");
+			goto invalid;
+		}
+	} else if (!strcasecmp(mode_req.mode, "ftl")) {
+		if (spdk_json_decode_object(params, rpc_construct_ftl_nvme_decoders,
+					    SPDK_COUNTOF(rpc_construct_ftl_nvme_decoders),
 					    &req)) {
 			SPDK_ERRLOG("spdk_json_decode_object failed\n");
 			goto invalid;
