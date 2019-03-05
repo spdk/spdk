@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "48295f08_ce3196a8",
+        "filename": "test/ocf/integrity/mallocs.conf",
+        "patchSetId": 10
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T05:02:08Z",
+      "side": 1,
+      "message": "Oh gosh, GerritHub diff doesn\u0027t look right here.",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 34
+      },
+      "revId": "d5dcda7d19d17de38362f2c42906cd90ec1a23ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
