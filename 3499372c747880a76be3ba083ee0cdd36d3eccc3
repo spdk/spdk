@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "468b4c70_8eefbc97",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "Can you give more detail here?",
+      "parentUuid": "b14072d7_e74721a9",
+      "range": {
+        "startLine": 452,
+        "startChar": 2,
+        "endLine": 452,
+        "endChar": 11
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7e578d1_ad74a28b",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 16
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-05T10:28:09Z",
       "side": 1,
       "message": "For incorrect parameter, I recommend return -1;",
+      "range": {
+        "startLine": 467,
+        "startChar": 3,
+        "endLine": 467,
+        "endChar": 9
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b9c7dc89_09c35fd5",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 467,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e7e578d1_ad74a28b",
       "range": {
         "startLine": 467,
         "startChar": 3,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "c0d14490_2aaa8ad1",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 490,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f41b0e34_37dfa7e5",
+      "range": {
+        "startLine": 490,
+        "startChar": 2,
+        "endLine": 490,
+        "endChar": 14
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b81180e9_a73c5516",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 16
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "d7c97c9a_b6ba4cc1",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "The application did not run on nvmf_autotest because it is a VM and doesn\u0027t have an iommu. However if you look at nvmf_phy_autotest, the test did run there. I don\u0027t think there\u0027s a need to disable this check since we are getting coverage on the physical machine.\nThanks for pointing out that the app didn\u0027t run on the VM though. That means that this check is working.",
+      "parentUuid": "b81180e9_a73c5516",
+      "range": {
+        "startLine": 501,
+        "startChar": 1,
+        "endLine": 501,
+        "endChar": 30
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b2be80de_490964b9",
         "filename": "test/nvmf/fuzz/fuzz.sh",
         "patchSetId": 16
@@ -105,6 +201,30 @@
       "writtenOn": "2019-03-05T09:31:13Z",
       "side": 1,
       "message": "If test -t 15 (\u003e10 or without -t), app will reports error and can\u0027t exit normally:\nnvme_rdma.c:1685:nvme_rdma_qpair_process_completions: *ERROR*: CQ error on Queue Pair 0xb6c5e0, Response Index 13238504 (12): transport retry counter exceeded\nnvme_rdma.c:1685:nvme_rdma_qpair_process_completions: *ERROR*: CQ error on Queue Pair 0xb6c5e0, Response Index 18 (5): Work Request Flushed Error",
+      "range": {
+        "startLine": 38,
+        "startChar": 32,
+        "endLine": 38,
+        "endChar": 38
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2465d3ef_42a5a67f",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "Thanks, I\u0027ll look into this.",
+      "parentUuid": "b2be80de_490964b9",
       "range": {
         "startLine": 38,
         "startChar": 32,

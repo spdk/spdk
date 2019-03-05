@@ -109,6 +109,30 @@
       "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3a5ce39_cc8d4090",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 15
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-05T20:10:20Z",
+      "side": 1,
+      "message": "That is to be expected. OPC 0 is a flush, and OPC 9 is a DSM command. Since the rest of the data is being filled in randomly, the chances of any other command capsule being filled out properly are astronomically low. Take a write for example. It would be very unlikely for all of the LBA information and memory regions needed by that command to be filled out in a way that the drive should accept. We still print them out in case we get a positive completion on an unexpected opcode or some other time when we shouldn\u0027t.",
+      "parentUuid": "a5c50680_1a0cbb33",
+      "range": {
+        "startLine": 38,
+        "startChar": 67,
+        "endLine": 38,
+        "endChar": 70
+      },
+      "revId": "fdb541b63d6b62fe3321a8f8d6d198fbb61cd10a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
