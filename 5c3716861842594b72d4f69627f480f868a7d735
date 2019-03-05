@@ -131,6 +131,24 @@
     },
     {
       "key": {
+        "uuid": "6b140a63_97f8fc9c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:51:50Z",
+      "side": 1,
+      "message": "I will do it in separate patch as it is not related to multicore. Ok?",
+      "parentUuid": "d7bd4e54_31a25f07",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b4f486b3_2328f0f7",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
