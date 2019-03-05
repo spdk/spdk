@@ -16,6 +16,24 @@
       "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d79ab11_44838ca8",
+        "filename": "ocf",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-05T12:12:30Z",
+      "side": 0,
+      "message": "Yes, this is precisely the commit when dynamic queues are are added to OCF\nhttps://github.com/Open-CAS/ocf/commit/e235500472c18a9e0687608d94cc542eaeeeb7a2",
+      "parentUuid": "124eb18b_099a504c",
+      "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
