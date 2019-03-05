@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "857a7a49_3f3fcc72",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "Return from this function is never used, except as a way to check if the cache is used. How about changing it to bool and name to \"is_cache_used\" or similar (I\u0027m not best at naming).",
+      "range": {
+        "startLine": 74,
+        "startChar": 0,
+        "endLine": 74,
+        "endChar": 15
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f174c1d1_8a162f01",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -25,6 +48,86 @@
     },
     {
       "key": {
+        "uuid": "6dcf4b4b_c4f8cd14",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 741,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "As per comment in 919, please add check to verify if cache or core name, is not present already as the opposite.",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f486b3_2328f0f7",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "I don\u0027t think this is needed, since we already checked base-\u003eis_cache. There shouldn\u0027t be a core and cache with same name at all, this would be a configuration error.",
+      "range": {
+        "startLine": 919,
+        "startChar": 0,
+        "endLine": 923,
+        "endChar": 3
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98646843_100c8b40",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 924,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "Please add comment detailing what happens here.",
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "db56cc6e_0d087644",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 926,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "This should be added as an assert, but I don\u0027t see how we could proceed to return on line 931 if this is not true.",
+      "range": {
+        "startLine": 926,
+        "startChar": 3,
+        "endLine": 926,
+        "endChar": 37
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "013f9261_2b4a5e0e",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 18
@@ -45,6 +148,52 @@
       "revId": "5c3716861842594b72d4f69627f480f868a7d735",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "210fec50_ef23471c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1022,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "Since this function retrieves vbdev_ocf by name of bdev_name, it means that surfaced bdev is ocf_bdev. We shouldn\u0027t be using create_from_bdevs on ocf_bdev.\nInstead it should be performed only on surfacing a bdev that belongs as cache or core.\nPlease see comment in 1041",
+      "range": {
+        "startLine": 1022,
+        "startChar": 33,
+        "endLine": 1022,
+        "endChar": 66
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df5b15bf_0b859592",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1041,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T04:12:05Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we just skip break here, since cache can be used in multiple vbdev_ocf ?\nThen lines 1029-1037 could be removed.",
+      "range": {
+        "startLine": 1041,
+        "startChar": 0,
+        "endLine": 1041,
+        "endChar": 9
+      },
+      "revId": "5c3716861842594b72d4f69627f480f868a7d735",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
