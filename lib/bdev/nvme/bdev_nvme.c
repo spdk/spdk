@@ -151,13 +151,13 @@ spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch)
 }
 
 struct nvme_bdev_ctrlr *
-spdk_bdev_nvme_first_ctrlr(void)
+nvme_bdev_first_ctrlr(void)
 {
 	return TAILQ_FIRST(&g_nvme_bdev_ctrlrs);
 }
 
 struct nvme_bdev_ctrlr *
-spdk_bdev_nvme_next_ctrlr(struct nvme_bdev_ctrlr *prev)
+nvme_bdev_next_ctrlr(struct nvme_bdev_ctrlr *prev)
 {
 	return TAILQ_NEXT(prev, tailq);
 }
@@ -563,7 +563,7 @@ bdev_nvme_get_io_channel(void *ctx)
 }
 
 void
-spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
+nvme_bdev_dump_trid_json(struct spdk_nvme_transport_id *trid, struct spdk_json_write_ctx *w)
 {
 	const char *trtype_str;
 	const char *adrfam_str;
@@ -615,7 +615,7 @@ bdev_nvme_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 	spdk_json_write_named_object_begin(w, "trid");
 
-	spdk_bdev_nvme_dump_trid_json(&nvme_bdev_ctrlr->trid, w);
+	nvme_bdev_dump_trid_json(&nvme_bdev_ctrlr->trid, w);
 
 	spdk_json_write_object_end(w);
 
@@ -2050,7 +2050,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 		spdk_json_write_named_object_begin(w, "params");
 		spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
-		spdk_bdev_nvme_dump_trid_json(trid, w);
+		nvme_bdev_dump_trid_json(trid, w);
 		spdk_json_write_named_bool(w, "prchk_reftag",
 					   (nvme_bdev_ctrlr->prchk_flags & SPDK_NVME_IO_FLAGS_PRCHK_REFTAG) != 0);
 		spdk_json_write_named_bool(w, "prchk_guard",

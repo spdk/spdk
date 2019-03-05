@@ -311,7 +311,7 @@ spdk_rpc_dump_nvme_controller_info(struct spdk_json_write_ctx *w,
 	spdk_json_write_named_string(w, "name", nvme_bdev_ctrlr->name);
 
 	spdk_json_write_named_object_begin(w, "trid");
-	spdk_bdev_nvme_dump_trid_json(trid, w);
+	nvme_bdev_dump_trid_json(trid, w);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
@@ -365,7 +365,7 @@ spdk_rpc_get_nvme_controllers(struct spdk_jsonrpc_request *request,
 	if (ctrlr != NULL) {
 		spdk_rpc_dump_nvme_controller_info(w, ctrlr);
 	} else {
-		for (ctrlr = spdk_bdev_nvme_first_ctrlr(); ctrlr; ctrlr = spdk_bdev_nvme_next_ctrlr(ctrlr))  {
+		for (ctrlr = nvme_bdev_first_ctrlr(); ctrlr; ctrlr = nvme_bdev_next_ctrlr(ctrlr))  {
 			spdk_rpc_dump_nvme_controller_info(w, ctrlr);
 		}
 	}
