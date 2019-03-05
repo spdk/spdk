@@ -34,6 +34,24 @@
       "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3a6deac4_65cdfcf8",
+        "filename": "ocf",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T16:09:08Z",
+      "side": 0,
+      "message": "@Darek, I see this being different than what usually is done for submodules. Here the situation is that OCF is being updated with patches from our feedback, so instead of waiting for their planned release version and us waiting until then - we update the commit here.\nOverall plan is to be based on the OCF release version for SPDK 19.04, as soon as that is ready.",
+      "parentUuid": "4d79ab11_44838ca8",
+      "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
