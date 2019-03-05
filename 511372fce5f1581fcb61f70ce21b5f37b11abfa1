@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "91a2e961_c4c0d8af",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 30
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:38:55Z",
+      "side": 1,
+      "message": "Can we put bool variable together? For example, move line 172 to line 177, thus the two bool variables will be together for alignment and saves the size of the struct",
+      "range": {
+        "startLine": 178,
+        "startChar": 0,
+        "endLine": 178,
+        "endChar": 16
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
