@@ -740,7 +740,7 @@ SpdkEnv::~SpdkEnv()
 	}
 
 	SpdkFinalizeThread();
-	spdk_app_start_shutdown();
+	spdk_app_start_shutdown(NULL);
 	pthread_join(mSpdkTid, NULL);
 }
 
