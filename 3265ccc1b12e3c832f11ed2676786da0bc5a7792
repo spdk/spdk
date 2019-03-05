@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5c1bd2ca_7fc0f3ca",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T23:08:55Z",
+      "side": 1,
+      "message": "Instead of \u0027max_nsid\u0027 which implies some permanence, how about \"num_ns\"?",
+      "revId": "3265ccc1b12e3c832f11ed2676786da0bc5a7792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
