@@ -69,7 +69,6 @@ struct spdk_app {
 static struct spdk_app g_spdk_app;
 static spdk_msg_fn g_start_fn = NULL;
 static void *g_start_arg = NULL;
-static struct spdk_event *g_shutdown_event = NULL;
 static struct spdk_thread *g_app_thread = NULL;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
@@ -221,15 +220,21 @@ spdk_app_get_running_config(char **config_str, char *name)
 	return 0;
 }
 
-void
-spdk_app_start_shutdown(void)
+static void
+app_start_shutdown(void *ctx)
 {
-	if (g_shutdown_event != NULL) {
-		spdk_event_call(g_shutdown_event);
-		g_shutdown_event = NULL;
+	if (g_spdk_app.shutdown_cb) {
+		g_spdk_app.shutdown_cb();
+		g_spdk_app.shutdown_cb = NULL;
 	} else {
 		spdk_app_stop(0);
 	}
+}
+
+void
+spdk_app_start_shutdown(void)
+{
+	spdk_thread_send_msg(g_app_thread, app_start_shutdown, NULL);
 }
 
 static void
@@ -239,12 +244,6 @@ __shutdown_signal(int signo)
 		g_shutdown_sig_received = true;
 		spdk_app_start_shutdown();
 	}
-}
-
-static void
-__shutdown_event_cb(void *arg1, void *arg2)
-{
-	g_spdk_app.shutdown_cb();
 }
 
 static int
@@ -294,13 +293,6 @@ spdk_app_setup_signal_handlers(struct spdk_app_opts *opts)
 	struct sigaction	sigact;
 	sigset_t		sigmask;
 	int			rc;
-
-	/* Set up custom shutdown handling if the user requested it. */
-	if (opts->shutdown_cb != NULL) {
-		g_shutdown_event = spdk_event_allocate(spdk_env_get_current_core(),
-						       __shutdown_event_cb,
-						       NULL, NULL);
-	}
 
 	sigemptyset(&sigmask);
 	memset(&sigact, 0, sizeof(sigact));
