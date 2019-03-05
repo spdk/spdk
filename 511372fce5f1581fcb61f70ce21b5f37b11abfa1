@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "eac11903_3993379e",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:45:30Z",
+      "side": 1,
+      "message": "My be wrapp with spdk_likely, I think that normally, we will not use diff.",
+      "range": {
+        "startLine": 493,
+        "startChar": 6,
+        "endLine": 493,
+        "endChar": 50
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "670196ca_9d988f5a",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 494,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:45:30Z",
+      "side": 1,
+      "message": "I think that could be combine the three functions: spdk_iscsi_conn_read_data, spdk_iscsi_connv_readv_data\n  spdk_dif_set_md_interleave_iovs into one calling point in the pdu handling function, will it be clear here in this function invoking point.",
+      "range": {
+        "startLine": 494,
+        "startChar": 7,
+        "endLine": 494,
+        "endChar": 33
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63474a54_be917d2e",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 30
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-05T02:45:30Z",
+      "side": 1,
+      "message": "If some comments can be added for this function will be good.",
+      "range": {
+        "startLine": 632,
+        "startChar": 0,
+        "endLine": 632,
+        "endChar": 18
+      },
+      "revId": "511372fce5f1581fcb61f70ce21b5f37b11abfa1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "91a2e961_c4c0d8af",
         "filename": "lib/iscsi/iscsi.h",
         "patchSetId": 30
