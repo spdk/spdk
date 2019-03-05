@@ -96,6 +96,30 @@
     },
     {
       "key": {
+        "uuid": "1e99bf68_07127f14",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T16:05:18Z",
+      "side": 1,
+      "message": "Yea, definitely different topic. I\u0027m still kind of split on that, but lets come back to this later.",
+      "parentUuid": "9d834df1_1bf5893e",
+      "range": {
+        "startLine": 67,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 10
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5695a152_2ca9608a",
         "filename": "test/ocf/management/multicore.sh",
         "patchSetId": 9
@@ -131,6 +155,30 @@
       "side": 1,
       "message": "Yes, because check for 100mb happens during cache start in OCF, but it will never happen.",
       "parentUuid": "5695a152_2ca9608a",
+      "range": {
+        "startLine": 74,
+        "startChar": 33,
+        "endLine": 74,
+        "endChar": 40
+      },
+      "revId": "248945565ccb43487579b79a11ffa07fa07cf2ac",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44297568_48633161",
+        "filename": "test/ocf/management/multicore.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-05T16:05:18Z",
+      "side": 1,
+      "message": "Alright",
+      "parentUuid": "cb673629_9e7563ef",
       "range": {
         "startLine": 74,
         "startChar": 33,
