@@ -16,6 +16,24 @@
       "revId": "5ba5f70271cd8eb501e58cea08b9b7bb4ec1af2c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bca3ad0e_8dbd6b9b",
+        "filename": "lib/event/app.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T20:10:54Z",
+      "side": 1,
+      "message": "I\u0027ll add the assert for now. I can actually get back to making this guarantee toward the end of the series when it is converted to threads. The challenge here is that I am not currently storing the \"init thread\" anywhere yet - that comes later in the series.",
+      "parentUuid": "2fbcb2a6_ba773b65",
+      "revId": "5ba5f70271cd8eb501e58cea08b9b7bb4ec1af2c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
