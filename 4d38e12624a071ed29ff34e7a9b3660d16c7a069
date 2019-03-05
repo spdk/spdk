@@ -106,6 +106,24 @@
       "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c11e0f97_95041f05",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1365,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-05T18:43:57Z",
+      "side": 1,
+      "message": "Please describe the exact problem. Does something crash here, is it a deadlock, ..?",
+      "parentUuid": "e875ab28_7950634f",
+      "revId": "4d38e12624a071ed29ff34e7a9b3660d16c7a069",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
