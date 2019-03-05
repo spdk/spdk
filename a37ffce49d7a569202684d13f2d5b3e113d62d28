@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0906af8_9f454718",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T23:05:24Z",
+      "side": 1,
+      "message": "I\u0027m trying to understand what\u0027s going on with this part. The same initiator can connect to the subsystem twice (over different ports?), which creates two ctrlr objects with potentially the same hostid. I have a lot of open questions on what should happen in that case though (should it even be allowed?). If the host registers itself via one path, is it also registered via another path? I\u0027m not sure it is.\n\nI think for now, ignore the case of two ctrlrs with the same hostid and just make this loop over ns-\u003eregistrants. We\u0027ll sort out this multipathing problem later on.",
+      "revId": "a37ffce49d7a569202684d13f2d5b3e113d62d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f2410c8b_6117ffc1",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1754,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-05T23:05:24Z",
+      "side": 1,
+      "message": "Is it an error if the provided data buffer isn\u0027t large enough? How do you report the truncation?",
+      "revId": "a37ffce49d7a569202684d13f2d5b3e113d62d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
