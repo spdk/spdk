@@ -817,7 +817,8 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 		return -ENOMEM;
 	}
 
-	return ftl_io_read((struct ftl_io *)io);
+	ftl_io_read((struct ftl_io *)io);
+	return 0;
 }
 
 int

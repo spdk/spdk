@@ -486,7 +486,8 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 		return -1;
 	}
 
-	return ftl_io_read(io);
+	ftl_io_read(io);
+	return 0;
 }
 
 static void

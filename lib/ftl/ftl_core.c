@@ -699,7 +699,7 @@ ftl_read_canceled(int rc)
 	return rc == 0;
 }
 
-static int
+static void
 ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		void *ctx)
 {
@@ -734,12 +734,12 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
 
-		if (rc != 0 && rc != -ENOMEM) {
-			SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
-			io->status = -EIO;
-			break;
-		} else if (rc == -ENOMEM) {
+		if (rc) {
 			io->status = rc;
+
+			if (rc != -ENOMEM) {
+				SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
+			}
 			break;
 		}
 
@@ -753,8 +753,6 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
-
-	return rc;
 }
 
 static int
@@ -1322,7 +1320,6 @@ ftl_io_write(struct ftl_io *io)
 }
 
 
-
 static int
 _spdk_ftl_write(struct ftl_io *io)
 {
@@ -1379,7 +1376,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return _spdk_ftl_write(io);
 }
 
-int
+void
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
@@ -1392,11 +1389,11 @@ ftl_io_read(struct ftl_io *io)
 			next_ppa = ftl_lba_read_next_ppa;
 		}
 
-		return ftl_submit_read(io, next_ppa, NULL);
+		ftl_submit_read(io, next_ppa, NULL);
+		return;
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
-	return 0;
 }
 
 static void
@@ -1433,7 +1430,8 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 	}
 
 	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
-	return ftl_io_read(io);
+	ftl_io_read(io);
+	return 0;
 }
 
 static struct ftl_flush *
