@@ -1005,32 +1005,16 @@ spdk_vhost_event_async_send_foreach_continue(struct spdk_vhost_session *vsession
 }
 
 static void
-stop_device(int vid)
+_stop_session(struct spdk_vhost_session *vsession)
 {
-	struct spdk_vhost_dev *vdev;
-	struct spdk_vhost_session *vsession;
+	struct spdk_vhost_dev *vdev = vsession->vdev;
 	struct spdk_vhost_virtqueue *q;
 	int rc;
 	uint16_t i;
 
-	pthread_mutex_lock(&g_spdk_vhost_mutex);
-	vsession = spdk_vhost_session_find_by_vid(vid);
-	if (vsession == NULL) {
-		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return;
-	}
-
-	vdev = vsession->vdev;
-	if (vsession->lcore == -1) {
-		/* already stopped, nothing to do */
-		pthread_mutex_unlock(&g_spdk_vhost_mutex);
-		return;
-	}
-
 	rc = vdev->backend->stop_session(vsession);
 	if (rc != 0) {
-		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vid);
+		SPDK_ERRLOG("Couldn't stop device with vid %d.\n", vsession->vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
 	}
@@ -1041,6 +1025,7 @@ stop_device(int vid)
 			continue;
 		}
 		rte_vhost_set_vring_base(vsession->vid, i, q->last_avail_idx, q->last_used_idx);
+		SPDK_ERRLOG("q=%u\tlast_avail=%u\t avail=%u\n", i, q->last_avail_idx, q->vring.avail->idx);
 	}
 
 	spdk_vhost_session_mem_unregister(vsession);
@@ -1048,6 +1033,31 @@ stop_device(int vid)
 	vsession->lcore = -1;
 	assert(vdev->active_session_num > 0);
 	vdev->active_session_num--;
+}
+
+static void
+stop_device(int vid)
+{
+	struct spdk_vhost_session *vsession;
+
+	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vsession = spdk_vhost_session_find_by_vid(vid);
+	if (vsession == NULL) {
+		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
+	if (vsession->lcore == -1) {
+		/* already stopped, nothing to do */
+		pthread_mutex_unlock(&g_spdk_vhost_mutex);
+		return;
+	}
+
+	_stop_session(vsession);
+	/* unset it unconditionally */
+	vsession->forced_polling = false;
+
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
@@ -1070,6 +1080,7 @@ start_device(int vid)
 	vdev = vsession->vdev;
 	if (vsession->lcore != -1) {
 		/* already started, nothing to do */
+		rc = 0;
 		goto out;
 	}
 
@@ -1090,6 +1101,8 @@ start_device(int vid)
 			q->vring.desc = NULL;
 			continue;
 		}
+
+		SPDK_ERRLOG("q=%u\t\tlast_avail=%u\t avail=%u\n", i, q->last_avail_idx, q->vring.avail->idx);
 
 		/* Disable notifications. */
 		if (rte_vhost_enable_guest_notification(vid, i, 0) != 0) {
@@ -1324,6 +1337,11 @@ destroy_connection(int vid)
 		SPDK_ERRLOG("Couldn't find session with vid %d.\n", vid);
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return;
+	}
+
+	if (vsession->forced_polling) {
+		_stop_session(vsession);
+		vsession->forced_polling = false;
 	}
 
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);

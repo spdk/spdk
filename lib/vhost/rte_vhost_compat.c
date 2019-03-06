@@ -56,6 +56,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 {
 	struct vhost_user_msg *msg = _msg;
 	struct spdk_vhost_session *vsession;
+	uint16_t i;
 
 	vsession = spdk_vhost_session_find_by_vid(vid);
 	if (vsession == NULL) {
@@ -65,17 +66,33 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_SET_OWNER:
 	case VHOST_USER_SET_VRING_BASE:
 	case VHOST_USER_SET_VRING_ADDR:
 	case VHOST_USER_SET_VRING_NUM:
-		/* We might be forcefully polling the session, so stop it now */
-		if (vsession->lcore != -1) {
+	case VHOST_USER_SET_VRING_KICK:
+		if (vsession->forced_polling) {
 			g_spdk_vhost_ops.destroy_device(vid);
+			/* destroy_device will unset the flag */
+			for (i = 0; i < vsession->max_queues; i++) {
+				struct spdk_vhost_virtqueue *q = &vsession->virtqueue[i];
+
+				if (q->vring.desc == NULL) {
+					continue;
+				}
+
+				rte_vhost_set_vring_base(vsession->vid, i,
+						q->vring.avail->idx, q->vring.used->idx);
+			}
 		}
 		break;
+	case VHOST_USER_SET_VRING_CALL:
 	case VHOST_USER_SET_MEM_TABLE:
+		/* stepping on thin ice here; this is asking for a data race */
 		if (vsession->lcore != -1) {
+			bool forced_poll = vsession->forced_polling;
 			g_spdk_vhost_ops.destroy_device(vid);
+			vsession->needs_forced_poll = forced_poll;
 			vsession->needs_restart = true;
 		}
 		break;
@@ -131,11 +148,13 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 	if (vsession->needs_restart) {
 		g_spdk_vhost_ops.new_device(vid);
 		vsession->needs_restart = false;
+		if (vsession->needs_forced_poll) {
+			vsession->forced_polling = true;
+			vsession->needs_forced_poll = false;
+		}
 	}
 
 	switch (msg->request) {
-	case VHOST_USER_SET_MEM_TABLE:
-		break;
 	case VHOST_USER_SET_OWNER:
 		vsession->needs_forced_poll = true;
 		break;
@@ -143,6 +162,7 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 		if (vsession->needs_forced_poll) {
 			g_spdk_vhost_ops.new_device(vid);
 			vsession->needs_forced_poll = false;
+			vsession->forced_polling = true;
 		}
 		break;
 	default:
