@@ -4081,6 +4081,8 @@ Example response:
     "poll_groups": [
       {
         "name": "app_thread"
+        "admin_qpairs": 1,
+        "io_qpairs": 4
       }
     ]
   }
