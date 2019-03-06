@@ -4168,6 +4168,7 @@ Example response:
   "jsonrpc": "2.0",
   "id": 1,
   "result": {
+    "tick_rate": 2400000000,
     "poll_groups": [
       {
         "name": "app_thread",
@@ -4177,20 +4178,24 @@ Example response:
         "transports": [
           {
             "trtype": "RDMA",
-            "pending_data_buffer": 0,
+            "pending_data_buffer": 12131888,
             "devices": [
               {
                 "name": "mlx5_1",
-                "polls": 1536729,
+                "polls": 72284105,
                 "completions": 0,
+                "requests": 0,
+                "request_latency": 0,
                 "pending_free_request": 0,
                 "pending_rdma_read": 0,
                 "pending_rdma_write": 0
               },
               {
                 "name": "mlx5_0",
-                "polls": 1536729,
-                "completions": 18667357,
+                "polls": 72284105,
+                "completions": 15165875,
+                "requests": 7582935,
+                "request_latency": 1249323766184,
                 "pending_free_request": 0,
                 "pending_rdma_read": 337602,
                 "pending_rdma_write": 0

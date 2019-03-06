@@ -1626,6 +1626,10 @@ write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_string(w, "name", stat->rdma.devices[i].name);
 			spdk_json_write_named_uint64(w, "polls", stat->rdma.devices[i].polls);
 			spdk_json_write_named_uint64(w, "completions", stat->rdma.devices[i].completions);
+			spdk_json_write_named_uint64(w, "requests",
+						     stat->rdma.devices[i].requests);
+			spdk_json_write_named_uint64(w, "request_latency",
+						     stat->rdma.devices[i].request_latency);
 			spdk_json_write_named_uint64(w, "pending_free_request",
 						     stat->rdma.devices[i].pending_free_request);
 			spdk_json_write_named_uint64(w, "pending_rdma_read",
@@ -1707,6 +1711,7 @@ spdk_rpc_nvmf_get_stats(struct spdk_jsonrpc_request *request,
 	}
 
 	spdk_json_write_object_begin(ctx->w);
+	spdk_json_write_named_uint64(ctx->w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(ctx->w, "poll_groups");
 
 	spdk_for_each_channel(g_spdk_nvmf_tgt,

@@ -238,6 +238,7 @@ struct spdk_nvmf_rdma_recv {
 	uint8_t					*buf;
 
 	struct spdk_nvmf_rdma_wr		rdma_wr;
+	uint64_t				receive_tsc;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_recv)	link;
 };
@@ -266,6 +267,7 @@ struct spdk_nvmf_rdma_request {
 	void					*buffers[NVMF_REQ_MAX_BUFFERS];
 
 	uint32_t				num_outstanding_data_wr;
+	uint64_t				receive_tsc;
 
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
@@ -412,6 +414,8 @@ struct spdk_nvmf_rdma_qpair {
 struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
+	uint64_t				requests;
+	uint64_t				request_latency;
 	uint64_t				pending_free_request;
 	uint64_t				pending_rdma_read;
 	uint64_t				pending_rdma_write;
@@ -2082,6 +2086,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
 
+			rqpair->poller->stat.request_latency += spdk_get_ticks() - rdma_req->receive_tsc;
 			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
@@ -2623,6 +2628,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 			rqpair->qd++;
 		}
 
+		rdma_req->receive_tsc = rdma_req->recv->receive_tsc;
 		rdma_req->state = RDMA_REQUEST_STATE_NEW;
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false) {
 			break;
@@ -3432,6 +3438,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 	int reaped, i;
 	int count = 0;
 	bool error = false;
+	uint64_t poll_tsc = spdk_get_ticks();
 
 	/* Poll for completing operations. */
 	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
@@ -3487,6 +3494,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			rdma_recv->wr.next = NULL;
 			rqpair->current_recv_depth++;
+			rdma_recv->receive_tsc = poll_tsc;
+			rpoller->stat.requests++;
 			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
 			break;
 		case RDMA_WR_TYPE_DATA:
@@ -3718,6 +3727,8 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 				device_stat->name = ibv_get_device_name(rpoller->device->context->device);
 				device_stat->polls = rpoller->stat.polls;
 				device_stat->completions = rpoller->stat.completions;
+				device_stat->requests = rpoller->stat.requests;
+				device_stat->request_latency = rpoller->stat.request_latency;
 				device_stat->pending_free_request = rpoller->stat.pending_free_request;
 				device_stat->pending_rdma_read = rpoller->stat.pending_rdma_read;
 				device_stat->pending_rdma_write = rpoller->stat.pending_rdma_write;
