@@ -25,6 +25,144 @@
     },
     {
       "key": {
+        "uuid": "f0d251ff_1b0d0053",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "Did we even had a requirement for this test? I recall only talking abount changing 2xNVMe to NVMe+Malloc tests, but not this.",
+      "range": {
+        "startLine": 7,
+        "startChar": 16,
+        "endLine": 7,
+        "endChar": 55
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "37f8f751_4551831a",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "No need to use hex mask, look two lines above this one for an example.",
+      "range": {
+        "startLine": 4,
+        "startChar": 20,
+        "endLine": 4,
+        "endChar": 26
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "90a593ee_c565c2fe",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "I just noticed that... why do we even use that kind of syntax!?",
+      "range": {
+        "startLine": 94,
+        "startChar": 11,
+        "endLine": 94,
+        "endChar": 31
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d4e41d54_9ef7f757",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "Wrong indent",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 1
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "775525dd_7474f91b",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "#!/usr/bin/env bash\nset -xe",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 6
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "148204e2_35b3a335",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "very confusing name\nthis function is used only once. wouldn\u0027t it be better to just use loop?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fa04cd4d_3cda4063",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -64,6 +202,29 @@
         "startChar": 5,
         "endLine": 17,
         "endChar": 28
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fdbf31be_83e6df2f",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "Looks like mixed tabs and spaces?",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 9
       },
       "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
@@ -133,6 +294,29 @@
         "startChar": 6,
         "endLine": 26,
         "endChar": 16
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "537377b9_3b641efc",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-06T13:14:38Z",
+      "side": 1,
+      "message": "Any specific reason why we don\u0027t just use vhost process mask?",
+      "range": {
+        "startLine": 34,
+        "startChar": 52,
+        "endLine": 34,
+        "endChar": 65
       },
       "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
