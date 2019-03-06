@@ -34,6 +34,42 @@
       "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4cab5881_868f8493",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-06T23:01:49Z",
+      "side": 1,
+      "message": "0 looks OK.",
+      "parentUuid": "68ed3d42_c3d92d2e",
+      "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a5f0fc9f_c08c2e97",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-06T23:01:49Z",
+      "side": 1,
+      "message": "Yes I changed the code to return in that case.",
+      "parentUuid": "cbb2d741_7e1f0be2",
+      "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
