@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "6a65c977_417f6d3e",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 452,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-06T07:09:28Z",
+      "side": 1,
+      "message": "Thank you for your prompt response. My local SSD is P3700. \"-p\" will always reports massive: \nnvme_qpair.c: 118:nvme_admin_qpair_print_command: *NOTICE*: ADMIN COMMAND (5b) sqid:0 cid:90 nsid:1 cdw10:2ad91bd3 cdw11:491d5ee6\nnvme_qpair.c: 306:nvme_qpair_print_completion: *NOTICE*: INVALID OPCODE (00/01) sqid:0 cid:90 cdw0:0 sqhd:001c p:0 m:0 dnr:0\nthen reports:\nnvme_fuzz.c: 114:report_timeout: *ERROR*: The following command has timed out. It is possible that it caused a target/drive to hang.\nnvme_fuzz.c: 115:report_timeout: *ERROR*: Number of completed I/O previous to this: 800\nI will send you detailed log by email.",
+      "parentUuid": "d5c38a26_4d4f3149",
+      "range": {
+        "startLine": 452,
+        "startChar": 2,
+        "endLine": 452,
+        "endChar": 11
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7e578d1_ad74a28b",
         "filename": "test/app/fuzz/nvme_fuzz.c",
         "patchSetId": 16
@@ -202,6 +226,30 @@
       "side": 1,
       "message": "The application did not run on nvmf_autotest because it is a VM and doesn\u0027t have an iommu. However if you look at nvmf_phy_autotest, the test did run there. I don\u0027t think there\u0027s a need to disable this check since we are getting coverage on the physical machine.\nThanks for pointing out that the app didn\u0027t run on the VM though. That means that this check is working.",
       "parentUuid": "b81180e9_a73c5516",
+      "range": {
+        "startLine": 501,
+        "startChar": 1,
+        "endLine": 501,
+        "endChar": 30
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c4a9d23b_dde65dbe",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 501,
+      "author": {
+        "id": 1011296
+      },
+      "writtenOn": "2019-03-06T07:09:28Z",
+      "side": 1,
+      "message": "Thanks for your explanation. I found it in nvmf_phy_autotest.",
+      "parentUuid": "d7c97c9a_b6ba4cc1",
       "range": {
         "startLine": 501,
         "startChar": 1,
