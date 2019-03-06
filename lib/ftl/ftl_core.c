@@ -1525,7 +1525,7 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	return spdk_nvme_qpair_process_completions(qpair, 1);
+	return spdk_nvme_qpair_process_completions(qpair, 0);
 }
 
 int
@@ -1543,7 +1543,7 @@ ftl_task_core(void *ctx)
 	}
 
 	ftl_process_writes(dev);
-	spdk_nvme_qpair_process_completions(qpair, 1);
+	spdk_nvme_qpair_process_completions(qpair, 0);
 	ftl_process_relocs(dev);
 
 	return 0;
