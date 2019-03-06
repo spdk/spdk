@@ -171,6 +171,7 @@ struct nvme_pcie_qpair {
 
 	uint16_t max_completions_cap;
 
+	uint16_t last_sq_tail;
 	uint16_t sq_tail;
 	uint16_t cq_head;
 	uint16_t sq_head;
@@ -936,7 +937,7 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
-	pqpair->sq_tail = pqpair->cq_head = 0;
+	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->cq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -1172,7 +1173,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 {
 	struct nvme_request	*req;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
+	/* struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr); */
 
 	req = tr->req;
 	assert(req != NULL);
@@ -1190,6 +1191,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
 	}
 
+	/*
 	spdk_wmb();
 	if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
 			pqpair->sq_tail,
@@ -1199,6 +1201,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
 		g_thread_mmio_ctrlr = NULL;
 	}
+	*/
 }
 
 static void
@@ -2108,6 +2111,19 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 			spdk_mmio_write_4(pqpair->cq_hdbl, pqpair->cq_head);
 			g_thread_mmio_ctrlr = NULL;
 		}
+	}
+
+	if (pqpair->last_sq_tail != pqpair->sq_tail) {
+		if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
+				pqpair->sq_tail,
+				pqpair->sq_shadow_tdbl,
+				pqpair->sq_eventidx))) {
+			spdk_wmb();
+			g_thread_mmio_ctrlr = pctrlr;
+			spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
+			g_thread_mmio_ctrlr = NULL;
+		}
+		pqpair->last_sq_tail = pqpair->sq_tail;
 	}
 
 	if (spdk_unlikely(ctrlr->timeout_enabled)) {
