@@ -299,13 +299,13 @@ ftl_io_complete(struct ftl_io *io)
 void
 ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 {
-	io->status = -EIO;
-
 	/* TODO: add error handling for specifc cases */
 	if (status->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&
 	    status->status.sc == SPDK_OCSSD_SC_READ_HIGH_ECC) {
-		io->status = 0;
+		return;
 	}
+
+	io->status = -EIO;
 }
 
 void *
