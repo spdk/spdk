@@ -15,6 +15,14 @@ return a context associated with the specified controllers.  Users then call
 spdk_nvme_probe_poll_async() until it returns 0, indicating that the operation
 is completed with success.
 
+A new qpair creation option, delay_pcie_doorbell, was added. This can be passed
+to spdk_nvme_alloc_io_qpair(). This makes the I/O submission functions,
+such as spdk_nvme_ns_writev(), skip ringing the submission queue doorbell.
+Instead the doorbell will be rung as necessary inside
+spdk_nvme_qpair_process_completions(). This can result in significantly fewer
+MMIO writes to the doorbell register under heavy load, greatly improving
+performance.
+
 New API spdk_nvme_ctrlr_get_flags() was added.
 
 ### raid
