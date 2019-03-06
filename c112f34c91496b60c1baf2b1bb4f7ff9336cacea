@@ -16,6 +16,24 @@
       "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cbb2d741_7e1f0be2",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-06T12:02:44Z",
+      "side": 1,
+      "message": "And what if rc \u003c iov[i].iov_len?",
+      "parentUuid": "68ed3d42_c3d92d2e",
+      "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
