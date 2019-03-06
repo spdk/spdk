@@ -52,6 +52,24 @@
       "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d3c1e55e_7d71897a",
+        "filename": "ocf",
+        "patchSetId": 2
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-06T08:38:05Z",
+      "side": 0,
+      "message": "OK - thanks Tomek",
+      "parentUuid": "3a6deac4_65cdfcf8",
+      "revId": "5266132d8be28dcbe90ebb5db6dd34b6c37ab85e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
