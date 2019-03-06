@@ -8,6 +8,14 @@ spdk_app_start() now only accepts a single context argument.
 
 ### nvme
 
+A new qpair creation option, delay_doorbell, was added. This can be passed
+to spdk_nvme_alloc_io_qpair(). This makes the I/O submission functions,
+such as spdk_nvme_ns_writev(), skip ringing the submission queue doorbell.
+Instead the doorbell will be rung as necessary inside
+spdk_nvme_qpair_process_completions(). This can result in significantly fewer
+MMIO writes to the doorbell register under heavy load, greatly improving
+performance.
+
 Added asynchronous probe support.  New APIs spdk_nvme_probe_async() and
 spdk_nvme_probe_poll_async() were added to enable this feature.
 

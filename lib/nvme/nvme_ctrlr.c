@@ -234,6 +234,10 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 		opts->io_queue_requests = ctrlr->opts.io_queue_requests;
 	}
 
+	if (FIELD_OK(delay_doorbell)) {
+		opts->delay_doorbell = false;
+	}
+
 #undef FIELD_OK
 }
 
