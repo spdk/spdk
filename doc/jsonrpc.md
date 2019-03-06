@@ -4221,10 +4221,24 @@ Example response:
         "devices": [
           {
             "name": "mlx5_1",
-            "polls": 379790781,
+            "polls": 58121352,
             "completions": 0,
             "requests": 0,
-            "request_latency": 0,
+            "request_state_latency": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
             "pending_free_request": 0,
             "pending_data_buffer": 0,
             "pending_rdma_read": 0,
@@ -4232,13 +4246,27 @@ Example response:
           },
           {
             "name": "mlx5_0",
-            "polls": 379790781,
-            "completions": 23989324,
-            "requests": 7996461,
-            "request_latency": 302548878912,
+            "polls": 58121352,
+            "completions": 20102326,
+            "requests": 6700795,
+            "request_state_latency": [
+              0,
+              100157761784,
+              102019953592,
+              105155603888,
+              0,
+              393706593688,
+              0,
+              473207574280,
+              81024,
+              476079753560,
+              0,
+              0,
+              795179572560
+            ],
             "pending_free_request": 0,
             "pending_data_buffer": 0,
-            "pending_rdma_read": 337602,
+            "pending_rdma_read": 676402,
             "pending_rdma_write": 0
           }
         ]

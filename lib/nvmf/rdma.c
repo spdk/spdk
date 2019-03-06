@@ -415,7 +415,7 @@ struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
 	uint64_t				requests;
-	uint64_t				request_latency;
+	uint64_t				request_state_latency[RDMA_REQUEST_NUM_STATES];
 	uint64_t				pending_free_request;
 	uint64_t				pending_data_buffer;
 	uint64_t				pending_rdma_read;
@@ -2087,8 +2087,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
-
-			rqpair->poller->stat.request_latency += spdk_get_ticks() - rdma_req->receive_tsc;
 			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
@@ -2099,6 +2097,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (rdma_req->state != prev_state) {
 			progress = true;
+			rqpair->poller->stat.request_state_latency[prev_state] +=
+				spdk_get_ticks() - rdma_req->receive_tsc;
 		}
 	} while (rdma_req->state != prev_state);
 
@@ -3722,7 +3722,8 @@ nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
 			rgroup = SPDK_CONTAINEROF(tgroup, struct spdk_nvmf_rdma_poll_group, group);
 			STAILQ_INIT(&pg_stat->devices);
 			TAILQ_FOREACH(rpoller, &rgroup->pollers, link) {
-				device_stat = calloc(1, sizeof(*device_stat));
+				device_stat = calloc(1, sizeof(*device_stat) +
+						     sizeof(rpoller->stat.request_state_latency));
 				if (!device_stat) {
 					status = 1;
 					goto exit;
@@ -3731,11 +3732,13 @@ nvmf_rdma_poll_group_get_stat(struct spdk_io_channel_iter *i)
 				device_stat->polls = rpoller->stat.polls;
 				device_stat->completions = rpoller->stat.completions;
 				device_stat->requests = rpoller->stat.requests;
-				device_stat->request_latency = rpoller->stat.request_latency;
 				device_stat->pending_free_request = rpoller->stat.pending_free_request;
 				device_stat->pending_data_buffer = rpoller->stat.pending_data_buffer;
 				device_stat->pending_rdma_read = rpoller->stat.pending_rdma_read;
 				device_stat->pending_rdma_write = rpoller->stat.pending_rdma_write;
+				device_stat->num_states = RDMA_REQUEST_NUM_STATES;
+				memcpy(device_stat->request_state_latency, rpoller->stat.request_state_latency,
+				       sizeof(rpoller->stat.request_state_latency));
 				STAILQ_INSERT_TAIL(&pg_stat->devices, device_stat, link);
 			}
 			STAILQ_INSERT_TAIL(&ctx->stat.poll_groups, pg_stat, link);
