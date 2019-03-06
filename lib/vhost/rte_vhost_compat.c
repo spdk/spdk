@@ -65,17 +65,34 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_SET_OWNER:
+	case VHOST_USER_GET_VRING_BASE:
 	case VHOST_USER_SET_VRING_BASE:
 	case VHOST_USER_SET_VRING_ADDR:
 	case VHOST_USER_SET_VRING_NUM:
-		/* We might be forcefully polling the session, so stop it now */
-		if (vsession->lcore != -1) {
+	case VHOST_USER_SET_VRING_KICK:
+		if (vsession->forced_polling) {
+			/* additional queues are being initialized so stop our
+			 * forced polling
+			 */
 			g_spdk_vhost_ops.destroy_device(vid);
+			vsession->forced_polling = false;
 		}
 		break;
+	case VHOST_USER_SET_VRING_CALL: {
+		uint8_t vq_idx = msg->payload.u64 & VHOST_USER_VRING_IDX_MASK;
+
+		if (vsession->virtqueue[vq_idx].vring.desc == NULL) {
+			break;
+		}
+	}
+	/* fall-through */
 	case VHOST_USER_SET_MEM_TABLE:
+		/* stepping on thin ice here; this is asking for a data race */
 		if (vsession->lcore != -1) {
+			bool forced_poll = vsession->forced_polling;
 			g_spdk_vhost_ops.destroy_device(vid);
+			vsession->needs_forced_poll = forced_poll;
 			vsession->needs_restart = true;
 		}
 		break;
@@ -131,11 +148,13 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 	if (vsession->needs_restart) {
 		g_spdk_vhost_ops.new_device(vid);
 		vsession->needs_restart = false;
+		if (vsession->needs_forced_poll) {
+			vsession->forced_polling = true;
+			vsession->needs_forced_poll = false;
+		}
 	}
 
 	switch (msg->request) {
-	case VHOST_USER_SET_MEM_TABLE:
-		break;
 	case VHOST_USER_SET_OWNER:
 		vsession->needs_forced_poll = true;
 		break;
@@ -143,6 +162,7 @@ spdk_extern_vhost_post_msg_handler(int vid, void *_msg)
 		if (vsession->needs_forced_poll) {
 			g_spdk_vhost_ops.new_device(vid);
 			vsession->needs_forced_poll = false;
+			vsession->forced_polling = true;
 		}
 		break;
 	default:
