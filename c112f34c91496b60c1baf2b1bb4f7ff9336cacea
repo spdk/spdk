@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68ed3d42_c3d92d2e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 25
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-06T12:00:35Z",
+      "side": 1,
+      "message": "What if vppcom_session_read() returns zero, is it possible? I think we should return immediately if vppcom_session_read() return zero.",
+      "revId": "c112f34c91496b60c1baf2b1bb4f7ff9336cacea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
