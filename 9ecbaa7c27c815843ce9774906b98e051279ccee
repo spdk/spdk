@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "757baa6a_59ddab9e",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-06T12:19:36Z",
+      "side": 1,
+      "message": "From patch set 7 to patch set 8, the return type changed from in to int. But I haven\u0027t see anyone comment about return type (please point it out for me if I missed comment). What\u0027s your consideration about using bool as return type? Because we use int (0 for success and -1 for general failure) for general function, and use bool for boolean function.",
+      "range": {
+        "startLine": 531,
+        "startChar": 0,
+        "endLine": 531,
+        "endChar": 4
+      },
+      "revId": "9ecbaa7c27c815843ce9774906b98e051279ccee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
