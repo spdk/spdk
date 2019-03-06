@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "63fc123d_a1a86928",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-06T01:39:45Z",
+      "side": 1,
+      "message": "The specification 1.3 chapter 8.8 has descriptions on it, and I also use the same diagram for the unit tests.  For the Host has two controllers associate with same subsystem(multipath), it only need to register once, see 8.8.2 for this part.",
+      "parentUuid": "a0906af8_9f454718",
+      "revId": "a37ffce49d7a569202684d13f2d5b3e113d62d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f2410c8b_6117ffc1",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 12
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-05T23:05:24Z",
       "side": 1,
       "message": "Is it an error if the provided data buffer isn\u0027t large enough? How do you report the truncation?",
+      "revId": "a37ffce49d7a569202684d13f2d5b3e113d62d28",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "09d8816f_a977bae6",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 1754,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-06T01:39:45Z",
+      "side": 1,
+      "message": "Hi Ben, I think I followed the specification, see what the specification describes:\n\nNumber of Dwords (NUMD): This field specifies the number of Dwords of the Reservation Status\ndata structure to transfer. This is a 0’s based value.\nIf this field corresponds to a length that is less than the size of the Reservation Status data\nstructure, then only that specified portion of the data structure is transferred.",
+      "parentUuid": "f2410c8b_6117ffc1",
       "revId": "a37ffce49d7a569202684d13f2d5b3e113d62d28",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
