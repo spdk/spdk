@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "31c87e50_73cdab34",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-06T22:57:53Z",
+      "side": 1,
+      "message": "This looks wrong. You don\u0027t set this SCSI device until line #958.",
+      "range": {
+        "startLine": 947,
+        "startChar": 41,
+        "endLine": 947,
+        "endChar": 84
+      },
+      "revId": "2a0bc96c2613cf7542f7bb663803de7a418ab47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "157454da_9ccfc733",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-06T22:57:53Z",
+      "side": 1,
+      "message": "So if the status used to be VHOST_SCSI_DEV_REMOVED, we will continue sending hotremove sense codes for that SCSI target. This looks wrong if there\u0027s more than one session and channel allocation only fails for some of them - It could be that one session will fail I/O with SCSI hotremove sense codes and other session will process I/O just fine.",
+      "revId": "2a0bc96c2613cf7542f7bb663803de7a418ab47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

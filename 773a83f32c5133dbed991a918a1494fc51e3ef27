@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6eaad541_9adac515",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 967,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-06T22:57:53Z",
+      "side": 0,
+      "message": "could you preserve this comment? I still find it informative.",
+      "revId": "773a83f32c5133dbed991a918a1494fc51e3ef27",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
