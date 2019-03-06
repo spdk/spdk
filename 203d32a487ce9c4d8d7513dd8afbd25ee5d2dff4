@@ -22,6 +22,30 @@
       "revId": "203d32a487ce9c4d8d7513dd8afbd25ee5d2dff4",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e561d51a_41291b7c",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 2600,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-06T08:28:53Z",
+      "side": 1,
+      "message": "No, this is used in https://review.gerrithub.io/#/c/spdk/spdk/+/446382/35/lib/iscsi/iscsi.c.\n\nWill you read the line 729?",
+      "parentUuid": "a199d3c2_6b679cfa",
+      "range": {
+        "startLine": 2600,
+        "startChar": 1,
+        "endLine": 2600,
+        "endChar": 61
+      },
+      "revId": "203d32a487ce9c4d8d7513dd8afbd25ee5d2dff4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
