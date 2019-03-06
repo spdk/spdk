@@ -89,12 +89,13 @@ struct spdk_nvmf_rdma_device_stat {
 	uint64_t polls;
 	uint64_t completions;
 	uint64_t requests;
-	uint64_t request_latency;
 	uint64_t pending_free_request;
 	uint64_t pending_data_buffer;
 	uint64_t pending_rdma_read;
 	uint64_t pending_rdma_write;
 	STAILQ_ENTRY(spdk_nvmf_rdma_device_stat) link;
+	uint32_t num_states;
+	uint64_t request_state_latency[];
 };
 
 struct spdk_nvmf_rdma_poll_group_stat {
