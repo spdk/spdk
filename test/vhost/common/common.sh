@@ -470,7 +470,7 @@ function vm_kill_all()
 #
 function vm_shutdown_all()
 {
-	local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
+	# local shell_restore_x="$( [[ "$-" =~ x ]] && echo 'set -x' )"
 	# XXX: temporally disable to debug shutdown issue
 	# set +x
 
@@ -494,7 +494,7 @@ function vm_shutdown_all()
 
 		if [[ $all_vms_down == 1 ]]; then
 			notice "All VMs successfully shut down"
-			$shell_restore_x
+			# $shell_restore_x
 			return 0
 		fi
 
@@ -502,7 +502,7 @@ function vm_shutdown_all()
 		sleep 1
 	done
 
-	$shell_restore_x
+	# $shell_restore_x
 	error "Timeout waiting for some VMs to shutdown"
 	return 1
 }
