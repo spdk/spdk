@@ -4214,14 +4214,17 @@ Example response:
   "id": 1,
   "result": {
     "trtype": "RDMA",
+    "tick_rate": 2400000000,
     "poll_groups": [
       {
         "name": "app_thread",
         "devices": [
           {
             "name": "mlx5_1",
-            "polls": 1536729,
+            "polls": 379790781,
             "completions": 0,
+            "requests": 0,
+            "request_latency": 0,
             "pending_free_request": 0,
             "pending_data_buffer": 0,
             "pending_rdma_read": 0,
@@ -4229,8 +4232,10 @@ Example response:
           },
           {
             "name": "mlx5_0",
-            "polls": 1536729,
-            "completions": 18667357,
+            "polls": 379790781,
+            "completions": 23989324,
+            "requests": 7996461,
+            "request_latency": 302548878912,
             "pending_free_request": 0,
             "pending_data_buffer": 0,
             "pending_rdma_read": 337602,

@@ -1731,6 +1731,7 @@ write_nvmf_rdma_stat(struct spdk_json_write_ctx *w, void *stat)
 	struct spdk_nvmf_rdma_poll_group_stat *pg_stat;
 	struct spdk_nvmf_rdma_device_stat *device_stat;
 
+	spdk_json_write_named_uint64(w, "tick_rate", spdk_get_ticks_hz());
 	spdk_json_write_named_array_begin(w, "poll_groups");
 	STAILQ_FOREACH(pg_stat, &rdma_stat->poll_groups, link) {
 		spdk_json_write_object_begin(w);
@@ -1741,6 +1742,10 @@ write_nvmf_rdma_stat(struct spdk_json_write_ctx *w, void *stat)
 			spdk_json_write_named_string(w, "name", device_stat->name);
 			spdk_json_write_named_uint64(w, "polls", device_stat->polls);
 			spdk_json_write_named_uint64(w, "completions", device_stat->completions);
+			spdk_json_write_named_uint64(w, "requests",
+						     device_stat->requests);
+			spdk_json_write_named_uint64(w, "request_latency",
+						     device_stat->request_latency);
 			spdk_json_write_named_uint64(w, "pending_free_request",
 						     device_stat->pending_free_request);
 			spdk_json_write_named_uint64(w, "pending_data_buffer",
