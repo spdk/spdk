@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e395924_42a561ed",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-06T19:03:21Z",
+      "side": 1,
+      "message": "I think we need to make a small change to how this plugin operations. When we initialize the io_u, we should capture the fio_qpair into the spdk_fio_request structure. Then, we only need to look it up here, during initialization, and we can quickly get to the fio_qpair elsewhere.\n\nIn order to make this change, though, we need to verify that any given io_u is only used for one file throughout its lifetime. I bet this is true, but can you search the fio code to see if io_u-\u003efile is ever updated after initialization?",
+      "revId": "be3891b7318c2b2c0696fd03f03e8cff8c67f785",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dabc9cdc_b0efb2c7",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-06T19:03:21Z",
+      "side": 1,
+      "message": "fio_thread-\u003efio_qpair is a list - how do you know the first one is the right qpair for this completion?",
+      "revId": "be3891b7318c2b2c0696fd03f03e8cff8c67f785",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
