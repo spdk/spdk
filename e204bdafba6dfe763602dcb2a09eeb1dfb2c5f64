@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d0f35a11_8ca541ea",
+        "filename": "configure",
+        "patchSetId": 3
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-06T19:28:13Z",
+      "side": 1,
+      "message": "Remove this",
+      "revId": "e204bdafba6dfe763602dcb2a09eeb1dfb2c5f64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c587a7af_ef6a811c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2944,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-06T19:28:13Z",
+      "side": 1,
+      "message": "Do we correctly set rdma_recv-\u003eqpair back to NULL when we\u0027re done with it? It might be safer to just check if rpoller-\u003esrq is not NULL here.",
+      "revId": "e204bdafba6dfe763602dcb2a09eeb1dfb2c5f64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
