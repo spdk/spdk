@@ -935,6 +935,17 @@ struct spdk_nvme_io_qpair_opts {
 	 * compatibility requirements, or driver-assisted striping.
 	 */
 	uint32_t io_queue_requests;
+
+	/**
+	 * When submitting I/O via spdk_nvme_ns_read/write and similar functions,
+	 * don't immediately write the submission queue doorbell. Instead, write
+	 * to the doorbell as necessary inside spdk_nvme_qpair_process_completions().
+	 *
+	 * This results in better batching of I/O submission and consequently fewer
+	 * MMIO writes to the doorbell, which may increase performance.
+	 *
+	 * This only applies to local PCIe devices. */
+	bool delay_pcie_doorbell;
 };
 
 /**
