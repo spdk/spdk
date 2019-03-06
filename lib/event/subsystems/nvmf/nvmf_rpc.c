@@ -1612,7 +1612,7 @@ static void
 write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
 			   struct spdk_nvmf_transport_poll_group_stat *stat)
 {
-	uint64_t i;
+	uint64_t i, state;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "trtype",
@@ -1628,8 +1628,11 @@ write_nvmf_transport_stats(struct spdk_json_write_ctx *w,
 			spdk_json_write_named_uint64(w, "completions", stat->rdma.devices[i].completions);
 			spdk_json_write_named_uint64(w, "requests",
 						     stat->rdma.devices[i].requests);
-			spdk_json_write_named_uint64(w, "request_latency",
-						     stat->rdma.devices[i].request_latency);
+			spdk_json_write_named_array_begin(w, "request_state_latency");
+			for (state = 0; state < stat->rdma.devices[i].num_request_states; ++state) {
+				spdk_json_write_uint64(w, stat->rdma.devices[i].request_state_latency[state]);
+			}
+			spdk_json_write_array_end(w);
 			spdk_json_write_named_uint64(w, "pending_free_request",
 						     stat->rdma.devices[i].pending_free_request);
 			spdk_json_write_named_uint64(w, "pending_rdma_read",

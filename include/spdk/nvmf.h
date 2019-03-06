@@ -90,7 +90,8 @@ struct spdk_nvmf_rdma_device_stat {
 	uint64_t polls;
 	uint64_t completions;
 	uint64_t requests;
-	uint64_t request_latency;
+	uint32_t num_request_states;
+	uint64_t *request_state_latency;
 	uint64_t pending_free_request;
 	uint64_t pending_rdma_read;
 	uint64_t pending_rdma_write;

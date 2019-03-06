@@ -4178,26 +4178,54 @@ Example response:
         "transports": [
           {
             "trtype": "RDMA",
-            "pending_data_buffer": 12131888,
+            "pending_data_buffer": 13414719,
             "devices": [
               {
                 "name": "mlx5_1",
-                "polls": 72284105,
+                "polls": 384550561,
                 "completions": 0,
                 "requests": 0,
-                "request_latency": 0,
+                "request_state_latency": [
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0,
+                  0
+                ],
                 "pending_free_request": 0,
                 "pending_rdma_read": 0,
                 "pending_rdma_write": 0
               },
               {
                 "name": "mlx5_0",
-                "polls": 72284105,
-                "completions": 15165875,
-                "requests": 7582935,
-                "request_latency": 1249323766184,
+                "polls": 384550561,
+                "completions": 13962607,
+                "requests": 6981301,
+                "request_state_latency": [
+                  0,
+                  129688470712,
+                  622501351960,
+                  185768,
+                  0,
+                  625882862816,
+                  0,
+                  772105633944,
+                  772627003576,
+                  773394158664,
+                  0,
+                  0,
+                  1387469663632
+                ],
                 "pending_free_request": 0,
-                "pending_rdma_read": 337602,
+                "pending_rdma_read": 0,
                 "pending_rdma_write": 0
               }
             ]

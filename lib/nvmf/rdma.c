@@ -415,7 +415,7 @@ struct spdk_nvmf_rdma_poller_stat {
 	uint64_t				completions;
 	uint64_t				polls;
 	uint64_t				requests;
-	uint64_t				request_latency;
+	uint64_t				request_state_latency[RDMA_REQUEST_NUM_STATES];
 	uint64_t				pending_free_request;
 	uint64_t				pending_rdma_read;
 	uint64_t				pending_rdma_write;
@@ -2086,8 +2086,6 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 		case RDMA_REQUEST_STATE_COMPLETED:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_COMPLETED, 0, 0,
 					  (uintptr_t)rdma_req, (uintptr_t)rqpair->cm_id);
-
-			rqpair->poller->stat.request_latency += spdk_get_ticks() - rdma_req->receive_tsc;
 			nvmf_rdma_request_free(rdma_req, rtransport);
 			break;
 		case RDMA_REQUEST_NUM_STATES:
@@ -2098,6 +2096,8 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (rdma_req->state != prev_state) {
 			progress = true;
+			rqpair->poller->stat.request_state_latency[prev_state] +=
+				spdk_get_ticks() - rdma_req->receive_tsc;
 		}
 	} while (rdma_req->state != prev_state);
 
@@ -3664,6 +3664,21 @@ spdk_nvmf_rdma_init_hooks(struct spdk_nvme_rdma_hooks *hooks)
 	g_nvmf_hooks = *hooks;
 }
 
+static void
+spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
+{
+	uint64_t i;
+	if (stat) {
+		if (stat->rdma.devices) {
+			for (i = 0; i < stat->rdma.num_devices; ++i) {
+				free(stat->rdma.devices[i].request_state_latency);
+			}
+		}
+		free(stat->rdma.devices);
+	}
+	free(stat);
+}
+
 static int
 spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 				   struct spdk_nvmf_transport_poll_group_stat **stat)
@@ -3712,24 +3727,25 @@ spdk_nvmf_rdma_poll_group_get_stat(struct spdk_nvmf_tgt *tgt,
 				device_stat->polls = rpoller->stat.polls;
 				device_stat->completions = rpoller->stat.completions;
 				device_stat->requests = rpoller->stat.requests;
-				device_stat->request_latency = rpoller->stat.request_latency;
 				device_stat->pending_free_request = rpoller->stat.pending_free_request;
 				device_stat->pending_rdma_read = rpoller->stat.pending_rdma_read;
 				device_stat->pending_rdma_write = rpoller->stat.pending_rdma_write;
+				device_stat->request_state_latency = calloc(RDMA_REQUEST_NUM_STATES,
+								     sizeof(device_stat->request_state_latency[0]));
+				if (!device_stat->request_state_latency) {
+					SPDK_ERRLOG("Failed to allocate memory request latencies\n");
+					spdk_nvmf_rdma_poll_group_free_stat(*stat);
+					return -ENOMEM;
+				}
+				device_stat->num_request_states = RDMA_REQUEST_NUM_STATES;
+				memcpy(device_stat->request_state_latency,
+				       rpoller->stat.request_state_latency,
+				       sizeof(rpoller->stat.request_state_latency));
 			}
 			return 0;
 		}
 	}
 	return -ENOENT;
-}
-
-static void
-spdk_nvmf_rdma_poll_group_free_stat(struct spdk_nvmf_transport_poll_group_stat *stat)
-{
-	if (stat) {
-		free(stat->rdma.devices);
-	}
-	free(stat);
 }
 
 const struct spdk_nvmf_transport_ops spdk_nvmf_transport_rdma = {
