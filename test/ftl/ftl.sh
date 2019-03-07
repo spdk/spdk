@@ -31,11 +31,11 @@ trap "at_ftl_exit" SIGINT SIGTERM EXIT
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
 timing_enter ftl
-timing_enter fio
+timing_enter bdevperf
 
-run_test suite $testdir/fio.sh $device basic
+run_test suite $testdir/bdevperf.sh $device
 
-timing_exit fio
+timing_exit bdevperf
 
 timing_enter restore
 run_test suite $testdir/restore.sh $device
@@ -54,7 +54,7 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	trap - SIGINT SIGTERM EXIT
 
 	timing_enter fio_extended
-	run_test suite $testdir/fio.sh $device extended $uuid
+	run_test suite $testdir/fio.sh $device $uuid
 	timing_exit fio_extended
 fi
 
