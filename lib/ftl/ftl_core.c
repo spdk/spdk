@@ -786,6 +786,9 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 		      size_t lbk, void *ctx)
 {
 	struct spdk_ftl_dev *dev = io->dev;
+	size_t lbk_cnt, max_lbks;
+	struct ftl_ppa next_ppa, cur_ppa;
+
 	*ppa = ftl_l2p_get(dev, io->lba + lbk);
 
 	(void) ctx;
@@ -808,8 +811,48 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 		return -EAGAIN;
 	}
 
-	/* We want to read one lbk at a time */
-	return 1;
+	max_lbks = dev->xfer_size - (ppa->lbk % dev->xfer_size);
+	max_lbks = spdk_min(io->lbk_cnt - lbk, max_lbks);
+	max_lbks = spdk_min(ftl_io_iovec_len_left(io), max_lbks);
+	assert(ppa->lbk / dev->xfer_size == (ppa->lbk + max_lbks - 1) / dev->xfer_size);
+
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "max_lbks = %zu  = min(%zu, %zu, %zu)\n", max_lbks,
+			dev->xfer_size - (ppa->lbk % dev->xfer_size), io->lbk_cnt - lbk,
+			ftl_io_iovec_len_left(io));
+
+	lbk_cnt = 1;
+	cur_ppa.ppa = ppa->ppa;
+
+	while (lbk_cnt < max_lbks) {
+		next_ppa = ftl_l2p_get(dev, io->lba + lbk_cnt);
+
+		/* If PPA is invalid, skip it (already zero'ed) */
+		if (ftl_ppa_invalid(next_ppa)) {
+			break;
+		}
+
+		if (ftl_ppa_cached(next_ppa)) {
+			break;
+		}
+
+		if (next_ppa.lbk != cur_ppa.lbk + 1 ||
+			next_ppa.chk != cur_ppa.chk ||
+			next_ppa.pu != cur_ppa.pu ||
+			next_ppa.grp != cur_ppa.grp) {
+			break;
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "%lu/%lu, lba:%lu ppa.lbk: %d %d\n",
+				(lbk_cnt + 1), max_lbks, io->lba + lbk + lbk_cnt,
+				cur_ppa.lbk, next_ppa.lbk);
+
+		lbk_cnt++;
+		cur_ppa.ppa = next_ppa.ppa;
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "lbk_cnt = %lu/%lu\n", lbk_cnt, max_lbks);
+
+	return lbk_cnt;
 }
 
 static void
