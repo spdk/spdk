@@ -492,6 +492,12 @@ vbdev_compress_destruct(void *ctx)
 	/* Remove this device from the internal list */
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 
+	/* TODO: uncomment after reduce load/init paths are implemented.
+	 * We will get a base channel in those paths, RO in load and RW in
+	 * init, and then put them here when the vbdev is killed.
+	 */
+	/* spdk_put_io_channel(comp_bdev->base_ch); */
+
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 
