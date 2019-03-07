@@ -197,9 +197,9 @@ if [ ! -d "${DEPENDENCY_DIR}/nvme-cli" ]; then
 	export SPDK_TEST_NVME_CLI=0
 fi
 
-if [ $SPDK_TEST_FTL -eq 1 ]; then
+#if [ $SPDK_TEST_FTL -eq 1 ]; then
 	config_params+=' --with-ftl'
-fi
+#fi
 
 if [ $SPDK_TEST_ISAL -eq 0 ]; then
 	config_params+=' --without-isal'
