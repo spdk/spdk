@@ -783,9 +783,10 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 		      size_t lbk, void *ctx)
 {
 	struct spdk_ftl_dev *dev = io->dev;
-	*ppa = ftl_l2p_get(dev, io->lba + lbk);
+	struct ftl_ppa next_ppa;
+	size_t i;
 
-	(void) ctx;
+	*ppa = ftl_l2p_get(dev, io->lba + lbk);
 
 	SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Read ppa:%lx, lba:%lu\n", ppa->ppa, io->lba);
 
@@ -805,8 +806,19 @@ ftl_lba_read_next_ppa(struct ftl_io *io, struct ftl_ppa *ppa,
 		return -EAGAIN;
 	}
 
-	/* We want to read one lbk at a time */
-	return 1;
+	for (i = 1; i < ftl_io_iovec_len_left(io); ++i) {
+		next_ppa = ftl_l2p_get(dev, io->lba + lbk + i);
+
+		if (ftl_ppa_invalid(next_ppa) || ftl_ppa_cached(next_ppa)) {
+			break;
+		}
+
+		if (ppa->ppa + i != next_ppa.ppa) {
+			break;
+		}
+	}
+
+	return i;
 }
 
 static void
