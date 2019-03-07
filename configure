@@ -73,6 +73,8 @@ function usage()
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
 	echo "                           No path required."
+	echo " ftl                       Required to build FTL module."
+	echo "                           No path required."
 	echo ""
 	echo "Environment variables:"
 	echo ""
