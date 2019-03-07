@@ -427,6 +427,7 @@ if $INSTALL; then
     sshpass \
     python3-pandas \
     btrfs-progs \
+    rpm-build \
     iptables
 fi
 
