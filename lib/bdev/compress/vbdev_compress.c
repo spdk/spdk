@@ -781,6 +781,20 @@ _comp_reduce_unmap(struct spdk_reduce_backing_dev *dev,
 	}
 }
 
+
+/* Called by reduceLib after performing unload vol actions following base bdev hotremove */
+static void
+bdev_hotremove_vol_unload_cb(void *cb_arg, int reduce_errno)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("error %d\n", reduce_errno);
+	}
+
+	spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
+}
+
 /* Called when the underlying base bdev goes away. */
 static void
 vbdev_compress_base_bdev_hotremove_cb(void *ctx)
@@ -790,7 +804,8 @@ vbdev_compress_base_bdev_hotremove_cb(void *ctx)
 
 	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
 		if (bdev_find == comp_bdev->base_bdev) {
-			spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
+			/* Tell reduceLiib that we're done with this volume. */
+			spdk_reduce_vol_unload(comp_bdev->vol, bdev_hotremove_vol_unload_cb, comp_bdev);
 		}
 	}
 }
