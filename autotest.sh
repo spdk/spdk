@@ -237,7 +237,8 @@ if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
 		run_test suite ./test/ocf/ocf.sh
 	fi
 
-	if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
+#	if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
+	if [ $SPDK_TEST_NVME -eq 1 ]; then
 		run_test suite ./test/ftl/ftl.sh
 	fi
 fi
