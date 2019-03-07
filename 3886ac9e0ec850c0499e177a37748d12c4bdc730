@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fca900d9_f2eeee48",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-07T15:53:13Z",
+      "side": 1,
+      "message": "isn\u0027t the target ID technically still occupied when status \u003d\u003d REMOVING?",
+      "revId": "3886ac9e0ec850c0499e177a37748d12c4bdc730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fba756bf_09ebf174",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-07T15:53:13Z",
+      "side": 1,
+      "message": "could this be reworded?",
+      "revId": "3886ac9e0ec850c0499e177a37748d12c4bdc730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61ecd5e8_ed45e7cc",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 945,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-07T15:53:13Z",
+      "side": 1,
+      "message": "comment needs to be updated",
+      "revId": "3886ac9e0ec850c0499e177a37748d12c4bdc730",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
