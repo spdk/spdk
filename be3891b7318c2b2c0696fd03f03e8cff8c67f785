@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "12073fce_cc3f6341",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-07T02:58:05Z",
+      "side": 1,
+      "message": "I searched the code in fio source tree, there can have different threads but the io_u-\u003efile is only used for one file, depends on user\u0027s input for parameter --file-name.\n\nIf we stored the fio_qpair to the spdk_fio_request structure, then we can eliminate the look up code in spdk_fio_queue().",
+      "parentUuid": "0e395924_42a561ed",
+      "revId": "be3891b7318c2b2c0696fd03f03e8cff8c67f785",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dabc9cdc_b0efb2c7",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 6
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-06T19:03:21Z",
       "side": 1,
       "message": "fio_thread-\u003efio_qpair is a list - how do you know the first one is the right qpair for this completion?",
+      "revId": "be3891b7318c2b2c0696fd03f03e8cff8c67f785",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c35bd5c_6afd518d",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 693,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-07T02:58:05Z",
+      "side": 1,
+      "message": "right, I will fix that first.",
+      "parentUuid": "dabc9cdc_b0efb2c7",
       "revId": "be3891b7318c2b2c0696fd03f03e8cff8c67f785",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
