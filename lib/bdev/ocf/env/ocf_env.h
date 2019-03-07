@@ -52,6 +52,7 @@
 #include "spdk_internal/log.h"
 
 #include "ocf_env_list.h"
+#include "ocf/ocf_err.h"
 
 typedef uint8_t u8;
 typedef uint16_t u16;
@@ -194,10 +195,7 @@ static inline int env_mutex_lock_interruptible(env_mutex *mutex)
 
 static inline int env_mutex_trylock(env_mutex *mutex)
 {
-	if (pthread_mutex_trylock(&mutex->m) == 0) {
-		return 1;
-	}
-	return 0;
+	return pthread_mutex_trylock(&mutex->m) ? -OCF_ERR_NO_LOCK : 0;
 }
 
 static inline void env_mutex_unlock(env_mutex *mutex)
@@ -207,7 +205,7 @@ static inline void env_mutex_unlock(env_mutex *mutex)
 
 static inline int env_mutex_is_locked(env_mutex *mutex)
 {
-	if (env_mutex_trylock(mutex)) {
+	if (env_mutex_trylock(mutex) == 0) {
 		env_mutex_unlock(mutex);
 		return 0;
 	}
@@ -271,13 +269,7 @@ static inline void env_rwsem_down_read(env_rwsem *s)
 
 static inline int env_rwsem_down_read_trylock(env_rwsem *s)
 {
-	int result = pthread_rwlock_tryrdlock(&s->lock);
-
-	if (result == 0) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return pthread_rwlock_tryrdlock(&s->lock) ? -OCF_ERR_NO_LOCK : 0;
 }
 
 static inline void env_rwsem_up_write(env_rwsem *s)
@@ -292,27 +284,17 @@ static inline void env_rwsem_down_write(env_rwsem *s)
 
 static inline int env_rwsem_down_write_trylock(env_rwsem *s)
 {
-	int result = pthread_rwlock_trywrlock(&s->lock);
-
-	if (result == 0) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return pthread_rwlock_trywrlock(&s->lock) ? -OCF_ERR_NO_LOCK : 0;
 }
 
 static inline int env_rwsem_is_locked(env_rwsem *s)
 {
-	if (env_rwsem_down_write_trylock(s)) {
-		env_rwsem_up_write(s);
-		return 1;
-	}
-	if (env_rwsem_down_read_trylock(s)) {
+	if (env_rwsem_down_read_trylock(s) == 0) {
 		env_rwsem_up_read(s);
-		return 1;
+		return 0;
 	}
 
-	return 0;
+	return 1;
 }
 
 static inline int env_rwsem_down_read_interruptible(env_rwsem *s)
