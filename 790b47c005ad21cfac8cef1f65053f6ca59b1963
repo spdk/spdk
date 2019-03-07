@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "89348309_a4ffe60a",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-07T18:31:00Z",
+      "side": 1,
+      "message": "Maybe?:\n\n  This test check if vhost scsi target hotplug/hotremove is\n  working correctly when initiator (e.g. QEMU) disconnects \n  unexpectedly.\n\nbtw: can you format this commit message correctly?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 51
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84e0d650_b7550e7c",
         "filename": "test/vhost/common/autotest.config",
         "patchSetId": 4
