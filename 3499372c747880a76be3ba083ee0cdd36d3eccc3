@@ -306,6 +306,30 @@
       "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1c8dadf6_94c631c9",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 16
+      },
+      "lineNbr": 38,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-07T04:11:35Z",
+      "side": 1,
+      "message": "So I was able to duplicate this failure while using Soft-RoCE, but it appears that I can run the fuzzer for an arbitrary amount of time (at least 8 minutes) without hitting this. I think that the failure is in Soft-RoCE. We should handle failures like that in this script and the associated c file. I will add a couple of statements in the script to make sure that we clean up properly after a failure in the C file.",
+      "parentUuid": "2465d3ef_42a5a67f",
+      "range": {
+        "startLine": 38,
+        "startChar": 32,
+        "endLine": 38,
+        "endChar": 38
+      },
+      "revId": "3499372c747880a76be3ba083ee0cdd36d3eccc3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
