@@ -459,6 +459,12 @@ vbdev_compress_destruct(void *ctx)
 	/* Remove this device from the internal list */
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
 
+	/* TODO: uncomment after reduce load/init paths are implemented.
+	 * We will get a base channel in those paths, RO in load and RW in
+	 * init, and then put them here when the vbdev is killed.
+	 */
+	/* spdk_put_io_channel(comp_bdev->base_ch); */
+
 	/* Unclaim the underlying bdev. */
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 
@@ -535,7 +541,10 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	struct comp_io_channel *comp_ch = ctx_buf;
 	struct vbdev_compress *comp_bdev = io_device;
 
-	comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
+	/* Note: the base bdev ch is allocated in the load/init paths
+	 * as they open the bdev with different permissions.  It is
+	 * returned in the destruct and shutdown paths.
+	 */
 
 	/* We use this queue to track outstanding IO in our lyaer. */
 	TAILQ_INIT(&comp_bdev->pending_comp_ios);
@@ -570,7 +579,6 @@ comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 	}
 
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
-	spdk_put_io_channel(comp_bdev->base_ch);
 }
 
 /* RPC entry point for compression vbdev creation. */
