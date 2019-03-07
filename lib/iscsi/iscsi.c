@@ -399,6 +399,7 @@ spdk_iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
 						 segment_len - pdu->data_valid_bytes,
 						 pdu->data_buf + pdu->data_valid_bytes);
 	} else {
+		pdu->dif_strip = true;
 		rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
 						     pdu->data_buf, pdu->data_buf_len,
 						     pdu->data_valid_bytes, segment_len, NULL,
@@ -3083,14 +3084,22 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			} else {
 				/* we are doing the first partial write task */
 				task->scsi.ref++;
-				spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_buf_len);
+				if (pdu->dif_strip) {
+					spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_buf_len);
+				} else {
+					spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_segment_len);
+				}
 				task->scsi.length = pdu->data_segment_len;
 			}
 		}
 
 		if (pdu->data_segment_len == transfer_len) {
 			/* we are doing small writes with no R2T */
-			spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_buf_len);
+			if (pdu->dif_strip) {
+				spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_buf_len);
+			} else {
+				spdk_scsi_task_set_data(&task->scsi, pdu->data, transfer_len);
+			}
 			task->scsi.length = transfer_len;
 		}
 	} else {
@@ -4335,7 +4344,11 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	}
 	subtask->scsi.offset = buffer_offset;
 	subtask->scsi.length = pdu->data_segment_len;
-	spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
+	if (pdu->dif_strip) {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
+	} else {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+	}
 	spdk_iscsi_task_associate_pdu(subtask, pdu);
 
 	if (task->next_expected_r2t_offset == transfer_len) {
