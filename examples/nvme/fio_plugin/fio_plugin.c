@@ -72,6 +72,7 @@ struct spdk_fio_request {
 	struct spdk_dif_ctx	dif_ctx;
 
 	struct spdk_fio_thread	*fio_thread;
+	struct spdk_fio_qpair	*fio_qpair;
 };
 
 struct spdk_fio_ctrlr {
@@ -592,9 +593,10 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_fio_request		*fio_req = ctx;
 	struct spdk_fio_thread		*fio_thread = fio_req->fio_thread;
+	struct spdk_fio_qpair		*fio_qpair = fio_req->fio_qpair;
 
-	if (fio_thread->fio_qpair->do_nvme_pi) {
-		fio_extended_lba_verify_pi(fio_thread->fio_qpair, fio_req->io);
+	if (fio_qpair->do_nvme_pi) {
+		fio_extended_lba_verify_pi(fio_qpair, fio_req->io);
 	}
 
 	assert(fio_thread->iocq_count < fio_thread->iocq_size);
@@ -658,6 +660,7 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	if (fio_qpair == NULL || ns == NULL) {
 		return -ENXIO;
 	}
+	fio_req->fio_qpair = fio_qpair;
 
 	block_size = spdk_nvme_ns_get_extended_sector_size(ns);
 
