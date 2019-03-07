@@ -101,6 +101,13 @@ struct spdk_scsi_dev_session_state {
 	enum spdk_scsi_dev_vhost_status status;
 };
 
+enum spdk_scsi_session_status {
+	VHOST_SCSI_SESSION_STOPPED,
+	VHOST_SCSI_SESSION_STARTING,
+	VHOST_SCSI_SESSION_RUNNING,
+	VHOST_SCSI_SESSION_STOPPING
+};
+
 struct spdk_vhost_scsi_session {
 	struct spdk_vhost_session vsession;
 
@@ -110,6 +117,9 @@ struct spdk_vhost_scsi_session {
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
 	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+
+	/* Session status. Change protected by global vhost lock. */
+	enum spdk_scsi_session_status status;
 };
 
 struct spdk_vhost_scsi_task {
@@ -179,8 +189,9 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	struct spdk_scsi_dev *dev;
 
 	state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (state->dev == NULL) {
-		/* we've been already removed in the meantime */
+	if (state->dev == NULL || state->status != VHOST_SCSI_DEV_REMOVING) {
+		/* we've been already removed in the meantime or we are only detaching
+		 * this device from session. */
 		return 0;
 	}
 
@@ -763,6 +774,15 @@ process_requestq(struct spdk_vhost_scsi_session *svsession, struct spdk_vhost_vi
 }
 
 static int
+vdev_removed_devs_worker(void *arg)
+{
+	struct spdk_vhost_scsi_session *svsession = arg;
+
+	process_removed_devs(svsession);
+	return -1;
+}
+
+static int
 vdev_mgmt_worker(void *arg)
 {
 	struct spdk_vhost_scsi_session *svsession = arg;
@@ -930,13 +950,19 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	struct spdk_scsi_dev_session_state *session_sdev;
 	int rc;
 
-	if (vsession == NULL || vsession->lcore == -1) {
+	if (vsession == NULL) {
 		/* Nothing more to do */
 		return 0;
 	}
 
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	vhost_sdev = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
+
+	/* Only runnig session allocate IO channels. */
+	if (svsession->status != VHOST_SCSI_SESSION_RUNNING) {
+		/* All done. */
+		return 0;
+	}
 
 	rc = spdk_scsi_dev_allocate_io_channels(vhost_sdev->dev);
 	if (rc != 0) {
@@ -954,6 +980,9 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 
 	/* copy only device pointer */
 	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
+	assert(session_sdev->status == VHOST_SCSI_DEV_EMPTY ||
+	       session_sdev->status == VHOST_SCSI_DEV_REMOVED);
+	assert(session_sdev->dev == NULL);
 	session_sdev->dev = vhost_sdev->dev;
 	/* Don't copy status as target might get removed just after adding it.
 	 * We should receive separate remove request in this case.
@@ -1052,28 +1081,33 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_session_state *state;
-	int rc = 0;
 
 	if (vsession == NULL) {
-		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
-						    struct spdk_vhost_scsi_dev, vdev);
+		return 0;
+	}
 
-		if (vdev->active_session_num == 0) {
-			/* there aren't any active sessions, so remove the dev and exit */
-			rc = remove_scsi_tgt(svdev, scsi_tgt_num);
-		}
-		return rc;
+	svsession = (struct spdk_vhost_scsi_session *)vsession;
+	state = &svsession->scsi_dev_state[scsi_tgt_num];
+	if (state->status != VHOST_SCSI_DEV_PRESENT) {
+		/* Empty, already removing or removed. */
+		return 0;
 	}
 
 	/* Mark the target for removal */
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
 	assert(state->status == VHOST_SCSI_DEV_PRESENT);
 	state->status = VHOST_SCSI_DEV_REMOVING;
 
-	/* If the session isn't currently polled, unset the dev straight away */
-	if (vsession->lcore == -1) {
+	/* If the session isn't currently polled, unset the dev straight away. */
+	if (svsession->status == VHOST_SCSI_SESSION_STOPPED) {
+		assert(svsession->svdev->lcore == -1);
+		state->status = VHOST_SCSI_DEV_REMOVED;
 		state->dev = NULL;
+		return 0;
+	}
+
+	/* If session is starting or stopping, don't send hotremove events.
+	 * For stopping phase device will be collected in session destroy poller. */
+	if (svsession->status != VHOST_SCSI_SESSION_RUNNING) {
 		return 0;
 	}
 
@@ -1125,6 +1159,10 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 
 	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_remove_tgt,
 				       (void *)(uintptr_t)scsi_tgt_num);
+
+	if (vdev->active_session_num == 0) {
+		remove_scsi_tgt(svdev, scsi_tgt_num);
+	}
 	return 0;
 }
 
@@ -1315,6 +1353,9 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 	    vsession->virtqueue[VIRTIO_SCSI_EVENTQ].vring.desc) {
 		svsession->mgmt_poller = spdk_poller_register(vdev_mgmt_worker, svsession,
 					 MGMT_POLL_PERIOD_US);
+	} else {
+		svsession->mgmt_poller = spdk_poller_register(vdev_removed_devs_worker, svsession,
+					 MGMT_POLL_PERIOD_US);
 	}
 out:
 	spdk_vhost_session_event_done(event_ctx, rc);
@@ -1343,6 +1384,7 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 	}
 
 	vsession->lcore = svdev->lcore;
+	svsession->status = VHOST_SCSI_SESSION_STARTING;
 	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
 					   3, "start session");
 	if (rc != 0) {
@@ -1352,6 +1394,10 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 			spdk_vhost_free_reactor(svdev->lcore);
 			svdev->lcore = -1;
 		}
+
+		svsession->status = VHOST_SCSI_SESSION_STOPPED;
+	} else {
+		svsession->status = VHOST_SCSI_SESSION_RUNNING;
 	}
 
 	return rc;
@@ -1364,6 +1410,8 @@ destroy_session_poller_cb(void *arg)
 	struct spdk_vhost_session *vsession = &svsession->vsession;
 	uint32_t i;
 
+	process_removed_devs(svsession);
+
 	if (vsession->task_cnt > 0) {
 		return -1;
 	}
@@ -1374,11 +1422,10 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
-		if (svsession->scsi_dev_state[i].dev == NULL) {
-			continue;
+		/* Some devices didn't detached yet. */
+		if (svsession->scsi_dev_state[i].dev != NULL) {
+			return -1;
 		}
-
-		spdk_scsi_dev_free_io_channels(svsession->scsi_dev_state[i].dev);
 	}
 
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Stopping poller for vhost controller %s\n",
@@ -1397,6 +1444,12 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 			struct spdk_vhost_session *vsession, void *event_ctx)
 {
 	struct spdk_vhost_scsi_session *svsession;
+	unsigned i;
+
+	/* Mark session device for detach. */
+	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		spdk_vhost_scsi_session_remove_tgt(vdev, vsession, (void *)(uintptr_t)i);
+	}
 
 	svsession = to_scsi_session(vsession);
 	assert(svsession != NULL);
@@ -1420,6 +1473,8 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
 		return -1;
 	}
+
+	svsession->status = VHOST_SCSI_SESSION_STOPPING;
 	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
 					   3, "stop session");
 	if (rc != 0) {
@@ -1431,6 +1486,8 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 		spdk_vhost_free_reactor(svsession->svdev->lcore);
 		svsession->svdev->lcore = -1;
 	}
+
+	svsession->status = VHOST_SCSI_SESSION_STOPPED;
 	return 0;
 }
 
