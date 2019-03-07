@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "02c01838_8571528b",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-07T09:06:44Z",
+      "side": 1,
+      "message": "This might be unclear in this patch, but in next patch in series I\u0027m making possible to remove ftl controller using common remove RPC. This call is actually requires num_ns to be set to real value.",
+      "parentUuid": "de80db38_0e9bd5fc",
+      "range": {
+        "startLine": 126,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 73
+      },
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "292e0a42_db8b6095",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 14
@@ -39,6 +63,24 @@
       "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5bf5d26f_c0c6c8b6",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-07T09:06:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "292e0a42_db8b6095",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "5eb146fd_0cc4d929",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-07T09:06:44Z",
+      "side": 1,
+      "message": "This the same reason that I explained in previous comment.",
+      "parentUuid": "ba400215_2435c9e8",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d0652aad_d898e43d",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 14
@@ -73,6 +133,24 @@
       "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92f26007_af690522",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 671,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-07T09:06:44Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d0652aad_d898e43d",
+      "revId": "e9dc224fac5adce7c024ad78b279d09ade041d9f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
