@@ -114,6 +114,8 @@ struct vbdev_compress {
 	struct spdk_reduce_vol_params	params;		/* params for the reduce volume */
 	struct spdk_reduce_backing_dev	backing_dev;	/* backing device info for the reduce volume */
 	struct spdk_reduce_vol		*vol;		/* the reduce volume */
+	spdk_delete_compress_complete	delete_cb_fn;
+	void				*delete_cb_arg;
 	TAILQ_ENTRY(vbdev_compress)	link;
 };
 static TAILQ_HEAD(, vbdev_compress) g_vbdev_comp = TAILQ_HEAD_INITIALIZER(g_vbdev_comp);
@@ -536,6 +538,19 @@ _device_unregister_cb(void *io_device)
 	free(comp_bdev);
 }
 
+static void
+_reduce_destroy_cb(void *ctx, int reduce_errno)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("error %d\n", reduce_errno);
+	}
+
+	spdk_bdev_unregister(&comp_bdev->comp_bdev, comp_bdev->delete_cb_fn,
+			     comp_bdev->delete_cb_arg);
+}
+
 /* Called by reduceLib after performing unload vol actions */
 static void
 spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
@@ -546,18 +561,8 @@ spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
 		SPDK_ERRLOG("error %d\n", reduce_errno);
 	}
 
-	/* Remove this device from the internal list */
-	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
-
-	/* Unclaim the underlying bdev. */
-	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
-
-	/* Close the underlying bdev. */
-	/* TODO: determine if we want to do this here or let spdk_reduce_vol_unload() do it */
-	/* spdk_bdev_close(comp_bdev->base_desc); */
-
-	/* Unregister the io_device. */
-	spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+	/* Clean the device before we free our resources. */
+	spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
 }
 
 /* Called after we've unregistered following a hot remove callback.
@@ -568,8 +573,17 @@ vbdev_compress_destruct(void *ctx)
 {
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
-	/* Tell reduceLiib that we're done with this volume. */
-	spdk_reduce_vol_unload(comp_bdev->vol, spdk_reduce_vol_unload_cb, comp_bdev);
+	/* Remove this device from the internal list */
+	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
+
+	/* Unclaim the underlying bdev. */
+	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
+
+	/* Close the underlying bdev. */
+	spdk_bdev_close(comp_bdev->base_desc);
+
+	/* Unregister the io_device. */
+	spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
 
 	return 0;
 }
@@ -1100,7 +1114,6 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 	}
 
 	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
-	spdk_bdev_module_examine_done(&compress_if);
 
 	return;
 	/* Error cleanup paths. */
@@ -1123,12 +1136,25 @@ error_bdev_name:
 void
 delete_compress_disk(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn, void *cb_arg)
 {
+	struct vbdev_compress *comp_bdev = NULL;
+
 	if (!bdev || bdev->module != &compress_if) {
 		cb_fn(cb_arg, -ENODEV);
 		return;
 	}
 
-	spdk_bdev_unregister(bdev, cb_fn, cb_arg);
+	comp_bdev = SPDK_CONTAINEROF(bdev, struct vbdev_compress, comp_bdev);
+	if (!comp_bdev) {
+		SPDK_ERRLOG("deletting bdev %s\n", bdev->name);
+		return;
+	}
+
+	/* Save these for after the vol is destroyed. */
+	comp_bdev->delete_cb_fn = cb_fn;
+	comp_bdev->delete_cb_arg = cb_arg;
+
+	/* Tell reduceLiib that we're done with this volume. */
+	spdk_reduce_vol_unload(comp_bdev->vol, spdk_reduce_vol_unload_cb, comp_bdev);
 }
 
 /* Callback from reduce for then load is complete. We'll pass the vbdev_comp struct
@@ -1155,6 +1181,7 @@ vbdev_reduce_load_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 
 	meta_ctx->vol = vol;
 	vbdev_compress_claim(meta_ctx);
+	spdk_bdev_module_examine_done(&compress_if);
 }
 
 /* Examine_disk entry point: will do a metadata load to see if this is ours,
