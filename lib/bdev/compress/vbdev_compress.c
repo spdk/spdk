@@ -533,13 +533,14 @@ spdk_reduce_vol_unload_cb(void *cb_arg, int reduce_errno)
 	spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
 }
 
-/* Called after we've unregistered following a hot remove callback.
- * Our finish entry point will be called next.
- */
-static int
-vbdev_compress_destruct(void *ctx)
+static void
+vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 {
-	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
+
+	if (reduce_errno) {
+		SPDK_ERRLOG("error %d\n", reduce_errno);
+	}
 
 	/* Remove this device from the internal list */
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
@@ -554,7 +555,17 @@ vbdev_compress_destruct(void *ctx)
 
 	/* Unregister the io_device. */
 	spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
+}
+/* Called after we've unregistered following a hot remove callback.
+ * Our finish entry point will be called next.
+ */
+static int
+vbdev_compress_destruct(void *ctx)
+{
+	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
+	/* Tell reduceLiib that we're done with this volume. */
+	spdk_reduce_vol_unload(comp_bdev->vol, vbdev_compress_destruct_cb, comp_bdev);
 
 	return 0;
 }
@@ -850,7 +861,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 
 /* We provide this callback for the SPDK channel code to destroy a channel
  * created with our create callback. We just need to undo anything we did
- * when we created. If this bdev used its own poller, we'd unregsiter it here.
+ * when we created. If this bdev used its own poller, we'd unregister it here.
  */
 static void
 comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
@@ -901,8 +912,6 @@ vbdev_compress_init(void)
 static void
 vbdev_compress_finish(void)
 {
-	/* TODO: unload vol in a future patch */
-
 	rte_mempool_free(g_comp_op_mp);
 	spdk_mempool_free(g_mbuf_mp);
 }
