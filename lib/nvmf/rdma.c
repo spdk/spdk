@@ -1655,6 +1655,11 @@ spdk_nvmf_rdma_opts_init(struct spdk_nvmf_transport_opts *opts)
 	opts->buf_cache_size =		SPDK_NVMF_RDMA_DEFAULT_BUFFER_CACHE_SIZE;
 }
 
+const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
+	.notify_cb = spdk_nvmf_rdma_mem_notify,
+	.are_contiguous = spdk_nvmf_rdma_check_contiguous_entries
+};
+
 static int spdk_nvmf_rdma_destroy(struct spdk_nvmf_transport *transport);
 
 static struct spdk_nvmf_transport *
@@ -1663,6 +1668,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 	int rc;
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_device	*device, *tmp;
+	struct ibv_pd			*pd;
 	struct ibv_context		**contexts;
 	uint32_t			i;
 	int				flag;
@@ -1813,6 +1819,34 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 
 		TAILQ_INSERT_TAIL(&rtransport->devices, device, link);
 		i++;
+
+		pd = NULL;
+		if (g_nvmf_hooks.get_ibv_pd) {
+			pd = g_nvmf_hooks.get_ibv_pd(NULL, device->context);
+		}
+
+		if (!g_nvmf_hooks.get_ibv_pd) {
+			device->pd = ibv_alloc_pd(device->context);
+			if (!device->pd) {
+				SPDK_ERRLOG("Unable to allocate protection domain.\n");
+				spdk_nvmf_rdma_destroy(&rtransport->transport);
+				return NULL;
+			}
+		} else {
+			device->pd = pd;
+		}
+
+		assert(device->map == NULL);
+
+		device->map = spdk_mem_map_alloc(0, &g_nvmf_rdma_map_ops, device->pd);
+		if (!device->map) {
+			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
+			spdk_nvmf_rdma_destroy(&rtransport->transport);
+			return NULL;
+		}
+
+		assert(device->map != NULL);
+		assert(device->pd != NULL);
 	}
 	rdma_free_devices(contexts);
 
@@ -1913,11 +1947,6 @@ spdk_nvmf_rdma_trid_from_cm_id(struct rdma_cm_id *id,
 			       struct spdk_nvme_transport_id *trid,
 			       bool peer);
 
-const struct spdk_mem_map_ops g_nvmf_rdma_map_ops = {
-	.notify_cb = spdk_nvmf_rdma_mem_notify,
-	.are_contiguous = spdk_nvmf_rdma_check_contiguous_entries
-};
-
 static int
 spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		      const struct spdk_nvme_transport_id *trid)
@@ -1925,7 +1954,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 	struct spdk_nvmf_rdma_transport	*rtransport;
 	struct spdk_nvmf_rdma_device	*device;
 	struct spdk_nvmf_rdma_port	*port_tmp, *port;
-	struct ibv_pd			*pd;
 	struct addrinfo			*res;
 	struct addrinfo			hints;
 	int				family;
@@ -2036,62 +2064,6 @@ spdk_nvmf_rdma_listen(struct spdk_nvmf_transport *transport,
 		pthread_mutex_unlock(&rtransport->lock);
 		return -EINVAL;
 	}
-
-	pd = NULL;
-	if (g_nvmf_hooks.get_ibv_pd) {
-		if (spdk_nvmf_rdma_trid_from_cm_id(port->id, &port->trid, 1) < 0) {
-			rdma_destroy_id(port->id);
-			free(port);
-			pthread_mutex_unlock(&rtransport->lock);
-			return -EINVAL;
-		}
-
-		pd = g_nvmf_hooks.get_ibv_pd(&port->trid, port->id->verbs);
-	}
-
-	if (device->pd == NULL) {
-		/* Haven't created a protection domain yet. */
-
-		if (!g_nvmf_hooks.get_ibv_pd) {
-			device->pd = ibv_alloc_pd(device->context);
-			if (!device->pd) {
-				SPDK_ERRLOG("Unable to allocate protection domain.\n");
-				rdma_destroy_id(port->id);
-				free(port);
-				pthread_mutex_unlock(&rtransport->lock);
-				return -ENOMEM;
-			}
-		} else {
-			device->pd = pd;
-		}
-
-		assert(device->map == NULL);
-
-		device->map = spdk_mem_map_alloc(0, &g_nvmf_rdma_map_ops, device->pd);
-		if (!device->map) {
-			SPDK_ERRLOG("Unable to allocate memory map for listen address\n");
-			if (!g_nvmf_hooks.get_ibv_pd) {
-				ibv_dealloc_pd(device->pd);
-			}
-			rdma_destroy_id(port->id);
-			free(port);
-			pthread_mutex_unlock(&rtransport->lock);
-			return -ENOMEM;
-		}
-	} else if (g_nvmf_hooks.get_ibv_pd) {
-		/* A protection domain exists for this device, but the user has
-		 * enabled hooks. Verify that they only supply one pd per device. */
-		if (device->pd != pd) {
-			SPDK_ERRLOG("The NVMe-oF target only supports one protection domain per device.\n");
-			rdma_destroy_id(port->id);
-			free(port);
-			pthread_mutex_unlock(&rtransport->lock);
-			return -EINVAL;
-		}
-	}
-
-	assert(device->map != NULL);
-	assert(device->pd != NULL);
 
 	SPDK_INFOLOG(SPDK_LOG_RDMA, "*** NVMf Target Listening on %s port %d ***\n",
 		     port->trid.traddr, ntohs(rdma_get_src_port(port->id)));
