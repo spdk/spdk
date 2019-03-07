@@ -30,11 +30,11 @@ trap "at_ftl_exit" SIGINT SIGTERM EXIT
 PCI_WHITELIST="$device" PCI_BLACKLIST="" DRIVER_OVERRIDE="" ./scripts/setup.sh
 
 timing_enter ftl
-timing_enter fio
+timing_enter bdevperf
 
-run_test suite $testdir/fio.sh $device
+run_test suite $testdir/bdevperf.sh $device
 
-timing_exit fio
+timing_exit bdevperf
 
 timing_enter restore
 run_test suite $testdir/restore.sh $device $uuid
