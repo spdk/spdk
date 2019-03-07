@@ -22,6 +22,30 @@
       "revId": "9ecbaa7c27c815843ce9774906b98e051279ccee",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec4501b3_efaa81bf",
+        "filename": "include/spdk/scsi.h",
+        "patchSetId": 22
+      },
+      "lineNbr": 531,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-07T00:59:44Z",
+      "side": 1,
+      "message": "This was not considered carefully. I thought that just two values are OK. Leaving from the pattern seen in SPDK is not what I wanted to do. I\u0027ll change bool to int.",
+      "parentUuid": "757baa6a_59ddab9e",
+      "range": {
+        "startLine": 531,
+        "startChar": 0,
+        "endLine": 531,
+        "endChar": 4
+      },
+      "revId": "9ecbaa7c27c815843ce9774906b98e051279ccee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
