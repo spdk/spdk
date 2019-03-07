@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "03c8f5c7_310f6d07",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "539f7a93_03a67253",
+      "range": {
+        "startLine": 7,
+        "startChar": 0,
+        "endLine": 7,
+        "endChar": 55
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0336401b_11d86a4c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "I think malloc disc is enough for hotattach/hotdetach.",
+      "parentUuid": "f0d251ff_1b0d0053",
+      "range": {
+        "startLine": 7,
+        "startChar": 16,
+        "endLine": 7,
+        "endChar": 55
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "37f8f751_4551831a",
         "filename": "test/vhost/common/autotest.config",
         "patchSetId": 2
@@ -59,6 +107,30 @@
       "writtenOn": "2019-03-06T13:14:38Z",
       "side": 1,
       "message": "No need to use hex mask, look two lines above this one for an example.",
+      "range": {
+        "startLine": 4,
+        "startChar": 20,
+        "endLine": 4,
+        "endChar": 26
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9ed6fb9f_f1b17732",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 2
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "37f8f751_4551831a",
       "range": {
         "startLine": 4,
         "startChar": 20,
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "5a1f5c56_5277be40",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "For small if we can use:\n[[ condition ]] \u0026\u0026 code_if_true || code_if_false",
+      "parentUuid": "90a593ee_c565c2fe",
+      "range": {
+        "startLine": 94,
+        "startChar": 11,
+        "endLine": 94,
+        "endChar": 31
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d4e41d54_9ef7f757",
         "filename": "test/vhost/hotplug/common.sh",
         "patchSetId": 2
@@ -105,6 +201,30 @@
       "writtenOn": "2019-03-06T13:14:38Z",
       "side": 1,
       "message": "Wrong indent",
+      "range": {
+        "startLine": 96,
+        "startChar": 0,
+        "endLine": 96,
+        "endChar": 1
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "76a958a9_5f96c790",
+        "filename": "test/vhost/hotplug/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 96,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d4e41d54_9ef7f757",
       "range": {
         "startLine": 96,
         "startChar": 0,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "00b7cb69_643af1ca",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "775525dd_7474f91b",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 2,
+        "endChar": 6
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "148204e2_35b3a335",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -151,6 +295,30 @@
       "writtenOn": "2019-03-06T13:14:38Z",
       "side": 1,
       "message": "very confusing name\nthis function is used only once. wouldn\u0027t it be better to just use loop?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 24
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a6fb0b55_91791c79",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "We want to run this section as background process",
+      "parentUuid": "148204e2_35b3a335",
       "range": {
         "startLine": 9,
         "startChar": 0,
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "b8d7ed70_c1173321",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fa04cd4d_3cda4063",
+      "range": {
+        "startLine": 15,
+        "startChar": 9,
+        "endLine": 15,
+        "endChar": 20
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0899870d_a5b05c05",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -197,6 +389,30 @@
       "writtenOn": "2019-03-06T12:50:19Z",
       "side": 1,
       "message": "((i\u003d1; i\u003c\u003dcounter; i++)); \n\n\u0027$\u0027 not needed in arithmetic context",
+      "range": {
+        "startLine": 17,
+        "startChar": 5,
+        "endLine": 17,
+        "endChar": 28
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9c423ee5_74225ec5",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0899870d_a5b05c05",
       "range": {
         "startLine": 17,
         "startChar": 5,
@@ -232,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "fa824c62_40f0de71",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fdbf31be_83e6df2f",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 18,
+        "endChar": 9
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf0b7662_08b4fc1c",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -243,6 +483,30 @@
       "writtenOn": "2019-03-06T12:50:19Z",
       "side": 1,
       "message": "I would rather send SIGKILL insted of SIGTERM.",
+      "range": {
+        "startLine": 19,
+        "startChar": 9,
+        "endLine": 19,
+        "endChar": 16
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "21e9db9f_dd1504cd",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "cf0b7662_08b4fc1c",
       "range": {
         "startLine": 19,
         "startChar": 9,
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "1340c116_37a0cd68",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc1bf7a2_f508d143",
+      "range": {
+        "startLine": 20,
+        "startChar": 10,
+        "endLine": 20,
+        "endChar": 28
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "26780b8a_ed3b0139",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -289,6 +577,30 @@
       "writtenOn": "2019-03-06T12:50:19Z",
       "side": 1,
       "message": "Shouldn\u0027t you kill run_stop_vm here?",
+      "range": {
+        "startLine": 26,
+        "startChar": 6,
+        "endLine": 26,
+        "endChar": 16
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e81b81ff_7a2cdd1b",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "26780b8a_ed3b0139",
       "range": {
         "startLine": 26,
         "startChar": 6,
@@ -324,6 +636,30 @@
     },
     {
       "key": {
+        "uuid": "858e3799_69334f8b",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "It was Pawel W requirement.",
+      "parentUuid": "537377b9_3b641efc",
+      "range": {
+        "startLine": 34,
+        "startChar": 52,
+        "endLine": 34,
+        "endChar": 65
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "264c5837_01e5d889",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
@@ -335,6 +671,30 @@
       "writtenOn": "2019-03-06T12:50:19Z",
       "side": 1,
       "message": "Can you reduce number of logs printed? Putting \n\n  echo \"Succesfully done $j iterations\"\n\nafter this while loop and adding\n\n  echo \"Iterations $j failed\"\n\nin ERR trap will be enough for user.",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 21
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41dc5dc7_a53b1a40",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-07T10:58:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "264c5837_01e5d889",
       "range": {
         "startLine": 44,
         "startChar": 0,
