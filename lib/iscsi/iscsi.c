@@ -38,6 +38,7 @@
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
+#include "spdk/likely.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
@@ -384,6 +385,34 @@ spdk_iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
 	}
 }
 
+static int
+spdk_iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
+				  struct spdk_iscsi_pdu *pdu,
+				  uint32_t segment_len)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct iovec iovs[32];
+	int rc;
+
+	if (spdk_likely(!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx))) {
+		return spdk_iscsi_conn_read_data(conn,
+						 segment_len - pdu->data_valid_bytes,
+						 pdu->data_buf + pdu->data_valid_bytes);
+	} else {
+		pdu->dif_insert_or_strip = true;
+		rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
+						     pdu->data_buf, pdu->data_buf_len,
+						     pdu->data_valid_bytes, segment_len, NULL,
+						     &dif_ctx);
+		if (rc > 0) {
+			return spdk_iscsi_conn_readv_data(conn, iovs, rc);
+		} else {
+			SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
+			return rc;
+		}
+	}
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
@@ -488,9 +517,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			pdu->data_buf = pdu->mobj->buf;
 		}
 
-		rc = spdk_iscsi_conn_read_data(conn,
-					       data_len - pdu->data_valid_bytes,
-					       pdu->data_buf + pdu->data_valid_bytes);
+		rc = spdk_iscsi_conn_read_data_segment(conn, pdu, data_len);
 		if (rc < 0) {
 			*_pdu = NULL;
 			spdk_put_pdu(pdu);
@@ -615,6 +642,41 @@ _iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
 	return true;
 }
 
+/* Build iovec array to leave metadata space for every data block
+ * when reading data segment from socket.
+ */
+static inline bool
+_iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
+			       void *buf, uint32_t buf_len, uint32_t data_len,
+			       struct spdk_dif_ctx *dif_ctx)
+{
+	int rc;
+	uint32_t mapped_len = 0;
+
+	if (ctx->iov_offset >= data_len) {
+		ctx->iov_offset -= buf_len;
+	} else {
+		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->num_iovs - ctx->iovcnt,
+						     buf, buf_len,
+						     ctx->iov_offset, data_len, &mapped_len,
+						     dif_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to setup iovs for DIF strip\n");
+			return false;
+		}
+
+		ctx->mapped_len += mapped_len;
+		ctx->iov_offset = 0;
+		ctx->iovcnt += rc;
+
+		if (ctx->iovcnt == ctx->num_iovs) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 int
 spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
 		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
@@ -660,8 +722,15 @@ spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_
 
 	/* Data Segment */
 	if (data_len > 0) {
-		if (!_iov_ctx_set_iov(&ctx, pdu->data, data_len)) {
-			goto end;
+		if (!pdu->dif_insert_or_strip) {
+			if (!_iov_ctx_set_iov(&ctx, pdu->data, data_len)) {
+				goto end;
+			}
+		} else {
+			if (!_iov_ctx_set_md_interleave_iov(&ctx, pdu->data, pdu->data_buf_len,
+							    data_len, &pdu->dif_ctx)) {
+				goto end;
+			}
 		}
 	}
 
@@ -2911,6 +2980,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t transfer_len;
+	uint32_t scsi_data_len;
 	int F_bit, R_bit, W_bit;
 	int lun_i, rc;
 	struct iscsi_bhs_scsi_req *reqh;
@@ -2991,6 +3061,12 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
+		if (spdk_likely(!pdu->dif_insert_or_strip)) {
+			scsi_data_len = pdu->data_segment_len;
+		} else {
+			scsi_data_len = pdu->data_buf_len;
+		}
+
 		if (F_bit && pdu->data_segment_len < transfer_len) {
 			/* needs R2T */
 			rc = spdk_add_transfer_task(conn, task);
@@ -3006,14 +3082,14 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			} else {
 				/* we are doing the first partial write task */
 				task->scsi.ref++;
-				spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_segment_len);
+				spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
 				task->scsi.length = pdu->data_segment_len;
 			}
 		}
 
 		if (pdu->data_segment_len == transfer_len) {
 			/* we are doing small writes with no R2T */
-			spdk_scsi_task_set_data(&task->scsi, pdu->data, transfer_len);
+			spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
 			task->scsi.length = transfer_len;
 		}
 	} else {
@@ -4258,7 +4334,11 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	}
 	subtask->scsi.offset = buffer_offset;
 	subtask->scsi.length = pdu->data_segment_len;
-	spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+	} else {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
+	}
 	spdk_iscsi_task_associate_pdu(subtask, pdu);
 
 	if (task->next_expected_r2t_offset == transfer_len) {
