@@ -265,6 +265,13 @@ spdk_notify_get_ctx(struct spdk_notify *notify)
 	return notify->ctx;
 }
 
+const struct spdk_notify_type *
+spdk_notify_get_type(struct spdk_notify *notify)
+{
+	return notify->type;
+}
+
+
 void spdk_notify_write_json(struct spdk_json_write_ctx *w, struct spdk_notify *notify)
 {
 	notify->type->write_info_cb(w, notify);

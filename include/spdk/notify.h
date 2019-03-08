@@ -147,6 +147,14 @@ unsigned spdk_notify_get(struct spdk_notify *notify);
 unsigned spdk_notify_put(struct spdk_notify *notify);
 
 /**
+ * Return type of given notification.
+ *
+ * \param notify Notification we are talking about.
+ * \return Pointer to notification type.
+ */
+const struct spdk_notify_type *spdk_notify_get_type(struct spdk_notify *notify);
+
+/**
  * Return pointer to user notification context.
  *
  * \param notify Notification object
