@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "71ea720b_68930d74",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T12:55:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "89348309_a4ffe60a",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 51
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "84e0d650_b7550e7c",
         "filename": "test/vhost/common/autotest.config",
         "patchSetId": 4
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-07T18:24:39Z",
       "side": 1,
       "message": "Aren\u0027t we using comma \u0027,\u0027 to separate cores in corelist?",
+      "range": {
+        "startLine": 4,
+        "startChar": 21,
+        "endLine": 4,
+        "endChar": 28
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "845721da_de5a0d63",
+        "filename": "test/vhost/common/autotest.config",
+        "patchSetId": 4
+      },
+      "lineNbr": 4,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T12:55:06Z",
+      "side": 1,
+      "message": "Yes, it should be separated by comma.",
+      "parentUuid": "84e0d650_b7550e7c",
       "range": {
         "startLine": 4,
         "startChar": 21,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "d71fc2ed_1f694a9d",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T12:55:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "097746cb_49c57689",
+      "range": {
+        "startLine": 425,
+        "startChar": 0,
+        "endLine": 425,
+        "endChar": 33
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "71178cdf_39c4979e",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 4
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "6c6fa92f_deb05723",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 31,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T12:55:06Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "71178cdf_39c4979e",
+      "range": {
+        "startLine": 31,
+        "startChar": 7,
+        "endLine": 31,
+        "endChar": 9
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ad1cc36a_a63a6500",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 4
@@ -105,6 +201,30 @@
       "writtenOn": "2019-03-07T18:24:39Z",
       "side": 1,
       "message": "why you need it?",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 56,
+        "endChar": 9
+      },
+      "revId": "790b47c005ad21cfac8cef1f65053f6ca59b1963",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ca9a815b_8de9bf84",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 56,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T12:55:06Z",
+      "side": 1,
+      "message": "To check if main loop below ended with error (failure\u003d1). If success then we exit from main loop and failure\u003d0 (false). Do you have any idea how we can check it in a different way?",
+      "parentUuid": "ad1cc36a_a63a6500",
       "range": {
         "startLine": 56,
         "startChar": 0,
