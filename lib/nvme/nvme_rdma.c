@@ -328,17 +328,16 @@ nvme_rdma_post_recv(struct nvme_rdma_qpair *rqpair, uint16_t rsp_idx)
 static void
 nvme_rdma_free_rsps(struct nvme_rdma_qpair *rqpair)
 {
-	if (rqpair->rsp_mr && rdma_dereg_mr(rqpair->rsp_mr)) {
-		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
-	}
-	rqpair->rsp_mr = NULL;
-
-	free(rqpair->rsps);
-	rqpair->rsps = NULL;
 	free(rqpair->rsp_sgls);
 	rqpair->rsp_sgls = NULL;
 	free(rqpair->rsp_recv_wrs);
 	rqpair->rsp_recv_wrs = NULL;
+	free(rqpair->rsps);
+	rqpair->rsps = NULL;
+	if (rqpair->rsp_mr && rdma_dereg_mr(rqpair->rsp_mr)) {
+		SPDK_ERRLOG("Unable to de-register rsp_mr\n");
+	}
+	rqpair->rsp_mr = NULL;
 }
 
 static int
@@ -349,6 +348,7 @@ nvme_rdma_alloc_rsps(struct nvme_rdma_qpair *rqpair)
 	rqpair->rsp_mr = NULL;
 	rqpair->rsps = NULL;
 	rqpair->rsp_recv_wrs = NULL;
+	rqpair->rsp_sgls = NULL;
 
 	rqpair->rsp_sgls = calloc(rqpair->num_entries, sizeof(*rqpair->rsp_sgls));
 	if (!rqpair->rsp_sgls) {
@@ -404,26 +404,24 @@ fail:
 static void
 nvme_rdma_free_reqs(struct nvme_rdma_qpair *rqpair)
 {
-	if (!rqpair->rdma_reqs) {
-		return;
-	}
-
+	free(rqpair->rdma_reqs);
+	rqpair->rdma_reqs = NULL;
+	free(rqpair->cmds);
+	rqpair->cmds = NULL;
 	if (rqpair->cmd_mr && rdma_dereg_mr(rqpair->cmd_mr)) {
 		SPDK_ERRLOG("Unable to de-register cmd_mr\n");
 	}
 	rqpair->cmd_mr = NULL;
-
-	free(rqpair->cmds);
-	rqpair->cmds = NULL;
-
-	free(rqpair->rdma_reqs);
-	rqpair->rdma_reqs = NULL;
 }
 
 static int
 nvme_rdma_alloc_reqs(struct nvme_rdma_qpair *rqpair)
 {
 	int i;
+
+	rqpair->cmds = NULL;
+	rqpair->cmd_mr = NULL;
+	rqpair->rdma_reqs = NULL;
 
 	rqpair->rdma_reqs = calloc(rqpair->num_entries, sizeof(struct spdk_nvme_rdma_req));
 	if (rqpair->rdma_reqs == NULL) {
