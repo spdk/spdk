@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "197d2068_e6b64bc9",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 1721,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-08T20:47:07Z",
+      "side": 1,
+      "message": "After staring at the spec for a very long time, I do think you have this correct.",
+      "revId": "35c731242becfa0bb6027c04d5e06f12aa6d8117",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
