@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "347df7c8_c0c472c9",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "let\u0027s move this after hostsvcid\n\nlet\u0027s also use \"standard\" instead of \"generic\", and \"host_ftl\" instead of \"ftl\"\n\nwe will also need to clarify somehow which options are valid with \"host_ftl\" mode - but let\u0027s tackle that later",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1f92d05c_8cb1a1b3",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "this is NVMe specific, but doesn\u0027t have anything about NVMe in the name\n\nbut do we need this?  just wondering if at least for now, we can remove it - we wouldn\u0027t really need it until some point where we want bdev_nvme.c and bdev_ftl.c to be able to register their own functions outside of bdev_nvme_rpc.c",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec1bb885_8efb6e07",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "move to the end of the argument list",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7ea8774_842d6281",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "move to the end",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90780ef8_1d6a9549",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "you could break these whitespace changes out into a separate patch :-)",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e9101e4_95918c02",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:50:10Z",
+      "side": 1,
+      "message": "please try to be consistent with ordering - for example, in jsonrpc.md, you have mode first, here you have it after trtype and traddr, then below under args, it\u0027s first again, then later when you check mode, it\u0027s after subnqn",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
