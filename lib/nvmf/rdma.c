@@ -2593,6 +2593,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_rdma_device		*device;
 	struct ibv_srq_init_attr		srq_init_attr;
 	struct spdk_nvmf_rdma_resource_opts	opts;
+	int					num_cqe;
 
 	rtransport = SPDK_CONTAINEROF(transport, struct spdk_nvmf_rdma_transport, transport);
 
@@ -2618,15 +2619,6 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->group = rgroup;
 
 		TAILQ_INIT(&poller->qpairs);
-
-		poller->cq = ibv_create_cq(device->context, DEFAULT_NVMF_RDMA_CQ_SIZE, poller, NULL, 0);
-		if (!poller->cq) {
-			SPDK_ERRLOG("Unable to create completion queue\n");
-			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
-			pthread_mutex_unlock(&rtransport->lock);
-			return NULL;
-		}
-		poller->num_cqe = DEFAULT_NVMF_RDMA_CQ_SIZE;
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 		if (device->attr.max_srq != 0) {
@@ -2657,6 +2649,27 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 				pthread_mutex_unlock(&rtransport->lock);
 			}
 		}
+
+		/*
+		 * When using an srq, we can limit the completion queue at startup.
+		 * The following formula represents the calculation:
+		 * num_cqe = num_recv + num_data_wr + num_send_wr.
+		 * where num_recv=num_data_wr=and num_send_wr=poller->max_srq_depth
+		 */
+		if (poller->srq) {
+			num_cqe = poller->max_srq_depth * 3;
+		} else {
+			num_cqe = DEFAULT_NVMF_RDMA_CQ_SIZE;
+		}
+
+		poller->cq = ibv_create_cq(device->context, num_cqe, poller, NULL, 0);
+		if (!poller->cq) {
+			SPDK_ERRLOG("Unable to create completion queue\n");
+			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
+			pthread_mutex_unlock(&rtransport->lock);
+			return NULL;
+		}
+		poller->num_cqe = num_cqe;
 	}
 
 	pthread_mutex_unlock(&rtransport->lock);
