@@ -49,6 +49,7 @@
 #include <rte_bus_pci.h>
 #endif
 #include <rte_dev.h>
+#include <rte_alarm.h>
 
 #if RTE_VERSION < RTE_VERSION_NUM(16, 11, 0, 0)
 #error RTE_VERSION is too old! Minimum 16.11 is required.

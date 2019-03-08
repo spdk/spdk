@@ -71,18 +71,6 @@ nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove)
 	abort();
 }
 
-int
-spdk_uevent_connect(void)
-{
-	abort();
-}
-
-int
-spdk_get_uevent(int fd, struct spdk_uevent *uevent)
-{
-	abort();
-}
-
 struct spdk_pci_id
 spdk_pci_device_get_id(struct spdk_pci_device *dev)
 {
