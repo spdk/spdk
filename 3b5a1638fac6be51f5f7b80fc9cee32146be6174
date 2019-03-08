@@ -684,6 +684,30 @@
     },
     {
       "key": {
+        "uuid": "a01b0285_da681965",
+        "filename": "test/vhost/hotplug/scsi_stress_test.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-08T13:07:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52b31dfe_cd5171db",
+      "range": {
+        "startLine": 34,
+        "startChar": 52,
+        "endLine": 34,
+        "endChar": 65
+      },
+      "revId": "3b5a1638fac6be51f5f7b80fc9cee32146be6174",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "264c5837_01e5d889",
         "filename": "test/vhost/hotplug/scsi_stress_test.sh",
         "patchSetId": 2
