@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c83913b9_44d182f1",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-08T19:06:37Z",
+      "side": 1,
+      "message": "This needs to get moved to the 19.01.1 section",
+      "revId": "d54f1197adfeacbd9223f11e408c4925236c207c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
