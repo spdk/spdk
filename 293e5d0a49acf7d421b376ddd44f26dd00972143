@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d703fd05_fd8ca25b",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T10:56:05Z",
+      "side": 1,
+      "message": "Can you please detail how you encountered this issue ?\nDeletion is tricky because in most cases there is very little recourse one can do after failure - other than clean up resources.\n\nThis function is called in three cases that I see:\n1) deletion of lvol via RPC\n2) deletion of lvol store via RPC\n3) failure when creating lvol disk\n\nThis proposed patch helps with 1), by not cleaning up or deleting the lvol.\n\n2) would leave a dangling lvol. Probably iterating multiple times over _vbdev_lvs_remove_lvol_cb(), maybe infinitely.\n\n3) would not free lvol resources and without lvol actually present, they would never get freed.",
+      "range": {
+        "startLine": 899,
+        "startChar": 0,
+        "endLine": 899,
+        "endChar": 25
+      },
+      "revId": "293e5d0a49acf7d421b376ddd44f26dd00972143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41baab49_12ad9285",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T10:56:05Z",
+      "side": 1,
+      "message": "Instead maybe moving the TAILQ_REMOVE to be triggered regardless of failure or success in deletion - would be better. Yet haven\u0027t explored this option.",
+      "range": {
+        "startLine": 910,
+        "startChar": 1,
+        "endLine": 910,
+        "endChar": 52
+      },
+      "revId": "293e5d0a49acf7d421b376ddd44f26dd00972143",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
