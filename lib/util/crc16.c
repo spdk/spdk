@@ -39,7 +39,7 @@
  */
 
 #ifdef SPDK_CONFIG_ISAL
-#include "isa-l/crc.h"
+#include "isa-l/include/crc.h"
 
 uint16_t
 spdk_crc16_t10dif(uint16_t init_crc, const void *buf, size_t len)
