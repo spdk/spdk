@@ -22,6 +22,30 @@
       "revId": "f4d67a75aca4e1810d7f2e1a09b46578c7e26a4b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9a80b3f8_7f14d515",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-08T08:51:56Z",
+      "side": 1,
+      "message": "Unfortunately. rte_net functions are called inside those network-specific rte_vhost APIs. We don\u0027t use any of them, but we still have to link with rte_net.\n\n./spdk/dpdk/build/lib/librte_vhost.a(virtio_net.o): In function `rte_vhost_dequeue_burst\u0027:\n./spdk/mk/spdk.app.mk:46: recipe for target \u0027histogram_perf\u0027 failed\n./spdk/dpdk/lib/librte_vhost/virtio_net.c:1639: undefined reference to `rte_net_make_rarp_packet\u0027\ncollect2: error: ld returned 1 exit status",
+      "parentUuid": "b1ed38a1_92b0fada",
+      "range": {
+        "startLine": 107,
+        "startChar": 27,
+        "endLine": 107,
+        "endChar": 34
+      },
+      "revId": "f4d67a75aca4e1810d7f2e1a09b46578c7e26a4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
