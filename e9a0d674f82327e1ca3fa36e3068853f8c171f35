@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "837c9ef5_0fcfe631",
+        "filename": "test/iscsi_tgt/qos/qos.sh",
+        "patchSetId": 5
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T20:50:47Z",
+      "side": 1,
+      "message": "just make check_qos parameter $4 - then you minimize changes to this function",
+      "revId": "e9a0d674f82327e1ca3fa36e3068853f8c171f35",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
