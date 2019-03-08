@@ -266,7 +266,7 @@ display_controller(struct dev *dev, int model)
 	printf("============================\n");
 	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(dev->ctrlr); i++) {
 		ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, i);
-		if (ns == NULL) {
+		if (ns == NULL || spdk_nvme_ns_get_ctrlr(ns) == NULL) {
 			continue;
 		}
 		display_namespace(ns);
