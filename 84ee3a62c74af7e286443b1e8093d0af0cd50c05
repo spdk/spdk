@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6def089e_e5985790",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T12:22:47Z",
+      "side": 0,
+      "message": "Unfortunately I don\u0027t think the bdevperf can replace all the fio configs. I\u0027d propose to leave fio.sh for extended tests at least.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 72
+      },
+      "revId": "84ee3a62c74af7e286443b1e8093d0af0cd50c05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}

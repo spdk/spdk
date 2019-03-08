@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec7b4027_fd4edeb4",
+        "filename": "autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 241,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T12:22:47Z",
+      "side": 1,
+      "message": "That\u0027s temporary change to display the results, right ?",
+      "range": {
+        "startLine": 240,
+        "startChar": 0,
+        "endLine": 241,
+        "endChar": 35
+      },
+      "revId": "3aeb6bffff68301113c2d85f80a57a2eda135f0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b78645bf_cfd1f7e0",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T12:22:47Z",
+      "side": 1,
+      "message": "I think this one has block size as 68K (-o argument in bdevperf)",
+      "range": {
+        "startLine": 11,
+        "startChar": 8,
+        "endLine": 11,
+        "endChar": 32
+      },
+      "revId": "3aeb6bffff68301113c2d85f80a57a2eda135f0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "729a4a76_95220370",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T12:22:47Z",
+      "side": 1,
+      "message": "double //",
+      "range": {
+        "startLine": 32,
+        "startChar": 9,
+        "endLine": 32,
+        "endChar": 11
+      },
+      "revId": "3aeb6bffff68301113c2d85f80a57a2eda135f0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e0518f2e_13c97f4f",
+        "filename": "test/ftl/ftl.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T12:22:47Z",
+      "side": 1,
+      "message": "As noted in previous file, lets leave fio.sh here.",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 58,
+        "endChar": 30
+      },
+      "revId": "3aeb6bffff68301113c2d85f80a57a2eda135f0c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
