@@ -16,6 +16,24 @@
       "revId": "1627af6d6bf0bfd992d30eab9938bf0413754803",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f48cbfd5_3256baba",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 982,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-08T00:18:38Z",
+      "side": 1,
+      "message": "No, 8 or 16 bytes are too small, I saw 128 bytes for the metadata per sector, so if formatted to (512 + 128), when IO size is 4KiB, the metadata length is 1024 bytes per IO.",
+      "parentUuid": "1821c9f5_21ad266e",
+      "revId": "1627af6d6bf0bfd992d30eab9938bf0413754803",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
