@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b1ed38a1_92b0fada",
+        "filename": "lib/env_dpdk/env.mk",
+        "patchSetId": 4
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-08T00:30:59Z",
+      "side": 1,
+      "message": "Is rte_net library required here?",
+      "range": {
+        "startLine": 107,
+        "startChar": 27,
+        "endLine": 107,
+        "endChar": 34
+      },
+      "revId": "f4d67a75aca4e1810d7f2e1a09b46578c7e26a4b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
