@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ec031ab_3bd2c052",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T20:41:12Z",
+      "side": 1,
+      "message": "looking at next patch, we add more of these ((x / 512) * (512 + 16)) calculations\n\nmaybe we should add something to bdev.h like:\n\n#define SPDK_BDEV_SIZE_WITH_MD(x) (((x) / 512) * (512 + 16))",
+      "revId": "a2b427d2439a620895ccdd255d8bb384aa978e3a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
