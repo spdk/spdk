@@ -33,6 +33,24 @@
       "revId": "dd293e024d55b1dd4d4e8daa46f8eff352df0526",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1264fbc1_90a40988",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 911,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-08T17:56:04Z",
+      "side": 1,
+      "message": "Whether it\u0027s on or off is actually controlled by the enable_sgl flag (added by ChangPeng a while ago) which is disabled by default. This flag only controls the size when enable_sgl\u003d1.",
+      "parentUuid": "e867eb4c_8d23e01a",
+      "revId": "dd293e024d55b1dd4d4e8daa46f8eff352df0526",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
