@@ -42,6 +42,7 @@
 #include "spdk/bdev.h"
 #include "spdk/json.h"
 #include "spdk/nvme.h"
+#include "spdk/nvme_ocssd.h"
 #include "spdk/thread.h"
 #include "spdk/string.h"
 #include "spdk/likely.h"
@@ -2001,6 +2002,11 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 
 	pthread_mutex_lock(&g_bdev_nvme_mutex);
 	TAILQ_FOREACH(nvme_bdev_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
+
+		if (spdk_nvme_ctrlr_is_ocssd_supported(nvme_bdev_ctrlr->ctrlr)) {
+			continue;
+		}
+
 		trid = &nvme_bdev_ctrlr->trid;
 
 		spdk_json_write_object_begin(w);
