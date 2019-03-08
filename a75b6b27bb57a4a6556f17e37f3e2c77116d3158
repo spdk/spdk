@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96d05dc5_6eba3983",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 28
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-08T07:18:28Z",
+      "side": 1,
+      "message": "tab",
+      "revId": "a75b6b27bb57a4a6556f17e37f3e2c77116d3158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d9f903a0_6719b7bf",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-08T07:18:28Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 42,
+        "startChar": 3,
+        "endLine": 65,
+        "endChar": 37
+      },
+      "revId": "a75b6b27bb57a4a6556f17e37f3e2c77116d3158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d29a5127_4f1b7278",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 28
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-08T07:18:28Z",
+      "side": 1,
+      "message": "tab",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 180,
+        "endChar": 2
+      },
+      "revId": "a75b6b27bb57a4a6556f17e37f3e2c77116d3158",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
