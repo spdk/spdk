@@ -2242,6 +2242,20 @@ void spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 		struct spdk_nvme_qpair *qpair,
 		uint8_t opc);
 
+/**
+ * pci device event callback context
+ *
+ * context is used to transmit between pci device hotplug event cabllback functions.
+ */
+struct spdk_nvme_event_cb_ctx {
+	void                                    *cb_ctx;
+	spdk_nvme_probe_cb                      probe_cb;
+	spdk_nvme_attach_cb                     attach_cb;
+	spdk_nvme_remove_cb                     remove_cb;
+	struct spdk_nvme_ctrlr                  *ctrlr;
+	char                                    traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
+};
+
 #ifdef SPDK_CONFIG_RDMA
 struct ibv_context;
 struct ibv_pd;

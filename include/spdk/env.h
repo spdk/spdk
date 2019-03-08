@@ -1132,6 +1132,53 @@ int spdk_mem_register(void *vaddr, size_t len);
  */
 int spdk_mem_unregister(void *vaddr, size_t len);
 
+/**
+ *
+ */
+enum spdk_dev_event_type {
+	SPDK_DEV_EVENT_ADD,	/**< device being added */
+	SPDK_DEV_EVENT_REMOVE,	/**< device being removed */
+	SPDK_DEV_EVENT_MAX	/**< max value of this enum */
+};
+
+/**
+ *
+ */
+void spdk_nvme_event_callback(const char *device_name, enum spdk_dev_event_type type, void *arg);
+
+/**
+ *
+ */
+typedef void (*spdk_eal_alarm_callback)(void *arg);
+
+/**
+ *
+ */
+int spdk_eal_alarm_set(uint64_t us, spdk_eal_alarm_callback cb_fn, void *cb_arg);
+
+/**
+ *
+ */
+typedef void (*spdk_dev_event_cb_fn)(const char *device_name,
+				     enum spdk_dev_event_type event,
+				     void *cb_arg);
+
+/**
+ *
+ */
+void
+spdk_dev_hotplug_monitor_start(const char *device_name,
+			       spdk_dev_event_cb_fn cb_fn,
+			       void *cb_arg);
+
+/**
+ *
+ */
+void
+spdk_dev_hotplug_monitor_stop(const char *device_name,
+			      spdk_dev_event_cb_fn cb_fn,
+			      void *cb_arg);
+
 #ifdef __cplusplus
 }
 #endif
