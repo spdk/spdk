@@ -1001,6 +1001,54 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&ocf_if);
 }
 
+/* Visitor function or open callback
+ * int visitor_function(ocf_core_t core, void *cntx)
+ * {
+ *   void *data = calloc(,sizeof(max_bdev_name));
+ *   rc = ocf_core_get_user_metadata(core, data, max_bdev_name);
+ *   init_vbdev(vbdev_name, mode, cache, core);
+}
+*/
+
+/* This function is called to determine if device was
+ * previously initialized by ocf, so that spdk can
+ * load it automatically.
+ * If that device named is cache_vbdev attach them */
+static void
+vbdev_ocf_probe(struct spdk_bdev *bdev)
+{
+	const char *cache_name = spdk_bdev_get_name(bdev);
+	// struct vbdev_ocf *vbdev;
+	ocf_volume_t volume;
+
+	bool clean_shutdown;
+	bool cache_dirty;
+	struct ocf_volume_uuid uuid;
+	int rc;
+
+
+	uuid.data = cache_name;
+	uuid.size = strlen(cache_name) + 1;
+
+	rc = ocf_ctx_volume_create(vbdev_ocf_ctx, &volume, &uuid, SPDK_OBJECT);
+
+	if (rc) {
+		goto done;
+	}
+
+	rc = ocf_metadata_probe(vbdev_ocf_ctx, volume, &clean_shutdown, &cache_dirty);
+	if (rc || !clean_shutdown || cache_dirty) {
+		goto done;
+	}
+	/* TODO: determine cache mode based on serialized data */
+	/* init_vbdev(NULL, cache_mode, cache_name, NULL); */
+	/* start_cache(vbdev) */
+	/* Consider using: ocf_core_visit(cache, visitior, cntx, false); */
+
+done:
+	spdk_bdev_module_examine_done(&ocf_if);
+}
+
 static int
 vbdev_ocf_get_ctx_size(void)
 {
@@ -1017,6 +1065,7 @@ static struct spdk_bdev_module ocf_if = {
 	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
 	.examine_config = vbdev_ocf_examine,
+	.examine_disk = vbdev_ocf_probe,
 };
 SPDK_BDEV_MODULE_REGISTER(ocf, &ocf_if);
 
