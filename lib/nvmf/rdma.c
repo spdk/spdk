@@ -310,6 +310,7 @@ struct spdk_nvmf_rdma_qpair {
 	struct spdk_nvmf_rdma_poller		*poller;
 
 	struct rdma_cm_id			*cm_id;
+	struct ibv_srq				*srq;
 	struct rdma_cm_id			*listen_id;
 
 	/* The maximum number of I/O outstanding on this connection at one time */
@@ -801,7 +802,7 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 
 	spdk_poller_unregister(&rqpair->destruct_poller);
 
-	if (rqpair->qd != 0 && rqpair->poller->srq == NULL) {
+	if (rqpair->qd != 0 && rqpair->srq == NULL) {
 		nvmf_rdma_dump_qpair_contents(rqpair);
 		SPDK_WARNLOG("Destroying qpair when queue depth is %d\n", rqpair->qd);
 	}
@@ -809,12 +810,12 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 	if (rqpair->poller) {
 		TAILQ_REMOVE(&rqpair->poller->qpairs, rqpair, link);
 
-		if (rqpair->poller->srq != NULL) {
+		if (rqpair->srq != NULL) {
 			/* Drop all received but unprocessed commands for this queue and return them to SRQ */
 			STAILQ_FOREACH_SAFE(rdma_recv, &rqpair->resources->incoming_queue, link, recv_tmp) {
 				if (rqpair == rdma_recv->qpair) {
 					STAILQ_REMOVE_HEAD(&rqpair->resources->incoming_queue, link);
-					rc = ibv_post_srq_recv(rqpair->poller->srq, &rdma_recv->wr, &bad_recv_wr);
+					rc = ibv_post_srq_recv(rqpair->srq, &rdma_recv->wr, &bad_recv_wr);
 					if (rc) {
 						SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 					}
@@ -827,12 +828,12 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 		rdma_destroy_qp(rqpair->cm_id);
 		rdma_destroy_id(rqpair->cm_id);
 
-		if (rqpair->poller && rqpair->poller->srq == NULL) {
+		if (rqpair->poller && rqpair->srq == NULL) {
 			rqpair->poller->required_num_wr -= MAX_WR_PER_QP(rqpair->max_queue_depth);
 		}
 	}
 
-	if (rqpair->poller != NULL && rqpair->poller->srq == NULL) {
+	if (rqpair->poller != NULL && rqpair->srq == NULL) {
 		spdk_nvmf_rdma_resources_destroy(rqpair->resources);
 	}
 
@@ -860,8 +861,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	ibv_init_attr.send_cq		= rqpair->poller->cq;
 	ibv_init_attr.recv_cq		= rqpair->poller->cq;
 
-	if (rqpair->poller->srq) {
-		ibv_init_attr.srq		= rqpair->poller->srq;
+	if (rqpair->srq) {
+		ibv_init_attr.srq		= rqpair->srq;
 	} else {
 		ibv_init_attr.cap.max_recv_wr	= rqpair->max_queue_depth +
 						  1; /* RECV operations + dummy drain WR */
@@ -1012,10 +1013,10 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	assert(rdma_req->recv != NULL);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
 		      rqpair);
-	if (rqpair->poller->srq == NULL) {
+	if (rqpair->srq == NULL) {
 		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
 	} else {
-		rc = ibv_post_srq_recv(rqpair->poller->srq, &rdma_req->recv->wr, &bad_recv_wr);
+		rc = ibv_post_srq_recv(rqpair->srq, &rdma_req->recv->wr, &bad_recv_wr);
 	}
 
 	if (rc) {
@@ -2265,7 +2266,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 		rdma_req->recv = STAILQ_FIRST(&resources->incoming_queue);
 		STAILQ_REMOVE_HEAD(&resources->incoming_queue, link);
 
-		if (rqpair->poller->srq != NULL) {
+		if (rqpair->srq != NULL) {
 			rdma_req->req.qpair = &rdma_req->recv->qpair->qpair;
 			rdma_req->recv->qpair->qd++;
 		} else {
@@ -2728,6 +2729,7 @@ spdk_nvmf_rdma_poll_group_add(struct spdk_nvmf_transport_poll_group *group,
 
 	TAILQ_INSERT_TAIL(&poller->qpairs, rqpair, link);
 	rqpair->poller = poller;
+	rqpair->srq = rqpair->poller->srq;
 
 	rc = spdk_nvmf_rdma_qpair_initialize(qpair);
 	if (rc < 0) {
@@ -2824,7 +2826,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
 
-	if (rqpair->poller->srq == NULL) {
+	if (rqpair->srq == NULL) {
 		rqpair->drain_recv_wr.type = RDMA_WR_TYPE_DRAIN_RECV;
 		recv_wr.wr_id = (uintptr_t)&rqpair->drain_recv_wr;
 		rc = ibv_post_recv(rqpair->cm_id->qp, &recv_wr, &bad_recv_wr);
