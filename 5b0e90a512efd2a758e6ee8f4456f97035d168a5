@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8e476e0_48b83ac8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-08T08:32:28Z",
+      "side": 1,
+      "message": "In line #945 you expect the session_sdev-\u003edev to be already set, so why do we need to change it here?",
+      "revId": "5b0e90a512efd2a758e6ee8f4456f97035d168a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
