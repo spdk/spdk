@@ -50,6 +50,8 @@
 
 static struct spdk_bdev_module ocf_if;
 
+#define OCF_MAX_NAME_LEN 64
+
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_vbdev_head);
 
@@ -1225,6 +1227,72 @@ examine_end(int status, void *cb_arg)
 	}
 }
 
+struct examine_ctx {
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	ocf_cache_t ocf_cache;
+	struct vbdev_ocf_config cfg;
+	char cache_mode_name[5];
+	ocf_volume_t volume;
+};
+
+static void
+_vbdev_ocf_probe_cores_cpl(void *priv, int error, unsigned int num_cores)
+{
+	struct examine_ctx *ctx = (struct examine_ctx *)priv;
+
+	free(ctx);
+}
+
+
+static void
+_vbdev_ocf_probe_cpl(void *priv, int rc,
+		     struct ocf_metadata_probe_status *status)
+{
+	struct examine_ctx *ctx = (struct examine_ctx *)priv;
+	struct ocf_volume_uuid *uuids;
+	int uuid_count;
+
+	if (rc || !status->clean_shutdown || status->cache_dirty) {
+		spdk_bdev_module_examine_done(&ocf_if);
+		return;
+	}
+
+	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &ctx->ocf_cache, &ctx->cfg.cache);
+	if (rc) {
+		SPDK_ERRLOG("Failed to start cache instance\n");
+		spdk_bdev_module_examine_done(&ocf_if);
+		free(ctx);
+		return;
+	}
+	/* This is ocf cache bdev, claim it */
+	rc = spdk_bdev_open(ctx->bdev, true, hotremove_cb, ctx->bdev, &ctx->desc);
+	if (rc) {
+		SPDK_ERRLOG("Unable to open device '%s' for writing\n", ctx->bdev->name);
+		spdk_bdev_module_examine_done(&ocf_if);
+		free(ctx);
+		return;
+	}
+	rc = spdk_bdev_module_claim_bdev(ctx->bdev, ctx->desc,
+					 &ocf_if);
+	if (rc) {
+		SPDK_ERRLOG("Unable to claim device '%s'\n", ctx->bdev->name);
+		spdk_bdev_close(ctx->desc);
+		spdk_bdev_module_examine_done(&ocf_if);
+		free(ctx);
+		return;
+	}
+	/* Cache device claimed, visit saved cores and add appriopiate vbdevs */
+	uuids = calloc(10, sizeof(struct ocf_volume_uuid *));
+	uuid_count = 10;
+	ocf_metadata_probe_cores(vbdev_ocf_ctx, ctx->volume, uuids, uuid_count, &_vbdev_ocf_probe_cores_cpl,
+				 ctx);
+
+
+	spdk_bdev_module_examine_done(&ocf_if);
+}
+
+
 /* This is called after vbdev_ocf_examine
  * It allows to delay application initialization
  * until all OCF bdevs get registered
@@ -1234,7 +1302,11 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 {
 	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
+	struct ocf_volume_uuid uuid;
+	struct examine_ctx *ctx;
+	ocf_volume_t volume;
 	int *refcnt;
+	int rc;
 
 	refcnt = malloc(sizeof(*refcnt));
 	if (refcnt == NULL) {
@@ -1262,7 +1334,22 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 			break;
 		}
 	}
+	rc = ocf_ctx_volume_create(vbdev_ocf_ctx, &volume, &uuid, SPDK_OBJECT);
+	if (rc) {
+		spdk_bdev_module_examine_done(&ocf_if);
+		return;
+	}
 
+	ctx = calloc(1, sizeof(struct examine_ctx));
+
+	if (!ctx) {
+		spdk_bdev_module_examine_done(&ocf_if);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->volume = volume;
+	ocf_metadata_probe(vbdev_ocf_ctx, volume, &_vbdev_ocf_probe_cpl, ctx);
 	examine_end(0, refcnt);
 }
 
