@@ -50,6 +50,8 @@
 
 static struct spdk_bdev_module ocf_if;
 
+#define OCF_MAX_NAME_LEN 64
+
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_vbdev_head);
 
@@ -1225,6 +1227,83 @@ examine_end(int status, void *cb_arg)
 	}
 }
 
+struct examine_ctx {
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	ocf_cache_t ocf_cache;
+	struct vbdev_ocf_config cfg;
+	char cache_mode_name[5];
+	ocf_volume_t volume;
+	int *refcnt;
+	struct ocf_volume_uuid cache_uuid;
+	struct ocf_volume_uuid *uuids;
+	int uuid_count;
+};
+
+static void
+_vbdev_ocf_probe_cores2_cpl(void *priv, int error, unsigned int num_cores)
+{
+	struct examine_ctx *ctx = (struct examine_ctx *)priv;
+	unsigned int i;
+	const char *vbdev_name;
+	const char *core_name;
+
+
+	if (error != 0) {
+		examine_end(error, ctx->refcnt);
+		return;
+	}
+
+	for (i = 0; i < num_cores; i++) {
+		core_name = ocf_uuid_to_str(&ctx->uuids[i]);
+		vbdev_name = core_name + strlen(core_name);
+		init_vbdev(vbdev_name, "wt", ctx->bdev->name, core_name);
+	}
+
+	free(ctx);
+}
+
+
+static void
+_vbdev_ocf_probe_cores_cpl(void *priv, int error, unsigned int num_cores)
+{
+	struct examine_ctx *ctx = (struct examine_ctx *)priv;
+
+	if (error != 0) {
+		examine_end(error, ctx->refcnt);
+		return;
+	}
+
+	ctx->uuids = calloc(num_cores, sizeof(struct ocf_volume_uuid));
+	if (!ctx->uuids) {
+		examine_end(-ENOMEM, ctx->refcnt);
+		return;
+	}
+
+	ocf_metadata_probe_cores(vbdev_ocf_ctx, ctx->volume, ctx->uuids, ctx->uuid_count,
+				 &_vbdev_ocf_probe_cores2_cpl,
+				 ctx);
+}
+
+
+static void
+_vbdev_ocf_probe_cpl(void *priv, int rc,
+		     struct ocf_metadata_probe_status *status)
+{
+	struct examine_ctx *ctx = (struct examine_ctx *)priv;
+
+
+	if (rc || !status->clean_shutdown || status->cache_dirty) {
+		examine_end(rc, ctx->refcnt);
+		return;
+	}
+
+	ocf_metadata_probe_cores(vbdev_ocf_ctx, ctx->volume, ctx->uuids, ctx->uuid_count,
+				 &_vbdev_ocf_probe_cores_cpl,
+				 ctx);
+}
+
+
 /* This is called after vbdev_ocf_examine
  * It allows to delay application initialization
  * until all OCF bdevs get registered
@@ -1234,7 +1313,9 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 {
 	const char *bdev_name = spdk_bdev_get_name(bdev);
 	struct vbdev_ocf *vbdev;
+	struct examine_ctx *ctx;
 	int *refcnt;
+	int rc;
 
 	refcnt = malloc(sizeof(*refcnt));
 	if (refcnt == NULL) {
@@ -1259,11 +1340,28 @@ vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
 			if (register_vbdev(vbdev, examine_end, refcnt) == 0) {
 				(*refcnt)++;
 			}
-			break;
+			examine_end(0, refcnt);
+			return;
 		}
 	}
 
-	examine_end(0, refcnt);
+	ctx = calloc(1, sizeof(struct examine_ctx));
+	if (!ctx) {
+		examine_end(0, refcnt);
+		return;
+	}
+
+	rc = ocf_ctx_volume_create(vbdev_ocf_ctx, &ctx->volume, &ctx->cache_uuid, SPDK_OBJECT);
+	if (rc) {
+		examine_end(0, refcnt);
+		free(ctx);
+		return;
+	}
+
+	ctx->bdev = bdev;
+	ctx->refcnt = refcnt;
+
+	ocf_metadata_probe(vbdev_ocf_ctx, ctx->volume, &_vbdev_ocf_probe_cpl, ctx);
 }
 
 static int
