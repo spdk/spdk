@@ -973,6 +973,33 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 	spdk_bdev_module_examine_done(&ocf_if);
 }
 
+/* This function is called to determine if device was
+ * previously initialized by ocf, so that spdk can
+ * load it automatically.
+ * If that device named is cache_vbdev attach them */
+static void
+vbdev_ocf_probe(struct spdk_bdev *bdev)
+{
+	const char *bdev_name = spdk_bdev_get_name(bdev);
+	struct vbdev_ocf *vbdev;
+	int rc;
+	bool clean_shutdown, cache_dirty;
+
+
+	TAILQ_FOREACH(vbdev, &g_ocf_vbdev_head, tailq) {
+		if (!strcmp(bdev_name, vbdev->cache.name)) {
+			rc = ocf_metadata_probe(vbdev_ocf_ctx, (ocf_data_obj_t)vbdev->ocf_cache, &clean_shutdown,
+						&cache_dirty);
+
+			if (!rc) {
+				create_from_bdevs(vbdev, bdev, NULL);
+			}
+			break;
+		}
+	}
+	spdk_bdev_module_examine_done(&ocf_if);
+}
+
 static int
 vbdev_ocf_get_ctx_size(void)
 {
@@ -989,6 +1016,7 @@ static struct spdk_bdev_module ocf_if = {
 	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
 	.examine_config = vbdev_ocf_examine,
+	.examine_disk = vbdev_ocf_probe,
 };
 SPDK_BDEV_MODULE_REGISTER(ocf, &ocf_if);
 
