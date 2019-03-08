@@ -31,31 +31,71 @@
  *   OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/** \file
- * SPDK uevent
- */
+#include "spdk/stdinc.h"
+#include "spdk/log.h"
+#include "env_internal.h"
 
-#include "spdk/env.h"
-#include "spdk/nvmf_spec.h"
+int
+spdk_dev_event_callback_unregister(const char *device_name, spdk_dev_event_cb_fn cb_fn,
+				   void *cb_arg)
+{
+	int rc;
 
-#ifndef SPDK_UEVENT_H_
-#define SPDK_UEVENT_H_
+	rc = rte_dev_event_callback_unregister(device_name, (rte_dev_event_cb_fn)cb_fn,
+					       cb_arg);
+	if (rc < 0) {
+		SPDK_ERRLOG("Callback func is NULL\n");
+	}
 
-#define SPDK_NVME_UEVENT_SUBSYSTEM_UIO 1
-#define SPDK_NVME_UEVENT_SUBSYSTEM_VFIO 2
+	return rc;
+}
 
-enum spdk_nvme_uevent_action {
-	SPDK_NVME_UEVENT_ADD = 0,
-	SPDK_NVME_UEVENT_REMOVE = 1,
-};
+int
+spdk_dev_event_callback_register(const char *device_name, spdk_dev_event_cb_fn cb_fn,
+				 void *cb_arg)
+{
+	int rc;
 
-struct spdk_uevent {
-	enum spdk_nvme_uevent_action action;
-	int subsystem;
-	char traddr[SPDK_NVMF_TRADDR_MAX_LEN + 1];
-};
+	rc = rte_dev_event_callback_register(device_name, (rte_dev_event_cb_fn)cb_fn,
+					     cb_arg);
+	if (rc) {
+		SPDK_ERRLOG("Failed to register dev event callback\n");
+	}
 
-int spdk_uevent_connect(void);
-int spdk_get_uevent(int fd, struct spdk_uevent *uevent);
+	return rc;
+}
 
-#endif /* SPDK_UEVENT_H_ */
+int
+spdk_eal_alarm_set(uint64_t us, spdk_eal_alarm_callback cb_fn, void *cb_arg)
+{
+	int rc;
+
+	rc = rte_eal_alarm_set(us, (rte_eal_alarm_callback)cb_fn,
+			       cb_arg);
+	if (rc) {
+		SPDK_ERRLOG("Could not set up deferred callback\n");
+	}
+
+	return rc;
+}
+
+void
+spdk_dev_event_monitor_start(void)
+{
+	int rc;
+	rc = rte_dev_event_monitor_start();
+	if (rc) {
+		SPDK_ERRLOG("Fail to start hotplug monitor\n");
+	}
+}
+
+void
+spdk_dev_event_monitor_stop(void)
+{
+	int rc;
+
+	rc = rte_dev_event_monitor_stop();
+	if (rc) {
+		SPDK_ERRLOG("Fail to stop hotplug monitor\n");
+	}
+}
