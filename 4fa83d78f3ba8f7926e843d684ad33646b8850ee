@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dd925420_ee3571fa",
+        "filename": "lib/nvme/nvme_transport.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-08T05:18:18Z",
+      "side": 1,
+      "message": "The idea is fine to me, but I think we should implement spdk_transport_ctrlr_reset() instead of reconstruct here",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 106,
+        "endChar": 1
+      },
+      "revId": "4fa83d78f3ba8f7926e843d684ad33646b8850ee",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
