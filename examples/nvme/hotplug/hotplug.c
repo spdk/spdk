@@ -61,6 +61,7 @@ struct perf_task {
 };
 
 static TAILQ_HEAD(, dev_ctx) g_devs = TAILQ_HEAD_INITIALIZER(g_devs);
+static pthread_mutex_t g_devs_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static uint64_t g_tsc_rate;
 
@@ -72,7 +73,7 @@ static int g_expected_removal_times = -1;
 static int g_insert_times;
 static int g_removal_times;
 static int g_shm_id = -1;
-static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC;
+static uint64_t g_timeout_in_us = SPDK_SEC_TO_USEC * 5;
 
 static void
 task_complete(struct perf_task *task);
@@ -135,7 +136,11 @@ register_dev(struct spdk_nvme_ctrlr *ctrlr)
 		goto skip;
 	}
 	g_insert_times++;
+
+	pthread_mutex_lock(&g_devs_mutex);
 	TAILQ_INSERT_TAIL(&g_devs, dev, tailq);
+	pthread_mutex_unlock(&g_devs_mutex);
+
 	return;
 
 skip:
@@ -304,9 +309,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 static void
 remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 {
-	struct dev_ctx *dev;
+	struct dev_ctx *dev, *temp;
 
-	TAILQ_FOREACH(dev, &g_devs, tailq) {
+	pthread_mutex_lock(&g_devs_mutex);
+	TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, temp) {
 		if (dev->ctrlr == ctrlr) {
 			/*
 			 * Mark the device as removed, but don't detach yet.
@@ -315,10 +321,16 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 			 * is_removed is true and all outstanding I/O have been completed.
 			 */
 			dev->is_removed = true;
+			drain_io(dev);
+			g_removal_times++;
+			unregister_dev(dev);
 			fprintf(stderr, "Controller removed: %s\n", dev->name);
+			pthread_mutex_unlock(&g_devs_mutex);
 			return;
 		}
+
 	}
+	pthread_mutex_unlock(&g_devs_mutex);
 
 	/*
 	 * If we get here, this remove_cb is for a controller that we are not tracking
@@ -346,6 +358,7 @@ io_loop(void)
 		 * I/O will be submitted in the io_complete callback
 		 * to replace each I/O that is completed.
 		 */
+		pthread_mutex_lock(&g_devs_mutex);
 		TAILQ_FOREACH(dev, &g_devs, tailq) {
 			if (dev->is_new) {
 				/* Submit initial I/O for this controller. */
@@ -355,28 +368,7 @@ io_loop(void)
 
 			check_io(dev);
 		}
-
-		/*
-		 * Check for hotplug events.
-		 */
-		if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
-			fprintf(stderr, "spdk_nvme_probe() failed\n");
-			break;
-		}
-
-		/*
-		 * Check for devices which were hot-removed and have finished
-		 * processing outstanding I/Os.
-		 *
-		 * unregister_dev() may remove devs from the list, so use the
-		 * removal-safe iterator.
-		 */
-		TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
-			if (dev->is_removed && dev->current_queue_depth == 0) {
-				g_removal_times++;
-				unregister_dev(dev);
-			}
-		}
+		pthread_mutex_unlock(&g_devs_mutex);
 
 		now = spdk_get_ticks();
 		if (now > tsc_end) {
@@ -392,10 +384,12 @@ io_loop(void)
 		}
 	}
 
+	pthread_mutex_lock(&g_devs_mutex);
 	TAILQ_FOREACH_SAFE(dev, &g_devs, tailq, dev_tmp) {
 		drain_io(dev);
 		unregister_dev(dev);
 	}
+	pthread_mutex_unlock(&g_devs_mutex);
 }
 
 static void usage(char *program_name)
@@ -474,10 +468,24 @@ register_controllers(void)
 	return 0;
 }
 
+static void
+nvme_event_cb_ctx_init(struct spdk_nvme_event_cb_ctx *event_ctx,
+		       void *arg,
+		       spdk_nvme_probe_cb probe_cb,
+		       spdk_nvme_attach_cb attach_cb,
+		       spdk_nvme_remove_cb remove_cb)
+{
+	event_ctx->cb_ctx = arg;
+	event_ctx->probe_cb = probe_cb;
+	event_ctx->attach_cb = attach_cb;
+	event_ctx->remove_cb = remove_cb;
+}
+
 int main(int argc, char **argv)
 {
 	int rc;
 	struct spdk_env_opts opts;
+	struct spdk_nvme_event_cb_ctx event_ctx;
 
 	rc = parse_args(argc, argv);
 	if (rc != 0) {
@@ -502,8 +510,14 @@ int main(int argc, char **argv)
 		return 1;
 	}
 
+	/* hotplug part */
+	nvme_event_cb_ctx_init(&event_ctx, NULL, probe_cb, attach_cb, remove_cb);
+	spdk_dev_hotplug_monitor_start(NULL, spdk_nvme_event_callback, &event_ctx);
+
 	fprintf(stderr, "Initialization complete. Starting I/O...\n");
 	io_loop();
+
+	spdk_dev_hotplug_monitor_stop(NULL, spdk_nvme_event_callback, &event_ctx);
 
 	if (g_expected_insert_times != -1 && g_insert_times != g_expected_insert_times) {
 		fprintf(stderr, "Expected inserts %d != actual inserts %d\n",
