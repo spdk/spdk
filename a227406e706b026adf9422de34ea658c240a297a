@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "06c89f5d_fec88970",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 27
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-08T01:41:19Z",
+      "side": 1,
+      "message": "I\u0027m okay with the patch, but it\u0027s nice to define (512 + 16) as a macro in the source file, and put the comments there to say why, then it\u0027s easy for others to read the code.",
+      "range": {
+        "startLine": 526,
+        "startChar": 68,
+        "endLine": 526,
+        "endChar": 76
+      },
+      "revId": "a227406e706b026adf9422de34ea658c240a297a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
