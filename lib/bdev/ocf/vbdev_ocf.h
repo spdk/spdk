@@ -39,6 +39,8 @@
 #include "spdk/bdev.h"
 #include "spdk/bdev_module.h"
 
+#define VBDEV_OCF_MD_MAX_LEN 4096
+
 struct vbdev_ocf;
 
 /* Context for OCF queue poller
@@ -133,6 +135,9 @@ struct vbdev_ocf_base {
 
 	/* Reference to main vbdev */
 	struct vbdev_ocf            *parent;
+
+	/* id and metadata for ocf volume */
+	char uuid_str[VBDEV_OCF_MD_MAX_LEN];
 };
 
 /*
