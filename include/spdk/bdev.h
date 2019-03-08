@@ -43,6 +43,7 @@
 #include "spdk/scsi_spec.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/json.h"
+#include "spdk/notify.h"
 #include "spdk/queue.h"
 #include "spdk/histogram_data.h"
 #include "spdk/dif.h"
@@ -202,6 +203,26 @@ void spdk_bdev_config_text(FILE *fp);
  * \param w pointer to a JSON write context where the configuration will be written.
  */
 void spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w);
+
+/**
+ * Helper function that can be used to serialise delete_notify into JSON data. It can be directly used
+ * to define delete event type.
+ *
+ * \param w JSON write context
+ * \param delete_notify
+ */
+void spdk_bdev_delete_notify_write_info(struct spdk_json_write_ctx *w, struct spdk_notify *delete_notify);
+
+/**
+ * Helper function to send notification when bdev was removed. Should be called by only bdev
+ * is successfully unregistered.
+ *
+ * \param delete_notify_type Previously registered delete event type.
+ * \param bdev_name Name of bdev that was removed.
+ * \return 0 if event was sent successfully or negative errno otherwise.
+ *   -ENOMEM Out of memory
+ */
+int spdk_bdev_delete_notify_send(struct spdk_notify_type *delete_notify_type, const char *bdev_name);
 
 /**
  * Get block device by the block device name.

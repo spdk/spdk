@@ -722,6 +722,39 @@ spdk_bdev_subsystem_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_array_end(w);
 }
 
+void
+spdk_bdev_delete_notify_write_info(struct spdk_json_write_ctx *w, struct spdk_notify *delete_notify)
+{
+	const char *bdev_name = spdk_notify_get_ctx(delete_notify);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "method", "delete_malloc_bdev");
+
+	spdk_json_write_named_object_begin(w, "params");
+	spdk_json_write_named_string(w, "name", bdev_name);
+	spdk_json_write_object_end(w);
+
+	spdk_json_write_object_end(w);
+}
+
+int
+spdk_bdev_delete_notify_send(struct spdk_notify_type *delete_notify_type, const char *bdev_name)
+{
+	struct spdk_notify *notify;
+	size_t name_size = strlen(bdev_name) + 1;
+	char *name;
+
+	notify = spdk_notify_alloc(delete_notify_type, name_size);
+	if (notify == NULL) {
+		return -errno;
+	}
+
+	name = spdk_notify_get_ctx(notify);
+	snprintf(name, name_size, "%s", bdev_name);
+	spdk_notify_send(notify);
+	return 0;
+}
+
 static int
 spdk_bdev_mgmt_channel_create(void *io_device, void *ctx_buf)
 {
