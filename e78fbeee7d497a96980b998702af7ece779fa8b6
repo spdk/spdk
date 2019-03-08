@@ -36,6 +36,24 @@
     },
     {
       "key": {
+        "uuid": "d94c3a21_ea7c6a53",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T19:56:22Z",
+      "side": 1,
+      "message": "ok - now I understand why you needed this - because we don\u0027t always compile FTL code\n\nI\u0027d prefer to avoid an extra constructor macro like this, but we can add it if necessary.  I\u0027m wondering if we should just enable the FTL code by default?  Is there any reason we shouldn\u0027t just automatically compile it in now?  Could you get input on this from Tomek and the NSG team?",
+      "parentUuid": "1f92d05c_8cb1a1b3",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec1bb885_8efb6e07",
         "filename": "scripts/rpc.py",
         "patchSetId": 24
