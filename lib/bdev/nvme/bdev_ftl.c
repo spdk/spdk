@@ -134,6 +134,14 @@ bdev_ftl_add_ctrlr(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transpo
 		ftl_ctrlr->trid = *trid;
 		ftl_ctrlr->ref = 1;
 
+		ftl_ctrlr->name = spdk_sprintf_alloc("NVMe_%s", trid->traddr);
+		if (!ftl_ctrlr->name) {
+			SPDK_ERRLOG("Unable to allocate memory for bdev controller name.\n");
+			free(ftl_ctrlr);
+			ftl_ctrlr = NULL;
+			goto out;
+		}
+
 		TAILQ_INSERT_HEAD(&g_nvme_bdev_ctrlrs, ftl_ctrlr, tailq);
 	}
 out:
@@ -153,6 +161,7 @@ bdev_ftl_remove_ctrlr(struct nvme_bdev_ctrlr *ctrlr)
 		}
 
 		TAILQ_REMOVE(&g_nvme_bdev_ctrlrs, ctrlr, tailq);
+		free(ctrlr->name);
 		free(ctrlr);
 	}
 out:
