@@ -196,15 +196,12 @@ struct nvme_pcie_qpair {
 	uint64_t cpl_bus_addr;
 };
 
-static int nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx,
-				  struct spdk_pci_addr *pci_addr);
 static int nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair);
 static int nvme_pcie_qpair_destroy(struct spdk_nvme_qpair *qpair);
 
 __thread struct nvme_pcie_ctrlr *g_thread_mmio_ctrlr = NULL;
 static volatile uint16_t g_signal_lock;
 static bool g_sigset = false;
-static int hotplug_fd = -1;
 
 static void
 nvme_sigbus_fault_sighandler(int signum, siginfo_t *info, void *ctx)
@@ -243,71 +240,6 @@ nvme_pcie_ctrlr_setup_signal(void)
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_SIGINFO;
 	sigaction(SIGBUS, &sa, NULL);
-}
-
-static int
-_nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
-{
-	struct spdk_nvme_ctrlr *ctrlr, *tmp;
-	struct spdk_uevent event;
-	struct spdk_pci_addr pci_addr;
-	union spdk_nvme_csts_register csts;
-	struct spdk_nvme_ctrlr_process *proc;
-
-	while (spdk_get_uevent(hotplug_fd, &event) > 0) {
-		if (event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_UIO ||
-		    event.subsystem == SPDK_NVME_UEVENT_SUBSYSTEM_VFIO) {
-			if (event.action == SPDK_NVME_UEVENT_ADD) {
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "add nvme address: %s\n",
-					      event.traddr);
-				if (spdk_process_is_primary()) {
-					if (!spdk_pci_addr_parse(&pci_addr, event.traddr)) {
-						nvme_pcie_ctrlr_attach(probe_ctx, &pci_addr);
-					}
-				}
-			} else if (event.action == SPDK_NVME_UEVENT_REMOVE) {
-				struct spdk_nvme_transport_id trid;
-
-				memset(&trid, 0, sizeof(trid));
-				trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
-				snprintf(trid.traddr, sizeof(trid.traddr), "%s", event.traddr);
-
-				ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
-				if (ctrlr == NULL) {
-					return 0;
-				}
-				SPDK_DEBUGLOG(SPDK_LOG_NVME, "remove nvme address: %s\n",
-					      event.traddr);
-
-				nvme_ctrlr_fail(ctrlr, true);
-
-				/* get the user app to clean up and stop I/O */
-				if (probe_ctx->remove_cb) {
-					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-					probe_ctx->remove_cb(probe_ctx->cb_ctx, ctrlr);
-					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-				}
-			}
-		}
-	}
-
-	/* This is a work around for vfio-attached device hot remove detection. */
-	TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq, tmp) {
-		/* NVMe controller BAR must be mapped to secondary process space before any access. */
-		proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
-		if (proc) {
-			csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
-			if (csts.raw == 0xffffffffU) {
-				nvme_ctrlr_fail(ctrlr, true);
-				if (probe_ctx->remove_cb) {
-					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-					probe_ctx->remove_cb(probe_ctx->cb_ctx, ctrlr);
-					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-				}
-			}
-		}
-	}
-	return 0;
 }
 
 static inline struct nvme_pcie_ctrlr *
@@ -719,6 +651,106 @@ pcie_nvme_enum_cb(void *ctx, struct spdk_pci_device *pci_dev)
 	return nvme_ctrlr_probe(&trid, enum_ctx->probe_ctx, pci_dev);
 }
 
+static void
+spdk_alarm_remove_callback(void *arg)
+{
+	struct spdk_nvme_event_cb_ctx *cb_ctx = arg;
+
+	if (cb_ctx->remove_cb) {
+		cb_ctx->remove_cb(cb_ctx->cb_ctx, cb_ctx->ctrlr);
+	}
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "remove device successfully\n");
+}
+
+static void
+spdk_alarm_add_callback(void *arg)
+{
+	struct spdk_nvme_event_cb_ctx *cb_ctx = arg;
+	struct spdk_nvme_transport_id trid;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter add callback\n");
+
+	memset(&trid, 0, sizeof(trid));
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	if (cb_ctx->traddr[0] != 0) {
+		snprintf(trid.traddr, sizeof(trid.traddr), "%s", cb_ctx->traddr);
+	}
+
+	if (spdk_nvme_probe(&trid, cb_ctx->cb_ctx, cb_ctx->probe_cb,
+			    cb_ctx->attach_cb, cb_ctx->remove_cb) != 0) {
+		SPDK_ERRLOG("nvme probe fail\n");
+	}
+}
+
+void
+spdk_nvme_event_callback(const char *device_name, enum spdk_dev_event_type type,
+			 void *arg)
+{
+	struct spdk_nvme_ctrlr *ctrlr;
+	struct spdk_nvme_transport_id trid;
+	struct spdk_nvme_event_cb_ctx *cb_ctx = arg;
+
+	if (type >= SPDK_DEV_EVENT_MAX) {
+		SPDK_ERRLOG("calle upon invalid event %d\n", type);
+	}
+
+	memset(&trid, 0, sizeof(trid));
+	trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	snprintf(trid.traddr, sizeof(trid.traddr), "%s", device_name);
+
+	nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
+	ctrlr = spdk_nvme_get_ctrlr_by_trid_unsafe(&trid);
+
+	switch (type) {
+	case SPDK_DEV_EVENT_REMOVE:
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "The device: %s will be removed!\n", device_name);
+
+		if (ctrlr == NULL) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "The device: %s has been removed\n", device_name);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return;
+		}
+
+		if (ctrlr->is_removed) {
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return;
+		}
+
+		cb_ctx->ctrlr = ctrlr;
+		if (spdk_eal_alarm_set(10, spdk_alarm_remove_callback, (void *)cb_ctx)) {
+			SPDK_ERRLOG("Could not set up deferred device removal!\n");
+		}
+
+		nvme_ctrlr_fail(ctrlr, true);
+
+		break;
+	case SPDK_DEV_EVENT_ADD:
+		SPDK_DEBUGLOG(SPDK_LOG_NVME, "device will be added!\n");
+
+		if (ctrlr != NULL) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "The device: %s has been added\n", device_name);
+			nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+			return;
+		}
+
+		memset(cb_ctx->traddr, 0, sizeof(cb_ctx->traddr));
+		if (device_name != NULL) {
+			snprintf(cb_ctx->traddr, sizeof(cb_ctx->traddr), "%s", device_name);
+		}
+
+		if (spdk_eal_alarm_set(10, spdk_alarm_add_callback, (void *)cb_ctx)) {
+			SPDK_ERRLOG("Could not set up deferred device add!\n");
+		}
+
+		break;
+	default:
+		SPDK_ERRLOG("Not support event type:%d\n", type);
+		break;
+	}
+	nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+}
+
 int
 nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		     bool direct_connect)
@@ -734,15 +766,6 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		enum_ctx.has_pci_addr = true;
 	}
 
-	if (hotplug_fd < 0) {
-		hotplug_fd = spdk_uevent_connect();
-		if (hotplug_fd < 0) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "Failed to open uevent netlink socket\n");
-		}
-	} else {
-		_nvme_pcie_hotplug_monitor(probe_ctx);
-	}
-
 	if (enum_ctx.has_pci_addr == false) {
 		return spdk_pci_enumerate(spdk_pci_nvme_get_driver(),
 					  pcie_nvme_enum_cb, &enum_ctx);
@@ -750,18 +773,6 @@ nvme_pcie_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return spdk_pci_device_attach(spdk_pci_nvme_get_driver(),
 					      pcie_nvme_enum_cb, &enum_ctx, &enum_ctx.pci_addr);
 	}
-}
-
-static int
-nvme_pcie_ctrlr_attach(struct spdk_nvme_probe_ctx *probe_ctx, struct spdk_pci_addr *pci_addr)
-{
-	struct nvme_pcie_enum_ctx enum_ctx;
-
-	enum_ctx.probe_ctx = probe_ctx;
-	enum_ctx.has_pci_addr = true;
-	enum_ctx.pci_addr = *pci_addr;
-
-	return spdk_pci_enumerate(spdk_pci_nvme_get_driver(), pcie_nvme_enum_cb, &enum_ctx);
 }
 
 struct spdk_nvme_ctrlr *nvme_pcie_ctrlr_construct(const struct spdk_nvme_transport_id *trid,
