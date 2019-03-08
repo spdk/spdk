@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "40a9c2bf_9b11a074",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-08T07:28:07Z",
+      "side": 1,
+      "message": "for (nsid \u003d spdk_nvme_ctrlr_get_first_active_ns(ctrlr);\n\t     nsid !\u003d 0; nsid \u003d spdk_nvme_ctrlr_get_next_active_ns(ctrlr, nsid)) {\n\t\tdisplay_namespace(spdk_nvme_ctrlr_get_ns(ctrlr, nsid));\n\t}",
+      "revId": "f18b0d500f89fcab39d771ec642254c58d01fe47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
