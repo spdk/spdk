@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf2f815d_5ff5dddc",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 17
+      },
+      "lineNbr": 68,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T20:09:45Z",
+      "side": 1,
+      "message": "comment something like: /** tailq for ftl bdevs built on different punit ranges */",
+      "revId": "3b2ba9a036a75fec44e4a92c6c5faf7b98746954",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
