@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "88563786_72433ff9",
+        "filename": "lib/nvmf/nvmf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 166,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T20:54:59Z",
+      "side": 1,
+      "message": "I see why you changed this to num_ns.  But now I think sgroup-\u003echannels now might be confusing.  Would sgroup-\u003ens_channels be better?  It would be fine to make that change in this patch too.",
+      "revId": "8a697af3a6c870ab76030919e63dc844ee116066",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "45add4a8_fbcf9f08",
+        "filename": "lib/nvmf/nvmf_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-08T20:54:59Z",
+      "side": 1,
+      "message": "change this to ns_channels?",
+      "revId": "8a697af3a6c870ab76030919e63dc844ee116066",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
