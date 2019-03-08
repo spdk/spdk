@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "919c914e_4e580902",
+        "filename": "ocf",
+        "patchSetId": 5
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-08T15:35:44Z",
+      "side": 1,
+      "message": "Since we update OCF multiple times, please add info on that to commit message. Like in this commit we do it because ocf_cache_has_pending_requests() was added.\nJust so we are clear it is not an accident :)",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 58
+      },
+      "revId": "b3ad6a1b4c4ebd91acf75ac4047dd2b5fbb3aa32",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
