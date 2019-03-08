@@ -38,6 +38,7 @@
 #include "spdk/event.h"
 #include "spdk/vhost.h"
 
+#include "spdk/notify.h"
 /* TODO: this should be handled by configure */
 #if defined(SPDK_CONFIG_VHOST) && !defined(__linux__)
 #undef SPDK_CONFIG_VHOST
@@ -50,7 +51,9 @@
 #endif
 
 static const char *g_pid_path = NULL;
-static const char g_spdk_tgt_get_opts_string[] = "f:" SPDK_VHOST_OPTS;
+static const char g_spdk_tgt_get_opts_string[] = "f:X:" SPDK_VHOST_OPTS;
+
+static FILE *g_event_log_file;
 
 static void
 spdk_tgt_usage(void)
@@ -89,10 +92,30 @@ spdk_tgt_parse_arg(int ch, char *arg)
 		spdk_vhost_set_socket_path(arg);
 		break;
 #endif
+	case 'X':
+		g_event_log_file = fopen(arg, "a");
+		if (!g_event_log_file) {
+			return -EINVAL;
+		}
+		setbuf(g_event_log_file, NULL);
+		SPDK_ERRLOG("Logging to file %s\n", arg);
+		break;
 	default:
 		return -EINVAL;
 	}
 	return 0;
+}
+
+static void
+spdk_tgt_event_file_logger(struct spdk_notify *notify, void *ctx)
+{
+	const struct spdk_notify_type *type = spdk_notify_get_type(notify);
+	time_t now = time(NULL);
+	struct tm *tm_now = localtime(&now);
+	char str_now[64];
+
+	strftime(str_now, sizeof(str_now), "%c", tm_now);
+	fprintf(g_event_log_file, "%s: New event: %s\n", str_now, type->name);
 }
 
 static void
@@ -105,6 +128,11 @@ spdk_tgt_started(void *arg1, void *arg2)
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
 		fflush(stdout);
+	}
+
+	if (g_event_log_file) {
+		fputs("=== SPDK TARGET START ===\n", g_event_log_file);
+		spdk_notify_listen(spdk_tgt_event_file_logger, NULL);
 	}
 }
 
@@ -124,6 +152,12 @@ main(int argc, char **argv)
 
 	rc = spdk_app_start(&opts, spdk_tgt_started, NULL);
 	spdk_app_fini();
+
+	if (g_event_log_file) {
+		spdk_notify_unlisten(spdk_tgt_event_file_logger, NULL);
+		fputs("=== SPDK TARGET EXIT ===\n", g_event_log_file);
+		fclose(g_event_log_file);
+	}
 
 	return rc;
 }
