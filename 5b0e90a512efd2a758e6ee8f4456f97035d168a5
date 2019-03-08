@@ -16,6 +16,24 @@
       "revId": "5b0e90a512efd2a758e6ee8f4456f97035d168a5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f565a57_6d8d2721",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 961,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-08T15:12:38Z",
+      "side": 1,
+      "message": "vhost_sdev-\u003edev",
+      "parentUuid": "a8e476e0_48b83ac8",
+      "revId": "5b0e90a512efd2a758e6ee8f4456f97035d168a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
