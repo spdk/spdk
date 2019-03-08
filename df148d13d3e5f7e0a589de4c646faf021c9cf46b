@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f34cf9a2_548ae133",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1824,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-08T21:33:00Z",
+      "side": 1,
+      "message": "This hook interface was designed to potentially allow for different pds per listener. I know, however, that the consumer of this interface doesn\u0027t actually need that on the target side. I think this is ok.",
+      "revId": "df148d13d3e5f7e0a589de4c646faf021c9cf46b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
