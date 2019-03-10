@@ -436,6 +436,9 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 			}
 		} else {
 			total += rc;
+			if (rc < iov[i].iov_len) {
+				break;
+			}
 		}
 	}
 	return total;
