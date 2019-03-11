@@ -235,14 +235,16 @@ def delete_aio_bdev(client, name):
     return client.call('delete_aio_bdev', params)
 
 
-def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None, nvme_adminq_poll_period_us=None):
+def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
+                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
         retry_count: The number of attempts per I/O when an I/O fails (optional)
-        nvme_adminq_poll_period_us: how often the admin queue is polled for asynchronous events in microsecon (optional)
+        nvme_adminq_poll_period_us: How often the admin queue is polled for asynchronous events in microseconds (optional)
+        nvme_ioq_poll_period_us: How often to poll I/O queues for completions in microseconds (optional)
     """
     params = {}
 
@@ -257,6 +259,9 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if nvme_adminq_poll_period_us:
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
+
+    if nvme_ioq_poll_period_us:
+        params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
 
     return client.call('set_bdev_nvme_options', params)
 

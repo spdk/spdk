@@ -51,6 +51,7 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
+	uint64_t nvme_ioq_poll_period_us;
 };
 
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
