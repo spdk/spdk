@@ -169,6 +169,14 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
+ * Release any resources of the environment library that were alllocated with
+ * spdk_env_init(). After this call, no SPDK env function calls may be made.
+ * It is expected that common usage of this function is to call it just before
+ * terminating the process.
+ */
+void spdk_env_fini(void);
+
+/**
  * Allocate a pinned memory buffer with the given size and alignment.
  *
  * \param size Size in bytes.

@@ -61,6 +61,12 @@ For retrieving physical addresses, spdk_vtophys() should be used instead.
 
 Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
 
+### env
+
+spdk_env_fini() and spdk_env_dpdk_post_fini() were added to release any resources
+allocated by spdk_env_init() or spdk_env_dpdk_post_init() respectively. It is expected
+that common usage of those functions is to call them just before terminating the process.
+
 ## v19.01:
 
 ### ocf bdev
