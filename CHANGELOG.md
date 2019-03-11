@@ -31,6 +31,12 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+### env
+
+spdk_env_fini() and spdk_env_dpdk_post_fini() were added to release any resources
+allocated by spdk_env_init() or spdk_env_dpdk_post_init() respectively. It is expected
+that common usage of those functions is to call them just before terminating the process.
+
 ## v19.01:
 
 ### ocf bdev
