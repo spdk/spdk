@@ -276,8 +276,12 @@ _bdev_nvme_reset_create_qpair(struct spdk_io_channel_iter *i)
 	struct spdk_nvme_ctrlr *ctrlr = spdk_io_channel_iter_get_io_device(i);
 	struct spdk_io_channel *_ch = spdk_io_channel_iter_get_channel(i);
 	struct nvme_io_channel *nvme_ch = spdk_io_channel_get_ctx(_ch);
+	struct spdk_nvme_io_qpair_opts opts;
 
-	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	opts.delay_pcie_doorbell = true;
+
+	nvme_ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 	if (!nvme_ch->qpair) {
 		spdk_for_each_channel_continue(i, -1);
 		return;
@@ -517,6 +521,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 {
 	struct spdk_nvme_ctrlr *ctrlr = io_device;
 	struct nvme_io_channel *ch = ctx_buf;
+	struct spdk_nvme_io_qpair_opts opts;
 
 #ifdef SPDK_CONFIG_VTUNE
 	ch->collect_spin_stat = true;
@@ -524,7 +529,10 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 	ch->collect_spin_stat = false;
 #endif
 
-	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, NULL, 0);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(ctrlr, &opts, sizeof(opts));
+	opts.delay_pcie_doorbell = true;
+
+	ch->qpair = spdk_nvme_ctrlr_alloc_io_qpair(ctrlr, &opts, sizeof(opts));
 
 	if (ch->qpair == NULL) {
 		return -1;
