@@ -1,0 +1,106 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d20e8d9b_6132fd57",
+        "filename": "configure",
+        "patchSetId": 12
+      },
+      "lineNbr": 61,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "Still need to remove rdma-srq option from help",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cc4b3ea_b860a331",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 801,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "This warning would still get printed out, even in the SRQ case.",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "208f614e_f612444a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "This check wasn\u0027t here previously.",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b3af4999_16dec2e8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 872,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "Dynamic resize of the completion queue used to occur no matter what. If you want to remove that for the SRQ case, do it in a separate patch.",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eacac99a_6073107d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 2272,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "Extra whitespace",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6547bc4f_3016a5d5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 3007,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:16:13Z",
+      "side": 1,
+      "message": "whitespace",
+      "revId": "3773c2d175e7113d1990ed43d38159fc3244ba87",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
