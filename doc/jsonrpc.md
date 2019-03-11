@@ -1042,7 +1042,9 @@ Get list of OCF devices including unregistered ones.
 
 ### Parameters
 
-This method has no parameters.
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Name of OCF vbdev or name of cache device or name of core device
 
 ### Response
 
