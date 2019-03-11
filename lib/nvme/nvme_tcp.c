@@ -1018,7 +1018,7 @@ nvme_tcp_pdu_payload_handle(struct nvme_tcp_qpair *tqpair,
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 
 	/* check data digest if need */
-	if (pdu->ddigest_valid_bytes) {
+	if (pdu->ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
@@ -1499,39 +1499,25 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 			}
 
 			data_len = pdu->data_len;
-			/* data len */
-			if (pdu->data_valid_bytes < data_len) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							data_len - pdu->data_valid_bytes,
-							(uint8_t *)pdu->data + pdu->data_valid_bytes);
-				if (rc < 0) {
-					nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-					break;
-				}
-
-				pdu->data_valid_bytes += rc;
-				if (pdu->data_valid_bytes < data_len) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
-			}
-
 			/* data digest */
 			if ((pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_C2H_DATA) &&
-			    tqpair->host_ddgst_enable && (pdu->ddigest_valid_bytes < SPDK_NVME_TCP_DIGEST_LEN)) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							SPDK_NVME_TCP_DIGEST_LEN - pdu->ddigest_valid_bytes,
-							pdu->data_digest + pdu->ddigest_valid_bytes);
-				if (rc < 0) {
-					nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
-					break;
-				}
+			    tqpair->host_ddgst_enable) {
+				data_len += SPDK_NVME_TCP_DIGEST_LEN;
+				pdu->ddgst_enable = true;
 
-				pdu->ddigest_valid_bytes += rc;
-				if (pdu->ddigest_valid_bytes < SPDK_NVME_TCP_DIGEST_LEN) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
 			}
 
+			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+			if (rc < 0) {
+				nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_ERROR);
+				break;
+			}
+
+			if (pdu->readv_offset < data_len) {
+				return NVME_TCP_PDU_IN_PROGRESS;
+			}
+
+			assert(pdu->readv_offset == data_len);
 			/* All of this PDU has now been read from the socket. */
 			nvme_tcp_pdu_payload_handle(tqpair, reaped);
 			break;
