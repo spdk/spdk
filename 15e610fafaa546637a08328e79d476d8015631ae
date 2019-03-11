@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "e37d5a1d_9ec976fb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3776,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T20:00:13Z",
+      "side": 1,
+      "message": "I think I see what you\u0027re doing here - let me explain it and you tell me if I\u0027m right or wrong. You want to catch the case where someone calls spdk_bdev_unregister twice, so you want to add a check to spdk_bdev_unregister to look at whether the status is already REMOVING. However, spdk_bdev_close currently calls spdk_bdev_unregister when the last handle to the bdev is closed, and in that case spdk_bdev_unregister should not fail this new status check\n\nIf I\u0027m understanding the problem correctly, I would have solved this by creating the following series of patches:\n\n1. Rename the existing spdk_bdev_unregister to spdk_bdev_unregister_unsafe() and take the locks and the call to spdk_bdev_fini out of it. Otherwise it remains identical. Add a new spdk_bdev_unregister that takes the lock and calls spdk_bdev_unregister_unsafe, and if it return successfully calls spdk_bdev_fini.\n2. Update the spdk_bdev_close() path to call spdk_bdev_unregister_unsafe()/spdk_bdev_fini() instead of calling spdk_bdev_unregister.\n3. Add a check for the bdev status in spdk_bdev_unregister.",
+      "revId": "15e610fafaa546637a08328e79d476d8015631ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5411614d_97c576a0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 10
