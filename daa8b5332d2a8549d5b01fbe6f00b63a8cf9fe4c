@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9096959f_f3145b6b",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 3084,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-11T02:28:36Z",
+      "side": 1,
+      "message": "For this statement, and the following 2 all related with this if/else, Maybe we use an variable, for example, data_len, \nand set data_len \u003d pdu-\u003edata_segment_len as a default value.\n\nThen we use if (spdk_likely(!pdu-\u003edif_insert_or_strip)) {\ndata_len \u003d XXX;\n}\nspdk_scsi_task_set_data(\u0026task-\u003escsi, pdu-\u003edata, data_len);\n\nThis could be much more clear, instead of calling spdk_scsi_set_data in each each if else/case",
+      "range": {
+        "startLine": 3078,
+        "startChar": 4,
+        "endLine": 3084,
+        "endChar": 5
+      },
+      "revId": "daa8b5332d2a8549d5b01fbe6f00b63a8cf9fe4c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
