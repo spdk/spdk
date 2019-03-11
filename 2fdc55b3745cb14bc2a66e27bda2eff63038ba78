@@ -48,6 +48,54 @@
     },
     {
       "key": {
+        "uuid": "79f65fae_cad9f691",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "092bd986_ac33c5b0",
+      "range": {
+        "startLine": 1,
+        "startChar": 11,
+        "endLine": 1,
+        "endChar": 17
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67057ccf_d5588adb",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "01372ca6_2dd1a08c",
+      "range": {
+        "startLine": 1,
+        "startChar": 18,
+        "endLine": 1,
+        "endChar": 29
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d1fb5673_62d8466d",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -94,6 +142,54 @@
     },
     {
       "key": {
+        "uuid": "2841f048_3306c56b",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d1fb5673_62d8466d",
+      "range": {
+        "startLine": 3,
+        "startChar": 162,
+        "endLine": 3,
+        "endChar": 196
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d2e06af4_c991126d",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 3,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "841ff709_dfa0ea1d",
+      "range": {
+        "startLine": 3,
+        "startChar": 22,
+        "endLine": 3,
+        "endChar": 78
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "59f1c5f1_660882b5",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -105,6 +201,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "Does it matter if its an RDMA NIC or TCP NIC?",
+      "range": {
+        "startLine": 5,
+        "startChar": 10,
+        "endLine": 5,
+        "endChar": 15
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4189f41e_c990917b",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Currently scripts only work for RDMA layer, so yes.\nWill change this either in further patch-set or in separate commit.",
+      "parentUuid": "59f1c5f1_660882b5",
       "range": {
         "startLine": 5,
         "startChar": 10,
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "1e9b515c_3cde89be",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7ff2ac2e_e423f76a",
+      "range": {
+        "startLine": 7,
+        "startChar": 2,
+        "endLine": 7,
+        "endChar": 50
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7a16b966_22985462",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -151,6 +295,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "How about changing this to \"Configure the target and initiator in the json configuration file\"",
+      "range": {
+        "startLine": 8,
+        "startChar": 0,
+        "endLine": 8,
+        "endChar": 122
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2941d107_cb22915e",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7a16b966_22985462",
       "range": {
         "startLine": 8,
         "startChar": 0,
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "8c932fa0_8fcff038",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e90f2691_dca073ed",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 71
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c10b38d3_dbe52d77",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -197,6 +389,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "I would suggest changing this to \"such as\"",
+      "range": {
+        "startLine": 12,
+        "startChar": 60,
+        "endLine": 12,
+        "endChar": 66
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "758ad1fb_5c551940",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c10b38d3_dbe52d77",
       "range": {
         "startLine": 12,
         "startChar": 60,
@@ -232,6 +448,30 @@
     },
     {
       "key": {
+        "uuid": "dfa8c45e_900c1042",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "afd0c47b_a7526a75",
+      "range": {
+        "startLine": 17,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 32
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d657c96b_5d51149c",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -243,6 +483,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "Does it have to be an RDMA IP address?",
+      "range": {
+        "startLine": 18,
+        "startChar": 4,
+        "endLine": 18,
+        "endChar": 12
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d80ab7c9_cc9c2163",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Currently scripts only work for RDMA layer, so yes.\nWill change this either in further patch-set or in separate commit.",
+      "parentUuid": "d657c96b_5d51149c",
       "range": {
         "startLine": 18,
         "startChar": 4,
@@ -278,6 +542,30 @@
     },
     {
       "key": {
+        "uuid": "0f16880c_7c923b8e",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 19,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "62171f03_4977b514",
+      "range": {
+        "startLine": 19,
+        "startChar": 0,
+        "endLine": 19,
+        "endChar": 77
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9c3f0f3f_96b8fb11",
         "filename": "scripts/perf/nvmf/README.md",
         "patchSetId": 9
@@ -289,6 +577,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "I think this is confusing. We can simplify it to \"The NVMe namespaces\"",
+      "range": {
+        "startLine": 20,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 31
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0b61ef85_5ea78800",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9c3f0f3f_96b8fb11",
       "range": {
         "startLine": 20,
         "startChar": 0,
@@ -324,6 +636,30 @@
     },
     {
       "key": {
+        "uuid": "2cd30f67_1c792592",
+        "filename": "scripts/perf/nvmf/README.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "831f397e_9bed79b2",
+      "range": {
+        "startLine": 29,
+        "startChar": 45,
+        "endLine": 29,
+        "endChar": 51
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "06148678_022a1d07",
         "filename": "scripts/perf/nvmf/common.py",
         "patchSetId": 9
@@ -335,6 +671,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "The ave, min and max latency might be sufficient for IOPS test but I think on the latency test we are interested in the tail latency so we should at least collect the p99 latency.",
+      "range": {
+        "startLine": 53,
+        "startChar": 56,
+        "endLine": 53,
+        "endChar": 101
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2764ac22_a94c99d9",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "06148678_022a1d07",
       "range": {
         "startLine": 53,
         "startChar": 56,
@@ -370,6 +730,30 @@
     },
     {
       "key": {
+        "uuid": "e0c98a96_26a15c16",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 79,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dc6a5d0d_3a96ac58",
+      "range": {
+        "startLine": 77,
+        "startChar": 0,
+        "endLine": 79,
+        "endChar": 75
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "842c9a89_ef707209",
         "filename": "scripts/perf/nvmf/common.py",
         "patchSetId": 9
@@ -381,6 +765,30 @@
       "writtenOn": "2019-03-05T22:15:37Z",
       "side": 1,
       "message": "This could be in ns or us. Generally we report in us, so we should have the script convert ns to us",
+      "range": {
+        "startLine": 82,
+        "startChar": 11,
+        "endLine": 85,
+        "endChar": 0
+      },
+      "revId": "2fdc55b3745cb14bc2a66e27bda2eff63038ba78",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2a5cf199_b723cd9c",
+        "filename": "scripts/perf/nvmf/common.py",
+        "patchSetId": 9
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-11T09:00:48Z",
+      "side": 1,
+      "message": "Done.\nBTW, thanks for noticing this - I forgot to remove this function from here. Actually used function is in run_nvmf.py, s o these changes are added there.",
+      "parentUuid": "842c9a89_ef707209",
       "range": {
         "startLine": 82,
         "startChar": 11,
