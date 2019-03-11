@@ -174,13 +174,6 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 	return tmp;
 }
 
-static void
-spdk_destruct_eal_cmdline(void)
-{
-	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
-}
-
-
 static int
 spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 {
@@ -365,10 +358,6 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 
 	g_eal_cmdline = args;
 	g_eal_cmdline_argcount = argcount;
-	if (atexit(spdk_destruct_eal_cmdline) != 0) {
-		fprintf(stderr, "Failed to register cleanup handler\n");
-	}
-
 	return argcount;
 }
 
@@ -387,6 +376,12 @@ spdk_env_dpdk_post_init(void)
 	}
 
 	return 0;
+}
+
+void
+spdk_env_dpdk_post_fini(void)
+{
+	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
 }
 
 int
@@ -447,6 +442,12 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	}
 
 	return spdk_env_dpdk_post_init();
+}
+
+void
+spdk_env_fini(void)
+{
+	spdk_env_dpdk_post_fini();
 }
 
 bool

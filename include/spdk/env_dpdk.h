@@ -53,6 +53,14 @@ extern "C" {
 int spdk_env_dpdk_post_init(void);
 
 /**
+ * Release any resources of the environment library that were alllocated with
+ * spdk_env_dpdk_post_init(). After this call, no DPDK function calls may
+ * be made. It is expected that common usage of this function is to call it
+ * just before terminating the process.
+ */
+void spdk_env_dpdk_post_fini(void);
+
+/**
  * Check if DPDK was initialized external to the SPDK env_dpdk library.
  *
  * \return true if DPDK was initialized external to the SPDK env_dpdk library.
