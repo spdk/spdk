@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afb08d32_977fe7ac",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 563,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T06:19:35Z",
+      "side": 1,
+      "message": "if (rc !\u003d 0) {\n  fprintf();\n}\nreturn rc;",
+      "range": {
+        "startLine": 558,
+        "startChar": 0,
+        "endLine": 563,
+        "endChar": 10
+      },
+      "revId": "8c76346c5f27c6d32cf08df923e646f87e6d2f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b21404c3_d96ca1fa",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 670,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T06:19:35Z",
+      "side": 1,
+      "message": "We should do the following:\n\nif (rc \u003c 0) {\n  io_u-\u003eerror \u003d -r;\n  td_verror(td, io_u-\u003eerror, \"xfer\");\n  return FIO_Q_COMPLETED;\n}",
+      "range": {
+        "startLine": 668,
+        "startChar": 0,
+        "endLine": 670,
+        "endChar": 3
+      },
+      "revId": "8c76346c5f27c6d32cf08df923e646f87e6d2f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c806633e_7909d2f3",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 710,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T06:19:35Z",
+      "side": 1,
+      "message": "We should change this to the following:\n\nif (rc !\u003d 0) {\n  io_u-\u003eerror \u003d abs(rc);\n  td_verror(td, io_u-\u003eerror, \"xfer\");\n  return FIO_Q_QUEUED;\n}\n\nSo we can factor out these to yellow blocks by adding the label failed or error.",
+      "range": {
+        "startLine": 708,
+        "startChar": 0,
+        "endLine": 710,
+        "endChar": 2
+      },
+      "revId": "8c76346c5f27c6d32cf08df923e646f87e6d2f92",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
