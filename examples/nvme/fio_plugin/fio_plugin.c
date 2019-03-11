@@ -528,7 +528,7 @@ static void spdk_fio_io_u_free(struct thread_data *td, struct io_u *io_u)
 	}
 }
 
-static void
+static int
 fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 {
 	struct spdk_nvme_ns *ns = fio_qpair->ns;
@@ -549,11 +549,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 			       fio_qpair->io_flags, lba, 0xFFFF, FIO_NVME_PI_APPTAG, 0);
 	if (rc != 0) {
 		fprintf(stderr, "Initialization of DIF context failed\n");
-		return;
-	}
-
-	if (io_u->ddir != DDIR_WRITE) {
-		return;
+		return rc;
 	}
 
 	iov.iov_base = io_u->buf;
@@ -562,9 +558,11 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	if (rc != 0) {
 		fprintf(stderr, "Generation of DIF failed\n");
 	}
+
+	return rc;
 }
 
-static void
+static int
 fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 {
 	struct spdk_nvme_ns *ns = fio_qpair->ns;
@@ -573,10 +571,6 @@ fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	struct iovec iov;
 	struct spdk_dif_error err_blk = {};
 	int rc;
-
-	if (io_u->ddir != DDIR_READ) {
-		return;
-	}
 
 	iov.iov_base = io_u->buf;
 	iov.iov_len = io_u->xfer_buflen;
@@ -587,6 +581,8 @@ fio_extended_lba_verify_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 		fprintf(stderr, "DIF error detected. type=%d, offset=%" PRIu32 "\n",
 			err_blk.err_type, err_blk.err_offset);
 	}
+
+	return rc;
 }
 
 static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
@@ -594,9 +590,13 @@ static void spdk_fio_completion_cb(void *ctx, const struct spdk_nvme_cpl *cpl)
 	struct spdk_fio_request		*fio_req = ctx;
 	struct spdk_fio_thread		*fio_thread = fio_req->fio_thread;
 	struct spdk_fio_qpair		*fio_qpair = fio_req->fio_qpair;
+	int				rc;
 
-	if (fio_qpair->do_nvme_pi) {
-		fio_extended_lba_verify_pi(fio_qpair, fio_req->io);
+	if (fio_qpair->do_nvme_pi && fio_req->io->ddir == DDIR_READ) {
+		rc = fio_extended_lba_verify_pi(fio_qpair, fio_req->io);
+		if (rc != 0) {
+			fio_req->io->error = abs(rc);
+		}
 	}
 
 	assert(fio_thread->iocq_count < fio_thread->iocq_size);
@@ -668,8 +668,12 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	lba_count = io_u->xfer_buflen / block_size;
 
 	/* TODO: considering situations that fio will randomize and verify io_u */
-	if (fio_qpair->do_nvme_pi) {
-		fio_extended_lba_setup_pi(fio_qpair, io_u);
+	if (fio_qpair->do_nvme_pi && io_u->ddir == DDIR_WRITE) {
+		rc = fio_extended_lba_setup_pi(fio_qpair, io_u);
+		if (rc < 0) {
+			io_u->error = -rc;
+			return FIO_Q_COMPLETED;
+		}
 	}
 
 	switch (io_u->ddir) {
@@ -708,7 +712,8 @@ spdk_fio_queue(struct thread_data *td, struct io_u *io_u)
 	}
 
 	if (rc != 0) {
-		return -abs(rc);
+		io_u->error = abs(rc);
+		return FIO_Q_COMPLETED;
 	}
 
 	return FIO_Q_QUEUED;
