@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "1df55591_e3f05693",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T04:25:51Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "70730222_f9e231c6",
+      "range": {
+        "startLine": 17,
+        "startChar": 39,
+        "endLine": 17,
+        "endChar": 46
+      },
+      "revId": "5b31282542d256fd15b8f2ce94ace6277695b327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "31bc13d6_129ba92e",
         "filename": "scripts/rpc.py",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-11T02:32:44Z",
       "side": 1,
       "message": "So what\u0027s the difference, I see previously is:\n`A` `B` `C`, and now is A B C.  What\u0027s the benefit of the new style?",
+      "range": {
+        "startLine": 839,
+        "startChar": 3,
+        "endLine": 841,
+        "endChar": 84
+      },
+      "revId": "5b31282542d256fd15b8f2ce94ace6277695b327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b97900d9_aa826556",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T04:25:51Z",
+      "side": 1,
+      "message": "We can add new options after portal_lists. If we don\u0027t change, we cannot add any new option to add_portal_group. We may want to add new option to add_portal_group.",
+      "parentUuid": "31bc13d6_129ba92e",
       "range": {
         "startLine": 839,
         "startChar": 3,
