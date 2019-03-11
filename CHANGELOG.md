@@ -1,6 +1,6 @@
 # Changelog
 
-## v19.01.1: (Upcoming Release)
+## v19.01.1:
 
 ### logical volumes
 
