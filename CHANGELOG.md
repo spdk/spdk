@@ -57,6 +57,10 @@ Default size is 4096.
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
 For retrieving physical addresses, spdk_vtophys() should be used instead.
 
+### DPDK
+
+Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
+
 ## v19.01:
 
 ### ocf bdev

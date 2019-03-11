@@ -41,17 +41,13 @@
 #include <rte_config.h>
 #include <rte_version.h>
 #include <rte_eal.h>
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 05, 0, 0)
 #include <rte_bus.h>
-#endif
 #include <rte_pci.h>
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 1)
 #include <rte_bus_pci.h>
-#endif
 #include <rte_dev.h>
 
-#if RTE_VERSION < RTE_VERSION_NUM(16, 11, 0, 0)
-#error RTE_VERSION is too old! Minimum 16.11 is required.
+#if RTE_VERSION < RTE_VERSION_NUM(17, 11, 0, 0)
+#error RTE_VERSION is too old! Minimum 17.11 is required.
 #endif
 
 /* x86-64 and ARM userspace virtual addresses use only the low 48 bits [0..47],
