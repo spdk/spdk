@@ -22,6 +22,30 @@
       "revId": "978c842fb9a2d559492aa78e32f83b1db33c101f",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f752a95a_17611bf6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 816,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-11T10:46:07Z",
+      "side": 1,
+      "message": "I\u0027m not so sure about it, it looks safer but in other hand do we have any requirement that read couldn\u0027t be issued to two separate chunks? If ppa\u0027s will be contiguous across chunks (which is not case in our test environments) won\u0027t be a firmware responsibility to handle such situation?",
+      "parentUuid": "b6984fc1_41ea216a",
+      "range": {
+        "startLine": 816,
+        "startChar": 6,
+        "endLine": 816,
+        "endChar": 34
+      },
+      "revId": "978c842fb9a2d559492aa78e32f83b1db33c101f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
