@@ -207,6 +207,7 @@ def get_nvme_bdev_json(config, section):
         ["RetryCount", "retry_count", int, 4],
         ["TimeoutuSec", "timeout_us", int, 0],
         ["AdminPollRate", "nvme_adminq_poll_period_us", int, 1000000],
+        ["IOPollRate", "nvme_ioq_poll_period_us", int, 0],
         ["ActionOnTimeout", "action_on_timeout", str, "none"],
         ["HotplugEnable", "enable", bool, False],
         ["AdminPollRate", "period_us", int, 1000]
