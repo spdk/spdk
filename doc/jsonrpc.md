@@ -1042,7 +1042,9 @@ Get list of OCF devices including unregistered ones.
 
 ### Parameters
 
-This method has no parameters.
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+name                    | Optional | string      | Name of OCF vbdev or name of cache device or name of core device
 
 ### Response
 
@@ -1054,6 +1056,9 @@ Example request:
 
 ~~~
 {
+  "params": {
+    "name": null
+  },
   "jsonrpc": "2.0",
   "method": "get_ocf_bdevs",
   "id": 1
