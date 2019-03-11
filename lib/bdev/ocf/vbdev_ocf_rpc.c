@@ -219,10 +219,42 @@ end:
 }
 SPDK_RPC_REGISTER("get_ocf_stats", spdk_rpc_get_ocf_stats, SPDK_RPC_RUNTIME)
 
+/* Structure to hold the parameters for this RPC method. */
+struct rpc_get_ocf_bdevs {
+	char *name;
+};
+
+static void
+free_rpc_get_ocf_bdevs(struct rpc_get_ocf_bdevs *r)
+{
+	free(r->name);
+}
+
+/* Structure to decode the input parameters for this RPC method. */
+static const struct spdk_json_object_decoder rpc_get_ocf_bdevs_decoders[] = {
+	{"name", offsetof(struct rpc_get_ocf_bdevs, name), spdk_json_decode_string, true},
+};
+
+struct get_bdevs_ctx {
+	char *name;
+	struct spdk_json_write_ctx *w;
+	bool matched;
+};
+
 static void
 get_bdevs_fn(struct vbdev_ocf *vbdev, void *ctx)
 {
-	struct spdk_json_write_ctx *w = ctx;
+	struct get_bdevs_ctx *cctx = ctx;
+	struct spdk_json_write_ctx *w = cctx->w;
+
+	if (cctx->name != NULL &&
+	    strcmp(vbdev->name, cctx->name) &&
+	    strcmp(vbdev->cache.name, cctx->name) &&
+	    strcmp(vbdev->core.name, cctx->name)) {
+		return;
+	}
+
+	cctx->matched = true;
 
 	spdk_json_write_object_begin(w);
 	spdk_json_write_named_string(w, "name", vbdev->name);
@@ -245,16 +277,39 @@ static void
 spdk_rpc_get_ocf_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
 {
 	struct spdk_json_write_ctx *w;
+	struct rpc_get_ocf_bdevs req = {NULL};
+	struct get_bdevs_ctx cctx;
+
+	if (params && spdk_json_decode_object(params, rpc_get_ocf_bdevs_decoders,
+					      SPDK_COUNTOF(rpc_get_ocf_bdevs_decoders),
+					      &req)) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "Invalid parameters");
+		goto end;
+	}
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
 		return;
 	}
 
+	cctx.name    = req.name;
+	cctx.w       = w;
+	cctx.matched = false;
+
 	spdk_json_write_array_begin(w);
-	vbdev_ocf_foreach(get_bdevs_fn, w);
+	vbdev_ocf_foreach(get_bdevs_fn, &cctx);
 	spdk_json_write_array_end(w);
 
-	spdk_jsonrpc_end_result(request, w);
+	if (cctx.matched) {
+		spdk_jsonrpc_end_result(request, w);
+	} else {
+		free(w);
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 spdk_strerror(ENODEV));
+	}
+
+end:
+	free_rpc_get_ocf_bdevs(&req);
 }
 SPDK_RPC_REGISTER("get_ocf_bdevs", spdk_rpc_get_ocf_bdevs, SPDK_RPC_RUNTIME)
