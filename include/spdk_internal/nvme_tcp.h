@@ -226,7 +226,6 @@ nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pd
 
 	_iov_ctx_init(&ctx, iovec, num_iovs, pdu->writev_offset);
 	hlen = pdu->hdr.common.hlen;
-	plen = hlen;
 	enable_digest = 1;
 	if (pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_REQ ||
 	    pdu->hdr.common.pdu_type == SPDK_NVME_TCP_PDU_TYPE_IC_RESP ||
@@ -241,6 +240,7 @@ nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pd
 		hlen += SPDK_NVME_TCP_DIGEST_LEN;
 	}
 
+	plen = hlen;
 	if (!pdu->data_len || !pdu->data) {
 		/* PDU header + possible header digest */
 		_iov_ctx_set_iov(&ctx, (uint8_t *)&pdu->hdr.raw, hlen);
