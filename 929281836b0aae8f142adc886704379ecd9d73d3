@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "18569b65_dee0d5c7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-11T07:08:01Z",
+      "side": 1,
+      "message": "Please put an empty line between the commit message and its title, for example:\n\n\n\nnvme: optimize memory barriers on ARM\n\nModify the memory barrier mode to improve performance\nThe mode of dmb oshld can guarantees cpu sequential execution,\nwhich has less impact on performance.",
+      "revId": "929281836b0aae8f142adc886704379ecd9d73d3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
