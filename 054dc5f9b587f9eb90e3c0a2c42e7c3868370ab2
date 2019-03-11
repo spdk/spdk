@@ -16,6 +16,24 @@
       "revId": "054dc5f9b587f9eb90e3c0a2c42e7c3868370ab2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf049255_6f3ae4bf",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-03-11T02:35:32Z",
+      "side": 1,
+      "message": "hi Seth, thanks for your explanation. It\u0027s my fault to give this assumption.\nwhen I reviewed the code about nvme_rdma_alloc_rsps and nvme_rdma_alloc_reqs. The similar functions which use different methods, it\u0027s looks a little strange to me. \n\nI just want to keep consistency of these codes.",
+      "parentUuid": "2d44b463_a0d0aeb1",
+      "revId": "054dc5f9b587f9eb90e3c0a2c42e7c3868370ab2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
