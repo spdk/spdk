@@ -51,6 +51,7 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
+	uint64_t nvme_ioq_poll_period_us;
 };
 
 typedef void (*spdk_bdev_nvme_fn)(void *ctx);

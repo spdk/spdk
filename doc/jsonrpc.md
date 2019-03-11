@@ -1332,7 +1332,8 @@ Name                       | Optional | Type        | Description
 action_on_timeout          | Optional | string      | Action to take on command time out: none, reset or abort
 timeout_us                 | Optional | number      | Timeout for each command, in microseconds. If 0, don't track timeouts
 retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails
-nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microsecond
+nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microseconds
+nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).
 
 ### Example
 
