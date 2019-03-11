@@ -1,0 +1,211 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e9a4516_e344df3f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "relocate -\u003e relocation",
+      "range": {
+        "startLine": 7,
+        "startChar": 39,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87af2b18_4534c7ce",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "The only place I could found that actually used this was in band_free_md to do some debug-only verification. If that\u0027s the case, I don\u0027t think it\u0027s worth adding. Moreover, I don\u0027t think this should be a part of ftl_md. The ftl_md that\u0027s part of the band should be valid as soon as initialization is done (and the initialization code is aware of which of the ftl_md is valid). The other uses should do the same - wait till the metadata read request is finished.",
+      "range": {
+        "startLine": 109,
+        "startChar": 10,
+        "endLine": 109,
+        "endChar": 15
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36a319f3_8dd272fb",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "This can potentially hide the ENOMEM set in the submission routine. You should flip the condition and move the io-\u003estatus \u003d -EIO here.",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 17
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2be7d76f_4fd1bc2e",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "You\u0027re throwing away the data that was actually read here. Let\u0027s say the read was split into multiple requests and only the last one couldn\u0027t be allocated, which means the whole metadata, but the last sectors will be read. I think we should reuse the IO and reschedule the read instead of releasing the band_reloc.\n\nMoreover, reloc_release will remove the band from high_prio queue and move it to the pending_queue, which means that we\u0027re lowering the priority of the band, only because NVMe request couldn\u0027t be allocated.",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 180,
+        "endChar": 28
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6e5354b_7005d898",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "Let\u0027s just change it to:\n\nelse {\n  assert(status \u003d\u003d 0);\n  _ftl_reloc_prep(breloc);\n}",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 0
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "221045ce_e388f80f",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "I don\u0027t think we should be setting this here. I think you should change the core\u0027s completion callback not to clear this flag when io-\u003estatus \u003d\u003d ENOMEM.",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 33
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e45cd53_4d666b4a",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "I don\u0027t understand why are you freeing the IO? The idea is to reuse the IO in order not to re-read the stuff already read before the request couldn\u0027t be allocated. This should reschedule the read with this particular IO.",
+      "range": {
+        "startLine": 272,
+        "startChar": 2,
+        "endLine": 272,
+        "endChar": 19
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e6e447c_e2d281c4",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 491,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "Equal sign.",
+      "range": {
+        "startLine": 491,
+        "startChar": 30,
+        "endLine": 491,
+        "endChar": 31
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c032673_7d689cab",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 506,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T18:15:25Z",
+      "side": 1,
+      "message": "You shouldn\u0027t touch the io, if it already went through the ftl_io_read. You should do:\n\nif (spdk_unlikely(io-\u003eflags \u0026 FTL_IO_INITIALIZED)) {\n  return ftl_io_read(io);\n}\n\n// previous code.",
+      "range": {
+        "startLine": 502,
+        "startChar": 0,
+        "endLine": 506,
+        "endChar": 2
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
