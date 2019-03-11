@@ -46,6 +46,30 @@
       "revId": "58dc5043a6b7df6da4dd679cf024c0c0b17de239",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2e896f8e_b0e3a648",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T04:22:41Z",
+      "side": 1,
+      "message": "Yes, Zhouhui is right. We added check code in spdk_dif_ctx_init() and the case that block_size \u003c md_size is covered.",
+      "parentUuid": "5e021b69_b5c86758",
+      "range": {
+        "startLine": 1386,
+        "startChar": 1,
+        "endLine": 1386,
+        "endChar": 50
+      },
+      "revId": "58dc5043a6b7df6da4dd679cf024c0c0b17de239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
