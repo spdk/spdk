@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96d313b2_abb5dfb2",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T18:06:46Z",
+      "side": 1,
+      "message": "Instead of exposing the details of spdk_notify_type, can you make it an opaque handle? The API functions below will need to change just slightly. For example:\n\nstruct spdk_notify_type *spdk_notify_type_register(const char *type);\n\nYou\u0027ll also need to add a function to get the string name from the handle:\n\nconst char *spdk_notify_type_get_name(struct spdk_notify_type *type);",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35f4a351_102ae5db",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 53,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T18:06:46Z",
+      "side": 1,
+      "message": "Instead of having this struct hold the spdk_notify_type structure, I think you can make it just hold two strings - one of the context and one for the type name.",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "535978e3_d78aaa7e",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T18:06:46Z",
+      "side": 1,
+      "message": "We need to outline what the rules are for calling spdk_notify* functions, especially this one, from different threads. I don\u0027t think we can leave thread safety up to the user because lots of unrelated libraries are going to be generating events.\n\nThere are a few ways we could tackle this that I see.\n\n1. Take a lock in all of these functions. It\u0027s not great for performance, but it\u0027s the simplest to implement.\n2. I left a comment lower down about how to implement the circular buffer using only an index as opposed to a TAILQ. If we made the increment of the head index atomic, then we could make this function thread safe by adding one additional index. There would need to be an index for \"next open slot\", which I called the \"head\" before, and one for \"highest populated slot\" which I\u0027ll call \"data\" now. The algorithm is as follows:\n\n1. Until successful:\n  a. Read \u0027head\u0027 onto stack (call this number \u0027slot\u0027)\n  b. try to compare and swap \u0027head\u0027 for \u0027head\u0027 + 1, if \u0027head\u0027 equals \u0027slot\u0027.\n2. Copy the event data into the location indicated by \u0027slot\u0027 (using circular buffer math)\n3. Until successful:\n  a. Read \u0027data\u0027 onto stack (call this number \u0027tail\u0027)\n  b. try to compare and swap \u0027data\u0027 for \u0027slot\u0027 if \u0027tail\u0027 equals \u0027slot\u0027 - 1.\n\nThere are some scenarios where this can spin for awhile (if a thread gets pre-empted at a bad time) but I think this will always ultimately make forward progress.",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dc5bf3f3_188c6468",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T18:06:46Z",
+      "side": 1,
+      "message": "Instead of the below two functions, I think we just need one:\n\nconst struct spdk_notify_event *spdk_notify_get_event(int idx);\n\nMaking the return value const is important since the user is not allowed to mutate the value. Even this is not entirely safe if another thread happens to call spdk_notify_send enough to wrap back around before the event pointer returned is consumed. There are a few ways we could address that, but I\u0027m not sure whether we should just yet.",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47d47a1e_0d7ec893",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-11T18:06:46Z",
+      "side": 1,
+      "message": "I don\u0027t think you need this g_notifications list. Instead, as a global, keep the current head index into the circular buffer (actually make it a monotonically increasing integer - don\u0027t wrap it).\n\nIn this function, copy the type name (string) and the ctx (string) into the array entry at (head % ring size) and increment head.",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
