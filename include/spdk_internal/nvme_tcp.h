@@ -283,17 +283,16 @@ end:
 }
 
 static int
-nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
-		   void *buf)
+nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 {
 	int ret;
 
 	assert(sock != NULL);
-	if (bytes == 0) {
+	if (iov == NULL || iovcnt == 0) {
 		return 0;
 	}
 
-	ret = spdk_sock_recv(sock, buf, bytes);
+	ret = spdk_sock_readv(sock, iov, iovcnt);
 
 	if (ret > 0) {
 		return ret;
@@ -306,15 +305,28 @@ nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
 
 		/* For connect reset issue, do not output error log */
 		if (errno == ECONNRESET) {
-			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_recv() failed, errno %d: %s\n",
+			SPDK_DEBUGLOG(SPDK_LOG_NVME, "spdk_sock_readv() failed, errno %d: %s\n",
 				      errno, spdk_strerror(errno));
 		} else {
-			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
 				    errno, spdk_strerror(errno));
 		}
 	}
 
+	/* connection closed */
 	return NVME_TCP_CONNECTION_FATAL;
+}
+
+static int
+nvme_tcp_read_data(struct spdk_sock *sock, int bytes,
+		   void *buf)
+{
+	struct iovec iov;
+
+	iov.iov_base = buf;
+	iov.iov_len = bytes;
+
+	return nvme_tcp_readv_data(sock, &iov, 1);
 }
 
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
