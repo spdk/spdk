@@ -31,6 +31,10 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+# DPDK
+
+Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
+
 ## v19.01:
 
 ### ocf bdev
