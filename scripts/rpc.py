@@ -179,9 +179,11 @@ if __name__ == "__main__":
     p.set_defaults(func=get_ocf_stats)
 
     def get_ocf_bdevs(args):
-        print_dict(rpc.bdev.get_ocf_bdevs(args.client))
+        print_dict(rpc.bdev.get_ocf_bdevs(args.client,
+                                          name=args.name))
     p = subparsers.add_parser('get_ocf_bdevs',
                               help='Get list of OCF devices including unregistered ones')
+    p.add_argument('name', nargs='?', default=None, help='name of OCF vbdev or name of cache device or name of core device (optional)')
     p.set_defaults(func=get_ocf_bdevs)
 
     def construct_malloc_bdev(args):

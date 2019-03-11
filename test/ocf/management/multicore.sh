@@ -42,13 +42,13 @@ $rpc_py get_ocf_bdevs | jq -e \
 
 $rpc_py  delete_ocf_bdev C2
 
-$rpc_py get_ocf_bdevs | jq -e \
-	'any(select(.name == "C1" and .started))'
+$rpc_py get_ocf_bdevs C1 | jq -e \
+	'.[0] | .started'
 
 $rpc_py construct_ocf_bdev C2 wt Cache Core1
 
-$rpc_py get_ocf_bdevs | jq -e \
-	'any(select(.name == "C2" and .started))'
+$rpc_py get_ocf_bdevs C2 | jq -e \
+	'.[0] | .started'
 
 # Normal shutdown
 
@@ -63,6 +63,9 @@ $rpc_py construct_malloc_bdev   1 512 -b Core
 
 $rpc_py construct_ocf_bdev C1 wt Cache Malloc
 $rpc_py construct_ocf_bdev C2 wt Cache Core
+
+$rpc_py get_ocf_bdevs Cache | jq \
+	'length == 2'
 
 $rpc_py delete_malloc_bdev Cache
 
