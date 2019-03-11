@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "8f010ed8_8dcc09e4",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 2283,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-11T11:55:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "be46a034_34f41344",
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9764447e_54391238",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 2
@@ -42,6 +60,30 @@
     },
     {
       "key": {
+        "uuid": "02c1acb2_eff7230a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-11T11:55:55Z",
+      "side": 1,
+      "message": "you are right, should call nvme_ctrlr_fail(ctrlr, true) before the callback.\nActually， i can\u0027t directly reomve the ctrlr. As DPDK can\u0027t release the device in the intr path.\nbelow is the explaination:\n/ * Because the user\u0027s callback is invoked in eal interrupt\n  * callback, the interrupt callback need to be finished before\n  * it can be unregistered when detaching device. So finish\n  * callback soon and use a deferred removal to detach device\n  * is need. It is a workaround, once the device detaching be\n  * moved into the eal in the future, the deferred removal could\n  * be deleted.\n  */",
+      "parentUuid": "9764447e_54391238",
+      "range": {
+        "startLine": 721,
+        "startChar": 2,
+        "endLine": 723,
+        "endChar": 3
+      },
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7c8e2375_8c09cc19",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 2
@@ -53,6 +95,30 @@
       "writtenOn": "2019-03-11T09:39:49Z",
       "side": 1,
       "message": "SPDK can support asynchronous probe now, so you can allocate a probe context to probe the controller, so that DPDK alarm is not required.",
+      "range": {
+        "startLine": 742,
+        "startChar": 2,
+        "endLine": 744,
+        "endChar": 3
+      },
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "834a32d6_ce12e41a",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-11T11:55:55Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7c8e2375_8c09cc19",
       "range": {
         "startLine": 742,
         "startChar": 2,
