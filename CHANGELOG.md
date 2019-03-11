@@ -7,6 +7,33 @@
 Added option to change method for erasing data region on lvol store creation.
 Default of unmapping can now be changed to writing zeroes or no operation.
 
+### autotest
+
+Introduce SPDK_RUN_FUNCTIONAL_TEST variable enabled by default, that can be
+manually disabled on systems where e.g. only unit tests are run.
+
+### FTL
+
+Add detection for OpenChannel devices, so that NVMe tests and FTL bdev tests
+are run on appropriate devices.
+
+### QoS
+
+Enabled rate limit when opening the bdev, as there were some cases where
+previously closed bdev would have QoS disabled.
+
+### GitHub issues
+
+ #523: (fio_plugin) Fixed hang on pthread_exit(NULL).
+ #633: (crypto bdev) Fixed memory leak in driver init path.
+ #602: (nvme bdev)  Will not attach user deleted controllers automatically.
+ #676: (nvme_bdev) Added SHST_COMPLETE quirk for VMWare emulated SSDs.
+ #638: (nvmf) Fixed the lvol creation failure issue for NVMe-oF TCP.
+ #699: (nvmf) Updated default number of shared buffers for RDMA.
+ #673: (vhost) Will use mmap_size to check for 2MB hugepage multiple.
+ #663: (building) Fixed duplicated clean target in shared_lib/Makefile
+ #593: (spdkcli) Will exit with 1 when rpc throws JSONRPCException.
+
 ## v19.01:
 
 ### ocf bdev
