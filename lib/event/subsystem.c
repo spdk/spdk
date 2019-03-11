@@ -201,7 +201,12 @@ _spdk_subsystem_fini_next(void *arg1)
 	while (g_next_subsystem) {
 		if (g_next_subsystem->fini) {
 			g_next_subsystem->fini();
-			return;
+			/* Initialization interrupted due to error */
+			if (g_subsystems_init_interrupted == true) {
+				break;
+			} else {
+				return;
+			}
 		}
 		g_next_subsystem = TAILQ_PREV(g_next_subsystem, spdk_subsystem_list, tailq);
 	}
