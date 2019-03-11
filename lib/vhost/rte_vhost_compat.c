@@ -65,6 +65,7 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_SET_VRING_CALL:
 	case VHOST_USER_SET_MEM_TABLE:
 		if (vsession->lcore != -1) {
 			g_spdk_vhost_ops.destroy_device(vid);
