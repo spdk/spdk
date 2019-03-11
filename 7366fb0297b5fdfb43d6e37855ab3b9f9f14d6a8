@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0cf7b74_25c3f2f9",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T07:08:42Z",
+      "side": 1,
+      "message": "We should insert nvme_robust_mute_unlock(\u0026ctrlr-\u003elock) or add the label faild or error to the line 866 and rc \u003d -EIO and go there.",
+      "revId": "7366fb0297b5fdfb43d6e37855ab3b9f9f14d6a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "810718e2_11d27513",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1619,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T07:08:42Z",
+      "side": 1,
+      "message": "we can use break here.",
+      "range": {
+        "startLine": 1619,
+        "startChar": 3,
+        "endLine": 1619,
+        "endChar": 12
+      },
+      "revId": "7366fb0297b5fdfb43d6e37855ab3b9f9f14d6a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "11102135_77d1d691",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1772,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T07:08:42Z",
+      "side": 1,
+      "message": "Should we move this to after successful completion of nvme_tcp_qpair_connect() ?",
+      "range": {
+        "startLine": 1770,
+        "startChar": 0,
+        "endLine": 1772,
+        "endChar": 2
+      },
+      "revId": "7366fb0297b5fdfb43d6e37855ab3b9f9f14d6a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
