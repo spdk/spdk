@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25116b81_188630f2",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-11T02:09:24Z",
+      "side": 1,
+      "message": "Though it will not be overflow from the design, I would like to suggest add a assert after this statement to avoid the unexpected behavivor.",
+      "range": {
+        "startLine": 1386,
+        "startChar": 1,
+        "endLine": 1386,
+        "endChar": 50
+      },
+      "revId": "58dc5043a6b7df6da4dd679cf024c0c0b17de239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
