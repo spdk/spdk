@@ -22,6 +22,30 @@
       "revId": "58dc5043a6b7df6da4dd679cf024c0c0b17de239",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e021b69_b5c86758",
+        "filename": "lib/util/dif.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 1386,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-11T02:54:31Z",
+      "side": 1,
+      "message": "Ziye:\nThe ctx-\u003eblock_size and ctx-\u003emd_size is assigned in spdk_dif_ctx_init(), so we should add assert in that function if we have to.",
+      "parentUuid": "25116b81_188630f2",
+      "range": {
+        "startLine": 1386,
+        "startChar": 1,
+        "endLine": 1386,
+        "endChar": 50
+      },
+      "revId": "58dc5043a6b7df6da4dd679cf024c0c0b17de239",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
