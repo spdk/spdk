@@ -85,15 +85,19 @@ def get_ocf_stats(client, name):
     return client.call('get_ocf_stats', params)
 
 
-def get_ocf_bdevs(client):
+def get_ocf_bdevs(client, name=None):
     """Get list of OCF devices including unregistered ones
 
     Args:
+        name: name of OCF vbdev or name of cache device or name of core device (optional)
 
     Returns:
         Array of OCF devices with their current status
     """
-    return client.call('get_ocf_bdevs', None)
+    params = None
+    if name:
+        params = {'name': name}
+    return client.call('get_ocf_bdevs', params)
 
 
 def construct_malloc_bdev(client, num_blocks, block_size, name=None, uuid=None):
