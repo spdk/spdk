@@ -1631,7 +1631,7 @@ spdk_nvmf_tcp_pdu_payload_handle(struct spdk_nvmf_tcp_qpair *tqpair)
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF_TCP, "enter\n");
 	/* check data digest if need */
-	if (pdu->ddigest_valid_bytes) {
+	if (pdu->ddgst_enable) {
 		crc32c = nvme_tcp_pdu_calc_data_digest(pdu);
 		rc = MATCH_DIGEST_WORD(pdu->data_digest, crc32c);
 		if (rc == 0) {
@@ -1965,34 +1965,21 @@ spdk_nvmf_tcp_sock_process(struct spdk_nvmf_tcp_qpair *tqpair)
 			}
 
 			data_len = pdu->data_len;
-			/* data len */
-			if (pdu->data_valid_bytes < data_len) {
-				rc = nvme_tcp_read_data(tqpair->sock, data_len - pdu->data_valid_bytes,
-							(void *)pdu->data + pdu->data_valid_bytes);
-				if (rc < 0) {
-					return NVME_TCP_PDU_FATAL;
-				}
-
-				pdu->data_valid_bytes += rc;
-				if (pdu->data_valid_bytes < data_len) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
+			/* data digest */
+			if (spdk_unlikely((pdu->hdr.common.pdu_type != SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ) &&
+					  tqpair->host_ddgst_enable)) {
+				data_len += SPDK_NVME_TCP_DIGEST_LEN;
+				pdu->ddgst_enable = true;
 			}
 
-			/* data digest */
-			if ((pdu->hdr.common.pdu_type != SPDK_NVME_TCP_PDU_TYPE_H2C_TERM_REQ) &&
-			    tqpair->host_ddgst_enable && (pdu->ddigest_valid_bytes < SPDK_NVME_TCP_DIGEST_LEN)) {
-				rc = nvme_tcp_read_data(tqpair->sock,
-							SPDK_NVME_TCP_DIGEST_LEN - pdu->ddigest_valid_bytes,
-							pdu->data_digest + pdu->ddigest_valid_bytes);
-				if (rc < 0) {
-					return NVME_TCP_PDU_FATAL;
-				}
+			rc = nvme_tcp_read_payload_data(tqpair->sock, pdu);
+			if (rc < 0) {
+				return NVME_TCP_PDU_IN_PROGRESS;
+			}
 
-				pdu->ddigest_valid_bytes += rc;
-				if (pdu->ddigest_valid_bytes < SPDK_NVME_TCP_DIGEST_LEN) {
-					return NVME_TCP_PDU_IN_PROGRESS;
-				}
+			pdu->readv_offset += rc;
+			if (pdu->readv_offset < data_len) {
+				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
 			/* All of this PDU has now been read from the socket. */
