@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0745fee4_14c1221a",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 565,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T08:52:31Z",
+      "side": 1,
+      "message": "How about changing this to int and return rc, and then set abs(rc) to io_u-\u003eerror if rc !\u003d 0 in spdk_fio_completion_cb() ?\n\nThis will unify DIF and DIX also in verification.",
+      "range": {
+        "startLine": 565,
+        "startChar": 7,
+        "endLine": 565,
+        "endChar": 11
+      },
+      "revId": "186441a74241afd66dc91e7b25aea2db95f48430",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
