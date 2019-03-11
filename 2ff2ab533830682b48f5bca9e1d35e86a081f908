@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2bfda04b_2b72cd15",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T16:03:07Z",
+      "side": 1,
+      "message": "Couldn\u0027t we just set to rc to whatever the spdk_nvme_ns_cmd_read returns (if its non-zero of course)?",
+      "range": {
+        "startLine": 736,
+        "startChar": 0,
+        "endLine": 739,
+        "endChar": 18
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f8c89ce_f6b7316f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-11T16:03:07Z",
+      "side": 1,
+      "message": "The user still needs to handle this case very similarly to one of the nvme functions returning ENOMEM. So what\u0027s the advantage of getting rid of the ftl_io_read return code?",
+      "range": {
+        "startLine": 1425,
+        "startChar": 0,
+        "endLine": 1429,
+        "endChar": 2
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
