@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "70730222_f9e231c6",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-11T02:32:44Z",
+      "side": 1,
+      "message": "is changed,",
+      "range": {
+        "startLine": 17,
+        "startChar": 39,
+        "endLine": 17,
+        "endChar": 46
+      },
+      "revId": "5b31282542d256fd15b8f2ce94ace6277695b327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "31bc13d6_129ba92e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-11T02:32:44Z",
+      "side": 1,
+      "message": "So what\u0027s the difference, I see previously is:\n`A` `B` `C`, and now is A B C.  What\u0027s the benefit of the new style?",
+      "range": {
+        "startLine": 839,
+        "startChar": 3,
+        "endLine": 841,
+        "endChar": 84
+      },
+      "revId": "5b31282542d256fd15b8f2ce94ace6277695b327",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
