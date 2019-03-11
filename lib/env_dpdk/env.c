@@ -47,17 +47,10 @@ virt_to_phys(void *vaddr)
 {
 	uint64_t ret;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	ret = rte_malloc_virt2iova(vaddr);
 	if (ret != RTE_BAD_IOVA) {
 		return ret;
 	}
-#else
-	ret = rte_malloc_virt2phy(vaddr);
-	if (ret != RTE_BAD_PHYS_ADDR) {
-		return ret;
-	}
-#endif
 
 	return spdk_vtophys(vaddr, NULL);
 }
@@ -402,26 +395,11 @@ spdk_ring_count(struct spdk_ring *ring)
 size_t
 spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
 {
-	int rc;
-#if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
-	rc = rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count);
-	if (rc == 0) {
-		return count;
-	}
-
-	return 0;
-#else
-	rc = rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
-	return rc;
-#endif
+	return rte_ring_enqueue_bulk((struct rte_ring *)ring, objs, count, NULL);
 }
 
 size_t
 spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count)
 {
-#if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
-	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count);
-#else
 	return rte_ring_dequeue_burst((struct rte_ring *)ring, objs, count, NULL);
-#endif
 }

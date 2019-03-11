@@ -51,23 +51,10 @@
 #define SPDK_VFIO_ENABLED 0
 #else
 #include <linux/version.h>
-/*
- * DPDK versions before 17.11 don't provide a way to get VFIO information in the public API,
- * and we can't link to internal symbols when built against shared library DPDK,
- * so disable VFIO entirely in that case.
- */
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0) && \
-    (RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3) || !defined(RTE_BUILD_SHARED_LIB))
-
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(3, 6, 0)
 #define SPDK_VFIO_ENABLED 1
 #include <linux/vfio.h>
-
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 #include <rte_vfio.h>
-#else
-/* Internal DPDK function forward declaration */
-int pci_vfio_is_enabled(void);
-#endif
 
 struct spdk_vfio_dma_map {
 	struct vfio_iommu_type1_dma_map map;
@@ -929,11 +916,7 @@ vtophys_get_paddr_memseg(uint64_t vaddr)
 		if (vaddr >= (uintptr_t)seg->addr &&
 		    vaddr < ((uintptr_t)seg->addr + seg->len)) {
 			paddr = seg->phys_addr;
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 			if (paddr == RTE_BAD_IOVA) {
-#else
-			if (paddr == RTE_BAD_PHYS_ADDR) {
-#endif
 				return SPDK_VTOPHYS_ERROR;
 			}
 			paddr += (vaddr - (uintptr_t)seg->addr);
@@ -951,37 +934,20 @@ vtophys_get_paddr_pagemap(uint64_t vaddr)
 {
 	uintptr_t paddr;
 
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
-#define BAD_ADDR RTE_BAD_IOVA
-#define VTOPHYS rte_mem_virt2iova
-#else
-#define BAD_ADDR RTE_BAD_PHYS_ADDR
-#define VTOPHYS rte_mem_virt2phy
-#endif
-
-	/*
-	 * Note: the virt2phy/virt2iova functions have changed over time, such
-	 * that older versions may return 0 while recent versions will never
-	 * return 0 but RTE_BAD_PHYS_ADDR/IOVA instead.  To support older and
-	 * newer versions, check for both return values.
-	 */
-	paddr = VTOPHYS((void *)vaddr);
-	if (paddr == 0 || paddr == BAD_ADDR) {
+	paddr = rte_mem_virt2iova((void *)vaddr);
+	if (paddr == RTE_BAD_IOVA) {
 		/*
 		 * The vaddr may be valid but doesn't have a backing page
 		 * assigned yet.  Touch the page to ensure a backing page
 		 * gets assigned, then try to translate again.
 		 */
 		rte_atomic64_read((rte_atomic64_t *)vaddr);
-		paddr = VTOPHYS((void *)vaddr);
+		paddr = rte_mem_virt2iova((void *)vaddr);
 	}
-	if (paddr == 0 || paddr == BAD_ADDR) {
+	if (paddr == RTE_BAD_IOVA) {
 		/* Unable to get to the physical address. */
 		return SPDK_VTOPHYS_ERROR;
 	}
-
-#undef BAD_ADDR
-#undef VTOPHYS
 
 	return paddr;
 }
@@ -1122,11 +1088,7 @@ spdk_vtophys_notify(void *cb_ctx, struct spdk_mem_map *map,
 static bool
 spdk_vfio_enabled(void)
 {
-#if RTE_VERSION >= RTE_VERSION_NUM(17, 11, 0, 3)
 	return rte_vfio_is_enabled("vfio_pci");
-#else
-	return pci_vfio_is_enabled();
-#endif
 }
 
 /* Check if IOMMU is enabled on the system */
