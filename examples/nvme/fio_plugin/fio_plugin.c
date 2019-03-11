@@ -234,6 +234,7 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 	struct thread_data	*td = cb_ctx;
 	struct spdk_fio_thread	*fio_thread = td->io_ops_data;
+	struct spdk_nvme_io_qpair_opts	qpopts;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 	struct spdk_fio_qpair	*fio_qpair;
 	struct spdk_nvme_ns	*ns;
@@ -301,7 +302,10 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 		return;
 	}
 
-	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, NULL, 0);
+	spdk_nvme_ctrlr_get_default_io_qpair_opts(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
+	qpopts.delay_pcie_doorbell = true;
+
+	fio_qpair->qpair = spdk_nvme_ctrlr_alloc_io_qpair(fio_ctrlr->ctrlr, &qpopts, sizeof(qpopts));
 	if (!fio_qpair->qpair) {
 		SPDK_ERRLOG("Cannot allocate nvme io_qpair any more\n");
 		g_error = true;
