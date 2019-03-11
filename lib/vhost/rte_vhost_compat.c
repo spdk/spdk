@@ -65,6 +65,16 @@ spdk_extern_vhost_pre_msg_handler(int vid, void *_msg)
 	}
 
 	switch (msg->request) {
+	case VHOST_USER_SET_VRING_CALL:
+		/* rte_vhost will close the previous callfd and won't notify
+		 * us about any change. This will effectively make SPDK fail
+		 * to deliver any subsequent interrupts until a session is
+		 * restarted. We stop the session here before closing the previous
+		 * fd (so that all interrupts must have been delivered by the
+		 * time the descriptor is closed) and start right after (which
+		 * will make SPDK retrieve the latest, up-to-date callfd from
+		 * rte_vhost.
+		 */
 	case VHOST_USER_SET_MEM_TABLE:
 		/* rte_vhost will unmap previous memory that SPDK may still
 		 * have pending DMA operations on. We can't let that happen,
