@@ -732,6 +732,8 @@ memory_iter_cb(const struct rte_memseg_list *msl,
 }
 #endif
 
+static int vtophys_init(void);
+
 int
 spdk_mem_map_init(void)
 {
@@ -763,6 +765,13 @@ spdk_mem_map_init(void)
 		spdk_mem_register(seg->addr, seg->len);
 	}
 #endif
+
+	if (vtophys_init() != 0) {
+		DEBUG_PRINT("vtophys mem map allocation failed\n");
+		spdk_mem_map_free(&g_mem_reg_map);
+		return -1;
+	}
+
 	return 0;
 }
 
@@ -1266,8 +1275,8 @@ spdk_vtophys_pci_device_removed(struct rte_pci_device *pci_device)
 #endif
 }
 
-int
-spdk_vtophys_init(void)
+static int
+vtophys_init(void)
 {
 	const struct spdk_mem_map_ops vtophys_map_ops = {
 		.notify_cb = spdk_vtophys_notify,

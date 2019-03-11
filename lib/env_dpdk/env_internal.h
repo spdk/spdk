@@ -79,7 +79,6 @@ int spdk_pci_device_fini(struct rte_pci_device *device);
 
 void spdk_pci_init(void);
 int spdk_mem_map_init(void);
-int spdk_vtophys_init(void);
 
 /**
  * Report a DMA-capable PCI device to the vtophys translation code.

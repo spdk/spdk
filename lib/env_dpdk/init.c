@@ -381,10 +381,6 @@ spdk_env_dpdk_post_init(void)
 		fprintf(stderr, "Failed to allocate mem_map\n");
 		return -1;
 	}
-	if (spdk_vtophys_init() < 0) {
-		fprintf(stderr, "Failed to initialize vtophys\n");
-		return -1;
-	}
 
 	return 0;
 }
