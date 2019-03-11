@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41078ce0_3e515212",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 709,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-11T07:38:16Z",
+      "side": 1,
+      "message": "In this case, IO is not queued, hence we should return FIO_Q_COMPLETED ?",
+      "range": {
+        "startLine": 709,
+        "startChar": 2,
+        "endLine": 709,
+        "endChar": 24
+      },
+      "revId": "d97433c5389587b2be9aa8d80a8f1b4b69c12202",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
