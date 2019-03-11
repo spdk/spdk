@@ -1,0 +1,67 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "be46a034_34f41344",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 2283,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-11T09:39:49Z",
+      "side": 1,
+      "message": "unrelated empty line.",
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9764447e_54391238",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-11T09:39:49Z",
+      "side": 1,
+      "message": "This part is not required, you can call the remove callback directly for the removal path, and you should call nvme_ctrlr_fail(ctrlr, true) before the callback.",
+      "range": {
+        "startLine": 721,
+        "startChar": 2,
+        "endLine": 723,
+        "endChar": 3
+      },
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7c8e2375_8c09cc19",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-11T09:39:49Z",
+      "side": 1,
+      "message": "SPDK can support asynchronous probe now, so you can allocate a probe context to probe the controller, so that DPDK alarm is not required.",
+      "range": {
+        "startLine": 742,
+        "startChar": 2,
+        "endLine": 744,
+        "endChar": 3
+      },
+      "revId": "12ca3a803f70087d57be7fee5359416807cf7fcc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
