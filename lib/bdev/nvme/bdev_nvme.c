@@ -106,6 +106,7 @@ static struct spdk_bdev_nvme_opts g_opts = {
 	.timeout_us = 0,
 	.retry_count = SPDK_NVME_DEFAULT_RETRY_COUNT,
 	.nvme_adminq_poll_period_us = 1000000ULL,
+	.nvme_ioq_poll_period_us = 0,
 };
 
 #define NVME_HOTPLUG_POLL_PERIOD_MAX			10000000ULL
@@ -538,7 +539,7 @@ bdev_nvme_create_cb(void *io_device, void *ctx_buf)
 		return -1;
 	}
 
-	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, 0);
+	ch->poller = spdk_poller_register(bdev_nvme_poll, ch, g_opts.nvme_ioq_poll_period_us);
 	return 0;
 }
 
@@ -1333,6 +1334,11 @@ bdev_nvme_library_init(void)
 		g_opts.nvme_adminq_poll_period_us = intval;
 	}
 
+	intval = spdk_conf_section_get_intval(sp, "IOPollRate");
+	if (intval > 0) {
+		g_opts.nvme_ioq_poll_period_us = intval;
+	}
+
 	if (spdk_process_is_primary()) {
 		hotplug_enabled = spdk_conf_section_get_boolval(sp, "HotplugEnable", false);
 	}
@@ -1964,6 +1970,7 @@ bdev_nvme_get_spdk_running_config(FILE *fp)
 		"# Set how often the admin queue is polled for asynchronous events.\n"
 		"# Units in microseconds.\n");
 	fprintf(fp, "AdminPollRate %"PRIu64"\n", g_opts.nvme_adminq_poll_period_us);
+	fprintf(fp, "IOPollRate %" PRIu64"\n", g_opts.nvme_ioq_poll_period_us);
 	fprintf(fp, "\n"
 		"# Disable handling of hotplug (runtime insert and remove) events,\n"
 		"# users can set to Yes if want to enable it.\n"
@@ -2004,6 +2011,7 @@ bdev_nvme_config_json(struct spdk_json_write_ctx *w)
 	spdk_json_write_named_uint64(w, "timeout_us", g_opts.timeout_us);
 	spdk_json_write_named_uint32(w, "retry_count", g_opts.retry_count);
 	spdk_json_write_named_uint64(w, "nvme_adminq_poll_period_us", g_opts.nvme_adminq_poll_period_us);
+	spdk_json_write_named_uint64(w, "nvme_ioq_poll_period_us", g_opts.nvme_ioq_poll_period_us);
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_object_end(w);
