@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fa3fc8c8_f92ceff5",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 24
+      },
+      "lineNbr": 1418,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "347df7c8_c0c472c9",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1f92d05c_8cb1a1b3",
         "filename": "lib/bdev/nvme/common.h",
         "patchSetId": 24
@@ -54,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "95952412_e8a24dc2",
+        "filename": "lib/bdev/nvme/common.h",
+        "patchSetId": 24
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "I\u0027ve talked with NSG team and Tomek and they don\u0027t mind making it to automatically compile. I\u0027ll add patch that removes ftl configuration parameter before that one and then remove this construct functions in this patch.",
+      "parentUuid": "d94c3a21_ea7c6a53",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ec1bb885_8efb6e07",
         "filename": "scripts/rpc.py",
         "patchSetId": 24
@@ -68,6 +104,24 @@
       "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb76e831_d9f0e583",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 289,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ec1bb885_8efb6e07",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -88,6 +142,24 @@
     },
     {
       "key": {
+        "uuid": "c8b300e4_adeebf18",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d7ea8774_842d6281",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "90780ef8_1d6a9549",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 24
@@ -105,6 +177,24 @@
     },
     {
       "key": {
+        "uuid": "e2f35d08_bddda9f5",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 279,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "90780ef8_1d6a9549",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0e9101e4_95918c02",
         "filename": "scripts/rpc/bdev.py",
         "patchSetId": 24
@@ -119,6 +209,24 @@
       "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1651c212_0245c519",
+        "filename": "scripts/rpc/bdev.py",
+        "patchSetId": 24
+      },
+      "lineNbr": 284,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-11T13:44:02Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0e9101e4_95918c02",
+      "revId": "e78fbeee7d497a96980b998702af7ece779fa8b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
