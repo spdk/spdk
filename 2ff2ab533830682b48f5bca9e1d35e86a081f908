@@ -93,6 +93,30 @@
       "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ae0b9fc_b1cefafd",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:48:13Z",
+      "side": 1,
+      "message": "I think we should change the way we handle the ENOMEM returned by the NVMe layer entirely. We shouldn\u0027t pass them to the user. Each ftl_io_channel should have a queue with such requests and we should periodically check this queues (and perhaps also check it when doing another IO on the same IO channel). That way we\u0027ll never throw away partially read data.",
+      "parentUuid": "f3923694_76acada3",
+      "range": {
+        "startLine": 1425,
+        "startChar": 0,
+        "endLine": 1429,
+        "endChar": 2
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
