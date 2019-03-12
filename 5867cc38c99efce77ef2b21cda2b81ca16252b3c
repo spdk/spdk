@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ddb620e_be0b6fe3",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 372,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-12T21:23:34Z",
+      "side": 1,
+      "message": "just return nvme_tcp_readv_data() value directly?",
+      "revId": "5867cc38c99efce77ef2b21cda2b81ca16252b3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
