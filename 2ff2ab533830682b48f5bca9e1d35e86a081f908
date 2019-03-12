@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2e530dc4_71a3ab4f",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 739,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T07:45:14Z",
+      "side": 1,
+      "message": "Yes, this should be ok, but I just wondering what was our motivation to do this in such way?",
+      "parentUuid": "2bfda04b_2b72cd15",
+      "range": {
+        "startLine": 736,
+        "startChar": 0,
+        "endLine": 739,
+        "endChar": 18
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "9f8c89ce_f6b7316f",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-11T16:03:07Z",
       "side": 1,
       "message": "The user still needs to handle this case very similarly to one of the nvme functions returning ENOMEM. So what\u0027s the advantage of getting rid of the ftl_io_read return code?",
+      "range": {
+        "startLine": 1425,
+        "startChar": 0,
+        "endLine": 1429,
+        "endChar": 2
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f3923694_76acada3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T07:45:14Z",
+      "side": 1,
+      "message": "Returning ENOMEM directly from spdk_ftl_read is ok. I removed return value from ftl_io_read because we have sync and async path there and I want have consistent error handling for both paths. Consider case when we are splitting IO - we could end up with situation that we submitted one piece of IO to disk and next one get ENOMEM - if we return this error to user in sync path we also propagate this error second time in completion callback and bad things can happen then. On the other hand if user submit IO from other thread it loos this sync return error handling anyway.",
+      "parentUuid": "9f8c89ce_f6b7316f",
       "range": {
         "startLine": 1425,
         "startChar": 0,
