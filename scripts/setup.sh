@@ -487,7 +487,11 @@ function status_linux {
 	echo -e "BDF\t\tVendor\tDevice\tNUMA\tDriver\t\tDevice name"
 	for bdf in $(iter_all_pci_class_code 01 08 02); do
 		driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
-		node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+		if [ "$numa_nodes" = "0" ]; then
+			node="-"
+		else
+			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+		fi
 		device=$(cat /sys/bus/pci/devices/$bdf/device)
 		vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 		if [ "$driver" = "nvme" -a -d /sys/bus/pci/devices/$bdf/nvme ]; then
@@ -508,7 +512,11 @@ function status_linux {
 	for dev_id in $TMP; do
 		for bdf in $(iter_all_pci_dev_id 8086 $dev_id); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
-			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			if [ "$numa_nodes" = "0" ]; then
+				node="-"
+			else
+				node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 			echo -e "$bdf\t${vendor#0x}\t${device#0x}\t$node\t${driver:--}"
@@ -525,7 +533,11 @@ function status_linux {
 	for dev_id in $TMP; do
 		for bdf in $(iter_all_pci_dev_id 1af4 $dev_id); do
 			driver=$(grep DRIVER /sys/bus/pci/devices/$bdf/uevent |awk -F"=" '{print $2}')
-			node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			if [ "$numa_nodes" = "0" ]; then
+				node="-"
+			else
+				node=$(cat /sys/bus/pci/devices/$bdf/numa_node)
+			fi
 			device=$(cat /sys/bus/pci/devices/$bdf/device)
 			vendor=$(cat /sys/bus/pci/devices/$bdf/vendor)
 			blknames=''
