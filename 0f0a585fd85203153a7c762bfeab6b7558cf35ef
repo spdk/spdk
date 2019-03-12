@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "386b57e5_f692742f",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-12T10:13:20Z",
+      "side": 1,
+      "message": "UUID is not passed to here from autotest. Lets remove it.",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 7
+      },
+      "revId": "0f0a585fd85203153a7c762bfeab6b7558cf35ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5d2ec5e_c174c994",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-12T10:13:20Z",
+      "side": 1,
+      "message": "This goes unused here, in fio.sh its used it is used in fio config files.",
+      "range": {
+        "startLine": 14,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 26
+      },
+      "revId": "0f0a585fd85203153a7c762bfeab6b7558cf35ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "63e80e76_513e2204",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 7
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-12T10:13:20Z",
+      "side": 1,
+      "message": "See above.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 20,
+        "endChar": 2
+      },
+      "revId": "0f0a585fd85203153a7c762bfeab6b7558cf35ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
