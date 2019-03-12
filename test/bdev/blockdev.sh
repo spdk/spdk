@@ -51,6 +51,33 @@ function nbd_function_test() {
 	return 0
 }
 
+function check_qos_works_well() {
+	local enable_limit=$1
+	local qos_limit=$2
+	local retval=0
+
+	if [ $LIMIT_TYPE = IOPS ]; then
+		io_result=`$BDEV_PERF | awk '/Malloc/ {print $4}'`
+	else
+		io_result=`$BDEV_PERF | awk '/Malloc/ {print $6}'`
+	fi
+
+	if [ $enable_limit = true ]; then
+		#qos realization is related with bytes transfered.It currently have like 5% variation.
+		retval=$(echo "$qos_limit*0.85 < $io_result && $io_result < $qos_limit*1.05" | bc)
+		if [ $retval -eq 0 ]; then
+			echo "Failed to limit the io read rate of malloc bdev by qos"
+			exit 1
+		fi
+	else
+		retval=$(echo "$io_result > $qos_limit" | bc)
+		if [ $retval -eq 0 ]; then
+			echo "$io_result by disabled QoS less than $qos_limit - exit QoS testing"
+			$RUN_QOS=false
+		fi
+	fi
+}
+
 timing_enter bdev
 
 # Create a file to be used as an AIO backend
@@ -164,6 +191,31 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	report_test_completion "nightly_bdev_reset"
 fi
 
+# Create conf file for bdevperf Malloc device for QoS testing
+cat > $testdir/bdev_qos.conf << EOL
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 128
+EOL
+
+IOPS_LIMIT=20000
+BANDWIDTH_LIMIT=20
+READ_BANDWIDTH_LIMIT=10
+LIMIT_TYPE=IOPS
+RUN_QOS=true
+BDEV_PERF="$testdir/bdevperf/bdevperf -c $testdir/bdev_qos.conf -q 128 -o 4096 -w randread -t 5"
+
+# Run bdevperf with QoS disabled
+check_qos_works_well false $IOPS_LIMIT
+if [ $RUN_QOS = true ]; then
+	cat >> $testdir/bdev_qos.conf << EOL
+[QoS]
+  Limit_IOPS Malloc0 $IOPS_LIMIT
+EOL
+
+	check_qos_works_well true $IOPS_LIMIT
+fi
+rm -f $testdir/bdev_qos.conf
 
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
