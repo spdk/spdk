@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a27d3036_d2278e11",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-12T08:02:30Z",
+      "side": 1,
+      "message": "Just a nitpick - can we change this to unsigned?\n\nSPDK_BDEV_BUF_SIZE_WITH_MD performs a division, which for signed integers can\u0027t be optimized to a single shift.",
+      "range": {
+        "startLine": 443,
+        "startChar": 14,
+        "endLine": 443,
+        "endChar": 17
+      },
+      "revId": "9791cd47a919ba818cdcfa6355b536154929a902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
