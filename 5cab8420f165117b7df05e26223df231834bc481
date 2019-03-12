@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ec0e6fc3_2501e85a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-12T14:52:04Z",
+      "side": 1,
+      "message": "Since you are opening bdev inside this function, you should change examine_config in line 859 to examine_disk.\nexamine_config should only load this bdev based on configuration.",
+      "range": {
+        "startLine": 1004,
+        "startChar": 1,
+        "endLine": 1004,
+        "endChar": 25
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44dbdd98_be3dadfc",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-12T14:52:04Z",
+      "side": 1,
+      "message": "You should not call this until you claim the device or fail.",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 30
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
