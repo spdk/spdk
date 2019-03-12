@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dba62e1a_0c70c2f5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-12T22:32:52Z",
+      "side": 1,
+      "message": "after changes to previous patch, you can just do \u0026rqpair-\u003eresources here",
+      "revId": "7a2b3dee56e56dca80a097324880f39c36f5515d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb461157_59a7e134",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 2788,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-12T22:32:52Z",
+      "side": 1,
+      "message": "\u0026poller-\u003eresources",
+      "revId": "7a2b3dee56e56dca80a097324880f39c36f5515d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
