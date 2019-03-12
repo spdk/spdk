@@ -436,13 +436,14 @@ function waitfornbd() {
 function waitforbdev() {
 	local bdev_name=$1
 	local i
+	local rpc_addr="${2:-$DEFAULT_RPC_ADDR}"
 
 	for ((i=1; i<=20; i++)); do
-		if $rpc_py bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
+		if $rpc_py -s "$rpc_addr" bdev_get_bdevs | jq -r '.[] .name' | grep -qw $bdev_name; then
 			return 0
 		fi
 
-		if $rpc_py bdev_get_bdevs | jq -r '.[] .aliases' | grep -qw $bdev_name; then
+		if $rpc_py -s "$rpc_addr" bdev_get_bdevs | jq -r '.[] .aliases' | grep -qw $bdev_name; then
 			return 0
 		fi
 
