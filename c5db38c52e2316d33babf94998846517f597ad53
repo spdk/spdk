@@ -53,6 +53,24 @@
     },
     {
       "key": {
+        "uuid": "a7396330_c0bae262",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-12T12:22:49Z",
+      "side": 1,
+      "message": "\u003e There would need to be an index for \"next open slot\"\n\nThis might take some time for properly (unit) test it.\n\nPls confirm this because I would like to see this explicitly: are you proposing to reimplement rte_ring in notify library?\n\nHow do you want to \"securly\" return notification pointer to use if its content can be overwritten any time?",
+      "parentUuid": "535978e3_d78aaa7e",
+      "revId": "c5db38c52e2316d33babf94998846517f597ad53",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dc5bf3f3_188c6468",
         "filename": "include/spdk/notify.h",
         "patchSetId": 41
