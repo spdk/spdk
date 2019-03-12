@@ -117,6 +117,30 @@
       "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5c39ef0_3c7b0c63",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1429,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:58:14Z",
+      "side": 1,
+      "message": "Yes, I\u0027m aware that we should change our internal ENOMEM mechanism. You could refer to discussion on https://review.gerrithub.io/c/spdk/spdk/+/446610\nI would like to merge this change as it is potential bug fix.",
+      "parentUuid": "9ae0b9fc_b1cefafd",
+      "range": {
+        "startLine": 1425,
+        "startChar": 0,
+        "endLine": 1429,
+        "endChar": 2
+      },
+      "revId": "2ff2ab533830682b48f5bca9e1d35e86a081f908",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
