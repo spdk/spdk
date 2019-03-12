@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "13b015ee_62ae909a",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T20:23:23Z",
+      "side": 1,
+      "message": "response",
+      "revId": "41cd9d8276361f7efcadbe0bb304f84d93b731e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7a7716f_eac0b28c",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T20:23:23Z",
+      "side": 1,
+      "message": "Is the complexity of a lazily evaluated JSON string worth it? It\u0027s certainly better for performance when you have the logger disabled.",
+      "revId": "41cd9d8276361f7efcadbe0bb304f84d93b731e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "602472d7_4e1d5805",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 37
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T20:23:23Z",
+      "side": 1,
+      "message": "ignoring",
+      "revId": "41cd9d8276361f7efcadbe0bb304f84d93b731e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
