@@ -75,7 +75,7 @@ all: ocf_inc ocf_src
 ocf_inc:
 	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" inc O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" --quiet
 
-ocf_src:
+ocf_src: ocf_inc
 	$(Q)$(MAKE) -C "$(CONFIG_OCF_PATH)" src O="$(SPDK_ROOT_DIR)/lib/bdev/ocf/env/" CMD=cp --quiet
 
 ocf_distclean:
