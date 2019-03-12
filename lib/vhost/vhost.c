@@ -233,7 +233,6 @@ spdk_vhost_vq_get_desc(struct spdk_vhost_session *vsession, struct spdk_vhost_vi
 	*desc = &virtqueue->vring.desc[req_idx];
 
 	if (spdk_vhost_vring_desc_is_indirect(*desc)) {
-		assert(spdk_vhost_dev_has_feature(vsession, VIRTIO_RING_F_INDIRECT_DESC));
 		*desc_table_size = (*desc)->len / sizeof(**desc);
 		*desc_table = spdk_vhost_gpa_to_vva(vsession, (*desc)->addr,
 						    sizeof(**desc) * *desc_table_size);
