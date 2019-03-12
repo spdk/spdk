@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "62d4b06e_fff84f49",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 294,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-12T14:25:59Z",
+      "side": 1,
+      "message": "This is very similiar to test_decode_object.\nMaybe instead of duplicating test suite, you could add additional test cases in test_decode_object?",
+      "range": {
+        "startLine": 257,
+        "startChar": 0,
+        "endLine": 294,
+        "endChar": 0
+      },
+      "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8200dcd7_4f6b1693",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-12T14:25:59Z",
+      "side": 1,
+      "message": "Could you show a test that will fail on spdk_json_decode_object but pass on spdk_json_decode_object_lenient?",
+      "range": {
+        "startLine": 301,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 36
+      },
+      "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "512f9c9e_b101ffe9",
+        "filename": "test/unit/lib/json/json_util.c/json_util_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-12T14:25:59Z",
+      "side": 1,
+      "message": "you should change this name as well",
+      "range": {
+        "startLine": 1011,
+        "startChar": 22,
+        "endLine": 1011,
+        "endChar": 35
+      },
+      "revId": "71ffa7623c697577579b0b48af54eeebf3f17289",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
