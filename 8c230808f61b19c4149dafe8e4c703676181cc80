@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "919454d5_2058e6e5",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 13
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T20:42:37Z",
+      "side": 1,
+      "message": "--with-rdma-srq never actually made it into a release, so you don\u0027t need to mention that it was removed.\n\nHowever, you should mention that shared receive queue is now used by default.",
+      "revId": "8c230808f61b19c4149dafe8e4c703676181cc80",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
