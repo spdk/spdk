@@ -51,6 +51,32 @@ function nbd_function_test() {
 	return 0
 }
 
+function check_qos_works_well() {
+	local enable_limit=$1
+	local qos_limit=$2
+
+	if [ $LIMIT_TYPE = IOPS ]; then
+		io_result=`$BDEV_PERF | awk '/Malloc/ {printf("%i",$4)}'`
+	else
+		io_result=`$BDEV_PERF | awk '/Malloc/ {printf("%i",$6)}'`
+	fi
+
+	if [ $enable_limit = true ]; then
+		down_limit=`echo "$qos_limit 0.9" | awk '{printf("%i",$1*$2)}'`
+		up_limit=`echo "$qos_limit 1.05" | awk '{printf("%i",$1*$2)}'`
+		#QoS realization is related with bytes transfered.It currently has some variation.
+		if [ $io_result -lt $down_limit -o $io_result -gt $up_limit ]; then
+			echo "Failed to limit the io read rate of malloc bdev by qos"
+			exit 1
+		fi
+	else
+		if [ $io_result -lt $qos_limit ]; then
+			echo "$io_result by disabled QoS less than $qos_limit - exit QoS testing"
+			$RUN_QOS=false
+		fi
+	fi
+}
+
 timing_enter bdev
 
 # Create a file to be used as an AIO backend
@@ -164,6 +190,46 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	report_test_completion "nightly_bdev_reset"
 fi
 
+# Create conf file for bdevperf Malloc device for QoS testing
+cat > $testdir/bdev_qos.conf << EOL
+[Malloc]
+  NumberOfLuns 1
+  LunSizeInMB 128
+EOL
+
+IOPS_LIMIT=20000
+BANDWIDTH_LIMIT=20
+READ_BANDWIDTH_LIMIT=10
+LIMIT_TYPE=IOPS
+RUN_QOS=true
+BDEV_PERF="$testdir/bdevperf/bdevperf -m 0x2 -c $testdir/bdev_qos.conf -q 128 -o 4096 -w randread -t 5"
+
+# Run bdevperf with QoS disabled first
+check_qos_works_well false $IOPS_LIMIT
+if [ $RUN_QOS = true ]; then
+	# Run bdevperf with IOPS rate limit
+	cat >> $testdir/bdev_qos.conf << EOL
+[QoS]
+  Limit_IOPS Malloc0 $IOPS_LIMIT
+EOL
+	check_qos_works_well true $IOPS_LIMIT
+
+	# Run bdevperf with IOPS and bandwidth rate limits
+	LIMIT_TYPE=BANDWIDTH
+	cat >> $testdir/bdev_qos.conf << EOL
+[QoS]
+  Limit_BPS Malloc0 $BANDWIDTH_LIMIT
+EOL
+	check_qos_works_well true $BANDWIDTH_LIMIT
+
+	# Run bdevperf with additional read only bandwidth rate limit
+	cat >> $testdir/bdev_qos.conf << EOL
+[QoS]
+  Limit_Read_BPS Malloc0 $READ_BANDWIDTH_LIMIT
+EOL
+	check_qos_works_well true $READ_BANDWIDTH_LIMIT
+fi
+rm -f $testdir/bdev_qos.conf
 
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
