@@ -46,6 +46,30 @@
       "revId": "021f481b59447d62fb3f8f596fdd77ba26a00ab1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a3a5e94_51a4ea68",
+        "filename": "lib/event/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-12T01:34:41Z",
+      "side": 1,
+      "message": "For this, that\u0027s the reason to add the check of the g_subsystems_init_interrupted flag instead of always breaking out. I\u0027ve debugged this issue and when entering this function, the g_subsystems_initialized \u003d\u003d false and g_subsystems_init_interrupted \u003d\u003d false at line 194 check due to a failed operation to create a Malloc device (where I explicitly set a huge size to produce this condition). In the failed initialization path, this function is only called once so that the exit callback (g_app_stop_fn) is never got executed (the original logic is just return without calling the callback), and the application (like the bdevperf) is hanging (due to a failed Malloc creation).\n\nOn the other hand, could you describe the original NVMe-oF issue and I could verify with this change, whether that issue is there or not.",
+      "parentUuid": "45d3ea89_2c89c825",
+      "range": {
+        "startLine": 206,
+        "startChar": 4,
+        "endLine": 206,
+        "endChar": 10
+      },
+      "revId": "021f481b59447d62fb3f8f596fdd77ba26a00ab1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
