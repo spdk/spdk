@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "00997a18_bac2b170",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 3063,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-12T04:38:32Z",
+      "side": 1,
+      "message": "This is not necessary if pdu-\u003edata_segment_len is 0. Hence the previous version may be better.",
+      "revId": "6cc7553f83e6d5a808b53fc1f5856c5ce15d6d3d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
