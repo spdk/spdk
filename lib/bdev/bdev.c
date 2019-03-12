@@ -874,17 +874,10 @@ spdk_bdev_modules_init(void)
 	return 0;
 }
 
-
-static void
-spdk_bdev_init_failed_complete(void *cb_arg)
-{
-	spdk_bdev_init_complete(-1);
-}
-
 static void
 spdk_bdev_init_failed(void *cb_arg)
 {
-	spdk_bdev_finish(spdk_bdev_init_failed_complete, NULL);
+	spdk_bdev_init_complete(-1);
 }
 
 void
