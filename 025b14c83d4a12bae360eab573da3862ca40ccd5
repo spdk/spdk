@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea37fe41_9c6deca0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2130,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-12T09:38:12Z",
+      "side": 1,
+      "message": "I think line 2130 belongs to last if {} section, although it makes no difference for physical NVMe controllers.",
+      "range": {
+        "startLine": 2130,
+        "startChar": 3,
+        "endLine": 2130,
+        "endChar": 42
+      },
+      "revId": "025b14c83d4a12bae360eab573da3862ca40ccd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
