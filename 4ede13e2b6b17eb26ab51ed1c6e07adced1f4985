@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b45fc2eb_6c399baf",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-12T05:14:36Z",
+      "side": 1,
+      "message": "uh, this one wasn\u0027t updated as well",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 51
+      },
+      "revId": "4ede13e2b6b17eb26ab51ed1c6e07adced1f4985",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
