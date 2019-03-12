@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "93c4630f_ff94bde6",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 3776,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-12T08:43:34Z",
+      "side": 1,
+      "message": "\u003e You want to catch the case where someone calls spdk_bdev_unregister twice...\n\nTrue\n\n\u003e However, spdk_bdev_close currently calls spdk_bdev_unregister when the last handle to the bdev is closed, and in that case spdk_bdev_unregister should not fail this new status check\n\nNow it calls spdk_bdev_unregister_continue() and it is OK to return -EBUSY as descibed in comment.\n\n\u003e If I\u0027m understanding the problem correctly, I would have solved this by creating the following series of patches:\n\nI think, the code is working exactly how you described it. Only diff is:\n1. Rename\n - spdk_bdev_unregister_continue\n + spdk_bdev_unregister_unsafe\n\n2. Move to spdk_bdev_unregister_unsafe\n  - check if spdk_get_thread() !\u003d NULL\n  - check if internal.status !\u003d REMOVING\n\n#1 is pure sed so ok if you like it I can change it\n#2 is usless to check it from spdk_bdev_close()\n\nBut as you are the more experienced here something obvious could be overlooked by me. Do you want me to do #2 ?",
+      "parentUuid": "e37d5a1d_9ec976fb",
+      "revId": "15e610fafaa546637a08328e79d476d8015631ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5411614d_97c576a0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 10
