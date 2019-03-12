@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f47bf4b7_95cbe3ad",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T19:04:59Z",
+      "side": 1,
+      "message": "The storage device may use a block format that requires separate metadata (DIX). In this scenario, the fio_plugin will automatically allocate an extra 4KiB buffer per I/O to hold this metadata. For some cases, such as 512 byte blocks with 16 metadata bytes per block and a 128KiB I/O size, 4KiB may not be large enough. In this case, the `md_per_io_size` option may be specified to increase the size of the metadata buffer.",
+      "revId": "18d0dab121d0220d62a4f712998292bbdb591b4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dea0df4e_ee17c4f8",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T19:04:59Z",
+      "side": 1,
+      "message": "If md_size * lba_count is greater than g_spdk_md_per_io_size, shouldn\u0027t that be an error? Or does spdk_dix_verify already handle that and fail below?",
+      "revId": "18d0dab121d0220d62a4f712998292bbdb591b4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
