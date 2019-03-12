@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f58b7c8_20a9d980",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-12T08:26:46Z",
+      "side": 1,
+      "message": "if we don\u0027t check mapped_length, we should set NULL.",
+      "range": {
+        "startLine": 370,
+        "startChar": 83,
+        "endLine": 370,
+        "endChar": 97
+      },
+      "revId": "2497f1644dba9d25eaf10b08d69a3ee7a341d835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4ec68318_9c0eb92e",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 375,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-12T08:26:46Z",
+      "side": 1,
+      "message": "I think we should done this operation in nvme_tcp_read_pdu().\n\nrc \u003d nvme_tcp_read_payload_data(sock, pdu);\nif (rc \u003c 0) {\n  nvme_tcp_qpair_set_recv_state(tqpair, ERROR);\n  break;\n}\n\npdu-\u003ereadv_offset +\u003d rc;\nif (pdu-\u003ereadv_offset \u003c data_len) {\n return IN_PROGRESS;\n}",
+      "range": {
+        "startLine": 375,
+        "startChar": 2,
+        "endLine": 375,
+        "endChar": 29
+      },
+      "revId": "2497f1644dba9d25eaf10b08d69a3ee7a341d835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "570ae414_ad52d123",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1975,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-12T08:26:46Z",
+      "side": 1,
+      "message": "Please see my comment in nvme_tcp.c",
+      "range": {
+        "startLine": 1975,
+        "startChar": 3,
+        "endLine": 1975,
+        "endChar": 5
+      },
+      "revId": "2497f1644dba9d25eaf10b08d69a3ee7a341d835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
