@@ -4,6 +4,7 @@ testdir=$(readlink -f $(dirname $0))
 rootdir=$(readlink -f $testdir/../..)
 source $rootdir/test/common/autotest_common.sh
 source $testdir/nbd_common.sh
+source "$rootdir/scripts/common.sh"
 
 rpc_py="$rootdir/scripts/rpc.py"
 
@@ -49,6 +50,75 @@ function nbd_function_test() {
 	fi
 
 	return 0
+}
+
+IOPS_LIMIT=2000
+RUN_TIME=5
+RUN_QOS=false
+QOS_RPC_SERVER=/var/tmp/spdk-qos.sock
+QOS_DEV="Null_0"
+
+function qos_create_dev() {
+	$rpc_py -s $QOS_RPC_SERVER bdev_null_create $QOS_DEV 128 512
+	waitforbdev $QOS_DEV $QOS_RPC_SERVER
+}
+
+function qos_delete_dev() {
+	$rpc_py -s $QOS_RPC_SERVER bdev_null_delete $QOS_DEV
+}
+
+function qos_check_test() {
+	local qos_min_iops_limit=1000
+
+	io_result=$($rpc_py -s $QOS_RPC_SERVER bdev_get_iostat -b $QOS_DEV)
+	io_result_before=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
+
+	sleep $RUN_TIME
+	io_result=$($rpc_py -s $QOS_RPC_SERVER bdev_get_iostat -b $QOS_DEV)
+	io_result_after=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
+
+	# Set the IOPS limit as one quarter of the measured performance without QoS
+	io_result=$(((io_result_after-io_result_before)/RUN_TIME/4))
+	# Once min IOPS limit (1000) can hit, the min bandwidth limit (1MB) can also hit as I/O size is 4K
+	if [ $io_result -gt $qos_min_iops_limit ]; then
+		RUN_QOS=true
+		IOPS_LIMIT=$((io_result/qos_min_iops_limit*qos_min_iops_limit))
+	else
+		echo "$io_result without rate limiting is less than min $qos_limit - exit QoS testing"
+	fi
+}
+
+function qos_run_test() {
+	local qos_limit=$1
+	local limit_type=$2
+
+	io_result=$($rpc_py -s $QOS_RPC_SERVER bdev_get_iostat -b $QOS_DEV)
+	if [ $limit_type = IOPS ]; then
+		io_result_before=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
+	else
+		io_result_before=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
+	fi
+	sleep $RUN_TIME
+	io_result=$($rpc_py -s $QOS_RPC_SERVER bdev_get_iostat -b $QOS_DEV)
+
+	if [ $limit_type = IOPS ]; then
+		io_result_after=$(echo $io_result | jq -r '.bdevs[0].num_read_ops')
+		io_result=$(((io_result_after-io_result_before)/RUN_TIME))
+	else
+		io_result_after=$(echo $io_result | jq -r '.bdevs[0].bytes_read')
+		io_result=$(((io_result_after-io_result_before)/RUN_TIME))
+		qos_limit=$((qos_limit*1024*1024))
+	fi
+
+	down_limit=$(echo "$qos_limit 0.85" | awk '{printf("%i",$1*$2)}')
+	up_limit=$(echo "$qos_limit 1.15" | awk '{printf("%i",$1*$2)}')
+	# QoS realization is related with bytes transfered. It currently has some variation.
+	if [ $io_result -lt $down_limit -o $io_result -gt $up_limit ]; then
+		echo "Failed to limit the io read rate of malloc bdev by qos"
+		qos_delete_dev
+		killprocess $QOS_PID
+		exit 1
+	fi
 }
 
 timing_enter bdev
@@ -176,6 +246,32 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 	report_test_completion "nightly_bdev_reset"
 fi
 
+# Run bdevperf with QoS disabled first
+$testdir/bdevperf/bdevperf -z -m 0x2 -q 256 -o 4096 -w randread -t 60 -r $QOS_RPC_SERVER &
+QOS_PID=$!
+echo "Process qos testing pid: $QOS_PID"
+trap 'killprocess $QOS_PID; exit 1' SIGINT SIGTERM EXIT
+waitforlisten $QOS_PID $QOS_RPC_SERVER
+
+qos_create_dev
+$rootdir/test/bdev/bdevperf/bdevperf.py -s $QOS_RPC_SERVER perform_tests &
+qos_check_test
+if [ $RUN_QOS = true ]; then
+	# Run bdevperf with IOPS rate limit
+	$rpc_py -s $QOS_RPC_SERVER bdev_set_qos_limit --rw_ios_per_sec $IOPS_LIMIT $QOS_DEV
+	qos_run_test $IOPS_LIMIT IOPS
+
+	# Run bdevperf with IOPS and bandwidth rate limits
+	$rpc_py -s $QOS_RPC_SERVER bdev_set_qos_limit --rw_mbytes_per_sec 4 $QOS_DEV
+	qos_run_test 4 BANDWIDTH
+
+	# Run bdevperf with additional read only bandwidth rate limit
+	$rpc_py -s $QOS_RPC_SERVER bdev_set_qos_limit --r_mbytes_per_sec 2 $QOS_DEV
+	qos_run_test 2 BANDWIDTH
+fi
+
+qos_delete_dev
+killprocess $QOS_PID
 
 if grep -q Nvme0 $testdir/bdev.conf; then
 	part_dev_by_gpt $testdir/bdev.conf Nvme0n1 $rootdir reset
