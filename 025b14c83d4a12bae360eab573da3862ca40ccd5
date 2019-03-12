@@ -22,6 +22,30 @@
       "revId": "025b14c83d4a12bae360eab573da3862ca40ccd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f5061e37_69e8e4f1",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2130,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T14:55:45Z",
+      "side": 1,
+      "message": "If last_sq_tail isn\u0027t unconditionally updated, then the condition on line 2120 will always be true.\n\nFor devices that don\u0027t require a doorbell write, it doesn\u0027t really matter. But I\u0027d prefer to bail on this check on line 2120 if we can, rather than executing line 2121 every time.",
+      "parentUuid": "ea37fe41_9c6deca0",
+      "range": {
+        "startLine": 2130,
+        "startChar": 3,
+        "endLine": 2130,
+        "endChar": 42
+      },
+      "revId": "025b14c83d4a12bae360eab573da3862ca40ccd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
