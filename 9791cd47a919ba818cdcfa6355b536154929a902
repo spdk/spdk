@@ -22,6 +22,30 @@
       "revId": "9791cd47a919ba818cdcfa6355b536154929a902",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "59dee3d6_60b11684",
+        "filename": "lib/iscsi/iscsi.h",
+        "patchSetId": 15
+      },
+      "lineNbr": 443,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-12T08:14:36Z",
+      "side": 1,
+      "message": "Thank you, Darek. I may have other suggestions in this patch, and so I want to wait for now.",
+      "parentUuid": "a27d3036_d2278e11",
+      "range": {
+        "startLine": 443,
+        "startChar": 14,
+        "endLine": 443,
+        "endChar": 17
+      },
+      "revId": "9791cd47a919ba818cdcfa6355b536154929a902",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
