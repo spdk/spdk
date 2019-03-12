@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "df6669a3_294341fa",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 998,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T19:08:30Z",
+      "side": 1,
+      "message": "Should you keep the default as 0x1234 like it was before?",
+      "revId": "f93c0eb3b3ed396873d072f29565172cac3dac9e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
