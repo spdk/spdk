@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17f0ea9_53959cd2",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 12
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-12T20:41:47Z",
+      "side": 1,
+      "message": "This is actually in the wrong section now that I look at it. It should be up in the 19.04 section.\n\nHowever, since later in the series we rip this out, how about we just remove this and the CONFIG/configure changes here? That does mean that the only way to enable SRQ as of this patch is by modifying the code to #define the variable. But 3 patches down the line it gets turned on automatically, so I think that\u0027s fine.",
+      "revId": "2dbfcec05884f30a62264475701ae04c24785166",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
