@@ -72,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "9057e573_d72dbbe9",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:39:50Z",
+      "side": 1,
+      "message": "What is the flow in which the metadata is being read and we want to release it? It doesn\u0027t seem right.",
+      "parentUuid": "f950f579_d8667042",
+      "range": {
+        "startLine": 109,
+        "startChar": 10,
+        "endLine": 109,
+        "endChar": 15
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "36a319f3_8dd272fb",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 4
@@ -107,6 +131,30 @@
       "side": 1,
       "message": "Yes, I was thinking that I\u0027ve added this in another patch but it seems I missed it - i think this change should be a part of https://review.gerrithub.io/c/spdk/spdk/+/447176",
       "parentUuid": "36a319f3_8dd272fb",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 17
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4c5c933_7b3f5e9f",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:39:50Z",
+      "side": 1,
+      "message": "Then please change it there and rebase this patch.",
+      "parentUuid": "8bb8c70c_2f59c0d9",
       "range": {
         "startLine": 307,
         "startChar": 0,
@@ -213,6 +261,30 @@
     },
     {
       "key": {
+        "uuid": "4fe5e3b7_8bf41f77",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:39:50Z",
+      "side": 1,
+      "message": "Then we\u0027re going to change it in the future. This return statement and assert(0) doesn\u0027t look good.",
+      "parentUuid": "7d64d6c6_bdd96585",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 0
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "221045ce_e388f80f",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -260,6 +332,30 @@
     },
     {
       "key": {
+        "uuid": "e30dd844_06121540",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:39:50Z",
+      "side": 1,
+      "message": "I disagree - this approach is significantly worse. Since SPDK handles ENOMEM in a way to retry to request, libftl should do the same. If we complete a request with a status \u003d ENOMEM, we should treat it as partially completed request and not clear its flags and allow for further ftl_io_read that would only fill the remaining data.",
+      "parentUuid": "6466db04_613a68f7",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 33
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e45cd53_4d666b4a",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -295,6 +391,30 @@
       "side": 1,
       "message": "I wasn\u0027t sure if can make progress on such IO in current implementation so I choose the cleanest way as it shoud be vaery rare case. But you are right, we should try to make progress on such IO.",
       "parentUuid": "0e45cd53_4d666b4a",
+      "range": {
+        "startLine": 272,
+        "startChar": 2,
+        "endLine": 272,
+        "endChar": 19
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "babb12b0_b396efb6",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-12T08:39:50Z",
+      "side": 1,
+      "message": "Yes, we can. But of course we cannot change the IO (e.g. its flags).",
+      "parentUuid": "1ec652d8_7d60bd82",
       "range": {
         "startLine": 272,
         "startChar": 2,
