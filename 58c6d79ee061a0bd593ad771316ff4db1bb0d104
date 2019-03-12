@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d47bb229_7b1fefdf",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-12T23:35:21Z",
+      "side": 1,
+      "message": "Yeah, I wanted it to be enbedded as well, but I thought it might be wasteful after we remove the compile time flags. Once the compile time flag is removed, we will determine at runtime whether the poller or qpair will use the resources struct. My reasoning was that we didn\u0027t want to unnecessarily bloat the qpair structs if the poller had the resources in it. \nI could add a flag variable in the qpairs and poller to indicate whether or not the resources struct is used, but it seemed more natural to use a pointer.\nYou definitely have a better concept of which is better:\n1. Save some memory in the qpair structs in the case that a device supports srq by using pointers, but then have to chase a pointer in the I/O path\n2. embed the resources struct in both the poller and the qpair and use flags to determine which one to access on a per-qp basis. Uses a little more memory, but no need to chase a pointer.\nSo I will defer to your judgement.",
+      "parentUuid": "51186b9d_4d6fe46b",
+      "revId": "58c6d79ee061a0bd593ad771316ff4db1bb0d104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8ca2bc36_541548b4",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 9
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-12T22:29:49Z",
       "side": 1,
       "message": "same here",
+      "revId": "58c6d79ee061a0bd593ad771316ff4db1bb0d104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1449d718_c8928de3",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-12T23:35:21Z",
+      "side": 1,
+      "message": "see above",
+      "parentUuid": "8ca2bc36_541548b4",
       "revId": "58c6d79ee061a0bd593ad771316ff4db1bb0d104",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
