@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "f950f579_d8667042",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "I don\u0027t like this flag either. but I want to keep this debug check becouse it is extreamly usefull. I didn\u0027t find better solution for this, I can eventually put this flag to ifdef or maybe you have some better idea?",
+      "parentUuid": "87af2b18_4534c7ce",
+      "range": {
+        "startLine": 109,
+        "startChar": 10,
+        "endLine": 109,
+        "endChar": 15
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "36a319f3_8dd272fb",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 4
@@ -59,6 +83,30 @@
       "writtenOn": "2019-03-11T18:15:25Z",
       "side": 1,
       "message": "This can potentially hide the ENOMEM set in the submission routine. You should flip the condition and move the io-\u003estatus \u003d -EIO here.",
+      "range": {
+        "startLine": 307,
+        "startChar": 0,
+        "endLine": 307,
+        "endChar": 17
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8bb8c70c_2f59c0d9",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "Yes, I was thinking that I\u0027ve added this in another patch but it seems I missed it - i think this change should be a part of https://review.gerrithub.io/c/spdk/spdk/+/447176",
+      "parentUuid": "36a319f3_8dd272fb",
       "range": {
         "startLine": 307,
         "startChar": 0,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "49a51eda_6a8f371d",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 180,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "Yes, you are right, but as I say offline this patch is not a final solution. Doing it this way which in fact is resetting reloc state machine requires fewest changes in reloc logic. I think high_prio band don\u0027t have this issue because it don\u0027t have to read lba_map? I\u0027m thinking about your idea as some of optimization but I would like to avoid changing reloc mechanism to be able to handle this situation. In my opinion this ENOMEM flow for metadata reads could be potentially part of metadata read as it alloc its own IO anyway?",
+      "parentUuid": "2be7d76f_4fd1bc2e",
+      "range": {
+        "startLine": 180,
+        "startChar": 2,
+        "endLine": 180,
+        "endChar": 28
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e6e5354b_7005d898",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -105,6 +177,30 @@
       "writtenOn": "2019-03-11T18:15:25Z",
       "side": 1,
       "message": "Let\u0027s just change it to:\n\nelse {\n  assert(status \u003d\u003d 0);\n  _ftl_reloc_prep(breloc);\n}",
+      "range": {
+        "startLine": 181,
+        "startChar": 0,
+        "endLine": 185,
+        "endChar": 0
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d64d6c6_bdd96585",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "I\u0027m not so convinced to do this change - we need to put some logic to this else statement in future anyway?",
+      "parentUuid": "e6e5354b_7005d898",
       "range": {
         "startLine": 181,
         "startChar": 0,
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "6466db04_613a68f7",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "Both approaches looks awful in my opinion. I don\u0027t like playing with this IO flagas - we have mess with this already in our code. I think we should figure out some better solution for this...",
+      "parentUuid": "221045ce_e388f80f",
+      "range": {
+        "startLine": 271,
+        "startChar": 0,
+        "endLine": 271,
+        "endChar": 33
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "0e45cd53_4d666b4a",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 4
@@ -151,6 +271,30 @@
       "writtenOn": "2019-03-11T18:15:25Z",
       "side": 1,
       "message": "I don\u0027t understand why are you freeing the IO? The idea is to reuse the IO in order not to re-read the stuff already read before the request couldn\u0027t be allocated. This should reschedule the read with this particular IO.",
+      "range": {
+        "startLine": 272,
+        "startChar": 2,
+        "endLine": 272,
+        "endChar": 19
+      },
+      "revId": "21d0311ce124bcd87a4870e45dd4dcdae4de23f5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ec652d8_7d60bd82",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 272,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-12T08:16:36Z",
+      "side": 1,
+      "message": "I wasn\u0027t sure if can make progress on such IO in current implementation so I choose the cleanest way as it shoud be vaery rare case. But you are right, we should try to make progress on such IO.",
+      "parentUuid": "0e45cd53_4d666b4a",
       "range": {
         "startLine": 272,
         "startChar": 2,
