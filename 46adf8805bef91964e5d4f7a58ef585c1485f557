@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34925ab8_6f3fccd6",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-13T15:12:26Z",
+      "side": 1,
+      "message": "I see you are doing this free(w), because on every case the array is begun before knowing if device is there. Yet, the overall design for json_rpc is that when response begins, it always has to end with spdk_jsonrpc_end_result().\n\nMy previous comment on providing ENODEV, was on get_bdevs or get_lvol_stores where the check if a device exists is done beforehand.\n\nWe can do two things here:\n- Skip providing ENODEV and just give empty array (as in previous patch set)\n- Add check for vbdev_ocf_get_by_name() and vbdev_ocf_get_base_by_name() before iterating. This will cause us to iterate 2-3 times over g_ocf_vbdev_head\n\nI haven\u0027t considered aspect of json response, sorry.\n\nAnother, would be to provide getters for cache and core directly in the API - convoluted since there can be multiple of the same cache structures belonging to multiple vbdev_ocfs :/",
+      "range": {
+        "startLine": 307,
+        "startChar": 2,
+        "endLine": 307,
+        "endChar": 10
+      },
+      "revId": "46adf8805bef91964e5d4f7a58ef585c1485f557",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
