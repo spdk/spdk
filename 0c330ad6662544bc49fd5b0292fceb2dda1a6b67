@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a8cff993_533e5fc8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-13T23:41:19Z",
+      "side": 1,
+      "message": "does this need to be moved?",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e88ac202_95d24ca1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-13T23:41:19Z",
+      "side": 1,
+      "message": "in some cases we check -\u003esrq, in others we check -\u003eresources - is it possible to make it consistent?  I think using -\u003esrq is more clear",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd51e5d6_f4eced31",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2905,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-13T23:41:19Z",
+      "side": 1,
+      "message": "could we move both of these rdma_recv-\u003eqpair assignments up to just after rdma_wr gets assigned?  It should be cheap to just check if the rdma_wr-\u003etype is RDMA_WR_TYPE_RECV and set the qpair if it isn\u0027t already set\n\nshould probably have a very short comment here too explaining why the qpair could be null",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
