@@ -1269,10 +1269,14 @@ ftl_select_defrag_band(struct spdk_ftl_dev *dev)
 static void
 ftl_process_relocs(struct spdk_ftl_dev *dev)
 {
+	struct ftl_band *band;
+
 	if (ftl_dev_needs_defrag(dev)) {
-		dev->df_band = ftl_select_defrag_band(dev);
-		if (dev->df_band) {
-			ftl_reloc_add(dev->reloc, dev->df_band, 0, ftl_num_band_lbks(dev), 0);
+		band = dev->df_band = ftl_select_defrag_band(dev);
+
+		if (band) {
+			ftl_reloc_add(dev->reloc, band, 0, ftl_num_band_lbks(dev), 0);
+			ftl_trace_defrag_band(dev, band);
 		}
 	}
 
