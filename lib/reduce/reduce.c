@@ -550,7 +550,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	struct reduce_init_load_ctx *load_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = load_ctx->vol;
 	uint64_t backing_dev_size;
-	uint64_t i, num_chunks;
+	uint64_t i, num_chunks, logical_map_value;
 	uint64_t *chunk;
 	size_t mapped_len;
 	uint32_t j;
@@ -608,11 +608,12 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 
 	num_chunks = vol->params.vol_size / vol->params.chunk_size;
 	for (i = 0; i < num_chunks; i++) {
-		if (vol->pm_logical_map[i] == REDUCE_EMPTY_MAP_ENTRY) {
+		logical_map_value = vol->pm_logical_map[i];
+		if (logical_map_value == REDUCE_EMPTY_MAP_ENTRY) {
 			continue;
 		}
-		spdk_bit_array_set(vol->allocated_chunk_maps, i);
-		chunk = _reduce_vol_get_chunk_map(vol, i);
+		spdk_bit_array_set(vol->allocated_chunk_maps, logical_map_value);
+		chunk = _reduce_vol_get_chunk_map(vol, logical_map_value);
 		for (j = 0; j < vol->backing_io_units_per_chunk; j++) {
 			if (chunk[j] != REDUCE_EMPTY_MAP_ENTRY) {
 				spdk_bit_array_set(vol->allocated_backing_io_units, chunk[j]);
@@ -819,7 +820,7 @@ _write_complete_req(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t logical_map_index, old_chunk_map_index;
+	uint64_t logical_map_index, old_logical_map_index;
 	uint64_t *old_chunk;
 	uint32_t i;
 
@@ -839,9 +840,9 @@ _write_complete_req(void *_req, int reduce_errno)
 
 	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
 
-	old_chunk_map_index = vol->pm_logical_map[logical_map_index];
-	if (old_chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
-		old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
+	old_logical_map_index = vol->pm_logical_map[logical_map_index];
+	if (old_logical_map_index != REDUCE_EMPTY_MAP_ENTRY) {
+		old_chunk = _reduce_vol_get_chunk_map(vol, old_logical_map_index);
 		for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
 			if (old_chunk[i] == REDUCE_EMPTY_MAP_ENTRY) {
 				break;
@@ -850,7 +851,7 @@ _write_complete_req(void *_req, int reduce_errno)
 			spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk[i]);
 			old_chunk[i] = REDUCE_EMPTY_MAP_ENTRY;
 		}
-		spdk_bit_array_clear(vol->allocated_chunk_maps, old_chunk_map_index);
+		spdk_bit_array_clear(vol->allocated_chunk_maps, old_logical_map_index);
 	}
 
 	/*
