@@ -4686,22 +4686,30 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		lun_id = spdk_islun2lun(lun);
 		break;
 	}
-	case ISCSI_OP_SCSI_DATAIN:
 	case ISCSI_OP_SCSI_DATAOUT: {
-		/* Location of Buffer Offset and TTT in PDU are same
-		 * for Data In and Out, so unify them.
-		 */
-		struct iscsi_bhs_data_in *dbhs;
+		struct iscsi_bhs_data_out *dbhs;
 		struct spdk_iscsi_task *task;
 		int transfer_tag;
 
-		dbhs = (struct iscsi_bhs_data_in *)bhs;
+		dbhs = (struct iscsi_bhs_data_out *)bhs;
 		offset = from_be32(&dbhs->buffer_offset);
 		transfer_tag = from_be32(&dbhs->ttt);
 		task = spdk_get_transfer_task(conn, transfer_tag);
 		if (task == NULL) {
 			return false;
 		}
+		cdb = task->scsi.cdb;
+		lun_id = task->lun_id;
+		break;
+	}
+	case ISCSI_OP_SCSI_DATAIN: {
+		struct iscsi_bhs_data_in *dbhs;
+		struct spdk_iscsi_task *task;
+
+		dbhs = (struct iscsi_bhs_data_in *)bhs;
+		offset = from_be32(&dbhs->buffer_offset);
+		task = pdu->task;
+		assert(task != NULL);
 		cdb = task->scsi.cdb;
 		lun_id = task->lun_id;
 		break;
