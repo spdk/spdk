@@ -370,6 +370,12 @@ static int spdk_fio_setup(struct thread_data *td)
 	char *trid_info;
 	unsigned int i;
 
+	if (!fio_options) {
+		log_err("spdk: must set spdk_conf when using spdk plugin\n");
+		return 1;
+	}
+
+
 	if (!td->o.use_thread) {
 		log_err("spdk: must set thread=1 when using spdk plugin\n");
 		return 1;
