@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ea8f3df8_8214a12c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 632,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-13T11:51:48Z",
+      "side": 1,
+      "message": "With addition of trylocks, I wonder if we want to add timeout at some point ?",
+      "range": {
+        "startLine": 632,
+        "startChar": 6,
+        "endLine": 632,
+        "endChar": 28
+      },
+      "revId": "eb4b23c676e711d1e902025bc86d9fc88a0069ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7502188_322bed8a",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-13T11:51:48Z",
+      "side": 1,
+      "message": "We talked about this case offline, but let me summarize it here too. This can be implemented using usual APIs:\n- call start_cache_cb() directly\n- which at the end registers poller with \u0027add_core_poll\u0027\n- The poller will unregister itself and call register_spdk_bdev_cb() after adding core is successful \n\nThis is straightforward scenario. In any more complex cases, I think it might be even more beneficial to use callbacks/msgs/pollers directly. Error paths are easier to follow than \u0027pre-planned\u0027 execution flow proposed here.",
+      "range": {
+        "startLine": 776,
+        "startChar": 0,
+        "endLine": 798,
+        "endChar": 1
+      },
+      "revId": "eb4b23c676e711d1e902025bc86d9fc88a0069ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
