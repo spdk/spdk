@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "fd6a76e5_c408f39a",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T00:39:30Z",
+      "side": 1,
+      "message": "Thanks",
+      "parentUuid": "f47bf4b7_95cbe3ad",
+      "revId": "18d0dab121d0220d62a4f712998292bbdb591b4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dea0df4e_ee17c4f8",
         "filename": "examples/nvme/fio_plugin/fio_plugin.c",
         "patchSetId": 14
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-12T19:04:59Z",
       "side": 1,
       "message": "If md_size * lba_count is greater than g_spdk_md_per_io_size, shouldn\u0027t that be an error? Or does spdk_dix_verify already handle that and fail below?",
+      "revId": "18d0dab121d0220d62a4f712998292bbdb591b4d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d73f172d_7beed24a",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 655,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T00:39:30Z",
+      "side": 1,
+      "message": "Exactly, spdk_dix_verify() will do the check and return error for that case.",
+      "parentUuid": "dea0df4e_ee17c4f8",
       "revId": "18d0dab121d0220d62a4f712998292bbdb591b4d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
