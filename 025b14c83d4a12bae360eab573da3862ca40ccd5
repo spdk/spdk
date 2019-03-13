@@ -46,6 +46,30 @@
       "revId": "025b14c83d4a12bae360eab573da3862ca40ccd5",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fa36d3c3_c534cdad",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2130,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T09:28:21Z",
+      "side": 1,
+      "message": "Okay, but there is an optimization can do here, we can also check completion queue\u0027s cq_head, maybe the index request last_sq_tail or sq_tail pointed to was already finished.",
+      "parentUuid": "f5061e37_69e8e4f1",
+      "range": {
+        "startLine": 2130,
+        "startChar": 3,
+        "endLine": 2130,
+        "endChar": 42
+      },
+      "revId": "025b14c83d4a12bae360eab573da3862ca40ccd5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
