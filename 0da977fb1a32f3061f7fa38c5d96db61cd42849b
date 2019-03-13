@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f86d9be3_379ce0a1",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 32
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T08:48:07Z",
+      "side": 1,
+      "message": "let\u0027s use the name \"spdk_opal\" prefix for external APIs in the whole patch set.",
+      "range": {
+        "startLine": 117,
+        "startChar": 0,
+        "endLine": 117,
+        "endChar": 97
+      },
+      "revId": "0da977fb1a32f3061f7fa38c5d96db61cd42849b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "02b90ea4_2e73ec4f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 32
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T08:48:07Z",
+      "side": 1,
+      "message": "For those internal static functions we can use \"opal_\" prefix, and we don\u0027t need \"spdk_opal_\" or \"spdk_\" here.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 390,
+        "endChar": 1
+      },
+      "revId": "0da977fb1a32f3061f7fa38c5d96db61cd42849b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
