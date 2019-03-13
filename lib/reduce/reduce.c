@@ -550,7 +550,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	struct reduce_init_load_ctx *load_ctx = cb_arg;
 	struct spdk_reduce_vol *vol = load_ctx->vol;
 	uint64_t backing_dev_size;
-	uint64_t i, num_chunks;
+	uint64_t i, num_chunks, logical_map_value;
 	uint64_t *chunk;
 	size_t mapped_len;
 	uint32_t j;
@@ -608,11 +608,12 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 
 	num_chunks = vol->params.vol_size / vol->params.chunk_size;
 	for (i = 0; i < num_chunks; i++) {
-		if (vol->pm_logical_map[i] == REDUCE_EMPTY_MAP_ENTRY) {
+		logical_map_value = vol->pm_logical_map[i];
+		if (logical_map_value == REDUCE_EMPTY_MAP_ENTRY) {
 			continue;
 		}
-		spdk_bit_array_set(vol->allocated_chunk_maps, i);
-		chunk = _reduce_vol_get_chunk_map(vol, i);
+		spdk_bit_array_set(vol->allocated_chunk_maps, logical_map_value);
+		chunk = _reduce_vol_get_chunk_map(vol, logical_map_value);
 		for (j = 0; j < vol->backing_io_units_per_chunk; j++) {
 			if (chunk[j] != REDUCE_EMPTY_MAP_ENTRY) {
 				spdk_bit_array_set(vol->allocated_backing_io_units, chunk[j]);
