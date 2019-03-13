@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "826ddddd_3209a724",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-13T14:14:51Z",
+      "side": 1,
+      "message": "you can move those two under the check below, then merge the two checks to:\n\nif (vsession \u003d\u003d NULL || vsession-\u003elcore \u003d\u003d -1) \n  return 0;\n\nBut that should be done in a separate patch. Please bring back the original order for this one.",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 939,
+        "endChar": 62
+      },
+      "revId": "f34f787cd9ed699ee3cb97bdea0e1f9a226af710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1dd20272_9cd38b93",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-13T14:14:51Z",
+      "side": 1,
+      "message": "unrelated change?",
+      "range": {
+        "startLine": 948,
+        "startChar": 0,
+        "endLine": 951,
+        "endChar": 47
+      },
+      "revId": "f34f787cd9ed699ee3cb97bdea0e1f9a226af710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
