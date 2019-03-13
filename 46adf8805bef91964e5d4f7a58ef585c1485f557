@@ -22,6 +22,30 @@
       "revId": "46adf8805bef91964e5d4f7a58ef585c1485f557",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49976ae9_e575ddb3",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-13T15:51:27Z",
+      "side": 1,
+      "message": "Ok, I removed free() and added checks that you suggesting to still print error message.\nThe fact that we iterate 3 times doesn\u0027t seem to be a big concern in RPC path.\n\nI think iterator for cache devices would be nice to add, but I am not convinced it\u0027s worth it because iterating is also straight forward and easy.",
+      "parentUuid": "34925ab8_6f3fccd6",
+      "range": {
+        "startLine": 307,
+        "startChar": 2,
+        "endLine": 307,
+        "endChar": 10
+      },
+      "revId": "46adf8805bef91964e5d4f7a58ef585c1485f557",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
