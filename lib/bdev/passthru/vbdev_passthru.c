@@ -205,29 +205,6 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
-/* Callback for getting a buf from the bdev pool in the event that the caller passed
- * in NULL, we need to own the buffer so it doesn't get freed by another vbdev module
- * beneath us before we're done with it. That won't happen in this example but it could
- * if this example were used as a template for something more complex.
- */
-static void
-pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
-{
-	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru,
-					 pt_bdev);
-	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
-
-	if (!success) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		return;
-	}
-
-	spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
-			       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
-			       bdev_io->u.bdev.num_blocks, _pt_complete_io,
-			       bdev_io);
-}
-
 /* Called when someone above submits IO to this pt vbdev. We're simply passing it on here
  * via SPDK IO calls which in turn allocate another bdev IO and call our cpl callback provided
  * below along with the original bdiv_io so that we can complete it once this IO completes.
@@ -248,8 +225,10 @@ vbdev_passthru_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, pt_read_get_buf_cb,
-				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
+		rc = spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
+					    bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
+					    bdev_io->u.bdev.num_blocks, _pt_complete_io,
+					    bdev_io);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
 		rc = spdk_bdev_writev_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
