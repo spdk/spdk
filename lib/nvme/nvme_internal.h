@@ -324,14 +324,7 @@ struct nvme_async_event_request {
 };
 
 struct spdk_nvme_qpair {
-	STAILQ_HEAD(, nvme_request)	free_req;
-	STAILQ_HEAD(, nvme_request)	queued_req;
-	/** Commands opcode in this list will return error */
-	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
-	/** Requests in this list will return error */
-	STAILQ_HEAD(, nvme_request)	err_req_head;
-
-	enum spdk_nvme_transport_type	trtype;
+	struct spdk_nvme_ctrlr		*ctrlr;
 
 	uint16_t			id;
 
@@ -351,7 +344,15 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t				no_deletion_notification_needed: 1;
 
-	struct spdk_nvme_ctrlr		*ctrlr;
+	enum spdk_nvme_transport_type	trtype;
+
+	STAILQ_HEAD(, nvme_request)	free_req;
+	STAILQ_HEAD(, nvme_request)	queued_req;
+
+	/** Commands opcode in this list will return error */
+	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
+	/** Requests in this list will return error */
+	STAILQ_HEAD(, nvme_request)	err_req_head;
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
