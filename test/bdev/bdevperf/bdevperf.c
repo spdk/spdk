@@ -222,6 +222,27 @@ blockdev_heads_destroy(void)
 	free(g_coremap);
 }
 
+static void
+end_run(void *arg1, void *arg2);
+
+static void
+bdevperf_target_gone(void *arg)
+{
+	struct io_target *target = arg;
+
+	spdk_poller_unregister(&target->run_timer);
+	if (g_reset) {
+		spdk_poller_unregister(&target->reset_timer);
+	}
+
+	target->is_draining = true;
+	if (target->current_queue_depth == 0) {
+		struct spdk_event *complete =
+			spdk_event_allocate(g_master_core, end_run, target, NULL);
+		spdk_event_call(complete);
+	}
+}
+
 static int
 bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 {
@@ -252,7 +273,7 @@ bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
 		return -ENOMEM;
 	}
 
-	rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+	rc = spdk_bdev_open(bdev, true, bdevperf_target_gone, target, &target->bdev_desc);
 	if (rc != 0) {
 		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
 		free(target->name);
