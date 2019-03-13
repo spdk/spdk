@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "460123aa_ab27f804",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-13T17:08:19Z",
+      "side": 1,
+      "message": "FTL",
+      "revId": "8c3f473b46b7bfc82fbf9028597672980d09a987",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
