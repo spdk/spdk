@@ -988,10 +988,10 @@ static void
 _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t chunk;
+	uint64_t logical_map_index;
 
-	chunk = req->offset / vol->logical_blocks_per_chunk;
-	req->chunk_map_index = vol->pm_logical_map[chunk];
+	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
+	req->chunk_map_index = vol->pm_logical_map[logical_map_index];
 	assert(req->chunk_map_index != UINT32_MAX);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
@@ -1018,7 +1018,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 		      spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
-	uint64_t chunk;
+	uint64_t logical_map_index;
 	int i;
 
 	if (length == 0) {
@@ -1036,8 +1036,8 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 		return;
 	}
 
-	chunk = offset / vol->logical_blocks_per_chunk;
-	if (vol->pm_logical_map[chunk] == REDUCE_EMPTY_MAP_ENTRY) {
+	logical_map_index = offset / vol->logical_blocks_per_chunk;
+	if (vol->pm_logical_map[logical_map_index] == REDUCE_EMPTY_MAP_ENTRY) {
 		/*
 		 * This chunk hasn't been allocated.  So treat the data as all
 		 * zeroes for this chunk - do the memset and immediately complete
@@ -1074,7 +1074,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
-	uint64_t chunk, chunk_offset;
+	uint64_t logical_map_index, chunk_offset;
 	uint32_t lbsize, lb_per_chunk;
 	int i;
 	uint8_t *buf;
@@ -1109,8 +1109,8 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	chunk = offset / vol->logical_blocks_per_chunk;
-	if (vol->pm_logical_map[chunk] != REDUCE_EMPTY_MAP_ENTRY) {
+	logical_map_index = offset / vol->logical_blocks_per_chunk;
+	if (vol->pm_logical_map[logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
 		/* Read old chunk, then overwrite with data from this write operation.
 		 * TODO: bypass reading old chunk if this write operation overwrites
 		 * the entire chunk.
