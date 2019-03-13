@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "51dfceae_fff4c425",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 104,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-13T01:39:50Z",
+      "side": 1,
+      "message": "change",
+      "range": {
+        "startLine": 104,
+        "startChar": 57,
+        "endLine": 104,
+        "endChar": 60
+      },
+      "revId": "563f190f9447c613a85139b922292b08354d46a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba5aae4b_23153dc2",
+        "filename": "examples/nvme/fio_plugin/README.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 105,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-13T01:39:50Z",
+      "side": 1,
+      "message": "Application tag and application tag mask are set to 0x1234 and 0xFFFF as default. ?",
+      "range": {
+        "startLine": 105,
+        "startChar": 70,
+        "endLine": 105,
+        "endChar": 71
+      },
+      "revId": "563f190f9447c613a85139b922292b08354d46a5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
