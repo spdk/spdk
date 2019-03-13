@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "52dbaf1e_b07bfd44",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-13T13:46:23Z",
+      "side": 1,
+      "message": "Because I missed that possibility. I fixed this in new patchset, ok now?",
+      "parentUuid": "34d602c5_e12a9c4b",
+      "range": {
+        "startLine": 300,
+        "startChar": 0,
+        "endLine": 303,
+        "endChar": 38
+      },
+      "revId": "38a3edace698e1404a24d721cd9a47b95ef77a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b5aaac53_f07bd825",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 18
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-13T08:23:35Z",
       "side": 1,
       "message": "This path does not inform user if there are no such vbdev_ocfs. It would iterate over all, and generate empty array.",
+      "range": {
+        "startLine": 311,
+        "startChar": 1,
+        "endLine": 311,
+        "endChar": 49
+      },
+      "revId": "38a3edace698e1404a24d721cd9a47b95ef77a66",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0819943d_23707982",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 311,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-13T13:46:23Z",
+      "side": 1,
+      "message": "You are right, done",
+      "parentUuid": "b5aaac53_f07bd825",
       "range": {
         "startLine": 311,
         "startChar": 1,
