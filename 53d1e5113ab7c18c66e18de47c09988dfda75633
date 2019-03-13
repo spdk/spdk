@@ -16,6 +16,24 @@
       "revId": "53d1e5113ab7c18c66e18de47c09988dfda75633",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c73ebb56_9a46cd57",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-13T13:25:01Z",
+      "side": 1,
+      "message": "I\u0027m know this whole concept is confusing, but it\u0027s just a dirty workaround. It\u0027s specific to rte_vhost, so I didn\u0027t describe it within this file. It\u0027s only described in rte_vhost_compat.c and the commit message.\n\nAs for the SET_VRING_ADDR:\nWe already poll only those queues that have rte_vhost_vring-\u003edesc set (q-\u003evring.desc !\u003d NULL), which is set by DPDK upon receiving SET_VRING_ADDR.",
+      "parentUuid": "2f6f35e7_f065982e",
+      "revId": "53d1e5113ab7c18c66e18de47c09988dfda75633",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
