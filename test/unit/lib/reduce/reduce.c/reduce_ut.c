@@ -611,6 +611,47 @@ _read_write(uint32_t backing_blocklen)
 	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 
+	/* Overwrite what we just wrote with 0xCC */
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+	CU_ASSERT(g_vol->params.vol_size == params.vol_size);
+	CU_ASSERT(g_vol->params.chunk_size == params.chunk_size);
+	CU_ASSERT(g_vol->params.backing_io_unit_size == params.backing_io_unit_size);
+
+	memset(buf, 0xCC, 2 * params.logical_block_size);
+	iov.iov_base = buf;
+	iov.iov_len = 2 * params.logical_block_size;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 2, 2, write_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	memset(compare_buf, 0xCC, sizeof(compare_buf));
+	for (i = 0; i < params.chunk_size / params.logical_block_size; i++) {
+		memset(buf, 0xFF, params.logical_block_size);
+		iov.iov_base = buf;
+		iov.iov_len = params.logical_block_size;
+		g_reduce_errno = -1;
+		spdk_reduce_vol_readv(g_vol, &iov, 1, i, 1, read_cb, NULL);
+		CU_ASSERT(g_reduce_errno == 0);
+
+		switch (i) {
+		case 2:
+		case 3:
+			CU_ASSERT(memcmp(buf, compare_buf, params.logical_block_size) == 0);
+			break;
+		default:
+			CU_ASSERT(spdk_mem_all_zero(buf, params.logical_block_size));
+			break;
+		}
+	}
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
 	g_vol = NULL;
 	g_reduce_errno = -1;
 	spdk_reduce_vol_load(&backing_dev, load_cb, NULL);
@@ -647,7 +688,7 @@ _read_write(uint32_t backing_blocklen)
 		switch (i) {
 		case 2:
 		case 3:
-			memset(compare_buf, 0xAA, sizeof(compare_buf));
+			memset(compare_buf, 0xCC, sizeof(compare_buf));
 			CU_ASSERT(memcmp(buf, compare_buf, params.logical_block_size) == 0);
 			break;
 		case 37:

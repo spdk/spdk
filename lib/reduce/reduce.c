@@ -611,8 +611,8 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		if (vol->pm_logical_map[i] == REDUCE_EMPTY_MAP_ENTRY) {
 			continue;
 		}
-		spdk_bit_array_set(vol->allocated_chunk_maps, i);
-		chunk = _reduce_vol_get_chunk_map(vol, i);
+		spdk_bit_array_set(vol->allocated_chunk_maps, vol->pm_logical_map[i]);
+		chunk = _reduce_vol_get_chunk_map(vol, vol->pm_logical_map[i]);
 		for (j = 0; j < vol->backing_io_units_per_chunk; j++) {
 			if (chunk[j] != REDUCE_EMPTY_MAP_ENTRY) {
 				spdk_bit_array_set(vol->allocated_backing_io_units, chunk[j]);
