@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "32ca0661_2edb024a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-13T23:27:49Z",
+      "side": 1,
+      "message": "we should remove the spdk_ prefix here - we usually reserve this for public functions\n\na lot of other static functions leave off spdk_, although I notice the function just before this one is also incorrect - but please don\u0027t change that function in this patch :)",
+      "revId": "1fa251a7194da878e09a8b056461afa8ad55afd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47b644d4_373ba90a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-13T23:27:49Z",
+      "side": 1,
+      "message": "why change this to 0?",
+      "revId": "1fa251a7194da878e09a8b056461afa8ad55afd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
