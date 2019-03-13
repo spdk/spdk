@@ -568,6 +568,11 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 		opts.io_queue_requests = entry->num_io_requests;
 	}
 	opts.delay_doorbell = true;
+	opts.io_queue_size = g_queue_depth;
+	if (g_io_size_bytes <= 0x1000) {
+		/* With small I/O, there is going to be very limited splitting. */
+		opts.io_queue_requests = g_queue_depth * 2;
+	}
 
 	ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
 			       sizeof(opts));
