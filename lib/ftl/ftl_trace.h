@@ -38,37 +38,11 @@
 
 #define FTL_TRACE_INVALID_ID ((uint64_t) -1)
 
-enum ftl_trace_source {
-	FTL_TRACE_SOURCE_INTERNAL = 0x20,
-	FTL_TRACE_SOURCE_USER,
-};
-
-enum ftl_trace_type {
-	FTL_TRACE_TYPE_READ,
-	FTL_TRACE_TYPE_MD_READ,
-	FTL_TRACE_TYPE_WRITE,
-	FTL_TRACE_TYPE_MD_WRITE,
-	FTL_TRACE_TYPE_ERASE,
-	FTL_TRACE_TYPE_OTHER,
-};
-
-enum ftl_trace_point {
-	FTL_TRACE_POINT_SCHEDULED,
-	FTL_TRACE_POINT_RWB_FILL,
-	FTL_TRACE_POINT_SUBMISSION,
-	FTL_TRACE_POINT_OTHER,
-};
-
 enum ftl_trace_completion {
-	FTL_TRACE_COMPLETION_INVALID = FTL_TRACE_POINT_OTHER + 1,
+	FTL_TRACE_COMPLETION_INVALID,
 	FTL_TRACE_COMPLETION_CACHE,
 	FTL_TRACE_COMPLETION_DISK,
 };
-
-struct ftl_event {
-	/* Id used for grouping multiple events of the same request */
-	uint64_t		id;
-} __attribute__((packed));
 
 struct ftl_trace {
 	/* Monotonically incrementing event id */
