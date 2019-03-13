@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f6f35e7_f065982e",
+        "filename": "lib/vhost/vhost_internal.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 130,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-13T10:04:51Z",
+      "side": 1,
+      "message": "forced_polling is really confused, for the cases that only have 1 valid IO queue in the BIOS, the SPDK poller should only poll the queues with valid QID, this can be implemented via SET_VRING_ADDR.",
+      "revId": "53d1e5113ab7c18c66e18de47c09988dfda75633",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
