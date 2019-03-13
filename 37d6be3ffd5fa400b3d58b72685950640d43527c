@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8c0d9b4d_ffaf5963",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1811,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-13T19:17:07Z",
+      "side": 1,
+      "message": "Is this function only called from one place? Maybe just make it part of spdk_nvmf_ns_reservation_request",
+      "revId": "37d6be3ffd5fa400b3d58b72685950640d43527c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a232252b_c46c5fde",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1819,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-13T19:17:07Z",
+      "side": 1,
+      "message": "Can you call _nvmf_ns_reservation_update_done here?",
+      "revId": "37d6be3ffd5fa400b3d58b72685950640d43527c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
