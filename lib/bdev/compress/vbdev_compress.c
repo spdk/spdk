@@ -49,6 +49,7 @@
 #include <rte_config.h>
 #include <rte_bus_vdev.h>
 #include <rte_compressdev.h>
+#include <rte_comp.h>
 
 /* TODO: valdiate these are good starting values */
 #define NUM_MAX_XFORMS 16
@@ -134,11 +135,13 @@ struct comp_bdev_io {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;		/* for bdev_io_wait */
 	struct spdk_bdev_io		*orig_io;		/* the original IO */
 	struct spdk_io_channel		*ch;			/* for resubmission */
-	struct spdk_bdev_io		*read_io;
-	/* TODO: rename these and maybe read_io above as well */
-	uint64_t dest_num_blocks;				/* num of blocks for the contiguous buffer */
-	uint64_t dest_offset_blocks;				/* block offset on media */
-	struct iovec dest_iov;					/* iov representing contig write buffer */
+	struct iovec			dst_iov;
+	struct iovec			src_iov;
+	struct iovec			*_iovs;
+	int				_iovcnt;
+	uint64_t			_num_blocks;
+	uint64_t			_offset_blocks;
+	struct spdk_bdev_io		*free_io;
 };
 
 /* Shared mempools between all devices on this system */
@@ -151,6 +154,7 @@ static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
 struct vbdev_compress *_prepare_for_load_init(struct spdk_bdev *bdev);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
 static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
+static int _compress_operation(struct spdk_bdev_io *bdev_io, enum rte_comp_xform_type operation);
 
 /* Called by vbdev_init_compress_drivers() to init each discovered compression device */
 static int
@@ -356,20 +360,11 @@ error_create_mbuf:
 	return rc;
 }
 
-/* Poller for the DPDK compression driver. */
-static int
-comp_dev_poller(void *args)
-{
-	/* TODO future patch in series */
-	return 0;
-}
-
-/* Completion callback for reads that were issued from this bdev. */
+/* Completion callback for writes that were issued via reducelib. */
 static void
-spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
+spdk_reduce_vol_writev_cb(void *arg, int reduce_errno)
 {
 	struct spdk_bdev_io *bdev_io = arg;
-
 	if (reduce_errno == 0) {
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
@@ -378,19 +373,254 @@ spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
 	}
 }
 
+/* Completion callback for reads that were issued via reducelib. */
 static void
-spdk_bdev_readv_blocks_cb(void *arg, int reduce_errno)
+spdk_reduce_vol_readv_cb(void *arg, int reduce_errno)
 {
 	struct spdk_bdev_io *bdev_io = arg;
+	int rc;
 
 	/* TODO: need to decide which error codes are bdev_io success vs failure;
 	 * example examine calls reading metadata */
 	if (reduce_errno == 0) {
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		/* Decompress data */
+		rc = _compress_operation(bdev_io, RTE_COMP_DECOMPRESS);
+		//SPDK_NOTICELOG("read %lu for %p success\n", bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+		//	       bdev_io);
+		if (rc) {
+			SPDK_ERRLOG("ERROR %d on read from decompression operation\n", rc);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	} else {
 		SPDK_ERRLOG("ERROR %d on read from reduce API\n", reduce_errno);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 	}
+}
+
+/* Following an compress or decompree we need to then either write the compressed data or finish
+ * the read on decompressed data. Do that here.
+ */
+static void
+_compress_operation_complete(struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
+					   comp_bdev);
+	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
+	struct spdk_bdev_io *free_me = io_ctx->free_io;
+	int rc = 0;
+
+	TAILQ_REMOVE(&comp_bdev->pending_comp_ios, bdev_io, module_link);
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+
+		/* reset the bdev_io buffers to point to the decompressed data */
+		bdev_io->u.bdev.iovs = io_ctx->_iovs;
+		bdev_io->u.bdev.iovcnt = io_ctx->_iovcnt;
+
+		/* Complete the original IO and then free the one that we created
+		 * as a result of issuing an IO via submit_reqeust.
+		 */
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		} else {
+			SPDK_ERRLOG("Issue with decompression on bdev_io %p\n", bdev_io);
+			rc = -EINVAL;
+		}
+		spdk_dma_free(io_ctx->src_iov.iov_base);
+		spdk_bdev_free_io(free_me);
+
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+
+		/* reset the bdev_io buffers to point to the compressed data */
+		bdev_io->u.bdev.iovs = io_ctx->_iovs;
+		bdev_io->u.bdev.iovcnt = io_ctx->_iovcnt;
+
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+			/* Write the compressed data. */
+			spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+					       spdk_reduce_vol_writev_cb, bdev_io);
+		} else {
+			SPDK_ERRLOG("Issue with compression on bdev_io %p\n", bdev_io);
+			rc = -EINVAL;
+		}
+
+		spdk_dma_free(io_ctx->dst_iov.iov_base);
+		spdk_bdev_free_io(free_me);
+	} else {
+		SPDK_ERRLOG("Unknown bdev type %u on comp operation completion\n",
+			    bdev_io->type);
+		rc = -EINVAL;
+	}
+
+	if (rc) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+/* Poller for the DPDK compression driver. */
+static int
+comp_dev_poller(void *args)
+{
+	struct vbdev_compress *comp_bdev = args;
+	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
+	struct rte_comp_op *deq_ops[16];
+	uint16_t num_deq;
+	struct spdk_bdev_io *bdev_io = NULL;
+
+	num_deq = rte_compressdev_dequeue_burst(cdev_id, 0, deq_ops, 1);
+
+	if (num_deq > 0) {
+		bdev_io = (struct spdk_bdev_io *)deq_ops[0]->m_src->userdata;
+		/*
+		 * RTE_COMP_OP_STATUS_SUCCESS = 0,
+		 * RTE_COMP_OP_STATUS_NOT_PROCESSED,
+		 * RTE_COMP_OP_STATUS_INVALID_ARGS,
+		 * RTE_COMP_OP_STATUS_ERROR,
+		 * RTE_COMP_OP_STATUS_INVALID_STATE,
+		 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_TERMINATED,
+		 * RTE_COMP_OP_STATUS_OUT_OF_SPACE_RECOVERABLE,
+		 */
+		if (deq_ops[0]->status != RTE_COMP_OP_STATUS_SUCCESS) {
+			SPDK_ERRLOG("deque status %u on bdevio %p\n", deq_ops[0]->status, bdev_io);
+			bdev_io->internal.status = SPDK_BDEV_IO_STATUS_FAILED;
+		}
+		_compress_operation_complete(bdev_io);
+	}
+	return 0;
+}
+
+#define MAX_ENQUEUE_ARRAY_SIZE `16
+static int
+_compress_operation(struct spdk_bdev_io *bdev_io, enum rte_comp_xform_type operation)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
+					   comp_bdev);
+	struct rte_comp_op *comp_op;
+	struct rte_mbuf *src_mbufs[MAX_MBUFS_PER_OP];
+	struct rte_mbuf *dst_mbufs[MAX_MBUFS_PER_OP];
+	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
+	//struct comp_io_channel *comp_ch = io_ctx->comp_ch;
+	uint8_t cdev_id = comp_bdev->device_qp->device->cdev_id;
+	uint64_t total_length = bdev_io->u.bdev.num_blocks * io_ctx->comp_bdev->comp_bdev.blocklen;
+	uint8_t *current_src_iov = NULL;
+	uint8_t *current_dst_iov = NULL;
+	int iov_index;
+	int rc = 0;
+	//uint64_t comp_offset = 0;
+	int src_iovcnt = io_ctx->_iovcnt;
+	int dst_iovcnt = 1; /* TODO only know this now for test purposes, will get from reduceLib */
+
+	assert(src_iovcnt < MAX_MBUFS_PER_OP);
+
+	comp_op = rte_comp_op_alloc(g_comp_op_mp);
+	if (!comp_op) {
+		SPDK_ERRLOG("ERROR trying to get a comp op!\n");
+		return -ENOMEM;
+
+	}
+
+	/* get an mbuf per iov */
+	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&src_mbufs[0], src_iovcnt);
+	if (rc) {
+		SPDK_ERRLOG("ERROR trying to get src_mbufs!\n");
+		rc = -ENOMEM;
+		goto error_get_src;
+
+	}
+
+	rc = spdk_mempool_get_bulk(g_mbuf_mp, (void **)&dst_mbufs[0], dst_iovcnt);
+	if (rc) {
+		SPDK_ERRLOG("ERROR trying to get dst_mbufs!\n");
+		rc = -ENOMEM;
+		goto error_get_dst;
+	}
+
+
+
+	/* TODO: these structs aren't really being used apparently but we need to
+	 * add a callback with at least an assert or something in it in case they
+	 * ever are
+	*/
+	struct rte_mbuf_ext_shared_info shinfo_src;
+	struct rte_mbuf_ext_shared_info shinfo_dst;
+
+	/* There is a 1:1 mapping between a bdev_io and a compression operation, but
+	 * all compression PMDs that SPDK uses support chaining so build our mbuf chain
+	 * and associate with our single comp_op.
+	 */
+
+	/* Setup src mbufs */
+	for (iov_index = 0; iov_index < src_iovcnt; iov_index++) {
+
+		current_src_iov = bdev_io->u.bdev.iovs[iov_index].iov_base;
+		src_mbufs[iov_index]->userdata = bdev_io;
+		if (operation == RTE_COMP_DECOMPRESS) {
+			/* TODO */
+			//bdev_io->u.bdev.iovs[iov_index].iov_len = total_length;
+		}
+
+
+		rte_pktmbuf_attach_extbuf(src_mbufs[iov_index],
+					  current_src_iov,
+					  spdk_vtophys((void *)current_src_iov, NULL),
+					  bdev_io->u.bdev.iovs[iov_index].iov_len,
+					  &shinfo_src);
+		rte_pktmbuf_append(src_mbufs[iov_index], bdev_io->u.bdev.iovs[iov_index].iov_len);
+
+		if (iov_index > 0) {
+			rte_pktmbuf_chain(src_mbufs[0], src_mbufs[iov_index]);
+		}
+
+	}
+
+	comp_op->m_src = src_mbufs[0];
+	comp_op->src.offset = 0;
+	comp_op->src.length = total_length;
+
+	/* setup dst mbufs, for the current test being used with this code there's only one vector */
+	for (iov_index = 0; iov_index < dst_iovcnt; iov_index++) {
+
+		current_dst_iov = io_ctx->dst_iov.iov_base;
+		rte_pktmbuf_attach_extbuf(dst_mbufs[iov_index],
+					  current_dst_iov,
+					  spdk_vtophys((void *)current_dst_iov, NULL),
+					  io_ctx->dst_iov.iov_len,
+					  &shinfo_dst);
+
+		rte_pktmbuf_append(dst_mbufs[iov_index], io_ctx->dst_iov.iov_len);
+		//comp_offset += io_ctx->dst_iov.iov_len;
+
+		if (iov_index > 0) {
+			rte_pktmbuf_chain(dst_mbufs[0], dst_mbufs[iov_index]);
+		}
+	}
+	comp_op->m_dst = dst_mbufs[0];
+	comp_op->dst.offset = 0;
+
+	if (operation == RTE_COMP_COMPRESS) {
+		comp_op->private_xform = comp_bdev->device_qp->device->comp_xform;
+		SPDK_NOTICELOG("Compress src (%p) = %p dst = %p\n", bdev_io, comp_op->m_src->buf_addr,
+			       comp_op->m_dst->buf_addr);
+
+	} else {
+		comp_op->private_xform = comp_bdev->device_qp->device->decomp_xform;
+		SPDK_NOTICELOG("Decompress src (%p) = %p dst = %p\n", bdev_io, comp_op->m_src->buf_addr,
+			       comp_op->m_dst->buf_addr);
+
+	}
+
+	rte_compressdev_enqueue_burst(cdev_id, 0, &comp_op, 1);
+	TAILQ_INSERT_TAIL(&comp_bdev->pending_comp_ios, bdev_io, module_link);
+	return rc;
+
+	/* Error cleanup paths. */
+error_get_dst:
+	spdk_mempool_put_bulk(g_mbuf_mp, (void **)&src_mbufs[0], src_iovcnt);
+error_get_src:
+	rte_mempool_put(g_comp_op_mp, (void **)comp_op);
+	return rc;
+
 }
 
 /* Callback for getting a buf from the bdev pool in the event that the caller passed
@@ -402,10 +632,38 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 {
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
+	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
+	uint64_t total_length = bdev_io->u.bdev.num_blocks * BACKING_IO_UNIT_SZ;
 
+	/* alloc the compression souce buffer */
+	io_ctx->src_iov.iov_len = total_length;
+	io_ctx->src_iov.iov_base = spdk_dma_malloc(total_length,
+				   spdk_bdev_get_buf_align(bdev_io->bdev), NULL);
+	if (!io_ctx->src_iov.iov_base) {
+		SPDK_ERRLOG("ERROR trying to allocate read buffer for compression!\n");
+		/* TODO: fail the bdev_io */
+		assert(false);
+		return;
+	}
+
+	/* now set the compression destination to the bdev_io */
+	io_ctx->dst_iov.iov_len = total_length;
+	io_ctx->_iovcnt = bdev_io->u.bdev.iovcnt;
+	io_ctx->_offset_blocks = bdev_io->u.bdev.offset_blocks;
+	io_ctx->_num_blocks = bdev_io->u.bdev.num_blocks;
+	io_ctx->_iovs = bdev_io->u.bdev.iovs;
+
+	/* Replace the incoming buffer with our own that so compressed data can be
+	 * decompressed into the bdev_io buffer. Buffer will be freed when the bdev_io
+	 * is completed.
+	*/
+	bdev_io->u.bdev.iovs[0].iov_base = io_ctx->src_iov.iov_base;
+	bdev_io->u.bdev.iovcnt = 1;
+
+	/* read compressed data via reducelib then decompress in callback. */
 	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      spdk_bdev_readv_blocks_cb, bdev_io);
+			      spdk_reduce_vol_readv_cb, bdev_io);
 }
 
 /* TODO: A future patch will add routines to complete IO up the stack, need
@@ -427,6 +685,7 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 					   comp_bdev);
 	struct comp_io_channel *comp_ch = spdk_io_channel_get_ctx(ch);
 	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
+	uint64_t total_length = bdev_io->u.bdev.num_blocks * BACKING_IO_UNIT_SZ;
 	int rc = 0;
 
 	memset(io_ctx, 0, sizeof(struct comp_bdev_io));
@@ -447,9 +706,25 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-				       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-				       spdk_bdev_writev_blocks_cb, bdev_io);
+		/* allocate a buffer to hold the compressed data */
+		io_ctx->dst_iov.iov_len = total_length;
+		io_ctx->dst_iov.iov_base = spdk_dma_malloc(total_length,
+					   spdk_bdev_get_buf_align(bdev_io->bdev), NULL);
+		if (!io_ctx->dst_iov.iov_base) {
+			SPDK_ERRLOG("ERROR trying to allocate write buffer for compression!\n");
+			/* TODO: fail the bdev_io */
+			assert(false);
+			return;
+		}
+		io_ctx->_offset_blocks = bdev_io->u.bdev.offset_blocks;
+		io_ctx->_num_blocks = bdev_io->u.bdev.num_blocks;
+
+		/* now set the src from the bdev_io */
+		io_ctx->src_iov.iov_len = total_length;
+		io_ctx->_iovcnt = bdev_io->u.bdev.iovcnt;
+		io_ctx->_iovs = bdev_io->u.bdev.iovs;
+		io_ctx->_num_blocks = bdev_io->u.bdev.num_blocks;
+		rc = _compress_operation(bdev_io, RTE_COMP_COMPRESS);
 		break;
 	/* TODO in future patch in the series */
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
@@ -806,7 +1081,7 @@ _prepare_for_load_init(struct spdk_bdev *bdev)
 	/* TODO, configurable chunk size & logical block size */
 	meta_ctx->params.chunk_size = DEV_CHUNK_SZ;
 	meta_ctx->params.logical_block_size = DEV_LBA_SZ;
-	meta_ctx->params.backing_io_unit_size = BACKING_IO_UNIT_SZ;
+	meta_ctx->params.backing_io_unit_size = bdev->blocklen;
 	meta_ctx->params.logical_block_size = meta_ctx->params.backing_io_unit_size;
 
 	return meta_ctx;
@@ -852,7 +1127,7 @@ vbdev_init_reduce(struct spdk_bdev *bdev, const char *vbdev_name, const char *co
 static int
 comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 {
-	struct comp_io_channel *comp_ch = ctx_buf;
+	//struct comp_io_channel *comp_ch = ctx_buf;
 	struct vbdev_compress *comp_bdev = io_device;
 	struct comp_device_qp *device_qp;
 
@@ -864,7 +1139,7 @@ comp_bdev_ch_create_cb(void *io_device, void *ctx_buf)
 	if (comp_bdev->ch_count == 0) {
 		comp_bdev->base_ch = spdk_bdev_get_io_channel(comp_bdev->base_desc);
 		comp_bdev->reduce_thread = spdk_get_thread();
-		comp_bdev->poller = spdk_poller_register(comp_dev_poller, comp_ch, 0);
+		comp_bdev->poller = spdk_poller_register(comp_dev_poller, comp_bdev, 0);
 		/* Now assign a q pair */
 		pthread_mutex_lock(&g_comp_device_qp_lock);
 		TAILQ_FOREACH(device_qp, &g_comp_device_qp, link) {
