@@ -53,6 +53,56 @@ static struct spdk_bdev_module ocf_if;
 static TAILQ_HEAD(, vbdev_ocf) g_ocf_vbdev_head
 	= TAILQ_HEAD_INITIALIZER(g_ocf_vbdev_head);
 
+static TAILQ_HEAD(, examining_bdev) g_ocf_examining_bdevs_head
+	= TAILQ_HEAD_INITIALIZER(g_ocf_examining_bdevs_head);
+
+/* Structure for keeping list of bdevs that are claimed but not used yet */
+struct examining_bdev {
+	struct spdk_bdev           *bdev;
+	TAILQ_ENTRY(examining_bdev) tailq;
+};
+
+/* Add bdev to list of claimed */
+static void
+examine_start(struct spdk_bdev *bdev)
+{
+	struct examining_bdev *entry = malloc(sizeof(*entry));
+
+	assert(entry);
+	entry->bdev = bdev;
+	TAILQ_INSERT_TAIL(&g_ocf_examining_bdevs_head, entry, tailq);
+}
+
+/* Tells if current bdev can be marked as done at examine */
+static bool
+examine_isdone(struct spdk_bdev *bdev)
+{
+	struct examining_bdev *entry;
+
+	TAILQ_FOREACH(entry, &g_ocf_examining_bdevs_head, tailq) {
+		if (entry->bdev == bdev) {
+			return false;
+		}
+	}
+	return true;
+}
+
+/* If bdev exists on list of claimed bdevs, remove it and report examine done */
+static void
+examine_done(struct spdk_bdev *bdev)
+{
+	struct examining_bdev *entry, *safe;
+
+	TAILQ_FOREACH_SAFE(entry, &g_ocf_examining_bdevs_head, tailq, safe) {
+		if (entry->bdev == bdev) {
+			TAILQ_REMOVE(&g_ocf_examining_bdevs_head, entry, tailq);
+			spdk_bdev_module_examine_done(&ocf_if);
+			free(entry);
+			break;
+		}
+	}
+}
+
 /* Free allocated strings and structure itself
  * Used at shutdown only */
 static void
@@ -109,12 +159,66 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 	return NULL;
 }
 
+/* Common structure for OCF management pollers */
+struct poller_arg {
+	void                 *ctx;
+	struct spdk_poller   *poller;
+	void                 *cb_arg;
+	void (*cb)(int, void *);
+};
+
+/* Unregister poller and call callback if provided */
+static void
+unregister_poller(struct poller_arg *arg, int rc)
+{
+	spdk_poller_unregister(&arg->poller);
+	if (arg->cb) {
+		arg->cb(rc, arg->cb_arg);
+	}
+	free(arg);
+}
+
+static int
+stop_vbdev_poll(void *opaque)
+{
+	struct poller_arg *arg   = opaque;
+	struct vbdev_ocf  *vbdev = arg->ctx;
+	int rc;
+
+	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
+		unregister_poller(arg, 0);
+		return 0;
+	}
+
+	if (get_other_cache_instance(vbdev)) {
+		SPDK_NOTICELOG("Not stopping cache instance '%s'"
+			       " because it is referenced by other OCF bdev\n",
+			       vbdev->cache.name);
+		unregister_poller(arg, 0);
+		return 0;
+	}
+
+	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
+		return 0;
+	}
+
+	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
+	if (rc) {
+		SPDK_ERRLOG("Could not stop cache for '%s'\n", vbdev->name);
+	}
+
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
+
+	unregister_poller(arg, rc);
+	return 1;
+}
+
 /* Stop OCF cache object
  * vbdev_ocf is not operational after this */
 static int
-stop_vbdev(struct vbdev_ocf *vbdev)
+stop_vbdev(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 {
-	int rc;
+	struct poller_arg *arg;
 
 	if (vbdev == NULL) {
 		return -EFAULT;
@@ -128,33 +232,87 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 		return -EINVAL;
 	}
 
-	if (get_other_cache_instance(vbdev)) {
-		SPDK_NOTICELOG("Not stopping cache instance '%s'"
-			       " because it is referenced by other OCF bdev\n",
-			       vbdev->cache.name);
+	arg = malloc(sizeof(*arg));
+	if (arg == NULL) {
+		return -ENOMEM;
+	}
+
+	arg->poller = spdk_poller_register(stop_vbdev_poll, arg, 200);
+	if (arg->poller == NULL) {
+		free(arg);
+		return -ENOMEM;
+	}
+
+	arg->ctx    = vbdev;
+	arg->cb     = cb;
+	arg->cb_arg = cb_arg;
+
+	return 0;
+}
+
+static void
+remove_base_bdev(struct vbdev_ocf_base *base)
+{
+	if (base->attached) {
+		spdk_bdev_module_release_bdev(base->bdev);
+		spdk_bdev_close(base->desc);
+		base->attached = false;
+	}
+}
+
+static int
+remove_core_poll(void *opaque)
+{
+	struct poller_arg     *arg   = opaque;
+	struct vbdev_ocf_base *base  = arg->ctx;
+	ocf_core_t core;
+	int rc;
+
+	rc = ocf_core_get(base->parent->ocf_cache, base->id, &core);
+	if (rc) {
+		unregister_poller(arg, rc);
 		return 0;
 	}
 
-	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
+	rc = ocf_mngt_cache_lock(base->parent->ocf_cache);
 	if (rc) {
-		return rc;
+		return 0;
 	}
 
-	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
-	if (rc) {
-		SPDK_ERRLOG("Could not stop cache for '%s'\n", vbdev->name);
-		return rc;
+	rc = ocf_mngt_cache_remove_core(core);
+
+	ocf_mngt_cache_unlock(base->parent->ocf_cache);
+
+	remove_base_bdev(base);
+
+	unregister_poller(arg, rc);
+	return 1;
+}
+
+struct remove_cache_arg {
+	struct vbdev_ocf_base *base;
+	void (*cb)(int, void *);
+	void *cb_arg;
+};
+
+static void
+remove_cache_cb(int status, void *opaque)
+{
+	struct remove_cache_arg *arg = opaque;
+
+	remove_base_bdev(arg->base);
+
+	if (arg->cb) {
+		arg->cb(status, arg);
 	}
 
-	return rc;
+	free(arg);
 }
 
 /* Release SPDK and OCF objects associated with base */
 static int
-remove_base(struct vbdev_ocf_base *base)
+remove_base(struct vbdev_ocf_base *base, void (*cb)(int, void *), void *cb_arg)
 {
-	ocf_core_t core;
 	int rc = 0;
 
 	if (base == NULL) {
@@ -165,49 +323,100 @@ remove_base(struct vbdev_ocf_base *base)
 
 	if (base->is_cache && get_other_cache_base(base)) {
 		base->attached = false;
+		if (cb) {
+			cb(0, cb_arg);
+		}
 		return 0;
 	}
 
-	/* Release OCF-part */
 	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
 		if (base->is_cache) {
-			rc = stop_vbdev(base->parent);
+			struct remove_cache_arg *arg = malloc(sizeof(*arg));
+
+			if (arg == NULL) {
+				return -ENOMEM;
+			}
+
+			arg->base   = base;
+			arg->cb     = cb;
+			arg->cb_arg = cb_arg;
+
+			rc = stop_vbdev(base->parent, remove_cache_cb, arg);
+			if (rc) {
+				free(arg);
+				return rc;
+			}
 		} else {
-			rc = ocf_core_get(base->parent->ocf_cache, base->id, &core);
-			if (rc) {
-				goto close_spdk_dev;
+			struct poller_arg *arg = malloc(sizeof(*arg));
+
+			if (arg == NULL) {
+				return -ENOMEM;
 			}
-			rc = ocf_mngt_cache_lock(base->parent->ocf_cache);
-			if (rc) {
-				goto close_spdk_dev;
+
+			arg->poller = spdk_poller_register(remove_core_poll, arg, 200);
+			if (arg->poller == NULL) {
+				free(arg);
+				return -ENOMEM;
 			}
-			rc = ocf_mngt_cache_remove_core(core);
-			ocf_mngt_cache_unlock(base->parent->ocf_cache);
+
+			arg->cb     = cb;
+			arg->cb_arg = cb_arg;
+			arg->ctx    = base;
+		}
+	} else {
+		remove_base_bdev(base);
+		if (cb) {
+			cb(0, cb_arg);
 		}
 	}
 
-close_spdk_dev:
-	/* Release SPDK-part */
-	spdk_bdev_module_release_bdev(base->bdev);
-	spdk_bdev_close(base->desc);
-
-	base->attached = false;
 	return rc;
 }
 
-/* Argument for destruct poller fn */
-struct destruct_poll_arg {
-	struct vbdev_ocf   *vbdev;
-	struct spdk_poller *poller;
-};
+static void
+destruct_finish(int status, void *ctx)
+{
+	struct vbdev_ocf *vbdev = ctx;
+	spdk_bdev_destruct_done(&vbdev->exp_bdev, vbdev->state.stop_status);
+}
+
+static void
+destruct_core(int status, void *ctx)
+{
+	struct vbdev_ocf *vbdev = ctx;
+
+	if (vbdev->core.attached) {
+		if (remove_base(&vbdev->core, destruct_finish, vbdev)) {
+			destruct_finish(0, vbdev);
+		}
+	} else {
+		destruct_finish(0, vbdev);
+	}
+}
+
+static void
+destruct_cache(int status, void *ctx)
+{
+	struct vbdev_ocf *vbdev     = ctx;
+
+	vbdev->state.stop_status = status;
+
+	if (vbdev->cache.attached) {
+		if (remove_base(&vbdev->cache, destruct_core, vbdev)) {
+			destruct_core(0, vbdev);
+		}
+	} else {
+		destruct_core(0, vbdev);
+	}
+}
 
 /* After cache finished all pending requests,
  * free OCF resources, close base bdevs */
 static int
 destruct_poll(void *opaque)
 {
-	struct destruct_poll_arg *arg = opaque;
-	struct vbdev_ocf *vbdev = arg->vbdev;
+	struct poller_arg *arg  = opaque;
+	struct vbdev_ocf *vbdev = arg->ctx;
 	int status = 0;
 
 	if (ocf_cache_has_pending_requests(vbdev->ocf_cache)) {
@@ -215,27 +424,24 @@ destruct_poll(void *opaque)
 	}
 
 	if (vbdev->state.started) {
-		status = stop_vbdev(vbdev);
+		status = stop_vbdev(vbdev, destruct_cache, vbdev);
+		if (status) {
+			destruct_cache(status, vbdev);
+		}
+	} else {
+		destruct_cache(0, vbdev);
 	}
 
-	if (vbdev->core.attached) {
-		remove_base(&vbdev->core);
-	}
-	if (vbdev->cache.attached) {
-		remove_base(&vbdev->cache);
-	}
-
-	spdk_bdev_destruct_done(&vbdev->exp_bdev, status);
-	spdk_poller_unregister(&arg->poller);
-	return 0;
+	unregister_poller(arg, 0);
+	return 1;
 }
 
 /* Start destruct poller */
 static void
 unregister_cb(void *opaque)
 {
-	struct destruct_poll_arg *arg   = malloc(sizeof(*arg));
-	struct vbdev_ocf         *vbdev = opaque;
+	struct vbdev_ocf  *vbdev = opaque;
+	struct poller_arg *arg   = malloc(sizeof(*arg));
 
 	if (arg == NULL) {
 		SPDK_ERRLOG("Unable to stop OCF cache: %s\n", spdk_strerror(ENOMEM));
@@ -243,8 +449,9 @@ unregister_cb(void *opaque)
 		return;
 	}
 
-	arg->vbdev  = vbdev;
+	arg->ctx    = vbdev;
 	arg->poller = spdk_poller_register(destruct_poll, arg, 200);
+	arg->cb     = NULL;
 }
 
 /* Unregister io device with callback to unregister_cb
@@ -265,11 +472,11 @@ vbdev_ocf_destruct(void *opaque)
 		return 1;
 	}
 
-	if (vbdev->core.attached) {
-		remove_base(&vbdev->core);
-	}
 	if (vbdev->cache.attached) {
-		remove_base(&vbdev->cache);
+		remove_base(&vbdev->cache, NULL, NULL);
+	}
+	if (vbdev->core.attached) {
+		remove_base(&vbdev->core, NULL, NULL);
 	}
 
 	return 0;
@@ -604,25 +811,50 @@ start_cache(struct vbdev_ocf *vbdev)
 	return 0;
 }
 
-/* Add core for existing OCF cache instance */
 static int
-add_core(struct vbdev_ocf *vbdev)
+add_core_poll(void *opaque)
 {
+	struct poller_arg *arg   = opaque;
+	struct vbdev_ocf  *vbdev = arg->ctx;
 	int rc;
 
-	rc = ocf_mngt_cache_lock(vbdev->ocf_cache);
-	if (rc) {
-		return rc;
+	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
+		return 0;
 	}
 
 	rc = ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->ocf_core, &vbdev->cfg.core);
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
 	if (rc) {
 		SPDK_ERRLOG("Failed to add core device to cache instance\n");
-		return rc;
+	} else {
+		vbdev->core.id = ocf_core_get_id(vbdev->ocf_core);
 	}
 
-	vbdev->core.id = ocf_core_get_id(vbdev->ocf_core);
+	ocf_mngt_cache_unlock(vbdev->ocf_cache);
+
+	unregister_poller(arg, rc);
+	return 1;
+}
+
+/* Add core for existing OCF cache instance */
+static int
+add_core(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
+{
+	struct poller_arg *arg;
+
+	arg = malloc(sizeof(*arg));
+	if (arg == NULL) {
+		return -ENOMEM;
+	}
+
+	arg->poller = spdk_poller_register(add_core_poll, arg, 200);
+	if (arg->poller == NULL) {
+		free(arg);
+		return -ENOMEM;
+	}
+
+	arg->ctx    = vbdev;
+	arg->cb     = cb;
+	arg->cb_arg = cb_arg;
 
 	return 0;
 }
@@ -721,29 +953,12 @@ io_device_destroy_cb(void *io_device, void *ctx_buf)
 	ocf_queue_put(qctx->queue);
 }
 
-/* Start OCF cache and register vbdev_ocf at bdev layer */
-static int
-register_vbdev(struct vbdev_ocf *vbdev)
+/* Create exported spdk object */
+static void
+register_ocf_bdev(int status, void *ctx)
 {
+	struct vbdev_ocf *vbdev = ctx;
 	int result;
-
-	if (!vbdev->cache.attached || !vbdev->core.attached) {
-		return -EPERM;
-	}
-
-	result = start_cache(vbdev);
-	if (result) {
-		SPDK_ERRLOG("Failed to start cache instance\n");
-		return result;
-	}
-
-	result = add_core(vbdev);
-	if (result) {
-		SPDK_ERRLOG("Failed to add core to cache instance\n");
-		return result;
-	}
-
-	/* Create exported spdk object */
 
 	/* Copy properties of the base bdev */
 	vbdev->exp_bdev.blocklen = vbdev->core.bdev->blocklen;
@@ -764,10 +979,34 @@ register_vbdev(struct vbdev_ocf *vbdev)
 	result = spdk_bdev_register(&vbdev->exp_bdev);
 	if (result) {
 		SPDK_ERRLOG("Could not register exposed bdev\n");
+	} else {
+		vbdev->state.started = true;
+	}
+
+	examine_done(vbdev->core.bdev);
+}
+
+/* Start OCF cache and register vbdev_ocf at bdev layer */
+static int
+register_vbdev(struct vbdev_ocf *vbdev)
+{
+	int result;
+
+	if (!vbdev->cache.attached || !vbdev->core.attached) {
+		return -EPERM;
+	}
+
+	result = start_cache(vbdev);
+	if (result) {
+		SPDK_ERRLOG("Failed to start cache instance\n");
 		return result;
 	}
 
-	vbdev->state.started = true;
+	result = add_core(vbdev, register_ocf_bdev, vbdev);
+	if (result) {
+		SPDK_ERRLOG("Failed to add core to cache instance\n");
+		return result;
+	}
 
 	return result;
 }
@@ -1035,10 +1274,13 @@ attach_base(struct vbdev_ocf_base *base)
 
 /* Attach base bdevs
  * If they attached, start vbdev
- * otherwise wait for them to appear at examine */
+ * otherwise wait for them to appear at examine
+ * We add core device to list of claimed devices if OCF starts here */
 static int
 create_from_bdevs(struct vbdev_ocf *vbdev,
-		  struct spdk_bdev *cache_bdev, struct spdk_bdev *core_bdev)
+		  struct spdk_bdev *cache_bdev,
+		  struct spdk_bdev *core_bdev,
+		  bool examine)
 {
 	int rc = 0;
 
@@ -1054,6 +1296,9 @@ create_from_bdevs(struct vbdev_ocf *vbdev,
 
 	if (rc == 0 && vbdev->core.attached && vbdev->cache.attached) {
 		rc = register_vbdev(vbdev);
+		if (examine && rc == 0) {
+			examine_start(core_bdev);
+		}
 	}
 
 	return rc;
@@ -1090,13 +1335,13 @@ vbdev_ocf_construct(const char *vbdev_name,
 			       vbdev->name, core_name);
 	}
 
-	return create_from_bdevs(vbdev, cache_bdev, core_bdev);
+	return create_from_bdevs(vbdev, cache_bdev, core_bdev, false);
 }
 
 /* This called if new device is created in SPDK application
- * If that device named as one of base bdevs of cache_vbdev,
- * attach them
- * If last device attached here, vbdev starts here */
+ * If that device named as one of base bdevs of OCF vbdev,
+ * claim and open them
+ * If last device attached here, vbdev starts asynchronously here */
 static void
 vbdev_ocf_examine(struct spdk_bdev *bdev)
 {
@@ -1109,15 +1354,28 @@ vbdev_ocf_examine(struct spdk_bdev *bdev)
 		}
 
 		if (!strcmp(bdev_name, vbdev->cache.name)) {
-			create_from_bdevs(vbdev, bdev, NULL);
+			create_from_bdevs(vbdev, bdev, NULL, true);
 			continue;
 		}
 		if (!strcmp(bdev_name, vbdev->core.name)) {
-			create_from_bdevs(vbdev, NULL, bdev);
+			create_from_bdevs(vbdev, NULL, bdev, true);
 			break;
 		}
 	}
 	spdk_bdev_module_examine_done(&ocf_if);
+}
+
+/* This is called after vbdev_ocf_examine
+ * It allows to delay application initialization
+ * until all OCF bdevs get registered
+ * We do module_examine_done() on all bdevs
+ * except for ones that are still used in register_vbdev */
+static void
+vbdev_ocf_examine_disk(struct spdk_bdev *bdev)
+{
+	if (examine_isdone(bdev)) {
+		spdk_bdev_module_examine_done(&ocf_if);
+	}
 }
 
 static int
@@ -1136,6 +1394,7 @@ static struct spdk_bdev_module ocf_if = {
 	.config_text = NULL,
 	.get_ctx_size = vbdev_ocf_get_ctx_size,
 	.examine_config = vbdev_ocf_examine,
+	.examine_disk   = vbdev_ocf_examine_disk,
 };
 SPDK_BDEV_MODULE_REGISTER(ocf, &ocf_if);
 
