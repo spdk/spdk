@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "214069dc_dab56281",
+        "filename": "lib/iscsi/conn.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 914,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-14T22:49:30Z",
+      "side": 1,
+      "message": "Could you try an experiment, and put an inline keyword here before \u0027int\u0027?\n\nI looked at the disassembly for spdk_iscsi_conn_read_data with a non-debug build - and my compile is not inlining the spdk_iscsi_conn_readv call from spdk_iscsi_conn_read.  If I add the \u0027inline\u0027 keyword, it does get inlined.  This may explain the performance issue.",
+      "revId": "79eeb0a47129e350c8afc0087d6b80cc1359a531",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
