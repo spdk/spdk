@@ -267,7 +267,6 @@ struct spdk_nvmf_rdma_request {
 
 	uint32_t				num_outstanding_data_wr;
 
-	TAILQ_ENTRY(spdk_nvmf_rdma_request)	link;
 	STAILQ_ENTRY(spdk_nvmf_rdma_request)	state_link;
 };
 
@@ -415,7 +414,7 @@ struct spdk_nvmf_rdma_poll_group {
 	struct spdk_nvmf_transport_poll_group	group;
 
 	/* Requests that are waiting to obtain a data buffer */
-	TAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
+	STAILQ_HEAD(, spdk_nvmf_rdma_request)	pending_data_buf_queue;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_poller)	pollers;
 };
@@ -1788,7 +1787,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 	 * to release resources. */
 	if (rqpair->ibv_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 		if (rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER) {
-			TAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, link);
+			STAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, spdk_nvmf_rdma_request, state_link);
 		}
 		rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 	}
@@ -1828,7 +1827,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 
 			rdma_req->state = RDMA_REQUEST_STATE_NEED_BUFFER;
-			TAILQ_INSERT_TAIL(&rgroup->pending_data_buf_queue, rdma_req, link);
+			STAILQ_INSERT_TAIL(&rgroup->pending_data_buf_queue, rdma_req, state_link);
 			break;
 		case RDMA_REQUEST_STATE_NEED_BUFFER:
 			spdk_trace_record(TRACE_RDMA_REQUEST_STATE_NEED_BUFFER, 0, 0,
@@ -1836,7 +1835,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 			assert(rdma_req->req.xfer != SPDK_NVME_DATA_NONE);
 
-			if (rdma_req != TAILQ_FIRST(&rgroup->pending_data_buf_queue)) {
+			if (rdma_req != STAILQ_FIRST(&rgroup->pending_data_buf_queue)) {
 				/* This request needs to wait in line to obtain a buffer */
 				break;
 			}
@@ -1844,7 +1843,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			/* Try to get a data buffer */
 			rc = spdk_nvmf_rdma_request_parse_sgl(rtransport, device, rdma_req);
 			if (rc < 0) {
-				TAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, link);
+				STAILQ_REMOVE_HEAD(&rgroup->pending_data_buf_queue, state_link);
 				rsp->status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
 				break;
@@ -1855,7 +1854,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 				break;
 			}
 
-			TAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, link);
+			STAILQ_REMOVE_HEAD(&rgroup->pending_data_buf_queue, state_link);
 
 			/* If data is transferring from host to controller and the data didn't
 			 * arrive using in capsule data, we need to do a transfer from the host.
@@ -2494,7 +2493,7 @@ spdk_nvmf_rdma_qpair_process_pending(struct spdk_nvmf_rdma_transport *rtransport
 	}
 
 	/* The second highest priority is I/O waiting on memory buffers. */
-	TAILQ_FOREACH_SAFE(rdma_req, &rqpair->poller->group->pending_data_buf_queue, link,
+	STAILQ_FOREACH_SAFE(rdma_req, &rqpair->poller->group->pending_data_buf_queue, state_link,
 			   req_tmp) {
 		if (spdk_nvmf_rdma_request_process(rtransport, rdma_req) == false && drain == false) {
 			break;
@@ -2877,7 +2876,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	}
 
 	TAILQ_INIT(&rgroup->pollers);
-	TAILQ_INIT(&rgroup->pending_data_buf_queue);
+	STAILQ_INIT(&rgroup->pending_data_buf_queue);
 
 	pthread_mutex_lock(&rtransport->lock);
 	TAILQ_FOREACH(device, &rtransport->devices, link) {
@@ -2982,7 +2981,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		free(poller);
 	}
 
-	if (!TAILQ_EMPTY(&rgroup->pending_data_buf_queue)) {
+	if (!STAILQ_EMPTY(&rgroup->pending_data_buf_queue)) {
 		SPDK_ERRLOG("Pending I/O list wasn't empty on poll group destruction\n");
 	}
 
