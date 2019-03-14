@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "1cc60efe_0c85c3a5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 638,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T16:39:52Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32ca0661_2edb024a",
+      "revId": "1fa251a7194da878e09a8b056461afa8ad55afd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "47b644d4_373ba90a",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-13T23:27:49Z",
       "side": 1,
       "message": "why change this to 0?",
+      "revId": "1fa251a7194da878e09a8b056461afa8ad55afd2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "44d17f83_dc812029",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T16:39:52Z",
+      "side": 1,
+      "message": "In the original configuration, we were setting it to max_queue_depth and then iterating through the list of recv\u0027s, posting each one and then decrementing this value until it was equal to zero. See line 872 on the left. In this case, we may or may not be using the qpair resources, so we need to start it off at zero during initialization. This keeps the old behavior consistent and is the right thing to do in SRQ. Each recv completion we get will increment this value and each time we repost one, we will get a completion. This allows us to track to make sure we don\u0027t exceed the NVMe-oF queue depth even with SRQ.",
+      "parentUuid": "47b644d4_373ba90a",
       "revId": "1fa251a7194da878e09a8b056461afa8ad55afd2",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
