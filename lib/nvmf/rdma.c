@@ -368,6 +368,8 @@ struct spdk_nvmf_rdma_qpair {
 	 * that we only initialize one of these paths.
 	 */
 	bool					disconnect_started;
+	/* Lets us know that we have received the last_wqe event. */
+	bool					last_wqe_reached;
 };
 
 struct spdk_nvmf_rdma_poller {
@@ -2328,11 +2330,21 @@ static void nvmf_rdma_destroy_drained_qpair(void *ctx)
 	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
 			struct spdk_nvmf_rdma_transport, transport);
 
-	if (rqpair->current_send_depth == 0 && rqpair->current_recv_depth == rqpair->max_queue_depth) {
-		/* The qpair has been drained. Free the resources. */
-		spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
+	/* In non SRQ path, we will reach rqpair->max_queue_depth. In SRQ path, we will get the last_wqe event. */
+	if (rqpair->current_send_depth != 0) {
+		return;
 	}
+
+	if (rqpair->srq == NULL && rqpair->current_recv_depth != rqpair->max_queue_depth) {
+		return;
+	}
+
+	if (rqpair->srq != NULL && rqpair->last_wqe_reached == false) {
+		return;
+	}
+
+	spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
 }
 
 
@@ -2469,9 +2481,10 @@ static void
 spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 {
 	int				rc;
-	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair = NULL;
 	struct ibv_async_event		event;
 	enum ibv_qp_state		state;
+	bool				event_acked = false;
 
 	rc = ibv_get_async_event(device->context, &event);
 
@@ -2493,7 +2506,21 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_nvmf_rdma_start_disconnect(rqpair);
 		break;
 	case IBV_EVENT_QP_LAST_WQE_REACHED:
-		/* This event only occurs for shared receive queues, which are not currently supported. */
+		/* This event only occurs for shared receive queues. */
+		rqpair = event.element.qp->qp_context;
+		rqpair->last_wqe_reached = true;
+
+		/* We must ack the event before destroying the qpair or we will hang. */
+		ibv_ack_async_event(&event);
+		event_acked = true;
+
+		/* This must be handled on the polling thread if it exists. Otherwise the timeout will catch it. */
+		if (rqpair->qpair.group) {
+			spdk_thread_send_msg(rqpair->qpair.group->thread, nvmf_rdma_destroy_drained_qpair, rqpair);
+		} else {
+			SPDK_ERRLOG("Unable to destroy the qpair %p since it does not have a poll group.\n", rqpair);
+		}
+
 		break;
 	case IBV_EVENT_SQ_DRAINED:
 		/* This event occurs frequently in both error and non-error states.
@@ -2534,7 +2561,9 @@ spdk_nvmf_process_ib_event(struct spdk_nvmf_rdma_device *device)
 		spdk_trace_record(TRACE_RDMA_IBV_ASYNC_EVENT, 0, 0, 0, event.event_type);
 		break;
 	}
-	ibv_ack_async_event(&event);
+	if (event_acked == false) {
+		ibv_ack_async_event(&event);
+	}
 }
 
 static void
