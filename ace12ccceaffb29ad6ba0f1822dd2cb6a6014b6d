@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4849ac4f_4e6bf525",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2502,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-14T19:53:07Z",
+      "side": 1,
+      "message": "I think this patch can just be these lines:\n\nrqpair \u003d event.element.qp-\u003eqp_context;\nrqpair-\u003ecurrent_recv_depth \u003d rqpair-\u003emax_queue_depth;\nrtransport \u003d SPDK_CONTAINEROF(rqpair-\u003eqpair.transport, struct spdk_nvmf_rdma_transport, transport);\nspdk_nvmf_rdma_destroy_drained_qpair(rqpair, rtransport);\n\nThat way, you don\u0027t need the extra last_wqe_reached flag and you don\u0027t have to modify spdk_nvmf_rdma_destroy_drained_qpair.",
+      "revId": "ace12ccceaffb29ad6ba0f1822dd2cb6a6014b6d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
