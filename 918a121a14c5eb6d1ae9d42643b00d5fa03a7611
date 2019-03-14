@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f7c6b6bb_f05ef149",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2322,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T22:52:04Z",
+      "side": 1,
+      "message": "I wanted to avoid that since it creates a race condition.\nIf, prior to the qpair being shut down, it had ever reached max queue depth, then it is possible for rqpair-\u003ecurrent_recv_depth to reach rqpair-\u003emax_queue_depth by polling recv completions in the error state. I don\u0027t want to reach that value by polling completions, call nvmf_rdma_destroy_drained_qpair and then get the cm_event and try calling it again, or worse, try to send back the ack on a broken qpair.",
+      "parentUuid": "a385f2af_8f09390b",
+      "revId": "918a121a14c5eb6d1ae9d42643b00d5fa03a7611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f4089191_c07a4b42",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-14T22:08:15Z",
       "side": 1,
       "message": "Now that you send a message, you don\u0027t need to ack the event special like this. It will get acked in the normal way at the bottom.",
+      "revId": "918a121a14c5eb6d1ae9d42643b00d5fa03a7611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e8787c25_00c8a65a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2508,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T22:52:04Z",
+      "side": 1,
+      "message": "Isn\u0027t that also a race condition (albeit a really unlikely one) Wouldn\u0027t it be possible for the other reactor to pick it up immediately and delete the ibv_qp before ibv_ack_async_event is done touching the memory related to the ibv_qp?\nThe main reason I\u0027m hesitant is because ibv_ack_async_event is a bit of a black box to me and I don\u0027t know how long it takes to execute or when it no longer needs the memory.",
+      "parentUuid": "f4089191_c07a4b42",
       "revId": "918a121a14c5eb6d1ae9d42643b00d5fa03a7611",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
