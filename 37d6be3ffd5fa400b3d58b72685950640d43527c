@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "c9223323_4a5efbc8",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1811,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-14T01:01:37Z",
+      "side": 1,
+      "message": "sounds good.",
+      "parentUuid": "8c0d9b4d_ffaf5963",
+      "revId": "37d6be3ffd5fa400b3d58b72685950640d43527c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a232252b_c46c5fde",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 7
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-13T19:17:07Z",
       "side": 1,
       "message": "Can you call _nvmf_ns_reservation_update_done here?",
+      "revId": "37d6be3ffd5fa400b3d58b72685950640d43527c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcf05f82_f674f028",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1819,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-14T01:01:37Z",
+      "side": 1,
+      "message": "OK.",
+      "parentUuid": "a232252b_c46c5fde",
       "revId": "37d6be3ffd5fa400b3d58b72685950640d43527c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
