@@ -345,13 +345,13 @@ struct spdk_nvmf_rdma_qpair {
 	 */
 	uint16_t				current_recv_depth;
 
+	/* The current number of active RDMA READ operations */
+	uint16_t				current_read_depth;
+
 	/* The current number of posted WRs from this qpair's
 	 * send queue. Should not exceed max_send_depth.
 	 */
 	uint32_t				current_send_depth;
-
-	/* The current number of active RDMA READ operations */
-	uint16_t				current_read_depth;
 
 	/* The maximum number of SGEs per WR on the send queue */
 	uint32_t				max_send_sge;
