@@ -70,6 +70,23 @@ struct spdk_nvme_rdma_hooks g_nvmf_hooks = {};
 /* The maximum number of buffers per request */
 #define NVMF_REQ_MAX_BUFFERS	(SPDK_NVMF_MAX_SGL_ENTRIES * 2)
 
+static int g_spdk_nvmf_ibv_query_mask =
+	IBV_QP_STATE |
+	IBV_QP_PKEY_INDEX |
+	IBV_QP_PORT |
+	IBV_QP_ACCESS_FLAGS |
+	IBV_QP_AV |
+	IBV_QP_PATH_MTU |
+	IBV_QP_DEST_QPN |
+	IBV_QP_RQ_PSN |
+	IBV_QP_MAX_DEST_RD_ATOMIC |
+	IBV_QP_MIN_RNR_TIMER |
+	IBV_QP_SQ_PSN |
+	IBV_QP_TIMEOUT |
+	IBV_QP_RETRY_CNT |
+	IBV_QP_RNR_RETRY |
+	IBV_QP_MAX_QP_RD_ATOMIC;
+
 enum spdk_nvmf_rdma_request_state {
 	/* The request is not currently in use */
 	RDMA_REQUEST_STATE_FREE = 0,
@@ -356,7 +373,7 @@ struct spdk_nvmf_rdma_qpair {
 	/* IBV queue pair attributes: they are used to manage
 	 * qp state and recover from errors.
 	 */
-	struct ibv_qp_attr			ibv_attr;
+	enum ibv_qp_state			ibv_state;
 
 	uint32_t				disconnect_flags;
 
@@ -461,38 +478,23 @@ spdk_nvmf_rdma_check_ibv_state(enum ibv_qp_state state)
 static enum ibv_qp_state
 spdk_nvmf_rdma_update_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair) {
 	enum ibv_qp_state old_state, new_state;
+	struct ibv_qp_attr qp_attr;
 	struct ibv_qp_init_attr init_attr;
 	int rc;
 
-	/* All the attributes needed for recovery */
-	static int spdk_nvmf_ibv_attr_mask =
-	IBV_QP_STATE |
-	IBV_QP_PKEY_INDEX |
-	IBV_QP_PORT |
-	IBV_QP_ACCESS_FLAGS |
-	IBV_QP_AV |
-	IBV_QP_PATH_MTU |
-	IBV_QP_DEST_QPN |
-	IBV_QP_RQ_PSN |
-	IBV_QP_MAX_DEST_RD_ATOMIC |
-	IBV_QP_MIN_RNR_TIMER |
-	IBV_QP_SQ_PSN |
-	IBV_QP_TIMEOUT |
-	IBV_QP_RETRY_CNT |
-	IBV_QP_RNR_RETRY |
-	IBV_QP_MAX_QP_RD_ATOMIC;
-
-	old_state = rqpair->ibv_attr.qp_state;
-	rc = ibv_query_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
-			  spdk_nvmf_ibv_attr_mask, &init_attr);
+	old_state = rqpair->ibv_state;
+	rc = ibv_query_qp(rqpair->cm_id->qp, &qp_attr,
+			  g_spdk_nvmf_ibv_query_mask, &init_attr);
 
 	if (rc)
 	{
 		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
-		assert(false);
+		return IBV_QPS_ERR + 1;
 	}
 
-	new_state = rqpair->ibv_attr.qp_state;
+	new_state = qp_attr.qp_state;
+	rqpair->ibv_state = new_state;
+	qp_attr.ah_attr.port_num = qp_attr.port_num;
 
 	rc = spdk_nvmf_rdma_check_ibv_state(new_state);
 	if (rc)
@@ -528,6 +530,8 @@ static int
 spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 			     enum ibv_qp_state new_state)
 {
+	struct ibv_qp_attr qp_attr;
+	struct ibv_qp_init_attr init_attr;
 	int rc;
 	enum ibv_qp_state state;
 	static int attr_mask_rc[] = {
@@ -561,11 +565,18 @@ spdk_nvmf_rdma_set_ibv_state(struct spdk_nvmf_rdma_qpair *rqpair,
 		return rc;
 	}
 
-	rqpair->ibv_attr.cur_qp_state = rqpair->ibv_attr.qp_state;
-	rqpair->ibv_attr.qp_state = new_state;
-	rqpair->ibv_attr.ah_attr.port_num = rqpair->ibv_attr.port_num;
+	rc = ibv_query_qp(rqpair->cm_id->qp, &qp_attr,
+			  g_spdk_nvmf_ibv_query_mask, &init_attr);
 
-	rc = ibv_modify_qp(rqpair->cm_id->qp, &rqpair->ibv_attr,
+	if (rc) {
+		SPDK_ERRLOG("Failed to get updated RDMA queue pair state!\n");
+		assert(false);
+	}
+
+	qp_attr.cur_qp_state = rqpair->ibv_state;
+	qp_attr.qp_state = new_state;
+
+	rc = ibv_modify_qp(rqpair->cm_id->qp, &qp_attr,
 			   attr_mask_rc[new_state]);
 
 	if (rc) {
@@ -1803,7 +1814,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 
 	/* If the queue pair is in an error state, force the request to the completed state
 	 * to release resources. */
-	if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+	if (rqpair->ibv_state == IBV_QPS_ERR || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 		if (rdma_req->state == RDMA_REQUEST_STATE_NEED_BUFFER) {
 			TAILQ_REMOVE(&rgroup->pending_data_buf_queue, rdma_req, link);
 		} else if (rdma_req->state == RDMA_REQUEST_STATE_DATA_TRANSFER_TO_CONTROLLER_PENDING) {
@@ -1834,7 +1845,7 @@ spdk_nvmf_rdma_request_process(struct spdk_nvmf_rdma_transport *rtransport,
 			rdma_req->req.cmd = (union nvmf_h2c_msg *)rdma_recv->sgl[0].addr;
 			memset(rdma_req->req.rsp, 0, sizeof(*rdma_req->req.rsp));
 
-			if (rqpair->ibv_attr.qp_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
+			if (rqpair->ibv_state == IBV_QPS_ERR  || rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 				break;
 			}
@@ -3080,7 +3091,7 @@ spdk_nvmf_rdma_request_complete(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_rdma_qpair     *rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair,
 			struct spdk_nvmf_rdma_qpair, qpair);
 
-	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
+	if (rqpair->ibv_state != IBV_QPS_ERR) {
 		/* The connection is alive, so process the request as normal */
 		rdma_req->state = RDMA_REQUEST_STATE_EXECUTED;
 	} else {
@@ -3127,7 +3138,7 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 		return;
 	}
 
-	if (rqpair->ibv_attr.qp_state != IBV_QPS_ERR) {
+	if (rqpair->ibv_state != IBV_QPS_ERR) {
 		spdk_nvmf_rdma_set_ibv_state(rqpair, IBV_QPS_ERR);
 	}
 
