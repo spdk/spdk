@@ -351,22 +351,15 @@ error_create_mbuf:
 	return rc;
 }
 
-/* Poller for the DPDK compression driver. */
-static int
-comp_dev_poller(void *args)
-{
-	/* TODO future patch in series */
-	return 0;
-}
-
-/* Completion callback for reads that were issued from this bdev. */
+/* Completion callback for writes that were issued via reducelib. */
 static void
-spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
+spdk_reduce_vol_writev_cb(void *arg, int reduce_errno)
 {
 	struct spdk_bdev_io *bdev_io = arg;
 
 	if (reduce_errno == 0) {
-		SPDK_NOTICELOG("write for %p success\n", bdev_io);
+		SPDK_NOTICELOG("write %lu for %p success\n", bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+			       bdev_io);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
 	} else {
 		SPDK_ERRLOG("ERROR %u on bdev_io from reduce API\n", reduce_errno);
@@ -374,16 +367,88 @@ spdk_bdev_writev_blocks_cb(void *arg, int reduce_errno)
 	}
 }
 
+/* Following an compress or decompree we need to then either write the compressed data or finish
+ * the read on decompressed data. Do that here.
+ */
 static void
-spdk_bdev_readv_blocks_cb(void *arg, int reduce_errno)
+_compress_operation_complete(struct spdk_bdev_io *bdev_io)
+{
+	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
+					   comp_bdev);
+	struct comp_bdev_io *io_ctx = (struct comp_bdev_io *)bdev_io->driver_ctx;
+	struct comp_io_channel *comp_ch = io_ctx->comp_ch;
+	struct spdk_bdev_io *free_me = io_ctx->read_io;
+	int rc = 0;
+
+	TAILQ_REMOVE(&comp_ch->pending_comp_ios, bdev_io, module_link);
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+
+		/* Complete the original IO and then free the one that we created
+		 * as a result of issuing an IO via submit_reqeust.
+		 */
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		} else {
+			SPDK_ERRLOG("Issue with decompression on bdev_io %p\n", bdev_io);
+			rc = -EINVAL;
+		}
+		spdk_bdev_free_io(free_me);
+
+	} else if (bdev_io->type == SPDK_BDEV_IO_TYPE_WRITE) {
+
+		if (bdev_io->internal.status != SPDK_BDEV_IO_STATUS_FAILED) {
+			/* Write the compressed data. */
+			spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
+					       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
+					       spdk_reduce_vol_writev_cb, bdev_io);
+		} else {
+			SPDK_ERRLOG("Issue with compression on bdev_io %p\n", bdev_io);
+			rc = -EINVAL;
+		}
+
+	} else {
+		SPDK_ERRLOG("Unknown bdev type %u on comp operation completion\n",
+			    bdev_io->type);
+		rc = -EINVAL;
+	}
+
+	if (rc) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+}
+
+/* Poller for the DPDK compression driver. */
+static int
+comp_dev_poller(void *args)
+{
+	return 0;
+}
+
+static int
+_compress_operation(struct spdk_bdev_io *bdev_io, enum rte_comp_xform_type operation)
+{
+	return 0;
+}
+
+/* Completion callback for reads that were issued via reducelib. */
+static void
+spdk_reduce_vol_readv_cb(void *arg, int reduce_errno)
 {
 	struct spdk_bdev_io *bdev_io = arg;
+	int rc;
 
 	/* TODO: need to decide which error codes are bdev_io success vs failure;
 	 * example examine calls reading metadata */
 	if (reduce_errno == 0) {
-		SPDK_NOTICELOG("read for %p success\n", bdev_io);
-		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_SUCCESS);
+		/* Decompress data */
+		rc = _compress_operation(bdev_io, RTE_COMP_DECOMPRESS);
+		SPDK_NOTICELOG("read %lu for %p success\n", bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+			       bdev_io);
+		if (rc) {
+			SPDK_ERRLOG("ERROR %d on read from decompression operation\n", rc);
+			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		}
 	} else {
 		SPDK_ERRLOG("ERROR %d on read from reduce API\n", reduce_errno);
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
@@ -400,9 +465,10 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 	struct vbdev_compress *comp_bdev = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_compress,
 					   comp_bdev);
 
+	/* read compressed data via reducelib then decompress in callback. */
 	spdk_reduce_vol_readv(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
 			      bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-			      spdk_bdev_readv_blocks_cb, bdev_io);
+			      spdk_reduce_vol_readv_cb, bdev_io);
 }
 
 /* TODO: A future patch will add routines to complete IO up the stack, need
@@ -444,9 +510,8 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		spdk_reduce_vol_writev(comp_bdev->vol, bdev_io->u.bdev.iovs, bdev_io->u.bdev.iovcnt,
-				       bdev_io->u.bdev.offset_blocks, bdev_io->u.bdev.num_blocks,
-				       spdk_bdev_writev_blocks_cb, bdev_io);
+		/* Compress data first, then send to reducelib. */
+		rc = _compress_operation(bdev_io, RTE_COMP_COMPRESS);
 		break;
 	/* TODO in future patch in the series */
 	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
