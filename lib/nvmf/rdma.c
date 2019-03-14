@@ -3183,65 +3183,89 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
 
-		/* Handle error conditions */
-		if (wc[i].status) {
-			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+		switch (rdma_wr->type) {
+		case RDMA_WR_TYPE_SEND:
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-			error = true;
-
-			switch (rdma_wr->type) {
-			case RDMA_WR_TYPE_SEND:
-				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
-				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
+			if (!wc[i].status) {
+				count++;
+				assert(wc[i].opcode == IBV_WC_SEND);
+				assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
+			} else {
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
-				/* We're going to attempt an error recovery, so force the request into
-				 * the completed state. */
-				rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-				rqpair->current_send_depth--;
+			}
 
-				assert(rdma_req->num_outstanding_data_wr == 0);
-				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-				break;
-			case RDMA_WR_TYPE_RECV:
-				/* rdma_recv->qpair will be NULL if using an SRQ.  In that case we have to get the qpair from the wc. */
-				rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
-				if (rdma_recv->qpair == NULL) {
-					rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
+			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+			rqpair->current_send_depth--;
+
+			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+			assert(rdma_req->num_outstanding_data_wr == 0);
+			break;
+		case RDMA_WR_TYPE_RECV:
+			/* rdma_recv->qpair will be NULL if using an SRQ.  In that case we have to get the qpair from the wc. */
+			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
+			if (rdma_recv->qpair == NULL) {
+				rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
+			}
+			rqpair = rdma_recv->qpair;
+
+			assert(rqpair != NULL);
+			if (!wc[i].status) {
+				assert(wc[i].opcode == IBV_WC_RECV);
+				if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
+					spdk_nvmf_rdma_start_disconnect(rqpair);
+					break;
 				}
-				rqpair = rdma_recv->qpair;
+			}
 
-				assert(rqpair != NULL);
+			rqpair->current_recv_depth++;
+			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
+			break;
+		case RDMA_WR_TYPE_DATA:
+			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
+			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-				/* Dump this into the incoming queue. This gets cleaned up when
-				 * the queue pair disconnects or recovers. */
-				STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
-				rqpair->current_recv_depth++;
-				break;
-			case RDMA_WR_TYPE_DATA:
+			assert(rdma_req->num_outstanding_data_wr > 0);
+
+			rqpair->current_send_depth--;
+			rdma_req->num_outstanding_data_wr--;
+			if (!wc[i].status) {
+				if (wc[i].opcode == IBV_WC_RDMA_READ) {
+					rqpair->current_read_depth--;
+					/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
+					if (rdma_req->num_outstanding_data_wr == 0) {
+						rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
+						spdk_nvmf_rdma_request_process(rtransport, rdma_req);
+					}
+				} else {
+					assert(wc[i].opcode == IBV_WC_RDMA_WRITE);
+				}
+			} else {
 				/* If the data transfer fails still force the queue into the error state,
 				 * if we were performing an RDMA_READ, we need to force the request into a
 				 * completed state since it wasn't linked to a send. However, in the RDMA_WRITE
 				 * case, we should wait for the SEND to complete. */
-				rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
-				rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
-				assert(rdma_req->num_outstanding_data_wr > 0);
-				rdma_req->num_outstanding_data_wr--;
 				if (rdma_req->data.wr.opcode == IBV_WR_RDMA_READ) {
 					rqpair->current_read_depth--;
 					if (rdma_req->num_outstanding_data_wr == 0) {
 						rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
 					}
 				}
-				rqpair->current_send_depth--;
-				break;
-			default:
-				SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
-				continue;
 			}
+			break;
+		default:
+			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
+			continue;
+		}
+
+		/* Handle error conditions */
+		if (wc[i].status) {
+			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
+				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+
+			error = true;
 
 			if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
 				/* Disconnect the connection. */
@@ -3252,80 +3276,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			continue;
 		}
 
-		switch (wc[i].opcode) {
-		case IBV_WC_SEND:
-			assert(rdma_wr->type == RDMA_WR_TYPE_SEND);
-			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
-			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-
-			assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
-
-			rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
-			rqpair->current_send_depth--;
-			spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-
-			count++;
-
-			assert(rdma_req->num_outstanding_data_wr == 0);
-			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
-			break;
-
-		case IBV_WC_RDMA_WRITE:
-			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
-			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
-			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-			rqpair->current_send_depth--;
-			rdma_req->num_outstanding_data_wr--;
-
-			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
-			break;
-
-		case IBV_WC_RDMA_READ:
-			assert(rdma_wr->type == RDMA_WR_TYPE_DATA);
-			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
-			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
-			rqpair->current_send_depth--;
-
-			assert(rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER);
-			/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
-			assert(rdma_req->num_outstanding_data_wr > 0);
-			rqpair->current_read_depth--;
-			rdma_req->num_outstanding_data_wr--;
-			if (rdma_req->num_outstanding_data_wr == 0) {
-				rdma_req->state = RDMA_REQUEST_STATE_READY_TO_EXECUTE;
-				spdk_nvmf_rdma_request_process(rtransport, rdma_req);
-			}
-
-			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
-			break;
-
-		case IBV_WC_RECV:
-			assert(rdma_wr->type == RDMA_WR_TYPE_RECV);
-			/* rdma_recv->qpair will be NULL if using an SRQ.  In that case we have to get the qpair from the wc. */
-			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
-			if (rdma_recv->qpair == NULL) {
-				rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
-			}
-			rqpair = rdma_recv->qpair;
-			/* The qpair should not send more requests than are allowed per qpair. */
-			if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
-				spdk_nvmf_rdma_start_disconnect(rqpair);
-			} else {
-				rqpair->current_recv_depth++;
-			}
-
-			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
-			/* Try to process other queued requests */
-			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
-			break;
-
-		default:
-			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
-			continue;
-		}
+		spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
 
 		if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
 			nvmf_rdma_destroy_drained_qpair(rqpair);
