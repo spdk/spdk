@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c4705db5_cd6a34b3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 939,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-14T10:09:44Z",
+      "side": 1,
+      "message": "sure.",
+      "parentUuid": "826ddddd_3209a724",
+      "range": {
+        "startLine": 938,
+        "startChar": 0,
+        "endLine": 939,
+        "endChar": 62
+      },
+      "revId": "f34f787cd9ed699ee3cb97bdea0e1f9a226af710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1dd20272_9cd38b93",
         "filename": "lib/vhost/vhost_scsi.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-13T14:14:51Z",
       "side": 1,
       "message": "unrelated change?",
+      "range": {
+        "startLine": 948,
+        "startChar": 0,
+        "endLine": 951,
+        "endChar": 47
+      },
+      "revId": "f34f787cd9ed699ee3cb97bdea0e1f9a226af710",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1aef34d5_56c5848a",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-14T10:09:44Z",
+      "side": 1,
+      "message": "We are coping only vhost_sdev-\u003edev pointer to session. The \n\nsvsession-\u003esvdev-\u003escsi_dev_state[scsi_tgt_num].state\n\ncan change in while foreach_session() is in progress (as comment say) - see spdk_vhost_scsi_dev_remove_tgt().",
+      "parentUuid": "1dd20272_9cd38b93",
       "range": {
         "startLine": 948,
         "startChar": 0,
