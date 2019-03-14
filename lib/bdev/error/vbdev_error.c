@@ -49,8 +49,10 @@
 #include "vbdev_error.h"
 
 struct spdk_vbdev_error_config {
-	char *base_bdev;
-	TAILQ_ENTRY(spdk_vbdev_error_config) tailq;
+	char *					base_bdev;
+	uint32_t 				rand_fail_percentage;
+	uint32_t 				rand_pending_percentage;
+	TAILQ_ENTRY(spdk_vbdev_error_config) 	tailq;
 };
 
 static TAILQ_HEAD(, spdk_vbdev_error_config) g_error_config
@@ -65,6 +67,8 @@ struct vbdev_error_info {
 struct error_disk {
 	struct spdk_bdev_part		part;
 	struct vbdev_error_info		error_vector[SPDK_BDEV_IO_TYPE_RESET];
+	uint32_t 			rand_fail_percentage;
+	uint32_t 			rand_pending_percentage;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_ios;
 };
 
@@ -162,6 +166,27 @@ vbdev_error_get_error_type(struct error_disk *error_disk, uint32_t io_type)
 	return 0;
 }
 
+static uint32_t
+vbdev_error_get_random_error_type(struct error_disk const* error_disk, uint32_t io_type)
+{
+	uint32_t divine_choice;
+
+	if (error_disk->rand_fail_percentage == 0 && error_disk->rand_pending_percentage == 0){
+		return 0;
+	}
+
+	divine_choice = (uint32_t)(rand() % 100);
+	if (divine_choice < error_disk->rand_fail_percentage){
+		return VBDEV_IO_FAILURE;
+	}
+
+	if (divine_choice < error_disk->rand_fail_percentage + error_disk->rand_pending_percentage){
+		return VBDEV_IO_PENDING;
+	}
+
+	return 0;
+}
+
 static void
 vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
@@ -184,22 +209,41 @@ vbdev_error_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bde
 		return;
 	}
 
+	// Check if error injection is planned.
 	error_type = vbdev_error_get_error_type(error_disk, bdev_io->type);
-	if (error_type == 0) {
-		int rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
-
-		if (rc) {
-			SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
-			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-		}
-		return;
-	} else if (error_type == VBDEV_IO_FAILURE) {
+	if (error_type == VBDEV_IO_FAILURE) {
 		error_disk->error_vector[bdev_io->type].error_num--;
 		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
-	} else if (error_type == VBDEV_IO_PENDING) {
+		return;
+	}
+	
+	if (error_type == VBDEV_IO_PENDING) {
 		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
 		error_disk->error_vector[bdev_io->type].error_num--;
+		return;
 	}
+
+	// Check if random injection
+	error_type = vbdev_error_get_random_error_type(error_disk, bdev_io->type);
+	if (error_type == VBDEV_IO_FAILURE) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+	
+	if (error_type == VBDEV_IO_PENDING) {
+		TAILQ_INSERT_TAIL(&error_disk->pending_ios, bdev_io, module_link);
+		return;
+	}
+
+	// No fault injection.
+	int rc = spdk_bdev_part_submit_request(&ch->part_ch, bdev_io);
+
+	if (rc) {
+		SPDK_ERRLOG("bdev_error: submit request failed, rc=%d\n", rc);
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+	}
+
+	return;
 }
 
 static int
@@ -257,7 +301,7 @@ spdk_vbdev_error_base_bdev_hotremove_cb(void *_part_base)
 }
 
 static int
-_spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
+_spdk_vbdev_error_create(struct spdk_bdev *base_bdev, uint32_t fail_percent, uint32_t pending_percent)
 {
 	struct spdk_bdev_part_base *base = NULL;
 	struct error_disk *disk = NULL;
@@ -291,6 +335,10 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 
 	rc = spdk_bdev_part_construct(&disk->part, base, name, 0, base_bdev->blockcnt,
 				      "Error Injection Disk");
+
+	disk->rand_fail_percentage = fail_percent;
+	disk->rand_pending_percentage = pending_percent;
+
 	free(name);
 	if (rc) {
 		SPDK_ERRLOG("could not construct part for bdev %s\n", spdk_bdev_get_name(base_bdev));
@@ -306,7 +354,7 @@ _spdk_vbdev_error_create(struct spdk_bdev *base_bdev)
 }
 
 int
-spdk_vbdev_error_create(const char *base_bdev_name)
+spdk_vbdev_error_create(const char *base_bdev_name, uint32_t fail_percent, uint32_t pending_percent)
 {
 	int rc;
 	struct spdk_bdev *base_bdev;
@@ -323,7 +371,7 @@ spdk_vbdev_error_create(const char *base_bdev_name)
 		return 0;
 	}
 
-	rc = _spdk_vbdev_error_create(base_bdev);
+	rc = _spdk_vbdev_error_create(base_bdev, fail_percent, pending_percent);
 	if (rc != 0) {
 		vbdev_error_config_remove(base_bdev_name);
 		SPDK_ERRLOG("Could not create ErrorInjection bdev %s (rc=%d)\n",
@@ -370,6 +418,11 @@ vbdev_error_config_find_by_base_name(const char *base_bdev_name)
 	return NULL;
 }
 
+/*
+ * Format:
+ * [BdevError]
+ *   BdevError <base_bdev_name> <random failure percentage> <random pending percentage>
+ */
 static int
 vbdev_error_config_add(const char *base_bdev_name)
 {
@@ -422,6 +475,10 @@ vbdev_error_init(void)
 	struct spdk_conf_section *sp;
 	struct spdk_vbdev_error_config *cfg;
 	const char *base_bdev_name;
+	const char *fail_str;
+	const char *pend_str;
+	uint32_t rand_fail_percentage;
+	uint32_t rand_pending_percentage;
 	int i, rc;
 
 	sp = spdk_conf_find_section(NULL, "BdevError");
@@ -441,6 +498,21 @@ vbdev_error_init(void)
 			goto error;
 		}
 
+		// First index is the probability(%) of injecting io failure. 
+		fail_str = spdk_conf_section_get_nmval(sp, "BdevError", i, 1);
+		rand_fail_percentage = fail_str == NULL ? 0 : (uint32_t)spdk_strtol(fail_str, 10);
+
+		// Second index is the probability(%) of injecting io pending. 
+		pend_str = spdk_conf_section_get_nmval(sp, "BdevError", i, 2);
+		rand_pending_percentage = pend_str == NULL ? 0 : (uint32_t)spdk_strtol(pend_str, 10);
+
+		// Validate the random fault injection inputs.
+		if (rand_fail_percentage + rand_pending_percentage > 100){
+			SPDK_ERRLOG("ErrorInjection configuration has random percentage > 100\n");
+			rc = -EINVAL;
+			goto error;
+		} 
+
 		cfg = calloc(1, sizeof(*cfg));
 		if (!cfg) {
 			SPDK_ERRLOG("calloc() failed for vbdev_error_config\n");
@@ -449,6 +521,9 @@ vbdev_error_init(void)
 		}
 
 		cfg->base_bdev = strdup(base_bdev_name);
+		cfg->rand_fail_percentage = rand_fail_percentage;
+		cfg->rand_pending_percentage = rand_pending_percentage;
+
 		if (!cfg->base_bdev) {
 			free(cfg);
 			SPDK_ERRLOG("strdup() failed for bdev name\n");
@@ -480,7 +555,9 @@ vbdev_error_examine(struct spdk_bdev *bdev)
 
 	cfg = vbdev_error_config_find_by_base_name(bdev->name);
 	if (cfg != NULL) {
-		rc = _spdk_vbdev_error_create(bdev);
+		rc = _spdk_vbdev_error_create(bdev, 
+					      cfg->rand_fail_percentage, 
+					      cfg->rand_pending_percentage);
 		if (rc != 0) {
 			SPDK_ERRLOG("could not create error vbdev for bdev %s at examine\n",
 				    bdev->name);

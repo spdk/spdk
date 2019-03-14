@@ -100,7 +100,7 @@ spdk_rpc_construct_error_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	if (spdk_vbdev_error_create(req.base_name)) {
+	if (spdk_vbdev_error_create(req.base_name, 0, 0)) {
 		SPDK_ERRLOG("Could not create ErrorInjection bdev %s\n", req.base_name);
 		goto invalid;
 	}
