@@ -263,6 +263,24 @@
     },
     {
       "key": {
+        "uuid": "beec7c2f_cfd07650",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T16:32:07Z",
+      "side": 1,
+      "message": "If we have more complex configs, current command probably need to be changed too. In the meantime, let\u0027s use the most straightforward solution.",
+      "parentUuid": "e6777eda_ff1a4a1f",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8c508fca_f507036f",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
