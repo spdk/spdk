@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a385f2af_8f09390b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2322,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-14T22:08:15Z",
+      "side": 1,
+      "message": "Instead of modifying this function, how about we leave it as it was. The code below can send a message that calls a new function and that new function can simply do rqpair-\u003ecurrent_recv_depth \u003d rqpair-\u003emax_queue_depth and then call the old nvmf_rdma_destroy_drained_qpair function.\n\nThe advantage to this strategy is that it eliminates a flag from the rqpair, and we need to keep the size of those qpair objects down.",
+      "revId": "918a121a14c5eb6d1ae9d42643b00d5fa03a7611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4089191_c07a4b42",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2508,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-14T22:08:15Z",
+      "side": 1,
+      "message": "Now that you send a message, you don\u0027t need to ack the event special like this. It will get acked in the normal way at the bottom.",
+      "revId": "918a121a14c5eb6d1ae9d42643b00d5fa03a7611",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
