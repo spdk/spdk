@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "668155bb_35c5a911",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2658,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-14T11:53:08Z",
+      "side": 1,
+      "message": "remove \"and \"?",
+      "range": {
+        "startLine": 2658,
+        "startChar": 32,
+        "endLine": 2658,
+        "endChar": 36
+      },
+      "revId": "4c7ba1316149bcf706a86a6b7e0cf78f85441644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3c93fcb3_b7b3cac2",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 2661,
+      "author": {
+        "id": 1015209
+      },
+      "writtenOn": "2019-03-14T11:53:08Z",
+      "side": 1,
+      "message": "Can we reuse MAX_WR_PER_QP macro? I believe it should be valid for SRQ as well.\n\nAnd one more thing not directly related to this patch. Drain WRs are not used anymore but we still have +2 in MAX_WR_PER_QP macro and +1 for send and receive queue sizes on QP creation to leave space for drain WRs. Maybe we can address it in a separate patch?",
+      "range": {
+        "startLine": 2661,
+        "startChar": 13,
+        "endLine": 2661,
+        "endChar": 38
+      },
+      "revId": "4c7ba1316149bcf706a86a6b7e0cf78f85441644",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
