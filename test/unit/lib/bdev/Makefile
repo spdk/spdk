@@ -41,7 +41,8 @@ DIRS-y += crypto.c
 endif
 
 ifeq ($(CONFIG_REDUCE),y)
-DIRS-y += compress.c
+# enable once new mocks are added for compressdev
+#DIRS-y += compress.c
 endif
 
 DIRS-$(CONFIG_PMDK) += pmem
