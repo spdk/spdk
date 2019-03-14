@@ -876,6 +876,42 @@ spdk_iscsi_drop_conns(struct spdk_iscsi_conn *conn, const char *conn_match,
  * Otherwise returns the number of bytes successfully read.
  */
 int
+spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
+			  void *buf)
+{
+	int ret;
+
+	if (bytes == 0) {
+		return 0;
+	}
+
+	ret = spdk_sock_recv(conn->sock, buf, bytes);
+
+	if (ret > 0) {
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
+		return ret;
+	}
+
+	if (ret < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (errno == ECONNRESET) {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_recv() failed, errno %d: %s\n",
+				      errno, spdk_strerror(errno));
+		} else {
+			SPDK_ERRLOG("spdk_sock_recv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
+		}
+	}
+
+	/* connection closed */
+	return SPDK_ISCSI_CONNECTION_FATAL;
+}
+
+int
 spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 			   struct iovec *iov, int iovcnt)
 {
@@ -883,6 +919,11 @@ spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 
 	if (iov == NULL || iovcnt == 0) {
 		return 0;
+	}
+
+	if (iovcnt == 1) {
+		return spdk_iscsi_conn_read_data(conn, iov[0].iov_len,
+						 iov[0].iov_base);
 	}
 
 	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
@@ -909,18 +950,6 @@ spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
 
 	/* connection closed */
 	return SPDK_ISCSI_CONNECTION_FATAL;
-}
-
-int
-spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
-			  void *buf)
-{
-	struct iovec iov;
-
-	iov.iov_base = buf;
-	iov.iov_len = bytes;
-
-	return spdk_iscsi_conn_readv_data(conn, &iov, 1);
 }
 
 void
