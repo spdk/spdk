@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5692cf88_a4a3ef5a",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 2128,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-14T19:26:35Z",
+      "side": 1,
+      "message": "It looks to me like everything that happens in spdk_nvmf_ns_reservation_check could be done by comparing against values in the ns_info structure instead. Then, no event needs to be sent at all - you can just do it inline right here.",
+      "revId": "fe9da2595c61f59e9489032634599686dc671743",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
