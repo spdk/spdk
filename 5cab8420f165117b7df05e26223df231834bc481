@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "95408abc_a0a4b302",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-14T14:42:08Z",
+      "side": 1,
+      "message": "I\u0027m not sure I understand, are you simply suggesting that I change the name of the function vbdev_compress_examine() to vbdev_compress_examine_disk()? Why would opening the bdev in claim have anything to do with that suggestion? I checked 4 other bdev modules and they all have same naming convention and also open the bdev in the function.",
+      "parentUuid": "ec0e6fc3_2501e85a",
+      "range": {
+        "startLine": 1004,
+        "startChar": 1,
+        "endLine": 1004,
+        "endChar": 25
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44dbdd98_be3dadfc",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 43
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-12T14:52:04Z",
       "side": 1,
       "message": "You should not call this until you claim the device or fail.",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 30
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1923d76f_25f62407",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-14T14:42:08Z",
+      "side": 1,
+      "message": "Thanks! I meant to circle back to this, I had a note to do so - at the time I added this I was having issues putting it in \"the right place\".  I\u0027ll move and tested.",
+      "parentUuid": "44dbdd98_be3dadfc",
       "range": {
         "startLine": 1005,
         "startChar": 1,
