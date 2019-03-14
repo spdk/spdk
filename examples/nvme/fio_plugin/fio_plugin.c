@@ -104,6 +104,11 @@ struct spdk_fio_qpair {
 	bool			do_nvme_pi;
 	/* True for DIF and false for DIX, and this is valid only if do_nvme_pi is true. */
 	bool			extended_lba;
+	/* True for protection info transferred at start of metadata,
+	 * false for protection info transferred at end of metadata, and
+	 * this is valid only if do_nvme_pi is true.
+	 */
+	bool			md_start;
 	struct spdk_fio_qpair	*next;
 	struct spdk_fio_ctrlr	*fio_ctrlr;
 };
@@ -213,12 +218,7 @@ fio_do_nvme_pi_check(struct spdk_fio_qpair *fio_qpair)
 		return false;
 	}
 
-	/* PI locates at the first 8 bytes of metadata,
-	 * doesn't support now
-	 */
-	if (nsdata->dps.md_start) {
-		return false;
-	}
+	fio_qpair->md_start = nsdata->dps.md_start;
 
 	/* Controller performs PI setup and check */
 	if (fio_qpair->io_flags & SPDK_NVME_IO_FLAGS_PRACT) {
@@ -566,7 +566,7 @@ fio_extended_lba_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	lba_count = io_u->xfer_buflen / extended_lba_size;
 
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, extended_lba_size, md_size,
-			       true, false,
+			       true, fio_qpair->md_start,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
 			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
 	if (rc != 0) {
@@ -600,7 +600,7 @@ fio_separate_md_setup_pi(struct spdk_fio_qpair *fio_qpair, struct io_u *io_u)
 	lba_count = io_u->xfer_buflen / block_size;
 
 	rc = spdk_dif_ctx_init(&fio_req->dif_ctx, block_size, md_size,
-			       false, false,
+			       false, fio_qpair->md_start,
 			       (enum spdk_dif_type)spdk_nvme_ns_get_pi_type(ns),
 			       fio_qpair->io_flags, lba, g_spdk_apptag_mask, g_spdk_apptag, 0);
 	if (rc != 0) {
