@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "decf8f35_2a3e6627",
+        "filename": "test/ftl/fio.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T09:58:56Z",
+      "side": 0,
+      "message": "I\u0027d rather leave it as it was. It just won\u0027t be run during autotest.sh, but we\u0027ll still be able to run it manually.",
+      "range": {
+        "startLine": 10,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 0
+      },
+      "revId": "223491f1c682ab7468ce70b9fe36078b972eb746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

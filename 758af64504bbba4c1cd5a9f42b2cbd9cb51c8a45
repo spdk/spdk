@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "19dadfa3_090c921f",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T09:58:56Z",
+      "side": 1,
+      "message": "What\u0027s the point of exporting this?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 6
+      },
+      "revId": "758af64504bbba4c1cd5a9f42b2cbd9cb51c8a45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d751d3d_9d9dc650",
+        "filename": "test/ftl/bdevperf.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T09:58:56Z",
+      "side": 1,
+      "message": "Use lowercase for variable names.",
+      "range": {
+        "startLine": 12,
+        "startChar": 7,
+        "endLine": 12,
+        "endChar": 20
+      },
+      "revId": "758af64504bbba4c1cd5a9f42b2cbd9cb51c8a45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
