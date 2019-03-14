@@ -108,6 +108,30 @@
     },
     {
       "key": {
+        "uuid": "1f077105_d59a3c0f",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T15:40:14Z",
+      "side": 1,
+      "message": "Yes, I know it, but I think it should be in a test - this allow us test if we can properly destroy several bdevs we have created (also in diffrent order).",
+      "parentUuid": "fe1fdbc8_d38e4837",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07fac954_6d6a19e3",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
@@ -155,6 +179,24 @@
       "side": 1,
       "message": "Let\u0027s not complicate things when they can be easy. If we ever need to retrieve more data, we\u0027ll need a different command for that. Let\u0027s change this into:\nscripts/rpc.py get_bdevs | jq -r \u0027.[0].uuid\u0027",
       "parentUuid": "7aa2b6cd_1beef095",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d945386b_034a4ef7",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T15:40:14Z",
+      "side": 1,
+      "message": "I think my approach is safer - we strictly refer to ftl_bdev and with get_bdevs call you can get another bdevs also.",
+      "parentUuid": "6fd36e25_51494c11",
       "revId": "980048659441ee5c65118d963d3e84e5222d3131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
