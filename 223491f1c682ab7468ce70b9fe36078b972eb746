@@ -46,6 +46,30 @@
       "revId": "223491f1c682ab7468ce70b9fe36078b972eb746",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b1b98e34_3772129a",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:22:27Z",
+      "side": 1,
+      "message": "The restoration is clearly separated into two distinct phases: 1) reading head mds and serializing the bands and 2) restoring the L2P. I think having an indicator inside the restore struct just makes sense. And I don\u0027t think it\u0027s a big deal for this just to cover this particular case right now.",
+      "parentUuid": "22628692_e5817192",
+      "range": {
+        "startLine": 379,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 28
+      },
+      "revId": "223491f1c682ab7468ce70b9fe36078b972eb746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
