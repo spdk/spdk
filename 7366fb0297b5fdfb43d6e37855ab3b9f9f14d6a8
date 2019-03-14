@@ -80,6 +80,30 @@
       "revId": "7366fb0297b5fdfb43d6e37855ab3b9f9f14d6a8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "568facbb_05853718",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1772,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-14T06:28:56Z",
+      "side": 1,
+      "message": "We assume that all the states of tqpair are in the intialized state before invoking nvme_tcp_qpair_connect.",
+      "parentUuid": "11102135_77d1d691",
+      "range": {
+        "startLine": 1770,
+        "startChar": 0,
+        "endLine": 1772,
+        "endChar": 2
+      },
+      "revId": "7366fb0297b5fdfb43d6e37855ab3b9f9f14d6a8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
