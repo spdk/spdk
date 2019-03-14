@@ -2322,9 +2322,12 @@ spdk_nvmf_rdma_start_disconnect(struct spdk_nvmf_rdma_qpair *rqpair)
 	}
 }
 
-static void spdk_nvmf_rdma_destroy_drained_qpair(struct spdk_nvmf_rdma_qpair *rqpair,
-		struct spdk_nvmf_rdma_transport *rtransport)
+static void nvmf_rdma_destroy_drained_qpair(void *ctx)
 {
+	struct spdk_nvmf_rdma_qpair *rqpair = ctx;
+	struct spdk_nvmf_rdma_transport *rtransport = SPDK_CONTAINEROF(rqpair->qpair.transport,
+			struct spdk_nvmf_rdma_transport, transport);
+
 	if (rqpair->current_send_depth == 0 && rqpair->current_recv_depth == rqpair->max_queue_depth) {
 		/* The qpair has been drained. Free the resources. */
 		spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, true);
@@ -2963,7 +2966,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				/* Disconnect the connection. */
 				spdk_nvmf_rdma_start_disconnect(rqpair);
 			} else {
-				spdk_nvmf_rdma_destroy_drained_qpair(rqpair, rtransport);
+				nvmf_rdma_destroy_drained_qpair(rqpair);
 			}
 			continue;
 		}
@@ -3044,7 +3047,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 
 		if (rqpair->qpair.state != SPDK_NVMF_QPAIR_ACTIVE) {
-			spdk_nvmf_rdma_destroy_drained_qpair(rqpair, rtransport);
+			nvmf_rdma_destroy_drained_qpair(rqpair);
 		}
 	}
 
