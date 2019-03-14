@@ -62,6 +62,8 @@ struct ftl_restore {
 	void				*md_buf;
 
 	void				*lba_map;
+
+	bool				l2p_phase;
 };
 
 static int
@@ -94,6 +96,7 @@ ftl_restore_init(struct spdk_ftl_dev *dev, ftl_restore_fn cb)
 
 	restore->dev = dev;
 	restore->cb = cb;
+	restore->l2p_phase = false;
 
 	restore->bands = calloc(ftl_dev_num_bands(dev), sizeof(*restore->bands));
 	if (!restore->bands) {
@@ -131,9 +134,10 @@ static void
 ftl_restore_complete(struct ftl_restore *restore, int status)
 {
 	struct ftl_restore *ctx = status ? NULL : restore;
+	bool l2p_phase = restore->l2p_phase;
 
 	restore->cb(restore->dev, ctx, status);
-	if (status) {
+	if (status || l2p_phase) {
 		ftl_restore_free(restore);
 	}
 }
@@ -409,6 +413,7 @@ ftl_restore_device(struct ftl_restore *restore, ftl_restore_fn cb)
 {
 	struct ftl_restore_band *rband;
 
+	restore->l2p_phase = true;
 	restore->current = 0;
 	restore->cb = cb;
 
