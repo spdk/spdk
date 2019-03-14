@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a5d400b6_9de39676",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 380,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T12:40:34Z",
+      "side": 1,
+      "message": "I think it\u0027d be better to add a variable to keep track of the fact that we\u0027re doing the second part (rebuilding the l2p) and change the condition in ftl_restore_complete.",
+      "range": {
+        "startLine": 379,
+        "startChar": 0,
+        "endLine": 380,
+        "endChar": 28
+      },
+      "revId": "223491f1c682ab7468ce70b9fe36078b972eb746",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
