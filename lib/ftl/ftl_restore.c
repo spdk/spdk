@@ -376,7 +376,8 @@ ftl_restore_tail_md_cb(void *ctx, int status)
 
 	rband = ftl_restore_next_band(restore);
 	if (!rband) {
-		ftl_restore_complete(restore, 0);
+		restore->cb(restore->dev, restore, 0);
+		ftl_restore_free(restore);
 		return;
 	}
 
