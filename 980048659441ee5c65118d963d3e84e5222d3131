@@ -84,6 +84,30 @@
     },
     {
       "key": {
+        "uuid": "fe1fdbc8_d38e4837",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:32:14Z",
+      "side": 1,
+      "message": "No, my point was that we don\u0027t need it at all (the bdevs are destroyed automatically after during bdev_svc termination).",
+      "parentUuid": "4fd09eff_f9a8d270",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "07fac954_6d6a19e3",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
@@ -113,6 +137,24 @@
       "side": 1,
       "message": "That will requires additional get_bdevs call. I think this query is quite simple and could be used as a template to future negative test when we will need to create more complex queries to retrive bdev rpc errors.",
       "parentUuid": "07fac954_6d6a19e3",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6fd36e25_51494c11",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:32:14Z",
+      "side": 1,
+      "message": "Let\u0027s not complicate things when they can be easy. If we ever need to retrieve more data, we\u0027ll need a different command for that. Let\u0027s change this into:\nscripts/rpc.py get_bdevs | jq -r \u0027.[0].uuid\u0027",
+      "parentUuid": "7aa2b6cd_1beef095",
       "revId": "980048659441ee5c65118d963d3e84e5222d3131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -151,6 +193,24 @@
       "revId": "980048659441ee5c65118d963d3e84e5222d3131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ab67af1a_340f4447",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:32:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "35d25d1a_1e5657ad",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
