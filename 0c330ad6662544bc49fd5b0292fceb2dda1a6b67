@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a630c142_ddfe4c83",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 905,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T16:39:44Z",
+      "side": 1,
+      "message": "Not yet. I make this conditional in the next patch.",
+      "parentUuid": "a8cff993_533e5fc8",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e88ac202_95d24ca1",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 14
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6a7da219_97def1f1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 923,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T16:39:44Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "e88ac202_95d24ca1",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cd51e5d6_f4eced31",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 14
@@ -47,6 +83,24 @@
       "writtenOn": "2019-03-13T23:41:19Z",
       "side": 1,
       "message": "could we move both of these rdma_recv-\u003eqpair assignments up to just after rdma_wr gets assigned?  It should be cheap to just check if the rdma_wr-\u003etype is RDMA_WR_TYPE_RECV and set the qpair if it isn\u0027t already set\n\nshould probably have a very short comment here too explaining why the qpair could be null",
+      "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a0f2c5bd_1bd2634f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 2905,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-14T16:39:44Z",
+      "side": 1,
+      "message": "So when I do that, I get a warning from -Wmaybe-uninitialized for the non-error case (only when I build without debug enabled). Even when I check against if (rdma_wr-\u003etype \u003d\u003d RDMA_WR_TYPE_RECV || wc[i].opcode \u003d\u003d IBV_WC_RECV). But I like what you are saying here. I think there is a lot of common code that can be squashed between the two cases. Is it OK if I consolidate all of these in a future patch in a way that doesn\u0027t generate warnings? Comment added though.",
+      "parentUuid": "cd51e5d6_f4eced31",
       "revId": "0c330ad6662544bc49fd5b0292fceb2dda1a6b67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
