@@ -132,6 +132,30 @@
     },
     {
       "key": {
+        "uuid": "42b6b600_92f0f990",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:44:39Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "1f077105_d59a3c0f",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "07fac954_6d6a19e3",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
@@ -197,6 +221,24 @@
       "side": 1,
       "message": "I think my approach is safer - we strictly refer to ftl_bdev and with get_bdevs call you can get another bdevs also.",
       "parentUuid": "6fd36e25_51494c11",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "da6c2e4f_37ce4e33",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-14T15:44:39Z",
+      "side": 1,
+      "message": "You\u0027re starting the app on line 24 and suppling the conf created by gen_ftl.sh. You won\u0027t get any other bdevs.",
+      "parentUuid": "d945386b_034a4ef7",
       "revId": "980048659441ee5c65118d963d3e84e5222d3131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
