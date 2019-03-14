@@ -135,6 +135,24 @@
       "revId": "2a0bc96c2613cf7542f7bb663803de7a418ab47e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a90da856_914617cc",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 951,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-14T10:11:16Z",
+      "side": 1,
+      "message": "ehhh... gerrit glitch",
+      "parentUuid": "9695fe42_5132f700",
+      "revId": "2a0bc96c2613cf7542f7bb663803de7a418ab47e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
