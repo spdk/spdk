@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bdecdad1_9d8a3bc7",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T12:46:05Z",
+      "side": 1,
+      "message": "No it will be rejected by rpc.",
+      "parentUuid": "4935d102_85dfa43c",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "70a41d83_f895d0e1",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
@@ -30,6 +48,30 @@
       "writtenOn": "2019-03-11T14:41:06Z",
       "side": 1,
       "message": "These can fail if the user C-c\u0027s before all the devices are created, in which case we won\u0027t stop the bdev service. I suggest either adding \"|| true\" making sure it happens or just getting rid of these, as I don\u0027t think bdevs have to be deleted before the bdev is stopped (they\u0027ll be deleted automatically).",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 17,
+        "endChar": 33
+      },
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fd09eff_f9a8d270",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 17,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T12:46:05Z",
+      "side": 1,
+      "message": "Ok, I think it is not needed in exception path - will move it to test body",
+      "parentUuid": "70a41d83_f895d0e1",
       "range": {
         "startLine": 15,
         "startChar": 0,
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "7aa2b6cd_1beef095",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 30,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T12:46:05Z",
+      "side": 1,
+      "message": "That will requires additional get_bdevs call. I think this query is quite simple and could be used as a template to future negative test when we will need to create more complex queries to retrive bdev rpc errors.",
+      "parentUuid": "07fac954_6d6a19e3",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8c508fca_f507036f",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
@@ -70,6 +130,24 @@
       "writtenOn": "2019-03-11T14:41:06Z",
       "side": 1,
       "message": "I think it\u0027s worth to check some simple error cases: creating bdev using an already exisiting name, punit overlap, etc.",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35d25d1a_1e5657ad",
+        "filename": "test/ftl/json.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-14T12:46:05Z",
+      "side": 1,
+      "message": "I will add TODO for this - this requires fix in SPDK json lib.",
+      "parentUuid": "8c508fca_f507036f",
       "revId": "980048659441ee5c65118d963d3e84e5222d3131",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
