@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ae2f0011_99486480",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 874,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T19:27:47Z",
+      "side": 1,
+      "message": "This is functionally fine.  But this function is already over 100 lines long, so I probably would have first moved this code into a function as 1 patch, then this patch just adds the rqpair-\u003esrq \u003d\u003d NULL check.  That significantly reduces the size of this patch.\n\nIn general, if you\u0027re having to do a ton of whitespace changes (i.e. indentation), it probably means an intermediate patch to create a function would be better.  But it\u0027s not a hard rule.\n\nTo give you a bit of insight into how I do code reviews - if I see a 100 line patch, I might think I don\u0027t have time to review that right now.  But if I see an 80 line patch that clearly says it\u0027s just moving code into a function, followed by a 20-30 line patch, I might decide to review those patches if I have a few extra minutes.  :-)",
+      "revId": "2d03df25bc9ba8b1de4f0702da4d7104cb172f56",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
