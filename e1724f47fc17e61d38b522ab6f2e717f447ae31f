@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fc87895b_e903d0b4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 2903,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T19:17:05Z",
+      "side": 1,
+      "message": "I think this comment might be confusing for someone reading it for the first time.  For example, this says rqpair can be NULL, but then we assert that rqpair is not NULL at line 2910.\n\nIs this more accurate?\n\n/* rdma_recv-\u003eqpair will be NULL if using an SRQ.  In that case we have to get the qpair from the wc. */",
+      "revId": "e1724f47fc17e61d38b522ab6f2e717f447ae31f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "efcb21a1_edd11c30",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 3002,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T19:17:05Z",
+      "side": 1,
+      "message": "same as above.",
+      "revId": "e1724f47fc17e61d38b522ab6f2e717f447ae31f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
