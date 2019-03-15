@@ -264,8 +264,9 @@ virtio_scsi_dev_init(struct virtio_scsi_dev *svdev, uint16_t max_queues)
 
 	eventq = vdev->vqs[VIRTIO_SCSI_EVENTQ];
 	num_events = spdk_min(eventq->vq_nentries, VIRTIO_SCSI_EVENTQ_BUFFER_COUNT);
-	svdev->eventq_ios = spdk_dma_zmalloc(sizeof(*svdev->eventq_ios) * num_events,
-					     0, NULL);
+	svdev->eventq_ios = spdk_zmalloc(sizeof(*svdev->eventq_ios) * num_events,
+					 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+					 SPDK_MALLOC_DMA);
 	if (svdev->eventq_ios == NULL) {
 		SPDK_ERRLOG("cannot allocate memory for %"PRIu16" eventq buffers\n",
 			    num_events);
@@ -1050,7 +1051,7 @@ _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum)
 	}
 
 	if (base->cb_fn == NULL) {
-		spdk_dma_free(base);
+		spdk_free(base);
 		return;
 	}
 
@@ -1063,7 +1064,7 @@ _virtio_scsi_dev_scan_finish(struct virtio_scsi_scan_base *base, int errnum)
 	}
 
 	base->cb_fn(base->cb_arg, errnum, bdevs, bdevs_cnt);
-	spdk_dma_free(base);
+	spdk_free(base);
 }
 
 static int
@@ -1648,7 +1649,8 @@ _virtio_scsi_dev_scan_init(struct virtio_scsi_dev *svdev)
 		return -EBUSY;
 	}
 
-	base = spdk_dma_zmalloc(sizeof(*base), 64, NULL);
+	base = spdk_zmalloc(sizeof(*base), 64, NULL,
+			    SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (base == NULL) {
 		SPDK_ERRLOG("couldn't allocate memory for scsi target scan.\n");
 		return -ENOMEM;
@@ -1843,7 +1845,7 @@ _virtio_scsi_dev_unregister_cb(void *io_device)
 
 	remove_cb = svdev->remove_cb;
 	remove_ctx = svdev->remove_ctx;
-	spdk_dma_free(svdev->eventq_ios);
+	spdk_free(svdev->eventq_ios);
 	free(svdev);
 
 	if (remove_cb) {

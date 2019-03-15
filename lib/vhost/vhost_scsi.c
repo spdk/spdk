@@ -1213,8 +1213,9 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 			free_task_pool(svsession);
 			return -1;
 		}
-		vq->tasks = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
-					     SPDK_CACHE_LINE_SIZE, NULL);
+		vq->tasks = spdk_zmalloc(sizeof(struct spdk_vhost_scsi_task) * task_cnt,
+					 SPDK_CACHE_LINE_SIZE, NULL,
+					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (vq->tasks == NULL) {
 			SPDK_ERRLOG("Controller %s: failed to allocate %"PRIu32" tasks for virtqueue %"PRIu16"\n",
 				    svdev->vdev.name, task_cnt, i);
