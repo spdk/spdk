@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a19d759f_a428a0ac",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 170,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:12:01Z",
+      "side": 1,
+      "message": "has_shadow_dbl?\n\nit\u0027s a nit, but shadow_doorbell (bool) and shadow_dbl (struct) doesn\u0027t seem right\n\nof course, this matches ctrlr-\u003eshadow_doorbell, so I\u0027ll leave it to your better judgment",
+      "revId": "07175d46ee5600c05c8c4666c1e960c6bddfead2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "41815873_e63568b0",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 181,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:12:01Z",
+      "side": 1,
+      "message": "is sq_tail sufficient?  this struct is already called shadow_dbl so we can probably make this name shorter now",
+      "revId": "07175d46ee5600c05c8c4666c1e960c6bddfead2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c25071aa_a21fd384",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 184,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:12:01Z",
+      "side": 1,
+      "message": "same as above",
+      "revId": "07175d46ee5600c05c8c4666c1e960c6bddfead2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50e8a987_c64ba8fc",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2159,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:12:01Z",
+      "side": 1,
+      "message": "I\u0027m not following why this isn\u0027t kept inside of the closing brace at line 2157\n\nit\u0027s basically a nop putting it here, but seems better to avoid the extra instruction if possible",
+      "revId": "07175d46ee5600c05c8c4666c1e960c6bddfead2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
