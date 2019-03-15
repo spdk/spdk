@@ -150,6 +150,7 @@ spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 	return realloc(buf, size);
 }
 
+DEFINE_RETURN_MOCK(spdk_free, void *);
 void
 spdk_free(void *buf)
 {
