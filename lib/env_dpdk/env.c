@@ -89,6 +89,12 @@ spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint
 	return buf;
 }
 
+void *
+spdk_realloc(void *buf, size_t size, size_t align)
+{
+	return rte_realloc(buf, size, align);
+}
+
 void
 spdk_free(void *buf)
 {
