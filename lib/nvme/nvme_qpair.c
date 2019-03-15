@@ -481,10 +481,10 @@ nvme_qpair_deinit(struct spdk_nvme_qpair *qpair)
 
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
 		TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
-		spdk_dma_free(cmd);
+		spdk_free(cmd);
 	}
 
-	spdk_dma_free(qpair->req_buf);
+	spdk_free(qpair->req_buf);
 }
 
 int
@@ -633,7 +633,7 @@ spdk_nvme_qpair_add_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	}
 
 	if (cmd == NULL) {
-		cmd = spdk_dma_zmalloc(sizeof(*cmd), 64, NULL);
+		cmd = spdk_zmalloc(sizeof(*cmd), 64, NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!cmd) {
 			return -ENOMEM;
 		}
@@ -664,7 +664,7 @@ spdk_nvme_qpair_remove_cmd_error_injection(struct spdk_nvme_ctrlr *ctrlr,
 	TAILQ_FOREACH_SAFE(cmd, &qpair->err_cmd_head, link, entry) {
 		if (cmd->opc == opc) {
 			TAILQ_REMOVE(&qpair->err_cmd_head, cmd, link);
-			spdk_dma_free(cmd);
+			spdk_free(cmd);
 			return;
 		}
 	}
