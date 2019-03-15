@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "42bb01d8_82147941",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 1336,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:05:08Z",
+      "side": 1,
+      "message": "description should probably specify microseconds (like the timeout_us one above it) - maybe also say the default is 0 (as fast as possible)",
+      "revId": "ea9d40afebc55d745378b5fd2221507b70d9aacb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
