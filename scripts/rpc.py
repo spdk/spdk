@@ -1267,7 +1267,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                                trtype=args.trtype,
                                                traddr=args.traddr,
                                                punits=args.punits,
-                                               uuid=args.uuid))
+                                               uuid=args.uuid,
+                                               cache=args.cache))
 
     p = subparsers.add_parser('construct_ftl_bdev',
                               help='Add FTL bdev')
@@ -1280,6 +1281,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                    required=True)
     p.add_argument('-u', '--uuid', help='UUID of restored bdev (not applicable when creating new '
                    'instance): e.g. b286d19a-0059-4709-abcd-9f7732b1567d (optional)')
+    p.add_argument('-c', '--cache', help='Name of the bdev to be used as a write bufffer cache (optional)')
     p.set_defaults(func=construct_ftl_bdev)
 
     def delete_ftl_bdev(args):

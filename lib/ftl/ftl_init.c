@@ -843,6 +843,8 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 	dev->init_arg = cb_arg;
 	dev->range = opts->range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
+	dev->cache_bdev = opts->cache_bdev;
+
 	dev->name = strdup(opts->name);
 	if (!dev->name) {
 		SPDK_ERRLOG("Unable to set device name\n");
