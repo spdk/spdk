@@ -1,0 +1,95 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "522d5eca_4315f3ce",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T12:09:56Z",
+      "side": 1,
+      "message": "extra tab?",
+      "revId": "116d81a3db14b82d2e15da8951c7592be00bc278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5399c5fa_477a9aa1",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T12:09:56Z",
+      "side": 1,
+      "message": "double space?",
+      "revId": "116d81a3db14b82d2e15da8951c7592be00bc278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "740e4012_ba8c5117",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T12:09:56Z",
+      "side": 1,
+      "message": "size_t",
+      "revId": "116d81a3db14b82d2e15da8951c7592be00bc278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7b0cfe1d_5ad30102",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 178,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T12:09:56Z",
+      "side": 1,
+      "message": "I think we should add this trace in the code or remove this funciton.",
+      "revId": "116d81a3db14b82d2e15da8951c7592be00bc278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b5995dca_572fd3fa",
+        "filename": "lib/ftl/ftl_trace.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 299,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T12:09:56Z",
+      "side": 1,
+      "message": "We have very similar pattern in three functions - maybe we could merge it somehow?",
+      "range": {
+        "startLine": 264,
+        "startChar": 0,
+        "endLine": 299,
+        "endChar": 2
+      },
+      "revId": "116d81a3db14b82d2e15da8951c7592be00bc278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
