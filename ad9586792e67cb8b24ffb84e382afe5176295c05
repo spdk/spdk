@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c32f551_e7a1d9f7",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 37,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-15T10:17:47Z",
+      "side": 1,
+      "message": "not needed anymore",
+      "range": {
+        "startLine": 37,
+        "startChar": 0,
+        "endLine": 37,
+        "endChar": 31
+      },
+      "revId": "ad9586792e67cb8b24ffb84e382afe5176295c05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "27360a29_512349a6",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-15T10:17:47Z",
+      "side": 1,
+      "message": "i",
+      "range": {
+        "startLine": 73,
+        "startChar": 32,
+        "endLine": 73,
+        "endChar": 35
+      },
+      "revId": "ad9586792e67cb8b24ffb84e382afe5176295c05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a17ddef9_c88bbf59",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-15T10:17:47Z",
+      "side": 1,
+      "message": "check_format.sh ?",
+      "range": {
+        "startLine": 78,
+        "startChar": 31,
+        "endLine": 78,
+        "endChar": 36
+      },
+      "revId": "ad9586792e67cb8b24ffb84e382afe5176295c05",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
