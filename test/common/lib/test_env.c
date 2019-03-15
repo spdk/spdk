@@ -153,6 +153,8 @@ spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr)
 void
 spdk_free(void *buf)
 {
+	/* fix for false-positives in *certain* static analysis tools. */
+	assert((uintptr_t)buf != UINTPTR_MAX);
 	free(buf);
 }
 
