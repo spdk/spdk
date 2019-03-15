@@ -98,7 +98,8 @@ struct spdk_env_opts {
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
+ * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
+ * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
@@ -118,7 +119,8 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
+ * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
+ * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
