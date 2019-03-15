@@ -34,8 +34,8 @@ initialization (`module_init`) and teardown (`module_fini`) functions,
 the function that returns context size (`get_ctx_size`) - scratch space that
 will be allocated in each I/O request for use by this module, and a callback
 that will be called each time a new bdev is registered by another module
-(`examine`). Please check the documentation of struct spdk_bdev_module for
-more details.
+(`examine_config` and `examine_disk`). Please check the documentation of
+struct spdk_bdev_module for more details.
 
 ## Creating Bdevs
 
