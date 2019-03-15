@@ -169,6 +169,10 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
 int spdk_env_init(const struct spdk_env_opts *opts);
 
 /**
+ * **Deprecated**.
+ *
+ * Please use spdk_malloc() instead.
+ *
  * Allocate a pinned memory buffer with the given size and alignment.
  *
  * \param size Size in bytes.
@@ -181,9 +185,14 @@ int spdk_env_init(const struct spdk_env_opts *opts);
  *
  * \return a pointer to the allocated memory buffer.
  */
+__attribute__((deprecated))
 void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
+ * **Deprecated**.
+ *
+ * Please use spdk_malloc() instead.
+ *
  * Allocate a pinned, memory buffer with the given size, alignment and socket id.
  *
  * \param size Size in bytes.
@@ -198,9 +207,14 @@ void *spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr);
  *
  * \return a pointer to the allocated memory buffer.
  */
+__attribute__((deprecated))
 void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
+ * **Deprecated**.
+ *
+ * Please use spdk_zmalloc() instead.
+ *
  * Allocate a pinned memory buffer with the given size and alignment. The buffer
  * will be zeroed.
  *
@@ -214,9 +228,14 @@ void *spdk_dma_malloc_socket(size_t size, size_t align, uint64_t *phys_addr, int
  *
  * \return a pointer to the allocated memory buffer.
  */
+__attribute__((deprecated))
 void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
 
 /**
+ * **Deprecated**.
+ *
+ * Please use spdk_zmalloc() instead.
+ *
  * Allocate a pinned memory buffer with the given size, alignment and socket id.
  * The buffer will be zeroed.
  *
@@ -232,9 +251,15 @@ void *spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr);
  *
  * \return a pointer to the allocated memory buffer.
  */
+__attribute__((deprecated))
 void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, int socket_id);
 
 /**
+ *
+ * **Deprecated**.
+ *
+ * Please use spdk_realloc() instead.
+ *
  * Resize the allocated and pinned memory buffer with the given new size and
  * alignment. Existing contents are preserved.
  *
@@ -249,14 +274,20 @@ void *spdk_dma_zmalloc_socket(size_t size, size_t align, uint64_t *phys_addr, in
  *
  * \return a pointer to the resized memory buffer.
  */
+__attribute__((deprecated))
 void *spdk_dma_realloc(void *buf, size_t size, size_t align, uint64_t *phys_addr);
 
 /**
+ * **Deprecated**.
+ *
+ * Please use spdk_free() instead.
+ *
  * Free a memory buffer previously allocated, for example from spdk_dma_zmalloc().
  * This call is never made from the performance path.
  *
  * \param buf Buffer to free.
  */
+__attribute__((deprecated))
 void spdk_dma_free(void *buf);
 
 /**
