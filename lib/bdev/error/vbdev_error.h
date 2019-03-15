@@ -48,9 +48,11 @@ typedef void (*spdk_delete_error_complete)(void *cb_arg, int bdeverrno);
  * Create a vbdev on the base bdev to inject error into it.
  *
  * \param base_bdev_name Name of the base bdev.
+ * \param fail_percent Percentage of the io that will randomly fail.
+ * \param pending_percent Percentage of the io that will be pending.
  * \return 0 on success or negative on failure.
  */
-int spdk_vbdev_error_create(const char *base_bdev_name);
+int spdk_vbdev_error_create(const char *base_bdev_name, uint32_t fail_percent, uint32_t pending_percent);
 
 /**
  * Delete vbdev used to inject errors.
