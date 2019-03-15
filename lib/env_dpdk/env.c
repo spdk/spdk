@@ -199,6 +199,55 @@ spdk_memzone_dump(FILE *f)
 	rte_memzone_dump(f);
 }
 
+static int
+_spdk_ring_mempool_alloc(struct rte_mempool *mp)
+{
+	struct spdk_ring *ring;
+
+	ring = spdk_ring_create(SPDK_RING_TYPE_MP_MC, mp->size, mp->socket_id);
+	if (ring == NULL) {
+		return -ENOMEM;
+	}
+	mp->pool_data = ring;
+
+	return 0;
+}
+
+static void
+_spdk_ring_mempool_free(struct rte_mempool *mp)
+{
+	spdk_ring_free((struct spdk_ring *)mp->pool_data);
+}
+
+static int
+_spdk_ring_mempool_enqueue(struct rte_mempool *mp, void *const *obj_table, unsigned n)
+{
+	return spdk_ring_enqueue(mp->pool_data, obj_table, n) == 0 ? -ENOBUFS : 0;
+}
+
+static int
+_spdk_ring_mempool_dequeue(struct rte_mempool *mp, void **obj_table, unsigned n)
+{
+	return spdk_ring_dequeue(mp->pool_data, obj_table, n) == 0 ? -ENOBUFS : 0;
+}
+
+static unsigned
+_spdk_ring_mempool_get_count(const struct rte_mempool *mp)
+{
+	return spdk_ring_count(mp->pool_data);
+}
+
+static const struct rte_mempool_ops spdk_mempool_ops = {
+	.name = "spdk_ring_mempool",
+	.alloc = _spdk_ring_mempool_alloc,
+	.free = _spdk_ring_mempool_free,
+	.enqueue = _spdk_ring_mempool_enqueue,
+	.dequeue = _spdk_ring_mempool_dequeue,
+	.get_count = _spdk_ring_mempool_get_count,
+};
+
+MEMPOOL_REGISTER_OPS(spdk_mempool_ops);
+
 struct spdk_mempool *
 spdk_mempool_create_ctor(const char *name, size_t count,
 			 size_t ele_size, size_t cache_size, int socket_id,
@@ -391,7 +440,7 @@ spdk_ring_count(struct spdk_ring *ring)
 }
 
 size_t
-spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
+spdk_ring_enqueue(struct spdk_ring *ring, void *const *objs, size_t count)
 {
 	int rc;
 #if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)

@@ -347,7 +347,7 @@ spdk_ring_free(struct spdk_ring *ring)
 
 DEFINE_RETURN_MOCK(spdk_ring_enqueue, size_t);
 size_t
-spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
+spdk_ring_enqueue(struct spdk_ring *ring, void *const *objs, size_t count)
 {
 	struct spdk_ring_ele *ele;
 	size_t i;
