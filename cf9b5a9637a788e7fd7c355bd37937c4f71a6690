@@ -16,6 +16,24 @@
       "revId": "cf9b5a9637a788e7fd7c355bd37937c4f71a6690",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "39ee5e29_b5fc1878",
+        "filename": "lib/ftl/ftl_restore.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-15T16:50:13Z",
+      "side": 1,
+      "message": "restore-\u003ecb starts l2p phase at some point, you must remember old state",
+      "parentUuid": "b9a1d460_de70cb6d",
+      "revId": "cf9b5a9637a788e7fd7c355bd37937c4f71a6690",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
