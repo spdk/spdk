@@ -288,7 +288,8 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		return -EINVAL;
 	}
 
-	nvmf_data = spdk_dma_zmalloc(sizeof(*nvmf_data), 0, NULL);
+	nvmf_data = spdk_zmalloc(sizeof(*nvmf_data), 0, NULL,
+				 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!nvmf_data) {
 		SPDK_ERRLOG("nvmf_data allocation error\n");
 		return -ENOMEM;
@@ -319,13 +320,13 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 					nvme_completion_poll_cb, &status);
 	if (rc < 0) {
 		SPDK_ERRLOG("Connect command failed\n");
-		spdk_dma_free(nvmf_data);
+		spdk_free(nvmf_data);
 		return rc;
 	}
 
 	if (spdk_nvme_wait_for_completion(qpair, &status)) {
 		SPDK_ERRLOG("Connect command failed\n");
-		spdk_dma_free(nvmf_data);
+		spdk_free(nvmf_data);
 		return -EIO;
 	}
 
@@ -335,6 +336,6 @@ nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries)
 		SPDK_DEBUGLOG(SPDK_LOG_NVME, "CNTLID 0x%04" PRIx16 "\n", ctrlr->cntlid);
 	}
 
-	spdk_dma_free(nvmf_data);
+	spdk_free(nvmf_data);
 	return 0;
 }
