@@ -390,12 +390,11 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint64_t phys_addr = 0;
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
 	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					  64, &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -750,7 +749,7 @@ static int
 nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint64_t prp1, prp2;
+	uint64_t prp1, prp2, len;
 
 	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
@@ -766,15 +765,29 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* only 1 page size for doorbell buffer */
 	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
-				 &prp1);
+				 NULL);
 	if (ctrlr->shadow_doorbell == NULL) {
 		rc = -ENOMEM;
 		goto error;
 	}
 
-	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, &prp2);
+	len = ctrlr->page_size;
+	prp1 = spdk_vtophys(ctrlr->shadow_doorbell, &len);
+	if (prp1 == SPDK_VTOPHYS_ERROR || len != ctrlr->page_size) {
+		rc = -EFAULT;
+		goto error;
+	}
+
+	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
 	if (ctrlr->eventidx == NULL) {
 		rc = -ENOMEM;
+		goto error;
+	}
+
+	len = ctrlr->page_size;
+	prp2 = spdk_vtophys(ctrlr->eventidx, &len);
+	if (prp2 == SPDK_VTOPHYS_ERROR || len != ctrlr->page_size) {
+		rc = -EFAULT;
 		goto error;
 	}
 
@@ -1453,7 +1466,6 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	uint32_t nn = ctrlr->cdata.nn;
-	uint64_t phys_addr = 0;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
@@ -1466,15 +1478,16 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64, NULL,
+					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
 			rc = -ENOMEM;
 			goto fail;
 		}
 
 		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-					     &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+					     NULL, SPDK_ENV_SOCKET_ID_ANY,
+					     SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 		if (ctrlr->nsdata == NULL) {
 			rc = -ENOMEM;
 			goto fail;
