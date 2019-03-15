@@ -525,7 +525,7 @@ def destruct_split_vbdev(client, base_bdev):
     return client.call('destruct_split_vbdev', params)
 
 
-def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None):
+def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None, cache=None):
     """Construct FTL bdev
 
     Args:
@@ -534,6 +534,7 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None):
         traddr: transport address
         punit: parallel unit range
         uuid: UUID of the device
+        cache: name of the write buffer bdev
     """
     params = {'name': name,
               'trtype': trtype,
@@ -541,6 +542,9 @@ def construct_ftl_bdev(client, name, trtype, traddr, punits, uuid=None):
               'punits': punits}
     if uuid:
         params['uuid'] = uuid
+    if cache:
+        params['cache'] = cache
+
     return client.call('construct_ftl_bdev', params)
 
 
