@@ -839,11 +839,46 @@ spdk_nvmf_rdma_qpair_destroy(struct spdk_nvmf_rdma_qpair *rqpair)
 }
 
 static int
+nvmf_rdma_resize_cq(struct spdk_nvmf_rdma_qpair *rqpair, struct spdk_nvmf_rdma_device *device)
+{
+	struct spdk_nvmf_rdma_poller	*rpoller;
+	int				rc, num_cqe, required_num_wr;
+
+	/* Enlarge CQ size dynamically */
+	rpoller = rqpair->poller;
+	required_num_wr = rpoller->required_num_wr + MAX_WR_PER_QP(rqpair->max_queue_depth);
+	num_cqe = rpoller->num_cqe;
+	if (num_cqe < required_num_wr) {
+		num_cqe = spdk_max(num_cqe * 2, required_num_wr);
+		num_cqe = spdk_min(num_cqe, device->attr.max_cqe);
+	}
+
+	if (rpoller->num_cqe != num_cqe) {
+		if (required_num_wr > device->attr.max_cqe) {
+			SPDK_ERRLOG("RDMA CQE requirement (%d) exceeds device max_cqe limitation (%d)\n",
+				    required_num_wr, device->attr.max_cqe);
+			return -1;
+		}
+
+		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Resize RDMA CQ from %d to %d\n", rpoller->num_cqe, num_cqe);
+		rc = ibv_resize_cq(rpoller->cq, num_cqe);
+		if (rc) {
+			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
+			return -1;
+		}
+
+		rpoller->num_cqe = num_cqe;
+	}
+
+	rpoller->required_num_wr = required_num_wr;
+	return 0;
+}
+
+static int
 spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
-	struct spdk_nvmf_rdma_poller		*rpoller;
-	int					rc, num_cqe, required_num_wr;
+	int					rc;
 	struct spdk_nvmf_rdma_transport		*rtransport;
 	struct spdk_nvmf_transport		*transport;
 	struct spdk_nvmf_rdma_resource_opts	opts;
@@ -871,39 +906,13 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	ibv_init_attr.cap.max_send_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_TX_SGE);
 	ibv_init_attr.cap.max_recv_sge	= spdk_min(device->attr.max_sge, NVMF_DEFAULT_RX_SGE);
 
-	/* Enlarge CQ size dynamically */
-	rpoller = rqpair->poller;
-	required_num_wr = rpoller->required_num_wr + MAX_WR_PER_QP(rqpair->max_queue_depth);
-	num_cqe = rpoller->num_cqe;
-	if (num_cqe < required_num_wr) {
-		num_cqe = spdk_max(num_cqe * 2, required_num_wr);
-		num_cqe = spdk_min(num_cqe, device->attr.max_cqe);
+	if (nvmf_rdma_resize_cq(rqpair, device) < 0) {
+		SPDK_ERRLOG("Failed to resize the completion queue. Cannot initialize qpair.\n");
+		rdma_destroy_id(rqpair->cm_id);
+		rqpair->cm_id = NULL;
+		spdk_nvmf_rdma_qpair_destroy(rqpair);
+		return -1;
 	}
-
-	if (rpoller->num_cqe != num_cqe) {
-		if (required_num_wr > device->attr.max_cqe) {
-			SPDK_ERRLOG("RDMA CQE requirement (%d) exceeds device max_cqe limitation (%d)\n",
-				    required_num_wr, device->attr.max_cqe);
-			rdma_destroy_id(rqpair->cm_id);
-			rqpair->cm_id = NULL;
-			spdk_nvmf_rdma_qpair_destroy(rqpair);
-			return -1;
-		}
-
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Resize RDMA CQ from %d to %d\n", rpoller->num_cqe, num_cqe);
-		rc = ibv_resize_cq(rpoller->cq, num_cqe);
-		if (rc) {
-			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
-			rdma_destroy_id(rqpair->cm_id);
-			rqpair->cm_id = NULL;
-			spdk_nvmf_rdma_qpair_destroy(rqpair);
-			return -1;
-		}
-
-		rpoller->num_cqe = num_cqe;
-	}
-
-	rpoller->required_num_wr = required_num_wr;
 
 	rc = rdma_create_qp(rqpair->cm_id, rqpair->port->device->pd, &ibv_init_attr);
 	if (rc) {
