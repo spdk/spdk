@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "2976201f_859f7b9e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1004,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-15T14:57:19Z",
+      "side": 1,
+      "message": "Clarification. There are two types of examine callback. examine_config and examine_disk. \nexamine_config should claim the bdev based on configuration. It should exit synchronously and do not perform IO.\nexamine_disk can use IO to determine what type of disk it is.\n\nMain reason for such differentiation is that you might want to place lvol or compress bdev on cache/raid/passthru bdev.",
+      "parentUuid": "95408abc_a0a4b302",
+      "range": {
+        "startLine": 1004,
+        "startChar": 1,
+        "endLine": 1004,
+        "endChar": 25
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44dbdd98_be3dadfc",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 43
@@ -108,6 +132,30 @@
       "side": 1,
       "message": "Hmmm, so if I move examine_done to the vol_load callback (success and fail paths) I get this:\nbdev.c:3718:spdk_bdev_start: *ERROR*: examine_config for module compress did not call spdk_bdev_module_examine_done()\nwhich is what I was seeing early on when I quickly added it to the examine function.  I\u0027ll look more into it later this morn....",
       "parentUuid": "1923d76f_25f62407",
+      "range": {
+        "startLine": 1005,
+        "startChar": 1,
+        "endLine": 1005,
+        "endChar": 30
+      },
+      "revId": "5cab8420f165117b7df05e26223df231834bc481",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e08b8c17_c9ab0547",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 43
+      },
+      "lineNbr": 1005,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-03-15T14:57:19Z",
+      "side": 1,
+      "message": "If you change the calllback type to the one described above you will not get error anymore.",
+      "parentUuid": "8659630e_8193b903",
       "range": {
         "startLine": 1005,
         "startChar": 1,
