@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4458d06c_5c4c1c6d",
+        "filename": "include/spdk/event.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T22:29:31Z",
+      "side": 1,
+      "message": "I think Darek was advocating for just \"...will call start_fn on the current system thread with the argument provided.\"  Just leave spdk_thread out of it for now.",
+      "revId": "ca5dcc7fc5af07655835ade2072ed74a1f85a1f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
