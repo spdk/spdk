@@ -16,6 +16,24 @@
       "revId": "7b3f0dae5b3593129c0be37b5b12b9e7af1dddc8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6bcc09c8_33f75209",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 2325,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-15T20:05:45Z",
+      "side": 1,
+      "message": "It\u0027s a valid nit. I always try to use that formatting pattern.",
+      "parentUuid": "e2237875_90509918",
+      "revId": "7b3f0dae5b3593129c0be37b5b12b9e7af1dddc8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
