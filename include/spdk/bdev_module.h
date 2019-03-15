@@ -119,7 +119,9 @@ struct spdk_bdev_module {
 	 * First notification that a bdev should be examined by a virtual bdev module.
 	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
 	 * create their own vbdevs, but no I/O to device can be send to bdev at this point.
-	 * Only vbdevs based on config files can be created here.
+	 * Only vbdevs based on config files can be created here. This callback must finish
+	 * synchronously. If bdev module needs asynchronous start, it should claim the bdev in
+	 * examine_config, and implement async operations in examine_disk.
 	 */
 	void (*examine_config)(struct spdk_bdev *bdev);
 

@@ -3721,6 +3721,10 @@ spdk_bdev_start(struct spdk_bdev *bdev)
 	}
 
 	if (bdev->internal.claim_module) {
+		if (bdev->internal.claim_module->examine_disk) {
+			bdev->internal.claim_module->internal.action_in_progress++;
+			bdev->internal.claim_module->examine_disk(bdev);
+		}
 		return;
 	}
 
