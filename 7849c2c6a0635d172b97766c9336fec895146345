@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "544bf8ce_b1f00f96",
+        "filename": "include/spdk/bdev_module.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 122,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T22:16:56Z",
+      "side": 1,
+      "message": "I looked at this patch some more after our 1x1.  I think the way you have it is best.  But I think we need to make it even more clear how this works.\n\nI think the existing comment is fine.  But then lets add:\n\nThis callback must makes its decision to claim the module synchronously.  It must also call spdk_bdev_module_examine_done() before returning.  If the module needs to performance asynchronous operations such as I/O after claiming the bdev, it may define an examine_disk callback.  The examine_disk callback will then be called immediately after the examine_config callback returns.\n\n(Technically it\u0027s not \"immediate\", but I\u0027m afraid trying to explain it in more specific terms will just confuse.)",
+      "revId": "7849c2c6a0635d172b97766c9336fec895146345",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
