@@ -272,9 +272,15 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 		return -ENOMEM;
 	}
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VALUE_2MB, &queue_mem_phys_addr);
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VALUE_2MB, NULL);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
+	}
+
+	queue_mem_phys_addr = spdk_vtophys(queue_mem, NULL);
+	if (queue_mem_phys_addr == SPDK_VTOPHYS_ERROR) {
+		spdk_dma_free(queue_mem);
+		return -EFAULT;
 	}
 
 	vq->vq_ring_mem = queue_mem_phys_addr;
