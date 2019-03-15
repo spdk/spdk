@@ -865,8 +865,9 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 {
 	struct spdk_nvmf_subsystem_poll_group *sgroup;
 	uint32_t new_num_ns, old_num_ns;
-	uint32_t i;
+	uint32_t i, j;
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_registrant *reg, *tmp;
 
 	/* Make sure our poll group has memory for this subsystem allocated */
 	if (subsystem->id >= group->num_sgroups) {
@@ -953,7 +954,17 @@ poll_group_update_subsystem(struct spdk_nvmf_poll_group *group,
 		} else if (ns->rtype && ns->holder) {
 			sgroup->ns_info[i].crkey = ns->crkey;
 			sgroup->ns_info[i].rtype = ns->rtype;
-			sgroup->ns_info[i].hostid = ns->holder->hostid;
+			sgroup->ns_info[i].holder_id = ns->holder->hostid;
+
+			memset(&sgroup->ns_info[i].reg_hostid, 0, SPDK_NVMF_MAX_NUM_REGISTRANTS * sizeof(struct spdk_uuid));
+			j = 0;
+			TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+				if (j >= SPDK_NVMF_MAX_NUM_REGISTRANTS) {
+					SPDK_ERRLOG("Maximum %u registrants can support.\n", SPDK_NVMF_MAX_NUM_REGISTRANTS);
+					return -EINVAL;
+				}
+				sgroup->ns_info[i].reg_hostid[j++] = reg->hostid;
+			}
 		}
 	}
 
