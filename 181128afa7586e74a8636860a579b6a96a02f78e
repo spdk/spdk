@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "662729ae_6ec787c2",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 173,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:55:36Z",
+      "side": 1,
+      "message": "Yeah OK, this should be easy to add as a follow-on.  I just need to allocate the same # of qpairs as I have lcores and then associate them round robin with a bdev. This is basically what cryto does When you made this comment before I only took it to mean that I should have the reduce_thread stuff per bdev but I also need a qpair as well",
+      "parentUuid": "be487e16_e3be766e",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "22eb301f_699f9764",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 46
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-15T00:00:12Z",
       "side": 1,
       "message": "I know this is a total nit, but this doesn\u0027t initialize ISAL, it initializes the DPDK isal_compress module",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7202525a_2651d206",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:55:36Z",
+      "side": 1,
+      "message": "always better to be perfectly clear :)",
+      "parentUuid": "22eb301f_699f9764",
       "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "bc7d4268_b4a27797",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:55:36Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8496e2f9_a85519a7",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c2771051_5b6ecf54",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 46
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "837d4e7b_bd127b71",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 553,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:55:36Z",
+      "side": 1,
+      "message": "I should have made these changes on the tip and then backported, I need to rebase the chain to fully test these so hold off on review for now...",
+      "parentUuid": "c2771051_5b6ecf54",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4d0a6e83_07ed9250",
         "filename": "lib/bdev/compress/vbdev_compress.h",
         "patchSetId": 46
@@ -81,6 +153,24 @@
       "writtenOn": "2019-03-15T00:00:12Z",
       "side": 1,
       "message": "I guess I\u0027m thinking that the PMD doesn\u0027t get persisted.  The compression algorithm needs to, but not the PMD that will perform the compression.\n\nWe should probably discuss this over IRC.  I\u0027d like to get others opinions.  I\u0027m not 100% set on dynamically choosing the PMD but that\u0027s where I\u0027m leaning.  It fits with copy_engine, where we\u0027ll use a DMA Offload engine if available, otherwise use a CPU memcpy.  The caller doesn\u0027t specify which to use - copy_engine chooses for them.\n\nMaybe we provide application startup hooks to disable QAT even if it\u0027s available.  We have something similar for CB-DMA.  I think if you have QAT offload, you want to use it, unless it\u0027s for testing/benchmarking purposes.",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "93178cbd_46050640",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 46
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:55:36Z",
+      "side": 1,
+      "message": "So what you suggest would make it totally different from crypto - the other use of DPDK framework. We let users specify the PMD there and make no effort to automatically choose QAT.",
+      "parentUuid": "4d0a6e83_07ed9250",
       "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
