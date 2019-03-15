@@ -2072,7 +2072,6 @@ test_io_waitq(void)
 	struct spdk_bdev_io *bdev_io;
 	struct spdk_bdev_io *bdev_io_next;
 	uint32_t count;
-	uint64_t io_len;
 	uint64_t lba;
 	TAILQ_HEAD(, spdk_bdev_io) head_io;
 
@@ -2109,12 +2108,11 @@ test_io_waitq(void)
 
 	lba = 0;
 	TAILQ_INIT(&head_io);
-	for (count = 0; count < g_max_qd; count++) {
+	for (count = 0; count < 128; count++) {
 		bdev_io = calloc(1, sizeof(struct spdk_bdev_io) + sizeof(struct raid_bdev_io));
 		SPDK_CU_ASSERT_FATAL(bdev_io != NULL);
 		TAILQ_INSERT_TAIL(&head_io, bdev_io, module_link);
-		io_len = (rand() % g_strip_size) + 1;
-		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, io_len, SPDK_BDEV_IO_TYPE_WRITE);
+		bdev_io_initialize(bdev_io, &pbdev->bdev, lba, 8, SPDK_BDEV_IO_TYPE_WRITE);
 		g_bdev_io_submit_status = -ENOMEM;
 		lba += g_strip_size;
 		raid_bdev_submit_request(ch, bdev_io);
