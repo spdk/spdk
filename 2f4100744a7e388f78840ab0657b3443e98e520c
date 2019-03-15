@@ -16,6 +16,24 @@
       "revId": "2f4100744a7e388f78840ab0657b3443e98e520c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d92a24df_b9f771f9",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-15T17:59:48Z",
+      "side": 1,
+      "message": "OK, will revisit after confirming changes from prev patch",
+      "parentUuid": "0ce6d927_7f191ea1",
+      "revId": "2f4100744a7e388f78840ab0657b3443e98e520c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
