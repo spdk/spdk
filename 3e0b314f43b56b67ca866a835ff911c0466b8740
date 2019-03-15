@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da75807a_6c8e7255",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 47
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-15T17:08:10Z",
+      "side": 1,
+      "message": "So it turns out this is fairly complicated to get right in a thread safe way. I spent some time with Jim yesterday to work out how the get_events side will work and I think we got it, but as I was just writing it up I now think we need to go figure out how to make parallel notify_send operations safe.",
+      "revId": "3e0b314f43b56b67ca866a835ff911c0466b8740",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
