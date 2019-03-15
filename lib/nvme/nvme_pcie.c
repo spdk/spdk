@@ -1005,11 +1005,18 @@ nvme_pcie_qpair_construct(struct spdk_nvme_qpair *qpair)
 	 */
 	if (pqpair->sq_in_cmb == false) {
 		pqpair->cmd = spdk_zmalloc(pqpair->num_entries * sizeof(struct spdk_nvme_cmd),
-					   page_align, &pqpair->cmd_bus_addr,
+					   page_align, NULL,
 					   SPDK_ENV_SOCKET_ID_ANY, flags);
 		if (pqpair->cmd == NULL) {
 			SPDK_ERRLOG("alloc qpair_cmd failed\n");
 			return -ENOMEM;
+		}
+
+		pqpair->cmd_bus_addr = spdk_vtophys(pqpair->cmd, NULL);
+		if (pqpair->cmd_bus_addr == SPDK_VTOPHYS_ERROR) {
+			SPDK_ERRLOG("spdk_vtophys(pqpair->cmd) failed\n");
+			spdk_free(pqpair->cmd);
+			return -EFAULT;
 		}
 	}
 
