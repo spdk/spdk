@@ -1695,6 +1695,7 @@ test_spdk_nvme_ctrlr_doorbell_buffer_config(void)
 	MOCK_CLEAR(spdk_zmalloc)
 	MOCK_CLEAR(spdk_dma_malloc)
 	MOCK_CLEAR(spdk_dma_zmalloc)
+	MOCK_CLEAR(spdk_free)
 	ret = nvme_ctrlr_set_doorbell_buffer_config(&ctrlr);
 	CU_ASSERT(ret == 0);
 	nvme_ctrlr_free_doorbell_buffer(&ctrlr);

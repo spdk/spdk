@@ -106,6 +106,11 @@
 		return ut_ ## fn; \
 	}
 
+#define HANDLE_RETURN_MOCK_V(fn) \
+	if (ut_ ## fn ## _mocked) { \
+		return; \
+	}
+
 
 /* declare wrapper protos (alphabetically please) here */
 DECLARE_WRAPPER(calloc, void *, (size_t nmemb, size_t size));
