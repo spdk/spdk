@@ -42,6 +42,11 @@ The size of a shared receive queue is defined by transport configuration file pa
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
 
+### env
+
+The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
+For retrieving physical addresses, spdk_vtophys() should be used instead.
+
 ## v19.01:
 
 ### ocf bdev
