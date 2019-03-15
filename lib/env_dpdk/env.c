@@ -199,6 +199,70 @@ spdk_memzone_dump(FILE *f)
 	rte_memzone_dump(f);
 }
 
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
+
+static int
+spdk_ring_mempool_alloc(struct rte_mempool *mp)
+{
+	return 0;
+}
+
+static void
+spdk_ring_mempool_free(struct rte_mempool *mp)
+{
+
+}
+
+static int
+spdk_ring_mempool_enqueue(struct rte_mempool *mp, void * const *obj_table, unsigned n)
+{
+	return 0;
+}
+
+static int
+spdk_ring_mempool_dequeue(struct rte_mempool *mp, void **obj_table, unsigned n)
+{
+	return 0;
+}
+
+static unsigned
+spdk_ring_mempool_get_count(const struct rte_mempool *mp)
+{
+	return 0;
+}
+
+static int
+spdk_ring_mempool_populate(struct rte_mempool *mp,
+		unsigned int max_objs,
+		void *vaddr, rte_iova_t iova, size_t len,
+		rte_mempool_populate_obj_cb_t *obj_cb, void *obj_cb_arg)
+{
+	return 0;
+}
+
+static const struct rte_mempool_ops spdk_mempool_ops = {
+	.name = "spdk_ring_mempool",
+	.alloc = spdk_ring_mempool_alloc,
+	.free = spdk_ring_mempool_free,
+	.enqueue = spdk_ring_mempool_enqueue,
+	.dequeue = spdk_ring_mempool_dequeue,
+	.get_count = spdk_ring_mempool_get_count,
+	.populate = spdk_ring_mempool_populate,
+};
+
+MEMPOOL_REGISTER_OPS(spdk_mempool_ops);
+
+struct spdk_mempool *
+spdk_ring_mempool_create(const char *name, size_t count,
+			 size_t ele_size, size_t ele_align, size_t cache_size,
+			 int socket_id, spdk_mempool_obj_cb_t *obj_init,
+			 void *obj_init_arg)
+{
+	struct rte_mempool *mp;
+
+}
+#endif
+
 struct spdk_mempool *
 spdk_mempool_create_ctor(const char *name, size_t count,
 			 size_t ele_size, size_t cache_size, int socket_id,
