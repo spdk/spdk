@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e694f017_39c0d208",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1574,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-15T07:31:19Z",
+      "side": 1,
+      "message": "Changpeng:\nI\u0027m not familiar with nvme hotplug, could you explain for me it is safe to free(g_hotplug_probe_ctx) immediately after we unregister g_hotplug_poller. I\u0027m not sure whether g_hotplug_poller will still access g_hotplug_probe_ctx even if spdk_poller_unregister() returns.",
+      "revId": "2b99ecdf707a27f2698f81945a6a5a68d9e9700d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
