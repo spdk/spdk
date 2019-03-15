@@ -45,6 +45,30 @@
       "revId": "eb4b23c676e711d1e902025bc86d9fc88a0069ae",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2169b338_771ececd",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 798,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-15T09:18:44Z",
+      "side": 1,
+      "message": "Thanks, I have changed this implentation as you suggested.\nAlthough, as I see it, code became much harder to understand and I spent some time debugging this version and, what is also important to me, functions are no longer modular as they were using utilities approach.\nThis patch is also 2.5x larger than previus, so the argument of code size is not relevant. And having in mind that new OCF API brings a lot of asynchronous functions, this approach will result in even more lines of code.\nWith utilities, error paths are, in different respect, easier to see because all execution is pre-planned and we don\u0027t even have to look what they are doing because the path is always constant. Lack of backtrace can be justified with the fact that programmer always sees the flow.\nAs we see both solution in practice now, please consider previus approach again.",
+      "parentUuid": "f7502188_322bed8a",
+      "range": {
+        "startLine": 776,
+        "startChar": 0,
+        "endLine": 798,
+        "endChar": 1
+      },
+      "revId": "eb4b23c676e711d1e902025bc86d9fc88a0069ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
