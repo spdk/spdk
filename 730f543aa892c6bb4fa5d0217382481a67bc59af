@@ -2,6 +2,23 @@
   "comments": [
     {
       "key": {
+        "uuid": "6c10020c_b8468d08",
+        "filename": "lib/bdev/lvol/vbdev_lvol.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:10:03Z",
+      "side": 1,
+      "message": "what happens if a clone gets created after we call spdk_bdev_register, but before we actually try to delete the lvol/blob?\n\nI think you need some kind of function in blobstore like spdk_bs_delete_blob_prepare.  The name kind of sucks, but you get the idea.  This function can check if the blob can be deleted.  If not, it returns failure and you return an error here.  If it\u0027s ok, it marks the blob such that you can\u0027t create more clones on it.  Maybe it prevents other operations as well.\n\nI don\u0027t think any of this has to be persisted either.  Worst case, we get a power failure after delete_blob_prepared marked the blob, but before it actually deleted it.  In that case, we never told the caller that the lvol had been destroyed, so when it comes back up, he just needs to try to delete it again.",
+      "revId": "730f543aa892c6bb4fa5d0217382481a67bc59af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "acdb60cc_e71ff1ca",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 9
@@ -13,6 +30,40 @@
       "writtenOn": "2019-03-15T20:52:58Z",
       "side": 1,
       "message": "please break this out into a separate patch (as requested in my previous comment)",
+      "revId": "730f543aa892c6bb4fa5d0217382481a67bc59af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "76e9ee6c_cd8813e3",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 5635,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:10:03Z",
+      "side": 1,
+      "message": "this comment may not still be accurate\n\nare there other cases here where we could rearrange the delete operations to test for some additional expected failures?  or let\u0027s just update the comment",
+      "revId": "730f543aa892c6bb4fa5d0217382481a67bc59af",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ff18059b_7a29a292",
+        "filename": "test/unit/lib/blob/blob.c/blob_ut.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 5724,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:10:03Z",
+      "side": 1,
+      "message": "let\u0027s change these to say something like \"create snapshot1\" - then readers of the code can match these comments to the nice picture you have before the unit test function\n\nlooks you do this on some of the comments later",
       "revId": "730f543aa892c6bb4fa5d0217382481a67bc59af",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
