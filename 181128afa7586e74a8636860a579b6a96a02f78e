@@ -174,6 +174,24 @@
       "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f4539786_3a514ff2",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 46
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:24:10Z",
+      "side": 1,
+      "message": "Good point.  I\u0027m still concerned (even on crypto) about what happens when we try to reload later and for some reason we can\u0027t use that PMD.  Crypto is a bit different since the user is always creating the crypto bdev again explicitly on restart.  For compress, we have to persist it.\n\nI\u0027m fine with this for now.  But let\u0027s find some time next week to discuss in more depth.",
+      "parentUuid": "93178cbd_46050640",
+      "revId": "181128afa7586e74a8636860a579b6a96a02f78e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
