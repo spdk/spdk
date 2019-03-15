@@ -908,19 +908,13 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 	if (nvmf_rdma_resize_cq(rqpair, device) < 0) {
 		SPDK_ERRLOG("Failed to resize the completion queue. Cannot initialize qpair.\n");
-		rdma_destroy_id(rqpair->cm_id);
-		rqpair->cm_id = NULL;
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return -1;
+		goto error;
 	}
 
 	rc = rdma_create_qp(rqpair->cm_id, rqpair->port->device->pd, &ibv_init_attr);
 	if (rc) {
 		SPDK_ERRLOG("rdma_create_qp failed: errno %d: %s\n", errno, spdk_strerror(errno));
-		rdma_destroy_id(rqpair->cm_id);
-		rqpair->cm_id = NULL;
-		spdk_nvmf_rdma_qpair_destroy(rqpair);
-		return -1;
+		goto error;
 	}
 
 	rqpair->max_send_depth = spdk_min((uint32_t)(rqpair->max_queue_depth * 2 + 1),
@@ -945,10 +939,7 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 
 		if (!rqpair->resources) {
 			SPDK_ERRLOG("Unable to allocate resources for receive queue.\n");
-			rdma_destroy_id(rqpair->cm_id);
-			rqpair->cm_id = NULL;
-			spdk_nvmf_rdma_qpair_destroy(rqpair);
-			return -1;
+			goto error;
 		}
 	} else {
 		rqpair->resources = rqpair->poller->resources;
@@ -959,6 +950,12 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	STAILQ_INIT(&rqpair->pending_rdma_write_queue);
 
 	return 0;
+
+error:
+	rdma_destroy_id(rqpair->cm_id);
+	rqpair->cm_id = NULL;
+	spdk_nvmf_rdma_qpair_destroy(rqpair);
+	return -1;
 }
 
 static int
