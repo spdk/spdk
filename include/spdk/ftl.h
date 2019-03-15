@@ -39,6 +39,7 @@
 #include "spdk/nvme_ocssd.h"
 #include "spdk/uuid.h"
 #include "spdk/thread.h"
+#include "spdk/bdev.h"
 
 struct spdk_ftl_dev;
 
@@ -103,6 +104,8 @@ struct spdk_ftl_dev_init_opts {
 	struct spdk_nvme_ctrlr			*ctrlr;
 	/* Controller's transport ID */
 	struct spdk_nvme_transport_id		trid;
+	/* Write buffer cache */
+	struct spdk_bdev_desc			*cache_bdev;
 
 	/* Thread responsible for core tasks execution */
 	struct spdk_thread			*core_thread;
@@ -130,6 +133,8 @@ struct spdk_ftl_attrs {
 	uint64_t				lbk_cnt;
 	/* Logical block size */
 	size_t					lbk_size;
+	/* Write buffer cache */
+	struct spdk_bdev_desc			*cache_bdev;
 };
 
 struct ftl_module_init_opts {
