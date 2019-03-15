@@ -45,6 +45,7 @@ struct rpc_construct_ftl {
 	char *traddr;
 	char *punits;
 	char *uuid;
+	char *cache_bdev;
 };
 
 static void
@@ -55,6 +56,7 @@ free_rpc_construct_ftl(struct rpc_construct_ftl *req)
 	free(req->traddr);
 	free(req->punits);
 	free(req->uuid);
+	free(req->cache_bdev);
 }
 
 static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
@@ -63,6 +65,7 @@ static const struct spdk_json_object_decoder rpc_construct_ftl_decoders[] = {
 	{"traddr", offsetof(struct rpc_construct_ftl, traddr), spdk_json_decode_string},
 	{"punits", offsetof(struct rpc_construct_ftl, punits), spdk_json_decode_string},
 	{"uuid", offsetof(struct rpc_construct_ftl, uuid), spdk_json_decode_string, true},
+	{"cache", offsetof(struct rpc_construct_ftl, cache_bdev), spdk_json_decode_string, true},
 };
 
 #define FTL_RANGE_MAX_LENGTH 32
@@ -112,8 +115,15 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
+	if (req.cache_bdev && !spdk_bdev_get_by_name(req.cache_bdev)) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						     "No such bdev: %s", req.cache_bdev);
+		goto invalid;
+	}
+
 	opts.name = req.name;
 	opts.mode = SPDK_FTL_MODE_CREATE;
+	opts.cache_bdev = req.cache_bdev;
 
 	/* Parse trtype */
 	rc = spdk_nvme_transport_id_parse_trtype(&opts.trid.trtype, req.trtype);
