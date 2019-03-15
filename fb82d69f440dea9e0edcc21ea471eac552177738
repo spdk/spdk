@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8304b65f_d7ec3c3d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1713,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:45:30Z",
+      "side": 1,
+      "message": "should we set update_sgroup \u003d false here?",
+      "revId": "fb82d69f440dea9e0edcc21ea471eac552177738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7c6885b3_7eb4fe78",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1845,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:45:30Z",
+      "side": 1,
+      "message": "what\u0027s the impact if we can\u0027t call spdk_nvmf_subsystem_update_ns() because calloc failed?  should we at least have an ERRLOG?\n\nit would be better if we could embed this ctx in the req object - but it\u0027s not obvious how we would do that for spdk_nvmf_subsystem_update_ns() callers; in general, it\u0027s so much easier to not have to worry about memory allocation failures if possible",
+      "revId": "fb82d69f440dea9e0edcc21ea471eac552177738",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
