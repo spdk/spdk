@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "acc8bc89_6cc2989b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 466,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:28:55Z",
+      "side": 1,
+      "message": "you \"shouldn\u0027t\" need this one here - before this gets called, all of the associated channels will have been destroyed, and I think that\u0027s where you need to put the io_channel - when the last one was destroyed (of course, you\u0027ll need to make sure you send a message to the reduce_thread to do it)",
+      "revId": "86e606db5cd973e0fc5dc70801817e3b94cbef8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8b5b582_b366cd9b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T21:28:55Z",
+      "side": 1,
+      "message": "I don\u0027t think it will work like that.  init/load is always going to be on the master core/thread where the RPC server and startup code is running.  The base_ch has to be allocated from the same thread that is going to use it.",
+      "revId": "86e606db5cd973e0fc5dc70801817e3b94cbef8b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
