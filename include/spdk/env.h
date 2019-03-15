@@ -131,6 +131,21 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
 void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
 
 /**
+ * Resize a dma/sharable memory buffer with the given new size and alignment.
+ * Existing contents are preserved.
+ *
+ * \param buf Buffer to resize.
+ * \param size Size in bytes.
+ * \param align Alignment value for the allocated memory. If '0', the allocated
+ * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
+ * allocated buffer is aligned to the multiple of align. In this case, it must
+ * be a power of two.
+ *
+ * \return a pointer to the resized memory buffer.
+ */
+void *spdk_realloc(void *buf, size_t size, size_t align);
+
+/**
  * Free buffer memory that was previously allocated with spdk_malloc() or spdk_zmalloc().
  *
  * \param buf Buffer to free.
