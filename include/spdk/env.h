@@ -577,7 +577,7 @@ size_t spdk_ring_count(struct spdk_ring *ring);
  *
  * \return the number of objects enqueued.
  */
-size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
+size_t spdk_ring_enqueue(struct spdk_ring *ring, void *const *objs, size_t count);
 
 /**
  * Dequeue count objects from the ring into the array objs.
