@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2f55c4eb_60907a50",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 21,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:30:33Z",
+      "side": 1,
+      "message": "this newline can be omitted",
+      "revId": "17580ce76d435df6ed740cc38b70b98f38edb612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4086db7e_e962e241",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 6
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T20:30:33Z",
+      "side": 1,
+      "message": "I think this needs to be rebased due to other CHANGELOG modifications.  CHANGELOG is becoming the main point of merge conflicts.  :-)",
+      "revId": "17580ce76d435df6ed740cc38b70b98f38edb612",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
