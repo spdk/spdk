@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "85b8b44f_b6e25ee5",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 834,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-15T19:19:10Z",
+      "side": 1,
+      "message": "do you still need to check rqpair-\u003epoller here (I think you missed this question from previous revision)",
+      "revId": "236d8cf77c12d6e369681b7359be24804922d3e4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
