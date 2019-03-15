@@ -724,12 +724,12 @@ static void
 nvme_ctrlr_free_doorbell_buffer(struct spdk_nvme_ctrlr *ctrlr)
 {
 	if (ctrlr->shadow_doorbell) {
-		spdk_dma_free(ctrlr->shadow_doorbell);
+		spdk_free(ctrlr->shadow_doorbell);
 		ctrlr->shadow_doorbell = NULL;
 	}
 
 	if (ctrlr->eventidx) {
-		spdk_dma_free(ctrlr->eventidx);
+		spdk_free(ctrlr->eventidx);
 		ctrlr->eventidx = NULL;
 	}
 }
@@ -768,8 +768,9 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 	}
 
 	/* only 1 page size for doorbell buffer */
-	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
-				 NULL);
+	ctrlr->shadow_doorbell = spdk_zmalloc(ctrlr->page_size, ctrlr->page_size,
+					      NULL, SPDK_ENV_LCORE_ID_ANY,
+					      SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
 	if (ctrlr->shadow_doorbell == NULL) {
 		rc = -ENOMEM;
 		goto error;
@@ -782,7 +783,9 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 		goto error;
 	}
 
-	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
+	ctrlr->eventidx = spdk_zmalloc(ctrlr->page_size, ctrlr->page_size,
+				       NULL, SPDK_ENV_LCORE_ID_ANY,
+				       SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
 	if (ctrlr->eventidx == NULL) {
 		rc = -ENOMEM;
 		goto error;
@@ -963,7 +966,7 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	uint32_t				*new_ns_list = NULL;
 
 	if (ctrlr->num_ns == 0) {
-		spdk_dma_free(ctrlr->active_ns_list);
+		spdk_free(ctrlr->active_ns_list);
 		ctrlr->active_ns_list = NULL;
 
 		return 0;
@@ -973,8 +976,8 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	 * The allocated size must be a multiple of sizeof(struct spdk_nvme_ns_list)
 	 */
 	num_pages = (ctrlr->num_ns * sizeof(new_ns_list[0]) - 1) / sizeof(struct spdk_nvme_ns_list) + 1;
-	new_ns_list = spdk_dma_zmalloc(num_pages * sizeof(struct spdk_nvme_ns_list), ctrlr->page_size,
-				       NULL);
+	new_ns_list = spdk_zmalloc(num_pages * sizeof(struct spdk_nvme_ns_list), ctrlr->page_size,
+				   NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
 	if (!new_ns_list) {
 		SPDK_ERRLOG("Failed to allocate active_ns_list!\n");
 		return -ENOMEM;
@@ -1020,12 +1023,12 @@ nvme_ctrlr_identify_active_ns(struct spdk_nvme_ctrlr *ctrlr)
 	 * Now that that the list is properly setup, we can swap it in to the ctrlr and
 	 * free up the previous one.
 	 */
-	spdk_dma_free(ctrlr->active_ns_list);
+	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = new_ns_list;
 
 	return 0;
 fail:
-	spdk_dma_free(new_ns_list);
+	spdk_free(new_ns_list);
 	return rc;
 }
 
@@ -1437,7 +1440,7 @@ nvme_ctrlr_destruct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 		ctrlr->nsdata = NULL;
 	}
 
-	spdk_dma_free(ctrlr->active_ns_list);
+	spdk_free(ctrlr->active_ns_list);
 	ctrlr->active_ns_list = NULL;
 }
 
@@ -1739,7 +1742,7 @@ nvme_ctrlr_remove_process(struct spdk_nvme_ctrlr *ctrlr,
 		spdk_pci_device_detach(proc->devhandle);
 	}
 
-	spdk_dma_free(proc);
+	spdk_free(proc);
 }
 
 /**
@@ -1777,7 +1780,7 @@ nvme_ctrlr_cleanup_process(struct spdk_nvme_ctrlr_process *proc)
 		spdk_nvme_ctrlr_free_io_qpair(qpair);
 	}
 
-	spdk_dma_free(proc);
+	spdk_free(proc);
 }
 
 /**
