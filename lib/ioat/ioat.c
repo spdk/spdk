@@ -414,8 +414,14 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 	}
 
 	ioat->comp_update = spdk_dma_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
-					     &comp_update_bus_addr);
+					     NULL);
 	if (ioat->comp_update == NULL) {
+		return -1;
+	}
+
+	comp_update_bus_addr = spdk_vtophys((void *)ioat->comp_update, NULL);
+	if (comp_update_bus_addr == SPDK_VTOPHYS_ERROR) {
+		spdk_dma_free((void *)ioat->comp_update);
 		return -1;
 	}
 
