@@ -112,6 +112,9 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
+/* Maximum number of registrants supported per namespace */
+#define SPDK_NVMF_MAX_NUM_REGISTRANTS		16
+
 struct spdk_nvmf_subsystem_pg_ns_info {
 	struct spdk_io_channel		*channel;
 	/* current reservation key, no reservation if the value is 0 */
@@ -119,7 +122,9 @@ struct spdk_nvmf_subsystem_pg_ns_info {
 	/* reservation type */
 	enum spdk_nvme_reservation_type	rtype;
 	/* Host ID which holds the reservation */
-	struct spdk_uuid		hostid;
+	struct spdk_uuid		holder_id;
+	/* Host ID for the registrants with the namespace */
+	struct spdk_uuid		reg_hostid[SPDK_NVMF_MAX_NUM_REGISTRANTS];
 };
 
 struct spdk_nvmf_subsystem_poll_group {
