@@ -1163,6 +1163,10 @@ destroy_device_poller_cb(void *arg)
 
 	/* FIXME wait for pending I/Os to complete */
 
+	if (spdk_vhost_trylock() != 0) {
+		return -1;
+	}
+
 	for (i = 0; i < nvme->num_ns; i++) {
 		ns_dev = &nvme->ns[i];
 		if (ns_dev->bdev_io_channel) {
@@ -1183,6 +1187,7 @@ destroy_device_poller_cb(void *arg)
 	spdk_poller_unregister(&nvme->stop_poller);
 	spdk_vhost_session_event_done(nvme->vsession, 0);
 
+	spdk_vhost_unlock();
 	return -1;
 }
 
