@@ -150,6 +150,8 @@ struct spdk_vhost_session {
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_session) tailq;
+
+	struct spdk_vhost_session_fn_ctx *event_ctx;
 };
 
 struct spdk_vhost_dev {
@@ -184,7 +186,6 @@ struct spdk_vhost_dev {
 
 struct spdk_vhost_dev_destroy_ctx {
 	struct spdk_poller *poller;
-	void *event_ctx;
 };
 
 /**
@@ -331,7 +332,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  *
  * \param vsession vhost session
  * \param cb_fn the function to call. The void *arg parameter in cb_fn
- * must be passed to spdk_vhost_session_event_done().
+ * is always NULL.
  * \param timeout_sec timeout in seconds. This function will still
  * block after the timeout expires, but will print the provided errmsg.
  * \param errmsg error message to print once the timeout expires
@@ -343,10 +344,10 @@ int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 /**
  * Finish a blocking spdk_vhost_session_send_event() call.
  *
- * \param event_ctx event context
+ * \param vsession vhost session
  * \param response return code
  */
-void spdk_vhost_session_event_done(void *event_ctx, int response);
+void spdk_vhost_session_event_done(struct spdk_vhost_session *vsession, int response);
 
 struct spdk_vhost_session *spdk_vhost_session_find_by_vid(int vid);
 void spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);

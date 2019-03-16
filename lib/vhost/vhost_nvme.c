@@ -1076,7 +1076,7 @@ alloc_task_pool(struct spdk_vhost_nvme_dev *nvme)
 
 static int
 spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
-			 struct spdk_vhost_session *vsession, void *event_ctx)
+			 struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 	struct spdk_vhost_nvme_ns *ns_dev;
@@ -1105,7 +1105,7 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
-	spdk_vhost_session_event_done(event_ctx, 0);
+	spdk_vhost_session_event_done(vsession, 0);
 	return 0;
 }
 
@@ -1184,14 +1184,14 @@ destroy_device_poller_cb(void *arg)
 	}
 
 	spdk_poller_unregister(&nvme->destroy_ctx.poller);
-	spdk_vhost_session_event_done(nvme->destroy_ctx.event_ctx, 0);
+	spdk_vhost_session_event_done(nvme->vsession, 0);
 
 	return -1;
 }
 
 static int
 spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *event_ctx)
+			struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
@@ -1202,7 +1202,6 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	free_task_pool(nvme);
 	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vsession->vid, vdev->path);
 
-	nvme->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&nvme->requestq_poller);
 	nvme->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
 

@@ -674,7 +674,7 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 
 static int
 spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *event_ctx)
+			struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_blk_session *bvsession;
@@ -721,7 +721,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vsession->lcore);
 out:
-	spdk_vhost_session_event_done(event_ctx, rc);
+	spdk_vhost_session_event_done(vsession, rc);
 	return rc;
 }
 
@@ -767,14 +767,14 @@ destroy_session_poller_cb(void *arg)
 
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->destroy_ctx.poller);
-	spdk_vhost_session_event_done(bvsession->destroy_ctx.event_ctx, 0);
+	spdk_vhost_session_event_done(vsession, 0);
 
 	return -1;
 }
 
 static int
 spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
-		       struct spdk_vhost_session *vsession, void *event_ctx)
+		       struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession;
 
@@ -784,14 +784,13 @@ spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		goto err;
 	}
 
-	bvsession->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&bvsession->requestq_poller);
 	bvsession->destroy_ctx.poller = spdk_poller_register(destroy_session_poller_cb,
 					bvsession, 1000);
 	return 0;
 
 err:
-	spdk_vhost_session_event_done(event_ctx, -1);
+	spdk_vhost_session_event_done(vsession, -1);
 	return -1;
 }
 

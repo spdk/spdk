@@ -865,9 +865,9 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 }
 
 void
-spdk_vhost_session_event_done(void *event_ctx, int response)
+spdk_vhost_session_event_done(struct spdk_vhost_session *vsession, int response)
 {
-	struct spdk_vhost_session_fn_ctx *ctx = event_ctx;
+	struct spdk_vhost_session_fn_ctx *ctx = vsession->event_ctx;
 
 	ctx->response = response;
 	sem_post(&ctx->sem);
@@ -880,7 +880,7 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 	struct spdk_vhost_session *vsession;
 
 	vsession = spdk_vhost_session_find_by_id(ctx->vdev, ctx->vsession_id);
-	ctx->cb_fn(ctx->vdev, vsession, ctx);
+	ctx->cb_fn(ctx->vdev, vsession, NULL);
 }
 
 static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
@@ -957,6 +957,8 @@ spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 	ev_ctx.vdev = vsession->vdev;
 	ev_ctx.vsession_id = vsession->id;
 	ev_ctx.cb_fn = cb_fn;
+
+	vsession->event_ctx = &ev_ctx;
 	ev = spdk_event_allocate(vsession->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
@@ -973,6 +975,7 @@ spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 
 	sem_destroy(&ev_ctx.sem);
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
+	vsession->event_ctx = NULL;
 	return ev_ctx.response;
 }
 
