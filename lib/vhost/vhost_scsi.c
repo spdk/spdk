@@ -1364,6 +1364,9 @@ destroy_session_poller_cb(void *arg)
 		return -1;
 	}
 
+	if (spdk_vhost_trylock() != 0) {
+		return -1;
+	}
 
 	for (i = 0; i < vsession->max_queues; i++) {
 		spdk_vhost_vq_used_signal(vsession, &vsession->virtqueue[i]);
@@ -1385,6 +1388,7 @@ destroy_session_poller_cb(void *arg)
 	spdk_poller_unregister(&svsession->stop_poller);
 	spdk_vhost_session_event_done(vsession, 0);
 
+	spdk_vhost_unlock();
 	return -1;
 }
 

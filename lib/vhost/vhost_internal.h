@@ -321,9 +321,9 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * Call the provided function on the session's lcore and block until
  * spdk_vhost_session_event_done() is called.
  *
- * As an optimization, this function will unlock the vhost mutex
- * while it's waiting, which makes it prone to data races.
- * Practically, it is only useful for session start/stop and still
+ * This must be called under the global vhost mutex, which this function
+ * will unlock for the time it's waiting. This makes it prone to data races,
+ * so practically it is only useful for session start/stop and still
  * has to be used with extra caution.
  *
  * \param vsession vhost session
@@ -339,6 +339,8 @@ int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 
 /**
  * Finish a blocking spdk_vhost_session_send_event() call.
+ *
+ * Must be called under the global vhost mutex.
  *
  * \param vsession vhost session
  * \param response return code

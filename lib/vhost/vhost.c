@@ -886,9 +886,18 @@ spdk_vhost_event_cb(void *arg1, void *arg2)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = arg1;
 	struct spdk_vhost_session *vsession;
+	struct spdk_event *ev;
+
+	if (pthread_mutex_trylock(&g_spdk_vhost_mutex) != 0) {
+		ev = spdk_event_allocate(spdk_env_get_current_core(),
+					 spdk_vhost_event_cb, arg1, arg2);
+		spdk_event_call(ev);
+		return;
+	}
 
 	vsession = spdk_vhost_session_find_by_id(ctx->vdev, ctx->vsession_id);
 	ctx->cb_fn(ctx->vdev, vsession, NULL);
+	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
 static void spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
