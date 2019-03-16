@@ -152,7 +152,7 @@ struct spdk_vhost_nvme_dev {
 	TAILQ_ENTRY(spdk_vhost_nvme_dev) tailq;
 	STAILQ_HEAD(, spdk_vhost_nvme_task) free_tasks;
 	struct spdk_poller *requestq_poller;
-	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+	struct spdk_poller *stop_poller;
 };
 
 static const struct spdk_vhost_dev_backend spdk_vhost_nvme_device_backend;
@@ -1180,7 +1180,7 @@ destroy_device_poller_cb(void *arg)
 	nvme->dbbuf_eis = NULL;
 	nvme->dataplane_started = false;
 
-	spdk_poller_unregister(&nvme->destroy_ctx.poller);
+	spdk_poller_unregister(&nvme->stop_poller);
 	spdk_vhost_session_event_done(nvme->vsession, 0);
 
 	return -1;
@@ -1201,7 +1201,7 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	SPDK_NOTICELOG("Stopping Device %u, Path %s\n", vsession->vid, vdev->path);
 
 	spdk_poller_unregister(&nvme->requestq_poller);
-	nvme->destroy_ctx.poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
+	nvme->stop_poller = spdk_poller_register(destroy_device_poller_cb, nvme, 1000);
 
 	return 0;
 }

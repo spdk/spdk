@@ -104,7 +104,7 @@ struct spdk_vhost_scsi_session {
 	struct spdk_scsi_dev_vhost_state scsi_dev_state[SPDK_VHOST_SCSI_CTRLR_MAX_DEVS];
 	struct spdk_poller *requestq_poller;
 	struct spdk_poller *mgmt_poller;
-	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+	struct spdk_poller *stop_poller;
 };
 
 struct spdk_vhost_scsi_task {
@@ -1382,7 +1382,7 @@ destroy_session_poller_cb(void *arg)
 
 	free_task_pool(svsession);
 
-	spdk_poller_unregister(&svsession->destroy_ctx.poller);
+	spdk_poller_unregister(&svsession->stop_poller);
 	spdk_vhost_session_event_done(vsession, 0);
 
 	return -1;
@@ -1398,8 +1398,8 @@ spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
 	assert(svsession != NULL);
 	spdk_poller_unregister(&svsession->requestq_poller);
 	spdk_poller_unregister(&svsession->mgmt_poller);
-	svsession->destroy_ctx.poller = spdk_poller_register(destroy_session_poller_cb,
-					svsession, 1000);
+	svsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
+				 svsession, 1000);
 
 	return 0;
 }
