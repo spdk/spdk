@@ -78,7 +78,7 @@ struct spdk_vhost_blk_session {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_poller *requestq_poller;
 	struct spdk_io_channel *io_channel;
-	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+	struct spdk_poller *stop_poller;
 };
 
 /* forward declaration */
@@ -766,7 +766,7 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	free_task_pool(bvsession);
-	spdk_poller_unregister(&bvsession->destroy_ctx.poller);
+	spdk_poller_unregister(&bvsession->stop_poller);
 	spdk_vhost_session_event_done(vsession, 0);
 
 	return -1;
@@ -785,8 +785,8 @@ spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	}
 
 	spdk_poller_unregister(&bvsession->requestq_poller);
-	bvsession->destroy_ctx.poller = spdk_poller_register(destroy_session_poller_cb,
-					bvsession, 1000);
+	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
+				 bvsession, 1000);
 	return 0;
 
 err:

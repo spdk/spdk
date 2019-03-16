@@ -184,10 +184,6 @@ struct spdk_vhost_dev {
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
 };
 
-struct spdk_vhost_dev_destroy_ctx {
-	struct spdk_poller *poller;
-};
-
 /**
  * Synchronized vhost session event used for backend callbacks.
  *
