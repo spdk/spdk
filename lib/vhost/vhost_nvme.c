@@ -1156,32 +1156,29 @@ static int
 destroy_device_poller_cb(void *arg)
 {
 	struct spdk_vhost_nvme_dev *nvme = arg;
-	struct spdk_vhost_nvme_dev *dev, *tmp;
 	struct spdk_vhost_nvme_ns *ns_dev;
 	uint32_t i;
 
 	SPDK_DEBUGLOG(SPDK_LOG_VHOST_NVME, "Destroy device poller callback\n");
 
-	TAILQ_FOREACH_SAFE(dev, &g_nvme_ctrlrs, tailq, tmp) {
-		if (dev == nvme) {
-			for (i = 0; i < nvme->num_ns; i++) {
-				ns_dev = &nvme->ns[i];
-				if (ns_dev->bdev_io_channel) {
-					spdk_put_io_channel(ns_dev->bdev_io_channel);
-					ns_dev->bdev_io_channel = NULL;
-				}
-			}
-			/* Clear BAR space */
-			if (nvme->bar) {
-				memset((void *)nvme->bar, 0, nvme->bar_size);
-			}
-			nvme->num_sqs = 0;
-			nvme->num_cqs = 0;
-			nvme->dbbuf_dbs = NULL;
-			nvme->dbbuf_eis = NULL;
-			nvme->dataplane_started = false;
+	/* FIXME wait for pending I/Os to complete */
+
+	for (i = 0; i < nvme->num_ns; i++) {
+		ns_dev = &nvme->ns[i];
+		if (ns_dev->bdev_io_channel) {
+			spdk_put_io_channel(ns_dev->bdev_io_channel);
+			ns_dev->bdev_io_channel = NULL;
 		}
 	}
+	/* Clear BAR space */
+	if (nvme->bar) {
+		memset((void *)nvme->bar, 0, nvme->bar_size);
+	}
+	nvme->num_sqs = 0;
+	nvme->num_cqs = 0;
+	nvme->dbbuf_dbs = NULL;
+	nvme->dbbuf_eis = NULL;
+	nvme->dataplane_started = false;
 
 	spdk_poller_unregister(&nvme->destroy_ctx.poller);
 	spdk_vhost_session_event_done(nvme->vsession, 0);
@@ -1196,6 +1193,7 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
 	if (nvme == NULL) {
+		spdk_vhost_session_event_done(vsession, -1);
 		return -1;
 	}
 
@@ -1422,7 +1420,6 @@ int
 spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 {
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
-	struct spdk_vhost_nvme_dev *dev, *tmp;
 	struct spdk_vhost_nvme_ns *ns;
 	int rc;
 	uint32_t i;
@@ -1431,15 +1428,11 @@ spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 		return -EINVAL;
 	}
 
-	TAILQ_FOREACH_SAFE(dev, &g_nvme_ctrlrs, tailq, tmp) {
-		if (dev == nvme) {
-			TAILQ_REMOVE(&g_nvme_ctrlrs, dev, tailq);
-			for (i = 0; i < nvme->num_ns; i++) {
-				ns = &nvme->ns[i];
-				if (ns->active_ns) {
-					spdk_vhost_nvme_deactive_ns(ns);
-				}
-			}
+	TAILQ_REMOVE(&g_nvme_ctrlrs, nvme, tailq);
+	for (i = 0; i < nvme->num_ns; i++) {
+		ns = &nvme->ns[i];
+		if (ns->active_ns) {
+			spdk_vhost_nvme_deactive_ns(ns);
 		}
 	}
 
