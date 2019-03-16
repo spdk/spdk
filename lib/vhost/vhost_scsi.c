@@ -1258,7 +1258,7 @@ alloc_task_pool(struct spdk_vhost_scsi_session *svsession)
 
 static int
 spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
-			 struct spdk_vhost_session *vsession, void *event_ctx)
+			 struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_vhost_scsi_session *svsession;
@@ -1313,7 +1313,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 					 MGMT_POLL_PERIOD_US);
 	}
 out:
-	spdk_vhost_session_event_done(event_ctx, rc);
+	spdk_vhost_session_event_done(vsession, rc);
 	return rc;
 }
 
@@ -1383,20 +1383,19 @@ destroy_session_poller_cb(void *arg)
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->destroy_ctx.poller);
-	spdk_vhost_session_event_done(svsession->destroy_ctx.event_ctx, 0);
+	spdk_vhost_session_event_done(vsession, 0);
 
 	return -1;
 }
 
 static int
 spdk_vhost_scsi_stop_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *event_ctx)
+			struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_scsi_session *svsession;
 
 	svsession = to_scsi_session(vsession);
 	assert(svsession != NULL);
-	svsession->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&svsession->requestq_poller);
 	spdk_poller_unregister(&svsession->mgmt_poller);
 	svsession->destroy_ctx.poller = spdk_poller_register(destroy_session_poller_cb,
