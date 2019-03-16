@@ -56,11 +56,11 @@
 	ut_ ## fn
 
 #define MOCK_CLEAR(fn) \
-	ut_ ## fn ## _mocked = false;
+	ut_ ## fn ## _mocked = false
 
 #define MOCK_CLEAR_P(fn) \
 	ut_ ## fn ## _mocked = false; \
-	ut_ ## fn = NULL;
+	ut_ ## fn = NULL
 
 /* for proving to *certain* static analysis tools that we didn't reset the mock function. */
 #define MOCK_CLEARED_ASSERT(fn) \
@@ -70,7 +70,7 @@
 #define DECLARE_WRAPPER(fn, ret, args) \
 	extern bool ut_ ## fn ## _mocked; \
 	extern ret ut_ ## fn; \
-	ret __wrap_ ## fn args; ret __real_ ## fn args;
+	ret __wrap_ ## fn args; ret __real_ ## fn args
 
 /* for defining the implmentation of wrappers for syscalls */
 #define DEFINE_WRAPPER(fn, ret, dargs, pargs) \
