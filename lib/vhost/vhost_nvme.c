@@ -1105,7 +1105,7 @@ spdk_vhost_nvme_start_cb(struct spdk_vhost_dev *vdev,
 	/* Start the NVMe Poller */
 	nvme->requestq_poller = spdk_poller_register(nvme_worker, nvme, 0);
 
-	spdk_vhost_session_event_done(vsession, 0);
+	spdk_vhost_session_start_done(vsession, 0);
 	return 0;
 }
 
@@ -1185,7 +1185,7 @@ destroy_device_poller_cb(void *arg)
 	nvme->dataplane_started = false;
 
 	spdk_poller_unregister(&nvme->stop_poller);
-	spdk_vhost_session_event_done(nvme->vsession, 0);
+	spdk_vhost_session_stop_done(nvme->vsession, 0);
 
 	spdk_vhost_unlock();
 	return -1;
@@ -1198,7 +1198,7 @@ spdk_vhost_nvme_stop_cb(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_nvme_dev *nvme = to_nvme_dev(vdev);
 
 	if (nvme == NULL) {
-		spdk_vhost_session_event_done(vsession, -1);
+		spdk_vhost_session_stop_done(vsession, -1);
 		return -1;
 	}
 
