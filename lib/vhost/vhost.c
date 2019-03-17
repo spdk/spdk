@@ -877,12 +877,22 @@ complete_session_event(struct spdk_vhost_session *vsession, int response)
 void
 spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
 {
+	if (response == 0) {
+		vsession->lcore = spdk_env_get_current_core();
+		assert(vsession->vdev->active_session_num < UINT32_MAX);
+		vsession->vdev->active_session_num++;
+	}
 	complete_session_event(vsession, response);
 }
 
 void
 spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
 {
+	if (response == 0) {
+		vsession->lcore = -1;
+		assert(vsession->vdev->active_session_num > 0);
+		vsession->vdev->active_session_num--;
+	}
 	complete_session_event(vsession, response);
 }
 
@@ -961,7 +971,7 @@ out_unlock:
 }
 
 int
-spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
+spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession,
 			      spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
 			      const char *errmsg)
 {
@@ -981,7 +991,7 @@ spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 	ev_ctx.cb_fn = cb_fn;
 
 	vsession->event_ctx = &ev_ctx;
-	ev = spdk_event_allocate(vsession->lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
+	ev = spdk_event_allocate(lcore, spdk_vhost_event_cb, &ev_ctx, NULL);
 	assert(ev);
 	spdk_event_call(ev);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
@@ -1053,9 +1063,6 @@ _stop_session(struct spdk_vhost_session *vsession)
 
 	spdk_vhost_session_mem_unregister(vsession);
 	free(vsession->mem);
-	vsession->lcore = -1;
-	assert(vdev->active_session_num > 0);
-	vdev->active_session_num--;
 }
 
 static void
@@ -1176,8 +1183,6 @@ start_device(int vid)
 		goto out;
 	}
 
-	assert(vdev->active_session_num < UINT32_MAX);
-	vdev->active_session_num++;
 out:
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 	return rc;
