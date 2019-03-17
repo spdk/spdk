@@ -43,6 +43,7 @@
 
 #include "virtio_user/vhost.h"
 #include "spdk/string.h"
+#include "spdk/config.h"
 
 #include "spdk_internal/virtio.h"
 
