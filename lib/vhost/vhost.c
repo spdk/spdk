@@ -865,13 +865,25 @@ spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask)
 	return selected_core;
 }
 
-void
-spdk_vhost_session_event_done(struct spdk_vhost_session *vsession, int response)
+static void
+complete_session_event(struct spdk_vhost_session *vsession, int response)
 {
 	struct spdk_vhost_session_fn_ctx *ctx = vsession->event_ctx;
 
 	ctx->response = response;
 	sem_post(&ctx->sem);
+}
+
+void
+spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int response)
+{
+	complete_session_event(vsession, response);
+}
+
+void
+spdk_vhost_session_stop_done(struct spdk_vhost_session *vsession, int response)
+{
+	complete_session_event(vsession, response);
 }
 
 static void
