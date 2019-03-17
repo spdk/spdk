@@ -721,7 +721,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vsession->lcore);
 out:
-	spdk_vhost_session_event_done(vsession, rc);
+	spdk_vhost_session_start_done(vsession, rc);
 	return rc;
 }
 
@@ -771,7 +771,7 @@ destroy_session_poller_cb(void *arg)
 
 	free_task_pool(bvsession);
 	spdk_poller_unregister(&bvsession->stop_poller);
-	spdk_vhost_session_event_done(vsession, 0);
+	spdk_vhost_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
 	return -1;
@@ -795,7 +795,7 @@ spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 	return 0;
 
 err:
-	spdk_vhost_session_event_done(vsession, -1);
+	spdk_vhost_session_stop_done(vsession, -1);
 	return -1;
 }
 
