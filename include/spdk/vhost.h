@@ -109,9 +109,16 @@ void spdk_vhost_shutdown_cb(void);
 struct spdk_vhost_dev;
 
 /**
- * Lock the global vhost mutex, which synchronizes all the vhost device accesses.
+ * Lock the global vhost mutex synchronizing all the vhost device accesses.
  */
 void spdk_vhost_lock(void);
+
+/**
+ * Lock the global vhost mutex synchronizing all the vhost device accesses.
+ *
+ * \return 0 if the mutex could be locked immediately, negative errno otherwise.
+ */
+int spdk_vhost_trylock(void);
 
 /**
  * Unlock the global vhost mutex.
