@@ -1313,7 +1313,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 					 MGMT_POLL_PERIOD_US);
 	}
 out:
-	spdk_vhost_session_event_done(vsession, rc);
+	spdk_vhost_session_start_done(vsession, rc);
 	return rc;
 }
 
@@ -1386,7 +1386,7 @@ destroy_session_poller_cb(void *arg)
 	free_task_pool(svsession);
 
 	spdk_poller_unregister(&svsession->stop_poller);
-	spdk_vhost_session_event_done(vsession, 0);
+	spdk_vhost_session_stop_done(vsession, 0);
 
 	spdk_vhost_unlock();
 	return -1;
