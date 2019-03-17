@@ -1403,6 +1403,12 @@ spdk_vhost_lock(void)
 	pthread_mutex_lock(&g_spdk_vhost_mutex);
 }
 
+int
+spdk_vhost_trylock(void)
+{
+	return -pthread_mutex_trylock(&g_spdk_vhost_mutex);
+}
+
 void
 spdk_vhost_unlock(void)
 {
