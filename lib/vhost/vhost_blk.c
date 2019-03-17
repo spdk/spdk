@@ -719,7 +719,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	bvsession->requestq_poller = spdk_poller_register(bvdev->bdev ? vdev_worker : no_bdev_vdev_worker,
 				     bvsession, 0);
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vsession->lcore);
+		     vdev->name, spdk_env_get_current_core());
 out:
 	spdk_vhost_session_start_done(vsession, rc);
 	return rc;
@@ -728,15 +728,15 @@ out:
 static int
 spdk_vhost_blk_start(struct spdk_vhost_session *vsession)
 {
+	int32_t lcore;
 	int rc;
 
-	vsession->lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
-	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_blk_start_cb,
+	lcore = spdk_vhost_allocate_reactor(vsession->vdev->cpumask);
+	rc = spdk_vhost_session_send_event(lcore, vsession, spdk_vhost_blk_start_cb,
 					   3, "start session");
 
 	if (rc != 0) {
-		spdk_vhost_free_reactor(vsession->lcore);
-		vsession->lcore = -1;
+		spdk_vhost_free_reactor(lcore);
 	}
 
 	return rc;
@@ -802,17 +802,8 @@ err:
 static int
 spdk_vhost_blk_stop(struct spdk_vhost_session *vsession)
 {
-	int rc;
-
-	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_blk_stop_cb,
-					   3, "stop session");
-	if (rc != 0) {
-		return rc;
-	}
-
-	spdk_vhost_free_reactor(vsession->lcore);
-	vsession->lcore = -1;
-	return 0;
+	return spdk_vhost_session_send_event(vsession->lcore, vsession,
+					     spdk_vhost_blk_stop_cb, 3, "stop session");
 }
 
 static void

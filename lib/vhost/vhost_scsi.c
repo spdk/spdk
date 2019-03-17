@@ -1304,7 +1304,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		}
 	}
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
-		     vdev->name, vsession->lcore);
+		     vdev->name, spdk_env_get_current_core());
 
 	svsession->requestq_poller = spdk_poller_register(vdev_worker, svsession, 0);
 	if (vsession->virtqueue[VIRTIO_SCSI_CONTROLQ].vring.desc &&
@@ -1338,12 +1338,9 @@ spdk_vhost_scsi_start(struct spdk_vhost_session *vsession)
 		svdev->lcore = spdk_vhost_allocate_reactor(svdev->vdev.cpumask);
 	}
 
-	vsession->lcore = svdev->lcore;
-	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_start_cb,
+	rc = spdk_vhost_session_send_event(svdev->lcore, vsession, spdk_vhost_scsi_start_cb,
 					   3, "start session");
 	if (rc != 0) {
-		vsession->lcore = -1;
-
 		if (svdev->vdev.active_session_num == 0) {
 			spdk_vhost_free_reactor(svdev->lcore);
 			svdev->lcore = -1;
@@ -1419,14 +1416,13 @@ spdk_vhost_scsi_stop(struct spdk_vhost_session *vsession)
 		SPDK_ERRLOG("Trying to stop non-scsi session as a scsi one.\n");
 		return -1;
 	}
-	rc = spdk_vhost_session_send_event(vsession, spdk_vhost_scsi_stop_cb,
-					   3, "stop session");
+	rc = spdk_vhost_session_send_event(vsession->lcore, vsession,
+					   spdk_vhost_scsi_stop_cb, 3, "stop session");
 	if (rc != 0) {
 		return rc;
 	}
 
-	vsession->lcore = -1;
-	if (vsession->vdev->active_session_num == 1) {
+	if (vsession->vdev->active_session_num == 0) {
 		spdk_vhost_free_reactor(svsession->svdev->lcore);
 		svsession->svdev->lcore = -1;
 	}

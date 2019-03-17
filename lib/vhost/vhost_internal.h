@@ -318,7 +318,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
 				    spdk_vhost_session_fn fn, void *arg);
 
 /**
- * Call a function on the provided session's lcore and block until either
+ * Call a function on the provided lcore and block until either
  * spdk_vhost_session_start_done() or spdk_vhost_session_stop_done()
  * is called.
  *
@@ -326,6 +326,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * will unlock for the time it's waiting. It's meant to be called only
  * from start/stop session callbacks.
  *
+ * \param lcore target session's lcore
  * \param vsession vhost session
  * \param cb_fn the function to call. The void *arg parameter in cb_fn
  * is always NULL.
@@ -334,7 +335,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  * \param errmsg error message to print once the timeout expires
  * \return return the code passed to spdk_vhost_session_event_done().
  */
-int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
+int spdk_vhost_session_send_event(int32_t lcore, struct spdk_vhost_session *vsession,
 				  spdk_vhost_session_fn cb_fn, unsigned timeout_sec,
 				  const char *errmsg);
 
@@ -355,7 +356,8 @@ void spdk_vhost_session_start_done(struct spdk_vhost_session *vsession, int resp
  * Finish a blocking spdk_vhost_session_send_event() call and finally
  * stop the session. This must be called on the session's lcore which
  * used to receive all session-related messages (e.g. from
- * spdk_vhost_dev_foreach_session()).
+ * spdk_vhost_dev_foreach_session()). After this call, the session-
+ * related messages will be once again processed by any arbitrary thread.
  *
  * Must be called under the global vhost lock.
  *
