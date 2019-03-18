@@ -213,6 +213,26 @@ spdk_mempool_create(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
+DEFINE_RETURN_MOCK(spdk_mempool_create_aligned, struct spdk_mempool *);
+struct spdk_mempool *
+spdk_mempool_create_aligned(const char *name, size_t count, size_t ele_size,
+			    size_t alignment, size_t cache_size, int socket_id)
+{
+	struct test_mempool *mp;
+
+	HANDLE_RETURN_MOCK(spdk_mempool_create_aligned);
+
+	mp = calloc(1, sizeof(*mp));
+	if (mp == NULL) {
+		return NULL;
+	}
+
+	mp->count = count;
+	mp->ele_size = ele_size;
+
+	return (struct spdk_mempool *)mp;
+}
+
 void
 spdk_mempool_free(struct spdk_mempool *_mp)
 {
