@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "66255f11_f57a1ac4",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 34
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-18T09:49:24Z",
+      "side": 1,
+      "message": "Not used?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 9,
+        "endChar": 34
+      },
+      "revId": "459e706469fe0cb1daff780a8ce14467e1d43da4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
