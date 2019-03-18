@@ -327,6 +327,23 @@ struct spdk_mempool;
 #define SPDK_MEMPOOL_DEFAULT_CACHE_SIZE	SIZE_MAX
 
 /**
+ * Create a thread-safe memory pool with aligned elements.
+ *
+ * \param name Name for the memory pool.
+ * \param count Count of elements.
+ * \param ele_size Element size in bytes.
+ * \param alignment Alignment of the elements in bytes.
+ * \param cache_size How many elements may be cached in per-core caches. Use
+ * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ *
+ * \return a pointer to the created memory pool.
+ */
+struct spdk_mempool *spdk_mempool_create_aligned(const char *name, size_t count,
+		size_t ele_size, size_t alignment, size_t cache_size, int socket_id);
+
+/**
  * Create a thread-safe memory pool.
  *
  * \param name Name for the memory pool.
