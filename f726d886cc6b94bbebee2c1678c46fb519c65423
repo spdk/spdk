@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b55d45b8_16b6ecd6",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 629,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-18T10:51:29Z",
+      "side": 1,
+      "message": "do we need this check?",
+      "range": {
+        "startLine": 629,
+        "startChar": 0,
+        "endLine": 629,
+        "endChar": 12
+      },
+      "revId": "f726d886cc6b94bbebee2c1678c46fb519c65423",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
