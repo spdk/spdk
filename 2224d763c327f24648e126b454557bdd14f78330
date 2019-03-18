@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74f62fde_0cd2dbde",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 2513,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T22:37:14Z",
+      "side": 1,
+      "message": "You don\u0027t need to ack the event here - you can let this fall through and ack it in the normal path below. If the thread_send_msg goes to this thread, then it will execute after this function returns. If it goes to another thread, then the ib verbs stack guarantees that any calls to destroy the qp/cq/etc. will block until the event gets ack\u0027d. You\u0027re safe either way.",
+      "revId": "2224d763c327f24648e126b454557bdd14f78330",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
