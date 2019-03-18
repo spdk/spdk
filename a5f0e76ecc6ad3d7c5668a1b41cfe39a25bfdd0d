@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d8d20201_74c40381",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T23:37:51Z",
+      "side": 1,
+      "message": "I\u0027m not following the threading model here. Why do you need to send an event to the init thread to poll, but not to call spdk_nvme_connect_async? And the old code didn\u0027t guarantee that it was on the init thread either.",
+      "revId": "a5f0e76ecc6ad3d7c5668a1b41cfe39a25bfdd0d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
