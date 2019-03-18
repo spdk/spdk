@@ -199,45 +199,42 @@ spdk_memzone_dump(FILE *f)
 	rte_memzone_dump(f);
 }
 
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
-
 static int
 spdk_ring_mempool_alloc(struct rte_mempool *mp)
 {
+	struct spdk_ring *ring;
+
+	ring = spdk_ring_create(SPDK_RING_TYPE_MP_MC, mp->size, mp->socket_id);
+	if (ring == NULL) {
+		return -ENOMEM;
+	}
+	mp->pool_data = ring;
+
 	return 0;
 }
 
 static void
 spdk_ring_mempool_free(struct rte_mempool *mp)
 {
-
+	spdk_ring_free((struct spdk_ring *)mp->pool_data);
 }
 
 static int
-spdk_ring_mempool_enqueue(struct rte_mempool *mp, void * const *obj_table, unsigned n)
+spdk_ring_mempool_enqueue(struct rte_mempool *mp, void *const *obj_table, unsigned n)
 {
-	return 0;
+	return spdk_ring_enqueue(mp->pool_data, obj_table, n);
 }
 
 static int
 spdk_ring_mempool_dequeue(struct rte_mempool *mp, void **obj_table, unsigned n)
 {
-	return 0;
+	return spdk_ring_dequeue(mp->pool_data, obj_table, n);
 }
 
 static unsigned
 spdk_ring_mempool_get_count(const struct rte_mempool *mp)
 {
-	return 0;
-}
-
-static int
-spdk_ring_mempool_populate(struct rte_mempool *mp,
-		unsigned int max_objs,
-		void *vaddr, rte_iova_t iova, size_t len,
-		rte_mempool_populate_obj_cb_t *obj_cb, void *obj_cb_arg)
-{
-	return 0;
+	return spdk_ring_count(mp->pool_data);
 }
 
 static const struct rte_mempool_ops spdk_mempool_ops = {
@@ -247,21 +244,9 @@ static const struct rte_mempool_ops spdk_mempool_ops = {
 	.enqueue = spdk_ring_mempool_enqueue,
 	.dequeue = spdk_ring_mempool_dequeue,
 	.get_count = spdk_ring_mempool_get_count,
-	.populate = spdk_ring_mempool_populate,
 };
 
 MEMPOOL_REGISTER_OPS(spdk_mempool_ops);
-
-struct spdk_mempool *
-spdk_ring_mempool_create(const char *name, size_t count,
-			 size_t ele_size, size_t ele_align, size_t cache_size,
-			 int socket_id, spdk_mempool_obj_cb_t *obj_init,
-			 void *obj_init_arg)
-{
-	struct rte_mempool *mp;
-
-}
-#endif
 
 struct spdk_mempool *
 spdk_mempool_create_ctor(const char *name, size_t count,
@@ -292,27 +277,141 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
+static void
+spdk_mempool_free_chunk(struct rte_mempool_memhdr *memhdr, void *opaque)
+{
+	spdk_free(memhdr);
+}
+
+static int
+spdk_mempool_populate_aligned(struct rte_mempool *pool, size_t alignment)
+{
+	size_t ele_size;
+	size_t total_allocation_size;
+	size_t header_padding = 0;
+	size_t alignment_padding = 0;
+	size_t initial_padding;
+	size_t i, offset;
+	struct rte_mempool_memhdr *memhdr;
+	void *mem_region;
+
+	/* We need to pad the end of each element with enought room for the header of the next */
+	header_padding = pool->header_size;
+	ele_size = pool->header_size + pool->elt_size + pool->trailer_size + header_padding;
+
+	/* And we need to align the base of the structures. */
+	if (ele_size % alignment) {
+		alignment_padding = alignment - (ele_size % alignment);
+	}
+
+	ele_size += alignment_padding;
+
+	/* We also need to make sure we have enough space for the first header */
+	if (header_padding > alignment) {
+		initial_padding = alignment * (header_padding / alignment);
+		initial_padding += alignment;
+	} else {
+		initial_padding = alignment;
+	}
+
+	/* Overflow check */
+	if (ele_size > SIZE_MAX / pool->size) {
+		return -EINVAL;
+	}
+
+	total_allocation_size = ele_size *  pool->size + initial_padding;
+	mem_region = spdk_zmalloc(total_allocation_size, alignment, NULL, pool->socket_id,
+				  SPDK_MALLOC_DMA && SPDK_MALLOC_SHARE);
+	if (mem_region == NULL) {
+		return -ENOMEM;
+	}
+
+	memhdr = spdk_zmalloc(sizeof(*memhdr), 0, NULL, pool->socket_id, SPDK_MALLOC_DMA &&
+			      SPDK_MALLOC_SHARE);
+	if (memhdr == NULL) {
+		spdk_free(mem_region);
+		return -ENOMEM;
+	}
+
+	memhdr->mp = pool;
+	memhdr->addr = mem_region;
+	memhdr->iova = RTE_BAD_IOVA;
+	memhdr->len = total_allocation_size;
+	memhdr->opaque = NULL;
+	memhdr->free_cb = spdk_mempool_free_chunk;
+
+	STAILQ_INSERT_TAIL(&pool->mem_list, memhdr, next);
+	pool->nb_mem_chunks++;
+
+	/* Initial padding is guaranteed to be some multiple of alignment */
+	offset = initial_padding;
+	for (i = 0; i < pool->size; i++) {
+		mem_region = (char *)mem_region + offset;
+		/* Make sure all elements are aligned going in. */
+		assert((uintptr_t)mem_region & (uintptr_t)(alignment - 1) == (uintptr_t)mem_region);
+		rte_mempool_ops_enqueue_bulk(pool, &mem_region, 1);
+		/* This includes the size of the header for the next element. */
+		offset += ele_size;
+		assert(offset < total_allocation_size);
+	}
+	return 0;
+}
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size, int socket_id)
 {
-	return spdk_mempool_create_ctor(name, count, ele_size, cache_size, socket_id,
-					NULL, NULL);
+	return spdk_mempool_create_aligned(name, count, ele_size, 0, cache_size, socket_id);
 }
 
 struct spdk_mempool *
 spdk_mempool_create_aligned(const char *name, size_t count, size_t ele_size,
 			    size_t alignment, size_t cache_size, int socket_id)
 {
-	size_t ele_total_size;
-	ele_total_size = ele_size + alignment;
-	if (ele_size > ele_total_size || alignment > ele_total_size) {
-		return NULL;
-	} else {
-		return spdk_mempool_create_ctor(name, count, ele_total_size, cache_size, socket_id,
-						NULL, NULL);
+	struct rte_mempool *mp;
+	size_t tmp;
+	int ret;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
 	}
+
+	/* No more than half of all elements can be in cache */
+	tmp = (count / 2) / rte_lcore_count();
+	if (cache_size > tmp) {
+		cache_size = tmp;
+	}
+
+	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
+		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
+	}
+
+	mp = rte_mempool_create_empty(name, count, ele_size, cache_size, 0, socket_id,
+				      MEMPOOL_F_NO_PHYS_CONTIG);
+	if (mp == NULL) {
+		goto error;
+	}
+
+	ret = rte_mempool_set_ops_byname(mp, "spdk_ring_mempool", NULL);
+	if (ret) {
+		goto error;
+	}
+
+	ret = rte_mempool_ops_alloc(mp);
+	if (ret) {
+		goto error;
+	}
+
+	ret = spdk_mempool_populate_aligned(mp, alignment);
+	if (ret) {
+		goto error;
+	}
+
+	return (struct spdk_mempool *)mp;
+
+error:
+	rte_mempool_ops_free(mp);
+	return NULL;
 }
 
 char *
@@ -324,7 +423,9 @@ spdk_mempool_get_name(struct spdk_mempool *mp)
 void
 spdk_mempool_free(struct spdk_mempool *mp)
 {
-	rte_mempool_free((struct rte_mempool *)mp);
+	struct rte_mempool *pool = (struct rte_mempool *)mp;
+
+	rte_mempool_free(pool);
 }
 
 void *
@@ -469,7 +570,7 @@ spdk_ring_count(struct spdk_ring *ring)
 }
 
 size_t
-spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count)
+spdk_ring_enqueue(struct spdk_ring *ring, void *const *objs, size_t count)
 {
 	int rc;
 #if RTE_VERSION < RTE_VERSION_NUM(17, 5, 0, 0)
