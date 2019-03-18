@@ -110,7 +110,8 @@ struct nvme_tcp_req {
 	uint32_t				r2tl_remain;
 	bool					in_capsule_data;
 	struct nvme_tcp_pdu			send_pdu;
-	void					*buf;
+	struct iovec    			iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
+	uint32_t				iov_num;
 	TAILQ_ENTRY(nvme_tcp_req)		link;
 };
 
@@ -147,8 +148,9 @@ nvme_tcp_req_get(struct nvme_tcp_qpair *tqpair)
 	tcp_req->req = NULL;
 	tcp_req->in_capsule_data = false;
 	tcp_req->r2tl_remain = 0;
-	tcp_req->buf = NULL;
+	tcp_req->iov_num = 0;
 	memset(&tcp_req->send_pdu, 0, sizeof(tcp_req->send_pdu));
+	memset(tcp_req->iov, 0, sizeof(struct iovec) * NVME_TCP_MAX_SGL_DESCRIPTORS);
 	TAILQ_INSERT_TAIL(&tqpair->outstanding_reqs, tcp_req, link);
 
 	return tcp_req;
@@ -485,7 +487,10 @@ static int
 nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
 	struct nvme_request *req = tcp_req->req;
-	tcp_req->buf = req->payload.contig_or_cb_arg + req->payload_offset;
+
+	tcp_req->iov[0].iov_base = req->payload.contig_or_cb_arg + req->payload_offset;
+	tcp_req->iov[0].iov_len = req->payload_size;
+	tcp_req->iov_num = 1;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
 
@@ -500,8 +505,9 @@ nvme_tcp_build_contig_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req
 static int
 nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *tcp_req)
 {
-	int rc;
+	int rc, num_sgl_desc;
 	uint32_t length;
+	uint64_t remaining_size;
 	struct nvme_request *req = tcp_req->req;
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVME, "enter\n");
@@ -512,17 +518,28 @@ nvme_tcp_build_sgl_request(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_req *t
 	assert(req->payload.next_sge_fn != NULL);
 	req->payload.reset_sgl_fn(req->payload.contig_or_cb_arg, req->payload_offset);
 
-	/* TODO: for now, we only support a single SGL entry */
-	rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &tcp_req->buf, &length);
+	remaining_size = req->payload_size;
+	num_sgl_desc = 0;
 
-	if (rc) {
+	do {
+		rc = req->payload.next_sge_fn(req->payload.contig_or_cb_arg, &tcp_req->iov[num_sgl_desc].iov_base,
+					      &length);
+		if (rc) {
+			return -1;
+		}
+
+		tcp_req->iov[num_sgl_desc].iov_len = length;
+		remaining_size -= length;
+		num_sgl_desc++;
+	} while (remaining_size > 0 && num_sgl_desc < NVME_TCP_MAX_SGL_DESCRIPTORS);
+
+
+	/* Should be impossible if we did our sgl checks properly up the stack, but do a sanity check here. */
+	if (remaining_size > 0) {
 		return -1;
 	}
 
-	if (length < req->payload_size) {
-		SPDK_ERRLOG("multi-element SGL currently not supported for TCP now\n");
-		return -1;
-	}
+	tcp_req->iov_num = num_sgl_desc;
 
 	return 0;
 }
@@ -574,7 +591,7 @@ nvme_tcp_req_init(struct nvme_tcp_qpair *tqpair, struct nvme_request *req,
 			max_incapsule_data_size = spdk_min(max_incapsule_data_size, NVME_TCP_IN_CAPSULE_DATA_MAX_SIZE);
 		}
 
-		if (req->payload_size <= max_incapsule_data_size) {
+		if ((req->payload_size <= max_incapsule_data_size) && (tcp_req->iov_num == 1)) {
 			req->cmd.dptr.sgl1.unkeyed.type = SPDK_NVME_SGL_TYPE_DATA_BLOCK;
 			req->cmd.dptr.sgl1.unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
 			req->cmd.dptr.sgl1.address = 0;
@@ -594,7 +611,31 @@ static void
 nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
 			  struct nvme_tcp_req *tcp_req, uint32_t data_len)
 {
-	nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)tcp_req->buf + tcp_req->datao), data_len);
+	uint32_t i, remain_len, len;
+	struct _iov_ctx *ctx;
+
+	if (tcp_req->iov_num == 1) {
+		nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)tcp_req->iov[0].iov_base + tcp_req->datao), data_len);
+	} else {
+		i = 0;
+		ctx = &pdu->iov_ctx;
+		assert(tcp_req->iov_num <= NVME_TCP_MAX_SGL_DESCRIPTORS);
+		_iov_ctx_init(ctx, pdu->data_iov, tcp_req->iov_num, tcp_req->datao);
+		remain_len = data_len;
+
+		while (remain_len > 0) {
+			assert(i < NVME_TCP_MAX_SGL_DESCRIPTORS);
+			len = spdk_min(remain_len, tcp_req->iov[i].iov_len);
+			if (!_iov_ctx_set_iov(ctx, tcp_req->iov[i].iov_base, len)) {
+				break;
+			}
+			remain_len -= len;
+			i++;
+		}
+
+		pdu->data_iov_num = ctx->iovcnt;
+		pdu->data_len = data_len;
+	}
 }
 
 static int
