@@ -188,9 +188,11 @@ unregister_poller(struct poller_arg *arg, int rc)
 static void
 stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 {
-	struct poller_arg *arg = priv;
+	struct poller_arg          *arg  = priv;
+	struct vbdev_ocf_cache_ctx *cctx = ocf_cache_get_priv(cache);
 
 	ocf_mngt_cache_unlock(cache);
+	free(cctx);
 
 	if (arg->cb) {
 		arg->cb(error, arg->cb_arg);
@@ -820,6 +822,7 @@ start_cache(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 {
 	ocf_cache_t existing;
 	struct continuation *arg;
+	struct vbdev_ocf_cache_ctx *cache_ctx;
 	int rc;
 
 	if (vbdev->ocf_cache) {
@@ -837,15 +840,23 @@ start_cache(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 		return 0;
 	}
 
+	cache_ctx = calloc(1, sizeof(*cache_ctx));
+	if (cache_ctx == NULL) {
+		return -ENOMEM;
+	}
+
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
+		free(cache_ctx);
 		SPDK_ERRLOG("Failed to start cache instance\n");
 		return rc;
 	}
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
+	ocf_cache_set_priv(vbdev->ocf_cache, cache_ctx);
 
 	arg = malloc(sizeof(*arg));
 	if (arg == NULL) {
+		free(cache_ctx);
 		return -ENOMEM;
 	}
 

@@ -167,7 +167,6 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 
 	io = opaque;
 	io_ctx = ocf_get_io_ctx(io);
-
 	assert(io_ctx != NULL);
 
 	if (!success) {
@@ -179,6 +178,9 @@ vbdev_ocf_volume_submit_io_cb(struct spdk_bdev_io *bdev_io, bool success, void *
 		case SPDK_BDEV_IO_TYPE_READ:
 		case SPDK_BDEV_IO_TYPE_WRITE:
 			env_free(bdev_io->u.bdev.iovs);
+			break;
+		case SPDK_BDEV_IO_TYPE_FLUSH:
+			/* Context offset doesn't matter for flush requests */
 			break;
 		default:
 			assert(false);
@@ -212,6 +214,8 @@ prepare_submit(struct ocf_io *io)
 	struct vbdev_ocf_qcxt *qctx;
 	struct vbdev_ocf_base *base;
 	ocf_queue_t q = io->io_queue;
+	ocf_cache_t cache = ocf_queue_get_cache(q);
+	struct vbdev_ocf_cache_ctx *cctx = ocf_cache_get_priv(cache);
 	int rc = 0;
 
 	io_ctx->rq_cnt++;
@@ -222,7 +226,7 @@ prepare_submit(struct ocf_io *io)
 	vbdev_ocf_volume_io_get(io);
 	base = *((struct vbdev_ocf_base **)ocf_volume_get_priv(io->volume));
 
-	if (io->io_queue == NULL) {
+	if (q == NULL) {
 		/* In case IO is initiated by OCF, queue is unknown
 		 * so we have to get io channel ourselves */
 		io_ctx->ch = spdk_bdev_get_io_channel(base->desc);
@@ -230,6 +234,11 @@ prepare_submit(struct ocf_io *io)
 			return -EPERM;
 		}
 		return 0;
+	}
+	if (q == cctx->cleaner_queue) {
+		io->end(io, 0);
+		printf("GOT CLEANER QUEUE\n");
+		return 1;
 	}
 
 	qctx = ocf_queue_get_priv(q);

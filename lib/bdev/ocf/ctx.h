@@ -42,6 +42,12 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 
 #define SPDK_OBJECT 1
 
+/* Context of cache instance */
+struct vbdev_ocf_cache_ctx {
+	struct spdk_thread          *cleaner_thread;
+	ocf_queue_t                  cleaner_queue;
+};
+
 int vbdev_ocf_ctx_init(void);
 void vbdev_ocf_ctx_cleanup(void);
 
