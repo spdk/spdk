@@ -67,6 +67,11 @@ spdk_env_fini() and spdk_env_dpdk_post_fini() were added to release any resource
 allocated by spdk_env_init() or spdk_env_dpdk_post_init() respectively. It is expected
 that common usage of those functions is to call them just before terminating the process.
 
+The implementation of spdk_mempool_create has changed, and a new API function `spdk_mempool_create_aligned`
+has been added. This function requires an additional argument for the desired alignment of items stored in
+the mempool. Any items taken from a pool created with spdk_mempool_create_aligned are quaranteed to be aligned
+to the argument supplied to the function.
+
 ## v19.01:
 
 ### ocf bdev
