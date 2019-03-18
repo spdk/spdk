@@ -22,6 +22,30 @@
       "revId": "e8a59b581c9cb1afac15390f59e01ae61992c6d1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97ca5824_722568d8",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-18T08:01:19Z",
+      "side": 1,
+      "message": "This change does not meant to fix anything. It is only as preparation for next two patches (strictly speaking last one).\n\nDo you want me to split this even further?",
+      "parentUuid": "7472f3cf_cac7e194",
+      "range": {
+        "startLine": 942,
+        "startChar": 0,
+        "endLine": 947,
+        "endChar": 47
+      },
+      "revId": "e8a59b581c9cb1afac15390f59e01ae61992c6d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
