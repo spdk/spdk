@@ -34,6 +34,24 @@
       "revId": "aa8bed1b2c33f297a5dec5d42153a699da44504d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "25b4dbef_9a701440",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-18T13:58:47Z",
+      "side": 1,
+      "message": "Actually, I looked at how embedded structure will look in future patches and it doesn\u0027t quite fit.\nReason is that we will allocate many such arguments during single management operation, when OCF API will became asynchronous.\n\nI will handle allocation failure\n\nWould that be ok?",
+      "parentUuid": "54f2b369_1327e7ee",
+      "revId": "aa8bed1b2c33f297a5dec5d42153a699da44504d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
