@@ -78,6 +78,9 @@ struct spdk_reduce_pm_file {
 	uint64_t		size;
 };
 
+#define REDUCE_IO_READV		1
+#define REDUCE_IO_WRITEV	2
+
 struct spdk_reduce_vol_request {
 	/**
 	 *  Scratch buffer used for read/modify/write operations on
@@ -88,6 +91,7 @@ struct spdk_reduce_vol_request {
 	struct iovec				*buf_iov;
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
+	int					type;
 	int					reduce_errno;
 	int					iovcnt;
 	int					num_backing_ops;
@@ -119,11 +123,16 @@ struct spdk_reduce_vol {
 
 	struct spdk_reduce_vol_request		*request_mem;
 	TAILQ_HEAD(, spdk_reduce_vol_request)	free_requests;
+	TAILQ_HEAD(, spdk_reduce_vol_request)	executing_requests;
+	TAILQ_HEAD(, spdk_reduce_vol_request)	queued_requests;
 
 	/* Single contiguous buffer used for all request buffers for this volume. */
 	uint8_t					*reqbufspace;
 	struct iovec				*buf_iov_mem;
 };
+
+static void _start_readv_request(struct spdk_reduce_vol_request *req);
+static void _start_writev_request(struct spdk_reduce_vol_request *req);
 
 /*
  * Allocate extra metadata chunks and corresponding backing io units to account for
@@ -449,6 +458,10 @@ spdk_reduce_vol_init(struct spdk_reduce_vol_params *params,
 		return;
 	}
 
+	TAILQ_INIT(&vol->free_requests);
+	TAILQ_INIT(&vol->executing_requests);
+	TAILQ_INIT(&vol->queued_requests);
+
 	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 0, NULL);
 	if (vol->backing_super == NULL) {
 		cb_fn(cb_arg, NULL, -ENOMEM);
@@ -654,6 +667,10 @@ spdk_reduce_vol_load(struct spdk_reduce_backing_dev *backing_dev,
 		return;
 	}
 
+	TAILQ_INIT(&vol->free_requests);
+	TAILQ_INIT(&vol->executing_requests);
+	TAILQ_INIT(&vol->queued_requests);
+
 	vol->backing_super = spdk_dma_zmalloc(sizeof(*vol->backing_super), 64, NULL);
 	if (vol->backing_super == NULL) {
 		_init_load_cleanup(vol, NULL);
@@ -812,8 +829,26 @@ typedef void (*reduce_request_fn)(void *_req, int reduce_errno);
 static void
 _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 {
+	struct spdk_reduce_vol_request *next_req;
+	struct spdk_reduce_vol *vol = req->vol;
+
 	req->cb_fn(req->cb_arg, reduce_errno);
-	TAILQ_INSERT_HEAD(&req->vol->free_requests, req, tailq);
+	TAILQ_REMOVE(&vol->executing_requests, req, tailq);
+
+	TAILQ_FOREACH(next_req, &vol->queued_requests, tailq) {
+		if (next_req->logical_map_index == req->logical_map_index) {
+			TAILQ_REMOVE(&vol->queued_requests, next_req, tailq);
+			if (next_req->type == REDUCE_IO_READV) {
+				_start_readv_request(next_req);
+			} else {
+				assert(next_req->type == REDUCE_IO_WRITEV);
+				_start_writev_request(next_req);
+			}
+			break;
+		}
+	}
+
+	TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
 }
 
 static void
@@ -1010,9 +1045,24 @@ _iov_array_is_valid(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
 	return size == (length * vol->params.logical_block_size);
 }
 
+static bool
+_check_overlap(struct spdk_reduce_vol *vol, uint64_t logical_map_index)
+{
+	struct spdk_reduce_vol_request *req;
+
+	TAILQ_FOREACH(req, &vol->executing_requests, tailq) {
+		if (logical_map_index == req->logical_map_index) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
 static void
 _start_readv_request(struct spdk_reduce_vol_request *req)
 {
+	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
 	_reduce_vol_read_chunk(req, _read_read_done);
 }
 
@@ -1023,6 +1073,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 {
 	struct spdk_reduce_vol_request *req;
 	uint64_t logical_map_index;
+	bool overlapped;
 	int i;
 
 	if (length == 0) {
@@ -1041,7 +1092,9 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	}
 
 	logical_map_index = offset / vol->logical_blocks_per_chunk;
-	if (vol->pm_logical_map[logical_map_index] == REDUCE_EMPTY_MAP_ENTRY) {
+	overlapped = _check_overlap(vol, logical_map_index);
+
+	if (!overlapped && vol->pm_logical_map[logical_map_index] == REDUCE_EMPTY_MAP_ENTRY) {
 		/*
 		 * This chunk hasn't been allocated.  So treat the data as all
 		 * zeroes for this chunk - do the memset and immediately complete
@@ -1061,16 +1114,21 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	}
 
 	TAILQ_REMOVE(&vol->free_requests, req, tailq);
+	req->type = REDUCE_IO_READV;
 	req->vol = vol;
 	req->iov = iov;
 	req->iovcnt = iovcnt;
 	req->offset = offset;
-	req->logical_map_index = offset / vol->logical_blocks_per_chunk;
+	req->logical_map_index = logical_map_index;
 	req->length = length;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	_start_readv_request(req);
+	if (!overlapped) {
+		_start_readv_request(req);
+	} else {
+		TAILQ_INSERT_TAIL(&vol->queued_requests, req, tailq);
+	}
 }
 
 static void
@@ -1082,6 +1140,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	int i;
 	uint8_t *buf;
 
+	TAILQ_INSERT_TAIL(&req->vol->executing_requests, req, tailq);
 	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
 		/* Read old chunk, then overwrite with data from this write operation.
 		 * TODO: bypass reading old chunk if this write operation overwrites
@@ -1117,6 +1176,8 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
+	uint64_t logical_map_index;
+	bool overlapped;
 
 	if (length == 0) {
 		cb_fn(cb_arg, 0);
@@ -1133,6 +1194,9 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		return;
 	}
 
+	logical_map_index = offset / vol->logical_blocks_per_chunk;
+	overlapped = _check_overlap(vol, logical_map_index);
+
 	req = TAILQ_FIRST(&vol->free_requests);
 	if (req == NULL) {
 		cb_fn(cb_arg, -ENOMEM);
@@ -1140,6 +1204,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	}
 
 	TAILQ_REMOVE(&vol->free_requests, req, tailq);
+	req->type = REDUCE_IO_WRITEV;
 	req->vol = vol;
 	req->iov = iov;
 	req->iovcnt = iovcnt;
@@ -1149,7 +1214,11 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	_start_writev_request(req);
+	if (!overlapped) {
+		_start_writev_request(req);
+	} else {
+		TAILQ_INSERT_TAIL(&vol->queued_requests, req, tailq);
+	}
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)
