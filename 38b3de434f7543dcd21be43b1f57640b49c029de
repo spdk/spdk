@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e70036d3_bda1f34f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 631,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-18T11:16:18Z",
+      "side": 1,
+      "message": "should we do spdk_min(iono, 32)?",
+      "range": {
+        "startLine": 631,
+        "startChar": 17,
+        "endLine": 631,
+        "endChar": 19
+      },
+      "revId": "38b3de434f7543dcd21be43b1f57640b49c029de",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
