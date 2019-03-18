@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0944b456_94d1ac6d",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1053,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-18T16:30:25Z",
+      "side": 1,
+      "message": "maybe -u or -U instead (since \"unused\" is the keyword)",
+      "revId": "c0113db09b6f60dfa419b129f7f3df88a538bbae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
