@@ -53,12 +53,6 @@
 
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 
-/*
- * Maximum number of SGL elements.
- * This is chosen to match the current nvme_pcie.c limit.
- */
-#define NVME_TCP_MAX_SGL_DESCRIPTORS	(253)
-
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		16
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
@@ -1484,7 +1478,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			pdu = &tqpair->recv_pdu;
 			/* check whether the data is valid, if not we just return */
-			if (!pdu->data) {
+			if (!pdu->data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
