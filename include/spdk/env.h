@@ -84,6 +84,7 @@ struct spdk_env_opts {
 	const char		*hugedir;
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
+	bool			legacy_memory_mode;
 
 	/** Opaque context for use of the env implementation. */
 	void			*env_context;

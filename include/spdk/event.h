@@ -128,6 +128,9 @@ struct spdk_app_opts {
 
 	/* Number of trace entries allocated for each core */
 	uint64_t		num_entries;
+
+	/* Enable DPDK legacy memory mode. */
+	bool			legacy_memory_mode;
 };
 
 /**

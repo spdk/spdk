@@ -128,6 +128,8 @@ static const struct option g_cmdline_options[] = {
 	{"max-delay",			required_argument,	NULL, MAX_REACTOR_DELAY_OPT_IDX},
 #define JSON_CONFIG_OPT_IDX		262
 	{"json",			required_argument,	NULL, JSON_CONFIG_OPT_IDX},
+#define LEGACY_MEM_OPT_IDX		263
+	{"legacy-mem",			no_argument,		NULL, LEGACY_MEM_OPT_IDX},
 };
 
 /* Global section */
@@ -507,6 +509,7 @@ spdk_app_setup_env(struct spdk_app_opts *opts)
 	env_opts.num_pci_addr = opts->num_pci_addr;
 	env_opts.pci_blacklist = opts->pci_blacklist;
 	env_opts.pci_whitelist = opts->pci_whitelist;
+	env_opts.legacy_memory_mode = opts->legacy_memory_mode;
 
 	rc = spdk_env_init(&env_opts);
 	free(env_opts.pci_blacklist);
@@ -757,9 +760,10 @@ usage(void (*app_usage)(void))
 	printf(" -R, --huge-unlink         unlink huge files after initialization\n");
 	printf(" -W, --pci-whitelist <bdf>\n");
 	printf("                           pci addr to whitelist (-B and -W cannot be used at the same time)\n");
-	printf("      --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
-	printf("      --num-trace-entries <num>   number of trace entries for each core, must be power of 2. (default %d)\n",
+	printf("     --huge-dir <path>    use a specific hugetlbfs mount to reserve memory from\n");
+	printf("     --num-trace-entries <num>   number of trace entries for each core, must be power of 2. (default %d)\n",
 	       SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES);
+	printf("     --legacy-mem          Enable DPDK legacy memory mode\n");
 	spdk_log_usage(stdout, "-L");
 	spdk_trace_mask_usage(stdout, "-e");
 	if (app_usage) {
@@ -857,6 +861,9 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 				fprintf(stderr, "Invalid shared memory ID %s\n", optarg);
 				goto out;
 			}
+			break;
+		case LEGACY_MEM_OPT_IDX:
+			opts->legacy_memory_mode = true;
 			break;
 		case CPUMASK_OPT_IDX:
 			opts->reactor_mask = optarg;
