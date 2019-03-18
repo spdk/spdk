@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "env_internal.h"
+#include "spdk/util.h"
 
 #include <rte_config.h>
 #include <rte_cycles.h>
@@ -277,13 +278,151 @@ spdk_mempool_create_ctor(const char *name, size_t count,
 	return (struct spdk_mempool *)mp;
 }
 
+static void
+mempool_free_chunk(struct rte_mempool_memhdr *memhdr, void *opaque)
+{
+	spdk_free(memhdr->addr);
+}
+
+static int
+mempool_populate_aligned(struct rte_mempool *pool, size_t alignment)
+{
+	size_t ele_size;
+	size_t total_allocation_size;
+	size_t header_padding = 0;
+	size_t alignment_padding = 0;
+	size_t initial_padding;
+	size_t i, offset;
+	struct rte_mempool_memhdr *memhdr;
+	void *mem_region;
+
+	/* We need to pad the end of each element with enough room for the header amd trailer */
+	header_padding = pool->header_size;
+	ele_size = pool->header_size + pool->elt_size + pool->trailer_size;
+
+	if (alignment != 0) {
+		/* And we need to align the base of the structures. */
+		if (ele_size % alignment) {
+			alignment_padding = alignment - (ele_size % alignment);
+		}
+
+		ele_size += alignment_padding;
+
+		/* We also need to make sure we have enough space for the first header */
+		if (header_padding > alignment) {
+			initial_padding = alignment * (header_padding / alignment);
+			initial_padding += alignment;
+		} else {
+			initial_padding = alignment;
+		}
+	} else {
+		initial_padding = header_padding;
+	}
+
+	/* Overflow check */
+	if (ele_size > SIZE_MAX / pool->size) {
+		return -EINVAL;
+	}
+
+	total_allocation_size = ele_size * pool->size + initial_padding;
+	mem_region = spdk_zmalloc(total_allocation_size, alignment, NULL, pool->socket_id,
+				  SPDK_MALLOC_DMA | SPDK_MALLOC_SHARE);
+	if (mem_region == NULL) {
+		return -ENOMEM;
+	}
+
+	memhdr = spdk_zmalloc(sizeof(*memhdr), 0, NULL, pool->socket_id, SPDK_MALLOC_DMA |
+			      SPDK_MALLOC_SHARE);
+	if (memhdr == NULL) {
+		spdk_free(mem_region);
+		return -ENOMEM;
+	}
+
+	memhdr->mp = pool;
+	memhdr->addr = mem_region;
+	memhdr->iova = RTE_BAD_IOVA;
+	memhdr->len = total_allocation_size;
+	memhdr->opaque = NULL;
+	memhdr->free_cb = mempool_free_chunk;
+
+	STAILQ_INSERT_TAIL(&pool->mem_list, memhdr, next);
+	pool->nb_mem_chunks++;
+
+	/* Initial padding is guaranteed to be some multiple of alignment */
+	offset = initial_padding;
+	mem_region = (char *)mem_region + offset;
+	for (i = 0; i < pool->size; i++) {
+		assert(offset + ele_size <= total_allocation_size);
+		/* Make sure all elements are aligned going in. */
+		if (alignment != 0) {
+			assert(((uintptr_t)mem_region & (~(uintptr_t)(alignment - 1))) == (uintptr_t)mem_region);
+		}
+		rte_mempool_ops_enqueue_bulk(pool, &mem_region, 1);
+
+		/* This includes the size of the header for the next element. */
+		mem_region = (char *)mem_region + ele_size;
+		offset += ele_size;
+	}
+	return 0;
+}
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
 		    size_t ele_size, size_t cache_size, int socket_id)
 {
-	return spdk_mempool_create_ctor(name, count, ele_size, cache_size, socket_id,
-					NULL, NULL);
+	return spdk_mempool_create_aligned(name, count, ele_size, 0, cache_size, socket_id);
+}
+
+struct spdk_mempool *
+spdk_mempool_create_aligned(const char *name, size_t count, size_t ele_size,
+			    size_t alignment, size_t cache_size, int socket_id)
+{
+	struct rte_mempool *mp;
+	size_t tmp;
+	int ret;
+
+	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
+		socket_id = SOCKET_ID_ANY;
+	}
+
+	count = spdk_align64pow2(count);
+
+	/* No more than half of all elements can be in cache */
+	tmp = (count / 2) / rte_lcore_count();
+	if (cache_size > tmp) {
+		cache_size = tmp;
+	}
+
+	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
+		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
+	}
+
+	mp = rte_mempool_create_empty(name, count, ele_size, cache_size, 0, socket_id,
+				      MEMPOOL_F_NO_PHYS_CONTIG);
+	if (mp == NULL) {
+		goto error;
+	}
+
+	ret = rte_mempool_set_ops_byname(mp, "spdk_ring_mempool", NULL);
+	if (ret) {
+		goto error;
+	}
+
+	ret = rte_mempool_ops_alloc(mp);
+	if (ret) {
+		goto error;
+	}
+
+	ret = mempool_populate_aligned(mp, alignment);
+	if (ret) {
+		goto error;
+	}
+
+	return (struct spdk_mempool *)mp;
+
+error:
+	rte_mempool_ops_free(mp);
+	return NULL;
 }
 
 char *
