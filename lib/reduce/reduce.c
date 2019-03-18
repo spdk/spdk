@@ -92,6 +92,7 @@ struct spdk_reduce_vol_request {
 	int					iovcnt;
 	int					num_backing_ops;
 	uint64_t				offset;
+	uint64_t				logical_map_index;
 	uint64_t				length;
 	uint64_t				chunk_map_index;
 	uint64_t				*chunk;
@@ -820,7 +821,7 @@ _write_complete_req(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t logical_map_index, old_chunk_map_index;
+	uint64_t old_chunk_map_index;
 	uint64_t *old_chunk;
 	uint32_t i;
 
@@ -838,9 +839,7 @@ _write_complete_req(void *_req, int reduce_errno)
 		return;
 	}
 
-	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
-
-	old_chunk_map_index = vol->pm_logical_map[logical_map_index];
+	old_chunk_map_index = vol->pm_logical_map[req->logical_map_index];
 	if (old_chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
 		old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
 		for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
@@ -863,9 +862,9 @@ _write_complete_req(void *_req, int reduce_errno)
 	/* Persist the new chunk map.  This must be persisted before we update the logical map. */
 	_reduce_persist(vol, req->chunk, sizeof(uint64_t) * vol->backing_io_units_per_chunk);
 
-	vol->pm_logical_map[logical_map_index] = req->chunk_map_index;
+	vol->pm_logical_map[req->logical_map_index] = req->chunk_map_index;
 
-	_reduce_persist(vol, &vol->pm_logical_map[logical_map_index], sizeof(uint64_t));
+	_reduce_persist(vol, &vol->pm_logical_map[req->logical_map_index], sizeof(uint64_t));
 
 	_reduce_vol_complete_req(req, 0);
 }
@@ -989,10 +988,8 @@ static void
 _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
 {
 	struct spdk_reduce_vol *vol = req->vol;
-	uint64_t logical_map_index;
 
-	logical_map_index = req->offset / vol->logical_blocks_per_chunk;
-	req->chunk_map_index = vol->pm_logical_map[logical_map_index];
+	req->chunk_map_index = vol->pm_logical_map[req->logical_map_index];
 	assert(req->chunk_map_index != UINT32_MAX);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
@@ -1062,6 +1059,7 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	req->iov = iov;
 	req->iovcnt = iovcnt;
 	req->offset = offset;
+	req->logical_map_index = offset / vol->logical_blocks_per_chunk;
 	req->length = length;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
@@ -1075,7 +1073,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
-	uint64_t logical_map_index, chunk_offset;
+	uint64_t chunk_offset;
 	uint32_t lbsize, lb_per_chunk;
 	int i;
 	uint8_t *buf;
@@ -1106,12 +1104,12 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->iov = iov;
 	req->iovcnt = iovcnt;
 	req->offset = offset;
+	req->logical_map_index = offset / vol->logical_blocks_per_chunk;
 	req->length = length;
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	logical_map_index = offset / vol->logical_blocks_per_chunk;
-	if (vol->pm_logical_map[logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
+	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
 		/* Read old chunk, then overwrite with data from this write operation.
 		 * TODO: bypass reading old chunk if this write operation overwrites
 		 * the entire chunk.
