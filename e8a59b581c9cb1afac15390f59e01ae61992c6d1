@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7472f3cf_cac7e194",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-18T07:44:43Z",
+      "side": 1,
+      "message": "Hmm, it\u0027s still buggy. If the session event to remove a SCSI target arrives before the event to add it, we\u0027ll end up with the SCSI target leaked for that session.\n\nadd_tgt #1\n - vdev-\u003escsi_dev \u003d [...]\n - foreach_session\n   - defer\n\nremove_tgt #2\n - foreach_session\n   - locked\n   - session_state-\u003estatus \u003d REMOVING\n   \nadd_tgt #1 cont.\n   - locked\n   - channel opened, won\u0027t be ever closed\n   - session_state-\u003estatus \u003d PRESENT\n\n\nPlease hold back with making changes to this area within this patch. It does not belong there, needs some more effort and isn\u0027t even mentioned in the commit message.",
+      "range": {
+        "startLine": 942,
+        "startChar": 0,
+        "endLine": 947,
+        "endChar": 47
+      },
+      "revId": "e8a59b581c9cb1afac15390f59e01ae61992c6d1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
