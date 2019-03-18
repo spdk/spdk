@@ -120,9 +120,9 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 		return NULL;
 	}
 
-	transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
+	transport->data_buf_pool = spdk_mempool_create_aligned(spdk_mempool_name,
 				   opts->num_shared_buffers,
-				   opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				   opts->io_unit_size, NVMF_DATA_BUFFER_ALIGNMENT,
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				   SPDK_ENV_SOCKET_ID_ANY);
 
