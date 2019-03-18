@@ -1190,11 +1190,11 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
 	}
 
-	spdk_wmb();
 	if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
 			pqpair->sq_tail,
 			pqpair->sq_shadow_tdbl,
 			pqpair->sq_eventidx))) {
+		spdk_wmb();
 		g_thread_mmio_ctrlr = pctrlr;
 		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
 		g_thread_mmio_ctrlr = NULL;
