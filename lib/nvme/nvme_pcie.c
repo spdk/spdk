@@ -1167,12 +1167,28 @@ nvme_pcie_qpair_update_mmio_required(struct spdk_nvme_qpair *qpair, uint16_t val
 	return true;
 }
 
+static inline void
+nvme_pcie_qpair_ring_sq_doorbell(struct spdk_nvme_qpair *qpair)
+{
+	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
+	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
+
+	if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
+			pqpair->sq_tail,
+			pqpair->sq_shadow_tdbl,
+			pqpair->sq_eventidx))) {
+		spdk_wmb();
+		g_thread_mmio_ctrlr = pctrlr;
+		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
+		g_thread_mmio_ctrlr = NULL;
+	}
+}
+
 static void
 nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracker *tr)
 {
 	struct nvme_request	*req;
 	struct nvme_pcie_qpair	*pqpair = nvme_pcie_qpair(qpair);
-	struct nvme_pcie_ctrlr	*pctrlr = nvme_pcie_ctrlr(qpair->ctrlr);
 
 	req = tr->req;
 	assert(req != NULL);
@@ -1190,15 +1206,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 		SPDK_ERRLOG("sq_tail is passing sq_head!\n");
 	}
 
-	if (spdk_likely(nvme_pcie_qpair_update_mmio_required(qpair,
-			pqpair->sq_tail,
-			pqpair->sq_shadow_tdbl,
-			pqpair->sq_eventidx))) {
-		spdk_wmb();
-		g_thread_mmio_ctrlr = pctrlr;
-		spdk_mmio_write_4(pqpair->sq_tdbl, pqpair->sq_tail);
-		g_thread_mmio_ctrlr = NULL;
-	}
+	nvme_pcie_qpair_ring_sq_doorbell(qpair);
 }
 
 static void
