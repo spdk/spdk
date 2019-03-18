@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2a2d1846_5dc3034d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 894,
+      "author": {
+        "id": 1013008
+      },
+      "writtenOn": "2019-03-18T19:39:54Z",
+      "side": 1,
+      "message": "This should be ported from VCL.",
+      "range": {
+        "startLine": 865,
+        "startChar": 0,
+        "endLine": 894,
+        "endChar": 0
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
