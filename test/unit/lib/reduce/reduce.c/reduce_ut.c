@@ -961,6 +961,72 @@ defer_bdev_io(void)
 	backing_dev_destroy(&backing_dev);
 }
 
+static void
+overlapped(void)
+{
+	struct spdk_reduce_vol_params params = {};
+	struct spdk_reduce_backing_dev backing_dev = {};
+	const uint32_t logical_block_size = 512;
+	struct iovec iov;
+	char buf[2 * logical_block_size];
+	char compare_buf[2 * logical_block_size];
+
+	params.chunk_size = 16 * 1024;
+	params.backing_io_unit_size = 4096;
+	params.logical_block_size = logical_block_size;
+	spdk_uuid_generate(&params.uuid);
+
+	backing_dev_init(&backing_dev, &params, 512);
+
+	g_vol = NULL;
+	g_reduce_errno = -1;
+	spdk_reduce_vol_init(&params, &backing_dev, TEST_MD_PATH, init_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	SPDK_CU_ASSERT_FATAL(g_vol != NULL);
+
+	/* Write 0xAA to 1 512-byte logical block. */
+	memset(buf, 0xAA, logical_block_size);
+	iov.iov_base = buf;
+	iov.iov_len = logical_block_size;
+	g_reduce_errno = -100;
+	g_defer_bdev_io = true;
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, 1, write_cb, NULL);
+	/* Callback should not have executed, so this should still equal -100. */
+	CU_ASSERT(g_reduce_errno == -100);
+	CU_ASSERT(!TAILQ_EMPTY(&g_pending_bdev_io));
+	CU_ASSERT(g_pending_bdev_io_count == params.chunk_size / params.backing_io_unit_size);
+
+	/* Now do an overlapped I/O to the same chunk. */
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 1, 1, write_cb, NULL);
+	/* Callback should not have executed, so this should still equal -100. */
+	CU_ASSERT(g_reduce_errno == -100);
+	CU_ASSERT(!TAILQ_EMPTY(&g_pending_bdev_io));
+	/* The second I/O overlaps with the first one.  So we should only see pending bdev_io
+	 * related to the first I/O here - the second one won't start until the first one is completed.
+	 */
+	CU_ASSERT(g_pending_bdev_io_count == params.chunk_size / params.backing_io_unit_size);
+
+	backing_dev_io_execute(0);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	g_defer_bdev_io = false;
+	memset(compare_buf, 0xAA, sizeof(compare_buf));
+	memset(buf, 0xFF, sizeof(buf));
+	iov.iov_base = buf;
+	iov.iov_len = 2 * logical_block_size;
+	g_reduce_errno = -100;
+	spdk_reduce_vol_readv(g_vol, &iov, 1, 0, 2, read_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+	CU_ASSERT(memcmp(buf, compare_buf, 2 * logical_block_size) == 0);
+
+	g_reduce_errno = -1;
+	spdk_reduce_vol_unload(g_vol, unload_cb, NULL);
+	CU_ASSERT(g_reduce_errno == 0);
+
+	persistent_pm_buf_destroy();
+	backing_dev_destroy(&backing_dev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -987,7 +1053,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "write_maps", write_maps) == NULL ||
 		CU_add_test(suite, "read_write", read_write) == NULL ||
 		CU_add_test(suite, "destroy", destroy) == NULL ||
-		CU_add_test(suite, "defer_bdev_io", defer_bdev_io) == NULL
+		CU_add_test(suite, "defer_bdev_io", defer_bdev_io) == NULL ||
+		CU_add_test(suite, "overlapped", overlapped) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
