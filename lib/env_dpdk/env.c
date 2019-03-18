@@ -237,6 +237,20 @@ spdk_mempool_create(const char *name, size_t count,
 					NULL, NULL);
 }
 
+struct spdk_mempool *
+spdk_mempool_create_aligned(const char *name, size_t count, size_t ele_size,
+			    size_t alignment, size_t cache_size, int socket_id)
+{
+	size_t ele_total_size;
+	ele_total_size = ele_size + alignment;
+	if (ele_size > ele_total_size || alignment > ele_total_size) {
+		return NULL;
+	} else {
+		return spdk_mempool_create_ctor(name, count, ele_total_size, cache_size, socket_id,
+						NULL, NULL);
+	}
+}
+
 char *
 spdk_mempool_get_name(struct spdk_mempool *mp)
 {
