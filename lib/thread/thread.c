@@ -112,6 +112,7 @@ struct spdk_thread {
 	TAILQ_HEAD(, spdk_io_channel)	io_channels;
 	TAILQ_ENTRY(spdk_thread)	tailq;
 	char				*name;
+	struct spdk_cpuset		*affinity;
 
 	uint64_t			tsc_last;
 	struct spdk_thread_stats	stats;
@@ -200,7 +201,7 @@ spdk_thread_lib_fini(void)
 }
 
 struct spdk_thread *
-spdk_thread_create(const char *name)
+spdk_thread_create(const char *name, const struct spdk_cpuset *affinity)
 {
 	struct spdk_thread *thread;
 	struct spdk_msg *msgs[SPDK_MSG_MEMPOOL_CACHE_SIZE];
@@ -244,6 +245,9 @@ spdk_thread_create(const char *name)
 	} else {
 		thread->name = spdk_sprintf_alloc("%p", thread);
 	}
+
+	//FIXIT: we probably should to copy affinity if set
+	thread->affinity = affinity;
 
 	SPDK_DEBUGLOG(SPDK_LOG_THREAD, "Allocating new thread %s\n", thread->name);
 
