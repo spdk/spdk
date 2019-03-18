@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3eb868f3_17269cd7",
+        "filename": "test/env/vtophys/vtophys.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 165,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-18T14:25:29Z",
+      "side": 1,
+      "message": "Shuhei, since legacy mem only applies to your custom use case, could we possibly provide --legacy-mem through this env_context? It\u0027s a string to be appended directly into DPDK command line options and was introduced for cases just like this.\n\nThere\u0027s a separate patch to expose the same env_context in struct spdk_app_opts: https://review.gerrithub.io/c/spdk/spdk/+/443649\n\nIn env_dpdk we would need to disable --match-allocations when the user has provided --legacy-mem, but that\u0027s perfectly doable.\n\nWould that work for you?",
+      "range": {
+        "startLine": 165,
+        "startChar": 2,
+        "endLine": 165,
+        "endChar": 45
+      },
+      "revId": "6fd602fe14fb82ffa0618c79473b5caadb1b2e41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
