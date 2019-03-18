@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "54f2b369_1327e7ee",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-18T10:56:03Z",
+      "side": 1,
+      "message": "please handle the allocation failure.\n\ncould we maybe embed the destroy poller pointer inside struct vbdev_ocf, so that no allocation needs to be done here?",
+      "revId": "aa8bed1b2c33f297a5dec5d42153a699da44504d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
