@@ -221,8 +221,10 @@ init_failure(void)
 }
 
 static void
-backing_dev_readv(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
-		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+backing_dev_readv_execute(struct spdk_reduce_backing_dev *backing_dev,
+			  struct iovec *iov, int iovcnt,
+			  uint64_t lba, uint32_t lba_count,
+			  struct spdk_reduce_vol_cb_args *args)
 {
 	char *offset;
 	int i;
@@ -236,8 +238,17 @@ backing_dev_readv(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov
 }
 
 static void
-backing_dev_writev(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
-		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+backing_dev_readv(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
+		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	backing_dev_readv_execute(backing_dev, iov, iovcnt, lba, lba_count, args);
+}
+
+static void
+backing_dev_writev_execute(struct spdk_reduce_backing_dev *backing_dev,
+			   struct iovec *iov, int iovcnt,
+			   uint64_t lba, uint32_t lba_count,
+			   struct spdk_reduce_vol_cb_args *args)
 {
 	char *offset;
 	int i;
@@ -251,14 +262,29 @@ backing_dev_writev(struct spdk_reduce_backing_dev *backing_dev, struct iovec *io
 }
 
 static void
-backing_dev_unmap(struct spdk_reduce_backing_dev *backing_dev,
-		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+backing_dev_writev(struct spdk_reduce_backing_dev *backing_dev, struct iovec *iov, int iovcnt,
+		   uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	backing_dev_writev_execute(backing_dev, iov, iovcnt, lba, lba_count, args);
+}
+
+static void
+backing_dev_unmap_execute(struct spdk_reduce_backing_dev *backing_dev,
+			  uint64_t lba, uint32_t lba_count,
+			  struct spdk_reduce_vol_cb_args *args)
 {
 	char *offset;
 
 	offset = g_backing_dev_buf + lba * backing_dev->blocklen;
 	memset(offset, 0, lba_count * backing_dev->blocklen);
 	args->cb_fn(args->cb_arg, 0);
+}
+
+static void
+backing_dev_unmap(struct spdk_reduce_backing_dev *backing_dev,
+		  uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args)
+{
+	backing_dev_unmap_execute(backing_dev, lba, lba_count, args);
 }
 
 static void
