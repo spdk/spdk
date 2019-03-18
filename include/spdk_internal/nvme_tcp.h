@@ -41,6 +41,11 @@
 #define SPDK_NVME_TCP_DIGEST_ALIGNMENT		4
 #define SPDK_NVME_TCP_QPAIR_EXIT_TIMEOUT	30
 
+/*
+ * Maximum number of SGL elements.
+ */
+#define NVME_TCP_MAX_SGL_DESCRIPTORS	(16)
+
 #define MAKE_DIGEST_WORD(BUF, CRC32C) \
         (   ((*((uint8_t *)(BUF)+0)) = (uint8_t)((uint32_t)(CRC32C) >> 0)), \
             ((*((uint8_t *)(BUF)+1)) = (uint8_t)((uint32_t)(CRC32C) >> 8)), \
@@ -103,7 +108,8 @@ struct nvme_tcp_pdu {
 	nvme_tcp_qpair_xfer_complete_cb			cb_fn;
 	void						*cb_arg;
 	int						ref;
-	void						*data;
+	struct iovec					data_iov[NVME_TCP_MAX_SGL_DESCRIPTORS];
+	uint32_t					data_iovcnt;
 	uint32_t					data_len;
 
 	uint32_t					readv_offset;
@@ -160,13 +166,17 @@ nvme_tcp_pdu_calc_header_digest(struct nvme_tcp_pdu *pdu)
 static uint32_t
 nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 {
-	uint32_t crc32c;
+	uint32_t crc32c = SPDK_CRC32C_XOR;
 	uint32_t mod;
+	uint32_t i;
 
-	assert(pdu->data != NULL);
 	assert(pdu->data_len != 0);
 
-	crc32c = spdk_crc32c_update(pdu->data, pdu->data_len, ~0);
+	for (i = 0; i < pdu->data_iovcnt; i++) {
+		assert(pdu->data_iov[i].iov_base != NULL);
+		assert(pdu->data_iov[i].iov_len != 0);
+		crc32c = spdk_crc32c_update(pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len, crc32c);
+	}
 
 	mod = pdu->data_len % SPDK_NVME_TCP_DIGEST_ALIGNMENT;
 	if (mod != 0) {
@@ -177,7 +187,6 @@ nvme_tcp_pdu_calc_data_digest(struct nvme_tcp_pdu *pdu)
 		assert(pad_length <= sizeof(pad));
 		crc32c = spdk_crc32c_update(pad, pad_length, crc32c);
 	}
-
 	crc32c = crc32c ^ SPDK_CRC32C_XOR;
 	return crc32c;
 }
@@ -218,7 +227,7 @@ nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pd
 		      bool hdgst_enable, bool ddgst_enable, uint32_t *_mapped_length)
 {
 	int enable_digest;
-	uint32_t hlen, plen;
+	uint32_t hlen, plen, i;
 	struct _iov_ctx *ctx;
 
 	if (num_iovs == 0) {
@@ -243,7 +252,7 @@ nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pd
 	}
 
 	plen = hlen;
-	if (!pdu->data_len || !pdu->data) {
+	if (!pdu->data_len) {
 		/* PDU header + possible header digest */
 		_iov_ctx_set_iov(ctx, (uint8_t *)&pdu->hdr.raw, hlen);
 		goto end;
@@ -261,8 +270,10 @@ nvme_tcp_build_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp_pdu *pd
 
 	/* Data Segment */
 	plen += pdu->data_len;
-	if (!_iov_ctx_set_iov(ctx, pdu->data, pdu->data_len)) {
-		goto end;
+	for (i = 0; i < pdu->data_iovcnt; i++) {
+		if (!_iov_ctx_set_iov(ctx, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
+			goto end;
+		}
 	}
 
 	/* Data Digest */
@@ -289,6 +300,7 @@ nvme_tcp_build_payload_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp
 			      bool ddgst_enable, uint32_t *_mapped_length)
 {
 	struct _iov_ctx *ctx;
+	uint32_t i;
 
 	if (num_iovs == 0) {
 		return 0;
@@ -296,8 +308,11 @@ nvme_tcp_build_payload_iovecs(struct iovec *iovec, int num_iovs, struct nvme_tcp
 
 	ctx = &pdu->iov_ctx;
 	_iov_ctx_init(ctx, iovec, num_iovs, pdu->readv_offset);
-	if (!_iov_ctx_set_iov(ctx, pdu->data, pdu->data_len)) {
-		goto end;
+
+	for (i = 0; i < pdu->data_iovcnt; i++) {
+		if (!_iov_ctx_set_iov(ctx, pdu->data_iov[i].iov_base, pdu->data_iov[i].iov_len)) {
+			goto end;
+		}
 	}
 
 	/* Data Digest */
@@ -386,11 +401,12 @@ nvme_tcp_readv_data(struct spdk_sock *sock, struct iovec *iov, int iovcnt)
 static int
 nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 {
-	struct iovec iovec_array[2];
+	struct iovec iovec_array[NVME_TCP_MAX_SGL_DESCRIPTORS + 1];
 	struct iovec *iov = iovec_array;
 	int iovec_cnt;
 
-	iovec_cnt = nvme_tcp_build_payload_iovecs(iovec_array, 2, pdu, pdu->ddgst_enable, NULL);
+	iovec_cnt = nvme_tcp_build_payload_iovecs(iovec_array, NVME_TCP_MAX_SGL_DESCRIPTORS + 1, pdu,
+			pdu->ddgst_enable, NULL);
 	assert(iovec_cnt >= 0);
 
 	return nvme_tcp_readv_data(sock, iov, iovec_cnt);
@@ -399,8 +415,9 @@ nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 static void
 nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
 {
-	pdu->data = data;
-	pdu->data_len = data_len;
+	pdu->data_iov[0].iov_base = data;
+	pdu->data_iov[0].iov_len = pdu->data_len = data_len;
+	pdu->data_iovcnt = 1;
 }
 
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
