@@ -56,7 +56,7 @@ test_init_ftl_dev(const struct spdk_ocssd_geometry_data *geo,
 	dev->xfer_size = geo->ws_opt;
 	dev->geo = *geo;
 	dev->range = *range;
-	dev->core_thread.thread = spdk_thread_create("unit_test_thread");
+	dev->core_thread.thread = spdk_thread_create("unit_test_thread", NULL);
 	spdk_set_thread(dev->core_thread.thread);
 
 	dev->bands = calloc(geo->num_chk, sizeof(*dev->bands));

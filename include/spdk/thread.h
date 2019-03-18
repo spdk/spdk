@@ -41,6 +41,7 @@
 #include "spdk/stdinc.h"
 
 #include "spdk/queue.h"
+#include "spdk/cpuset.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,7 +200,7 @@ void spdk_thread_lib_fini(void);
  *
  * \return a pointer to the allocated thread on success or NULL on failure..
  */
-struct spdk_thread *spdk_thread_create(const char *name);
+struct spdk_thread *spdk_thread_create(const char *name, struct spdk_cpuset *affinity);
 
 /**
  * Release any resources related to the given thread and destroy it. Execution

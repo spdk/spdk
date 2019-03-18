@@ -362,7 +362,7 @@ spdk_thread(void *arg)
 	struct spdk_thread *thread;
 	struct ut_request *req;
 
-	thread = spdk_thread_create("thread1");
+	thread = spdk_thread_create("thread1", NULL);
 	spdk_set_thread(thread);
 
 	while (1) {
@@ -412,7 +412,7 @@ int main(int argc, char **argv)
 		return CU_get_error();
 	}
 
-	thread = spdk_thread_create("thread0");
+	thread = spdk_thread_create("thread0", NULL);
 	spdk_set_thread(thread);
 
 	pthread_create(&spdk_tid, NULL, spdk_thread, NULL);
