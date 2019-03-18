@@ -53,12 +53,6 @@
 
 #define NVME_TCP_RW_BUFFER_SIZE 131072
 
-/*
- * Maximum number of SGL elements.
- * This is chosen to match the current nvme_pcie.c limit.
- */
-#define NVME_TCP_MAX_SGL_DESCRIPTORS	(253)
-
 #define NVME_TCP_HPDA_DEFAULT			0
 #define NVME_TCP_MAX_R2T_DEFAULT		16
 #define NVME_TCP_PDU_H2C_MIN_DATA_SIZE		4096
@@ -598,9 +592,9 @@ nvme_tcp_qpair_cmd_send_complete(void *cb_arg)
 
 static void
 nvme_tcp_pdu_set_data_buf(struct nvme_tcp_pdu *pdu,
-			  struct nvme_tcp_req *tcp_req)
+			  struct nvme_tcp_req *tcp_req, uint32_t data_len)
 {
-	pdu->data = (void *)((uint64_t)tcp_req->buf + tcp_req->datao);
+	nvme_tcp_pdu_set_data(pdu, (void *)((uint64_t)tcp_req->buf + tcp_req->datao), data_len);
 }
 
 static int
@@ -653,8 +647,7 @@ nvme_tcp_qpair_capsule_cmd_send(struct nvme_tcp_qpair *tqpair,
 	}
 
 	tcp_req->datao = 0;
-	nvme_tcp_pdu_set_data_buf(pdu, tcp_req);
-	pdu->data_len = tcp_req->req->payload_size;
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req, tcp_req->req->payload_size);
 
 end:
 	capsule_cmd->common.plen = plen;
@@ -807,16 +800,13 @@ nvme_tcp_qpair_send_h2c_term_req(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_
 		DSET32(&h2c_term_req->fei, error_offset);
 	}
 
-	rsp_pdu->data = (uint8_t *)rsp_pdu->hdr.raw + h2c_term_req_hdr_len;
-
 	copy_len = pdu->hdr.common.hlen;
 	if (copy_len > SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE) {
 		copy_len = SPDK_NVME_TCP_TERM_REQ_ERROR_DATA_MAX_SIZE;
 	}
 
 	/* Copy the error info into the buffer */
-	memcpy((uint8_t *)rsp_pdu->data, pdu->hdr.raw, copy_len);
-	rsp_pdu->data_len = copy_len;
+	nvme_tcp_pdu_set_data(rsp_pdu, (uint8_t *)rsp_pdu->hdr.raw + h2c_term_req_hdr_len, copy_len);
 
 	/* Contain the header len of the wrong received pdu */
 	h2c_term_req->common.plen = h2c_term_req->common.hlen + copy_len;
@@ -1157,8 +1147,8 @@ nvme_tcp_c2h_term_req_hdr_handle(struct nvme_tcp_qpair *tqpair,
 	}
 
 	/* set the data buffer */
-	pdu->data = (uint8_t *)pdu->hdr.raw + c2h_term_req->common.hlen;
-	pdu->data_len = c2h_term_req->common.plen - c2h_term_req->common.hlen;
+	pdu->data_iov[0].iov_base = (uint8_t *)pdu->hdr.raw + c2h_term_req->common.hlen;
+	pdu->data_iov[0].iov_len = pdu->data_len = c2h_term_req->common.plen - c2h_term_req->common.hlen;
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
 	return;
 end:
@@ -1213,8 +1203,7 @@ nvme_tcp_c2h_data_hdr_handle(struct nvme_tcp_qpair *tqpair, struct nvme_tcp_pdu 
 
 	}
 
-	nvme_tcp_pdu_set_data_buf(pdu, tcp_req);
-	pdu->data_len = c2h_data->datal;
+	nvme_tcp_pdu_set_data_buf(pdu, tcp_req, c2h_data->datal);
 	pdu->ctx = tcp_req;
 
 	nvme_tcp_qpair_set_recv_state(tqpair, NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD);
@@ -1247,7 +1236,6 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 
 	rsp_pdu = &tcp_req->send_pdu;
 	memset(rsp_pdu, 0, sizeof(*rsp_pdu));
-	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req);
 	h2c_data = &rsp_pdu->hdr.h2c_data;
 
 	h2c_data->common.pdu_type = SPDK_NVME_TCP_PDU_TYPE_H2C_DATA;
@@ -1257,7 +1245,7 @@ spdk_nvme_tcp_send_h2c_data(struct nvme_tcp_req *tcp_req)
 	h2c_data->datao = tcp_req->datao;
 
 	h2c_data->datal = spdk_min(tcp_req->r2tl_remain, tqpair->maxh2cdata);
-	rsp_pdu->data_len = h2c_data->datal;
+	nvme_tcp_pdu_set_data_buf(rsp_pdu, tcp_req, h2c_data->datal);
 	tcp_req->r2tl_remain -= h2c_data->datal;
 
 	if (tqpair->host_hdgst_enable) {
@@ -1494,7 +1482,7 @@ nvme_tcp_read_pdu(struct nvme_tcp_qpair *tqpair, uint32_t *reaped)
 		case NVME_TCP_PDU_RECV_STATE_AWAIT_PDU_PAYLOAD:
 			pdu = &tqpair->recv_pdu;
 			/* check whether the data is valid, if not we just return */
-			if (!pdu->data) {
+			if (!pdu->data_len) {
 				return NVME_TCP_PDU_IN_PROGRESS;
 			}
 
