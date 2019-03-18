@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6e073831_9a9d9122",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T22:00:48Z",
+      "side": 1,
+      "message": "For system libraries, use #include \u003cliburing.h\u003e",
+      "revId": "c74b11dd1cf419f930706a3b76bac74bec4b5db1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "29aa9345_4f40d6c1",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 63,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T22:00:48Z",
+      "side": 1,
+      "message": "You shouldn\u0027t need a copy of the uring in this data structure.",
+      "revId": "c74b11dd1cf419f930706a3b76bac74bec4b5db1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2812618f_675be94d",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T22:00:48Z",
+      "side": 1,
+      "message": "You don\u0027t need this",
+      "revId": "c74b11dd1cf419f930706a3b76bac74bec4b5db1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
