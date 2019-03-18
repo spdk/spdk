@@ -34,6 +34,24 @@
       "revId": "2b99ecdf707a27f2698f81945a6a5a68d9e9700d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "81d6edaf_2fd71319",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1574,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-18T12:58:11Z",
+      "side": 1,
+      "message": "Changpeng:\nThanks for your explanation. I have found the code (please remind me if I found wrong code) that ensures _init and _fini is running on the same thread:\n\n\u003e /*\n\u003e  * We want to run spdk_subsystem_fini() from the same lcore where spdk_subsystem_init()\n\u003e  * was called.\n\u003e  */\n\u003e spdk_event_call(spdk_event_allocate(g_init_lcore, _spdk_app_stop, NULL, NULL));\n\nBut I think it\u0027s better to add assert(g_bdev_nvme_init_thread \u003d\u003d spdk_get_thread()), and feel free to add this assertion.",
+      "parentUuid": "2f3bef71_6d3567a2",
+      "revId": "2b99ecdf707a27f2698f81945a6a5a68d9e9700d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
