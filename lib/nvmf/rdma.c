@@ -228,7 +228,6 @@ struct spdk_nvmf_rdma_request_data {
 	struct spdk_nvmf_rdma_wr	rdma_wr;
 	struct ibv_send_wr		wr;
 	struct ibv_sge			sgl[SPDK_NVMF_MAX_SGL_ENTRIES];
-	void				*buffers[SPDK_NVMF_MAX_SGL_ENTRIES];
 };
 
 struct spdk_nvmf_rdma_request {
@@ -1248,13 +1247,12 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 	for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
+					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->req.iov[i].iov_base, link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, rdma_req->data.buffers[i]);
+			spdk_mempool_put(transport->data_buf_pool, rdma_req->req.iov[i].iov_base);
 		}
 		rdma_req->req.iov[i].iov_base = NULL;
-		rdma_req->data.buffers[i] = NULL;
 		rdma_req->req.iov[i].iov_len = 0;
 
 	}
@@ -1353,11 +1351,9 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 		}
 
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-						~NVMF_DATA_BUFFER_MASK);
-		rdma_req->req.iov[i].iov_len  = spdk_min(length, rtransport->transport.opts.io_unit_size);
+		rdma_req->req.iov[i].iov_base = buf;
+		rdma_req->req.iov[i].iov_len = spdk_min(length, rtransport->transport.opts.io_unit_size);
 		rdma_req->req.iovcnt++;
-		rdma_req->data.buffers[i] = buf;
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
 		rdma_req->data.wr.sg_list[i].length = rdma_req->req.iov[i].iov_len;
 		translation_len = rdma_req->req.iov[i].iov_len;
