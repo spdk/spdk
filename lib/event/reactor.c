@@ -365,12 +365,20 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	uint32_t core;
 	struct spdk_lw_thread *lw_thread;
 	struct spdk_event *evt;
+	struct spdk_cpuset *affinity;
 
 	lw_thread = spdk_thread_get_ctx(thread);
 	assert(lw_thread != NULL);
 	memset(lw_thread, 0, sizeof(*lw_thread));
 
+	affinity = thread->affinity;
+	if (affinity == NULL) {
+		/* If affinity is not set we choose one from free cores */
+		affinity = spdk_app_get_free_core_mask();
+	}
+
 	pthread_mutex_lock(&g_scheduler_mtx);
+	/* We should to choose lcore using affinity mask in the thread */
 	if (g_next_core > spdk_env_get_core_count()) {
 		g_next_core = spdk_env_get_first_core();
 	}
