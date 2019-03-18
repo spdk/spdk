@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "63a04564_75c5c01f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 19
+      },
+      "lineNbr": 1794,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-18T22:52:26Z",
+      "side": 1,
+      "message": "Can you move this function and the one below it into nvmf/ctrlr.c? That\u0027s where it gets used, and neither of these functions actually reference the subsystem anymore.",
+      "revId": "13ac6d6e58681a4c794f8edb4946efa4972148e3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
