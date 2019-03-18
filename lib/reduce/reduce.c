@@ -1010,6 +1010,12 @@ _iov_array_is_valid(struct spdk_reduce_vol *vol, struct iovec *iov, int iovcnt,
 	return size == (length * vol->params.logical_block_size);
 }
 
+static void
+_start_readv_request(struct spdk_reduce_vol_request *req)
+{
+	_reduce_vol_read_chunk(req, _read_read_done);
+}
+
 void
 spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 		      struct iovec *iov, int iovcnt, uint64_t offset, uint64_t length,
@@ -1064,7 +1070,45 @@ spdk_reduce_vol_readv(struct spdk_reduce_vol *vol,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	_reduce_vol_read_chunk(req, _read_read_done);
+	_start_readv_request(req);
+}
+
+static void
+_start_writev_request(struct spdk_reduce_vol_request *req)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+	uint64_t chunk_offset;
+	uint32_t lbsize, lb_per_chunk;
+	int i;
+	uint8_t *buf;
+
+	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
+		/* Read old chunk, then overwrite with data from this write operation.
+		 * TODO: bypass reading old chunk if this write operation overwrites
+		 * the entire chunk.
+		 */
+		_reduce_vol_read_chunk(req, _write_read_done);
+		return;
+	}
+
+	buf = req->buf;
+	lbsize = vol->params.logical_block_size;
+	lb_per_chunk = vol->logical_blocks_per_chunk;
+	/* Note: we must zero out parts of req->buf not specified by this write operation. */
+	chunk_offset = req->offset % lb_per_chunk;
+	if (chunk_offset != 0) {
+		memset(buf, 0, chunk_offset * lbsize);
+		buf += chunk_offset * lbsize;
+	}
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
+		buf += req->iov[i].iov_len;
+	}
+	chunk_offset += req->length;
+	if (chunk_offset != lb_per_chunk) {
+		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
+	}
+	_reduce_vol_write_chunk(req, _write_complete_req);
 }
 
 void
@@ -1073,10 +1117,6 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 		       spdk_reduce_vol_op_complete cb_fn, void *cb_arg)
 {
 	struct spdk_reduce_vol_request *req;
-	uint64_t chunk_offset;
-	uint32_t lbsize, lb_per_chunk;
-	int i;
-	uint8_t *buf;
 
 	if (length == 0) {
 		cb_fn(cb_arg, 0);
@@ -1109,33 +1149,7 @@ spdk_reduce_vol_writev(struct spdk_reduce_vol *vol,
 	req->cb_fn = cb_fn;
 	req->cb_arg = cb_arg;
 
-	if (vol->pm_logical_map[req->logical_map_index] != REDUCE_EMPTY_MAP_ENTRY) {
-		/* Read old chunk, then overwrite with data from this write operation.
-		 * TODO: bypass reading old chunk if this write operation overwrites
-		 * the entire chunk.
-		 */
-		_reduce_vol_read_chunk(req, _write_read_done);
-		return;
-	}
-
-	buf = req->buf;
-	lbsize = vol->params.logical_block_size;
-	lb_per_chunk = vol->logical_blocks_per_chunk;
-	/* Note: we must zero out parts of req->buf not specified by this write operation. */
-	chunk_offset = offset % lb_per_chunk;
-	if (chunk_offset != 0) {
-		memset(buf, 0, chunk_offset * lbsize);
-		buf += chunk_offset * lbsize;
-	}
-	for (i = 0; i < iovcnt; i++) {
-		memcpy(buf, iov[i].iov_base, iov[i].iov_len);
-		buf += iov[i].iov_len;
-	}
-	chunk_offset += length;
-	if (chunk_offset != lb_per_chunk) {
-		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
-	}
-	_reduce_vol_write_chunk(req, _write_complete_req);
+	_start_writev_request(req);
 }
 
 SPDK_LOG_REGISTER_COMPONENT("reduce", SPDK_LOG_REDUCE)
