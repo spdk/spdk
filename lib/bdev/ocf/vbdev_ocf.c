@@ -159,6 +159,13 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 	return NULL;
 }
 
+/* Common structure for asynchronous OCF management functions */
+struct continuation {
+	void *ctx;
+	void (*cb)(int, void *);
+	void *cb_arg;
+};
+
 /* Common structure for OCF management pollers */
 struct poller_arg {
 	void                 *ctx;
@@ -178,12 +185,25 @@ unregister_poller(struct poller_arg *arg, int rc)
 	free(arg);
 }
 
+static void
+stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	struct poller_arg *arg = priv;
+
+	ocf_mngt_cache_unlock(cache);
+
+	if (arg->cb) {
+		arg->cb(error, arg->cb_arg);
+	}
+
+	free(arg);
+}
+
 static int
 stop_vbdev_poll(void *opaque)
 {
 	struct poller_arg *arg   = opaque;
 	struct vbdev_ocf  *vbdev = arg->ctx;
-	int rc;
 
 	if (!ocf_cache_is_running(vbdev->ocf_cache)) {
 		unregister_poller(arg, 0);
@@ -202,14 +222,10 @@ stop_vbdev_poll(void *opaque)
 		return 0;
 	}
 
-	rc = ocf_mngt_cache_stop(vbdev->ocf_cache);
-	if (rc) {
-		SPDK_ERRLOG("Could not stop cache for '%s'\n", vbdev->name);
-	}
+	ocf_mngt_cache_stop(vbdev->ocf_cache, stop_vbdev_cmpl, arg);
 
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
+	spdk_poller_unregister(&arg->poller);
 
-	unregister_poller(arg, rc);
 	return 1;
 }
 
@@ -260,11 +276,28 @@ remove_base_bdev(struct vbdev_ocf_base *base)
 	}
 }
 
+static void
+remove_core_cmpl(void *priv, int error)
+{
+	struct poller_arg     *arg  = priv;
+	struct vbdev_ocf_base *base = arg->ctx;
+
+	ocf_mngt_cache_unlock(base->parent->ocf_cache);
+
+	remove_base_bdev(base);
+
+	if (arg->cb) {
+		arg->cb(error, arg->cb_arg);
+	}
+
+	spdk_poller_unregister(&arg->poller);
+}
+
 static int
 remove_core_poll(void *opaque)
 {
-	struct poller_arg     *arg   = opaque;
-	struct vbdev_ocf_base *base  = arg->ctx;
+	struct poller_arg     *arg  = opaque;
+	struct vbdev_ocf_base *base = arg->ctx;
 	ocf_core_t core;
 	int rc;
 
@@ -279,28 +312,18 @@ remove_core_poll(void *opaque)
 		return 0;
 	}
 
-	rc = ocf_mngt_cache_remove_core(core);
+	ocf_mngt_cache_remove_core(core, remove_core_cmpl, arg);
 
-	ocf_mngt_cache_unlock(base->parent->ocf_cache);
-
-	remove_base_bdev(base);
-
-	unregister_poller(arg, rc);
 	return 1;
 }
-
-struct remove_cache_arg {
-	struct vbdev_ocf_base *base;
-	void (*cb)(int, void *);
-	void *cb_arg;
-};
 
 static void
 remove_cache_cb(int status, void *opaque)
 {
-	struct remove_cache_arg *arg = opaque;
+	struct continuation   *arg  = opaque;
+	struct vbdev_ocf_base *base = arg->ctx;
 
-	remove_base_bdev(arg->base);
+	remove_base_bdev(base);
 
 	if (arg->cb) {
 		arg->cb(status, arg);
@@ -331,13 +354,13 @@ remove_base(struct vbdev_ocf_base *base, void (*cb)(int, void *), void *cb_arg)
 
 	if (base->parent->ocf_cache && ocf_cache_is_running(base->parent->ocf_cache)) {
 		if (base->is_cache) {
-			struct remove_cache_arg *arg = malloc(sizeof(*arg));
+			struct continuation *arg = malloc(sizeof(*arg));
 
 			if (arg == NULL) {
 				return -ENOMEM;
 			}
 
-			arg->base   = base;
+			arg->ctx    = base;
 			arg->cb     = cb;
 			arg->cb_arg = cb_arg;
 
@@ -775,11 +798,28 @@ static struct spdk_bdev_fn_table cache_dev_fn_table = {
 	.dump_info_json = vbdev_ocf_dump_info_json,
 };
 
+static void
+start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
+{
+	struct continuation *arg = priv;
+
+	if (error) {
+		SPDK_ERRLOG("Failed to attach cache device: %d\n", error);
+	}
+
+	ocf_mngt_cache_unlock(cache);
+
+	if (arg->cb) {
+		arg->cb(error, arg->cb_arg);
+	}
+}
+
 /* Start OCF cache, attach caching device */
 static int
-start_cache(struct vbdev_ocf *vbdev)
+start_cache(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 {
 	ocf_cache_t existing;
+	struct continuation *arg;
 	int rc;
 
 	if (vbdev->ocf_cache) {
@@ -791,6 +831,9 @@ start_cache(struct vbdev_ocf *vbdev)
 		SPDK_NOTICELOG("OCF bdev %s connects to existing cache device %s\n",
 			       vbdev->name, vbdev->cache.name);
 		vbdev->ocf_cache = existing;
+		if (cb) {
+			cb(0, cb_arg);
+		}
 		return 0;
 	}
 
@@ -801,14 +844,37 @@ start_cache(struct vbdev_ocf *vbdev)
 	}
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
 
-	rc = ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device);
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
-	if (rc) {
-		SPDK_ERRLOG("Failed to attach cache device\n");
-		return rc;
+	arg = malloc(sizeof(*arg));
+	if (arg == NULL) {
+		return -ENOMEM;
 	}
 
+	arg->cb     = cb;
+	arg->cb_arg = cb_arg;
+
+	ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, arg);
+
 	return 0;
+}
+
+static void
+add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
+{
+	struct continuation *arg   = priv;
+	struct vbdev_ocf   *vbdev = arg->ctx;
+
+	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Failed to add core device to cache instance\n");
+	} else {
+		vbdev->ocf_core = core;
+		vbdev->core.id  = ocf_core_get_id(core);
+	}
+
+	if (arg->cb) {
+		arg->cb(error, arg->cb_arg);
+	}
 }
 
 static int
@@ -816,22 +882,26 @@ add_core_poll(void *opaque)
 {
 	struct poller_arg *arg   = opaque;
 	struct vbdev_ocf  *vbdev = arg->ctx;
-	int rc;
+	struct continuation *cont;
 
 	if (ocf_mngt_cache_trylock(vbdev->ocf_cache)) {
 		return 0;
 	}
 
-	rc = ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->ocf_core, &vbdev->cfg.core);
-	if (rc) {
-		SPDK_ERRLOG("Failed to add core device to cache instance\n");
-	} else {
-		vbdev->core.id = ocf_core_get_id(vbdev->ocf_core);
+	cont = malloc(sizeof(*cont));
+	if (cont == NULL) {
+		unregister_poller(arg, -ENOMEM);
+		return 0;
 	}
 
-	ocf_mngt_cache_unlock(vbdev->ocf_cache);
+	cont->ctx    = vbdev;
+	cont->cb     = arg->cb;
+	cont->cb_arg = arg->cb_arg;
 
-	unregister_poller(arg, rc);
+	ocf_mngt_cache_add_core(vbdev->ocf_cache, &vbdev->cfg.core, add_core_cmpl, cont);
+
+	spdk_poller_unregister(&arg->poller);
+	free(arg);
 	return 1;
 }
 
@@ -986,29 +1056,32 @@ register_ocf_bdev(int status, void *ctx)
 	examine_done(vbdev->core.bdev);
 }
 
+static void
+register_vbdev_cb(int status, void *ctx)
+{
+	struct vbdev_ocf *vbdev = ctx;
+
+	if (status) {
+		SPDK_ERRLOG("Failed to start cache instance: %d\n", status);
+		return;
+	}
+
+	status = add_core(vbdev, register_ocf_bdev, vbdev);
+	if (status) {
+		SPDK_ERRLOG("Failed to add core to cache instance: %d\n", status);
+		return;
+	}
+}
+
 /* Start OCF cache and register vbdev_ocf at bdev layer */
 static int
 register_vbdev(struct vbdev_ocf *vbdev)
 {
-	int result;
-
 	if (!vbdev->cache.attached || !vbdev->core.attached) {
 		return -EPERM;
 	}
 
-	result = start_cache(vbdev);
-	if (result) {
-		SPDK_ERRLOG("Failed to start cache instance\n");
-		return result;
-	}
-
-	result = add_core(vbdev, register_ocf_bdev, vbdev);
-	if (result) {
-		SPDK_ERRLOG("Failed to add core to cache instance\n");
-		return result;
-	}
-
-	return result;
+	return start_cache(vbdev, register_vbdev_cb, vbdev);
 }
 
 /* Init OCF configuration options
