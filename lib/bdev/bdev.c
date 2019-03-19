@@ -83,10 +83,12 @@ int __itt_init_ittlib(const char *, __itt_group_id);
 #define SPDK_BDEV_POOL_ALIGNMENT 512
 
 static const char *qos_conf_type[] = {"Limit_IOPS",
-				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS"
+				      "Limit_BPS", "Limit_Read_BPS", "Limit_Write_BPS",
+				      "Limit_Unmap_BPS"
 				     };
 static const char *qos_rpc_type[] = {"rw_ios_per_sec",
-				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec"
+				     "rw_mbytes_per_sec", "r_mbytes_per_sec", "w_mbytes_per_sec",
+				     "u_mbytes_per_sec"
 				    };
 
 TAILQ_HEAD(spdk_bdev_list, spdk_bdev);
@@ -1245,6 +1247,7 @@ _spdk_bdev_qos_is_iops_rate_limit(enum spdk_bdev_qos_rate_limit_type limit)
 	case SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT:
 	case SPDK_BDEV_QOS_R_BPS_RATE_LIMIT:
 	case SPDK_BDEV_QOS_W_BPS_RATE_LIMIT:
+	case SPDK_BDEV_QOS_U_BPS_RATE_LIMIT:
 		return false;
 	case SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES:
 	default:
@@ -1260,6 +1263,8 @@ _spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return true;
 	default:
 		return false;
@@ -1285,6 +1290,19 @@ _spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_is_unmap_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	/* Treat discard/trim/unmap/write_zeroes same */
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1296,6 +1314,8 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 		return bdev_io->u.nvme_passthru.nbytes;
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_io->u.bdev.num_blocks * bdev->blocklen;
 	default:
 		return 0;
@@ -1305,6 +1325,10 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 static bool
 _spdk_bdev_qos_rw_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		return false;
+	}
+
 	if (limit->max_per_timeslice > 0 && limit->remaining_this_timeslice <= 0) {
 		return true;
 	} else {
@@ -1332,15 +1356,37 @@ _spdk_bdev_qos_w_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_b
 	return _spdk_bdev_qos_rw_queue_io(limit, io);
 }
 
+static bool
+_spdk_bdev_qos_u_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (_spdk_bdev_is_unmap_io(io) == false) {
+		return false;
+	}
+
+	if (limit->max_per_timeslice > 0 && limit->remaining_this_timeslice <= 0) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 static void
 _spdk_bdev_qos_rw_iops_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		return;
+	}
+
 	limit->remaining_this_timeslice--;
 }
 
 static void
 _spdk_bdev_qos_rw_bps_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		return;
+	}
+
 	limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
 }
 
@@ -1362,6 +1408,16 @@ _spdk_bdev_qos_w_bps_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk
 	}
 
 	return _spdk_bdev_qos_rw_bps_update_quota(limit, io);
+}
+
+static void
+_spdk_bdev_qos_u_bps_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+{
+	if (_spdk_bdev_is_unmap_io(io) == false) {
+		return;
+	}
+
+	limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
 }
 
 static void
@@ -1393,6 +1449,10 @@ _spdk_bdev_qos_set_ops(struct spdk_bdev_qos *qos)
 			qos->rate_limits[i].queue_io = _spdk_bdev_qos_w_queue_io;
 			qos->rate_limits[i].update_quota = _spdk_bdev_qos_w_bps_update_quota;
 			break;
+		case SPDK_BDEV_QOS_U_BPS_RATE_LIMIT:
+			qos->rate_limits[i].queue_io = _spdk_bdev_qos_u_queue_io;
+			qos->rate_limits[i].update_quota = _spdk_bdev_qos_u_bps_update_quota;
+			break;
 		default:
 			break;
 		}
@@ -1416,9 +1476,17 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 
 				if (qos->rate_limits[i].queue_io(&qos->rate_limits[i],
 								 bdev_io) == true) {
-					return submitted_ios;
+					if (i != SPDK_BDEV_QOS_U_BPS_RATE_LIMIT) {
+						return submitted_ios;
+					} else {
+						break;
+					}
 				}
 			}
+			if (i != SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
+				continue;
+			}
+
 			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 				if (!qos->rate_limits[i].update_quota) {
 					continue;
