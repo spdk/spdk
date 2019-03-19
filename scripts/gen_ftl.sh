@@ -19,6 +19,8 @@ function generate_config {
 	echo "  TransportID \"trtype:PCIe traddr:$1\" $2 $3 $4"
 }
 
+uuid=00000000-0000-0000-0000-000000000000
+
 while getopts ":a:n:l:m:u:" arg; do
 	case "$arg" in
 		a)	addr=$OPTARG	;;

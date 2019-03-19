@@ -485,27 +485,27 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			  struct ftl_bdev_init_opts *opts,
 			  size_t *num_bdevs)
 {
-	const char *val;
-	size_t i;
-	int rc = 0;
+	const struct spdk_uuid null_uuid = {};
+	const char *val, *trid;
+	int i, rc = 0;
 
 	*num_bdevs = 0;
 
 	for (i = 0; i < FTL_MAX_BDEVS; i++, opts++) {
-		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
+		trid = val = spdk_conf_section_get_nmval(sp, "TransportID", i, 0);
 		if (!val) {
 			break;
 		}
 
 		rc = spdk_nvme_transport_id_parse(&opts->trid, val);
 		if (rc < 0) {
-			SPDK_ERRLOG("Unable to parse TransportID: %s\n", val);
+			SPDK_ERRLOG("Unable to parse TransportID: %s\n", trid);
 			rc = -1;
 			break;
 		}
 
 		if (opts->trid.trtype != SPDK_NVME_TRANSPORT_PCIE) {
-			SPDK_ERRLOG("Unsupported transport type\n");
+			SPDK_ERRLOG("Unsupported transport type for TransportID: %s\n", trid);
 			continue;
 		}
 
@@ -513,7 +513,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
 		if (!val) {
-			SPDK_ERRLOG("No name provided for TransportID\n");
+			SPDK_ERRLOG("No name provided for TransportID: %s\n", trid);
 			rc = -1;
 			break;
 		}
@@ -521,30 +521,34 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 2);
 		if (!val) {
-			SPDK_ERRLOG("No punit range provided for TransportID\n");
+			SPDK_ERRLOG("No punit range provided for TransportID: %s\n", trid);
 			rc = -1;
 			break;
 		}
 
 		if (bdev_ftl_parse_punits(&opts->range, val)) {
-			SPDK_ERRLOG("Invalid punit range\n");
+			SPDK_ERRLOG("Invalid punit range for TransportID: %s\n", trid);
 			rc = -1;
 			break;
 		}
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
 		if (!val) {
-			continue;
-		}
-
-		rc = spdk_uuid_parse(&opts->uuid, val);
-		if (rc < 0) {
-			SPDK_ERRLOG("Failed to parse uuid: %s\n", val);
+			SPDK_ERRLOG("No UUID provided for TransportID: %s\n", trid);
 			rc = -1;
 			break;
 		}
 
-		opts->mode = 0;
+		rc = spdk_uuid_parse(&opts->uuid, val);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to parse uuid: %s for TransportID: %s\n", val, trid);
+			rc = -1;
+			break;
+		}
+
+		if (spdk_uuid_compare(&opts->uuid, &null_uuid)) {
+			opts->mode = 0;
+		}
 	}
 
 	if (!rc) {
