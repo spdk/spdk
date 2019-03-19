@@ -8,6 +8,13 @@ Shared receive queue can now be disabled even for NICs that support it using the
 `nvmf_create_transport` RPC method parameter `no_srq`. The actual use of a shared
 receive queue is predicated on hardware support when this flag is not used.
 
+### bdev
+
+Enforcement of unmap limit for quality of service (QoS) has been added to the
+bdev layer. The user controllable unmap limit is separate from the write limit.
+In order to complete the unmap operation fast, it is recommended to set a larger
+limit to avoid some potential timeout from unmap operation.
+
 ## v19.04:
 
 ### nvme
