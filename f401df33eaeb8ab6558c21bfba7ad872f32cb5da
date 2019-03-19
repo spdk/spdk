@@ -2,6 +2,75 @@
   "comments": [
     {
       "key": {
+        "uuid": "ae68ca78_593f798d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Have you verified we actually need all those includes ?",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 18
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f9980609_e2ffd656",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 83,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Unused (might be a separate patch)",
+      "range": {
+        "startLine": 82,
+        "startChar": 0,
+        "endLine": 83,
+        "endChar": 21
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2d360035_53eb3f83",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 151,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Please change it to relevant SPDK log, rather than printf.\nBesides can we log more meaningful info (session_handle ?)",
+      "range": {
+        "startLine": 151,
+        "startChar": 2,
+        "endLine": 151,
+        "endChar": 37
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a2d1846_5dc3034d",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -22,6 +91,75 @@
       "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5186a060_66888ba2",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1098,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Can we change all clib_warning to relevant SPDK logs ?",
+      "range": {
+        "startLine": 1098,
+        "startChar": 2,
+        "endLine": 1098,
+        "endChar": 14
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bfdc4f86_09102520",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 64
+      },
+      "lineNbr": 85,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Those two are no longer needed if line 87 is moved out of this if.",
+      "range": {
+        "startLine": 84,
+        "startChar": 0,
+        "endLine": 85,
+        "endChar": 30
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "62445ae5_53e1519d",
+        "filename": "mk/spdk.modules.mk",
+        "patchSetId": 64
+      },
+      "lineNbr": 87,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:13:20Z",
+      "side": 1,
+      "message": "Lets leave this part outside of CONFIG_VPP_DIR if-block, since it applies to both compile types of VPP.",
+      "range": {
+        "startLine": 87,
+        "startChar": 0,
+        "endLine": 87,
+        "endChar": 47
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
