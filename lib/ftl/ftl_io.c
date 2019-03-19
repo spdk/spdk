@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 #include "spdk/ftl.h"
 
 #include "ftl_io.h"
@@ -95,19 +96,22 @@ void
 ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt)
 {
 	struct iovec *iov = ftl_io_iovec(io);
-	size_t iov_lbks;
+	size_t iov_lbks, num_lbks;
 
 	while (lbk_cnt > 0) {
 		assert(io->iov_pos < io->iov_cnt);
 		iov_lbks = iov[io->iov_pos].iov_len / PAGE_SIZE;
 
 		if (io->iov_off + lbk_cnt < iov_lbks) {
+			io->pos += lbk_cnt;
 			io->iov_off += lbk_cnt;
 			break;
 		}
 
 		assert(iov_lbks > io->iov_off);
-		lbk_cnt -= (iov_lbks - io->iov_off);
+		num_lbks = iov_lbks - io->iov_off;
+		io->pos += num_lbks;
+		lbk_cnt -= num_lbks;
 		io->iov_off = 0;
 		io->iov_pos++;
 	}
