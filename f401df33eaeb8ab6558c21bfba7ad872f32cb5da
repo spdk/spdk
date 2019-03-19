@@ -278,6 +278,29 @@
     },
     {
       "key": {
+        "uuid": "2e2e896d_db557f2a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1326,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "We might want to give a way to customize this socket file placement. Using defaults is probably fine for now, but ideally we want to be able to provide a set_vpp_options RPC or so.",
+      "range": {
+        "startLine": 1326,
+        "startChar": 39,
+        "endLine": 1326,
+        "endChar": 54
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5c1bb46d_39e17bb7",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -301,6 +324,29 @@
     },
     {
       "key": {
+        "uuid": "04a351ce_57addb24",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "From info that you provided offline, vl_socket_client_init_shm() in v19.01.1 only has 1 argument. SPDK does want VPP to create separate pthread for us, so it makes sense.\nAlthough I\u0027d prefer to avoid using patches that are not in v19.01.1.\nDo you see any way we could what we need, without additional patch on VPP ?",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1333,
+        "endChar": 58
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0197ddd0_aad58727",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -317,6 +363,98 @@
         "startChar": 1,
         "endLine": 1335,
         "endChar": 11
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da891a92_57fa128a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1339,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "I don\u0027t see this being used anywhere, is it needed ?",
+      "range": {
+        "startLine": 1339,
+        "startChar": 0,
+        "endLine": 1339,
+        "endChar": 44
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "caf252cc_1d1f629e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "This describes what is being done at line 1357",
+      "range": {
+        "startLine": 1353,
+        "startChar": 1,
+        "endLine": 1353,
+        "endChar": 40
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "528ebf39_049dc9c0",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1357,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "What is the correct order here ?\nrx_poller_fn will start processing vl_input_queue immediately, on the other hand app_event_queue won\u0027t be processed until the app is attached.\nWhat is the dependency on processing those, to enabling sessions in VPP ? (I guess none, so why not call it directly ?)",
+      "range": {
+        "startLine": 1355,
+        "startChar": 0,
+        "endLine": 1357,
+        "endChar": 73
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6377fe7a_d6bb0080",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1357,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:03:40Z",
+      "side": 1,
+      "message": "Does this need to be thread_send_msg since we already are on this thread ?",
+      "range": {
+        "startLine": 1357,
+        "startChar": 1,
+        "endLine": 1357,
+        "endChar": 73
       },
       "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
