@@ -1,0 +1,228 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7235b2a2_8195f22d",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Need an empty line after this statement",
+      "range": {
+        "startLine": 934,
+        "startChar": 1,
+        "endLine": 934,
+        "endChar": 18
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4f9d3398_232f9d80",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "remove this line",
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4a058892_19eaf225",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Change to SPDK_OPAL_H  Since it is located in include/spdk folder",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 15
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f4d44e28_65c848e2",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Change to SPDK_OPAL_SEPC_H. Refer the same style in nvme_spec.h",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 19
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bb1abeaf_8e5f1cc0",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Add an empty line after this",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 29
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ff407637_1b62bcc8",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "For the definition, we can put it into one line.",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 50
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4de2549d_4de0bea0",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Failed on dev\u003d%p\\n\", dev",
+      "range": {
+        "startLine": 97,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 40
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4256800e_f2453fa2",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Same comments with line 98",
+      "range": {
+        "startLine": 117,
+        "startChar": 9,
+        "endLine": 118,
+        "endChar": 43
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "517374c0_adc0a763",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "call the self function again? Can we avoid this?",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 27
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "79a6ecf5_82a07d69",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-19T07:54:28Z",
+      "side": 1,
+      "message": "Could we also add SPDK prefix here?",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 23
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
