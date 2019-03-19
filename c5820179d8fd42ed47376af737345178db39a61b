@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f3e1c9c0_8968cc32",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1024,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-19T08:06:27Z",
+      "side": 1,
+      "message": "Why not process cpl_bus_addr in the same patch?",
+      "range": {
+        "startLine": 1024,
+        "startChar": 28,
+        "endLine": 1024,
+        "endChar": 40
+      },
+      "revId": "c5820179d8fd42ed47376af737345178db39a61b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
