@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "97f93dd5_0b82db3a",
+        "filename": "lib/bdev/uring/bdev_uring.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 269,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-19T08:01:38Z",
+      "side": 1,
+      "message": "get_buf_cb has the third parameter, success/failure, now. \n\nIf the third parameter is false, please return spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED).",
+      "range": {
+        "startLine": 269,
+        "startChar": 12,
+        "endLine": 269,
+        "endChar": 33
+      },
+      "revId": "be7f7ae0530b51c9bde81924fddc87cc9764a336",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6ea3e0f9_c10d0b8f",
+        "filename": "lib/bdev/uring/bdev_uring.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-19T08:01:38Z",
+      "side": 1,
+      "message": "create_uring_bdev and delete_uring_bdev ?",
+      "range": {
+        "startLine": 46,
+        "startChar": 18,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "be7f7ae0530b51c9bde81924fddc87cc9764a336",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
