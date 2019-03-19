@@ -2,6 +2,46 @@
   "comments": [
     {
       "key": {
+        "uuid": "b02d176d_37e8247b",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T15:51:05Z",
+      "side": 1,
+      "message": "This goes unused",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1e09ecfa_838516d3",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 733,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T15:51:05Z",
+      "side": 1,
+      "message": "Should return errno in this case too (same as line 719)",
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6a97be18_d379e827",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 65
