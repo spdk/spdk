@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "6a97be18_d379e827",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1082,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:57:20Z",
+      "side": 1,
+      "message": "Dead code?",
+      "range": {
+        "startLine": 1079,
+        "startChar": 0,
+        "endLine": 1082,
+        "endChar": 14
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "13c2c936_6ec995aa",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:57:20Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we cleanup the application session in case of failure ?",
+      "range": {
+        "startLine": 1099,
+        "startChar": 0,
+        "endLine": 1100,
+        "endChar": 49
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a75aafe_dd7e457f",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 65
