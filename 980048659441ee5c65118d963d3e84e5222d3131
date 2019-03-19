@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "504e2d20_6cfbb960",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 36,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-19T08:50:50Z",
+      "side": 1,
+      "message": "I\u0027ve checked checked it and it seems to work fine on my machine:\n[ksztyber@ftlvm spdk]$ sudo ./scripts/rpc.py construct_ftl_bdev -a 0000:00:04.0 -b nvme0 -l 0-3 -u \"\"\n{\n  \"name\": \"nvme0\",\n  \"uuid\": \"e84a48bb-02e0-41be-a787-76453237f341\"\n}",
+      "parentUuid": "bdecdad1_9d8a3bc7",
+      "revId": "980048659441ee5c65118d963d3e84e5222d3131",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "70a41d83_f895d0e1",
         "filename": "test/ftl/json.sh",
         "patchSetId": 1
