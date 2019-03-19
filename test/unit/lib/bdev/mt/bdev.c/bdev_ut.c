@@ -948,6 +948,107 @@ io_during_qos_reset(void)
 }
 
 static void
+io_during_qos_unmap(void)
+{
+	struct spdk_io_channel *io_ch[2];
+	struct spdk_bdev_channel *bdev_ch[2];
+	struct spdk_bdev *bdev;
+	enum spdk_bdev_io_status status, unmap_status1, unmap_status2;
+	int rc;
+
+	setup_test();
+	MOCK_SET(spdk_get_ticks, 0);
+
+	/* Enable QoS */
+	bdev = &g_bdev.bdev;
+	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
+	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
+	TAILQ_INIT(&bdev->internal.qos->queued);
+	/*
+	 * Enable read/write IOPS, write only byte per sec, read/write
+	 * byte per second and unmap only byte per sec rate limits.
+	 * In this case, read/write byte per second rate limit will
+	 * take effect first.
+	 */
+	/* 2000 read/write I/O per second, or 2 per millisecond */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT].limit = 2000;
+	/* 4K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT].limit = 4096000;
+	/* 8K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_W_BPS_RATE_LIMIT].limit = 8192000;
+	/* 16K byte per millisecond with 4K block size */
+	bdev->internal.qos->rate_limits[SPDK_BDEV_QOS_U_BPS_RATE_LIMIT].limit = 16384000;
+
+	g_get_io_channel = true;
+
+	/* Create channels */
+	set_thread(0);
+	io_ch[0] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[0] = spdk_io_channel_get_ctx(io_ch[0]);
+	CU_ASSERT(bdev_ch[0]->flags == BDEV_CH_QOS_ENABLED);
+
+	set_thread(1);
+	io_ch[1] = spdk_bdev_get_io_channel(g_desc);
+	bdev_ch[1] = spdk_io_channel_get_ctx(io_ch[1]);
+	CU_ASSERT(bdev_ch[1]->flags == BDEV_CH_QOS_ENABLED);
+
+	/* Send one large unmap I/O to consume all unmap allotment. */
+	unmap_status1 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_unmap_blocks(g_desc, io_ch[1], 0, 16, io_during_io_done, &unmap_status1);
+	CU_ASSERT(rc == 0);
+
+	/* Send one write I/O on same channel which shall succeed as seperation from unmap allotment. */
+	status = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_write_blocks(g_desc, io_ch[1], NULL, 0, 1, io_during_io_done, &status);
+	CU_ASSERT(rc == 0);
+
+	/* Send another large unmap I/O which will be queued. */
+	unmap_status2 = SPDK_BDEV_IO_STATUS_PENDING;
+	rc = spdk_bdev_unmap_blocks(g_desc, io_ch[1], 16, 16, io_during_io_done, &unmap_status2);
+	CU_ASSERT(rc == 0);
+
+	poll_threads();
+	CU_ASSERT(unmap_status1 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(unmap_status2 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_PENDING);
+
+	/* Complete any I/O that arrived at the disk */
+	poll_threads();
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, 0);
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+
+	CU_ASSERT(unmap_status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(unmap_status2 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Advance in time by 10 millisecond for the next unmap operation */
+	spdk_delay_us(10000);
+
+	/* Complete more I/O */
+	poll_threads();
+	set_thread(1);
+	stub_complete_io(g_bdev.io_target, 0);
+	set_thread(0);
+	stub_complete_io(g_bdev.io_target, 0);
+	poll_threads();
+
+	/* Now the second unmap I/O should be done */
+	CU_ASSERT(unmap_status2 == SPDK_BDEV_IO_STATUS_SUCCESS);
+
+	/* Tear down the channels */
+	set_thread(1);
+	spdk_put_io_channel(io_ch[1]);
+	set_thread(0);
+	spdk_put_io_channel(io_ch[0]);
+	poll_threads();
+
+	teardown_test();
+}
+
+static void
 enomem_done(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 {
 	enum spdk_bdev_io_status *status = cb_arg;
@@ -1522,6 +1623,7 @@ main(int argc, char **argv)
 		CU_add_test(suite, "io_during_reset", io_during_reset) == NULL ||
 		CU_add_test(suite, "io_during_qos_queue", io_during_qos_queue) == NULL ||
 		CU_add_test(suite, "io_during_qos_reset", io_during_qos_reset) == NULL ||
+		CU_add_test(suite, "io_during_qos_unmap", io_during_qos_unmap) == NULL ||
 		CU_add_test(suite, "enomem", enomem) == NULL ||
 		CU_add_test(suite, "enomem_multi_bdev", enomem_multi_bdev) == NULL ||
 		CU_add_test(suite, "enomem_multi_io_target", enomem_multi_io_target) == NULL ||
