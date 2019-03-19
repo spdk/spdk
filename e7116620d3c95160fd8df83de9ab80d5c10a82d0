@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "eb03508b_e061439f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-19T10:04:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79d93b40_c285cea7",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 34
+      },
+      "revId": "e7116620d3c95160fd8df83de9ab80d5c10a82d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "10f70784_293caf2e",
         "filename": "lib/lvol/lvol.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-18T12:29:16Z",
       "side": 1,
       "message": "If you\u0027ve encountered this in functional test, please add such scenario.\nBesides, would be great to have UT for three cases outline in previous patch set (delete lvol, delete lvs, failure on create lvol).",
+      "range": {
+        "startLine": 899,
+        "startChar": 0,
+        "endLine": 899,
+        "endChar": 25
+      },
+      "revId": "e7116620d3c95160fd8df83de9ab80d5c10a82d0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f87ea106_4b42c596",
+        "filename": "lib/lvol/lvol.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 899,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-03-19T10:04:28Z",
+      "side": 1,
+      "message": "I actually encountered this when I made a mistake in a next patch in patch series. I don\u0027t see how I can create functional test that will cause to get into this path.",
+      "parentUuid": "10f70784_293caf2e",
       "range": {
         "startLine": 899,
         "startChar": 0,
