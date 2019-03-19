@@ -12,6 +12,10 @@ timing_enter memory
 $testdir/memory/memory_ut
 timing_exit memory
 
+timing_enter mempool
+$testdir/mempool/mempool
+timing_exit mempool
+
 timing_enter vtophys
 $testdir/vtophys/vtophys
 timing_exit vtophys
