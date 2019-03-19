@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a75aafe_dd7e457f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:29:57Z",
+      "side": 1,
+      "message": "Do we need to support all of those ?\nI thought that at least for SSVM_SEGMENT_SHM, the support for it is not needed if we do MEMFD.",
+      "range": {
+        "startLine": 1184,
+        "startChar": 0,
+        "endLine": 1209,
+        "endChar": 2
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ec283eb7_1b782fe7",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1215,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T14:29:57Z",
+      "side": 1,
+      "message": "We should fail here properly by doing most of what is done in _spdk_vpp_application_detached() [poller unregister, clean up and net_framework init next]",
+      "range": {
+        "startLine": 1213,
+        "startChar": 0,
+        "endLine": 1215,
+        "endChar": 8
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
