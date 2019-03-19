@@ -45,6 +45,30 @@
       "revId": "be7f7ae0530b51c9bde81924fddc87cc9764a336",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9acf3c56_a9c0371a",
+        "filename": "lib/bdev/uring/bdev_uring.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T18:23:49Z",
+      "side": 1,
+      "message": "I agree.  This \"disk\" part of the name came from using the aio bdev module as a template.  But we shouldn\u0027t carry that over here.  Shuhei\u0027s suggested names would be better.  (We should remove other uses of \"disk\" in bdev_uring.c as well.)",
+      "parentUuid": "6ea3e0f9_c10d0b8f",
+      "range": {
+        "startLine": 46,
+        "startChar": 18,
+        "endLine": 46,
+        "endChar": 35
+      },
+      "revId": "be7f7ae0530b51c9bde81924fddc87cc9764a336",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
