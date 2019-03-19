@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4ac8f17f_bf24a707",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-03-19T12:21:18Z",
+      "side": 1,
+      "message": "We can cat all content into the bdev_qos.conf file.Then use sed to modify the file contents.",
+      "range": {
+        "startLine": 198,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 3
+      },
+      "revId": "7303497da139af4230001cc563ceabafeeb36792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1376c255_34e5451a",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-03-19T12:21:18Z",
+      "side": 1,
+      "message": "We can use \"sed -i\" command to modify the file content.",
+      "range": {
+        "startLine": 211,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 3
+      },
+      "revId": "7303497da139af4230001cc563ceabafeeb36792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "df2f081c_354efb17",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 222,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-03-19T12:21:18Z",
+      "side": 1,
+      "message": "same with the comment above.",
+      "range": {
+        "startLine": 219,
+        "startChar": 1,
+        "endLine": 222,
+        "endChar": 3
+      },
+      "revId": "7303497da139af4230001cc563ceabafeeb36792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
