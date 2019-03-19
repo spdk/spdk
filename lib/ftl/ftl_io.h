@@ -68,6 +68,8 @@ enum ftl_io_flags {
 	FTL_IO_PPA_MODE		= (1 << 6),
 	/* Indicates that IO contains noncontiguous LBAs */
 	FTL_IO_VECTOR_LBA	= (1 << 7),
+	/* Indicates that IO is retrying */
+	FTL_IO_RETRY		= (1 << 8),
 };
 
 enum ftl_io_type {
@@ -197,6 +199,8 @@ struct ftl_io {
 
 	/* Trace group id */
 	uint64_t				trace;
+
+	TAILQ_ENTRY(ftl_io)			entry;
 };
 
 /* Metadata IO */
@@ -249,6 +253,7 @@ void ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt);
 size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
+size_t ftl_io_lbks_left(struct ftl_io *io);
 int ftl_io_init_iovec(struct ftl_io *io, void *buf,
 		      size_t iov_cnt, size_t req_size);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);

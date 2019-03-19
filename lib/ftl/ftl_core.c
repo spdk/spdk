@@ -699,13 +699,13 @@ ftl_read_canceled(int rc)
 	return rc == 0;
 }
 
-static void
+static int
 ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		void *ctx)
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_ppa ppa;
-	size_t lbk = 0;
+	size_t lbk = io->lbk_cnt - ftl_io_lbks_left(io);
 	int rc = 0, lbk_cnt;
 
 	while (lbk < io->lbk_cnt) {
@@ -741,6 +741,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 				SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
 			}
 			break;
+
 		}
 
 		ftl_io_update_iovec(io, lbk_cnt);
@@ -753,6 +754,8 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
+
+	return rc;
 }
 
 static int
@@ -1319,7 +1322,6 @@ ftl_io_write(struct ftl_io *io)
 	return 0;
 }
 
-
 static int
 _spdk_ftl_write(struct ftl_io *io)
 {
@@ -1376,7 +1378,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return _spdk_ftl_write(io);
 }
 
-void
+int
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
@@ -1389,11 +1391,11 @@ ftl_io_read(struct ftl_io *io)
 			next_ppa = ftl_lba_read_next_ppa;
 		}
 
-		ftl_submit_read(io, next_ppa, NULL);
-		return;
+		return ftl_submit_read(io, next_ppa, NULL);
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
+	return 0;
 }
 
 static void
@@ -1509,12 +1511,34 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 	ftl_anm_event_complete(event);
 }
 
+static void
+ftl_process_nomem_queue(struct spdk_ftl_dev *dev)
+{
+	struct ftl_io *io;
+	int rc;
+
+	assert(ftl_check_read_thread(dev));
+
+	while (!TAILQ_EMPTY(&dev->nomem_io)) {
+		io = TAILQ_FIRST(&dev->nomem_io);
+		io->flags |= FTL_IO_RETRY;
+		io->status = 0;
+		rc = ftl_io_read(io);
+		if (rc == -ENOMEM) {
+			break;
+		}
+
+		TAILQ_REMOVE(&dev->nomem_io, io, entry);
+	}
+}
+
 int
 ftl_task_read(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
 	struct spdk_nvme_qpair *qpair = ftl_get_read_qpair(dev);
+	size_t ret;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -1523,7 +1547,13 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	return spdk_nvme_qpair_process_completions(qpair, 0);
+	ret = spdk_nvme_qpair_process_completions(qpair, 0);
+
+	if (ret && !TAILQ_EMPTY(&dev->nomem_io)) {
+		ftl_process_nomem_queue(dev);
+	}
+
+	return ret;
 }
 
 int

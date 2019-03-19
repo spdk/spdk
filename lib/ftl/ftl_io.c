@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 #include "spdk/ftl.h"
 
 #include "ftl_io.h"
@@ -140,6 +141,20 @@ ftl_io_iovec_len_left(struct ftl_io *io)
 {
 	struct iovec *iov = ftl_io_iovec(io);
 	return iov[io->iov_pos].iov_len / PAGE_SIZE - io->iov_off;
+}
+
+size_t
+ftl_io_lbks_left(struct ftl_io *io)
+{
+	size_t num_lbks = ftl_io_iovec_len_left(io);
+	struct iovec *iov = ftl_io_iovec(io);
+	size_t i;
+
+	for (i = io->iov_pos + 1; i < io->iov_cnt; ++i) {
+		num_lbks += iov[i].iov_len / PAGE_SIZE;
+	}
+
+	return num_lbks;
 }
 
 int
@@ -287,6 +302,14 @@ void
 ftl_io_complete(struct ftl_io *io)
 {
 	int keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
+
+	if (spdk_unlikely(io->status == -ENOMEM)) {
+		assert(io->type == FTL_IO_READ);
+		if (!(io->flags & FTL_IO_RETRY)) {
+			TAILQ_INSERT_TAIL(&io->dev->nomem_io, io, entry);
+		}
+		return;
+	}
 
 	io->flags &= ~FTL_IO_INITIALIZED;
 	io->cb.fn(io->cb.ctx, io->status);

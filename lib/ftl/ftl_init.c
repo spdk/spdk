@@ -840,6 +840,7 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 				sizeof(struct ftl_io_channel),
 				NULL);
 
+	TAILQ_INIT(&dev->nomem_io);
 	dev->ioch = spdk_get_io_channel(dev);
 	dev->init_cb = cb;
 	dev->init_arg = cb_arg;
