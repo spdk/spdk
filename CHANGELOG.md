@@ -46,6 +46,11 @@ block except for metadata.
 spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
 instead.
 
+Enforcement of unmap limit for quality of service (QoS) has been added to the bdev layer.
+Unmap will have the same limit as the write limit while does not affect each other. In
+order to complete the unmap operation fast, it is recommended to set a larger limit to
+avoid some potential timeout from unmap operation.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
