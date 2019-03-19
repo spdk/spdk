@@ -97,6 +97,8 @@ ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt)
 	struct iovec *iov = ftl_io_iovec(io);
 	size_t iov_lbks;
 
+	io->pos += lbk_cnt;
+
 	while (lbk_cnt > 0) {
 		assert(io->iov_pos < io->iov_cnt);
 		iov_lbks = iov[io->iov_pos].iov_len / PAGE_SIZE;
@@ -107,7 +109,7 @@ ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt)
 		}
 
 		assert(iov_lbks > io->iov_off);
-		lbk_cnt -= (iov_lbks - io->iov_off);
+		lbk_cnt -= (iov_lbks - io->iov_off) ;
 		io->iov_off = 0;
 		io->iov_pos++;
 	}
