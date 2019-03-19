@@ -70,6 +70,22 @@ spdk_align32pow2(uint32_t x)
 	return 1u << (1 + spdk_u32log2(x - 1));
 }
 
+static inline size_t
+spdk_sizelog2(size_t x)
+{
+	if (x == 0) {
+		/* log(0) is undefined */
+		return 0;
+	}
+	return 63u - __builtin_clzl(x);
+}
+
+static inline size_t
+spdk_alignsizepow2(size_t x)
+{
+	return 1u << (1 + spdk_sizelog2(x - 1));
+}
+
 /**
  * Check if a uint32_t is a power of 2.
  */
