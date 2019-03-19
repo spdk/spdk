@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f32f085_ab6e7ebb",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1262,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T18:27:16Z",
+      "side": 1,
+      "message": "how are these _itt_counter_* functions implemented?  I\u0027m concerned about thread safety issues - these will get called from multiple threads simultaneously",
+      "revId": "62864194cb587cc5af5f3ef36a39886408bde613",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
