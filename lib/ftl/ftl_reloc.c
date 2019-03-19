@@ -473,6 +473,7 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 {
 	struct ftl_ppa ppa;
 	size_t num_lbks;
+	int rc;
 
 	num_lbks = ftl_reloc_next_lbks(breloc, &ppa);
 
@@ -486,8 +487,12 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 		return -1;
 	}
 
-	ftl_io_read(io);
-	return 0;
+	rc = ftl_io_read(io);
+	if (rc == -ENOMEM) {
+		rc = 0;
+	}
+
+	return rc;
 }
 
 static void
