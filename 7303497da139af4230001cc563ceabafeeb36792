@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d3b05bff_fe186980",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-19T15:00:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4ac8f17f_bf24a707",
+      "range": {
+        "startLine": 198,
+        "startChar": 0,
+        "endLine": 198,
+        "endChar": 3
+      },
+      "revId": "7303497da139af4230001cc563ceabafeeb36792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1376c255_34e5451a",
         "filename": "test/bdev/blockdev.sh",
         "patchSetId": 9
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-19T12:21:18Z",
       "side": 1,
       "message": "We can use \"sed -i\" command to modify the file content.",
+      "range": {
+        "startLine": 211,
+        "startChar": 1,
+        "endLine": 214,
+        "endChar": 3
+      },
+      "revId": "7303497da139af4230001cc563ceabafeeb36792",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "258d32b4_6d591fa8",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-19T15:00:16Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1376c255_34e5451a",
       "range": {
         "startLine": 211,
         "startChar": 1,
