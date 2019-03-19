@@ -14,6 +14,13 @@ The function `spdk_notify_get_types()` and `spdk_notify_get_events()` were
 renamed to `spdk_notify_foreach_type()` and `spdk_notify_foreach_event()`,
 respectively. And update type name of callback accordingly.
 
+### bdev
+
+Enforcement of unmap limit for quality of service (QoS) has been added to the
+bdev layer. The user controllable unmap limit is separate from the write limit.
+In order to complete the unmap operation fast, it is recommended to set a larger
+limit to avoid some potential timeout from unmap operation.
+
 ## v19.04:
 
 ### nvme
