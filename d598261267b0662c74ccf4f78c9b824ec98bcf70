@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "96a43603_70e98063",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "this DEV_MD_PATH change could go in the previous patch",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a68946b3_932d6228",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "I think we can use the same callback for both readv and writev",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0ec5fe1f_2a89c95a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "I\u0027m not following how spdk_reduce_vol_unload could do this, unless there was some other kind of callback that would close the device.  We don\u0027t want spdk_reduce_vol_load to call spdk_bdev functions directly.",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6ce687c7_46ee9ab1",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "don\u0027t need to print out ziperrno if you know it\u0027s 0",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85b3246d_80814ca5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "this gets overwritten 2 lines later",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2635f00b_79cba31a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 987,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "does this need to be strdup\u0027d?  ISAL_PMD is a static string\n\nbut I do see above that we free this drv_name, so this does need to be strdup\u0027d here - but then I think this change needs to be made in the previous patch instead of this one",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "827f4030_2e5c3c53",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:48:32Z",
+      "side": 1,
+      "message": "I think you should use the params.chunk_size and params.logical_block_size here instead of hardcode values - then you\u0027re future proofed if we allow user to dynamically pick a different chunk size or logical block size",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
