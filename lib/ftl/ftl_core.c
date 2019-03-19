@@ -136,7 +136,9 @@ ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
 
 	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
 
-	if (!ftl_io_dec_req(io)) {
+	ftl_io_dec_req(io);
+
+	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
 }
@@ -705,12 +707,11 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 {
 	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_ppa ppa;
-	size_t lbk = 0;
 	int rc = 0, lbk_cnt;
 
-	while (lbk < io->lbk_cnt) {
+	while (io->pos < io->lbk_cnt) {
 		/* We might hit the cache here, if so, skip the read */
-		lbk_cnt = rc = next_ppa(io, &ppa, lbk, ctx);
+		lbk_cnt = rc = next_ppa(io, &ppa, io->pos, ctx);
 
 		/* We might need to retry the read from scratch (e.g. */
 		/* because write was under way and completed before */
@@ -722,7 +723,6 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		/* We don't have to schedule the read, as it was read from cache */
 		if (ftl_read_canceled(rc)) {
 			ftl_io_update_iovec(io, 1);
-			lbk++;
 			continue;
 		}
 
@@ -733,10 +733,8 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
-
 		if (rc) {
 			io->status = rc;
-
 			if (rc != -ENOMEM) {
 				SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
 			}
@@ -745,7 +743,6 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 
 		ftl_io_update_iovec(io, lbk_cnt);
 		ftl_io_inc_req(io);
-		lbk += lbk_cnt;
 	}
 
 	/* If we didn't have to read anything from the device, */
@@ -974,18 +971,18 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
-	size_t			i;
+	size_t			i, lbk_cnt;
 
 	for (i = 0; i < io->iov_cnt; ++i) {
+		lbk_cnt = iov[i].iov_len / PAGE_SIZE;
 		assert(iov[i].iov_len > 0);
-		assert(iov[i].iov_len / PAGE_SIZE == dev->xfer_size);
+		assert(lbk_cnt == dev->xfer_size);
 
 		ftl_trace_submission(dev, io, wptr->ppa, iov[i].iov_len / PAGE_SIZE);
 		rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
 						    iov[i].iov_base, ftl_io_get_md(io),
 						    ftl_ppa_addr_pack(dev, wptr->ppa),
-						    iov[i].iov_len / PAGE_SIZE,
-						    ftl_io_cmpl_cb, io, 0, 0, 0);
+						    lbk_cnt, ftl_io_cmpl_cb, io, 0, 0, 0);
 		if (rc) {
 			SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
 				    rc, wptr->ppa.ppa);
@@ -993,9 +990,9 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
-		io->pos = iov[i].iov_len / PAGE_SIZE;
+		ftl_io_update_iovec(io, lbk_cnt);
 		ftl_io_inc_req(io);
-		ftl_wptr_advance(wptr, iov[i].iov_len / PAGE_SIZE);
+		ftl_wptr_advance(wptr, lbk_cnt);
 	}
 
 	if (ftl_io_done(io)) {
@@ -1155,7 +1152,7 @@ ftl_rwb_fill(struct ftl_io *io)
 	int flags = ftl_rwb_flags_from_io(io);
 	uint64_t lba;
 
-	for (; io->pos < io->lbk_cnt; ++io->pos) {
+	while (io->pos < io->lbk_cnt) {
 		lba = ftl_io_current_lba(io);
 		if (lba == FTL_LBA_INVALID) {
 			ftl_io_update_iovec(io, 1);
@@ -1319,7 +1316,6 @@ ftl_io_write(struct ftl_io *io)
 	return 0;
 }
 
-
 static int
 _spdk_ftl_write(struct ftl_io *io)
 {
@@ -1390,7 +1386,6 @@ ftl_io_read(struct ftl_io *io)
 		}
 
 		ftl_submit_read(io, next_ppa, NULL);
-		return;
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
