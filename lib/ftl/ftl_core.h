@@ -198,8 +198,10 @@ struct spdk_ftl_dev {
 	/* Current user write limit */
 	int					limit;
 
-	/* Inflight io operations */
+	/* Inflight IO operations */
 	uint32_t				num_inflight;
+	/* Queue of IO awaiting retry */
+	TAILQ_HEAD(, ftl_io)			retry_queue;
 
 	/* Manages data relocation */
 	struct ftl_reloc			*reloc;
@@ -215,7 +217,7 @@ struct spdk_ftl_dev {
 typedef void (*ftl_restore_fn)(struct spdk_ftl_dev *, struct ftl_restore *, int);
 
 void	ftl_apply_limits(struct spdk_ftl_dev *dev);
-void	ftl_io_read(struct ftl_io *io);
+int	ftl_io_read(struct ftl_io *io);
 int	ftl_io_write(struct ftl_io *io);
 int	ftl_io_erase(struct ftl_io *io);
 int	ftl_io_flush(struct ftl_io *io);
