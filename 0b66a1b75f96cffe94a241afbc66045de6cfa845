@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3f5d294_0488e7de",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 50
+      },
+      "lineNbr": 613,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-19T21:07:26Z",
+      "side": 1,
+      "message": "This may not happen on the same thread that set the device_qp - see the example I gave on patch version 46.  If this is *not* the same thread, you\u0027ll need to send a message to the comp_bdev-\u003ereduce_thread to put the IO channel.  (You\u0027ll also need to think through what happens if someone creates another channel while that message is in process).\n\nNote you\u0027ll also need to set comp_ch-\u003edevice_qp \u003d NULL - otherwise the assert up on line 592 will have no effect should we run out of qpairs and we\u0027re allocating a qpair for this bdev for a second time.",
+      "revId": "0b66a1b75f96cffe94a241afbc66045de6cfa845",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
