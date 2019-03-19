@@ -71,6 +71,75 @@
     },
     {
       "key": {
+        "uuid": "7901659e_27cc5749",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 708,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "goto end\n\nPreviously session was not put back into the pool",
+      "range": {
+        "startLine": 708,
+        "startChar": 2,
+        "endLine": 708,
+        "endChar": 14
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e475a906_23b6f2ae",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "goto end",
+      "range": {
+        "startLine": 720,
+        "startChar": 0,
+        "endLine": 723,
+        "endChar": 15
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c73ac7ce_f7bd741f",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 735,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "Can we put this part into end: label ?",
+      "range": {
+        "startLine": 732,
+        "startChar": 0,
+        "endLine": 735,
+        "endChar": 15
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2a2d1846_5dc3034d",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -110,6 +179,167 @@
         "startChar": 2,
         "endLine": 1098,
         "endChar": 14
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e59f8070_c283619e",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "See below.",
+      "range": {
+        "startLine": 1279,
+        "startChar": 0,
+        "endLine": 1290,
+        "endChar": 43
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9e1c6827_ec04c00d",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1298,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "Can we provide some reasoning behind this number ?",
+      "range": {
+        "startLine": 1298,
+        "startChar": 30,
+        "endLine": 1298,
+        "endChar": 39
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "81cc0554_69c409a8",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1307,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "Can we move all the logging of VPP error codes to separate patch ? I see they are used only for posting, rather as proper return codes to users of the API.\nWe need to come up with good way to print those in SPDK friendly way. I think to make this patch simpler to review, printing error code as a number is fine, lets work on improving that in separate patch.",
+      "range": {
+        "startLine": 1305,
+        "startChar": 0,
+        "endLine": 1307,
+        "endChar": 8
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bf06a88d_823436ff",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "All that we do is set limited number of _t_handlers. Can we change this and define above this function to simpler vl_msg_api_set_handlers() direct calls ?\nSince we don\u0027t usually use this kind of construction in SPDK, it might be easier to read here.",
+      "range": {
+        "startLine": 1316,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 8
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c1bb46d_39e17bb7",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1330,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "app_name is not freed",
+      "range": {
+        "startLine": 1330,
+        "startChar": 2,
+        "endLine": 1330,
+        "endChar": 11
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0197ddd0_aad58727",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1335,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "app_name is not freed",
+      "range": {
+        "startLine": 1335,
+        "startChar": 1,
+        "endLine": 1335,
+        "endChar": 11
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e52316f6_3f6b3517",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1361,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-19T10:44:28Z",
+      "side": 1,
+      "message": "free(app_name) is needed",
+      "range": {
+        "startLine": 1361,
+        "startChar": 0,
+        "endLine": 1361,
+        "endChar": 4
       },
       "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
