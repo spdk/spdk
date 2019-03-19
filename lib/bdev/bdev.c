@@ -140,6 +140,13 @@ struct spdk_bdev_qos_limit {
 	 */
 	int64_t remaining_this_timeslice;
 
+	/** Remaining unmap IOs or bytes allowed in current timeslice (e.g., 1ms).
+	 *  For remaining bytes, allowed to run negative if an I/O is submitted when
+	 *  some bytes are remaining, but the I/O is bigger than that amount. The
+	 *  excess will be deducted from the next timeslice.
+	 */
+	int64_t remaining_unmap_this_timeslice;
+
 	/** Minimum allowed IOs or bytes to be issued in one timeslice (e.g., 1ms). */
 	uint32_t min_per_timeslice;
 
@@ -1246,6 +1253,8 @@ _spdk_bdev_qos_io_to_limit(struct spdk_bdev_io *bdev_io)
 	case SPDK_BDEV_IO_TYPE_NVME_IO_MD:
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return true;
 	default:
 		return false;
@@ -1271,6 +1280,19 @@ _spdk_bdev_is_read_io(struct spdk_bdev_io *bdev_io)
 	}
 }
 
+static bool
+_spdk_bdev_is_unmap_io(struct spdk_bdev_io *bdev_io)
+{
+	switch (bdev_io->type) {
+	/* Treat discard/trim/unmap/write_zeroes same */
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
+		return true;
+	default:
+		return false;
+	}
+}
+
 static uint64_t
 _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 {
@@ -1282,6 +1304,8 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 		return bdev_io->u.nvme_passthru.nbytes;
 	case SPDK_BDEV_IO_TYPE_READ:
 	case SPDK_BDEV_IO_TYPE_WRITE:
+	case SPDK_BDEV_IO_TYPE_UNMAP:
+	case SPDK_BDEV_IO_TYPE_WRITE_ZEROES:
 		return bdev_io->u.bdev.num_blocks * bdev->blocklen;
 	default:
 		return 0;
@@ -1291,7 +1315,15 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 static bool
 _spdk_bdev_qos_rw_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
-	if (limit->max_per_timeslice > 0 && limit->remaining_this_timeslice <= 0) {
+	int64_t remaining_this_timeslice;
+
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		remaining_this_timeslice = limit->remaining_unmap_this_timeslice;
+	} else {
+		remaining_this_timeslice = limit->remaining_this_timeslice;
+	}
+
+	if (limit->max_per_timeslice > 0 && remaining_this_timeslice <= 0) {
 		return true;
 	} else {
 		return false;
@@ -1321,13 +1353,21 @@ _spdk_bdev_qos_w_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_b
 static void
 _spdk_bdev_qos_rw_iops_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
-	limit->remaining_this_timeslice--;
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		limit->remaining_unmap_this_timeslice--;
+	} else {
+		limit->remaining_this_timeslice--;
+	}
 }
 
 static void
 _spdk_bdev_qos_rw_bps_update_quota(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
 {
-	limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
+	if (_spdk_bdev_is_unmap_io(io) == true) {
+		limit->remaining_unmap_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
+	} else {
+		limit->remaining_this_timeslice -= _spdk_bdev_get_io_size_in_byte(io);
+	}
 }
 
 static void
@@ -1822,6 +1862,8 @@ spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 							qos->rate_limits[i].min_per_timeslice);
 
 		qos->rate_limits[i].remaining_this_timeslice = qos->rate_limits[i].max_per_timeslice;
+
+		qos->rate_limits[i].remaining_unmap_this_timeslice = qos->rate_limits[i].max_per_timeslice;
 	}
 
 	_spdk_bdev_qos_set_ops(qos);
@@ -1846,12 +1888,16 @@ spdk_bdev_channel_poll_qos(void *arg)
 	/* Reset for next round of rate limiting */
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		/* We may have allowed the IOs or bytes to slightly overrun in the last
-		 * timeslice. remaining_this_timeslice is signed, so if it's negative
-		 * here, we'll account for the overrun so that the next timeslice will
-		 * be appropriately reduced.
+		 * timeslice. remaining_this_timeslice and remaining_unmap_this_timeslice
+		 * is signed, so if it's negative here, we'll account for the overrun so
+		 * that the next timeslice will be appropriately reduced.
 		 */
 		if (qos->rate_limits[i].remaining_this_timeslice > 0) {
 			qos->rate_limits[i].remaining_this_timeslice = 0;
+		}
+
+		if (qos->rate_limits[i].remaining_unmap_this_timeslice > 0) {
+			qos->rate_limits[i].remaining_unmap_this_timeslice = 0;
 		}
 	}
 
@@ -1859,6 +1905,9 @@ spdk_bdev_channel_poll_qos(void *arg)
 		qos->last_timeslice += qos->timeslice_size;
 		for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 			qos->rate_limits[i].remaining_this_timeslice +=
+				qos->rate_limits[i].max_per_timeslice;
+
+			qos->rate_limits[i].remaining_unmap_this_timeslice +=
 				qos->rate_limits[i].max_per_timeslice;
 		}
 	}
@@ -2128,6 +2177,7 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	 */
 	for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 		new_qos->rate_limits[i].remaining_this_timeslice = 0;
+		new_qos->rate_limits[i].remaining_unmap_this_timeslice = 0;
 		new_qos->rate_limits[i].min_per_timeslice = 0;
 		new_qos->rate_limits[i].max_per_timeslice = 0;
 	}

@@ -35,6 +35,11 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+Enforcement of unmap limit for quality of service (QoS) has been added to the bdev layer.
+Unmap will have the same limit as the write limit while does not affect each other. In
+order to complete the unmap operation fast, it is recommended to set a larger limit to
+avoid some potential timeout from unmap operation.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
