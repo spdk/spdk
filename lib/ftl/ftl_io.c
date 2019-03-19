@@ -32,6 +32,7 @@
  */
 
 #include "spdk/stdinc.h"
+#include "spdk/likely.h"
 #include "spdk/ftl.h"
 
 #include "ftl_io.h"
