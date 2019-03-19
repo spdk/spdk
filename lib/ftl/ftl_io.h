@@ -68,6 +68,8 @@ enum ftl_io_flags {
 	FTL_IO_PPA_MODE		= (1 << 6),
 	/* Indicates that IO contains noncontiguous LBAs */
 	FTL_IO_VECTOR_LBA	= (1 << 7),
+	/* Indicates that IO is being retried */
+	FTL_IO_RETRY		= (1 << 8),
 };
 
 enum ftl_io_type {
@@ -197,6 +199,8 @@ struct ftl_io {
 
 	/* Trace group id */
 	uint64_t				trace;
+
+	TAILQ_ENTRY(ftl_io)			retry_entry;
 };
 
 /* Metadata IO */
@@ -232,7 +236,7 @@ ftl_io_mode_lba(const struct ftl_io *io)
 static inline bool
 ftl_io_done(const struct ftl_io *io)
 {
-	return io->req_cnt == 0;
+	return io->req_cnt == 0 && !(io->flags & FTL_IO_RETRY);
 }
 
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
