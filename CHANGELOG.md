@@ -20,6 +20,11 @@ The format of the data returned by the get_bdevs_iostat RPC has changed to
 make it easier to parse.  It now returns an object with a "ticks" object
 and "bdevs" array with the per-bdev statistics.
 
+Enforcement of unmap limit for quality of service (QoS) has been added to the
+bdev layer. The user controllable unmap limit is separate from the write limit.
+In order to complete the unmap operation fast, it is recommended to set a larger
+limit to avoid some potential timeout from unmap operation.
+
 ## v19.04:
 
 ### nvme
