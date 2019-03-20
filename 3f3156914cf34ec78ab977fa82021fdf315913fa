@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "503662d7_5683ca52",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T00:14:00Z",
+      "side": 1,
+      "message": "let\u0027s remove the spdk_ prefix from these functions - we should reserve that prefix for public visible functions - even just adding a leading _ makes it more clear that these are private functions to this file",
+      "revId": "3f3156914cf34ec78ab977fa82021fdf315913fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
