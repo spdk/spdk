@@ -525,6 +525,7 @@ function vm_setup()
 	local guest_memory=1024
 	local queue_number=""
 	local vhost_dir="$(get_vhost_dir)"
+	local seabios_log=false
 	while getopts ':-:' optchar; do
 		case "$optchar" in
 			-)
@@ -543,6 +544,7 @@ function vm_setup()
 				migrate-to=*) local vm_migrate_to="${OPTARG#*=}" ;;
 				vhost-num=*) local vhost_dir="$(get_vhost_dir ${OPTARG#*=})" ;;
 				spdk-boot=*) local boot_from="${OPTARG#*=}" ;;
+				seabios_log) local seabios_log=true ;;
 				*)
 					error "unknown argument $OPTARG"
 					return 1
@@ -732,6 +734,9 @@ function vm_setup()
 				;;
 			spdk_vhost_scsi)
 				notice "using socket $vhost_dir/naa.$disk.$vm_num"
+				if $seabios_log; then
+					cmd+="-chardev file,path=$vm_dir/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios ${eol}"
+				fi
 				cmd+="-chardev socket,id=char_$disk,path=$vhost_dir/naa.$disk.$vm_num ${eol}"
 				cmd+="-device vhost-user-scsi-pci,id=scsi_$disk,num_queues=$queue_number,chardev=char_$disk"
 				if [[ "$disk" == "$boot_from" ]]; then
@@ -862,6 +867,33 @@ function vm_run()
 	done
 }
 
+function print_vm_logs()
+{
+	vm=$1
+	warning "================"
+	warning "QEMU LOG:"
+	if [[ -r $vm/qemu.log ]]; then
+		cat $vm/qemu.log
+	else
+		warning "LOG not found"
+	fi
+
+	warning "VM LOG:"
+	if [[ -r $vm/serial.log ]]; then
+		cat $vm/serial.log
+	else
+		warning "LOG not found"
+	fi
+
+	warning "SEABIOS LOG:"
+	if [[ -r $vm/seabios.log ]]; then
+		cat $vm/seabios.log
+	else
+		warning "LOG not found"
+	fi
+	warning "================"
+}
+
 # Wait for all created VMs to boot.
 # param $1 max wait time
 function vm_wait_for_boot()
@@ -895,26 +927,13 @@ function vm_wait_for_boot()
 			if ! vm_is_running $vm_num; then
 
 				warning "VM $vm_num is not running"
-				warning "================"
-				warning "QEMU LOG:"
-				if [[ -r $vm/qemu.log ]]; then
-					cat $vm/qemu.log
-				else
-					warning "LOG not found"
-				fi
-
-				warning "VM LOG:"
-				if [[ -r $vm/serial.log ]]; then
-					cat $vm/serial.log
-				else
-					warning "LOG not found"
-				fi
-				warning "================"
+				print_vm_logs "$vm"
 				$shell_restore_x
 				return 1
 			fi
 
 			if [[ $(date +%s) -gt $timeout_time ]]; then
+				print_vm_logs "$vm"
 				warning "timeout waiting for machines to boot"
 				$shell_restore_x
 				return 1
