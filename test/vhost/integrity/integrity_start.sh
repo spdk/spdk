@@ -80,7 +80,7 @@ $setup_cmd
 
 # Run VM
 vm_run 0
-vm_wait_for_boot 600 0
+vm_wait_for_boot 300 0
 
 # Run tests on VM
 vm_scp 0 $INTEGRITY_BASE_DIR/integrity_vm.sh root@127.0.0.1:/root/integrity_vm.sh
