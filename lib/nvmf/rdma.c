@@ -2704,6 +2704,10 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 	TAILQ_FOREACH_SAFE(poller, &rgroup->pollers, link, tmp) {
 		TAILQ_REMOVE(&rgroup->pollers, poller, link);
 
+		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
+			spdk_nvmf_rdma_qpair_destroy(qpair);
+		}
+
 		if (poller->srq) {
 			nvmf_rdma_resources_destroy(poller->resources);
 			ibv_destroy_srq(poller->srq);
@@ -2712,9 +2716,6 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 
 		if (poller->cq) {
 			ibv_destroy_cq(poller->cq);
-		}
-		TAILQ_FOREACH_SAFE(qpair, &poller->qpairs, link, tmp_qpair) {
-			spdk_nvmf_rdma_qpair_destroy(qpair);
 		}
 
 		free(poller);
