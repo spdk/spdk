@@ -88,6 +88,12 @@ struct ftl_bdev_io {
 	struct spdk_thread		*orig_thread;
 };
 
+struct ftl_deferred_init {
+	struct ftl_bdev_init_opts	opts;
+
+	LIST_ENTRY(ftl_deferred_init)	entry;
+};
+
 typedef void (*bdev_ftl_finish_fn)(void);
 
 static LIST_HEAD(, ftl_bdev)		g_ftl_bdevs = LIST_HEAD_INITIALIZER(g_ftl_bdevs);
@@ -95,9 +101,11 @@ static bdev_ftl_finish_fn		g_finish_cb;
 static size_t				g_num_conf_bdevs;
 static size_t				g_num_init_bdevs;
 static pthread_mutex_t			g_ftl_bdev_lock;
+static LIST_HEAD(, ftl_deferred_init)	g_deferred_init;
 
 static int bdev_ftl_initialize(void);
 static void bdev_ftl_finish(void);
+static void bdev_ftl_examine(struct spdk_bdev *);
 
 static int
 bdev_ftl_get_ctx_size(void)
@@ -111,6 +119,7 @@ static struct spdk_bdev_module g_ftl_if = {
 	.async_fini	= true,
 	.module_init	= bdev_ftl_initialize,
 	.module_fini	= bdev_ftl_finish,
+	.examine_disk	= bdev_ftl_examine,
 	.get_ctx_size	= bdev_ftl_get_ctx_size,
 };
 
@@ -490,13 +499,29 @@ out:
 }
 
 static int
+bdev_ftl_defer_init(struct ftl_bdev_init_opts *opts)
+{
+	struct ftl_deferred_init *init;
+
+	init = calloc(1, sizeof(*init));
+	if (!init) {
+		return -ENOMEM;
+	}
+
+	init->opts = *opts;
+	LIST_INSERT_HEAD(&g_deferred_init, init, entry);
+
+	return 0;
+}
+
+static int
 bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			  struct ftl_bdev_init_opts *opts,
 			  size_t *num_bdevs)
 {
 	const struct spdk_uuid null_uuid = {};
 	const char *val, *trid;
-	int i, rc = 0;
+	int i, rc = 0, num_deferred = 0;
 
 	*num_bdevs = 0;
 
@@ -565,17 +590,22 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			continue;
 		}
 
-		if (!spdk_bdev_get_by_name(val)) {
-			SPDK_ERRLOG("Invalid cache bdev name: %s for TransportID: %s\n", val, trid);
-			rc = -1;
-			break;
-		}
-
 		opts->cache_bdev = val;
+		if (!spdk_bdev_get_by_name(val)) {
+			SPDK_INFOLOG(SPDK_LOG_BDEV_FTL, "Deferring bdev %s initialization\n", opts->name);
+
+			if (bdev_ftl_defer_init(opts)) {
+				SPDK_ERRLOG("Unable to initialize bdev %s\n", opts->name);
+				rc = -1;
+				break;
+			}
+
+			num_deferred++;
+		}
 	}
 
 	if (!rc) {
-		*num_bdevs = i;
+		*num_bdevs = i - num_deferred;
 	}
 
 	return rc;
@@ -822,8 +852,19 @@ bdev_ftl_bdev_init_done(void)
 static void
 bdev_ftl_init_cb(const struct ftl_bdev_info *info, void *ctx, int status)
 {
+	struct ftl_deferred_init *opts;
+
 	if (status) {
 		SPDK_ERRLOG("Failed to initialize FTL bdev\n");
+	}
+
+	LIST_FOREACH(opts, &g_deferred_init, entry) {
+		if (!strcmp(opts->opts.name, info->name)) {
+			spdk_bdev_module_examine_done(&g_ftl_if);
+			LIST_REMOVE(opts, entry);
+			free(opts);
+			break;
+		}
 	}
 
 	bdev_ftl_bdev_init_done();
@@ -834,6 +875,7 @@ bdev_ftl_initialize_cb(void *ctx, int status)
 {
 	struct spdk_conf_section *sp;
 	struct ftl_bdev_init_opts *opts = NULL;
+	struct ftl_deferred_init *defer_opts;
 	size_t i;
 
 	if (status) {
@@ -857,7 +899,16 @@ bdev_ftl_initialize_cb(void *ctx, int status)
 	}
 
 	for (i = 0; i < g_num_conf_bdevs; ++i) {
-		if (bdev_ftl_init_bdev(&opts[i], bdev_ftl_init_cb, NULL)) {
+		bool defer_init = false;
+
+		LIST_FOREACH(defer_opts, &g_deferred_init, entry) {
+			if (!strcmp(defer_opts->opts.name, opts[i].name)) {
+				defer_init = true;
+				break;
+			}
+		}
+
+		if (!defer_init && bdev_ftl_init_bdev(&opts[i], bdev_ftl_init_cb, NULL)) {
 			SPDK_ERRLOG("Failed to create bdev '%s'\n", opts[i].name);
 			bdev_ftl_bdev_init_done();
 		}
@@ -939,6 +990,28 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 	}
 
 	return bdev_ftl_create(ctrlr, opts, cb, cb_arg);
+}
+
+static void
+bdev_ftl_examine(struct spdk_bdev *bdev)
+{
+	struct ftl_deferred_init *opts;
+
+	LIST_FOREACH(opts, &g_deferred_init, entry) {
+		if (spdk_bdev_get_by_name(opts->opts.cache_bdev) == bdev) {
+			if (bdev_ftl_init_bdev(&opts->opts, bdev_ftl_init_cb, NULL)) {
+				SPDK_ERRLOG("Unable to initialize bdev '%s'\n", opts->opts.name);
+				LIST_REMOVE(opts, entry);
+				free(opts);
+				break;
+			}
+
+			/* spdk_bdev_module_examine_done will be called by bdev_ftl_init_cb */
+			return;
+		}
+	}
+
+	spdk_bdev_module_examine_done(&g_ftl_if);
 }
 
 void
