@@ -16,6 +16,24 @@
       "revId": "837e3fef6a6f0c99ce8a2e34915af309eb5c95f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c2bb7a0f_96e3b497",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-20T08:54:23Z",
+      "side": 1,
+      "message": "Dong is right, we should put this below the mkdir.",
+      "parentUuid": "3bbccfcc_b7db4483",
+      "revId": "837e3fef6a6f0c99ce8a2e34915af309eb5c95f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
