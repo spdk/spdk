@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "744c458b_7a7512b7",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T00:29:46Z",
+      "side": 1,
+      "message": "this is the part I\u0027m not sure I understand...\n\nDPDK forces this header_size on us - if we want 4KB aligned buffers, even if this header is only a few bytes, doesn\u0027t that automatically result in 4KB of wasted space for every 4KB aligned buffer?  because once we have the end of one buffer (at a 4KB alignment), when we allocate the header, we\u0027ll need to bump up to the next 4KB before allocating the buffer itself\n\nIf I\u0027m wrong on this, please let me know.  But I don\u0027t think I am - this is all coming back to me from looking at it before.  I was hoping that when we populated the ring ourselves like this, that we\u0027d be able to avoid this header nonsense.",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a230ac35_c74566bf",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T00:29:46Z",
+      "side": 1,
+      "message": "you should probably put this assert at the beginning of the for loop, and change it to (offset + ele_size) instead of just offset",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "49022998_ac06085f",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T00:29:46Z",
+      "side": 1,
+      "message": "I\u0027m not following why these changes are needed.",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
