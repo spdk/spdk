@@ -1,0 +1,274 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "5bd1307f_67e68cb3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "The rc is overriden here and can potentially be returned if the ftl_read_cancelled is true and lbk equals io-\u003elbk_cnt - 1.",
+      "range": {
+        "startLine": 713,
+        "startChar": 12,
+        "endLine": 713,
+        "endChar": 14
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0d26c17_2b3f3ee5",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "Move this newline between closing brace and break statement.",
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8b481bc_9a72ef4c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1515,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "Rename it to ftl_process_retry_queue.",
+      "range": {
+        "startLine": 1515,
+        "startChar": 0,
+        "endLine": 1515,
+        "endChar": 23
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "22ff31ff_1ae42448",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "This doesn\u0027t add anything. It\u0027s not like we\u0027re passing this function\u0027s pointer somewhere and we don\u0027t really control how it\u0027s called. It\u0027s literally just called by the function below. Remove it.",
+      "range": {
+        "startLine": 1520,
+        "startChar": 0,
+        "endLine": 1520,
+        "endChar": 36
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf686c9a_e8255ff3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1525,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "I don\u0027t think it should be done like that. What if the request was split into multiple requests and one of them failed. You\u0027ll clear the status here even though you shouldn\u0027t do that. I think we shouldn\u0027t ever set io-\u003estatus \u003d ENOMEM if we intend to retry it. I think we should add FTL_IO_RETRY flag and rely on that.",
+      "range": {
+        "startLine": 1524,
+        "startChar": 0,
+        "endLine": 1525,
+        "endChar": 17
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9edc7b1_e71bbe96",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "I think after you\u0027ve changed how ftl_io_done and ftl_io_complete works you should add an else if  clause checking (rc !\u003d 0), and complete the IO here.",
+      "range": {
+        "startLine": 1529,
+        "startChar": 2,
+        "endLine": 1529,
+        "endChar": 3
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "683ab27e_c4faca6d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "Let\u0027s call it for what it is used for - num_completed.",
+      "range": {
+        "startLine": 1541,
+        "startChar": 8,
+        "endLine": 1541,
+        "endChar": 11
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5f046c16_c1813d2b",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "Let\u0027s just call it \u0027retry_queue\u0027. We don\u0027t need to tie the name to a specific error code name returned by the NVMe driver.",
+      "range": {
+        "startLine": 204,
+        "startChar": 24,
+        "endLine": 204,
+        "endChar": 32
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61fb76b4_019351e4",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "This is not needed. We already have an io-\u003epos that is supposed indicate the number of lbks processed. I think you should just update it in ftl_io_update_iovec.",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 1
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1fc2aab8_17a1759d",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "I don\u0027t think we should be doing stuff like that in ftl_io_complete. I think you should modify the ftl_io_done function to check the FTL_IO_RETRY flag and return false if that flag is set. Adding / removing requests to the retry_queue should solely be done in ftl_core. You can add an assert here checking that (io-\u003eflags \u0026 FTL_IO_RETRY) \u003d\u003d 0.",
+      "range": {
+        "startLine": 306,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 0
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c70f73e_b76aacb1",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "\u0027retrying\u0027 -\u003e \u0027being retried\u0027.",
+      "range": {
+        "startLine": 71,
+        "startChar": 25,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36c40a0b_10d3cf15",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-20T08:31:00Z",
+      "side": 1,
+      "message": "It\u0027s not obvious what this is used for, so I\u0027d rather call it retry_entry.",
+      "range": {
+        "startLine": 203,
+        "startChar": 23,
+        "endLine": 203,
+        "endChar": 28
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
