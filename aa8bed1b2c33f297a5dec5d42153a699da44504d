@@ -52,6 +52,24 @@
       "revId": "aa8bed1b2c33f297a5dec5d42153a699da44504d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1ecfe357_fd620f79",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-20T08:47:05Z",
+      "side": 1,
+      "message": "\"Reason is that we will allocate many such arguments during single management operation, when OCF API will became asynchronous.\"\nWill there ever be more than one active poller during management operation (delete core, stop cache, others..)? If not, then single field in vbdev_ocf might be enough. Or potentially poller that goes through states (stages?) of a manamgent operation.\n\nAnyway this discussion would be best suited for patches later in series, starting with https://review.gerrithub.io/#/c/spdk/spdk/+/447888/.\n\nI\u0027m fine with what is done in this patch.",
+      "parentUuid": "25b4dbef_9a701440",
+      "revId": "aa8bed1b2c33f297a5dec5d42153a699da44504d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
