@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ef1f955a_b07305cb",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 934,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7235b2a2_8195f22d",
+      "range": {
+        "startLine": 934,
+        "startChar": 1,
+        "endLine": 934,
+        "endChar": 18
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4f9d3398_232f9d80",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 36
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "3b84226b_f2056043",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 952,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4f9d3398_232f9d80",
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4a058892_19eaf225",
         "filename": "include/spdk/opal.h",
         "patchSetId": 36
@@ -53,6 +95,30 @@
       "writtenOn": "2019-03-19T07:54:28Z",
       "side": 1,
       "message": "Change to SPDK_OPAL_H  Since it is located in include/spdk folder",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 15
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bd411d9f_b03db53a",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4a058892_19eaf225",
       "range": {
         "startLine": 34,
         "startChar": 8,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "9a36eed0_aa84686e",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f4d44e28_65c848e2",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 19
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "bb1abeaf_8e5f1cc0",
         "filename": "lib/opal/opal.c",
         "patchSetId": 36
@@ -99,6 +189,30 @@
       "writtenOn": "2019-03-19T07:54:28Z",
       "side": 1,
       "message": "Add an empty line after this",
+      "range": {
+        "startLine": 44,
+        "startChar": 0,
+        "endLine": 44,
+        "endChar": 29
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9eab9906_baae05b5",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bb1abeaf_8e5f1cc0",
       "range": {
         "startLine": 44,
         "startChar": 0,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "c40c9aed_f9aad6c1",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ff407637_1b62bcc8",
+      "range": {
+        "startLine": 69,
+        "startChar": 0,
+        "endLine": 70,
+        "endChar": 50
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4de2549d_4de0bea0",
         "filename": "lib/opal/opal.c",
         "patchSetId": 36
@@ -145,6 +283,30 @@
       "writtenOn": "2019-03-19T07:54:28Z",
       "side": 1,
       "message": "Failed on dev\u003d%p\\n\", dev",
+      "range": {
+        "startLine": 97,
+        "startChar": 1,
+        "endLine": 97,
+        "endChar": 40
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "69593c08_faf9e7ae",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 97,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4de2549d_4de0bea0",
       "range": {
         "startLine": 97,
         "startChar": 1,
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "f8a9fdd7_49b1e893",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "4256800e_f2453fa2",
+      "range": {
+        "startLine": 117,
+        "startChar": 9,
+        "endLine": 118,
+        "endChar": 43
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "517374c0_adc0a763",
         "filename": "lib/opal/opal.c",
         "patchSetId": 36
@@ -203,6 +389,30 @@
     },
     {
       "key": {
+        "uuid": "932162a0_026b6e96",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 36
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Refactored. Thank you.",
+      "parentUuid": "517374c0_adc0a763",
+      "range": {
+        "startLine": 136,
+        "startChar": 2,
+        "endLine": 136,
+        "endChar": 27
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "79a6ecf5_82a07d69",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 36
@@ -214,6 +424,30 @@
       "writtenOn": "2019-03-19T07:54:28Z",
       "side": 1,
       "message": "Could we also add SPDK prefix here?",
+      "range": {
+        "startLine": 34,
+        "startChar": 8,
+        "endLine": 34,
+        "endChar": 23
+      },
+      "revId": "728b609fc6e0f78e92d421e243faf4cab16aa689",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "73b124bc_bc15a87f",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 36
+      },
+      "lineNbr": 34,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-20T06:33:30Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "79a6ecf5_82a07d69",
       "range": {
         "startLine": 34,
         "startChar": 8,
