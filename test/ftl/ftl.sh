@@ -42,6 +42,10 @@ run_test suite $testdir/restore.sh $device
 timing_exit restore
 
 if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
+	timing_enter fio_basic
+	run_test suite $testdir/fio.sh $device basic
+	timing_exit fio_basic
+
 	$rootdir/test/app/bdev_svc/bdev_svc &
 	bdev_svc_pid=$!
 
@@ -54,7 +58,7 @@ if [ $SPDK_TEST_FTL_EXTENDED -eq 1 ]; then
 	trap - SIGINT SIGTERM EXIT
 
 	timing_enter fio_extended
-	run_test suite $testdir/fio.sh extended $device $uuid
+	run_test suite $testdir/fio.sh $device extended $uuid
 	timing_exit fio_extended
 fi
 
