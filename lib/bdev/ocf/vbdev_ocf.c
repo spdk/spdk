@@ -45,6 +45,7 @@
 #include "spdk/conf.h"
 #include "spdk/io_channel.h"
 #include "spdk/string.h"
+#include "spdk/notify.h"
 #include "spdk_internal/log.h"
 #include "spdk/cpuset.h"
 
@@ -808,6 +809,7 @@ init_vbdev(const char *vbdev_name,
 
 	init_vbdev_config(vbdev);
 	TAILQ_INSERT_TAIL(&g_ocf_vbdev_head, vbdev, tailq);
+	spdk_notify_send("construct_ocf_bdev");
 	return rc;
 
 error_mem:
@@ -878,6 +880,9 @@ vbdev_ocf_init(void)
 			SPDK_ERRLOG("Config initialization failed with code: %d\n", status);
 		}
 	}
+
+	spdk_notify_type_register("construct_ocf_bdev");
+	spdk_notify_type_register("delete_ocf_bdev");
 
 	return status;
 }
