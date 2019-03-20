@@ -1381,22 +1381,22 @@ nvme_rdma_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		return -1;
 	}
 
-	/* get the cdata info */
-	rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
-				     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
-				     nvme_completion_poll_cb, &status);
-	if (rc != 0) {
-		SPDK_ERRLOG("Failed to identify cdata\n");
-		return rc;
-	}
-
-	if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
-		SPDK_ERRLOG("nvme_identify_controller failed!\n");
-		return -ENXIO;
-	}
-
 	/* Direct attach through spdk_nvme_connect() API */
 	if (direct_connect == true) {
+		/* get the cdata info */
+		rc = nvme_ctrlr_cmd_identify(discovery_ctrlr, SPDK_NVME_IDENTIFY_CTRLR, 0, 0,
+					     &discovery_ctrlr->cdata, sizeof(discovery_ctrlr->cdata),
+					     nvme_completion_poll_cb, &status);
+		if (rc != 0) {
+			SPDK_ERRLOG("Failed to identify cdata\n");
+			return rc;
+		}
+
+		if (spdk_nvme_wait_for_completion(discovery_ctrlr->adminq, &status)) {
+			SPDK_ERRLOG("nvme_identify_controller failed!\n");
+			return -ENXIO;
+		}
+
 		/* Set the ready state to skip the normal init process */
 		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
 		nvme_ctrlr_connected(probe_ctx, discovery_ctrlr);
