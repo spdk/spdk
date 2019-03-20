@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a1a376b_e09f6c49",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 71
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-20T06:11:28Z",
+      "side": 1,
+      "message": "Check the NVME/TCP transport, it currently only support SGL_ENTRY \u003d1, so will this misleading the initiator.",
+      "range": {
+        "startLine": 1529,
+        "startChar": 3,
+        "endLine": 1529,
+        "endChar": 28
+      },
+      "revId": "2c4c8d490e2254f232ab040e5eb6f3db5887bca8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
