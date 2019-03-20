@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdb79d9b_58ac22f9",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-20T14:35:53Z",
+      "side": 1,
+      "message": "I don\u0027t currently see a way to implement this in a thread safe way without a lock.\n\nMaybe instead of all of this complication, we just say that all of the notification operations must happen on some designated thread set during an initialization call (which we can verify in debug builds within the calls)?",
+      "revId": "de02c230ebb461b1cc46e2bce20cf31d33e07464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fc6f9997_2f659595",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-20T14:35:53Z",
+      "side": 1,
+      "message": "To be thread safe, the function signature here is going to need to be as follows:\n\nint spdk_notify_get_events(uint64_t start_idx, uint64_t max, spdk_notify_get_event cb_fn, void *ctx);\n\nWhere spdk_notify_get_event is a callback function with this signature:\n\nvoid spdk_notify_get_event(struct spdk_notify_event *event, void *ctx);\n\nWhen calling spdk_notify_get_events, the user will get called back one time for each event that\u0027s found. Inside the callback the spdk_notify_event structure is safe to access. The return value for spdk_notify_get_events indicates if (-1), during the call, the tail pointer (insertion point) of the ring passed over the area where the events were just returned, which may have made them invalid. This process makes multiple readers of the ring thread safe.",
+      "revId": "de02c230ebb461b1cc46e2bce20cf31d33e07464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
