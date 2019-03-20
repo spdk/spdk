@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a252971c_ea184ab4",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 572,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "956eca01_1d93847a",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b633d47c_ec17e6a0",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 53
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-19T21:20:41Z",
       "side": 1,
       "message": "\"meta_ctx\" doesn\u0027t resonate with me as a name - although I don\u0027t really have a much better name at the moment other than something like \"compress_bdev\" or \"compress_ctx\".",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7d545389_7a3e840c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 574,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "so maybe its not clear but the base channel stored in this struct is only used for initial meta operations at load and init time.  The base channel is gotten in those paths and put back in them as well.  That same struct, meta_ctx, is then passed to claim correctly filled out.  I think compress_ctx is more confusing.  I dunno though...",
+      "parentUuid": "b633d47c_ec17e6a0",
       "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "90ba6901_fcd2fffe",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 596,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f75b7974_a47e0210",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9235c537_5700c60e",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 53
@@ -64,6 +118,24 @@
       "writtenOn": "2019-03-19T21:20:41Z",
       "side": 1,
       "message": "this is probably going to have do a dynamic allocation - similar to blobstore (see bdev_blob_queue_io) - but it\u0027s fine to keep this as a TODO for now",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d9bf02b_4ea287ef",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 678,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "9235c537_5700c60e",
       "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +159,24 @@
     },
     {
       "key": {
+        "uuid": "0f004e44_8ffe68da",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 729,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f60f6383_f034da5c",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "48d126ab_8451201d",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 53
@@ -101,6 +191,24 @@
       "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4d1df551_a5f9dbbc",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 730,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-20T17:47:22Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "48d126ab_8451201d",
+      "revId": "75f986addc3574282f02b14b3244219b33c01eb8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
