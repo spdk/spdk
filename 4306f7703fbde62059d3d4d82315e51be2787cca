@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "01228899_3294d190",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-20T16:37:55Z",
+      "side": 1,
+      "message": "Yeah, it looks like the header object is unavoidable if we use the mempool struct. The structure is called rte_mempool_objhdr and we don\u0027t have a way around using it. So you\u0027re right, when we try to align things to 4k, we have this 64 byte structure that gets in our way and causes us to waste almost 4k which is slightly less bad than what we are doing now which is allocating structures with an extra 4k in them. So the memory savings we will see on this approach will really only come when we start removing the buffer pointers in the bdevio and nvmf_request structures.\nCurrently, I believe the only real benefit we get by using the mempool API is the per core cache. I am wondering if we couldn\u0027t just use rings for most of these structures and create our own caches using arrays or stailqs on a per core basis. Then we could legitimately just allocate the exact size of buffers we need.",
+      "parentUuid": "744c458b_7a7512b7",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a230ac35_c74566bf",
         "filename": "lib/env_dpdk/env.c",
         "patchSetId": 7
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "6bfb1752_e74a833a",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 362,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-20T16:37:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a230ac35_c74566bf",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "49022998_ac06085f",
         "filename": "lib/env_dpdk/env.c",
         "patchSetId": 7
@@ -50,6 +86,24 @@
       "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb8489e4_c84f4d40",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 437,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-20T16:37:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "49022998_ac06085f",
+      "revId": "4306f7703fbde62059d3d4d82315e51be2787cca",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
