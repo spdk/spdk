@@ -1194,13 +1194,20 @@ spdk_bdev_get_io(struct spdk_bdev_channel *channel)
 void
 spdk_bdev_free_io(struct spdk_bdev_io *bdev_io)
 {
-	struct spdk_bdev_mgmt_channel *ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
+	struct spdk_bdev_mgmt_channel *ch;
 
 	assert(bdev_io != NULL);
 	assert(bdev_io->internal.status != SPDK_BDEV_IO_STATUS_PENDING);
 
 	if (bdev_io->internal.buf != NULL) {
 		spdk_bdev_io_put_buf(bdev_io);
+	}
+
+	ch = bdev_io->internal.ch->shared_resource->mgmt_ch;
+	if (ch == NULL) {
+		SPDK_ERRLOG("bdev_io mgmt should not be NULL\n");
+		assert(ch != NULL);
+		return;
 	}
 
 	if (ch->per_thread_cache_count < ch->bdev_io_cache_size) {
