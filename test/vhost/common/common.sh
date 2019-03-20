@@ -681,6 +681,7 @@ function vm_setup()
 	cmd+="-pidfile $qemu_pid_file ${eol}"
 	cmd+="-serial file:$vm_dir/serial.log ${eol}"
 	cmd+="-D $vm_dir/qemu.log ${eol}"
+	cmd+="-chardev file,path=$vm_dir/seabios.log,id=seabios -device isa-debugcon,iobase=0x402,chardev=seabios ${eol}"
 	cmd+="-net user,hostfwd=tcp::$ssh_socket-:22,hostfwd=tcp::$fio_socket-:8765 ${eol}"
 	cmd+="-net nic ${eol}"
 	if [[ -z "$boot_from" ]]; then
@@ -862,6 +863,33 @@ function vm_run()
 	done
 }
 
+function vm_print_logs()
+{
+	vm_num=$1
+	warning "================"
+	warning "QEMU LOG:"
+	if [[ -r $VM_BASE_DIR/$vm_num/qemu.log ]]; then
+		cat $VM_BASE_DIR/$vm_num/qemu.log
+	else
+		warning "LOG qemu.log not found"
+	fi
+
+	warning "VM LOG:"
+	if [[ -r $VM_BASE_DIR/$vm_num/serial.log ]]; then
+		cat $VM_BASE_DIR/$vm_num/serial.log
+	else
+		warning "LOG serial.log not found"
+	fi
+
+	warning "SEABIOS LOG:"
+	if [[ -r $VM_BASE_DIR/$vm_num/seabios.log ]]; then
+		cat $VM_BASE_DIR/$vm_num/seabios.log
+	else
+		warning "LOG seabios.log not found"
+	fi
+	warning "================"
+}
+
 # Wait for all created VMs to boot.
 # param $1 max wait time
 function vm_wait_for_boot()
@@ -893,29 +921,15 @@ function vm_wait_for_boot()
 		notice "waiting for VM$vm_num ($vm)"
 		while ! vm_os_booted $vm_num; do
 			if ! vm_is_running $vm_num; then
-
 				warning "VM $vm_num is not running"
-				warning "================"
-				warning "QEMU LOG:"
-				if [[ -r $vm/qemu.log ]]; then
-					cat $vm/qemu.log
-				else
-					warning "LOG not found"
-				fi
-
-				warning "VM LOG:"
-				if [[ -r $vm/serial.log ]]; then
-					cat $vm/serial.log
-				else
-					warning "LOG not found"
-				fi
-				warning "================"
+				vm_print_logs $vm_num
 				$shell_restore_x
 				return 1
 			fi
 
 			if [[ $(date +%s) -gt $timeout_time ]]; then
 				warning "timeout waiting for machines to boot"
+				vm_print_logs $vm_num
 				$shell_restore_x
 				return 1
 			fi

@@ -85,7 +85,7 @@ timing_exit create_vhost_controller
 timing_enter setup_vm
 vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --disks="vhost_vm" --spdk-boot="vhost_vm"
 vm_run $vm_no
-vm_wait_for_boot 600 $vm_no
+vm_wait_for_boot 300 $vm_no
 timing_exit setup_vm
 
 timing_enter run_vm_cmd
