@@ -34,6 +34,24 @@
       "revId": "837e3fef6a6f0c99ce8a2e34915af309eb5c95f8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0caa8bfb_665091b5",
+        "filename": "test/common/config/vm_setup.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 378,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-20T09:00:43Z",
+      "side": 1,
+      "message": "I don\u0027t understand what would that change. mkdir executed below will be executed as $USER, so there is no reason to change it to $USER again\n\nCould you explain?",
+      "parentUuid": "c2bb7a0f_96e3b497",
+      "revId": "837e3fef6a6f0c99ce8a2e34915af309eb5c95f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
