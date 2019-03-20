@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9ecbc9c8_88d2faee",
+        "filename": "include/spdk/util.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 74,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T00:09:47Z",
+      "side": 1,
+      "message": "let\u0027s just make these u64 variants of the u32 ones above\n\ncallers can still use these with size_t variables, but it\u0027s good to make the names consistent (it\u0027s not entirely clear from the name that \"size\" means \"size_t\")\n\nlet\u0027s also put this patch first in the series",
+      "revId": "24bac35c2a6ee909a8bf9ffce87455565f6be278",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
