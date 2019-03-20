@@ -556,8 +556,6 @@ _ftl_dev_init_thread(void *ctx)
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
 
-	thread->thread = spdk_get_thread();
-
 	thread->poller = spdk_poller_register(thread->poller_fn, thread, thread->period_us);
 	if (!thread->poller) {
 		SPDK_ERRLOG("Unable to register poller\n");
