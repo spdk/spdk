@@ -40,6 +40,10 @@
 #ifndef SPDK_BDEV_MODULE_H
 #define SPDK_BDEV_MODULE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
@@ -990,5 +994,9 @@ uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
  *  Second helper macro for "stringize" trick to work.
  */
 #define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BDEV_MODULE_H */
