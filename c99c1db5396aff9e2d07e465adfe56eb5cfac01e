@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e07f2cae_fcda52aa",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 12
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-20T08:51:52Z",
+      "side": 1,
+      "message": "can we make this a function parameter?",
+      "range": {
+        "startLine": 58,
+        "startChar": 7,
+        "endLine": 58,
+        "endChar": 18
+      },
+      "revId": "c99c1db5396aff9e2d07e465adfe56eb5cfac01e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
