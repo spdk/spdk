@@ -16,6 +16,24 @@
       "revId": "3f3156914cf34ec78ab977fa82021fdf315913fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bf31ef48_a15fa752",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-20T16:25:34Z",
+      "side": 1,
+      "message": "I added an underscore at the beginning of each function. I think having spdk in the name is still important to differentiate from all of the dpdk ring mempool operations.",
+      "parentUuid": "503662d7_5683ca52",
+      "revId": "3f3156914cf34ec78ab977fa82021fdf315913fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
