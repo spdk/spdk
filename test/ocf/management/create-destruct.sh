@@ -84,6 +84,45 @@ fi
 # check if shutdown of running CAS bdev is ok
 $rpc_py construct_ocf_bdev PartCache wt NonExisting Malloc1
 
+# Create ocf on persistent storage
+
+trunc -s 128M ./aio0
+trunc -s 128M ./aio1
+
+$rpc_py construct_aio_bdev ./aio0 AIO0 4096
+$rpc_py construct_aio_bdev ./aio1 AIO1 4096
+
+$rpc_py construct_ocf_bdev ocf0 wt AIO0 AIO1
+
+if ! (bdev_check_claimed AIO0 && bdev_check_claimed AIO1); then
+	>&2 echo "Base devices expected to be claimed now"
+	exit 1
+fi
+
+
 trap - SIGINT SIGTERM EXIT
 
 killprocess $spdk_pid
+
+# Check for ocf persistency after restart
+$rootdir/app/iscsi_tgt/iscsi_tgt &
+spdk_pid=$!
+
+trap "killprocess $spdk_pid; exit 1" SIGINT SIGTERM EXIT
+
+waitforlisten $spdk_pid
+
+$rpc_py construct_aio_bdev ./aio0 AIO0 4096
+$rpc_py construct_aio_bdev ./aio1 AIO1 4096
+
+# OCF should be loaded now as well
+
+if ! (bdev_check_claimed AIO0 && bdev_check_claimed AIO1); then
+	>&2 echo "Base devices expected to be claimed now"
+	exit 1
+fi
+
+trap - SIGINT SIGTERM EXIT
+
+killprocess $spdk_pid
+rm aio0 aio1
