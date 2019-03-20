@@ -945,9 +945,6 @@ ftl_dev_free_sync(struct spdk_ftl_dev *dev)
 	}
 	pthread_mutex_unlock(&g_ftl_queue_lock);
 
-	ftl_dev_free_thread(dev, &dev->read_thread);
-	ftl_dev_free_thread(dev, &dev->core_thread);
-
 	assert(LIST_EMPTY(&dev->wptr_list));
 
 	ftl_dev_dump_bands(dev);
@@ -984,6 +981,9 @@ ftl_halt_poller(void *ctx)
 
 	if (!dev->core_thread.poller && !dev->read_thread.poller) {
 		spdk_poller_unregister(&dev->halt_poller);
+
+		ftl_dev_free_thread(dev, &dev->read_thread);
+		ftl_dev_free_thread(dev, &dev->core_thread);
 
 		ftl_anm_unregister_device(dev);
 		ftl_dev_free_sync(dev);
