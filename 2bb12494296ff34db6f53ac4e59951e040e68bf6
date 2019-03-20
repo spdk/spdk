@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f914aede_ce3170f2",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 580,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T20:56:31Z",
+      "side": 1,
+      "message": "This isn\u0027t going to work.  You need to store the device_qp in the bdev, not the comp_ch.  Same reason as before - this channel may be the first one to get allocated, but may not be the last one to be freed.  When it does get freed, the comp_ch memory becomes invalid immediately after returning from the destroy_cb.",
+      "revId": "2bb12494296ff34db6f53ac4e59951e040e68bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cf206279_1f585bb8",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 647,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T20:56:31Z",
+      "side": 1,
+      "message": "you can just check comp_bdev-\u003ereduce_thread \u003d\u003d spdk_get_thread()?",
+      "revId": "2bb12494296ff34db6f53ac4e59951e040e68bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "19dfb9b7_6f5aa46e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 51
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-20T20:56:31Z",
+      "side": 1,
+      "message": "need to unlock the mutex here\n\nprobably cleaner to just make this an if/else rather than add another pthread_mutex_unlock here",
+      "revId": "2bb12494296ff34db6f53ac4e59951e040e68bf6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
