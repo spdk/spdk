@@ -41,6 +41,8 @@
 #include "data.h"
 
 ocf_ctx_t vbdev_ocf_ctx;
+struct spdk_poller *g_metadata_poller;
+bool g_poll;
 
 static ctx_data_t *
 vbdev_ocf_ctx_data_alloc(uint32_t pages)
@@ -300,18 +302,30 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 	/* TODO [writeback]: implement with writeback mode support */
 }
 
+static int metadata_poller(void *ctx)
+{
+	ocf_metadata_updater_t mu = (ocf_metadata_updater_t)ctx;
+	if (g_poll) {
+		ocf_metadata_updater_run(mu);
+		g_poll = 0;
+		return 1;
+	}
+	return 0;
+}
+
 static int vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	g_metadata_poller = spdk_poller_register(metadata_poller, mu, 0);
+	g_poll = false;
 	return 0;
 }
 static void vbdev_ocf_volume_updater_stop(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	spdk_poller_unregister(&g_metadata_poller);
 }
 static void vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	g_poll = true;
 }
 
 /* This function is main way by which OCF communicates with user
