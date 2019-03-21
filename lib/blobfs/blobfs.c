@@ -2142,19 +2142,19 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 	pthread_spin_lock(&file->lock);
 	file->open_for_writing = true;
 
-	if (file->last == NULL) {
-		if (file->append_pos % CACHE_BUFFER_SIZE == 0) {
-			cache_append_buffer(file);
-		} else {
-			int rc;
+	if ((file->last == NULL) && (file->append_pos % CACHE_BUFFER_SIZE == 0)) {
+		cache_append_buffer(file);
+	}
 
-			file->append_pos += length;
-			pthread_spin_unlock(&file->lock);
-			rc = __send_rw_from_file(file, &channel->sem, payload,
-						 offset, length, false);
-			sem_wait(&channel->sem);
-			return rc;
-		}
+	if (file->last == NULL) {
+		int rc;
+
+		file->append_pos += length;
+		pthread_spin_unlock(&file->lock);
+		rc = __send_rw_from_file(file, &channel->sem, payload,
+					 offset, length, false);
+		sem_wait(&channel->sem);
+		return rc;
 	}
 
 	blob_size = __file_get_blob_size(file);
