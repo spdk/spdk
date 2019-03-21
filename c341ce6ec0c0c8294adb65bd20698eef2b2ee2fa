@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "ba43316e_c9d33949",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Ok, so we return 0 in such case, isn\u0027t it expected?",
+      "parentUuid": "5bd1307f_67e68cb3",
+      "range": {
+        "startLine": 713,
+        "startChar": 12,
+        "endLine": 713,
+        "endChar": 14
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b0d26c17_2b3f3ee5",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -39,6 +63,24 @@
       "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0fc4489d_de77810e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 744,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0d26c17_2b3f3ee5",
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "f7391141_6f0916bb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1515,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b8b481bc_9a72ef4c",
+      "range": {
+        "startLine": 1515,
+        "startChar": 0,
+        "endLine": 1515,
+        "endChar": 23
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "22ff31ff_1ae42448",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "83d4c7b2_cdbc84c3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1520,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "22ff31ff_1ae42448",
+      "range": {
+        "startLine": 1520,
+        "startChar": 0,
+        "endLine": 1520,
+        "endChar": 36
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cf686c9a_e8255ff3",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -99,6 +189,30 @@
       "writtenOn": "2019-03-20T08:31:00Z",
       "side": 1,
       "message": "I don\u0027t think it should be done like that. What if the request was split into multiple requests and one of them failed. You\u0027ll clear the status here even though you shouldn\u0027t do that. I think we shouldn\u0027t ever set io-\u003estatus \u003d ENOMEM if we intend to retry it. I think we should add FTL_IO_RETRY flag and rely on that.",
+      "range": {
+        "startLine": 1524,
+        "startChar": 0,
+        "endLine": 1525,
+        "endChar": 17
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d800eb04_5be0b863",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1525,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "In case we got error on any of splitted IO we never reach this point - whole IO will be completed with EIO and won\u0027t be added to retry_queue",
+      "parentUuid": "cf686c9a_e8255ff3",
       "range": {
         "startLine": 1524,
         "startChar": 0,
@@ -134,6 +248,30 @@
     },
     {
       "key": {
+        "uuid": "2786dd2a_f38b9fee",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1529,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "If first IO got error different than ENOMEM from nvme layer it will be completed in ftl_submit_read. In case we got io error in completion routine we end whole IO with error.",
+      "parentUuid": "b9edc7b1_e71bbe96",
+      "range": {
+        "startLine": 1529,
+        "startChar": 2,
+        "endLine": 1529,
+        "endChar": 3
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "683ab27e_c4faca6d",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -154,6 +292,30 @@
       "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "20bb5258_ad547b55",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1541,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "683ab27e_c4faca6d",
+      "range": {
+        "startLine": 1541,
+        "startChar": 8,
+        "endLine": 1541,
+        "endChar": 11
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -180,6 +342,30 @@
     },
     {
       "key": {
+        "uuid": "e947d5fc_19793cdf",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 204,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5f046c16_c1813d2b",
+      "range": {
+        "startLine": 204,
+        "startChar": 24,
+        "endLine": 204,
+        "endChar": 32
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "61fb76b4_019351e4",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 1
@@ -191,6 +377,30 @@
       "writtenOn": "2019-03-20T08:31:00Z",
       "side": 1,
       "message": "This is not needed. We already have an io-\u003epos that is supposed indicate the number of lbks processed. I think you should just update it in ftl_io_update_iovec.",
+      "range": {
+        "startLine": 146,
+        "startChar": 0,
+        "endLine": 158,
+        "endChar": 1
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a52ed6b_0fa04e11",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Yes, this could be moved to ftl_io_update_iovec.",
+      "parentUuid": "61fb76b4_019351e4",
       "range": {
         "startLine": 146,
         "startChar": 0,
@@ -226,6 +436,30 @@
     },
     {
       "key": {
+        "uuid": "f1f9d6e1_d382c768",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 313,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "I don\u0027t think it is possible - such approach will requires that we need to have separate descriptor for each splitted IO and we don\u0027t have one. We can only relay on io status and flag field which is shared among splitted requests. In current implementation we can add IO to retry_queue only after all splitted inflight IOs are completed - this is related with error propagation from sync and async path.\nI\u0027m also not so convinced that we should start retrying splitted IO when other pieces of such IO are inflight - this could be very easy error prone?",
+      "parentUuid": "1fc2aab8_17a1759d",
+      "range": {
+        "startLine": 306,
+        "startChar": 0,
+        "endLine": 313,
+        "endChar": 0
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6c70f73e_b76aacb1",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 1
@@ -249,6 +483,30 @@
     },
     {
       "key": {
+        "uuid": "ee5b4476_e2705e39",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6c70f73e_b76aacb1",
+      "range": {
+        "startLine": 71,
+        "startChar": 25,
+        "endLine": 71,
+        "endChar": 33
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "36c40a0b_10d3cf15",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 1
@@ -269,6 +527,30 @@
       "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fa9d3bc3_53589e74",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 1
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T08:54:08Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "36c40a0b_10d3cf15",
+      "range": {
+        "startLine": 203,
+        "startChar": 23,
+        "endLine": 203,
+        "endChar": 28
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
