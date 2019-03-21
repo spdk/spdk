@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c3e9badb_c0b52768",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1157,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a680a4b6_aa276dd0",
+      "range": {
+        "startLine": 1149,
+        "startChar": 0,
+        "endLine": 1157,
+        "endChar": 81
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "6db41aaf_f10d259e",
         "filename": "include/spdk/nvme.h",
         "patchSetId": 6
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-19T07:56:54Z",
       "side": 1,
       "message": "You can just declare struct spdk_nvme_event_cb_ctx here, and move detailed definition into nvme_internal.h.",
+      "range": {
+        "startLine": 2250,
+        "startChar": 0,
+        "endLine": 2257,
+        "endChar": 2
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3cc2442d_5315c3ef",
+        "filename": "include/spdk/nvme.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 2257,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6db41aaf_f10d259e",
       "range": {
         "startLine": 2250,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "a2b8ad50_75999e98",
+        "filename": "lib/env_dpdk/env_internal.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 52,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "6231f2fb_91c58fb1",
+      "range": {
+        "startLine": 52,
+        "startChar": 0,
+        "endLine": 52,
+        "endChar": 22
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d3522dc3_ed1d3208",
         "filename": "lib/env_dpdk/pci_dev_event.c",
         "patchSetId": 6
@@ -82,6 +154,30 @@
       "writtenOn": "2019-03-19T07:56:54Z",
       "side": 1,
       "message": "Those DPDK APIs are supported from specific DPDK versions, so a #ifdef section should be included to check the version.",
+      "range": {
+        "startLine": 44,
+        "startChar": 6,
+        "endLine": 44,
+        "endChar": 39
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cf73c340_11891f8c",
+        "filename": "lib/env_dpdk/pci_dev_event.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d3522dc3_ed1d3208",
       "range": {
         "startLine": 44,
         "startChar": 6,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "de09a10a_fba468a5",
+        "filename": "lib/env_dpdk/pci_dev_event.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 80,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7c7de2dd_af11d305",
+      "range": {
+        "startLine": 68,
+        "startChar": 0,
+        "endLine": 80,
+        "endChar": 1
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a329ae99_af227b0a",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 6
@@ -128,6 +248,24 @@
       "writtenOn": "2019-03-19T07:56:54Z",
       "side": 1,
       "message": "device_name can\u0027t be NULL for hotplug feature, so we can just return if the device_name isn\u0027t BDF.",
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c390a70a_4c1dde22",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 681,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "i will think more about this, as the VFIO event cant not get the BDF.",
+      "parentUuid": "a329ae99_af227b0a",
       "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -157,6 +295,30 @@
     },
     {
       "key": {
+        "uuid": "eda7685b_867a3bda",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 707,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "A new SPDK event is a good idea, thanks.",
+      "parentUuid": "3fdd634a_d6f0cc53",
+      "range": {
+        "startLine": 705,
+        "startChar": 2,
+        "endLine": 707,
+        "endChar": 3
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "caef768b_5ef3d51a",
         "filename": "lib/nvme/nvme_pcie.c",
         "patchSetId": 6
@@ -168,6 +330,30 @@
       "writtenOn": "2019-03-19T07:56:54Z",
       "side": 1,
       "message": "Refer to the new API: spdk_nvme_connect_async so that it can\u0027t block DPDK\u0027s thread context.",
+      "range": {
+        "startLine": 721,
+        "startChar": 1,
+        "endLine": 724,
+        "endChar": 3
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "298361be_305b383e",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T02:41:40Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "caef768b_5ef3d51a",
       "range": {
         "startLine": 721,
         "startChar": 1,
