@@ -151,7 +151,7 @@ spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t
 	}
 
 	if (FIELD_OK(admin_timeout_ms)) {
-		opts->admin_timeout_ms = NVME_MAX_TIMEOUT_PERIOD * 1000;
+		opts->admin_timeout_ms = NVME_MAX_ADMIN_TIMEOUT_IN_SECS * 1000;
 	}
 
 	if (FIELD_OK(header_digest)) {
