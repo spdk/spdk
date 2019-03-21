@@ -1043,8 +1043,4 @@ static void __attribute__((constructor)) spdk_bdev_module_register_##name(void) 
 }
 #endif
 
-#ifdef __cplusplus
-}
-#endif
-
 #endif /* SPDK_BDEV_MODULE_H */
