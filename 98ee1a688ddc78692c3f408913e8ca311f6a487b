@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "204361d0_913b55c2",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T17:11:30Z",
+      "side": 1,
+      "message": "should we assert(vbdev-\u003estate.started)?\n\nI don\u0027t see where vbdev-\u003estate.started ever gets set to false.  Having this if check here indicates the started flag could change between when spdk_io_device_unregister is called, and when this unregister_cb is invoked.  If that can\u0027t really happen, we should just assert instead to make it clear to the reader.",
+      "revId": "98ee1a688ddc78692c3f408913e8ca311f6a487b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
