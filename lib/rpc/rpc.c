@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/version.h"
 
 #define RPC_DEFAULT_PORT	"5260"
 
@@ -309,3 +310,42 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_spdk_version method requires no parameters");
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	spdk_json_write_object_begin(w);
+
+	spdk_json_write_named_string_fmt(w, "version", "%s", SPDK_VERSION_STRING);
+	spdk_json_write_named_string_fmt(w, "major", "%s", SPDK_VERSION_MAJOR_STRING);
+	spdk_json_write_named_string_fmt(w, "minor", "%s", SPDK_VERSION_STRINGIFY(SPDK_VERSION_MINOR));
+
+	if (SPDK_VERSION_PATCH != 0) {
+		spdk_json_write_named_string_fmt(w, "patch", "%s", SPDK_VERSION_STRINGIFY(SPDK_VERSION_PATCH));
+	}
+
+	if (strcmp(SPDK_VERSION_SUFFIX, "\0") != 0) {
+		spdk_json_write_name(w, "suffix");
+		spdk_json_write_string_fmt(w, "%s", SPDK_VERSION_SUFFIX);
+	}
+
+	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+}
+SPDK_RPC_REGISTER("get_spdk_version", spdk_rpc_get_version, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
