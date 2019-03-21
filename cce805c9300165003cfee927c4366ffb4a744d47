@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1a51086e_99cfb1ec",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 841,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-21T07:06:50Z",
+      "side": 1,
+      "message": "It\u0027s better to remove this section to line 844 and embed line 848-853 into the same section.",
+      "range": {
+        "startLine": 836,
+        "startChar": 1,
+        "endLine": 841,
+        "endChar": 2
+      },
+      "revId": "cce805c9300165003cfee927c4366ffb4a744d47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
