@@ -41,6 +41,11 @@ def get_rpc_methods(client, current=None):
     return client.call('get_rpc_methods', params)
 
 
+def get_spdk_version(client):
+    """Get target version of SPDK"""
+    return client.call('get_spdk_version')
+
+
 def _json_dump(config, fd, indent):
     if indent is None:
         indent = 2

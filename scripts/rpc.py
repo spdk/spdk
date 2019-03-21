@@ -54,6 +54,12 @@ if __name__ == "__main__":
     p.add_argument('-c', '--current', help='Get list of RPC methods only callable in the current state.', action='store_true')
     p.set_defaults(func=get_rpc_methods)
 
+    def get_spdk_version(args):
+        print(rpc.get_spdk_version(args.client))
+
+    p = subparsers.add_parser('get_spdk_version', help='Get target SPDK version')
+    p.set_defaults(func=get_spdk_version)
+
     def save_config(args):
         rpc.save_config(args.client,
                         sys.stdout,

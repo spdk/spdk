@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/version.h"
 
 #define RPC_DEFAULT_PORT	"5260"
 
@@ -309,3 +310,48 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	char *version_str;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_spdk_version method requires no parameters");
+	}
+
+	version_str = spdk_sprintf_alloc("%s%s", SPDK_VERSION_MAJOR_STRING, SPDK_VERSION_MINOR_STRING);
+	if (version_str == NULL) {
+		SPDK_ERRLOG("Mem allocation failed\n");
+		return;
+	}
+
+	if (SPDK_VERSION_PATCH != 0) {
+		version_str = spdk_sprintf_append_realloc(version_str, "%s", SPDK_VERSION_PATCH_STRING);
+		if (version_str == NULL) {
+			SPDK_ERRLOG("Mem allocation failed\n");
+			return;
+		}
+	}
+
+	if (SPDK_VERSION_SUFFIX) {
+		version_str = spdk_sprintf_append_realloc(version_str, "%s", SPDK_VERSION_SUFFIX);
+		if (version_str == NULL) {
+			SPDK_ERRLOG("Mem allocation failed\n");
+			return;
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_string(w, version_str);
+
+	spdk_jsonrpc_end_result(request, w);
+	free(version_str);
+}
+SPDK_RPC_REGISTER("get_spdk_version", spdk_rpc_get_version, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)

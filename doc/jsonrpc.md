@@ -5006,3 +5006,35 @@ Example response:
 
 }
 ~~~
+
+## get_spdk_version {#rpc_get_spdk_version}
+
+Get the version info of SPDK running on the target.
+
+### Parameters
+
+This method has no parameters.
+
+### Response
+
+The response is the version number including major version number, minor version number, patch level number (if not 0) and suffix string (if exists).
+
+### Example
+
+Example request:
+~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "get_spdk_version"
+}
+~~
+
+Example response:
+~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "19.04-pre"
+}
+~~
