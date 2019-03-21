@@ -36,6 +36,7 @@
 #include "spdk/crc32.h"
 #include "spdk/env.h"
 #include "spdk_internal/log.h"
+#include <rte_mempool.h>
 
 /* Number of buffers for mempool
  * Need to be power of two - 1 for better memory utilization
@@ -52,7 +53,15 @@ static env_atomic g_env_allocator_index = 0;
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	return spdk_mempool_get(allocator);
+	uint32_t *priv;
+	void *mem = spdk_mempool_get(allocator);
+
+	if (spdk_likely(mem)) {
+		priv = (uint32_t*)rte_mempool_get_priv(allocator);
+		memset(mem, 0, *priv);
+	}
+
+	return mem;
 }
 
 env_allocator *
@@ -60,13 +69,31 @@ env_allocator_create(uint32_t size, const char *name)
 {
 	env_allocator *allocator;
 	char qualified_name[128] = {0};
+	struct spdk_mempool *mp;
+	size_t tmp;
+	size_t cache_size;
+	uint32_t *priv;
 
 	snprintf(qualified_name, 128, "ocf_env_%d", env_atomic_inc_return(&g_env_allocator_index));
 
-	allocator = spdk_mempool_create(qualified_name,
-					ENV_ALLOCATOR_NBUFS, size,
-					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+	tmp = (ENV_ALLOCATOR_NBUFS / 2) / rte_lcore_count();
+	if (cache_size > tmp) {
+		cache_size = tmp;
+	}
+
+	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
+		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
+	}
+
+	allocator = (struct spdk_mempool*)rte_mempool_create(qualified_name,
+			ENV_ALLOCATOR_NBUFS, size,
+			RTE_MEMPOOL_CACHE_MAX_SIZE,
+			sizeof(size), NULL, NULL,
+			NULL, NULL, SOCKET_ID_ANY,
+			MEMPOOL_F_NO_PHYS_CONTIG);
+
+	priv = (uint32_t*)rte_mempool_get_priv(allocator);
+	*priv = size;
 
 	return allocator;
 }
