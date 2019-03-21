@@ -68,7 +68,7 @@ static struct spdk_bdev_module passthru_if = {
 	.config_json = vbdev_passthru_config_json
 };
 
-SPDK_BDEV_MODULE_REGISTER(&passthru_if)
+SPDK_BDEV_MODULE_REGISTER(passthru, &passthru_if)
 
 /* List of pt_bdev names and their base bdevs via configuration file.
  * Used so we can parse the conf once at init and use this list in examine().
@@ -211,11 +211,16 @@ vbdev_passthru_queue_io(struct spdk_bdev_io *bdev_io)
  * if this example were used as a template for something more complex.
  */
 static void
-pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+pt_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
 {
 	struct vbdev_passthru *pt_node = SPDK_CONTAINEROF(bdev_io->bdev, struct vbdev_passthru,
 					 pt_bdev);
 	struct pt_io_channel *pt_ch = spdk_io_channel_get_ctx(ch);
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	spdk_bdev_readv_blocks(pt_node->base_desc, pt_ch->base_ch, bdev_io->u.bdev.iovs,
 			       bdev_io->u.bdev.iovcnt, bdev_io->u.bdev.offset_blocks,
@@ -598,7 +603,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 
 		spdk_io_device_register(pt_node, pt_bdev_ch_create_cb, pt_bdev_ch_destroy_cb,
 					sizeof(struct pt_io_channel),
-					name->bdev_name);
+					name->vbdev_name);
 		SPDK_NOTICELOG("io_device created at: 0x%p\n", pt_node);
 
 		rc = spdk_bdev_open(bdev, true, vbdev_passthru_base_bdev_hotremove_cb,
@@ -662,6 +667,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 		/* This is not an error, we tracked the name above and it still
 		 * may show up later.
 		 */
+		SPDK_NOTICELOG("vbdev creation deferred pending base bdev arrival\n");
 		return 0;
 	}
 
@@ -669,7 +675,7 @@ create_passthru_disk(const char *bdev_name, const char *vbdev_name)
 }
 
 void
-delete_passthru_disk(struct spdk_bdev *bdev, spdk_delete_passthru_complete cb_fn, void *cb_arg)
+delete_passthru_disk(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	struct bdev_names *name;
 

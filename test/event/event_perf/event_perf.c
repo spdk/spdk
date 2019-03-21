@@ -85,7 +85,7 @@ event_work_fn(void *arg1, void *arg2)
 }
 
 static void
-event_perf_start(void *arg1, void *arg2)
+event_perf_start(void *arg1)
 {
 	uint32_t i;
 
@@ -174,7 +174,7 @@ main(int argc, char **argv)
 	printf("Running I/O for %d seconds...", g_time_in_sec);
 	fflush(stdout);
 
-	rc = spdk_app_start(&opts, event_perf_start, NULL, NULL);
+	rc = spdk_app_start(&opts, event_perf_start, NULL);
 
 	spdk_app_fini();
 	performance_dump(g_time_in_sec);

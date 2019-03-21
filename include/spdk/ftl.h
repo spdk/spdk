@@ -206,10 +206,8 @@ void spdk_ftl_conf_init_defaults(struct spdk_ftl_conf *conf);
  *
  * \param dev device
  * \param attr Attribute structure to fill
- *
- * \return 0 if successfully initialized, negated EINVAL otherwise.
  */
-int spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
+void  spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attr);
 
 /**
  * Submits a read to the specified device.
@@ -223,7 +221,7 @@ int spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs
  * \param cb_fn Callback function to invoke when the I/O is completed
  * \param cb_arg Argument to pass to the callback function
  *
- * \return 0 if successfully submitted, negated EINVAL otherwise.
+ * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
 		  size_t lba_cnt,
@@ -241,7 +239,7 @@ int spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t
  * \param cb_fn Callback function to invoke when the I/O is completed
  * \param cb_arg Argument to pass to the callback function
  *
- * \return 0 if successfully submitted, negative values otherwise.
+ * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba,
 		   size_t lba_cnt,
@@ -254,7 +252,7 @@ int spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_
  * \param cb_fn Callback function to invoke when all prior IOs have been completed
  * \param cb_arg Argument to pass to the callback function
  *
- * \return 0 if successfully submitted, negated EINVAL or ENOMEM otherwise.
+ * \return 0 if successfully submitted, negative errno otherwise.
  */
 int spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg);
 

@@ -45,9 +45,15 @@ test_check_mbr(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_check_mbr(NULL) does not exist, NULL is filtered out in spdk_gpt_parse() */
+	/* Set gpt is NULL */
+	re = spdk_gpt_parse_mbr(NULL);
+	CU_ASSERT(re == -1);
+
+	/* Set gpt->buf is NULL */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
+	re = spdk_gpt_parse_mbr(gpt);
+	CU_ASSERT(re == -1);
 
 	/* Set *gpt is "aaa...", all are mismatch include mbr_signature */
 	memset(a, 'a', sizeof(a));
@@ -87,13 +93,16 @@ test_read_header(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_read_header(NULL) does not exist, NULL is filtered out in spdk_gpt_parse() */
+	/* spdk_gpt_read_header(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
+	gpt->sector_size = 512;
 
 	/* Set *gpt is "aaa..." */
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
+	gpt->buf_size = sizeof(a);
 
 	/* Set header_size mismatch */
 	gpt->sector_size = 512;
@@ -152,13 +161,16 @@ test_read_partitions(void)
 	unsigned char a[SPDK_GPT_BUFFER_SIZE];
 	int re;
 
-	/* spdk_gpt_read_partitions(NULL) does not exist, NULL is filtered out in spdk_gpt_parse() */
+	/* spdk_gpt_read_partitions(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
+	gpt->sector_size = 512;
 
 	/* Set *gpt is "aaa..." */
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
+	gpt->buf_size = sizeof(a);
 
 	/* Set num_partition_entries exceeds Max value of entries GPT supported */
 	gpt->sector_size = 512;
@@ -200,7 +212,7 @@ test_read_partitions(void)
 }
 
 static void
-test_parse(void)
+test_parse_mbr_and_primary(void)
 {
 	struct spdk_gpt *gpt;
 	struct spdk_mbr *mbr;
@@ -209,32 +221,38 @@ test_parse(void)
 	int re;
 
 	/* Set gpt is NULL */
-	re = spdk_gpt_parse(NULL);
+	re = spdk_gpt_parse_mbr(NULL);
 	CU_ASSERT(re == -1);
 
 	/* Set gpt->buf is NULL */
 	gpt = calloc(1, sizeof(*gpt));
 	SPDK_CU_ASSERT_FATAL(gpt != NULL);
-	re = spdk_gpt_parse(gpt);
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
+	gpt->sector_size = 512;
+	re = spdk_gpt_parse_mbr(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set *gpt is "aaa...", check_mbr failed */
 	memset(a, 'a', sizeof(a));
 	gpt->buf = &a[0];
-	re = spdk_gpt_parse(gpt);
+	gpt->buf_size = sizeof(a);
+	re = spdk_gpt_parse_mbr(gpt);
 	CU_ASSERT(re == -1);
 
-	/* Set check_mbr passed, read_header failed */
+	/* Set check_mbr passed */
 	mbr = (struct spdk_mbr *)gpt->buf;
 	mbr->mbr_signature = 0xAA55;
 	mbr->partitions[0].start_lba = 1;
 	mbr->partitions[0].os_type = 0xEE;
 	mbr->partitions[0].size_lba = 0xFFFFFFFF;
-	re = spdk_gpt_parse(gpt);
+	re = spdk_gpt_parse_mbr(gpt);
+	CU_ASSERT(re == 0);
+
+	/* Expect read_header failed */
+	re = spdk_gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_header passed, read_partitions failed */
-	gpt->sector_size = 512;
 	head = (struct spdk_gpt_header *)(gpt->buf + GPT_PRIMARY_PARTITION_TABLE_LBA * gpt->sector_size);
 	head->header_size = sizeof(*head);
 	head->gpt_signature[0] = 'E';
@@ -251,7 +269,7 @@ test_parse(void)
 	to_le64(&gpt->lba_end, 0x2E935FFE);
 	to_le64(&head->first_usable_lba, 0xA);
 	to_le64(&head->last_usable_lba, 0xF4240);
-	re = spdk_gpt_parse(gpt);
+	re = spdk_gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == -1);
 
 	/* Set read_partitions passed, all passed */
@@ -260,7 +278,61 @@ test_parse(void)
 	to_le32(&head->header_crc32, 0x845A09AA);
 	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
 	to_le32(&head->num_partition_entries, 0x80);
-	re = spdk_gpt_parse(gpt);
+	re = spdk_gpt_parse_partition_table(gpt);
+	CU_ASSERT(re == 0);
+
+	free(gpt);
+}
+
+static void
+test_parse_secondary(void)
+{
+	struct spdk_gpt *gpt;
+	struct spdk_gpt_header *head;
+	unsigned char a[SPDK_GPT_BUFFER_SIZE];
+	int re;
+
+	/* spdk_gpt_parse_partition_table(NULL) does not exist, NULL is filtered out in spdk_gpt_parse_mbr() */
+	gpt = calloc(1, sizeof(*gpt));
+	SPDK_CU_ASSERT_FATAL(gpt != NULL);
+	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_SECONDARY;
+	gpt->sector_size = 512;
+
+	/* Set *gpt is "aaa...", read_header failed */
+	memset(a, 'a', sizeof(a));
+	gpt->buf = &a[0];
+	gpt->buf_size = sizeof(a);
+	re = spdk_gpt_parse_partition_table(gpt);
+	CU_ASSERT(re == -1);
+
+	/* Set read_header passed, read_partitions failed */
+	head = (struct spdk_gpt_header *)(gpt->buf + gpt->buf_size - gpt->sector_size);
+	head->header_size = sizeof(*head);
+	head->gpt_signature[0] = 'E';
+	head->gpt_signature[1] = 'F';
+	head->gpt_signature[2] = 'I';
+	head->gpt_signature[3] = ' ';
+	head->gpt_signature[4] = 'P';
+	head->gpt_signature[5] = 'A';
+	head->gpt_signature[6] = 'R';
+	head->gpt_signature[7] = 'T';
+	to_le32(&head->header_crc32, 0xAA68A167);
+	to_le64(&head->my_lba, 0x63FFFFF);
+	to_le64(&gpt->lba_start, 0x0);
+	to_le64(&gpt->lba_end, 0x63FFFFF);
+	to_le64(&gpt->total_sectors, 0x6400000);
+	to_le64(&head->first_usable_lba, 0xA);
+	to_le64(&head->last_usable_lba, 0x63FFFDE);
+	re = spdk_gpt_parse_partition_table(gpt);
+	CU_ASSERT(re == -1);
+
+	/* Set read_partitions passed, all passed */
+	to_le32(&head->size_of_partition_entry, 0x80);
+	to_le64(&head->partition_entry_lba, 0x63FFFDF);
+	to_le32(&head->header_crc32, 0x204129E8);
+	to_le32(&head->partition_entry_array_crc32, 0xEBEE44FB);
+	to_le32(&head->num_partition_entries, 0x80);
+	re = spdk_gpt_parse_partition_table(gpt);
 	CU_ASSERT(re == 0);
 
 	free(gpt);
@@ -284,7 +356,9 @@ main(int argc, char **argv)
 
 	if (
 		CU_add_test(suite, "parse",
-			    test_parse) == NULL ||
+			    test_parse_mbr_and_primary) == NULL ||
+		CU_add_test(suite, "parse secondary",
+			    test_parse_secondary) == NULL ||
 		CU_add_test(suite, "check mbr",
 			    test_check_mbr) == NULL ||
 		CU_add_test(suite, "read header",

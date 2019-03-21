@@ -623,8 +623,7 @@ fs_load_cb(__attribute__((unused)) void *ctx,
 }
 
 static void
-spdk_rocksdb_run(__attribute__((unused)) void *arg1,
-		 __attribute__((unused)) void *arg2)
+spdk_rocksdb_run(__attribute__((unused)) void *arg1)
 {
 	struct spdk_bdev *bdev;
 
@@ -667,7 +666,7 @@ initialize_spdk(void *arg)
 	struct spdk_app_opts *opts = (struct spdk_app_opts *)arg;
 	int rc;
 
-	rc = spdk_app_start(opts, spdk_rocksdb_run, NULL, NULL);
+	rc = spdk_app_start(opts, spdk_rocksdb_run, NULL);
 	/*
 	 * TODO:  Revisit for case of internal failure of
 	 * spdk_app_start(), itself.  At this time, it's known

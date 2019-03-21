@@ -100,7 +100,8 @@ struct spdk_env_opts {
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
+ * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
+ * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
@@ -120,7 +121,8 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
  * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
  * allocated buffer is aligned to the multiple of align. In this case, it must
  * be a power of two.
- * \param phys_addr A pointer to the variable to hold the physical address of
+ * \param phys_addr **Deprecated**. Please use spdk_vtophys() for retrieving physical
+ * addresses. A pointer to the variable to hold the physical address of
  * the allocated buffer is passed. If NULL, the physical address is not returned.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
@@ -129,6 +131,21 @@ void *spdk_malloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id,
  * \return a pointer to the allocated memory buffer.
  */
 void *spdk_zmalloc(size_t size, size_t align, uint64_t *phys_addr, int socket_id, uint32_t flags);
+
+/**
+ * Resize a dma/sharable memory buffer with the given new size and alignment.
+ * Existing contents are preserved.
+ *
+ * \param buf Buffer to resize.
+ * \param size Size in bytes.
+ * \param align Alignment value for the allocated memory. If '0', the allocated
+ * buffer is suitably aligned (in the same manner as malloc()). Otherwise, the
+ * allocated buffer is aligned to the multiple of align. In this case, it must
+ * be a power of two.
+ *
+ * \return a pointer to the resized memory buffer.
+ */
+void *spdk_realloc(void *buf, size_t size, size_t align);
 
 /**
  * Free buffer memory that was previously allocated with spdk_malloc() or spdk_zmalloc().
@@ -152,6 +169,14 @@ void spdk_env_opts_init(struct spdk_env_opts *opts);
  * \return 0 on success, or negative errno on failure.
  */
 int spdk_env_init(const struct spdk_env_opts *opts);
+
+/**
+ * Release any resources of the environment library that were alllocated with
+ * spdk_env_init(). After this call, no SPDK env function calls may be made.
+ * It is expected that common usage of this function is to call it just before
+ * terminating the process.
+ */
+void spdk_env_fini(void);
 
 /**
  * Allocate a pinned memory buffer with the given size and alignment.
@@ -574,6 +599,13 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
  * \return the number of objects dequeued which is less than 'count'.
  */
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
+
+/**
+ * Reports whether the SPDK application is using the IOMMU for DMA
+ *
+ * \return True if we are using the IOMMU, false otherwise.
+ */
+bool spdk_iommu_is_enabled(void);
 
 #define SPDK_VTOPHYS_ERROR	(0xFFFFFFFFFFFFFFFFULL)
 

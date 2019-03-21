@@ -36,8 +36,10 @@
 #include "spdk/event.h"
 #include "spdk/nvme.h"
 #include "spdk/string.h"
+#include "spdk/thread.h"
 
 static char g_path[256];
+static struct spdk_poller *g_poller;
 
 static void
 usage(char *executable_name)
@@ -70,8 +72,15 @@ attach_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 {
 }
 
+static int
+stub_sleep(void *arg)
+{
+	usleep(1000 * 1000);
+	return 0;
+}
+
 static void
-stub_start(void *arg1, void *arg2)
+stub_start(void *arg1)
 {
 	int shm_id = (intptr_t)arg1;
 
@@ -87,11 +96,14 @@ stub_start(void *arg1, void *arg2)
 		fprintf(stderr, "could not create sentinel file %s\n", g_path);
 		exit(1);
 	}
+
+	g_poller = spdk_poller_register(stub_sleep, NULL, 0);
 }
 
 static void
 stub_shutdown(void)
 {
+	spdk_poller_unregister(&g_poller);
 	unlink(g_path);
 	spdk_app_stop(0);
 }
@@ -149,9 +161,8 @@ main(int argc, char **argv)
 	}
 
 	opts.shutdown_cb = stub_shutdown;
-	opts.max_delay_us = 1000 * 1000;
 
-	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id, NULL);
+	ch = spdk_app_start(&opts, stub_start, (void *)(intptr_t)opts.shm_id);
 	spdk_app_fini();
 
 	return ch;

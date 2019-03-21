@@ -200,7 +200,7 @@ spdk_rpc_get_ocf_stats(struct spdk_jsonrpc_request *request, const struct spdk_j
 		goto end;
 	}
 
-	status = vbdev_ocf_stats_get(vbdev->cache.id, vbdev->core.id, &stats);
+	status = vbdev_ocf_stats_get(vbdev->ocf_cache, vbdev->core.id, &stats);
 	if (status) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not get stats: %s",

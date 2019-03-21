@@ -118,6 +118,9 @@
   # Set how often the admin queue is polled for asynchronous events.
   # Units in microseconds.
   AdminPollRate 100000
+  # Set how often I/O queues are polled from completions.
+  # Units in microseconds.
+  IOPollRate 0
 
   # Disable handling of hotplug (runtime insert and remove) events,
   # users can set to Yes if want to enable it.

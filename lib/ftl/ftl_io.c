@@ -200,7 +200,7 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	io->lbk_cnt = opts->iov_cnt * opts->req_size;
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
-	io->md = io->md;
+	io->md = opts->md;
 
 	if (ftl_io_init_iovec(io, opts->data, opts->iov_cnt, opts->req_size)) {
 		if (!opts->io) {
@@ -299,13 +299,13 @@ ftl_io_complete(struct ftl_io *io)
 void
 ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 {
-	io->status = -EIO;
-
 	/* TODO: add error handling for specifc cases */
 	if (status->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&
 	    status->status.sc == SPDK_OCSSD_SC_READ_HIGH_ECC) {
-		io->status = 0;
+		return;
 	}
+
+	io->status = -EIO;
 }
 
 void *

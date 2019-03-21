@@ -66,7 +66,6 @@ enum spdk_nvmf_subsystem_state {
 
 enum spdk_nvmf_qpair_state {
 	SPDK_NVMF_QPAIR_UNINITIALIZED = 0,
-	SPDK_NVMF_QPAIR_ACTIVATING,
 	SPDK_NVMF_QPAIR_ACTIVE,
 	SPDK_NVMF_QPAIR_DEACTIVATING,
 	SPDK_NVMF_QPAIR_ERROR,
@@ -113,14 +112,24 @@ struct spdk_nvmf_transport_poll_group {
 	TAILQ_ENTRY(spdk_nvmf_transport_poll_group)			link;
 };
 
+struct spdk_nvmf_subsystem_pg_ns_info {
+	struct spdk_io_channel		*channel;
+	/* current reservation key, no reservation if the value is 0 */
+	uint64_t			crkey;
+	/* reservation type */
+	enum spdk_nvme_reservation_type	rtype;
+	/* Host ID which holds the reservation */
+	struct spdk_uuid		hostid;
+};
+
 struct spdk_nvmf_subsystem_poll_group {
-	/* Array of channels for each namespace indexed by nsid - 1 */
-	struct spdk_io_channel	**channels;
-	uint32_t		num_channels;
+	/* Array of namespace information for each namespace indexed by nsid - 1 */
+	struct spdk_nvmf_subsystem_pg_ns_info	*ns_info;
+	uint32_t				num_ns;
 
-	enum spdk_nvmf_subsystem_state state;
+	enum spdk_nvmf_subsystem_state		state;
 
-	TAILQ_HEAD(, spdk_nvmf_request)	queued;
+	TAILQ_HEAD(, spdk_nvmf_request)		queued;
 };
 
 struct spdk_nvmf_poll_group {
@@ -172,12 +181,31 @@ struct spdk_nvmf_request {
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
 };
 
+struct spdk_nvmf_registrant {
+	TAILQ_ENTRY(spdk_nvmf_registrant) link;
+	struct spdk_uuid hostid;
+	/* Registration key */
+	uint64_t rkey;
+};
+
 struct spdk_nvmf_ns {
 	uint32_t nsid;
 	struct spdk_nvmf_subsystem *subsystem;
 	struct spdk_bdev *bdev;
 	struct spdk_bdev_desc *desc;
 	struct spdk_nvmf_ns_opts opts;
+	/* reservation notificaton mask */
+	uint32_t mask;
+	/* generation code */
+	uint32_t gen;
+	/* registrants head */
+	TAILQ_HEAD(, spdk_nvmf_registrant) registrants;
+	/* current reservation key */
+	uint64_t crkey;
+	/* reservation type */
+	enum spdk_nvme_reservation_type rtype;
+	/* current reservation holder, only valid if reservation type can only have one holder */
+	struct spdk_nvmf_registrant *holder;
 };
 
 struct spdk_nvmf_qpair {
@@ -306,6 +334,18 @@ bool spdk_nvmf_ctrlr_write_zeroes_supported(struct spdk_nvmf_ctrlr *ctrlr);
 void spdk_nvmf_ctrlr_ns_changed(struct spdk_nvmf_ctrlr *ctrlr, uint32_t nsid);
 
 void spdk_nvmf_bdev_ctrlr_identify_ns(struct spdk_nvmf_ns *ns, struct spdk_nvme_ns_data *nsdata);
+int spdk_nvmf_bdev_ctrlr_read_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				  struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_write_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_flush_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				   struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_dsm_cmd(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+				 struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
+int spdk_nvmf_bdev_ctrlr_nvme_passthru_io(struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
+		struct spdk_io_channel *ch, struct spdk_nvmf_request *req);
 
 int spdk_nvmf_subsystem_add_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				  struct spdk_nvmf_ctrlr *ctrlr);
@@ -314,6 +354,7 @@ void spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 struct spdk_nvmf_ctrlr *spdk_nvmf_subsystem_get_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 		uint16_t cntlid);
 int spdk_nvmf_ctrlr_async_event_ns_notice(struct spdk_nvmf_ctrlr *ctrlr);
+void spdk_nvmf_ns_reservation_request(void *ctx);
 
 /*
  * Abort aer is sent on a per controller basis and sends a completion for the aer to the host.

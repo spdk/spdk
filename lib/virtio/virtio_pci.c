@@ -122,9 +122,8 @@ pci_dump_json_info(struct virtio_dev *dev, struct spdk_json_write_ctx *w)
 		spdk_json_write_string(w, "pci-legacy");
 	}
 
-	spdk_json_write_name(w, "pci_address");
 	spdk_pci_addr_fmt(addr, sizeof(addr), &pci_addr);
-	spdk_json_write_string(w, addr);
+	spdk_json_write_named_string(w, "pci_address", addr);
 }
 
 static void
@@ -273,9 +272,15 @@ modern_setup_queue(struct virtio_dev *dev, struct virtqueue *vq)
 		return -ENOMEM;
 	}
 
-	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VALUE_2MB, &queue_mem_phys_addr);
+	queue_mem = spdk_dma_zmalloc(vq->vq_ring_size, VALUE_2MB, NULL);
 	if (queue_mem == NULL) {
 		return -ENOMEM;
+	}
+
+	queue_mem_phys_addr = spdk_vtophys(queue_mem, NULL);
+	if (queue_mem_phys_addr == SPDK_VTOPHYS_ERROR) {
+		spdk_dma_free(queue_mem);
+		return -EFAULT;
 	}
 
 	vq->vq_ring_mem = queue_mem_phys_addr;

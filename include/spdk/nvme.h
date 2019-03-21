@@ -308,6 +308,16 @@ struct spdk_nvme_host_id {
 	char hostsvcid[SPDK_NVMF_TRSVCID_MAX_LEN + 1];
 };
 
+/*
+ * Controller support flags
+ *
+ * Used for identifying if the controller supports these flags.
+ */
+enum spdk_nvme_ctrlr_flags {
+	SPDK_NVME_CTRLR_SGL_SUPPORTED			= 0x1, /**< The SGL is supported */
+	SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED	= 0x2, /**< security send/receive is supported */
+};
+
 /**
  * Parse the string representation of a transport ID.
  *
@@ -417,6 +427,27 @@ int spdk_nvme_transport_id_parse_adrfam(enum spdk_nvmf_adrfam *adrfam, const cha
  */
 int spdk_nvme_transport_id_compare(const struct spdk_nvme_transport_id *trid1,
 				   const struct spdk_nvme_transport_id *trid2);
+
+/**
+ * Parse the string representation of PI check settings (prchk:guard|reftag)
+ *
+ * \param prchk_flags Output PI check flags.
+ * \param str Input string representation of PI check settings.
+ *
+ * \return 0 if parsing was successful and prchk_flags is set, or negated errno
+ * values on failure.
+ */
+int spdk_nvme_prchk_flags_parse(uint32_t *prchk_flags, const char *str);
+
+/**
+ * Look up the string representation of PI check settings  (prchk:guard|reftag)
+ *
+ * \param prchk_flags PI check flags to convert.
+ *
+ * \return static string constant describing PI check settings. If prchk_flags is 0,
+ * NULL is returned.
+ */
+const char *spdk_nvme_prchk_flags_str(uint32_t prchk_flags);
 
 /**
  * Determine whether the NVMe library can handle a specific NVMe over Fabrics
@@ -545,6 +576,73 @@ struct spdk_nvme_ctrlr *spdk_nvme_connect(const struct spdk_nvme_transport_id *t
 		const struct spdk_nvme_ctrlr_opts *opts,
 		size_t opts_size);
 
+struct spdk_nvme_probe_ctx;
+
+/**
+ * Connect the NVMe driver to the device located at the given transport ID.
+ *
+ * The function will return a probe context on success, controller associates with
+ * the context is not ready for use, user must call spdk_nvme_probe_poll_async()
+ * until spdk_nvme_probe_poll_async() returns 0.
+ *
+ * \param trid The transport ID indicating which device to connect. If the trtype
+ * is PCIe, this will connect the local PCIe bus. If the trtype is RDMA, the traddr
+ * and trsvcid must point at the location of an NVMe-oF service.
+ * \param opts NVMe controller initialization options. Default values will be used
+ * if the user does not specify the options. The controller may not support all
+ * requested parameters.
+ * \param attach_cb will be called once the NVMe controller has been attached
+ * to the userspace driver.
+ *
+ * \return probe context on success, NULL on failure.
+ *
+ */
+struct spdk_nvme_probe_ctx *spdk_nvme_connect_async(const struct spdk_nvme_transport_id *trid,
+		const struct spdk_nvme_ctrlr_opts *opts,
+		spdk_nvme_attach_cb attach_cb);
+
+/**
+ * Probe and add controllers to the probe context list.
+ *
+ * Users must call spdk_nvme_probe_poll_async() to initialize
+ * controllers in the probe context list to the READY state.
+ *
+ * \param trid The transport ID indicating which bus to enumerate. If the trtype
+ * is PCIe or trid is NULL, this will scan the local PCIe bus. If the trtype is
+ * RDMA, the traddr and trsvcid must point at the location of an NVMe-oF discovery
+ * service.
+ * \param cb_ctx Opaque value which will be passed back in cb_ctx parameter of
+ * the callbacks.
+ * \param probe_cb will be called once per NVMe device found in the system.
+ * \param attach_cb will be called for devices for which probe_cb returned true
+ * once that NVMe controller has been attached to the userspace driver.
+ * \param remove_cb will be called for devices that were attached in a previous
+ * spdk_nvme_probe() call but are no longer attached to the system. Optional;
+ * specify NULL if removal notices are not desired.
+ *
+ * \return probe context on success, NULL on failure.
+ */
+struct spdk_nvme_probe_ctx *spdk_nvme_probe_async(const struct spdk_nvme_transport_id *trid,
+		void *cb_ctx,
+		spdk_nvme_probe_cb probe_cb,
+		spdk_nvme_attach_cb attach_cb,
+		spdk_nvme_remove_cb remove_cb);
+
+/**
+ * Start controllers in the context list.
+ *
+ * Users may call the function util it returns True.
+ *
+ * \param probe_ctx Context used to track probe actions.
+ *
+ * \return 0 if all probe operations are complete; the probe_ctx
+ * is also freed and no longer valid.
+ * \return -EAGAIN if there are still pending probe operations; user must call
+ * spdk_nvme_probe_poll_async again to continue progress.
+ * \return value other than 0 and -EAGAIN probe error with one controller.
+ */
+int spdk_nvme_probe_poll_async(struct spdk_nvme_probe_ctx *probe_ctx);
+
 /**
  * Detach specified device returned by spdk_nvme_probe()'s attach_cb from the
  * NVMe driver.
@@ -614,6 +712,15 @@ union spdk_nvme_cap_register spdk_nvme_ctrlr_get_regs_cap(struct spdk_nvme_ctrlr
  * \return the NVMe controller VS (Version) register.
  */
 union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *ctrlr);
+
+/**
+ * Get the NVMe controller CMBSZ (Controller Memory Buffer Size) register
+ *
+ * \param ctrlr Opaque handle to NVMe controller.
+ *
+ * \return the NVMe controller CMBSZ (Controller Memory Buffer Size) register.
+ */
+union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Get the number of namespaces for the given NVMe controller.
@@ -828,6 +935,17 @@ struct spdk_nvme_io_qpair_opts {
 	 * compatibility requirements, or driver-assisted striping.
 	 */
 	uint32_t io_queue_requests;
+
+	/**
+	 * When submitting I/O via spdk_nvme_ns_read/write and similar functions,
+	 * don't immediately write the submission queue doorbell. Instead, write
+	 * to the doorbell as necessary inside spdk_nvme_qpair_process_completions().
+	 *
+	 * This results in better batching of I/O submission and consequently fewer
+	 * MMIO writes to the doorbell, which may increase performance.
+	 *
+	 * This only applies to local PCIe devices. */
+	bool delay_pcie_doorbell;
 };
 
 /**
@@ -1211,9 +1329,8 @@ int spdk_nvme_ctrlr_cmd_set_feature_ns(struct spdk_nvme_ctrlr *ctrlr, uint8_t fe
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int
-spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-				 uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+int spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				     uint16_t spsp, uint8_t nssf, void *payload, size_t size);
 
 /**
  * Send security protocol data to controller.
@@ -1234,9 +1351,17 @@ spdk_nvme_ctrlr_security_receive(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
  * \return 0 if successfully submitted, negated errno if resources could not be allocated
  * for this request.
  */
-int
-spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
-			      uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+int spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
+				  uint16_t spsp, uint8_t nssf, void *payload, size_t size);
+
+/**
+ * Get supported flags of the controller.
+ *
+ * \param ctrlr NVMe controller to get flags.
+ *
+ * \return supported flags of this controller.
+ */
+uint64_t spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr);
 
 /**
  * Attach the specified namespace to controllers.

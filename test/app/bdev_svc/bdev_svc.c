@@ -51,7 +51,7 @@ bdev_svc_parse_arg(int ch, char *arg)
 }
 
 static void
-bdev_svc_start(void *arg1, void *arg2)
+bdev_svc_start(void *arg1)
 {
 	int fd;
 	int shm_id = (intptr_t)arg1;
@@ -87,7 +87,6 @@ main(int argc, char **argv)
 
 	opts.name = "bdev_svc";
 	opts.shutdown_cb = bdev_svc_shutdown;
-	opts.max_delay_us = 1000 * 1000;
 
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      bdev_svc_parse_arg, bdev_svc_usage)) !=
@@ -105,7 +104,7 @@ main(int argc, char **argv)
 		g_unaffinitize_thread = true;
 	}
 
-	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id, NULL);
+	rc = spdk_app_start(&opts, bdev_svc_start, (void *)(intptr_t)opts.shm_id);
 
 	spdk_app_fini();
 

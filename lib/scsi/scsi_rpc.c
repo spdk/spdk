@@ -67,11 +67,9 @@ spdk_rpc_get_scsi_devices(struct spdk_jsonrpc_request *request,
 
 		spdk_json_write_object_begin(w);
 
-		spdk_json_write_name(w, "id");
-		spdk_json_write_int32(w, dev->id);
+		spdk_json_write_named_int32(w, "id", dev->id);
 
-		spdk_json_write_name(w, "device_name");
-		spdk_json_write_string(w, dev->name);
+		spdk_json_write_named_string(w, "device_name", dev->name);
 
 		spdk_json_write_object_end(w);
 	}

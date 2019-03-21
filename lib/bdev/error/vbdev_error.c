@@ -97,7 +97,7 @@ static struct spdk_bdev_module error_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&error_if)
+SPDK_BDEV_MODULE_REGISTER(error, &error_if)
 
 int
 spdk_vbdev_inject_error(char *name, uint32_t io_type, uint32_t error_type, uint32_t error_num)
@@ -267,11 +267,9 @@ vbdev_error_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct error_disk *error_disk = ctx;
 	struct spdk_bdev *base_bdev = spdk_bdev_part_get_base_bdev(&error_disk->part);
 
-	spdk_json_write_name(w, "error_disk");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "error_disk");
 
-	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, base_bdev->name);
+	spdk_json_write_named_string(w, "base_bdev", base_bdev->name);
 
 	spdk_json_write_object_end(w);
 

@@ -1,25 +1,11 @@
 #!/usr/bin/env bash
 set -e
-BASE_DIR=$(readlink -f $(dirname $0))
-. $BASE_DIR/common.sh
+HOTPLUG_DIR=$(readlink -f $(dirname $0))
+. $HOTPLUG_DIR/common.sh
 
 if [[ $scsi_hot_remove_test == 1 ]] && [[ $blk_hot_remove_test == 1 ]]; then
     notice "Vhost-scsi and vhost-blk hotremove tests cannot be run together"
 fi
-
-# Add split section into vhost config
-function gen_config() {
-    cp $BASE_DIR/vhost.conf.base $BASE_DIR/vhost.conf.in
-    cat << END_OF_CONFIG >> $BASE_DIR/vhost.conf.in
-[Split]
-  Split Nvme0n1 16
-  Split Nvme1n1 20
-  Split HotInNvme0n1 2
-  Split HotInNvme1n1 2
-  Split HotInNvme2n1 2
-  Split HotInNvme3n1 2
-END_OF_CONFIG
-}
 
 # Run spdk by calling run_vhost from hotplug/common.sh.
 # Then prepare vhost with rpc calls and setup and run 4 VMs.
@@ -65,16 +51,29 @@ function clear_vhost_config() {
 }
 
 trap 'error_exit "${FUNCNAME}" "${LINENO}"' ERR
-gen_config
 # Hotremove/hotattach/hotdetach test cases prerequisites
-# 1. Run vhost with 2 NVMe disks.
-run_vhost
-rm $BASE_DIR/vhost.conf.in
+# Run vhost with 2 NVMe disks.
+
+notice "==============="
+notice ""
+notice "running SPDK"
+notice ""
+spdk_vhost_run
+$rpc_py set_bdev_nvme_hotplug -e
+$rpc_py construct_split_vbdev Nvme0n1 16
+$rpc_py construct_malloc_bdev 128 512 -b Malloc
+$rpc_py construct_split_vbdev Malloc 4
+$rpc_py construct_split_vbdev HotInNvme0n1 2
+$rpc_py construct_split_vbdev HotInNvme1n1 2
+$rpc_py construct_split_vbdev HotInNvme2n1 2
+$rpc_py construct_split_vbdev HotInNvme3n1 2
+$rpc_py get_bdevs
+
 if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     pre_hot_attach_detach_test_case
-    $BASE_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
+    $HOTPLUG_DIR/scsi_hotattach.sh --fio-bin=$fio_bin &
     first_script=$!
-    $BASE_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
+    $HOTPLUG_DIR/scsi_hotdetach.sh --fio-bin=$fio_bin &
     second_script=$!
     wait $first_script
     wait $second_script
@@ -82,9 +81,9 @@ if [[ $scsi_hot_remove_test == 0 ]] && [[ $blk_hot_remove_test == 0 ]]; then
     clear_vhost_config
 fi
 if [[ $scsi_hot_remove_test == 1 ]]; then
-    source $BASE_DIR/scsi_hotremove.sh
+    source $HOTPLUG_DIR/scsi_hotremove.sh
 fi
 if [[ $blk_hot_remove_test == 1 ]]; then
-    source $BASE_DIR/blk_hotremove.sh
+    source $HOTPLUG_DIR/blk_hotremove.sh
 fi
 post_test_case

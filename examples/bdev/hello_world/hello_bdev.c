@@ -188,7 +188,7 @@ hello_write(void *arg)
  * Our initial event that kicks off everything from main().
  */
 static void
-hello_start(void *arg1, void *arg2)
+hello_start(void *arg1)
 {
 	struct hello_context_t *hello_context = arg1;
 	uint32_t blk_size, buf_align;
@@ -283,7 +283,7 @@ main(int argc, char **argv)
 	 * hello_start() returns), or if an error occurs during
 	 * spdk_app_start() before hello_start() runs.
 	 */
-	rc = spdk_app_start(&opts, hello_start, &hello_context, NULL);
+	rc = spdk_app_start(&opts, hello_start, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}

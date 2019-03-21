@@ -63,7 +63,7 @@ iscsi_usage(void)
 }
 
 static void
-spdk_startup(void *arg1, void *arg2)
+spdk_startup(void *arg1)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
@@ -109,7 +109,7 @@ main(int argc, char **argv)
 	opts.usr1_handler = spdk_sigusr1;
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, spdk_startup, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_startup, NULL);
 	if (rc) {
 		SPDK_ERRLOG("Start iscsi target daemon:  spdk_app_start() retn non-zero\n");
 	}

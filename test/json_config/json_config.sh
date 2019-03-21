@@ -80,7 +80,7 @@ function json_config_test_shutdown_app() {
 	# kill_instance RPC will trigger ASAN
 	kill -SIGINT ${app_pid[$app]}
 
-	for (( i=0; i<10; i++ )); do
+	for (( i=0; i<30; i++ )); do
 		if ! kill -0 ${app_pid[$app]} 2>/dev/null; then
 			app_pid[$app]=
 			break
@@ -198,7 +198,7 @@ function create_vhost_subsystem_config() {
 
 	tgt_rpc construct_vhost_scsi_controller   VhostScsiCtrlr0
 	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 0 MallocForVhost0p3
-	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 1 MallocForVhost0p4
+	tgt_rpc add_vhost_scsi_lun                VhostScsiCtrlr0 -1 MallocForVhost0p4
 	tgt_rpc set_vhost_controller_coalescing   VhostScsiCtrlr0 1 100
 
 	tgt_rpc construct_vhost_blk_controller    VhostBlkCtrlr0 MallocForVhost0p5

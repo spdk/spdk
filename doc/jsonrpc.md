@@ -263,7 +263,6 @@ Example response:
     "set_iscsi_options",
     "set_bdev_options",
     "set_bdev_qos_limit",
-    "delete_bdev",
     "get_bdevs",
     "get_bdevs_iostat",
     "get_subsystem_config",
@@ -707,41 +706,6 @@ Note that histogram field is trimmed, actual encoded histogram length is ~80kb.
     "tsc_rate": 2300000000,
     "bucket_shift": 7
   }
-}
-~~~
-
-## delete_bdev {#rpc_delete_bdev}
-
-Unregister a block device.  This RPC is deprecated.  Users should instead use
-the specific deletion RPC for the bdev type to be removed (i.e.
-delete_malloc_bdev).
-
-### Parameters
-
-Name                    | Optional | Type        | Description
------------------------ | -------- | ----------- | -----------
-name                    | Required | string      | Block device name
-
-### Example
-
-Example request:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "method": "delete_bdev",
-  "params": {
-    "name": "Malloc0"
-  }
-}
-~~~
-
-Example response:
-~~~
-{
-  "jsonrpc": "2.0",
-  "id": 1,
-  "result": true
 }
 ~~~
 
@@ -1368,7 +1332,8 @@ Name                       | Optional | Type        | Description
 action_on_timeout          | Optional | string      | Action to take on command time out: none, reset or abort
 timeout_us                 | Optional | number      | Timeout for each command, in microseconds. If 0, don't track timeouts
 retry_count                | Optional | number      | The number of attempts per I/O before an I/O fails
-nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microsecond
+nvme_adminq_poll_period_us | Optional | number      | How often the admin queue is polled for asynchronous events in microseconds
+nvme_ioq_poll_period_us    | Optional | number      | How often I/O queues are polled for completions, in microseconds. Default: 0 (as fast as possible).
 
 ### Example
 
@@ -1459,6 +1424,8 @@ subnqn                  | Optional | string      | NVMe-oF target subnqn
 hostnqn                 | Optional | string      | NVMe-oF target hostnqn
 hostaddr                | Optional | string      | NVMe-oF host address: ip address
 hostsvcid               | Optional | string      | NVMe-oF host trsvcid: port number
+prchk_reftag            | Optional | bool        | Enable checking of PI reference tag for I/O processing
+prchk_guard             | Optional | bool        | Enable checking of PI guard for I/O processing
 
 ### Example
 
@@ -3488,7 +3455,7 @@ max_io_size                 | Optional | number  | Max I/O size (bytes)
 io_unit_size                | Optional | number  | I/O unit size (bytes)
 max_aq_depth                | Optional | number  | Max number of admin cmds per AQ
 num_shared_buffers          | Optional | number  | The number of pooled data buffers available to the transport
-buf_cache_size              | Optional | number  | The number of shared buffers to cache per poll group
+buf_cache_size              | Optional | number  | The number of shared buffers to reserve for each poll group
 
 ### Example:
 
@@ -4094,8 +4061,12 @@ In vhost target `ctrlr` create SCSI target with ID `scsi_target_num` and add `bd
 Name                    | Optional | Type        | Description
 ----------------------- | -------- | ----------- | -----------
 ctrlr                   | Required | string      | Controller name
-scsi_target_num         | Required | number      | SCSI target ID between 0 and 7
+scsi_target_num         | Required | number      | SCSI target ID between 0 and 7 or -1 to use first free ID.
 bdev_name               | Required | string      | Name of bdev to expose as a LUN 0
+
+### Response
+
+SCSI target ID.
 
 ### Example
 
@@ -4121,7 +4092,7 @@ response:
 {
   "jsonrpc": "2.0",
   "id": 1,
-  "result": true
+  "result": 1
 }
 ~~~
 
@@ -4499,6 +4470,7 @@ Name                    | Optional | Type        | Description
 bdev_name               | Required | string      | Bdev on which to construct logical volume store
 lvs_name                | Required | string      | Name of the logical volume store to create
 cluster_sz              | Optional | number      | Cluster size of the logical volume store in bytes
+clear_method            | Optional | string      | Change clear method for data region. Available: none, unmap (default), write_zeroes
 
 ### Response
 
@@ -4515,6 +4487,7 @@ Example request:
   "params": {
     "lvs_name": "LVS0",
     "bdev_name": "Malloc0"
+    "clear_method": "write_zeroes"
   }
 }
 ~~~

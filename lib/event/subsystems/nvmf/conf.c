@@ -1,8 +1,8 @@
 /*-
  *   BSD LICENSE
  *
- *   Copyright (c) Intel Corporation.
- *   All rights reserved.
+ *   Copyright (c) Intel Corporation. All rights reserved.
+ *   Copyright (c) 2018 Mellanox Technologies LTD. All rights reserved.
  *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
@@ -529,6 +529,17 @@ spdk_nvmf_parse_transport(struct spdk_nvmf_parse_transport_ctx *ctx)
 		opts.buf_cache_size = val;
 	}
 
+	val = spdk_conf_section_get_intval(ctx->sp, "MaxSRQDepth");
+	if (val >= 0) {
+		if (trtype == SPDK_NVME_TRANSPORT_RDMA) {
+			opts.max_srq_depth = val;
+		} else {
+			SPDK_ERRLOG("MaxSRQDepth is relevant only for RDMA transport '%s'\n", type);
+			ctx->cb_fn(-1);
+			free(ctx);
+			return;
+		}
+	}
 
 	transport = spdk_nvmf_transport_create(trtype, &opts);
 	if (transport) {

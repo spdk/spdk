@@ -38,6 +38,7 @@
 
 #include "spdk/event.h"
 #include "spdk/json.h"
+#include "spdk/thread.h"
 
 struct spdk_event {
 	uint32_t		lcore;
@@ -46,11 +47,11 @@ struct spdk_event {
 	void			*arg2;
 };
 
-int spdk_reactors_init(unsigned int max_delay_us);
+int spdk_reactors_init(void);
 void spdk_reactors_fini(void);
 
 void spdk_reactors_start(void);
-void spdk_reactors_stop(void *arg1, void *arg2);
+void spdk_reactors_stop(void *arg1);
 
 struct spdk_subsystem {
 	const char *name;
@@ -63,9 +64,8 @@ struct spdk_subsystem {
 	 * Write JSON configuration handler.
 	 *
 	 * \param w JSON write context
-	 * \param done_ev Done event to be called when writing is done.
 	 */
-	void (*write_config_json)(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+	void (*write_config_json)(struct spdk_json_write_ctx *w);
 	TAILQ_ENTRY(spdk_subsystem) tailq;
 };
 
@@ -86,24 +86,20 @@ extern struct spdk_subsystem_depend_list g_subsystems_deps;
 void spdk_add_subsystem(struct spdk_subsystem *subsystem);
 void spdk_add_subsystem_depend(struct spdk_subsystem_depend *depend);
 
-void spdk_subsystem_init(struct spdk_event *app_start_event);
-void spdk_subsystem_fini(struct spdk_event *app_finish_event);
+void spdk_subsystem_init(spdk_msg_fn cb_fn, void *cb_arg);
+void spdk_subsystem_fini(spdk_msg_fn cb_fn, void *cb_arg);
 void spdk_subsystem_init_next(int rc);
 void spdk_subsystem_fini_next(void);
 void spdk_subsystem_config(FILE *fp);
 
 /**
  * Save pointed \c subsystem configuration to the JSON write context \c w. In case of
- * error \c null is written to the JSON context. Writing might be done in async way
- * so caller need to pass event that subsystem will call when it finish writing
- * configuration.
+ * error \c null is written to the JSON context.
  *
  * \param w JSON write context
  * \param subsystem the subsystem to query
- * \param done_ev event to be called when writing is done
  */
-void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem,
-				struct spdk_event *done_ev);
+void spdk_subsystem_config_json(struct spdk_json_write_ctx *w, struct spdk_subsystem *subsystem);
 
 void spdk_rpc_initialize(const char *listen_addr);
 void spdk_rpc_finish(void);

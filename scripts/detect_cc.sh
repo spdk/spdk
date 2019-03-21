@@ -23,10 +23,7 @@ function usage()
 	err " --lto=[y|n]               Attempt to configure for LTO"
 }
 
-CC=cc
-CXX=c++
-LD=ld
-LTO=n
+
 
 for i in "$@"; do
 	case "$i" in
@@ -35,16 +32,24 @@ for i in "$@"; do
 			exit 0
 			;;
 		--cc=*)
-			CC="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				CC="${i#*=}"
+			fi
 			;;
 		--cxx=*)
-			CXX="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				CXX="${i#*=}"
+			fi
 			;;
 		--lto=*)
-			LTO="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				LTO="${i#*=}"
+			fi
 			;;
 		--ld=*)
-			LD="${i#*=}"
+			if [[ -n "${i#*=}" ]]; then
+				LD="${i#*=}"
+			fi
 			;;
 		--)
 			break
@@ -55,6 +60,11 @@ for i in "$@"; do
 			exit 1
 	esac
 done
+
+: ${CC=cc}
+: ${CXX=c++}
+: ${LD=ld}
+: ${LTO=n}
 
 CC_TYPE=$($CC -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')
 CXX_TYPE=$($CXX -v 2>&1 | grep -o -E '\w+ version' | head -1 | awk '{ print $1 }')

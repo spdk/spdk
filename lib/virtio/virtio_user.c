@@ -43,6 +43,7 @@
 
 #include "virtio_user/vhost.h"
 #include "spdk/string.h"
+#include "spdk/config.h"
 
 #include "spdk_internal/virtio.h"
 
@@ -165,13 +166,19 @@ virtio_user_map_notify(void *cb_ctx, struct spdk_mem_map *map,
 		return ret;
 	}
 
-	/* We have to send SET_VRING_ADDR to make rte_vhost flush a pending
-	 * SET_MEM_TABLE...
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
+	/* Our internal rte_vhost lib requires SET_VRING_ADDR to flush a pending
+	 * SET_MEM_TABLE. On the other hand, the upstream rte_vhost will invalidate
+	 * the entire queue upon receiving SET_VRING_ADDR message, so we mustn't
+	 * send it here. Both behaviors are strictly implementation specific, but
+	 * this message isn't needed from the point of the spec, so send it only
+	 * if vhost is compiled with our internal lib.
 	 */
 	ret = virtio_user_queue_setup(vdev, virtio_user_set_vring_addr);
 	if (ret < 0) {
 		return ret;
 	}
+#endif
 
 	/* Since we might want to use that mapping straight away, we have to
 	 * make sure the guest has already processed our SET_MEM_TABLE message.
@@ -544,11 +551,8 @@ virtio_user_dump_json_info(struct virtio_dev *vdev, struct spdk_json_write_ctx *
 {
 	struct virtio_user_dev *dev = vdev->ctx;
 
-	spdk_json_write_name(w, "type");
-	spdk_json_write_string(w, "user");
-
-	spdk_json_write_name(w, "socket");
-	spdk_json_write_string(w, dev->path);
+	spdk_json_write_named_string(w, "type", "user");
+	spdk_json_write_named_string(w, "socket", dev->path);
 }
 
 static void

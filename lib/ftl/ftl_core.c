@@ -507,23 +507,22 @@ ftl_get_limit(const struct spdk_ftl_dev *dev, int type)
 	return &dev->conf.defrag.limits[type];
 }
 
-static int
-ftl_update_md_entry(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
+static bool
+ftl_cache_lba_valid(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
 {
 	struct ftl_ppa ppa;
 
 	/* If the LBA is invalid don't bother checking the md and l2p */
 	if (spdk_unlikely(entry->lba == FTL_LBA_INVALID)) {
-		return 1;
+		return false;
 	}
 
 	ppa = ftl_l2p_get(dev, entry->lba);
 	if (!(ftl_ppa_cached(ppa) && ppa.offset == entry->pos)) {
-		ftl_invalidate_addr(dev, entry->ppa);
-		return 1;
+		return false;
 	}
 
-	return 0;
+	return true;
 }
 
 static void
@@ -535,13 +534,10 @@ ftl_evict_cache_entry(struct spdk_ftl_dev *dev, struct ftl_rwb_entry *entry)
 		goto unlock;
 	}
 
-	/* Make sure the metadata is in sync with l2p. If the l2p still contains */
-	/* the entry, fill it with the on-disk PPA and clear the cache status */
-	/* bit. Otherwise, skip the l2p update and just clear the cache status. */
-	/* This can happen, when a write comes during the time that l2p contains */
-	/* the entry, but the entry doesn't  have a PPA assigned (and therefore */
-	/* does not have the cache bit set). */
-	if (ftl_update_md_entry(dev, entry)) {
+	/* If the l2p wasn't updated and still points at the entry, fill it with the */
+	/* on-disk PPA and clear the cache status bit. Otherwise, skip the l2p update */
+	/* and just clear the cache status. */
+	if (!ftl_cache_lba_valid(dev, entry)) {
 		goto clear;
 	}
 
@@ -703,7 +699,7 @@ ftl_read_canceled(int rc)
 	return rc == 0;
 }
 
-static int
+static void
 ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		void *ctx)
 {
@@ -737,9 +733,13 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
+
 		if (rc) {
-			SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
-			io->status = -EIO;
+			io->status = rc;
+
+			if (rc != -ENOMEM) {
+				SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
+			}
 			break;
 		}
 
@@ -753,8 +753,6 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
-
-	return rc;
 }
 
 static int
@@ -891,10 +889,6 @@ ftl_write_cb(void *arg, int status)
 
 		SPDK_DEBUGLOG(SPDK_LOG_FTL_CORE, "Write ppa:%lu, lba:%lu\n",
 			      entry->ppa.ppa, entry->lba);
-
-		if (ftl_update_md_entry(dev, entry)) {
-			ftl_rwb_entry_invalidate(entry);
-		}
 	}
 
 	ftl_process_flush(dev, batch);
@@ -1039,7 +1033,7 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_batch	*batch;
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
-	struct ftl_ppa		ppa;
+	struct ftl_ppa		ppa, prev_ppa;
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {
@@ -1069,14 +1063,21 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	ppa = wptr->ppa;
 	ftl_rwb_foreach(entry, batch) {
 		entry->ppa = ppa;
-		/* Setting entry's cache bit needs to be done after metadata */
-		/* within the band is updated to make sure that writes */
-		/* invalidating the entry clear the metadata as well */
-		if (entry->lba != FTL_LBA_INVALID) {
-			ftl_band_set_addr(wptr->band, entry->lba, entry->ppa);
-		}
 
-		ftl_rwb_entry_set_valid(entry);
+		if (entry->lba != FTL_LBA_INVALID) {
+			pthread_spin_lock(&entry->lock);
+			prev_ppa = ftl_l2p_get(dev, entry->lba);
+
+			/* If the l2p was updated in the meantime, don't update band's metadata */
+			if (ftl_ppa_cached(prev_ppa) && prev_ppa.offset == entry->pos) {
+				/* Setting entry's cache bit needs to be done after metadata */
+				/* within the band is updated to make sure that writes */
+				/* invalidating the entry clear the metadata as well */
+				ftl_band_set_addr(wptr->band, entry->lba, entry->ppa);
+				ftl_rwb_entry_set_valid(entry);
+			}
+			pthread_spin_unlock(&entry->lock);
+		}
 
 		ftl_trace_rwb_pop(dev, entry);
 		ftl_update_rwb_stats(dev, entry);
@@ -1282,19 +1283,13 @@ ftl_current_limit(const struct spdk_ftl_dev *dev)
 	return dev->limit;
 }
 
-int
+void
 spdk_ftl_dev_get_attrs(const struct spdk_ftl_dev *dev, struct spdk_ftl_attrs *attrs)
 {
-	if (!dev || !attrs) {
-		return -EINVAL;
-	}
-
 	attrs->uuid = dev->uuid;
 	attrs->lbk_cnt = dev->num_lbas;
 	attrs->lbk_size = FTL_BLOCK_SIZE;
 	attrs->range = dev->range;
-
-	return 0;
 }
 
 static void
@@ -1323,7 +1318,6 @@ ftl_io_write(struct ftl_io *io)
 
 	return 0;
 }
-
 
 
 static int
@@ -1357,10 +1351,6 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 {
 	struct ftl_io *io;
 
-	if (!iov || !cb_fn || !dev) {
-		return -EINVAL;
-	}
-
 	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
 		return -EINVAL;
 	}
@@ -1386,7 +1376,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return _spdk_ftl_write(io);
 }
 
-int
+void
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
@@ -1399,11 +1389,11 @@ ftl_io_read(struct ftl_io *io)
 			next_ppa = ftl_lba_read_next_ppa;
 		}
 
-		return ftl_submit_read(io, next_ppa, NULL);
+		ftl_submit_read(io, next_ppa, NULL);
+		return;
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
-	return 0;
 }
 
 static void
@@ -1417,10 +1407,6 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 	      struct iovec *iov, size_t iov_cnt, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	struct ftl_io *io;
-
-	if (!iov || !cb_fn || !dev) {
-		return -EINVAL;
-	}
 
 	if (iov_cnt == 0 || iov_cnt > FTL_MAX_IOV) {
 		return -EINVAL;
@@ -1444,7 +1430,8 @@ spdk_ftl_read(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lba
 	}
 
 	ftl_io_user_init(dev, io, lba, lba_cnt, iov, iov_cnt, cb_fn, cb_arg, FTL_IO_READ);
-	return ftl_io_read(io);
+	ftl_io_read(io);
+	return 0;
 }
 
 static struct ftl_flush *
@@ -1502,10 +1489,6 @@ spdk_ftl_flush(struct spdk_ftl_dev *dev, spdk_ftl_fn cb_fn, void *cb_arg)
 {
 	struct ftl_flush *flush;
 
-	if (!dev || !cb_fn) {
-		return -EINVAL;
-	}
-
 	if (!dev->initialized) {
 		return -EBUSY;
 	}
@@ -1540,7 +1523,7 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	return spdk_nvme_qpair_process_completions(qpair, 1);
+	return spdk_nvme_qpair_process_completions(qpair, 0);
 }
 
 int
@@ -1558,7 +1541,7 @@ ftl_task_core(void *ctx)
 	}
 
 	ftl_process_writes(dev);
-	spdk_nvme_qpair_process_completions(qpair, 1);
+	spdk_nvme_qpair_process_completions(qpair, 0);
 	ftl_process_relocs(dev);
 
 	return 0;

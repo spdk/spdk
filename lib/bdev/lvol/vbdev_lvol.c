@@ -55,7 +55,7 @@ static struct spdk_bdev_module g_lvol_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&g_lvol_if)
+SPDK_BDEV_MODULE_REGISTER(lvol, &g_lvol_if)
 
 struct lvol_store_bdev *
 vbdev_get_lvs_bdev_by_lvs(struct spdk_lvol_store *lvs_orig)
@@ -205,7 +205,7 @@ end:
 
 int
 vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster_sz,
-		 spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
+		 enum lvs_clear_method clear_method, spdk_lvs_op_with_handle_complete cb_fn, void *cb_arg)
 {
 	struct spdk_bs_dev *bs_dev;
 	struct spdk_lvs_with_handle_req *lvs_req;
@@ -221,6 +221,10 @@ vbdev_lvs_create(struct spdk_bdev *base_bdev, const char *name, uint32_t cluster
 	spdk_lvs_opts_init(&opts);
 	if (cluster_sz != 0) {
 		opts.cluster_sz = cluster_sz;
+	}
+
+	if (clear_method != 0) {
+		opts.clear_method = clear_method;
 	}
 
 	if (name == NULL) {
@@ -634,8 +638,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	char *name;
 	int rc = 0;
 
-	spdk_json_write_name(w, "lvol");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "lvol");
 
 	lvs_bdev = vbdev_get_lvs_bdev_by_lvs(lvol->lvol_store);
 	if (!lvs_bdev) {
@@ -647,30 +650,24 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	bdev = lvs_bdev->bdev;
 
 	spdk_uuid_fmt_lower(lvol_store_uuid, sizeof(lvol_store_uuid), &lvol->lvol_store->uuid);
-	spdk_json_write_name(w, "lvol_store_uuid");
-	spdk_json_write_string(w, lvol_store_uuid);
+	spdk_json_write_named_string(w, "lvol_store_uuid", lvol_store_uuid);
 
-	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(bdev));
+	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(bdev));
 
 	blob = lvol->blob;
 
-	spdk_json_write_name(w, "thin_provision");
-	spdk_json_write_bool(w, spdk_blob_is_thin_provisioned(blob));
+	spdk_json_write_named_bool(w, "thin_provision", spdk_blob_is_thin_provisioned(blob));
 
-	spdk_json_write_name(w, "snapshot");
-	spdk_json_write_bool(w, spdk_blob_is_snapshot(blob));
+	spdk_json_write_named_bool(w, "snapshot", spdk_blob_is_snapshot(blob));
 
-	spdk_json_write_name(w, "clone");
-	spdk_json_write_bool(w, spdk_blob_is_clone(blob));
+	spdk_json_write_named_bool(w, "clone", spdk_blob_is_clone(blob));
 
 	if (spdk_blob_is_clone(blob)) {
 		spdk_blob_id snapshotid = spdk_blob_get_parent_snapshot(lvol->lvol_store->blobstore, lvol->blob_id);
 		if (snapshotid != SPDK_BLOBID_INVALID) {
 			name = vbdev_lvol_find_name(lvol, snapshotid);
 			if (name != NULL) {
-				spdk_json_write_name(w, "base_snapshot");
-				spdk_json_write_string(w, name);
+				spdk_json_write_named_string(w, "base_snapshot", name);
 			} else {
 				SPDK_ERRLOG("Cannot obtain snapshots name\n");
 			}
@@ -690,8 +687,7 @@ vbdev_lvol_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 
 			rc = spdk_blob_get_clones(lvol->lvol_store->blobstore, lvol->blob_id, ids, &count);
 			if (rc == 0) {
-				spdk_json_write_name(w, "clones");
-				spdk_json_write_array_begin(w);
+				spdk_json_write_named_array_begin(w, "clones");
 				for (i = 0; i < count; i++) {
 					name = vbdev_lvol_find_name(lvol, ids[i]);
 					if (name != NULL) {
@@ -849,6 +845,17 @@ lvol_reset(struct spdk_bdev_io *bdev_io)
 }
 
 static void
+lvol_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
+	lvol_read(ch, bdev_io);
+}
+
+static void
 vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
 {
 	struct spdk_lvol *lvol = bdev_io->bdev->ctxt;
@@ -857,7 +864,7 @@ vbdev_lvol_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_
 
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
-		spdk_bdev_io_get_buf(bdev_io, lvol_read,
+		spdk_bdev_io_get_buf(bdev_io, lvol_get_buf_cb,
 				     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 		break;
 	case SPDK_BDEV_IO_TYPE_WRITE:

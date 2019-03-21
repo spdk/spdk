@@ -122,7 +122,7 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 
 	transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
 				   opts->num_shared_buffers,
-				   opts->max_io_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				   opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				   SPDK_ENV_SOCKET_ID_ANY);
 
@@ -286,12 +286,6 @@ void
 spdk_nvmf_transport_qpair_fini(struct spdk_nvmf_qpair *qpair)
 {
 	qpair->transport->ops->qpair_fini(qpair);
-}
-
-bool
-spdk_nvmf_transport_qpair_is_idle(struct spdk_nvmf_qpair *qpair)
-{
-	return qpair->transport->ops->qpair_is_idle(qpair);
 }
 
 int

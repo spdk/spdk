@@ -37,7 +37,6 @@
 
 #include "spdk/util.h"
 #include "spdk/log.h"
-#include "spdk/event.h"
 #include "spdk/env.h"
 #include "spdk/thread.h"
 #include "spdk/jsonrpc.h"
@@ -88,7 +87,8 @@ typedef void (*client_resp_handler)(struct load_json_config_ctx *,
 struct load_json_config_ctx {
 	/* Thread used during configuration. */
 	struct spdk_thread *thread;
-	struct spdk_event *done_event;
+	spdk_msg_fn cb_fn;
+	void *cb_arg;
 
 	/* Current subsystem */
 	struct spdk_json_val *subsystems; /* "subsystems" array */
@@ -134,7 +134,7 @@ spdk_app_json_config_load_done(struct load_json_config_ctx *ctx, int rc)
 		SPDK_ERRLOG("Config load failed. Stopping SPDK application.\n");
 		spdk_app_stop(rc);
 	} else {
-		spdk_event_call(ctx->done_event);
+		ctx->cb_fn(ctx->cb_arg);
 	}
 
 	SPDK_DEBUG_APP_CFG("Config load finished\n");
@@ -426,7 +426,7 @@ static struct spdk_json_object_decoder subsystem_decoders[] = {
  *
  * In second iteration "subsystems" array is walked through again, this time only
  * RUNTIME RPC methods are used. When ctx->subsystems_it became NULL second time it
- * indicate that there is no more subsystems to load. The done_event is called to finish
+ * indicate that there is no more subsystems to load. The cb_fn is called to finish
  * configuration.
  */
 static void
@@ -562,22 +562,23 @@ err:
 }
 
 void
-spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *done_event)
+spdk_app_json_config_load(const char *json_config_file, const char *rpc_addr,
+			  spdk_msg_fn cb_fn, void *cb_arg)
 {
 	struct load_json_config_ctx *ctx = calloc(1, sizeof(*ctx));
-	const char *rpc_addr;
 	int rc;
 
-	assert(done_event);
+	assert(cb_fn);
 	if (!ctx) {
 		spdk_app_stop(-ENOMEM);
 		return;
 	}
 
-	ctx->done_event = done_event;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
 	ctx->thread = spdk_get_thread();
 
-	rc = spdk_app_json_config_read(opts->json_config_file, ctx);
+	rc = spdk_app_json_config_read(json_config_file, ctx);
 	if (rc) {
 		goto fail;
 	}
@@ -594,7 +595,6 @@ spdk_app_json_config_load(const struct spdk_app_opts *opts, struct spdk_event *d
 		}
 	}
 
-	rpc_addr = opts->rpc_addr;
 	/* If rpc_addr is not an Unix socket use default address as prefix. */
 	if (rpc_addr == NULL || rpc_addr[0] != '/') {
 		rpc_addr = SPDK_DEFAULT_RPC_ADDR;

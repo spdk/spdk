@@ -180,9 +180,18 @@ stub_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 }
 
 static void
+stub_submit_request_aligned_buffer_cb(struct spdk_io_channel *_ch,
+				      struct spdk_bdev_io *bdev_io, bool success)
+{
+	CU_ASSERT(success == true);
+
+	stub_submit_request(_ch, bdev_io);
+}
+
+static void
 stub_submit_request_aligned_buffer(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_io)
 {
-	spdk_bdev_io_get_buf(bdev_io, stub_submit_request,
+	spdk_bdev_io_get_buf(bdev_io, stub_submit_request_aligned_buffer_cb,
 			     bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen);
 }
 
@@ -287,8 +296,8 @@ struct spdk_bdev_module vbdev_ut_if = {
 	.examine_config = vbdev_ut_examine,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
-SPDK_BDEV_MODULE_REGISTER(&vbdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(vbdev_ut, &vbdev_ut_if)
 
 static void
 vbdev_ut_examine(struct spdk_bdev *bdev)

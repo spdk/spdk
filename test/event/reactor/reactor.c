@@ -85,7 +85,7 @@ nop(void *arg)
 }
 
 static void
-test_start(void *arg1, void *arg2)
+test_start(void *arg1)
 {
 	printf("test_start\n");
 
@@ -117,7 +117,6 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor";
-	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
 
@@ -137,7 +136,7 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
-	rc = spdk_app_start(&opts, test_start, NULL, NULL);
+	rc = spdk_app_start(&opts, test_start, NULL);
 
 	spdk_app_fini();
 

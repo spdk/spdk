@@ -2,6 +2,7 @@
 
 from rpc.client import print_dict, JSONRPCException
 
+import logging
 import argparse
 import rpc
 import sys
@@ -20,15 +21,17 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description='SPDK RPC command line interface')
     parser.add_argument('-s', dest='server_addr',
-                        help='RPC server address', default='/var/tmp/spdk.sock')
+                        help='RPC domain socket path or IP address', default='/var/tmp/spdk.sock')
     parser.add_argument('-p', dest='port',
                         help='RPC port number (if server_addr is IP address)',
                         default=5260, type=int)
     parser.add_argument('-t', dest='timeout',
-                        help='Timout as a floating point number expressed in seconds waiting for reponse. Default: 60.0',
+                        help='Timeout as a floating point number expressed in seconds waiting for response. Default: 60.0',
                         default=60.0, type=float)
-    parser.add_argument('-v', dest='verbose',
-                        help='Verbose mode', action='store_true')
+    parser.add_argument('-v', dest='verbose', action='store_const', const="INFO",
+                        help='Set verbose mode to INFO', default="ERROR")
+    parser.add_argument('--verbose', dest='verbose', choices=['DEBUG', 'INFO', 'ERROR'],
+                        help="""Set verbose level. """)
     subparsers = parser.add_subparsers(help='RPC methods')
 
     def start_subsystem_init(args):
@@ -256,7 +259,8 @@ if __name__ == "__main__":
                                        action_on_timeout=args.action_on_timeout,
                                        timeout_us=args.timeout_us,
                                        retry_count=args.retry_count,
-                                       nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us)
+                                       nvme_adminq_poll_period_us=args.nvme_adminq_poll_period_us,
+                                       nvme_ioq_poll_period_us=args.nvme_ioq_poll_period_us)
 
     p = subparsers.add_parser('set_bdev_nvme_options',
                               help='Set options for the bdev nvme type. This is startup command.')
@@ -268,6 +272,8 @@ if __name__ == "__main__":
                    help='the number of attempts per I/O when an I/O fails', type=int)
     p.add_argument('-p', '--nvme-adminq-poll-period-us',
                    help='How often the admin queue is polled for asynchronous events', type=int)
+    p.add_argument('-i', '--nvme-ioq-poll-period-us',
+                   help='How often to poll I/O queues for completions', type=int)
     p.set_defaults(func=set_bdev_nvme_options)
 
     def set_bdev_nvme_hotplug(args):
@@ -291,7 +297,9 @@ if __name__ == "__main__":
                                                  subnqn=args.subnqn,
                                                  hostnqn=args.hostnqn,
                                                  hostaddr=args.hostaddr,
-                                                 hostsvcid=args.hostsvcid))
+                                                 hostsvcid=args.hostsvcid,
+                                                 prchk_reftag=args.prchk_reftag,
+                                                 prchk_guard=args.prchk_guard))
 
     p = subparsers.add_parser('construct_nvme_bdev',
                               help='Add bdevs with nvme backend')
@@ -310,6 +318,10 @@ if __name__ == "__main__":
                    help='NVMe-oF host address: e.g., an ip address')
     p.add_argument('-c', '--hostsvcid',
                    help='NVMe-oF host svcid: e.g., a port number')
+    p.add_argument('-r', '--prchk-reftag',
+                   help='Enable checking of PI reference tag for I/O processing.', action='store_true')
+    p.add_argument('-g', '--prchk-guard',
+                   help='Enable checking of PI guard for I/O processing.', action='store_true')
     p.set_defaults(func=construct_nvme_bdev)
 
     def get_nvme_controllers(args):
@@ -458,15 +470,6 @@ if __name__ == "__main__":
         'get_bdevs_iostat', help='Display current I/O statistics of all the blockdevs or required blockdev.')
     p.add_argument('-b', '--name', help="Name of the Blockdev. Example: Nvme0n1", required=False)
     p.set_defaults(func=get_bdevs_iostat)
-
-    def delete_bdev(args):
-        rpc.bdev.delete_bdev(args.client,
-                             bdev_name=args.bdev_name)
-
-    p = subparsers.add_parser('delete_bdev', help='Delete a blockdev')
-    p.add_argument(
-        'bdev_name', help='Blockdev name to be deleted. Example: Malloc0.')
-    p.set_defaults(func=delete_bdev)
 
     def enable_bdev_histogram(args):
         rpc.bdev.enable_bdev_histogram(args.client, name=args.name, enable=args.enable)
@@ -812,7 +815,7 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     def add_portal_group(args):
         portals = []
-        for p in args.portal_list:
+        for p in args.portal_list.strip().split(' '):
             ip, separator, port_cpumask = p.rpartition(':')
             split_port_cpumask = port_cpumask.split('@')
             if len(split_port_cpumask) == 1:
@@ -830,9 +833,9 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p = subparsers.add_parser('add_portal_group', help='Add a portal group')
     p.add_argument(
         'tag', help='Portal group tag (unique, integer > 0)', type=int)
-    p.add_argument('portal_list', nargs=argparse.REMAINDER, help="""List of portals in 'host:port@cpumask' format, separated by whitespace
+    p.add_argument('portal_list', help="""List of portals in host:port@cpumask format, separated by whitespace
     (cpumask is optional and can be skipped)
-    Example: '192.168.100.100:3260' '192.168.100.100:3261' '192.168.100.100:3262@0x1""")
+    Example: '192.168.100.100:3260 192.168.100.100:3261 192.168.100.100:3262@0x1""")
     p.set_defaults(func=add_portal_group)
 
     def add_initiator_group(args):
@@ -1063,12 +1066,15 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         print(rpc.lvol.construct_lvol_store(args.client,
                                             bdev_name=args.bdev_name,
                                             lvs_name=args.lvs_name,
-                                            cluster_sz=args.cluster_sz))
+                                            cluster_sz=args.cluster_sz,
+                                            clear_method=args.clear_method))
 
     p = subparsers.add_parser('construct_lvol_store', help='Add logical volume store on base bdev')
     p.add_argument('bdev_name', help='base bdev name')
     p.add_argument('lvs_name', help='name for lvol store')
     p.add_argument('-c', '--cluster-sz', help='size of cluster (in bytes)', type=int, required=False)
+    p.add_argument('--clear-method', help="""Change clear method for data region.
+        Available: none, unmap, write_zeroes""", required=False)
     p.set_defaults(func=construct_lvol_store)
 
     def rename_lvol_store(args):
@@ -1212,11 +1218,13 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
         rpc.bdev.construct_raid_bdev(args.client,
                                      name=args.name,
                                      strip_size=args.strip_size,
+                                     strip_size_kb=args.strip_size_kb,
                                      raid_level=args.raid_level,
                                      base_bdevs=base_bdevs)
     p = subparsers.add_parser('construct_raid_bdev', help='Construct new raid bdev')
     p.add_argument('-n', '--name', help='raid bdev name', required=True)
-    p.add_argument('-s', '--strip-size', help='strip size in KB', type=int, required=True)
+    p.add_argument('-s', '--strip-size', help='strip size in KB (deprecated)', type=int)
+    p.add_argument('-z', '--strip-size_kb', help='strip size in KB', type=int)
     p.add_argument('-r', '--raid-level', help='raid level, only raid level 0 is supported', type=int, required=True)
     p.add_argument('-b', '--base-bdevs', help='base bdevs name, whitespace separated list in quotes', required=True)
     p.set_defaults(func=construct_raid_bdev)
@@ -1364,7 +1372,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
                                        io_unit_size=args.io_unit_size,
                                        max_aq_depth=args.max_aq_depth,
                                        num_shared_buffers=args.num_shared_buffers,
-                                       buf_cache_size=args.buf_cache_size)
+                                       buf_cache_size=args.buf_cache_size,
+                                       max_srq_depth=args.max_srq_depth)
 
     p = subparsers.add_parser('nvmf_create_transport', help='Create NVMf transport')
     p.add_argument('-t', '--trtype', help='Transport type (ex. RDMA)', type=str, required=True)
@@ -1375,7 +1384,8 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.add_argument('-u', '--io-unit-size', help='I/O unit size (bytes)', type=int)
     p.add_argument('-a', '--max-aq-depth', help='Max number of admin cmds per AQ', type=int)
     p.add_argument('-n', '--num-shared-buffers', help='The number of pooled data buffers available to the transport', type=int)
-    p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to cache per poll group', type=int)
+    p.add_argument('-b', '--buf-cache-size', help='The number of shared buffers to reserve for each poll group', type=int)
+    p.add_argument('-s', '--max-srq-depth', help='Max number of outstanding I/O per SRQ. Relevant only for RDMA transport', type=int)
     p.set_defaults(func=nvmf_create_transport)
 
     def get_nvmf_transports(args):
@@ -1580,10 +1590,10 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
     p.set_defaults(func=construct_vhost_scsi_controller)
 
     def add_vhost_scsi_lun(args):
-        rpc.vhost.add_vhost_scsi_lun(args.client,
-                                     ctrlr=args.ctrlr,
-                                     scsi_target_num=args.scsi_target_num,
-                                     bdev_name=args.bdev_name)
+        print(rpc.vhost.add_vhost_scsi_lun(args.client,
+                                           ctrlr=args.ctrlr,
+                                           scsi_target_num=args.scsi_target_num,
+                                           bdev_name=args.bdev_name))
 
     p = subparsers.add_parser('add_vhost_scsi_lun',
                               help='Add lun to vhost controller')
@@ -1732,10 +1742,11 @@ Format: 'user:u1 secret:s1 muser:mu1 msecret:ms1,user:u2 secret:s2 muser:mu2 mse
 
     args = parser.parse_args()
 
-    try:
-        args.client = rpc.client.JSONRPCClient(args.server_addr, args.port, args.verbose, args.timeout)
-        args.func(args)
-    except JSONRPCException as ex:
-        print("Exception:")
-        print(ex.message)
-        exit(1)
+    with rpc.client.JSONRPCClient(args.server_addr, args.port, args.timeout, log_level=getattr(logging, args.verbose.upper())) as client:
+        try:
+            args.client = client
+            args.func(args)
+        except JSONRPCException as ex:
+            print("Exception:")
+            print(ex.message)
+            exit(1)

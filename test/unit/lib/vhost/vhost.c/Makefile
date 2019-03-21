@@ -32,9 +32,12 @@
 #
 
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/config.mk
 
+ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
 CFLAGS += -I$(SPDK_ROOT_DIR)/lib/vhost/rte_vhost
+endif
+
 CFLAGS += $(ENV_CFLAGS)
 TEST_FILE = vhost_ut.c
 

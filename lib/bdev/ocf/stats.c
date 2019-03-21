@@ -35,29 +35,28 @@
 #include "stats.h"
 
 int
-vbdev_ocf_stats_get(int cache_id, int core_id, struct vbdev_ocf_stats *stats)
+vbdev_ocf_stats_get(ocf_cache_t cache, ocf_core_id_t core_id, struct vbdev_ocf_stats *stats)
 {
 	int status;
-	struct ocf_stats_core core_stats;
-	ocf_cache_t cache;
 	ocf_core_t core;
 
-	status = ocf_mngt_cache_get(vbdev_ocf_ctx, cache_id, &cache);
+	if (cache == NULL) {
+		assert(false);
+		return -EFAULT;
+	}
+
+	status = ocf_mngt_cache_read_lock(cache);
 	if (status) {
 		return status;
 	}
 
-	status = ocf_core_get(cache, 0, &core);
-	if (status) {
-		return status;
-	}
-
-	status = ocf_core_get_stats(core, &core_stats);
+	status = ocf_core_get(cache, core_id, &core);
 	if (status) {
 		return status;
 	}
 
 	status = ocf_stats_collect_core(core, &stats->usage, &stats->reqs, &stats->blocks, &stats->errors);
+	ocf_mngt_cache_read_unlock(cache);
 	if (status) {
 		return status;
 	}
@@ -101,24 +100,24 @@ vbdev_ocf_stats_write_json(struct spdk_json_write_ctx *w, struct vbdev_ocf_stats
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_named_object_begin(w, "blocks");
-	WJSON_STAT(w, stats, blocks, core_obj_rd, "4KiB blocks");
-	WJSON_STAT(w, stats, blocks, core_obj_wr, "4KiB blocks");
-	WJSON_STAT(w, stats, blocks, core_obj_total, "4KiB blocks");
-	WJSON_STAT(w, stats, blocks, cache_obj_rd, "4KiB blocks");
-	WJSON_STAT(w, stats, blocks, cache_obj_wr, "4KiB blocks");
-	WJSON_STAT(w, stats, blocks, cache_obj_total, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, core_volume_rd, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, core_volume_wr, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, core_volume_total, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, cache_volume_rd, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, cache_volume_wr, "4KiB blocks");
+	WJSON_STAT(w, stats, blocks, cache_volume_total, "4KiB blocks");
 	WJSON_STAT(w, stats, blocks, volume_rd, "4KiB blocks");
 	WJSON_STAT(w, stats, blocks, volume_wr, "4KiB blocks");
 	WJSON_STAT(w, stats, blocks, volume_total, "4KiB blocks");
 	spdk_json_write_object_end(w);
 
 	spdk_json_write_named_object_begin(w, "errors");
-	WJSON_STAT(w, stats, errors, core_obj_rd, "Requests");
-	WJSON_STAT(w, stats, errors, core_obj_wr, "Requests");
-	WJSON_STAT(w, stats, errors, core_obj_total, "Requests");
-	WJSON_STAT(w, stats, errors, cache_obj_rd, "Requests");
-	WJSON_STAT(w, stats, errors, cache_obj_wr, "Requests");
-	WJSON_STAT(w, stats, errors, cache_obj_total, "Requests");
+	WJSON_STAT(w, stats, errors, core_volume_rd, "Requests");
+	WJSON_STAT(w, stats, errors, core_volume_wr, "Requests");
+	WJSON_STAT(w, stats, errors, core_volume_total, "Requests");
+	WJSON_STAT(w, stats, errors, cache_volume_rd, "Requests");
+	WJSON_STAT(w, stats, errors, cache_volume_wr, "Requests");
+	WJSON_STAT(w, stats, errors, cache_volume_total, "Requests");
 	WJSON_STAT(w, stats, errors, total, "Requests");
 	spdk_json_write_object_end(w);
 

@@ -55,6 +55,7 @@ struct bdevperf_task {
 
 static const char *g_workload_type;
 static int g_io_size = 0;
+static uint64_t g_buf_size = 0;
 /* initialize to invalid value so we can detect if user overrides it. */
 static int g_rw_percentage = -1;
 static int g_is_random;
@@ -95,6 +96,7 @@ struct io_target {
 	uint64_t			size_in_ios;
 	uint64_t			offset_in_ios;
 	uint64_t			io_size_blocks;
+	uint32_t			dif_check_flags;
 	bool				is_draining;
 	struct spdk_poller		*run_timer;
 	struct spdk_poller		*reset_timer;
@@ -102,7 +104,7 @@ struct io_target {
 };
 
 struct io_target **g_head;
-uint32_t *coremap;
+uint32_t *g_coremap;
 static int g_target_count = 0;
 
 /*
@@ -112,6 +114,46 @@ static int g_target_count = 0;
  *  AIO blockdevs.
  */
 static size_t g_min_alignment = 8;
+
+static void
+generate_data(void *buf, int buf_len, int block_size, int md_size,
+	      int num_blocks, int seed)
+{
+	int offset_blocks = 0;
+
+	if (buf_len < num_blocks * block_size) {
+		return;
+	}
+
+	while (offset_blocks < num_blocks) {
+		memset(buf, seed, block_size - md_size);
+		memset(buf + block_size - md_size, 0, md_size);
+		buf += block_size;
+		offset_blocks++;
+	}
+}
+
+static bool
+verify_data(void *wr_buf, int wr_buf_len, void *rd_buf, int rd_buf_len,
+	    int block_size, int md_size, int num_blocks)
+{
+	int offset_blocks = 0;
+
+	if (wr_buf_len < num_blocks * block_size || rd_buf_len < num_blocks * block_size) {
+		return false;
+	}
+
+	while (offset_blocks < num_blocks) {
+		if (memcmp(wr_buf, rd_buf, block_size - md_size) != 0) {
+			return false;
+		}
+		wr_buf += block_size;
+		rd_buf += block_size;
+		offset_blocks++;
+	}
+
+	return true;
+}
 
 static int
 blockdev_heads_init(void)
@@ -126,8 +168,8 @@ blockdev_heads_init(void)
 		return -1;
 	}
 
-	coremap = calloc(core_count, sizeof(uint32_t));
-	if (!coremap) {
+	g_coremap = calloc(core_count, sizeof(uint32_t));
+	if (!g_coremap) {
 		free(g_head);
 		fprintf(stderr, "Cannot allocate coremap array with size=%u\n",
 			core_count);
@@ -135,7 +177,7 @@ blockdev_heads_init(void)
 	}
 
 	SPDK_ENV_FOREACH_CORE(i) {
-		coremap[idx++] = i;
+		g_coremap[idx++] = i;
 	}
 
 	return 0;
@@ -177,7 +219,96 @@ blockdev_heads_destroy(void)
 	}
 
 	free(g_head);
-	free(coremap);
+	free(g_coremap);
+}
+
+static int
+bdevperf_construct_target(struct spdk_bdev *bdev, struct io_target **_target)
+{
+	struct io_target *target;
+	size_t align;
+	int block_size, md_size, data_block_size;
+	int rc;
+
+	*_target = NULL;
+
+	if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
+		printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
+		return 0;
+	}
+
+	target = malloc(sizeof(struct io_target));
+	if (!target) {
+		fprintf(stderr, "Unable to allocate memory for new target.\n");
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	target->name = strdup(spdk_bdev_get_name(bdev));
+	if (!target->name) {
+		fprintf(stderr, "Unable to allocate memory for target name.\n");
+		free(target);
+		/* Return immediately because all mallocs will presumably fail after this */
+		return -ENOMEM;
+	}
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+	if (rc != 0) {
+		SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	target->bdev = bdev;
+	target->io_completed = 0;
+	target->current_queue_depth = 0;
+	target->offset_in_ios = 0;
+
+	block_size = spdk_bdev_get_block_size(bdev);
+	md_size = spdk_bdev_get_md_size(bdev);
+	if (md_size != 0 && !spdk_bdev_is_md_interleaved(bdev)) {
+		SPDK_ERRLOG("Separate metadata is not expected.\n");
+		free(target->name);
+		free(target);
+		return -EINVAL;
+	}
+	data_block_size = block_size - md_size;
+	target->io_size_blocks = g_io_size / data_block_size;
+	if ((g_io_size % data_block_size) != 0) {
+		SPDK_ERRLOG("IO size (%d) is not multiples of data block size of bdev %s (%"PRIu32")\n",
+			    g_io_size, spdk_bdev_get_name(bdev), data_block_size);
+		spdk_bdev_close(target->bdev_desc);
+		free(target->name);
+		free(target);
+		return 0;
+	}
+
+	g_buf_size = spdk_max(g_buf_size, target->io_size_blocks * block_size);
+
+	target->dif_check_flags = 0;
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_REFTAG)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_REFTAG_CHECK;
+	}
+	if (spdk_bdev_is_dif_check_enabled(bdev, SPDK_DIF_CHECK_TYPE_GUARD)) {
+		target->dif_check_flags |= SPDK_DIF_FLAGS_GUARD_CHECK;
+	}
+
+	target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
+	align = spdk_bdev_get_buf_align(bdev);
+	/*
+	 * TODO: This should actually use the LCM of align and g_min_alignment, but
+	 * it is fairly safe to assume all alignments are powers of two for now.
+	 */
+	g_min_alignment = spdk_max(g_min_alignment, align);
+
+	target->is_draining = false;
+	target->run_timer = NULL;
+	target->reset_timer = NULL;
+	TAILQ_INIT(&target->task_list);
+
+	*_target = target;
+	return 0;
 }
 
 static void
@@ -186,78 +317,22 @@ bdevperf_construct_targets(void)
 	int index = 0;
 	struct spdk_bdev *bdev;
 	struct io_target *target;
-	size_t align;
 	int rc;
 
 	bdev = spdk_bdev_first_leaf();
 	while (bdev != NULL) {
-
-		if (g_unmap && !spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_UNMAP)) {
-			printf("Skipping %s because it does not support unmap\n", spdk_bdev_get_name(bdev));
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
-		}
-
-		target = malloc(sizeof(struct io_target));
-		if (!target) {
-			fprintf(stderr, "Unable to allocate memory for new target.\n");
-			/* Return immediately because all mallocs will presumably fail after this */
-			return;
-		}
-
-		target->name = strdup(spdk_bdev_get_name(bdev));
-		if (!target->name) {
-			fprintf(stderr, "Unable to allocate memory for target name.\n");
-			free(target);
-			/* Return immediately because all mallocs will presumably fail after this */
-			return;
-		}
-
-		rc = spdk_bdev_open(bdev, true, NULL, NULL, &target->bdev_desc);
+		rc = bdevperf_construct_target(bdev, &target);
 		if (rc != 0) {
-			SPDK_ERRLOG("Could not open leaf bdev %s, error=%d\n", spdk_bdev_get_name(bdev), rc);
-			free(target->name);
-			free(target);
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
+			return;
 		}
-
-		target->bdev = bdev;
-		/* Mapping each target to lcore */
-		index = g_target_count % spdk_env_get_core_count();
-		target->next = g_head[index];
-		target->lcore = coremap[index];
-		target->io_completed = 0;
-		target->current_queue_depth = 0;
-		target->offset_in_ios = 0;
-		target->io_size_blocks = g_io_size / spdk_bdev_get_block_size(bdev);
-		if (target->io_size_blocks == 0 ||
-		    (g_io_size % spdk_bdev_get_block_size(bdev)) != 0) {
-			SPDK_ERRLOG("IO size (%d) is bigger than blocksize of bdev %s (%"PRIu32") or not a blocksize multiple\n",
-				    g_io_size, spdk_bdev_get_name(bdev), spdk_bdev_get_block_size(bdev));
-			spdk_bdev_close(target->bdev_desc);
-			free(target->name);
-			free(target);
-			bdev = spdk_bdev_next_leaf(bdev);
-			continue;
+		if (target != NULL) {
+			/* Mapping each created target to lcore */
+			index = g_target_count % spdk_env_get_core_count();
+			target->next = g_head[index];
+			target->lcore = g_coremap[index];
+			g_head[index] = target;
+			g_target_count++;
 		}
-
-		target->size_in_ios = spdk_bdev_get_num_blocks(bdev) / target->io_size_blocks;
-		align = spdk_bdev_get_buf_align(bdev);
-		/*
-		 * TODO: This should actually use the LCM of align and g_min_alignment, but
-		 * it is fairly safe to assume all alignments are powers of two for now.
-		 */
-		g_min_alignment = spdk_max(g_min_alignment, align);
-
-		target->is_draining = false;
-		target->run_timer = NULL;
-		target->reset_timer = NULL;
-		TAILQ_INIT(&target->task_list);
-
-		g_head[index] = target;
-		g_target_count++;
-
 		bdev = spdk_bdev_next_leaf(bdev);
 	}
 }
@@ -303,7 +378,10 @@ bdevperf_complete(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
 		spdk_bdev_io_get_iovec(bdev_io, &iovs, &iovcnt);
 		assert(iovcnt == 1);
 		assert(iovs != NULL);
-		if (memcmp(task->buf, iovs[0].iov_base, g_io_size) != 0) {
+		if (!verify_data(task->buf, g_buf_size, iovs[0].iov_base, iovs[0].iov_len,
+				 spdk_bdev_get_block_size(target->bdev),
+				 spdk_bdev_get_md_size(target->bdev),
+				 target->io_size_blocks) != 0) {
 			printf("Buffer mismatch! Disk Offset: %lu\n", task->offset_blocks);
 			target->is_draining = true;
 			g_run_failed = true;
@@ -390,9 +468,12 @@ bdevperf_prep_task(struct bdevperf_task *task)
 
 	task->offset_blocks = offset_in_ios * target->io_size_blocks;
 	if (g_verify || g_reset) {
-		memset(task->buf, rand_r(&seed) % 256, g_io_size);
+		generate_data(task->buf, g_buf_size,
+			      spdk_bdev_get_block_size(target->bdev),
+			      spdk_bdev_get_md_size(target->bdev),
+			      target->io_size_blocks, rand_r(&seed) % 256);
 		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_io_size;
+		task->iov.iov_len = g_buf_size;
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	} else if (g_flush) {
 		task->io_type = SPDK_BDEV_IO_TYPE_FLUSH;
@@ -405,9 +486,38 @@ bdevperf_prep_task(struct bdevperf_task *task)
 		task->io_type = SPDK_BDEV_IO_TYPE_READ;
 	} else {
 		task->iov.iov_base = task->buf;
-		task->iov.iov_len = g_io_size;
+		task->iov.iov_len = g_buf_size;
 		task->io_type = SPDK_BDEV_IO_TYPE_WRITE;
 	}
+}
+
+static int
+bdevperf_generate_dif(struct bdevperf_task *task)
+{
+	struct io_target	*target = task->target;
+	struct spdk_bdev	*bdev = target->bdev;
+	struct spdk_dif_ctx	dif_ctx;
+	int			rc;
+
+	rc = spdk_dif_ctx_init(&dif_ctx,
+			       spdk_bdev_get_block_size(bdev),
+			       spdk_bdev_get_md_size(bdev),
+			       spdk_bdev_is_md_interleaved(bdev),
+			       spdk_bdev_is_dif_head_of_md(bdev),
+			       spdk_bdev_get_dif_type(bdev),
+			       target->dif_check_flags,
+			       task->offset_blocks, 0, 0, 0);
+	if (rc != 0) {
+		fprintf(stderr, "Initialization of DIF context failed\n");
+		return rc;
+	}
+
+	rc = spdk_dif_generate(&task->iov, 1, target->io_size_blocks, &dif_ctx);
+	if (rc != 0) {
+		fprintf(stderr, "Generation of DIF failed\n");
+	}
+
+	return rc;
 }
 
 static void
@@ -419,16 +529,21 @@ bdevperf_submit_task(void *arg)
 	struct spdk_io_channel	*ch;
 	spdk_bdev_io_completion_cb cb_fn;
 	void			*rbuf;
-	int			rc;
+	int			rc = 0;
 
 	desc = target->bdev_desc;
 	ch = target->ch;
 
 	switch (task->io_type) {
 	case SPDK_BDEV_IO_TYPE_WRITE:
-		cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
-		rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
-					     target->io_size_blocks, cb_fn, task);
+		if (spdk_bdev_get_md_size(target->bdev) != 0 && target->dif_check_flags != 0) {
+			rc = bdevperf_generate_dif(task);
+		}
+		if (rc == 0) {
+			cb_fn = (g_verify || g_reset) ? bdevperf_verify_write_complete : bdevperf_complete;
+			rc = spdk_bdev_writev_blocks(desc, ch, &task->iov, 1, task->offset_blocks,
+						     target->io_size_blocks, cb_fn, task);
+		}
 		break;
 	case SPDK_BDEV_IO_TYPE_FLUSH:
 		rc = spdk_bdev_flush_blocks(desc, ch, task->offset_blocks,
@@ -602,7 +717,7 @@ bdevperf_usage(void)
 	printf("\t\t(If set to n, show weighted mean of the previous n IO/s in real time)\n");
 	printf("\t\t(Formula: M = 2 / (n + 1), EMA[i+1] = IO/s * M + (1 - M) * EMA[i])\n");
 	printf("\t\t(only valid with -S)\n");
-	printf(" -S                        show performance result in real time in seconds\n");
+	printf(" -S <period>               show performance result in real time every <period> seconds\n");
 }
 
 /*
@@ -681,6 +796,28 @@ performance_statistics_thread(void *arg)
 	return -1;
 }
 
+static struct bdevperf_task *bdevperf_construct_task_on_target(struct io_target *target)
+{
+	struct bdevperf_task *task;
+
+	task = calloc(1, sizeof(struct bdevperf_task));
+	if (!task) {
+		fprintf(stderr, "Failed to allocate task from memory\n");
+		return NULL;
+	}
+
+	task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
+	if (!task->buf) {
+		fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
+		free(task);
+		return NULL;
+	}
+
+	task->target = target;
+
+	return task;
+}
+
 static int
 bdevperf_construct_targets_tasks(void)
 {
@@ -706,20 +843,10 @@ bdevperf_construct_targets_tasks(void)
 		}
 		while (target != NULL) {
 			for (j = 0; j < task_num; j++) {
-				task = calloc(1, sizeof(struct bdevperf_task));
-				if (!task) {
-					fprintf(stderr, "Failed to allocate task from memory\n");
+				task = bdevperf_construct_task_on_target(target);
+				if (task == NULL) {
 					goto ret;
 				}
-
-				task->buf = spdk_dma_zmalloc(g_io_size, g_min_alignment, NULL);
-				if (!task->buf) {
-					fprintf(stderr, "Cannot allocate buf for task=%p\n", task);
-					free(task);
-					goto ret;
-				}
-
-				task->target = target;
 				TAILQ_INSERT_TAIL(&target->task_list, task, link);
 			}
 			target = target->next;
@@ -735,7 +862,7 @@ ret:
 }
 
 static void
-bdevperf_run(void *arg1, void *arg2)
+bdevperf_run(void *arg1)
 {
 	uint32_t i;
 	struct io_target *target;
@@ -1023,7 +1150,7 @@ main(int argc, char **argv)
 		g_zcopy = false;
 	}
 
-	rc = spdk_app_start(&opts, bdevperf_run, NULL, NULL);
+	rc = spdk_app_start(&opts, bdevperf_run, NULL);
 	if (rc) {
 		g_run_failed = true;
 	}

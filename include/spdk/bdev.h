@@ -45,6 +45,7 @@
 #include "spdk/json.h"
 #include "spdk/queue.h"
 #include "spdk/histogram_data.h"
+#include "spdk/dif.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,6 +53,12 @@ extern "C" {
 
 #define SPDK_BDEV_SMALL_BUF_MAX_SIZE 8192
 #define SPDK_BDEV_LARGE_BUF_MAX_SIZE (64 * 1024)
+
+/* Increase the buffer size to store interleaved metadata.  Increment is the
+ *  amount necessary to store metadata per data block.  16 byte metadata per
+ *  512 byte data block is the current maximum ratio of metadata per block.
+ */
+#define SPDK_BDEV_BUF_SIZE_WITH_MD(x)	(((x) / 512) * (512 + 16))
 
 /**
  * Block device remove callback.
@@ -404,6 +411,68 @@ bool spdk_bdev_has_write_cache(const struct spdk_bdev *bdev);
  * the nil UUID (all bytes zero).
  */
 const struct spdk_uuid *spdk_bdev_get_uuid(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device metadata size.
+ *
+ * \param bdev Block device to query.
+ * \return Size of metadata for this bdev in bytes.
+ */
+uint32_t spdk_bdev_get_md_size(const struct spdk_bdev *bdev);
+
+/**
+ * Query whether metadata is interleaved with block data or separated
+ * with block data.
+ *
+ * \param bdev Block device to query.
+ * \return true if metadata is interleaved with block data or false
+ * if metadata is separated with block data.
+ *
+ * Note this function is valid only if there is metadata.
+ */
+bool spdk_bdev_is_md_interleaved(const struct spdk_bdev *bdev);
+
+/**
+ * Get block device data block size.
+ *
+ * Data block size is equal to block size if there is no metadata or
+ * metadata is separated with block data, or equal to block size minus
+ * metadata size if there is metadata and it is interleaved with
+ * block data.
+ *
+ * \param bdev Block device to query.
+ * \return Size of data block for this bdev in bytes.
+ */
+uint32_t spdk_bdev_get_data_block_size(const struct spdk_bdev *bdev);
+
+/**
+ * Get DIF type of the block device.
+ *
+ * \param bdev Block device to query.
+ * \return DIF type of the block device.
+ */
+enum spdk_dif_type spdk_bdev_get_dif_type(const struct spdk_bdev *bdev);
+
+/**
+ * Check whether DIF is set in the first 8 bytes or the last 8 bytes of metadata.
+ *
+ * \param bdev Block device to query.
+ * \return true if DIF is set in the first 8 bytes of metadata, or false
+ * if DIF is set in the last 8 bytes of metadata.
+ *
+ * Note that this function is valid only if DIF type is not SPDK_DIF_DISABLE.
+ */
+bool spdk_bdev_is_dif_head_of_md(const struct spdk_bdev *bdev);
+
+/**
+ * Check whether the DIF check type is enabled.
+ *
+ * \param bdev Block device to query.
+ * \param check_type The specific DIF check type.
+ * \return true if enabled, false otherwise.
+ */
+bool spdk_bdev_is_dif_check_enabled(const struct spdk_bdev *bdev,
+				    enum spdk_dif_check_type check_type);
 
 /**
  * Get the most recently measured queue depth from a bdev.

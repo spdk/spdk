@@ -173,6 +173,7 @@ ftl_reloc_read_lba_map_cb(void *arg, int status)
 
 	assert(status == 0);
 	spdk_dma_free(breloc->md_buf);
+	ftl_io_free(io);
 	_ftl_reloc_prep(breloc);
 }
 
@@ -485,7 +486,8 @@ ftl_reloc_read(struct ftl_band_reloc *breloc, struct ftl_io *io)
 		return -1;
 	}
 
-	return ftl_io_read(io);
+	ftl_io_read(io);
+	return 0;
 }
 
 static void
@@ -571,9 +573,9 @@ ftl_reloc_release(struct ftl_band_reloc *breloc)
 static void
 ftl_process_reloc(struct ftl_band_reloc *breloc)
 {
-	ftl_reloc_process_write_queue(breloc);
-
 	ftl_reloc_process_free_queue(breloc);
+
+	ftl_reloc_process_write_queue(breloc);
 
 	if (ftl_reloc_done(breloc)) {
 		ftl_reloc_release(breloc);

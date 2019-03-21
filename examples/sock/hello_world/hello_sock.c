@@ -407,7 +407,7 @@ hello_start(void *arg1, int rc)
 }
 
 static void
-start_net_framework(void *arg1, void *arg2)
+start_net_framework(void *arg1)
 {
 	spdk_net_framework_start(hello_start, arg1);
 }
@@ -434,7 +434,7 @@ main(int argc, char **argv)
 	hello_context.port = g_port;
 	hello_context.verbose = g_verbose;
 
-	rc = spdk_app_start(&opts, start_net_framework, &hello_context, NULL);
+	rc = spdk_app_start(&opts, start_net_framework, &hello_context);
 	if (rc) {
 		SPDK_ERRLOG("ERROR starting application\n");
 	}

@@ -46,7 +46,14 @@
 #define SPDK_GPT_BUFFER_SIZE 32768  /* 32KB */
 #define	SPDK_GPT_GUID_EQUAL(x,y) (memcmp(x, y, sizeof(struct spdk_gpt_guid)) == 0)
 
+enum spdk_gpt_parse_phase {
+	SPDK_GPT_PARSE_PHASE_INVALID = 0,
+	SPDK_GPT_PARSE_PHASE_PRIMARY,
+	SPDK_GPT_PARSE_PHASE_SECONDARY,
+};
+
 struct spdk_gpt {
+	uint8_t parse_phase;
 	unsigned char *buf;
 	uint64_t buf_size;
 	uint64_t lba_start;
@@ -57,6 +64,7 @@ struct spdk_gpt {
 	struct spdk_gpt_partition_entry *partitions;
 };
 
-int spdk_gpt_parse(struct spdk_gpt *gpt);
+int spdk_gpt_parse_mbr(struct spdk_gpt *gpt);
+int spdk_gpt_parse_partition_table(struct spdk_gpt *gpt);
 
 #endif  /* SPDK_INTERNAL_GPT_H */

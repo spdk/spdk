@@ -76,7 +76,7 @@ realize the following:
   the 20 4KB IO units in the backing storage.
 * A "chunk map" will be 32 bytes in size.  This corresponds to 4 backing IO units per chunk
   (16KB / 4KB), and 8B (64b) per backing IO unit index.
-* 5 chunk maps will be allocated in 160B of persistent memory.  This correponds to 4 chunk maps
+* 5 chunk maps will be allocated in 160B of persistent memory.  This corresponds to 4 chunk maps
   for the 4 chunks in the compressed block device (64KB / 16KB), plus an extra chunk map for use
   when overwriting an existing chunk.
 * "Free chunk map list" will consist of indices 0 through 4 (inclusive).  These represent the

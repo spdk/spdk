@@ -83,9 +83,8 @@ void spdk_vhost_fini(spdk_vhost_fini_cb fini_cb);
  * Write vhost subsystem configuration into provided JSON context.
  *
  * \param w JSON write context
- * \param done_ev call this event when done.
  */
-void spdk_vhost_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev);
+void spdk_vhost_config_json(struct spdk_json_write_ctx *w);
 
 /**
  * Deinit vhost application. This is called once by SPDK app layer.
@@ -108,6 +107,33 @@ void spdk_vhost_shutdown_cb(void);
  * thread-safe API.
  */
 struct spdk_vhost_dev;
+
+/**
+ * Lock the global vhost mutex, which synchronizes all the vhost device accesses.
+ */
+void spdk_vhost_lock(void);
+
+/**
+ * Unlock the global vhost mutex.
+ */
+void spdk_vhost_unlock(void);
+
+/**
+ * Find a vhost device by name.
+ *
+ * \return vhost device or NULL
+ */
+struct spdk_vhost_dev *spdk_vhost_dev_find(const char *name);
+
+/**
+ * Get the next vhost device. If there's no more devices to iterate
+ * through, NULL will be returned.
+ *
+ * \param vdev vhost device. If NULL, this function will return the
+ * very first device.
+ * \return vdev vhost device or NULL
+ */
+struct spdk_vhost_dev *spdk_vhost_dev_next(struct spdk_vhost_dev *vdev);
 
 /**
  * Synchronized vhost event used for user callbacks.
@@ -207,12 +233,19 @@ int spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask);
  * automatically detected by the other side.
  *
  * \param vdev vhost SCSI device.
- * \param scsi_tgt_num slot to attach to.
+ * \param scsi_tgt_num slot to attach to or negative value to use first free.
  * \param bdev_name name of the SPDK bdev to associate with SCSI LUN0.
  *
- * \return 0 on success, negative errno on error.
+ * \return value >= 0 on success - the SCSI target ID, negative errno code:
+ * -EINVAL - one of the arguments is invalid:
+ *   - vdev is not vhost SCSI device
+ *   - SCSI target ID is out of range
+ *   - bdev name is NULL
+ *   - can't create SCSI LUN because of other errors e.g.: bdev does not exist
+ * -ENOSPC - scsi_tgt_num is -1 and maximum targets in vhost SCSI device reached
+ * -EEXIST - SCSI target ID already exists
  */
-int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_num,
+int spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 				const char *bdev_name);
 
 /**
@@ -292,36 +325,6 @@ int spdk_vhost_dev_remove(struct spdk_vhost_dev *vdev);
  * \return SPDK bdev associated with given vdev.
  */
 struct spdk_bdev *spdk_vhost_blk_get_dev(struct spdk_vhost_dev *ctrlr);
-
-/**
- * Call function on reactor of given vhost device. If device is not in use, the
- * event will be called right away on the caller's thread.
- *
- * This function is thread safe.
- *
- * \param vdev_name name of the vhost device to run this event on.
- * \param fn function to be called. The first parameter of callback function is
- * either actual spdk_vhost_dev pointer or NULL in case vdev with given name doesn't
- * exist. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event(const char *vdev_name, spdk_vhost_event_fn fn, void *arg);
-
-/**
- * Call function for each available vhost device on
- * it's reactor.  This will call given function in a chain,
- * meaning that each callback will be called after the
- * previous one has finished. After given function has
- * been called for all vdevs, it will be called once
- * again with first param - vhost device- set to NULL.
- *
- * This function is thread safe.
- *
- * \param fn function to be called for each vdev. The first param will be
- * either vdev pointer or NULL. The second param is user provided argument *arg*.
- * \param arg parameter to be passed to *fn*.
- */
-void spdk_vhost_call_external_event_foreach(spdk_vhost_event_fn fn, void *arg);
 
 #ifdef __cplusplus
 }

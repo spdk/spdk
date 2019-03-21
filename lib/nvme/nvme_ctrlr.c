@@ -78,6 +78,13 @@ nvme_ctrlr_set_cc(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cc_regist
 					      cc->raw);
 }
 
+int
+nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz)
+{
+	return nvme_transport_ctrlr_get_reg_4(ctrlr, offsetof(struct spdk_nvme_registers, cmbsz.raw),
+					      &cmbsz->raw);
+}
+
 void
 spdk_nvme_ctrlr_get_default_ctrlr_opts(struct spdk_nvme_ctrlr_opts *opts, size_t opts_size)
 {
@@ -225,6 +232,10 @@ spdk_nvme_ctrlr_get_default_io_qpair_opts(struct spdk_nvme_ctrlr *ctrlr,
 
 	if (FIELD_OK(io_queue_requests)) {
 		opts->io_queue_requests = ctrlr->opts.io_queue_requests;
+	}
+
+	if (FIELD_OK(delay_pcie_doorbell)) {
+		opts->delay_pcie_doorbell = false;
 	}
 
 #undef FIELD_OK
@@ -383,12 +394,11 @@ nvme_ctrlr_construct_intel_support_log_page_list(struct spdk_nvme_ctrlr *ctrlr,
 static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint64_t phys_addr = 0;
 	struct nvme_completion_poll_status	status;
 	struct spdk_nvme_intel_log_page_directory *log_page_directory;
 
 	log_page_directory = spdk_zmalloc(sizeof(struct spdk_nvme_intel_log_page_directory),
-					  64, &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
+					  64, NULL, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (log_page_directory == NULL) {
 		SPDK_ERRLOG("could not allocate log_page_directory\n");
 		return -ENXIO;
@@ -403,7 +413,8 @@ static int nvme_ctrlr_set_intel_support_log_pages(struct spdk_nvme_ctrlr *ctrlr)
 		return rc;
 	}
 
-	if (spdk_nvme_wait_for_completion(ctrlr->adminq, &status)) {
+	if (spdk_nvme_wait_for_completion_timeout(ctrlr->adminq, &status,
+			ctrlr->opts.admin_timeout_ms / 1000)) {
 		spdk_free(log_page_directory);
 		SPDK_WARNLOG("Intel log pages not supported on Intel drive!\n");
 		return 0;
@@ -544,6 +555,9 @@ nvme_ctrlr_shutdown(struct spdk_nvme_ctrlr *ctrlr)
 	} while (ms_waited < shutdown_timeout_ms);
 
 	SPDK_ERRLOG("did not shutdown within %u milliseconds\n", shutdown_timeout_ms);
+	if (ctrlr->quirks & NVME_QUIRK_SHST_COMPLETE) {
+		SPDK_ERRLOG("likely due to shutdown handling in the VMWare emulated NVMe SSD\n");
+	}
 }
 
 static int
@@ -739,7 +753,7 @@ static int
 nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
-	uint64_t prp1, prp2;
+	uint64_t prp1, prp2, len;
 
 	if (!ctrlr->cdata.oacs.doorbell_buffer_config) {
 		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_KEEP_ALIVE_TIMEOUT,
@@ -755,15 +769,29 @@ nvme_ctrlr_set_doorbell_buffer_config(struct spdk_nvme_ctrlr *ctrlr)
 
 	/* only 1 page size for doorbell buffer */
 	ctrlr->shadow_doorbell = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size,
-				 &prp1);
+				 NULL);
 	if (ctrlr->shadow_doorbell == NULL) {
 		rc = -ENOMEM;
 		goto error;
 	}
 
-	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, &prp2);
+	len = ctrlr->page_size;
+	prp1 = spdk_vtophys(ctrlr->shadow_doorbell, &len);
+	if (prp1 == SPDK_VTOPHYS_ERROR || len != ctrlr->page_size) {
+		rc = -EFAULT;
+		goto error;
+	}
+
+	ctrlr->eventidx = spdk_dma_zmalloc(ctrlr->page_size, ctrlr->page_size, NULL);
 	if (ctrlr->eventidx == NULL) {
 		rc = -ENOMEM;
+		goto error;
+	}
+
+	len = ctrlr->page_size;
+	prp2 = spdk_vtophys(ctrlr->eventidx, &len);
+	if (prp2 == SPDK_VTOPHYS_ERROR || len != ctrlr->page_size) {
+		rc = -EFAULT;
 		goto error;
 	}
 
@@ -895,6 +923,10 @@ nvme_ctrlr_identify_done(void *arg, const struct spdk_nvme_cpl *cpl)
 	if (ctrlr->cdata.sgls.supported) {
 		ctrlr->flags |= SPDK_NVME_CTRLR_SGL_SUPPORTED;
 		ctrlr->max_sges = nvme_transport_ctrlr_get_max_sges(ctrlr);
+	}
+
+	if (ctrlr->cdata.oacs.security) {
+		ctrlr->flags |= SPDK_NVME_CTRLR_SECURITY_SEND_RECV_SUPPORTED;
 	}
 
 	nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_SET_NUM_QUEUES,
@@ -1418,7 +1450,8 @@ nvme_ctrlr_update_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 	for (i = 0; i < nn; i++) {
 		struct spdk_nvme_ns	*ns = &ctrlr->ns[i];
 		uint32_t		nsid = i + 1;
-		nsdata			= &ctrlr->nsdata[nsid - 1];
+
+		nsdata = &ctrlr->nsdata[nsid - 1];
 
 		if ((nsdata->ncap == 0) && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
 			if (nvme_ns_construct(ns, nsid, ctrlr) != 0) {
@@ -1437,7 +1470,6 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 {
 	int rc = 0;
 	uint32_t nn = ctrlr->cdata.nn;
-	uint64_t phys_addr = 0;
 
 	/* ctrlr->num_ns may be 0 (startup) or a different number of namespaces (reset),
 	 * so check if we need to reallocate.
@@ -1450,15 +1482,16 @@ nvme_ctrlr_construct_namespaces(struct spdk_nvme_ctrlr *ctrlr)
 			return 0;
 		}
 
-		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64,
-					 &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
+		ctrlr->ns = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns), 64, NULL,
+					 SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE);
 		if (ctrlr->ns == NULL) {
 			rc = -ENOMEM;
 			goto fail;
 		}
 
 		ctrlr->nsdata = spdk_zmalloc(nn * sizeof(struct spdk_nvme_ns_data), 64,
-					     &phys_addr, SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
+					     NULL, SPDK_ENV_SOCKET_ID_ANY,
+					     SPDK_MALLOC_SHARE | SPDK_MALLOC_DMA);
 		if (ctrlr->nsdata == NULL) {
 			rc = -ENOMEM;
 			goto fail;
@@ -2354,6 +2387,17 @@ union spdk_nvme_vs_register spdk_nvme_ctrlr_get_regs_vs(struct spdk_nvme_ctrlr *
 	return ctrlr->vs;
 }
 
+union spdk_nvme_cmbsz_register spdk_nvme_ctrlr_get_regs_cmbsz(struct spdk_nvme_ctrlr *ctrlr)
+{
+	union spdk_nvme_cmbsz_register cmbsz;
+
+	if (nvme_ctrlr_get_cmbsz(ctrlr, &cmbsz)) {
+		cmbsz.raw = 0;
+	}
+
+	return cmbsz;
+}
+
 uint32_t
 spdk_nvme_ctrlr_get_num_ns(struct spdk_nvme_ctrlr *ctrlr)
 {
@@ -2788,4 +2832,10 @@ spdk_nvme_ctrlr_security_send(struct spdk_nvme_ctrlr *ctrlr, uint8_t secp,
 	}
 
 	return 0;
+}
+
+uint64_t
+spdk_nvme_ctrlr_get_flags(struct spdk_nvme_ctrlr *ctrlr)
+{
+	return ctrlr->flags;
 }

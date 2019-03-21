@@ -46,6 +46,7 @@
 #include "spdk/cpuset.h"
 #include "spdk/queue.h"
 #include "spdk/log.h"
+#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -114,7 +115,9 @@ struct spdk_app_opts {
 	struct spdk_pci_addr	*pci_blacklist;
 	struct spdk_pci_addr	*pci_whitelist;
 
-	/* The maximum latency allowed when passing an event
+	/* DEPRECATED. No longer has any effect.
+	 *
+	 * The maximum latency allowed when passing an event
 	 * from one core to another. A value of 0
 	 * means all cores continually poll. This is
 	 * specified in microseconds.
@@ -130,12 +133,6 @@ struct spdk_app_opts {
 	uint64_t		num_entries;
 };
 
-struct spdk_reactor_tsc_stats {
-	uint64_t busy_tsc;
-	uint64_t idle_tsc;
-	uint64_t unknown_tsc;
-};
-
 /**
  * Initialize the default value of opts
  *
@@ -146,22 +143,23 @@ void spdk_app_opts_init(struct spdk_app_opts *opts);
 /**
  * Start the framework.
  *
- * Before calling this function, the fields of opts must be initialized by
- * spdk_app_opts_init(). Once started, the framework will call start_fn on the
- * master core with the arguments provided. This call will block until spdk_app_stop()
- * is called, or if an error condition occurs during the intialization
- * code within spdk_app_start(), itself, before invoking the caller's
- * supplied function.
+ * Before calling this function, opts must be initialized by
+ * spdk_app_opts_init(). Once started, the framework will call start_fn on
+ * an spdk_thread running on the current system thread with the
+ * argument provided. This call will block until spdk_app_stop()
+ * is called. If an error condition occurs during the intialization
+ * code within spdk_app_start(), this function will immediately return
+ * before invoking start_fn.
  *
  * \param opts Initialization options used for this application.
- * \param start_fn Event function that is called when the framework starts.
- * \param arg1 Argument passed to function start_fn.
- * \param arg2 Argument passed to function start_fn.
+ * \param start_fn Entry point that will execute on an internally created thread
+ *                 once the framework has been started.
+ * \param ctx Argument passed to function start_fn.
  *
  * \return 0 on success or non-zero on failure.
  */
-int spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
-		   void *arg1, void *arg2);
+int spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
+		   void *ctx);
 
 /**
  * Perform final shutdown operations on an application using the event framework.
@@ -299,15 +297,6 @@ void spdk_reactor_enable_context_switch_monitor(bool enabled);
  * \return true if enabled or false otherwise.
  */
 bool spdk_reactor_context_switch_monitor_enabled(void);
-
-/**
- * Get tsc stats from a given reactor
- * Copy cumulative reactor tsc values to user's tsc_stats structure.
- *
- * \param tsc_stats User's tsc_stats structure.
- * \param core_id Get tsc data on this Reactor core id.
- */
-int spdk_reactor_get_tsc_stats(struct spdk_reactor_tsc_stats *tsc_stats, uint32_t core_id);
 
 #ifdef __cplusplus
 }

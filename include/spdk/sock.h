@@ -127,6 +127,17 @@ ssize_t spdk_sock_recv(struct spdk_sock *sock, void *buf, size_t len);
 ssize_t spdk_sock_writev(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
 
 /**
+ * Read message from the given socket to the I/O vector array.
+ *
+ * \param sock Socket to receive message.
+ * \param iov I/O vector.
+ * \param iovcnt Number of I/O vectors in the array.
+ *
+ * \return the length of the received message on success, -1 on failure.
+ */
+ssize_t spdk_sock_readv(struct spdk_sock *sock, struct iovec *iov, int iovcnt);
+
+/**
  * Set the value used to specify the low water mark (in bytes) for this socket.
  *
  * \param sock Socket to set for.

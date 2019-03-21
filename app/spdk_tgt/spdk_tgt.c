@@ -96,7 +96,7 @@ spdk_tgt_parse_arg(int ch, char *arg)
 }
 
 static void
-spdk_tgt_started(void *arg1, void *arg2)
+spdk_tgt_started(void *arg1)
 {
 	if (g_pid_path) {
 		spdk_tgt_save_pid(g_pid_path);
@@ -122,7 +122,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	rc = spdk_app_start(&opts, spdk_tgt_started, NULL, NULL);
+	rc = spdk_app_start(&opts, spdk_tgt_started, NULL);
 	spdk_app_fini();
 
 	return rc;

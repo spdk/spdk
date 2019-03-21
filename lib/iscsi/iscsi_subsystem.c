@@ -130,34 +130,24 @@ spdk_mobj_ctor(struct spdk_mempool *mp, __attribute__((unused)) void *arg,
 	       void *_m, __attribute__((unused)) unsigned i)
 {
 	struct spdk_mobj *m = _m;
-	uint64_t *phys_addr;
-	ptrdiff_t off;
 
 	m->mp = mp;
 	m->buf = (uint8_t *)m + sizeof(struct spdk_mobj);
 	m->buf = (void *)((unsigned long)((uint8_t *)m->buf + ISCSI_DATA_BUFFER_ALIGNMENT) &
 			  ~ISCSI_DATA_BUFFER_MASK);
-	off = (uint64_t)(uint8_t *)m->buf - (uint64_t)(uint8_t *)m;
-
-	/*
-	 * we store the physical address in a 64bit unsigned integer
-	 * right before the 512B aligned buffer area.
-	 */
-	phys_addr = (uint64_t *)m->buf - 1;
-	*phys_addr = spdk_vtophys(m, NULL) + off;
 }
 
 #define NUM_PDU_PER_CONNECTION(iscsi)	(2 * (iscsi->MaxQueueDepth + MAX_LARGE_DATAIN_PER_CONNECTION + 8))
-#define PDU_POOL_SIZE(iscsi)	(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
+#define PDU_POOL_SIZE(iscsi)		(iscsi->MaxConnections * NUM_PDU_PER_CONNECTION(iscsi))
 #define IMMEDIATE_DATA_POOL_SIZE(iscsi)	(iscsi->MaxConnections * 128)
 #define DATA_OUT_POOL_SIZE(iscsi)	(iscsi->MaxConnections * MAX_DATA_OUT_PER_CONNECTION)
 
 static int spdk_iscsi_initialize_pdu_pool(void)
 {
 	struct spdk_iscsi_globals *iscsi = &g_spdk_iscsi;
-	int imm_mobj_size = spdk_get_immediate_data_buffer_size() +
+	int imm_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size()) +
 			    sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
-	int dout_mobj_size = spdk_get_data_out_buffer_size() +
+	int dout_mobj_size = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) +
 			     sizeof(struct spdk_mobj) + ISCSI_DATA_BUFFER_ALIGNMENT;
 
 	/* create PDU pool */
@@ -396,7 +386,7 @@ spdk_iscsi_opts_init(struct spdk_iscsi_opts *opts)
 	opts->MaxQueueDepth = DEFAULT_MAX_QUEUE_DEPTH;
 	opts->DefaultTime2Wait = DEFAULT_DEFAULTTIME2WAIT;
 	opts->DefaultTime2Retain = DEFAULT_DEFAULTTIME2RETAIN;
-	opts->FirstBurstLength = DEFAULT_FIRSTBURSTLENGTH;
+	opts->FirstBurstLength = SPDK_ISCSI_FIRST_BURST_LENGTH;
 	opts->ImmediateData = DEFAULT_IMMEDIATEDATA;
 	opts->AllowDuplicateIsid = false;
 	opts->ErrorRecoveryLevel = DEFAULT_ERRORRECOVERYLEVEL;

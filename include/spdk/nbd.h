@@ -61,6 +61,7 @@ void spdk_nbd_fini(void);
 
 /**
  * Called when an NBD device has been started.
+ * On success, rc is assigned 0; On failure, rc is assigned negated errno.
  */
 typedef void (*spdk_nbd_start_cb)(void *cb_arg, struct spdk_nbd_disk *nbd,
 				  int rc);
@@ -70,10 +71,8 @@ typedef void (*spdk_nbd_start_cb)(void *cb_arg, struct spdk_nbd_disk *nbd,
  *
  * \param bdev_name Name of bdev exposed as a network block device.
  * \param nbd_path Path to the registered network block device.
- * \param cb_fn Called when the device has been started.
+ * \param cb_fn Callback to be always called.
  * \param cb_arg Passed to cb_fn.
- *
- * \return A negated error number is passed to cb_fn on failure.
  */
 void spdk_nbd_start(const char *bdev_name, const char *nbd_path,
 		    spdk_nbd_start_cb cb_fn, void *cb_arg);

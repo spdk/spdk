@@ -46,6 +46,12 @@ if [ "$cov_avail" = "yes" ]; then
 	# zero out coverage data
 	$LCOV -q -c -i -d . -t "Baseline" -o $UT_COVERAGE/ut_cov_base.info
 fi
+
+# workaround for valgrind v3.13 on arm64
+if [ $(uname -m) = "aarch64" ]; then
+	export LD_HWCAP_MASK=1
+fi
+
 $valgrind $testdir/include/spdk/histogram_data.h/histogram_ut
 
 $valgrind $testdir/lib/bdev/bdev.c/bdev_ut
@@ -107,7 +113,6 @@ $valgrind $testdir/lib/nvmf/ctrlr_discovery.c/ctrlr_discovery_ut
 if grep -q '#define SPDK_CONFIG_RDMA 1' $rootdir/include/spdk/config.h; then
 	$valgrind $testdir/lib/nvmf/rdma.c/rdma_ut
 fi
-$valgrind $testdir/lib/nvmf/request.c/request_ut
 $valgrind $testdir/lib/nvmf/subsystem.c/subsystem_ut
 $valgrind $testdir/lib/nvmf/tcp.c/tcp_ut
 
@@ -148,6 +153,9 @@ if grep -q '#define SPDK_CONFIG_FTL 1' $rootdir/include/spdk/config.h; then
 $valgrind $testdir/lib/ftl/ftl_rwb.c/ftl_rwb_ut
 $valgrind $testdir/lib/ftl/ftl_ppa/ftl_ppa_ut
 $valgrind $testdir/lib/ftl/ftl_band.c/ftl_band_ut
+$valgrind $testdir/lib/ftl/ftl_reloc.c/ftl_reloc_ut
+$valgrind $testdir/lib/ftl/ftl_wptr/ftl_wptr_ut
+$valgrind $testdir/lib/ftl/ftl_md/ftl_md_ut
 fi
 
 # local unit test coverage

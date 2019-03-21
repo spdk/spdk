@@ -39,6 +39,7 @@
 #include "spdk_internal/log.h"
 
 #include "bdev_nvme.h"
+#include "common.h"
 #include "spdk/base64.h"
 
 enum spdk_nvme_rpc_type {
@@ -69,7 +70,7 @@ struct rpc_send_nvme_cmd_ctx {
 	struct spdk_jsonrpc_request	*jsonrpc_request;
 	struct rpc_send_nvme_cmd_req	req;
 	struct rpc_send_nvme_cmd_resp	resp;
-	struct nvme_ctrlr		*nvme_ctrlr;
+	struct nvme_bdev_ctrlr		*nvme_bdev_ctrlr;
 	struct spdk_io_channel		*ctrlr_io_ch;
 };
 
@@ -174,7 +175,7 @@ static int
 nvme_rpc_admin_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme_cmd *cmd,
 			     void *buf, uint32_t nbytes, uint32_t timeout_ms)
 {
-	struct nvme_ctrlr *_nvme_ctrlr = ctx->nvme_ctrlr;
+	struct nvme_bdev_ctrlr *_nvme_ctrlr = ctx->nvme_bdev_ctrlr;
 	int ret;
 
 	ret = spdk_nvme_ctrlr_cmd_admin_raw(_nvme_ctrlr->ctrlr, cmd, buf,
@@ -188,7 +189,7 @@ nvme_rpc_io_cmd_bdev_nvme(struct rpc_send_nvme_cmd_ctx *ctx, struct spdk_nvme_cm
 			  void *buf, uint32_t nbytes, void *md_buf, uint32_t md_len,
 			  uint32_t timeout_ms)
 {
-	struct nvme_ctrlr *_nvme_ctrlr = ctx->nvme_ctrlr;
+	struct nvme_bdev_ctrlr *_nvme_ctrlr = ctx->nvme_bdev_ctrlr;
 	struct spdk_nvme_qpair *io_qpair;
 	int ret;
 
@@ -460,8 +461,8 @@ spdk_rpc_send_nvme_cmd(struct spdk_jsonrpc_request *request,
 		goto invalid;
 	}
 
-	ctx->nvme_ctrlr = spdk_bdev_nvme_lookup_ctrlr(ctx->req.name);
-	if (ctx->nvme_ctrlr == NULL) {
+	ctx->nvme_bdev_ctrlr = nvme_bdev_ctrlr_get_by_name(ctx->req.name);
+	if (ctx->nvme_bdev_ctrlr == NULL) {
 		SPDK_ERRLOG("Failed at device lookup\n");
 		error_code = SPDK_JSONRPC_ERROR_INVALID_PARAMS;
 		ret = -EINVAL;

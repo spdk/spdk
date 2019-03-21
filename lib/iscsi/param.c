@@ -1055,7 +1055,7 @@ spdk_iscsi_negotiate_params(struct spdk_iscsi_conn *conn,
 				} else {
 					MaxBurstLength = SPDK_ISCSI_MAX_BURST_LENGTH;
 				}
-				if (FirstBurstLength < MAX_FIRSTBURSTLENGTH &&
+				if (FirstBurstLength < SPDK_ISCSI_MAX_FIRST_BURST_LENGTH &&
 				    FirstBurstLength > MaxBurstLength) {
 					FirstBurstLength = MaxBurstLength;
 					snprintf(in_val, ISCSI_TEXT_MAX_VAL_LEN, "%d",
@@ -1128,8 +1128,8 @@ spdk_iscsi_copy_param2var(struct spdk_iscsi_conn *conn)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI,
 		      "copy MaxRecvDataSegmentLength=%s\n", val);
 	conn->MaxRecvDataSegmentLength = (int)strtol(val, NULL, 10);
-	if (conn->MaxRecvDataSegmentLength > SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH) {
-		conn->MaxRecvDataSegmentLength = SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH;
+	if (conn->MaxRecvDataSegmentLength > SPDK_BDEV_LARGE_BUF_MAX_SIZE) {
+		conn->MaxRecvDataSegmentLength = SPDK_BDEV_LARGE_BUF_MAX_SIZE;
 	}
 
 	val = spdk_iscsi_param_get_val(conn->params, "HeaderDigest");

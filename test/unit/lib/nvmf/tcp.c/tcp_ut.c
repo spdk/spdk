@@ -117,15 +117,48 @@ DEFINE_STUB(spdk_nvmf_ctrlr_write_zeroes_supported,
 	    (struct spdk_nvmf_ctrlr *ctrlr),
 	    false);
 
-DEFINE_STUB(spdk_nvmf_request_complete,
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_read_cmd,
 	    int,
-	    (struct spdk_nvmf_request *req),
-	    -1);
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
 
-DEFINE_STUB(spdk_nvmf_request_free,
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_write_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_write_zeroes_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_flush_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_dsm_cmd,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_bdev_ctrlr_nvme_passthru_io,
+	    int,
+	    (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
+	     struct spdk_nvmf_request *req),
+	    0);
+
+DEFINE_STUB(spdk_nvmf_transport_req_complete,
 	    int,
 	    (struct spdk_nvmf_request *req),
-	    -1);
+	    0);
+
+DEFINE_STUB_V(spdk_nvmf_ns_reservation_request, (void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
 
@@ -192,11 +225,6 @@ spdk_trace_add_register_fn(struct spdk_trace_register_fn *reg_fn)
 {
 }
 
-void
-spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
-{
-}
-
 static void
 test_nvmf_tcp_create(void)
 {
@@ -230,7 +258,6 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_IO_UNIT_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
 	/* case 2 */
@@ -254,7 +281,6 @@ test_nvmf_tcp_create(void)
 	CU_ASSERT(transport->opts.io_unit_size == UT_MAX_IO_SIZE);
 	/* destroy transport */
 	spdk_mempool_free(ttransport->transport.data_buf_pool);
-	spdk_io_device_unregister(ttransport, NULL);
 	free(ttransport);
 
 	/* case 3 */
@@ -328,34 +354,9 @@ test_nvmf_tcp_poll_group_create(void)
 	SPDK_CU_ASSERT_FATAL(group);
 	group->transport = transport;
 	spdk_nvmf_tcp_poll_group_destroy(group);
+	spdk_nvmf_tcp_destroy(transport);
 
 	spdk_thread_exit(thread);
-}
-
-static void
-test_nvmf_tcp_qpair_is_idle(void)
-{
-	struct nvme_tcp_qpair tqpair;
-
-	memset(&tqpair, 0, sizeof(tqpair));
-
-	/* case 1 */
-	tqpair.max_queue_depth = 0;
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 0;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == true);
-
-	/* case 2 */
-	tqpair.max_queue_depth = UT_MAX_QUEUE_DEPTH;
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 0;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == false);
-
-	/* case 3 */
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = 1;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == false);
-
-	/* case 4 */
-	tqpair.state_cntr[TCP_REQUEST_STATE_FREE] = UT_MAX_QUEUE_DEPTH;
-	CU_ASSERT(spdk_nvmf_tcp_qpair_is_idle(&tqpair.qpair) == true);
 }
 
 int main(int argc, char **argv)
@@ -376,8 +377,7 @@ int main(int argc, char **argv)
 	if (
 		CU_add_test(suite, "nvmf_tcp_create", test_nvmf_tcp_create) == NULL ||
 		CU_add_test(suite, "nvmf_tcp_destroy", test_nvmf_tcp_destroy) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL ||
-		CU_add_test(suite, "nvmf_tcp_qpair_is_idle", test_nvmf_tcp_qpair_is_idle) == NULL
+		CU_add_test(suite, "nvmf_tcp_poll_group_create", test_nvmf_tcp_poll_group_create) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();

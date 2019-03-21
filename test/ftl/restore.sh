@@ -18,6 +18,7 @@ restore_kill() {
 	fi
 	rm -rf $mount_dir
 	rm -f $testdir/testfile.md5
+	rm -f $testdir/config/ftl.json
 
 	$rpc_py delete_ftl_bdev -b nvme0
 	killprocess $svcpid
@@ -26,20 +27,22 @@ restore_kill() {
 
 trap "restore_kill; exit 1" SIGINT SIGTERM EXIT
 
-$rootdir/test/app/bdev_svc/bdev_svc --max-delay=0 & svcpid=$!
+$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
 
 if [ -n "$uuid" ]; then
 	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 -u $uuid
 else
-	uuid=$($rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 | jq -r '.uuid')
+	$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3
 fi
 
 # Load the nbd driver
 modprobe nbd
 $rpc_py start_nbd_disk nvme0 /dev/nbd0
 waitfornbd nbd0
+
+$rpc_py save_config > $testdir/config/ftl.json
 
 # Prepare the disk by creating ext4 fs and putting a file on it
 mkfs.ext4 -F /dev/nbd0
@@ -53,12 +56,11 @@ md5sum $mount_dir/testfile > $testdir/testfile.md5
 umount $mount_dir
 killprocess $svcpid
 
-$rootdir/test/app/bdev_svc/bdev_svc --max-delay=0 & svcpid=$!
+$rootdir/test/app/bdev_svc/bdev_svc & svcpid=$!
 # Wait until bdev_svc starts
 waitforlisten $svcpid
-$rpc_py construct_ftl_bdev -b nvme0 -a $device -l 0-3 -u $uuid
 
-$rpc_py start_nbd_disk nvme0 /dev/nbd0
+$rpc_py load_config < $testdir/config/ftl.json
 
 mount /dev/nbd0 $mount_dir
 md5sum -c $testdir/testfile.md5

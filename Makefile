@@ -77,6 +77,12 @@ clean: $(DIRS-y)
 install: all
 	$(Q)echo "Installed to $(DESTDIR)$(CONFIG_PREFIX)"
 
+ifneq ($(SKIP_DPDK_BUILD),1)
+ifeq ($(CONFIG_ISAL),y)
+dpdkbuild: isalbuild
+endif
+endif
+
 shared_lib: lib
 lib: $(DPDKBUILD)
 app: $(LIB)

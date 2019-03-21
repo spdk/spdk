@@ -220,10 +220,9 @@ display_namespace(struct spdk_nvme_ns *ns)
 static void
 display_controller(struct dev *dev, int model)
 {
-	struct spdk_nvme_ns			*ns;
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	uint8_t					str[128];
-	uint32_t				i;
+	uint32_t				nsid;
 
 	cdata = spdk_nvme_ctrlr_get_data(dev->ctrlr);
 
@@ -264,12 +263,9 @@ display_controller(struct dev *dev, int model)
 	printf("\n");
 	printf("Namespace Attributes\n");
 	printf("============================\n");
-	for (i = 1; i <= spdk_nvme_ctrlr_get_num_ns(dev->ctrlr); i++) {
-		ns = spdk_nvme_ctrlr_get_ns(dev->ctrlr, i);
-		if (ns == NULL) {
-			continue;
-		}
-		display_namespace(ns);
+	for (nsid = spdk_nvme_ctrlr_get_first_active_ns(dev->ctrlr);
+	     nsid != 0; nsid = spdk_nvme_ctrlr_get_next_active_ns(dev->ctrlr, nsid)) {
+		display_namespace(spdk_nvme_ctrlr_get_ns(dev->ctrlr, nsid));
 	}
 }
 

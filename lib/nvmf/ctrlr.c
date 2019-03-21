@@ -1017,6 +1017,114 @@ spdk_nvmf_ctrlr_get_features_host_identifier(struct spdk_nvmf_request *req)
 }
 
 static int
+spdk_nvmf_ctrlr_get_features_reservation_notification_mask(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "get Features - Reservation Notificaton Mask\n");
+
+	if (cmd->nsid == 0xffffffffu) {
+		SPDK_ERRLOG("get Features - Invalid Namespace ID\n");
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	if (ns == NULL) {
+		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	rsp->cdw0 = ns->mask;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_reservation_notification_mask(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Notificaton Mask\n");
+
+	if (cmd->nsid == 0xffffffffu) {
+		for (ns = spdk_nvmf_subsystem_get_first_ns(subsystem); ns != NULL;
+		     ns = spdk_nvmf_subsystem_get_next_ns(subsystem, ns)) {
+			ns->mask = cmd->cdw11;
+		}
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	if (ns == NULL) {
+		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+		rsp->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+	ns->mask = cmd->cdw11;
+
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_get_features_reservation_persistence(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Get Features - Reservation Persistence\n");
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	/* NSID with 0xffffffffu also included */
+	if (ns == NULL) {
+		SPDK_ERRLOG("Get Features - Invalid Namespace ID\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: Persistence feature can't support for now */
+	response->cdw0 = 0;
+
+	response->status.sct = SPDK_NVME_SCT_GENERIC;
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
+spdk_nvmf_ctrlr_set_features_reservation_persistence(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_ns *ns;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Set Features - Reservation Persistence\n");
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, cmd->nsid);
+	if (cmd->nsid != 0xffffffffu && ns == NULL) {
+		SPDK_ERRLOG("Set Features - Invalid Namespace ID\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	/* TODO: Feature not changeable for now */
+	response->status.sct = SPDK_NVME_SCT_COMMAND_SPECIFIC;
+	response->status.sc = SPDK_NVME_SC_FEATURE_NOT_CHANGEABLE;
+	return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+}
+
+static int
 spdk_nvmf_ctrlr_set_features_keep_alive_timer(struct spdk_nvmf_request *req)
 {
 	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
@@ -1424,6 +1532,7 @@ spdk_nvmf_ctrlr_identify_ctrlr(struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvme_c
 
 		cdata->oncs.dsm = spdk_nvmf_ctrlr_dsm_supported(ctrlr);
 		cdata->oncs.write_zeroes = spdk_nvmf_ctrlr_write_zeroes_supported(ctrlr);
+		cdata->oncs.reservations = 1;
 
 		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ext ctrlr data: ioccsz 0x%x\n",
 			      cdata->nvmf_specific.ioccsz);
@@ -1713,6 +1822,10 @@ spdk_nvmf_ctrlr_get_features(struct spdk_nvmf_request *req)
 		return get_features_generic(req, ctrlr->feat.keep_alive_timer.raw);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_get_features_host_identifier(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+		return spdk_nvmf_ctrlr_get_features_reservation_notification_mask(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+		return spdk_nvmf_ctrlr_get_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Get Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -1749,6 +1862,10 @@ spdk_nvmf_ctrlr_set_features(struct spdk_nvmf_request *req)
 		return spdk_nvmf_ctrlr_set_features_keep_alive_timer(req);
 	case SPDK_NVME_FEAT_HOST_IDENTIFIER:
 		return spdk_nvmf_ctrlr_set_features_host_identifier(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_MASK:
+		return spdk_nvmf_ctrlr_set_features_reservation_notification_mask(req);
+	case SPDK_NVME_FEAT_HOST_RESERVE_PERSIST:
+		return spdk_nvmf_ctrlr_set_features_reservation_persistence(req);
 	default:
 		SPDK_ERRLOG("Set Features command with unsupported feature ID 0x%02x\n", feature);
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;
@@ -1956,4 +2073,212 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 
 	spdk_nvmf_request_complete(ctrlr->aer_req);
 	ctrlr->aer_req = NULL;
+}
+
+int
+spdk_nvmf_ctrlr_process_io_cmd(struct spdk_nvmf_request *req)
+{
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc;
+	struct spdk_io_channel *ch;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvme_cpl *response = &req->rsp->nvme_cpl;
+
+	/* pre-set response details for this command */
+	response->status.sc = SPDK_NVME_SC_SUCCESS;
+	nsid = cmd->nsid;
+
+	if (spdk_unlikely(ctrlr == NULL)) {
+		SPDK_ERRLOG("I/O command sent before CONNECT\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	if (spdk_unlikely(ctrlr->vcprop.cc.bits.en != 1)) {
+		SPDK_ERRLOG("I/O command sent to disabled controller\n");
+		response->status.sct = SPDK_NVME_SCT_GENERIC;
+		response->status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	if (ns == NULL || ns->bdev == NULL) {
+		SPDK_ERRLOG("Unsuccessful query for nsid %u\n", cmd->nsid);
+		response->status.sc = SPDK_NVME_SC_INVALID_NAMESPACE_OR_FORMAT;
+		response->status.dnr = 1;
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
+	bdev = ns->bdev;
+	desc = ns->desc;
+	ch = group->sgroups[ctrlr->subsys->id].ns_info[nsid - 1].channel;
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_READ:
+		return spdk_nvmf_bdev_ctrlr_read_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_WRITE:
+		return spdk_nvmf_bdev_ctrlr_write_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_WRITE_ZEROES:
+		return spdk_nvmf_bdev_ctrlr_write_zeroes_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_FLUSH:
+		return spdk_nvmf_bdev_ctrlr_flush_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_DATASET_MANAGEMENT:
+		return spdk_nvmf_bdev_ctrlr_dsm_cmd(bdev, desc, ch, req);
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+	case SPDK_NVME_OPC_RESERVATION_REPORT:
+		spdk_thread_send_msg(ctrlr->subsys->thread, spdk_nvmf_ns_reservation_request, req);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_ASYNCHRONOUS;
+	default:
+		return spdk_nvmf_bdev_ctrlr_nvme_passthru_io(bdev, desc, ch, req);
+	}
+}
+
+static void
+spdk_nvmf_qpair_request_cleanup(struct spdk_nvmf_qpair *qpair)
+{
+	if (qpair->state == SPDK_NVMF_QPAIR_DEACTIVATING) {
+		assert(qpair->state_cb != NULL);
+
+		if (TAILQ_EMPTY(&qpair->outstanding)) {
+			qpair->state_cb(qpair->state_cb_arg, 0);
+		}
+	} else {
+		assert(qpair->state == SPDK_NVMF_QPAIR_ACTIVE);
+	}
+}
+
+int
+spdk_nvmf_request_free(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+
+	TAILQ_REMOVE(&qpair->outstanding, req, link);
+	if (spdk_nvmf_transport_req_free(req)) {
+		SPDK_ERRLOG("Unable to free transport level request resources.\n");
+	}
+
+	spdk_nvmf_qpair_request_cleanup(qpair);
+
+	return 0;
+}
+
+int
+spdk_nvmf_request_complete(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cpl *rsp = &req->rsp->nvme_cpl;
+	struct spdk_nvmf_qpair *qpair;
+
+	rsp->sqid = 0;
+	rsp->status.p = 0;
+	rsp->cid = req->cmd->nvme_cmd.cid;
+
+	qpair = req->qpair;
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF,
+		      "cpl: cid=%u cdw0=0x%08x rsvd1=%u status=0x%04x\n",
+		      rsp->cid, rsp->cdw0, rsp->rsvd1,
+		      *(uint16_t *)&rsp->status);
+
+	TAILQ_REMOVE(&qpair->outstanding, req, link);
+	if (spdk_nvmf_transport_req_complete(req)) {
+		SPDK_ERRLOG("Transport request completion error!\n");
+	}
+
+	spdk_nvmf_qpair_request_cleanup(qpair);
+
+	return 0;
+}
+
+static void
+nvmf_trace_command(union nvmf_h2c_msg *h2c_msg, bool is_admin_queue)
+{
+	struct spdk_nvmf_capsule_cmd *cap_hdr = &h2c_msg->nvmf_cmd;
+	struct spdk_nvme_cmd *cmd = &h2c_msg->nvme_cmd;
+	struct spdk_nvme_sgl_descriptor *sgl = &cmd->dptr.sgl1;
+	uint8_t opc;
+
+	if (cmd->opc == SPDK_NVME_OPC_FABRIC) {
+		opc = cap_hdr->fctype;
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s Fabrics cmd: fctype 0x%02x cid %u\n",
+			      is_admin_queue ? "Admin" : "I/O",
+			      cap_hdr->fctype, cap_hdr->cid);
+	} else {
+		opc = cmd->opc;
+		SPDK_DEBUGLOG(SPDK_LOG_NVMF, "%s cmd: opc 0x%02x fuse %u cid %u nsid %u cdw10 0x%08x\n",
+			      is_admin_queue ? "Admin" : "I/O",
+			      cmd->opc, cmd->fuse, cmd->cid, cmd->nsid, cmd->cdw10);
+		if (cmd->mptr) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "mptr 0x%" PRIx64 "\n", cmd->mptr);
+		}
+		if (cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_CONTIG &&
+		    cmd->psdt != SPDK_NVME_PSDT_SGL_MPTR_SGL) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "psdt %u\n", cmd->psdt);
+		}
+	}
+
+	if (spdk_nvme_opc_get_data_transfer(opc) != SPDK_NVME_DATA_NONE) {
+		if (sgl->generic.type == SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF,
+				      "SGL: Keyed%s: addr 0x%" PRIx64 " key 0x%x len 0x%x\n",
+				      sgl->generic.subtype == SPDK_NVME_SGL_SUBTYPE_INVALIDATE_KEY ? " (Inv)" : "",
+				      sgl->address, sgl->keyed.key, sgl->keyed.length);
+		} else if (sgl->generic.type == SPDK_NVME_SGL_TYPE_DATA_BLOCK) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "SGL: Data block: %s 0x%" PRIx64 " len 0x%x\n",
+				      sgl->unkeyed.subtype == SPDK_NVME_SGL_SUBTYPE_OFFSET ? "offs" : "addr",
+				      sgl->address, sgl->unkeyed.length);
+		} else {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "SGL type 0x%x subtype 0x%x\n",
+				      sgl->generic.type, sgl->generic.subtype);
+		}
+	}
+}
+
+void
+spdk_nvmf_request_exec(struct spdk_nvmf_request *req)
+{
+	struct spdk_nvmf_qpair *qpair = req->qpair;
+	spdk_nvmf_request_exec_status status;
+
+	nvmf_trace_command(req->cmd, spdk_nvmf_qpair_is_admin_queue(qpair));
+
+	if (qpair->state != SPDK_NVMF_QPAIR_ACTIVE) {
+		req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+		req->rsp->nvme_cpl.status.sc = SPDK_NVME_SC_COMMAND_SEQUENCE_ERROR;
+		/* Place the request on the outstanding list so we can keep track of it */
+		TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+		spdk_nvmf_request_complete(req);
+		return;
+	}
+
+	/* Check if the subsystem is paused (if there is a subsystem) */
+	if (qpair->ctrlr) {
+		struct spdk_nvmf_subsystem_poll_group *sgroup = &qpair->group->sgroups[qpair->ctrlr->subsys->id];
+		if (sgroup->state != SPDK_NVMF_SUBSYSTEM_ACTIVE) {
+			/* The subsystem is not currently active. Queue this request. */
+			TAILQ_INSERT_TAIL(&sgroup->queued, req, link);
+			return;
+		}
+
+	}
+
+	/* Place the request on the outstanding list so we can keep track of it */
+	TAILQ_INSERT_TAIL(&qpair->outstanding, req, link);
+
+	if (spdk_unlikely(req->cmd->nvmf_cmd.opcode == SPDK_NVME_OPC_FABRIC)) {
+		status = spdk_nvmf_ctrlr_process_fabrics_cmd(req);
+	} else if (spdk_unlikely(spdk_nvmf_qpair_is_admin_queue(qpair))) {
+		status = spdk_nvmf_ctrlr_process_admin_cmd(req);
+	} else {
+		status = spdk_nvmf_ctrlr_process_io_cmd(req);
+	}
+
+	if (status == SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE) {
+		spdk_nvmf_request_complete(req);
+	}
 }

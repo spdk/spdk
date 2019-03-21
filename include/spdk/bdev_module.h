@@ -40,6 +40,10 @@
 #ifndef SPDK_BDEV_MODULE_H
 #define SPDK_BDEV_MODULE_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include "spdk/stdinc.h"
 
 #include "spdk/bdev.h"
@@ -119,7 +123,12 @@ struct spdk_bdev_module {
 	 * First notification that a bdev should be examined by a virtual bdev module.
 	 * Virtual bdev modules may use this to examine newly-added bdevs and automatically
 	 * create their own vbdevs, but no I/O to device can be send to bdev at this point.
-	 * Only vbdevs based on config files can be created here.
+	 * Only vbdevs based on config files can be created here. This callback must make
+	 * its decision to claim the module synchronously.
+	 * It must also call spdk_bdev_module_examine_done() before returning. If the module
+	 * needs to perform asynchronous operations such as I/O after claiming the bdev,
+	 * it may define an examine_disk callback.  The examine_disk callback will then
+	 * be called immediately after the examine_config callback returns.
 	 */
 	void (*examine_config)(struct spdk_bdev *bdev);
 
@@ -292,6 +301,39 @@ struct spdk_bdev {
 	 */
 	struct spdk_uuid uuid;
 
+	/** Size in bytes of a metadata for the backend */
+	uint32_t md_len;
+
+	/**
+	 * Specify metadata location and set to true if metadata is interleaved
+	 * with block data or false if metadata is separated with block data.
+	 *
+	 * Note that this field is valid only if there is metadata.
+	 */
+	bool md_interleave;
+
+	/**
+	 * DIF type for this bdev.
+	 *
+	 * Note that this field is valid only if there is metadata.
+	 */
+	enum spdk_dif_type dif_type;
+
+	/*
+	 * DIF location.
+	 *
+	 * Set to true if DIF is set in the first 8 bytes of metadata or false
+	 * if DIF is set in the last 8 bytes of metadata.
+	 *
+	 * Note that this field is valid only if DIF is enabled.
+	 */
+	bool dif_is_head_of_md;
+
+	/**
+	 * Specify whether each DIF check type is enabled.
+	 */
+	uint32_t dif_check_flags;
+
 	/**
 	 * Pointer to the bdev module that registered this bdev.
 	 */
@@ -363,7 +405,17 @@ struct spdk_bdev {
 	} internal;
 };
 
-typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+/**
+ * Callback when buffer is allocated for the bdev I/O.
+ *
+ * \param ch The I/O channel the bdev I/O was handled on.
+ * \param bdev_io The bdev I/O
+ * \param success True if buffer is allocated successfully or the bdev I/O has an SGL
+ * assigned already, or false if it failed. The possible reason of failure is the size
+ * of the buffer to allocate is greater than the permitted maximum.
+ */
+typedef void (*spdk_bdev_io_get_buf_cb)(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+					bool success);
 
 #define BDEV_IO_NUM_CHILD_IOV 32
 
@@ -729,6 +781,14 @@ void spdk_bdev_io_complete_scsi_status(struct spdk_bdev_io *bdev_io, enum spdk_s
 struct spdk_thread *spdk_bdev_io_get_thread(struct spdk_bdev_io *bdev_io);
 
 /**
+ * Get the bdev module's I/O channel that the given bdev_io was submitted on.
+ *
+ * \param bdev_io I/O
+ * \return the bdev module's I/O channel that the given bdev_io was submitted on.
+ */
+struct spdk_io_channel *spdk_bdev_io_get_io_channel(struct spdk_bdev_io *bdev_io);
+
+/**
  * Resize for a bdev.
  *
  * Change number of blocks for provided block device.
@@ -971,24 +1031,16 @@ struct spdk_bdev *spdk_bdev_part_get_base_bdev(struct spdk_bdev_part *part);
 uint64_t spdk_bdev_part_get_offset_blocks(struct spdk_bdev_part *part);
 
 /*
- * Macro used to register module for later initialization.
+ *  Macro used to register module for later initialization.
  */
-#define SPDK_BDEV_MODULE_REGISTER(_module)							\
-	__attribute__((constructor)) static void						\
-	SPDK_BDEV_MODULE_REGISTER_FN_NAME(__LINE__)  (void)					\
-	{											\
-	    spdk_bdev_module_list_add(_module);							\
-	}
+#define SPDK_BDEV_MODULE_REGISTER(name, module) \
+static void __attribute__((constructor)) spdk_bdev_module_register_##name(void) \
+{ \
+	spdk_bdev_module_list_add(module); \
+} \
 
-/*
- * This is helper macro for automatic function generation.
- *
- */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME(line) SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line)
-
-/*
- *  Second helper macro for "stringize" trick to work.
- */
-#define SPDK_BDEV_MODULE_REGISTER_FN_NAME_(line) spdk_bdev_module_register_ ## line
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* SPDK_BDEV_MODULE_H */

@@ -48,7 +48,7 @@ nvmf_parse_arg(int ch, char *arg)
 }
 
 static void
-nvmf_tgt_started(void *arg1, void *arg2)
+nvmf_tgt_started(void *arg1)
 {
 	if (getenv("MEMZONE_DUMP") != NULL) {
 		spdk_memzone_dump(stdout);
@@ -65,7 +65,6 @@ main(int argc, char **argv)
 	/* default value in opts */
 	spdk_app_opts_init(&opts);
 	opts.name = "nvmf";
-	opts.max_delay_us = 0;
 	if ((rc = spdk_app_parse_args(argc, argv, &opts, "", NULL,
 				      nvmf_parse_arg, nvmf_usage)) !=
 	    SPDK_APP_PARSE_ARGS_SUCCESS) {
@@ -73,7 +72,7 @@ main(int argc, char **argv)
 	}
 
 	/* Blocks until the application is exiting */
-	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL, NULL);
+	rc = spdk_app_start(&opts, nvmf_tgt_started, NULL);
 	spdk_app_fini();
 	return rc;
 }

@@ -32,7 +32,7 @@ function check_qos_works_well() {
 
 	if [ $enable_limit = true ]; then
 		#qos realization is related with bytes transfered.It currently have like 5% variation.
-		retval=$(echo "$qos_limit*0.95 < $read_result && $read_result < $qos_limit*1.05" | bc)
+		retval=$(echo "$qos_limit*0.85 < $read_result && $read_result < $qos_limit*1.05" | bc)
 		if [ $retval -eq 0 ]; then
 			echo "Failed to limit the io read rate of malloc bdev by qos"
 			exit 1

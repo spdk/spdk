@@ -36,41 +36,10 @@
 #include "vhost.h"
 
 #include "spdk/string.h"
+#include "spdk_internal/vhost_user.h"
 
 /* The version of the protocol we support */
 #define VHOST_USER_VERSION    0x1
-
-#define VHOST_MEMORY_MAX_NREGIONS 8
-
-/** Fixed-size vhost_memory struct */
-struct vhost_memory_padded {
-	uint32_t nregions;
-	uint32_t padding;
-	struct vhost_memory_region regions[VHOST_MEMORY_MAX_NREGIONS];
-};
-
-struct vhost_user_msg {
-	enum vhost_user_request request;
-
-#define VHOST_USER_VERSION_MASK     0x3
-#define VHOST_USER_REPLY_MASK       (0x1 << 2)
-	uint32_t flags;
-	uint32_t size; /* the following payload size */
-	union {
-#define VHOST_USER_VRING_IDX_MASK   0xff
-#define VHOST_USER_VRING_NOFD_MASK  (0x1 << 8)
-		uint64_t u64;
-		struct vhost_vring_state state;
-		struct vhost_vring_addr addr;
-		struct vhost_memory_padded memory;
-		struct vhost_user_config cfg;
-	} payload;
-	int fds[VHOST_MEMORY_MAX_NREGIONS];
-} __attribute((packed));
-
-#define VHOST_USER_HDR_SIZE offsetof(struct vhost_user_msg, payload.u64)
-#define VHOST_USER_PAYLOAD_SIZE \
-	(sizeof(struct vhost_user_msg) - VHOST_USER_HDR_SIZE)
 
 static int
 vhost_user_write(int fd, void *buf, int len, int *fds, int fd_num)
@@ -142,9 +111,9 @@ vhost_user_read(int fd, struct vhost_user_msg *msg)
 
 	sz_payload = msg->size;
 
-	if (sizeof(*msg) - sz_hdr < sz_payload) {
+	if (sz_payload > VHOST_USER_PAYLOAD_SIZE) {
 		SPDK_WARNLOG("Received oversized msg: payload size %zu > available space %zu\n",
-			     sz_payload, sizeof(*msg) - sz_hdr);
+			     sz_payload, VHOST_USER_PAYLOAD_SIZE);
 		return -EIO;
 	}
 
@@ -263,9 +232,9 @@ static int
 prepare_vhost_memory_user(struct vhost_user_msg *msg, int fds[])
 {
 	int i, num;
-	struct hugepage_file_info huges[VHOST_MEMORY_MAX_NREGIONS];
+	struct hugepage_file_info huges[VHOST_USER_MEMORY_MAX_NREGIONS];
 
-	num = get_hugepage_file_info(huges, VHOST_MEMORY_MAX_NREGIONS);
+	num = get_hugepage_file_info(huges, VHOST_USER_MEMORY_MAX_NREGIONS);
 	if (num < 0) {
 		SPDK_ERRLOG("Failed to prepare memory for vhost-user\n");
 		return num;
@@ -312,7 +281,7 @@ vhost_user_sock(struct virtio_user_dev *dev,
 	struct vhost_user_msg msg;
 	struct vhost_vring_file *file = 0;
 	int need_reply = 0;
-	int fds[VHOST_MEMORY_MAX_NREGIONS];
+	int fds[VHOST_USER_MEMORY_MAX_NREGIONS];
 	int fd_num = 0;
 	int i, len, rc;
 	int vhostfd = dev->vhostfd;

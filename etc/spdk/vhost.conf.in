@@ -94,6 +94,9 @@
   # Set how often the admin queue is polled for asynchronous events.
   # Units in microseconds.
   AdminPollRate 100000
+  # Set how often I/O queues are polled from completions.
+  # Units in microseconds.
+  IOPollRate 0
 
 # The Split virtual block device slices block devices into multiple smaller bdevs.
 [Split]

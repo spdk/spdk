@@ -40,8 +40,6 @@
 #include "spdk/nvme.h"
 #include "spdk/bdev_module.h"
 
-#define NVME_MAX_CONTROLLERS 1024
-
 enum spdk_bdev_timeout_action {
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_NONE = 0,
 	SPDK_BDEV_NVME_TIMEOUT_ACTION_RESET,
@@ -53,44 +51,11 @@ struct spdk_bdev_nvme_opts {
 	uint64_t timeout_us;
 	uint32_t retry_count;
 	uint64_t nvme_adminq_poll_period_us;
+	uint64_t nvme_ioq_poll_period_us;
 };
 
-struct nvme_ctrlr {
-	/**
-	 * points to pinned, physically contiguous memory region;
-	 * contains 4KB IDENTIFY structure for controller which is
-	 *  target for CONTROLLER IDENTIFY command during initialization
-	 */
-	struct spdk_nvme_ctrlr		*ctrlr;
-	struct spdk_nvme_transport_id	trid;
-	char				*name;
-	int				ref;
-	bool				destruct;
-	uint32_t			num_ns;
-	/** Array of bdevs indexed by nsid - 1 */
-	struct nvme_bdev		*bdevs;
-
-	struct spdk_poller		*adminq_timer_poller;
-
-	/** linked list pointer for device list */
-	TAILQ_ENTRY(nvme_ctrlr)	tailq;
-};
-
-struct nvme_bdev {
-	struct spdk_bdev	disk;
-	struct nvme_ctrlr	*nvme_ctrlr;
-	uint32_t		id;
-	bool			active;
-	struct spdk_nvme_ns	*ns;
-};
-
-void spdk_bdev_nvme_dump_trid_json(struct spdk_nvme_transport_id *trid,
-				   struct spdk_json_write_ctx *w);
-
+typedef void (*spdk_bdev_nvme_fn)(void *ctx);
 struct spdk_nvme_qpair *spdk_bdev_nvme_get_io_qpair(struct spdk_io_channel *ctrlr_io_ch);
-struct nvme_ctrlr *spdk_bdev_nvme_lookup_ctrlr(const char *ctrlr_name);
-struct nvme_ctrlr *spdk_bdev_nvme_first_ctrlr(void);
-struct nvme_ctrlr *spdk_bdev_nvme_next_ctrlr(struct nvme_ctrlr *prev);
 void spdk_bdev_nvme_get_opts(struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_opts(const struct spdk_bdev_nvme_opts *opts);
 int spdk_bdev_nvme_set_hotplug(bool enabled, uint64_t period_us, spdk_msg_fn cb, void *cb_ctx);
@@ -99,7 +64,10 @@ int spdk_bdev_nvme_create(struct spdk_nvme_transport_id *trid,
 			  struct spdk_nvme_host_id *hostid,
 			  const char *base_name,
 			  const char **names, size_t *count,
-			  const char *hostnqn);
+			  const char *hostnqn,
+			  uint32_t prchk_flags,
+			  spdk_bdev_nvme_fn cb_fn,
+			  void *cb_ctx);
 struct spdk_nvme_ctrlr *spdk_bdev_nvme_get_ctrlr(struct spdk_bdev *bdev);
 
 /**
