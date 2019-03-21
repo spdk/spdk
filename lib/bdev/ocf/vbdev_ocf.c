@@ -814,6 +814,73 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	}
 }
 
+/* OCF management queue deinitialization */
+static void
+vbdev_ocf_ctx_mngt_queue_stop(ocf_queue_t q)
+{
+	struct spdk_poller *poller = ocf_queue_get_priv(q);
+
+	if (poller) {
+		spdk_poller_unregister(&poller);
+	}
+}
+
+static int
+mngt_queue_poll(void *opaque)
+{
+	ocf_queue_t q = opaque;
+	uint32_t iono = ocf_queue_pending_io(q);
+	int i, max = spdk_min(32, iono);
+
+	for (i = 0; i < max; i++) {
+		ocf_queue_run_single(q);
+	}
+
+	if (iono > 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+vbdev_ocf_ctx_mngt_queue_kick(ocf_queue_t q)
+{
+}
+
+/* Queue ops is an interface for running queue thread
+ * stop() operation in called just before queue gets destroyed */
+const struct ocf_queue_ops mngt_queue_ops = {
+	.kick_sync = NULL,
+	.kick = vbdev_ocf_ctx_mngt_queue_kick,
+	.stop = vbdev_ocf_ctx_mngt_queue_stop,
+};
+
+static int
+create_management_queue(struct vbdev_ocf *vbdev)
+{
+	ocf_queue_t mngt_queue;
+	struct spdk_poller *mngt_poller;
+	int rc;
+
+	rc = ocf_queue_create(vbdev->ocf_cache, &mngt_queue, &mngt_queue_ops);
+	if (rc) {
+		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
+		return rc;
+	}
+
+	mngt_poller = spdk_poller_register(mngt_queue_poll, mngt_queue, 0);
+	if (mngt_poller == NULL) {
+		SPDK_ERRLOG("Unable to initiate mngt request: %s", spdk_strerror(ENOMEM));
+		return -ENOMEM;
+	}
+
+	ocf_queue_set_priv(mngt_queue, mngt_poller);
+	ocf_mngt_cache_set_mngt_queue(vbdev->ocf_cache, mngt_queue);
+
+	return 0;
+}
+
 /* Start OCF cache, attach caching device */
 static int
 start_cache(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
@@ -843,6 +910,11 @@ start_cache(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 		return rc;
 	}
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
+
+	rc = create_management_queue(vbdev);
+	if (rc) {
+		return rc;
+	}
 
 	arg = malloc(sizeof(*arg));
 	if (arg == NULL) {
@@ -931,7 +1003,8 @@ add_core(struct vbdev_ocf *vbdev, void (*cb)(int, void *), void *cb_arg)
 
 /* Poller function for the OCF queue
  * We execute OCF requests here synchronously */
-static int queue_poll(void *opaque)
+static int
+queue_poll(void *opaque)
 {
 	struct vbdev_ocf_qcxt *qctx = opaque;
 	uint32_t iono = ocf_queue_pending_io(qctx->queue);

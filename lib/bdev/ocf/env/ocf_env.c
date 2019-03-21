@@ -52,7 +52,10 @@ static env_atomic g_env_allocator_index = 0;
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	return spdk_mempool_get(allocator);
+	/* HOTFIX FOR #671 THAT IS ALSO REPRODUCING WHEN USING MNGT QUEUE, DO NOT SUBMIT */
+	void *ret = spdk_mempool_get(allocator);
+	memset(ret, 0, 1024);
+	return ret;
 }
 
 env_allocator *
