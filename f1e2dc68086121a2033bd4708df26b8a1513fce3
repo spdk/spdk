@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9b9b6e92_c9cadaad",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 756,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-21T09:07:04Z",
+      "side": 1,
+      "message": "This should be a local variable.\nDeclare \u0026 initialize it somewhere at top of the function along with other variables.",
+      "range": {
+        "startLine": 756,
+        "startChar": 4,
+        "endLine": 756,
+        "endChar": 16
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c1c19166_5933177f",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-21T09:07:04Z",
+      "side": 1,
+      "message": "Is this really needed? There\u0027s already memory backend added on line 678.\nI have no knowledge of this so Im just asking questions: why size\u003d2M? What if we use 1G hugepages?\nAlso I\u0027m concerned about this: if you take a look at line 678 you\u0027ll notice that we bind memory allocated for specific numa node. host-nodes is missing here. Are you sure if it\u0027s not needed?",
+      "range": {
+        "startLine": 758,
+        "startChar": 5,
+        "endLine": 758,
+        "endChar": 95
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f24fdb79_9c38b417",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-21T09:07:04Z",
+      "side": 1,
+      "message": "I\u0027m nitpicking here, but this variable is not a barmem_id. It\u0027s just some string which also consists of the id.\nbarmem_id should be equal to \"mem${disk}\".\nThen cmd on line 762 should look like this:\ncmd+\u003d\"-device vhost-user-nvme,num_io_queues\u003d${queue_number},barmem\u003d${barmem_id},chardev\u003dchar_$disk\"",
+      "range": {
+        "startLine": 759,
+        "startChar": 5,
+        "endLine": 759,
+        "endChar": 35
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1bc0bc74_de7d961c",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-21T09:07:04Z",
+      "side": 1,
+      "message": "What does \"2\" stand for? Can this be a variable instead?",
+      "range": {
+        "startLine": 134,
+        "startChar": 66,
+        "endLine": 134,
+        "endChar": 67
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90a30c1d_591e2e3d",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-21T09:07:04Z",
+      "side": 1,
+      "message": "Should this be removed?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 13
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
