@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c05fd12_b5342113",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 52
+      },
+      "lineNbr": 640,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T20:10:13Z",
+      "side": 1,
+      "message": "This will deadlock if you ever have more than one channel on a bdev.",
+      "revId": "d931e22e5da11b9bdac8e09a870d5c435f72a315",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
