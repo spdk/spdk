@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "a3157161_ae734165",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 713,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T09:36:51Z",
+      "side": 1,
+      "message": "You\u0027re right, I didn\u0027t notice read_canceled checks for 0.",
+      "parentUuid": "ba43316e_c9d33949",
+      "range": {
+        "startLine": 713,
+        "startChar": 12,
+        "endLine": 713,
+        "endChar": 14
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b0d26c17_2b3f3ee5",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 1
@@ -213,6 +237,30 @@
       "side": 1,
       "message": "In case we got error on any of splitted IO we never reach this point - whole IO will be completed with EIO and won\u0027t be added to retry_queue",
       "parentUuid": "cf686c9a_e8255ff3",
+      "range": {
+        "startLine": 1524,
+        "startChar": 0,
+        "endLine": 1525,
+        "endChar": 17
+      },
+      "revId": "c341ce6ec0c0c8294adb65bd20698eef2b2ee2fa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "705c5cae_d5e2a57e",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1525,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T09:36:51Z",
+      "side": 1,
+      "message": "Let\u0027s rely on the FTL_IO_RETRY flag for retrying requests instead of the io-\u003estatus and keep the io-\u003estatus just for the submission/completions routines.",
+      "parentUuid": "d800eb04_5be0b863",
       "range": {
         "startLine": 1524,
         "startChar": 0,
