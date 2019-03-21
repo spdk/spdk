@@ -52,7 +52,15 @@ static env_atomic g_env_allocator_index = 0;
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	return spdk_mempool_get(allocator);
+	uint32_t *priv;
+	void *mem = spdk_mempool_get(allocator);
+
+	if (spdk_likely(mem)) {
+		priv = (uint32_t *)spdk_mempool_get_priv(allocator);
+		memset(mem, 0, *priv);
+	}
+
+	return mem;
 }
 
 env_allocator *
@@ -60,13 +68,18 @@ env_allocator_create(uint32_t size, const char *name)
 {
 	env_allocator *allocator;
 	char qualified_name[128] = {0};
+	struct spdk_mempool *mp;
+	uint32_t *priv;
 
 	snprintf(qualified_name, 128, "ocf_env_%d", env_atomic_inc_return(&g_env_allocator_index));
 
-	allocator = spdk_mempool_create(qualified_name,
-					ENV_ALLOCATOR_NBUFS, size,
-					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+	allocator = spdk_mempool_create_with_priv(qualified_name,
+			ENV_ALLOCATOR_NBUFS, size,
+			SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			sizeof(size), SPDK_ENV_SOCKET_ID_ANY);
+
+	priv = (uint32_t *)spdk_mempool_get_priv(allocator);
+	*priv = size;
 
 	return allocator;
 }

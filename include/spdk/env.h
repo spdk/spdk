@@ -343,6 +343,24 @@ struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
 		size_t ele_size, size_t cache_size, int socket_id);
 
 /**
+ * Create a thread-safe memory pool and allocate memory for private data.
+ *
+ * \param name Name for the memory pool.
+ * \param count Count of elements.
+ * \param ele_size Element size in bytes.
+ * \param cache_size How many elements may be cached in per-core caches. Use
+ * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
+ * \param priv_size Size of memory to be allocated for mempool owner private data.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ *
+ * \return a pointer to the created memory pool.
+ */
+struct spdk_mempool *spdk_mempool_create_with_priv(const char *name,
+		size_t count, size_t ele_size, size_t cache_size,
+		ssize_t priv_size, int socket_id);
+
+/**
  * An object callback function for memory pool.
  *
  * Used by spdk_mempool_create_ctor().
@@ -359,6 +377,7 @@ typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
  * \param ele_size Element size in bytes.
  * \param cache_size How many elements may be cached in per-core caches. Use
  * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
+ * \param priv_size Size of memory to be allocated for mempool owner private data.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
  * \param obj_init User provided object calllback initialization function.
@@ -367,7 +386,7 @@ typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
  * \return a pointer to the created memory pool.
  */
 struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
-		size_t ele_size, size_t cache_size, int socket_id,
+		size_t ele_size, size_t cache_size, size_t priv_size, int socket_id,
 		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
 
 /**
@@ -378,6 +397,15 @@ struct spdk_mempool *spdk_mempool_create_ctor(const char *name, size_t count,
  * \return the name of the memory pool.
  */
 char *spdk_mempool_get_name(struct spdk_mempool *mp);
+
+/**
+ * Return a pointer to the private data in an mempool structure.
+ *
+ * \param mp Memory pool to query.
+ *
+ * \return a pointer to private data.
+ */
+void *spdk_mempool_get_priv(struct spdk_mempool *mp);
 
 /**
  * Free a memory pool.
