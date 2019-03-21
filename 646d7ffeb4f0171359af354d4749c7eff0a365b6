@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2317935_a42679a1",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2147,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T17:59:04Z",
+      "side": 1,
+      "message": "I think if this returns NULL, we can just drop down to the __send_rw_from_file case below.\n\ni.e.\n\nif (file-\u003elast \u003d\u003d NULL \u0026\u0026 (file-\u003eappend_pos \u0026 CACHE_BUFFER_SIZE \u003d\u003d 0)) {\n  cache_append_buffer(file);\n}\n\nif (file-\u003elast \u003d\u003d NULL) {\n  int rc;\n\n  file-\u003eappend_pos +\u003d length;\n  ...\n}",
+      "revId": "646d7ffeb4f0171359af354d4749c7eff0a365b6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
