@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c62922e_c75a401c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T17:15:56Z",
+      "side": 1,
+      "message": "it would be good to really look for ways to not have to do all of these dynamic memory allocations  - in this case, could we just put something like \"struct spdk_poller *destruct_poller\" in the vbdev_ocf structure?  or maybe there\u0027s another way to do it\n\nin general - dynamic memory allocations should be avoided as much as possible, especially in the I/O path - it\u0027s another point of failure that can\u0027t really be recovered from",
+      "revId": "cc1492cd5f05f24308b0c13ab76d7e5fb1a4bc37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
