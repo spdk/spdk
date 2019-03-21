@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b489093d_620be388",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:19:14Z",
+      "side": 1,
+      "message": "This is some GCC extension to use empty initializer, I think you should use { 0 } - it\u0027s common in SPDK",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fffbd9ef_49397b80",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:19:14Z",
+      "side": 1,
+      "message": "Not sure if we shouldn\u0027t allow to use 0 UUID - perhaps at least we should mention this fact somewhere in doc/usage?\nWe can change ftl_setup_initial_state to retry uuid_generate in such case.",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4992c637_727e3fb4",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:19:14Z",
+      "side": 1,
+      "message": "Consider changing it to { 0 }",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1663f1bb_c5303939",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:19:14Z",
+      "side": 1,
+      "message": "Maybe something like printf \"%05d-%04d-%05d\" 0 will look better?",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
