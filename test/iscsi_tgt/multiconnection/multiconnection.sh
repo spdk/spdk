@@ -70,8 +70,8 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 sleep 1
 
 echo "Running FIO"
-$fio_py 131072 64 randrw 5
-$fio_py 262144 16 randwrite 10
+$fio_py iscsi 131072 64 randrw 5
+$fio_py iscsi 262144 16 randwrite 10
 sync
 
 trap - SIGINT SIGTERM EXIT

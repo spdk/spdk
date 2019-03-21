@@ -20,7 +20,7 @@ function check_qos_works_well() {
 		start_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].bytes_read')
 	fi
 
-	$fio_py 1024 128 randread 5
+	$fio_py iscsi 1024 128 randread 5
 
 	if [ $LIMIT_TYPE = IOPS ]; then
 		end_io_count=$($rpc_py get_bdevs_iostat -b $3 | jq -r '.[1].num_read_ops')

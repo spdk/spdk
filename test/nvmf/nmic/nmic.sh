@@ -73,7 +73,7 @@ if [ ! -z $NVMF_SECOND_TARGET_IP ]; then
 
 	waitforblk "nvme0n1"
 
-	$testdir/../fio/nvmf_fio.py 4096 1 write 1 verify
+	$rootdir/scripts/fio.py nvmf 4096 1 write 1 verify
 fi
 
 nvme disconnect -n "nqn.2016-06.io.spdk:cnode1" || true
