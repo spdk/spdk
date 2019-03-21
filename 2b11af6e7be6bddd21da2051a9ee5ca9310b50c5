@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "2d2338f3_c2b62e2b",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 756,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "Every device needs his own memory object",
+      "parentUuid": "5b51dcc7_b7b2e606",
+      "range": {
+        "startLine": 756,
+        "startChar": 4,
+        "endLine": 756,
+        "endChar": 88
+      },
+      "revId": "2b11af6e7be6bddd21da2051a9ee5ca9310b50c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fc5b031e_178e19d9",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-02-01T12:27:14Z",
       "side": 1,
       "message": "If I recall correctly from your emails this param was optional depending on the guest/host kernel version?\nIf so then I think this should rely on an additional param instead of hardcode.",
+      "range": {
+        "startLine": 758,
+        "startChar": 62,
+        "endLine": 758,
+        "endChar": 74
+      },
+      "revId": "2b11af6e7be6bddd21da2051a9ee5ca9310b50c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fd116481_e71a9be1",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fc5b031e_178e19d9",
       "range": {
         "startLine": 758,
         "startChar": 62,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "0a0e8f32_58351590",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "I added this test to test/vhost/vhost.sh",
+      "parentUuid": "0bf9654c_643a14c4",
+      "range": {
+        "startLine": 130,
+        "startChar": 0,
+        "endLine": 132,
+        "endChar": 57
+      },
+      "revId": "2b11af6e7be6bddd21da2051a9ee5ca9310b50c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19e903bf_0b602aa0",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 2
@@ -88,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "8fc40122_168a2be1",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 215,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "19e903bf_0b602aa0",
+      "revId": "2b11af6e7be6bddd21da2051a9ee5ca9310b50c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "97fc96c3_c0584b22",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 2
@@ -99,6 +189,30 @@
       "writtenOn": "2019-02-01T12:27:14Z",
       "side": 1,
       "message": "How about adding Nvme as bdev as well?",
+      "range": {
+        "startLine": 198,
+        "startChar": 2,
+        "endLine": 198,
+        "endChar": 28
+      },
+      "revId": "2b11af6e7be6bddd21da2051a9ee5ca9310b50c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "93c43a30_bd5bb9a8",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 198,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "97fc96c3_c0584b22",
       "range": {
         "startLine": 198,
         "startChar": 2,

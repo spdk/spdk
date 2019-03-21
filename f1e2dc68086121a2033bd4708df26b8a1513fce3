@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "4aacc7bd_98124c94",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 756,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "It is not global variable. Every disk needs to have this variable defined.",
+      "parentUuid": "9b9b6e92_c9cadaad",
+      "range": {
+        "startLine": 756,
+        "startChar": 4,
+        "endLine": 756,
+        "endChar": 16
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c1c19166_5933177f",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-21T09:07:04Z",
       "side": 1,
       "message": "Is this really needed? There\u0027s already memory backend added on line 678.\nI have no knowledge of this so Im just asking questions: why size\u003d2M? What if we use 1G hugepages?\nAlso I\u0027m concerned about this: if you take a look at line 678 you\u0027ll notice that we bind memory allocated for specific numa node. host-nodes is missing here. Are you sure if it\u0027s not needed?",
+      "range": {
+        "startLine": 758,
+        "startChar": 5,
+        "endLine": 758,
+        "endChar": 95
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fb41f6ee_80bed660",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 758,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "I think it is needed. Should we calculate size for all memory backend objects. I defined size\u003d${guest_mememory} for all memory backends objects. It works. Is it ok? Changpeng didn\u0027t use host-nodes in qemu command he send me.",
+      "parentUuid": "c1c19166_5933177f",
       "range": {
         "startLine": 758,
         "startChar": 5,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "5f9b37b2_6119c112",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 759,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "In kernel older than 4.12 use entry barmem\u003d${barmem_id}. Else delete this barmem parameter.",
+      "parentUuid": "f24fdb79_9c38b417",
+      "range": {
+        "startLine": 759,
+        "startChar": 5,
+        "endLine": 759,
+        "endChar": 35
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1bc0bc74_de7d961c",
         "filename": "test/vhost/fiotest/autotest.sh",
         "patchSetId": 3
@@ -94,6 +166,30 @@
     },
     {
       "key": {
+        "uuid": "898cefc8_d6c56089",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 134,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1bc0bc74_de7d961c",
+      "range": {
+        "startLine": 134,
+        "startChar": 66,
+        "endLine": 134,
+        "endChar": 67
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "90a30c1d_591e2e3d",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 3
@@ -105,6 +201,30 @@
       "writtenOn": "2019-03-21T09:07:04Z",
       "side": 1,
       "message": "Should this be removed?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 201,
+        "endChar": 13
+      },
+      "revId": "f1e2dc68086121a2033bd4708df26b8a1513fce3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3f5c8fd9_324ac864",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 3
+      },
+      "lineNbr": 201,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-21T13:58:55Z",
+      "side": 1,
+      "message": "We need to check which kernel version is on vm. Can we do this?",
+      "parentUuid": "90a30c1d_591e2e3d",
       "range": {
         "startLine": 201,
         "startChar": 0,
