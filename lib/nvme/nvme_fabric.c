@@ -143,7 +143,7 @@ nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint
 
 static void
 nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
-			   void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+			   struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	struct spdk_nvme_transport_id trid;
 	uint8_t *end;
@@ -196,7 +196,7 @@ nvme_fabric_discover_probe(struct spdk_nvmf_discovery_log_page_entry *entry,
 		      trid.subnqn, trid.trtype,
 		      trid.traddr, trid.trsvcid);
 
-	nvme_ctrlr_probe(&trid, NULL, probe_cb, cb_ctx);
+	nvme_ctrlr_probe(&trid, probe_ctx, NULL);
 }
 
 static int
@@ -221,7 +221,7 @@ nvme_fabric_get_discovery_log_page(struct spdk_nvme_ctrlr *ctrlr,
 
 int
 nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
-			   void *cb_ctx, spdk_nvme_probe_cb probe_cb)
+			   struct spdk_nvme_probe_ctx *probe_ctx)
 {
 	struct spdk_nvmf_discovery_log_page *log_page;
 	struct spdk_nvmf_discovery_log_page_entry *log_page_entry;
@@ -260,7 +260,7 @@ nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
 		}
 
 		for (i = 0; i < numrec; i++) {
-			nvme_fabric_discover_probe(log_page_entry++, cb_ctx, probe_cb);
+			nvme_fabric_discover_probe(log_page_entry++, probe_ctx);
 		}
 		remaining_num_rec -= numrec;
 		log_page_offset += numrec * sizeof(struct spdk_nvmf_discovery_log_page_entry);

@@ -37,9 +37,9 @@
 #include "spdk/stdinc.h"
 #include "spdk/assert.h"
 
-#define SPDK_DIF_REFTAG_CHECK	(1U << 26)
-#define SPDK_DIF_APPTAG_CHECK	(1U << 27)
-#define SPDK_DIF_GUARD_CHECK	(1U << 28)
+#define SPDK_DIF_FLAGS_REFTAG_CHECK	(1U << 26)
+#define SPDK_DIF_FLAGS_APPTAG_CHECK	(1U << 27)
+#define SPDK_DIF_FLAGS_GUARD_CHECK	(1U << 28)
 
 #define SPDK_DIF_REFTAG_ERROR	0x1
 #define SPDK_DIF_APPTAG_ERROR	0x2
@@ -51,6 +51,12 @@ enum spdk_dif_type {
 	SPDK_DIF_TYPE1 = 1,
 	SPDK_DIF_TYPE2 = 2,
 	SPDK_DIF_TYPE3 = 3,
+};
+
+enum spdk_dif_check_type {
+	SPDK_DIF_CHECK_TYPE_REFTAG = 1,
+	SPDK_DIF_CHECK_TYPE_APPTAG = 2,
+	SPDK_DIF_CHECK_TYPE_GUARD = 3,
 };
 
 struct spdk_dif {
@@ -85,6 +91,9 @@ struct spdk_dif_ctx {
 
 	/* Application tag mask */
 	uint16_t		apptag_mask;
+
+	/* Seed value for guard computation */
+	uint16_t		guard_seed;
 };
 
 /** DIF error information */
@@ -118,12 +127,14 @@ struct spdk_dif_error {
  * starting block address.
  * \param apptag_mask Application tag mask.
  * \param app_tag Application tag.
+ * \param guard_seed Seed value for guard computation.
  *
  * \return 0 on success and negated errno otherwise.
  */
 int spdk_dif_ctx_init(struct spdk_dif_ctx *ctx, uint32_t block_size, uint32_t md_size,
 		      bool md_interleave, bool dif_loc, enum spdk_dif_type dif_type, uint32_t dif_flags,
-		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag);
+		      uint32_t init_ref_tag, uint16_t apptag_mask, uint16_t app_tag,
+		      uint16_t guard_seed);
 
 /**
  * Generate DIF for extended LBA payload.
@@ -246,4 +257,47 @@ int spdk_dix_verify(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 int spdk_dix_inject_error(struct iovec *iovs, int iovcnt, struct iovec *md_iov,
 			  uint32_t num_blocks, const struct spdk_dif_ctx *ctx,
 			  uint32_t inject_flags, uint32_t *inject_offset);
+
+/**
+ * Setup iovec array to leave a space for metadata for each block.
+ *
+ * This function is used to leave a space for metadata for each block when
+ * the network socket reads data, or to make the network socket ignore a
+ * space for metadata for each block when the network socket writes data.
+ * This function removes the necessity of data copy in the SPDK application
+ * during DIF insertion and strip.
+ *
+ * \param iovs iovec array set by this function.
+ * \param num_iovs Number of elements in the iovec array.
+ * \param buf Buffer to create extended LBA payload.
+ * \param buf_len Length of the buffer to create extended LBA payload.
+ * \param data_offset Offset to store the next incoming data.
+ * \param data_len Expected data length of the payload.
+ * \param mapped_len Output parameter that will contain data length mapped by
+ * the iovec array.
+ * \param ctx DIF context.
+ *
+ * \return Number of used elements in the iovec array on success or negated
+ * errno otherwise.
+ */
+int spdk_dif_set_md_interleave_iovs(struct iovec *iovs, int num_iovs,
+				    uint8_t *buf, uint32_t buf_len,
+				    uint32_t data_offset, uint32_t data_len,
+				    uint32_t *mapped_len,
+				    const struct spdk_dif_ctx *ctx);
+
+/**
+ * Generate and insert DIF into metadata space for newly read data block.
+ *
+ * \param buf Buffer to create extended LBA payload.
+ * \param buf_len Length of the buffer to create extended LBA payload.
+ * \param offset Offset to the newly read data.
+ * \param read_len Length of the newly read data.
+ * \param ctx DIF context.
+ *
+ * \return 0 on success and negated errno otherwise.
+ */
+int spdk_dif_generate_stream(uint8_t *buf, uint32_t buf_len,
+			     uint32_t offset, uint32_t read_len,
+			     const struct spdk_dif_ctx *ctx);
 #endif /* SPDK_DIF_H */

@@ -95,3 +95,12 @@ Blocksize should be set as the sum of data and metadata. For example, if data bl
 PI metadata is 8 Byte, then blocksize in fio configure file should be 520 Byte:
 
     bs=520
+
+The storage device may use a block format that requires separate metadata (DIX). In this scenario, the fio_plugin
+will automatically allocate an extra 4KiB buffer per I/O to hold this metadata. For some cases, such as 512 byte
+blocks with 32 metadata bytes per block and a 128KiB I/O size, 4KiB isn't large enough. In this case, the
+`md_per_io_size` option may be specified to increase the size of the metadata buffer.
+
+Expose two options 'apptag' and 'apptag_mask', users can change them in the configuration file when using
+application tag and application tag mask in end-to-end data protection.  Application tag and application
+tag mask are set to 0x1234 and 0xFFFF by default.

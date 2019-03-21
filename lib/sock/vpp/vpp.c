@@ -386,6 +386,36 @@ spdk_vpp_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
+spdk_vpp_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+{
+	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
+	ssize_t total = 0;
+	int i, rc;
+
+	assert(sock != NULL);
+	assert(g_vpp_initialized);
+
+	for (i = 0; i < iovcnt; ++i) {
+		rc = vppcom_session_read(sock->fd, iov[i].iov_base, iov[i].iov_len);
+		if (rc < 0) {
+			if (total > 0) {
+				break;
+			} else {
+				errno = -rc;
+				return -1;
+			}
+		} else {
+			total += rc;
+			if (rc < iov[i].iov_len) {
+				/* Read less than buffer provided, no point to continue. */
+				break;
+			}
+		}
+	}
+	return total;
+}
+
+static ssize_t
 spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_vpp_sock *sock = __vpp_sock(_sock);
@@ -406,11 +436,13 @@ spdk_vpp_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 			}
 		} else {
 			total += rc;
+			if (rc < iov[i].iov_len) {
+				break;
+			}
 		}
 	}
 	return total;
 }
-
 
 /*
  * TODO: Check if there are similar parameters to configure in VPP
@@ -609,6 +641,7 @@ static struct spdk_net_impl g_vpp_net_impl = {
 	.accept		= spdk_vpp_sock_accept,
 	.close		= spdk_vpp_sock_close,
 	.recv		= spdk_vpp_sock_recv,
+	.readv		= spdk_vpp_sock_readv,
 	.writev		= spdk_vpp_sock_writev,
 	.set_recvlowat	= spdk_vpp_sock_set_recvlowat,
 	.set_recvbuf	= spdk_vpp_sock_set_recvbuf,

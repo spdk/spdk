@@ -38,6 +38,7 @@
 #include "spdk/crc32.h"
 #include "spdk/endian.h"
 #include "spdk/env.h"
+#include "spdk/likely.h"
 #include "spdk/trace.h"
 #include "spdk/string.h"
 #include "spdk/queue.h"
@@ -344,6 +345,83 @@ spdk_iscsi_pdu_calc_data_digest(struct spdk_iscsi_pdu *pdu)
 	return crc32c;
 }
 
+static bool
+spdk_iscsi_check_data_segment_length(struct spdk_iscsi_conn *conn,
+				     struct spdk_iscsi_pdu *pdu, int data_len)
+{
+	int max_segment_len;
+
+	/*
+	 * Determine the maximum segment length expected for this PDU.
+	 *  This will be used to make sure the initiator did not send
+	 *  us too much immediate data.
+	 *
+	 * This value is specified separately by the initiator and target,
+	 *  and not negotiated.  So we can use the #define safely here,
+	 *  since the value is not dependent on the initiator's maximum
+	 *  segment lengths (FirstBurstLength/MaxRecvDataSegmentLength),
+	 *  and SPDK currently does not allow configuration of these values
+	 *  at runtime.
+	 */
+	if (conn->sess == NULL) {
+		/*
+		 * If the connection does not yet have a session, then
+		 *  login is not complete and we use the 8KB default
+		 *  FirstBurstLength as our maximum data segment length
+		 *  value.
+		 */
+		max_segment_len = SPDK_ISCSI_FIRST_BURST_LENGTH;
+	} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT ||
+		   pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
+		max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
+	} else {
+		max_segment_len = spdk_get_max_immediate_data_size();
+	}
+	if (data_len <= max_segment_len) {
+		return true;
+	} else {
+		SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n", data_len, max_segment_len);
+		return false;
+	}
+}
+
+static int
+spdk_iscsi_conn_read_data_segment(struct spdk_iscsi_conn *conn,
+				  struct spdk_iscsi_pdu *pdu,
+				  uint32_t segment_len)
+{
+	struct spdk_dif_ctx dif_ctx;
+	struct iovec iovs[32];
+	int rc, _rc;
+
+	if (spdk_likely(!spdk_iscsi_get_dif_ctx(conn, pdu, &dif_ctx))) {
+		return spdk_iscsi_conn_read_data(conn,
+						 segment_len - pdu->data_valid_bytes,
+						 pdu->data_buf + pdu->data_valid_bytes);
+	} else {
+		pdu->dif_insert_or_strip = true;
+		rc = spdk_dif_set_md_interleave_iovs(iovs, 32,
+						     pdu->data_buf, pdu->data_buf_len,
+						     pdu->data_valid_bytes, segment_len, NULL,
+						     &dif_ctx);
+		if (rc > 0) {
+			rc = spdk_iscsi_conn_readv_data(conn, iovs, rc);
+			if (rc > 0) {
+				_rc = spdk_dif_generate_stream(pdu->data_buf, pdu->data_buf_len,
+							       pdu->data_valid_bytes, rc,
+							       &dif_ctx);
+				if (_rc != 0) {
+					SPDK_ERRLOG("DIF generate failed\n");
+					rc = _rc;
+				}
+			}
+		} else {
+			SPDK_ERRLOG("Setup iovs for interleaved metadata failed\n");
+		}
+		return rc;
+	}
+}
+
 int
 spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 {
@@ -352,7 +430,6 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	uint32_t crc32c;
 	int ahs_len;
 	int data_len;
-	int max_segment_len;
 	int rc;
 
 	if (conn->pdu_in_progress == NULL) {
@@ -427,13 +504,15 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	/* copy the actual data into local buffer */
 	if (pdu->data_valid_bytes < data_len) {
 		if (pdu->data_buf == NULL) {
-			if (data_len <= spdk_get_immediate_data_buffer_size()) {
+			if (data_len <= spdk_get_max_immediate_data_size()) {
 				pool = g_spdk_iscsi.pdu_immediate_data_pool;
-			} else if (data_len <= spdk_get_data_out_buffer_size()) {
+				pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(spdk_get_max_immediate_data_size());
+			} else if (data_len <= SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH) {
 				pool = g_spdk_iscsi.pdu_data_out_pool;
+				pdu->data_buf_len = SPDK_BDEV_BUF_SIZE_WITH_MD(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 			} else {
 				SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n",
-					    data_len, spdk_get_data_out_buffer_size());
+					    data_len, SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH);
 				*_pdu = NULL;
 				spdk_put_pdu(pdu);
 				conn->pdu_in_progress = NULL;
@@ -447,9 +526,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 			pdu->data_buf = pdu->mobj->buf;
 		}
 
-		rc = spdk_iscsi_conn_read_data(conn,
-					       data_len - pdu->data_valid_bytes,
-					       pdu->data_buf + pdu->data_valid_bytes);
+		rc = spdk_iscsi_conn_read_data_segment(conn, pdu, data_len);
 		if (rc < 0) {
 			*_pdu = NULL;
 			spdk_put_pdu(pdu);
@@ -492,35 +569,7 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 
 	/* Data Segment */
 	if (data_len != 0) {
-		/*
-		 * Determine the maximum segment length expected for this PDU.
-		 *  This will be used to make sure the initiator did not send
-		 *  us too much immediate data.
-		 *
-		 * This value is specified separately by the initiator and target,
-		 *  and not negotiated.  So we can use the #define safely here,
-		 *  since the value is not dependent on the initiator's maximum
-		 *  segment lengths (FirstBurstLength/MaxRecvDataSegmentLength),
-		 *  and SPDK currently does not allow configuration of these values
-		 *  at runtime.
-		 */
-		if (conn->sess == NULL) {
-			/*
-			 * If the connection does not yet have a session, then
-			 *  login is not complete and we use the 8KB default
-			 *  FirstBurstLength as our maximum data segment length
-			 *  value.
-			 */
-			max_segment_len = DEFAULT_FIRSTBURSTLENGTH;
-		} else if (pdu->bhs.opcode == ISCSI_OP_SCSI_DATAOUT) {
-			max_segment_len = spdk_get_data_out_buffer_size();
-		} else if (pdu->bhs.opcode == ISCSI_OP_NOPOUT) {
-			max_segment_len = SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
-		} else {
-			max_segment_len = spdk_get_immediate_data_buffer_size();
-		}
-		if (data_len > max_segment_len) {
-			SPDK_ERRLOG("Data(%d) > MaxSegment(%d)\n", data_len, max_segment_len);
+		if (!spdk_iscsi_check_data_segment_length(conn, pdu, data_len)) {
 			rc = spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 			spdk_put_pdu(pdu);
 
@@ -563,17 +612,96 @@ spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu)
 	return 1;
 }
 
-int
-spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
-			struct spdk_iscsi_pdu *pdu)
+struct _iov_ctx {
+	struct iovec	*iov;
+	int		num_iovs;
+	uint32_t	iov_offset;
+	int		iovcnt;
+	uint32_t	mapped_len;
+};
+
+static inline void
+_iov_ctx_init(struct _iov_ctx *ctx, struct iovec *iovs, int num_iovs,
+	      uint32_t iov_offset)
 {
-	int iovec_cnt = 0;
+	ctx->iov = iovs;
+	ctx->num_iovs = num_iovs;
+	ctx->iov_offset = iov_offset;
+	ctx->iovcnt = 0;
+	ctx->mapped_len = 0;
+}
+
+static inline bool
+_iov_ctx_set_iov(struct _iov_ctx *ctx, uint8_t *data, uint32_t data_len)
+{
+	if (ctx->iov_offset >= data_len) {
+		ctx->iov_offset -= data_len;
+	} else {
+		ctx->iov->iov_base = data + ctx->iov_offset;
+		ctx->iov->iov_len = data_len - ctx->iov_offset;
+		ctx->mapped_len += data_len - ctx->iov_offset;
+		ctx->iov_offset = 0;
+		ctx->iov++;
+		ctx->iovcnt++;
+		if (ctx->iovcnt == ctx->num_iovs) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+/* Build iovec array to leave metadata space for every data block
+ * when reading data segment from socket.
+ */
+static inline bool
+_iov_ctx_set_md_interleave_iov(struct _iov_ctx *ctx,
+			       void *buf, uint32_t buf_len, uint32_t data_len,
+			       struct spdk_dif_ctx *dif_ctx)
+{
+	int rc;
+	uint32_t mapped_len = 0;
+
+	if (ctx->iov_offset >= data_len) {
+		ctx->iov_offset -= buf_len;
+	} else {
+		rc = spdk_dif_set_md_interleave_iovs(ctx->iov, ctx->num_iovs - ctx->iovcnt,
+						     buf, buf_len,
+						     ctx->iov_offset, data_len, &mapped_len,
+						     dif_ctx);
+		if (rc < 0) {
+			SPDK_ERRLOG("Failed to setup iovs for DIF strip\n");
+			return false;
+		}
+
+		ctx->mapped_len += mapped_len;
+		ctx->iov_offset = 0;
+		ctx->iovcnt += rc;
+
+		if (ctx->iovcnt == ctx->num_iovs) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+int
+spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
+		      struct spdk_iscsi_pdu *pdu, uint32_t *_mapped_length)
+{
+	struct _iov_ctx ctx;
 	int enable_digest;
-	int total_ahs_len;
-	int data_len;
+	uint32_t total_ahs_len;
+	uint32_t data_len;
+
+	if (num_iovs == 0) {
+		return 0;
+	}
 
 	total_ahs_len = pdu->bhs.total_ahs_len;
 	data_len = DGET24(pdu->bhs.data_segment_len);
+	data_len = ISCSI_ALIGN(data_len);
 
 	enable_digest = 1;
 	if (pdu->bhs.opcode == ISCSI_OP_LOGIN_RSP) {
@@ -581,40 +709,51 @@ spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn, struct iovec *iovec,
 		enable_digest = 0;
 	}
 
-	/* BHS */
-	iovec[iovec_cnt].iov_base = &pdu->bhs;
-	iovec[iovec_cnt].iov_len = ISCSI_BHS_LEN;
-	iovec_cnt++;
+	_iov_ctx_init(&ctx, iovs, num_iovs, pdu->writev_offset);
 
+	/* BHS */
+	if (!_iov_ctx_set_iov(&ctx, (uint8_t *)&pdu->bhs, ISCSI_BHS_LEN)) {
+		goto end;
+	}
 	/* AHS */
 	if (total_ahs_len > 0) {
-		iovec[iovec_cnt].iov_base = pdu->ahs;
-		iovec[iovec_cnt].iov_len = 4 * total_ahs_len;
-		iovec_cnt++;
+		if (!_iov_ctx_set_iov(&ctx, pdu->ahs, 4 * total_ahs_len)) {
+			goto end;
+		}
 	}
 
 	/* Header Digest */
 	if (enable_digest && conn->header_digest) {
-		iovec[iovec_cnt].iov_base = pdu->header_digest;
-		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
-		iovec_cnt++;
+		if (!_iov_ctx_set_iov(&ctx, pdu->header_digest, ISCSI_DIGEST_LEN)) {
+			goto end;
+		}
 	}
 
 	/* Data Segment */
 	if (data_len > 0) {
-		iovec[iovec_cnt].iov_base = pdu->data;
-		iovec[iovec_cnt].iov_len = ISCSI_ALIGN(data_len);
-		iovec_cnt++;
+		if (!pdu->dif_insert_or_strip) {
+			if (!_iov_ctx_set_iov(&ctx, pdu->data, data_len)) {
+				goto end;
+			}
+		} else {
+			if (!_iov_ctx_set_md_interleave_iov(&ctx, pdu->data, pdu->data_buf_len,
+							    data_len, &pdu->dif_ctx)) {
+				goto end;
+			}
+		}
 	}
 
 	/* Data Digest */
 	if (enable_digest && conn->data_digest && data_len != 0) {
-		iovec[iovec_cnt].iov_base = pdu->data_digest;
-		iovec[iovec_cnt].iov_len = ISCSI_DIGEST_LEN;
-		iovec_cnt++;
+		_iov_ctx_set_iov(&ctx, pdu->data_digest, ISCSI_DIGEST_LEN);
 	}
 
-	return iovec_cnt;
+end:
+	if (_mapped_length != NULL) {
+		*_mapped_length = ctx.mapped_len;
+	}
+
+	return ctx.iovcnt;
 }
 
 static int
@@ -2536,6 +2675,7 @@ spdk_iscsi_send_datain(struct spdk_iscsi_conn *conn,
 	rsp_pdu = spdk_get_pdu();
 	rsph = (struct iscsi_bhs_data_in *)&rsp_pdu->bhs;
 	rsp_pdu->data = task->scsi.iovs[0].iov_base + offset;
+	rsp_pdu->data_buf_len = task->scsi.iovs[0].iov_len - offset;
 	rsp_pdu->data_from_mempool = true;
 
 	task_tag = task->tag;
@@ -2849,6 +2989,7 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	uint64_t lun;
 	uint32_t task_tag;
 	uint32_t transfer_len;
+	uint32_t scsi_data_len;
 	int F_bit, R_bit, W_bit;
 	int lun_i, rc;
 	struct iscsi_bhs_scsi_req *reqh;
@@ -2929,6 +3070,12 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			return spdk_iscsi_reject(conn, pdu, ISCSI_REASON_PROTOCOL_ERROR);
 		}
 
+		if (spdk_likely(!pdu->dif_insert_or_strip)) {
+			scsi_data_len = pdu->data_segment_len;
+		} else {
+			scsi_data_len = pdu->data_buf_len;
+		}
+
 		if (F_bit && pdu->data_segment_len < transfer_len) {
 			/* needs R2T */
 			rc = spdk_add_transfer_task(conn, task);
@@ -2944,14 +3091,14 @@ spdk_iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 			} else {
 				/* we are doing the first partial write task */
 				task->scsi.ref++;
-				spdk_scsi_task_set_data(&task->scsi, pdu->data, pdu->data_segment_len);
+				spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
 				task->scsi.length = pdu->data_segment_len;
 			}
 		}
 
 		if (pdu->data_segment_len == transfer_len) {
 			/* we are doing small writes with no R2T */
-			spdk_scsi_task_set_data(&task->scsi, pdu->data, transfer_len);
+			spdk_scsi_task_set_data(&task->scsi, pdu->data, scsi_data_len);
 			task->scsi.length = transfer_len;
 		}
 	} else {
@@ -4196,7 +4343,11 @@ static int spdk_iscsi_op_data(struct spdk_iscsi_conn *conn,
 	}
 	subtask->scsi.offset = buffer_offset;
 	subtask->scsi.length = pdu->data_segment_len;
-	spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+	if (spdk_likely(!pdu->dif_insert_or_strip)) {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_segment_len);
+	} else {
+		spdk_scsi_task_set_data(&subtask->scsi, pdu->data, pdu->data_buf_len);
+	}
 	spdk_iscsi_task_associate_pdu(subtask, pdu);
 
 	if (task->next_expected_r2t_offset == transfer_len) {
@@ -4495,6 +4646,84 @@ spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	return 0;
+}
+
+bool
+spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+		       struct spdk_dif_ctx *dif_ctx)
+{
+	struct iscsi_bhs *bhs;
+	uint32_t offset = 0;
+	uint8_t *cdb = NULL;
+	uint64_t lun;
+	int lun_id = 0;
+	struct spdk_scsi_lun *lun_dev;
+
+	/* connection is not in full feature phase but non-login opcode
+	 * was received.
+	 */
+	if ((!conn->full_feature && conn->state == ISCSI_CONN_STATE_RUNNING) ||
+	    conn->state == ISCSI_CONN_STATE_INVALID) {
+		return false;
+	}
+
+	/* SCSI Command is allowed only in normal session */
+	if (conn->sess == NULL ||
+	    conn->sess->session_type != SESSION_TYPE_NORMAL) {
+		return false;
+	}
+
+	bhs = &pdu->bhs;
+
+	switch (bhs->opcode) {
+	case ISCSI_OP_SCSI: {
+		struct iscsi_bhs_scsi_req *sbhs;
+
+		sbhs = (struct iscsi_bhs_scsi_req *)bhs;
+		offset = 0;
+		cdb = sbhs->cdb;
+		lun = from_be64(&sbhs->lun);
+		lun_id = spdk_islun2lun(lun);
+		break;
+	}
+	case ISCSI_OP_SCSI_DATAOUT: {
+		struct iscsi_bhs_data_out *dbhs;
+		struct spdk_iscsi_task *task;
+		int transfer_tag;
+
+		dbhs = (struct iscsi_bhs_data_out *)bhs;
+		offset = from_be32(&dbhs->buffer_offset);
+		transfer_tag = from_be32(&dbhs->ttt);
+		task = spdk_get_transfer_task(conn, transfer_tag);
+		if (task == NULL) {
+			return false;
+		}
+		cdb = task->scsi.cdb;
+		lun_id = task->lun_id;
+		break;
+	}
+	case ISCSI_OP_SCSI_DATAIN: {
+		struct iscsi_bhs_data_in *dbhs;
+		struct spdk_iscsi_task *task;
+
+		dbhs = (struct iscsi_bhs_data_in *)bhs;
+		offset = from_be32(&dbhs->buffer_offset);
+		task = pdu->task;
+		assert(task != NULL);
+		cdb = task->scsi.cdb;
+		lun_id = task->lun_id;
+		break;
+	}
+	default:
+		return false;
+	}
+
+	lun_dev = spdk_scsi_dev_get_lun(conn->dev, lun_id);
+	if (lun_dev == NULL) {
+		return false;
+	}
+
+	return spdk_scsi_lun_get_dif_ctx(lun_dev, cdb, offset, dif_ctx);
 }
 
 void spdk_free_sess(struct spdk_iscsi_sess *sess)

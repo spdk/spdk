@@ -459,6 +459,26 @@ static inline void env_atomic64_dec(env_atomic64 *a)
 	atomic_dec(a);
 }
 
+static inline int env_atomic64_add_return(int i, env_atomic *a)
+{
+	return __sync_add_and_fetch(a, i);
+}
+
+static inline int env_atomic64_sub_return(int i, env_atomic *a)
+{
+	return __sync_sub_and_fetch(a, i);
+}
+
+static inline int env_atomic64_inc_return(env_atomic *a)
+{
+	return env_atomic64_add_return(1, a);
+}
+
+static inline int env_atomic64_dec_return(env_atomic *a)
+{
+	return env_atomic_sub_return(1, a);
+}
+
 static inline long env_atomic64_cmpxchg(env_atomic64 *a, long old, long new)
 {
 	return atomic_cmpxchg(a, old, new);
@@ -621,6 +641,16 @@ static inline uint64_t env_ticks_to_secs(uint64_t j)
 static inline uint64_t env_ticks_to_msecs(uint64_t j)
 {
 	return env_ticks_to_secs(j) * 1000;
+}
+
+static inline uint64_t env_ticks_to_nsecs(uint64_t j)
+{
+	return env_ticks_to_secs(j) * 1000 * 1000;
+}
+
+static inline uint64_t env_ticks_to_usecs(uint64_t j)
+{
+	return env_ticks_to_secs(j) * 1000 * 1000 * 1000;
 }
 
 static inline uint64_t env_secs_to_ticks(uint64_t j)

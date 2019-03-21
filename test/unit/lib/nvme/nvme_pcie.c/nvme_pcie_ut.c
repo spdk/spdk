@@ -197,8 +197,8 @@ nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr)
 }
 
 int
-nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
-		 spdk_nvme_probe_cb probe_cb, void *cb_ctx)
+nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
+		 struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle)
 {
 	abort();
 }

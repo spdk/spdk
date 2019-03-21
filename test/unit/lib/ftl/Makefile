@@ -34,7 +34,7 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y = ftl_rwb.c ftl_ppa ftl_band.c
+DIRS-y = ftl_rwb.c ftl_ppa ftl_band.c ftl_reloc.c ftl_wptr ftl_md
 
 .PHONY: all clean $(DIRS-y)
 

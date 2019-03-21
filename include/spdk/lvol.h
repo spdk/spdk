@@ -39,6 +39,7 @@
 #define SPDK_LVOL_H
 
 #include "spdk/stdinc.h"
+#include "spdk/blob.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -49,12 +50,17 @@ struct spdk_lvol_store;
 struct spdk_lvol;
 
 enum lvol_clear_method {
-	LVOL_CLEAR_WITH_DEFAULT,
-	LVOL_CLEAR_WITH_NONE,
-	LVOL_CLEAR_WITH_UNMAP,
-	LVOL_CLEAR_WITH_WRITE_ZEROES,
+	LVOL_CLEAR_WITH_DEFAULT = BLOB_CLEAR_WITH_DEFAULT,
+	LVOL_CLEAR_WITH_NONE = BLOB_CLEAR_WITH_NONE,
+	LVOL_CLEAR_WITH_UNMAP = BLOB_CLEAR_WITH_UNMAP,
+	LVOL_CLEAR_WITH_WRITE_ZEROES = BLOB_CLEAR_WITH_WRITE_ZEROES,
 };
 
+enum lvs_clear_method {
+	LVS_CLEAR_WITH_UNMAP = BS_CLEAR_WITH_UNMAP,
+	LVS_CLEAR_WITH_WRITE_ZEROES = BS_CLEAR_WITH_WRITE_ZEROES,
+	LVS_CLEAR_WITH_NONE = BS_CLEAR_WITH_NONE,
+};
 
 /* Must include null terminator. */
 #define SPDK_LVS_NAME_MAX	64
@@ -64,8 +70,9 @@ enum lvol_clear_method {
  * Parameters for lvolstore initialization.
  */
 struct spdk_lvs_opts {
-	uint32_t	cluster_sz;
-	char		name[SPDK_LVS_NAME_MAX];
+	uint32_t		cluster_sz;
+	enum lvs_clear_method	clear_method;
+	char			name[SPDK_LVS_NAME_MAX];
 };
 
 /**

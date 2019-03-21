@@ -108,7 +108,32 @@ int spdk_ioat_probe(void *cb_ctx, spdk_ioat_probe_cb probe_cb, spdk_ioat_attach_
 void spdk_ioat_detach(struct spdk_ioat_chan *ioat);
 
 /**
- * Submit a DMA engine memory copy request.
+ * Build a DMA engine memory copy request.
+ *
+ * This function will build the descriptor in the channel's ring.  The
+ * caller must also explicitly call spdk_ioat_flush to submit the
+ * descriptor, possibly after building additional descriptors.
+ *
+ * \param chan I/OAT channel to build request.
+ * \param cb_arg Opaque value which will be passed back as the arg parameter in
+ * the completion callback.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param dst Destination virtual address.
+ * \param src Source virtual address.
+ * \param nbytes Number of bytes to copy.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_ioat_build_copy(struct spdk_ioat_chan *chan,
+			 void *cb_arg, spdk_ioat_req_cb cb_fn,
+			 void *dst, const void *src, uint64_t nbytes);
+
+/**
+ * Build and submit a DMA engine memory copy request.
+ *
+ * This function will build the descriptor in the channel's ring and then
+ * immediately submit it by writing the channel's doorbell.  Calling this
+ * function does not require a subsequent call to spdk_ioat_flush.
  *
  * \param chan I/OAT channel to submit request.
  * \param cb_arg Opaque value which will be passed back as the arg parameter in
@@ -125,7 +150,32 @@ int spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
 			  void *dst, const void *src, uint64_t nbytes);
 
 /**
- * Submit a DMA engine memory fill request.
+ * Build a DMA engine memory fill request.
+ *
+ * This function will build the descriptor in the channel's ring.  The
+ * caller must also explicitly call spdk_ioat_flush to submit the
+ * descriptor, possibly after building additional descriptors.
+ *
+ * \param chan I/OAT channel to build request.
+ * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
+ * in the completion callback.
+ * \param cb_fn Callback function which will be called when the request is complete.
+ * \param dst Destination virtual address.
+ * \param fill_pattern Repeating eight-byte pattern to use for memory fill.
+ * \param nbytes Number of bytes to fill.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_ioat_build_fill(struct spdk_ioat_chan *chan,
+			 void *cb_arg, spdk_ioat_req_cb cb_fn,
+			 void *dst, uint64_t fill_pattern, uint64_t nbytes);
+
+/**
+ * Build and submit a DMA engine memory fill request.
+ *
+ * This function will build the descriptor in the channel's ring and then
+ * immediately submit it by writing the channel's doorbell.  Calling this
+ * function does not require a subsequent call to spdk_ioat_flush.
  *
  * \param chan I/OAT channel to submit request.
  * \param cb_arg Opaque value which will be passed back as the cb_arg parameter
@@ -140,6 +190,17 @@ int spdk_ioat_submit_copy(struct spdk_ioat_chan *chan,
 int spdk_ioat_submit_fill(struct spdk_ioat_chan *chan,
 			  void *cb_arg, spdk_ioat_req_cb cb_fn,
 			  void *dst, uint64_t fill_pattern, uint64_t nbytes);
+
+/**
+ * Flush previously built descriptors.
+ *
+ * Descriptors are flushed by writing the channel's dmacount doorbell
+ * register.  This function enables batching multiple descriptors followed by
+ * a single doorbell write.
+ *
+ * \param chan I/OAT channel to flush.
+ */
+void spdk_ioat_flush(struct spdk_ioat_chan *chan);
 
 /**
  * Check for completed requests on an I/OAT channel.

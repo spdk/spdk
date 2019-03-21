@@ -1,6 +1,73 @@
 # Changelog
 
-## v19.01: (Upcoming Release)
+## v19.04: (Upcoming Release)
+
+### thread
+
+spdk_app_start() now only accepts a single context argument.
+
+### nvme
+
+Added asynchronous probe support.  New APIs spdk_nvme_probe_async(),
+spdk_nvme_connect_async() and spdk_nvme_probe_poll_async() were added to
+enable this feature, spdk_nvme_probe_async() and spdk_nvme_connect_async()
+return a context associated with the specified controllers.  Users then call
+spdk_nvme_probe_poll_async() until it returns 0, indicating that the operation
+is completed with success.
+
+A new qpair creation option, delay_pcie_doorbell, was added. This can be passed
+to spdk_nvme_alloc_io_qpair(). This makes the I/O submission functions,
+such as spdk_nvme_ns_writev(), skip ringing the submission queue doorbell.
+Instead the doorbell will be rung as necessary inside
+spdk_nvme_qpair_process_completions(). This can result in significantly fewer
+MMIO writes to the doorbell register under heavy load, greatly improving
+performance.
+
+New API spdk_nvme_ctrlr_get_flags() was added.
+
+### raid
+
+Added new strip_size_kb rpc param on create to replace the more ambiguous
+strip_size. The strip_size rpc param is deprecated.
+
+### thread
+
+Added spdk_thread_has_pollers() function to verify if there are
+any registered pollers to be run on the thread.
+
+Added spdk_thread_is_idle() function to check if there are any scheduled operations
+to be performed on the thread at given time.
+
+### bdev
+
+An new API `spdk_bdev_get_data_block_size` has been added to get size of data
+block except for metadata.
+
+### NVMe-oF Target
+
+Support for per-device shared receive queues in the RDMA transport has been added.
+It is enabled by default for any device that supports it.
+
+The size of a shared receive queue is defined by transport configuration file parameter
+`MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
+Default size is 4096.
+
+### env
+
+The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
+For retrieving physical addresses, spdk_vtophys() should be used instead.
+
+### DPDK
+
+Dropped support for DPDK 17.07 and earlier, which SPDK won't even compile with right now.
+
+### env
+
+spdk_env_fini() and spdk_env_dpdk_post_fini() were added to release any resources
+allocated by spdk_env_init() or spdk_env_dpdk_post_init() respectively. It is expected
+that common usage of those functions is to call them just before terminating the process.
+
+## v19.01:
 
 ### ocf bdev
 
@@ -161,6 +228,9 @@ This allows for basing clones on top of lvol_bdev without first creating a snaps
 Added option to change method for data erasure when deleting lvol or resizing down.
 Default of unmapping clusters can now be changed to writing zeroes or no operation.
 
+Added option to change method for erasing data region on lvol store creation.
+Default of unmapping can now be changed to writing zeroes or no operation.
+
 ### log
 
 "trace flags" are now referred to as "log flags" in the SPDK log API.  The
@@ -190,6 +260,13 @@ block devices. The module is split into the library (located in lib/ftl) and bde
 (lib/bdev/ftl). See the [documentation](https://spdk.io/doc/ftl.html) for more details.
 
 ### vhost
+
+A security vulnerability has been identified and fixed in the SPDK vhost target.  A malicious
+vhost client (i.e. virtual machine) could carefully construct a circular descriptor chain which
+would result in a partial denial of service in the SPDK vhost target.  These types of descriptor
+chains are now properly detected by the vhost target.  All SPDK vhost users serving untrusted
+vhost clients are strongly recommended to upgrade. (Reported by Dima Stepanov and Evgeny
+Yakovlev.)
 
 Vhost SCSI and Vhost Block devices can now accept multiple connections on the same socket file.
 Each connection (internally called a vhost session) will have access to the same storage, but

@@ -146,8 +146,7 @@ spdk_rpc_context_switch_monitor(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_object_begin(w);
 
-	spdk_json_write_name(w, "enabled");
-	spdk_json_write_bool(w, spdk_reactor_context_switch_monitor_enabled());
+	spdk_json_write_named_bool(w, "enabled", spdk_reactor_context_switch_monitor_enabled());
 
 	spdk_json_write_object_end(w);
 	spdk_jsonrpc_end_result(request, w);

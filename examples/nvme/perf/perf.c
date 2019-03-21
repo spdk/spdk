@@ -4,6 +4,8 @@
  *   Copyright (c) Intel Corporation.
  *   All rights reserved.
  *
+ *   Copyright (c) 2019 Mellanox Technologies LTD. All rights reserved.
+ *
  *   Redistribution and use in source and binary forms, with or without
  *   modification, are permitted provided that the following conditions
  *   are met:
@@ -42,6 +44,7 @@
 #include "spdk/histogram_data.h"
 #include "spdk/endian.h"
 #include "spdk/dif.h"
+#include "spdk/util.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -122,7 +125,9 @@ struct ns_worker_ctx {
 
 	union {
 		struct {
-			struct spdk_nvme_qpair	*qpair;
+			int			num_qpairs;
+			struct spdk_nvme_qpair	**qpair;
+			int			last_qpair;
 		} nvme;
 
 #if HAVE_LIBAIO
@@ -194,6 +199,7 @@ static uint32_t g_metacfg_prchk_flags;
 static int g_rw_percentage;
 static int g_is_random;
 static int g_queue_depth;
+static int g_nr_io_queues_per_ns = 1;
 static int g_time_in_sec;
 static uint32_t g_max_completions;
 static int g_dpdk_mem;
@@ -203,6 +209,7 @@ static bool g_no_pci;
 static bool g_warn;
 static bool g_header_digest;
 static bool g_data_digest;
+static uint32_t g_keep_alive_timeout_in_ms = 0;
 
 static const char *g_core_mask;
 
@@ -444,6 +451,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 {
 	uint64_t lba;
 	int rc;
+	int qp_num;
 
 	enum dif_mode {
 		DIF_MODE_NONE = 0,
@@ -461,11 +469,17 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		}
 	}
 
+	qp_num = ns_ctx->u.nvme.last_qpair;
+	ns_ctx->u.nvme.last_qpair++;
+	if (ns_ctx->u.nvme.last_qpair == ns_ctx->u.nvme.num_qpairs) {
+		ns_ctx->u.nvme.last_qpair = 0;
+	}
+
 	if (mode != DIF_MODE_NONE) {
 		rc = spdk_dif_ctx_init(&task->dif_ctx, entry->block_size, entry->md_size,
 				       entry->md_interleave, entry->pi_loc,
 				       (enum spdk_dif_type)entry->pi_type, entry->io_flags,
-				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks);
+				       lba, 0xFFFF, (uint16_t)entry->io_size_blocks, 0);
 		if (rc != 0) {
 			fprintf(stderr, "Initialization of DIF context failed\n");
 			exit(1);
@@ -473,7 +487,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 	}
 
 	if (task->is_read) {
-		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+		return spdk_nvme_ns_cmd_read_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
 						     task->iov.iov_base, task->md_iov.iov_base,
 						     lba,
 						     entry->io_size_blocks, io_complete,
@@ -500,7 +514,7 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 			break;
 		}
 
-		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair,
+		return spdk_nvme_ns_cmd_write_with_md(entry->u.nvme.ns, ns_ctx->u.nvme.qpair[qp_num],
 						      task->iov.iov_base, task->md_iov.iov_base,
 						      lba,
 						      entry->io_size_blocks, io_complete,
@@ -512,7 +526,15 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 static void
 nvme_check_io(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair, g_max_completions);
+	int i, rc;
+
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		rc = spdk_nvme_qpair_process_completions(ns_ctx->u.nvme.qpair[i], g_max_completions);
+		if (rc < 0) {
+			fprintf(stderr, "NVMe io qpair process completion error\n");
+			exit(1);
+		}
+	}
 }
 
 static void
@@ -552,17 +574,27 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
 	struct spdk_nvme_io_qpair_opts opts;
 	struct ns_entry *entry = ns_ctx->entry;
+	int i;
+
+	ns_ctx->u.nvme.num_qpairs = g_nr_io_queues_per_ns;
+	ns_ctx->u.nvme.qpair = calloc(ns_ctx->u.nvme.num_qpairs, sizeof(struct spdk_nvme_qpair *));
+	if (!ns_ctx->u.nvme.qpair) {
+		return -1;
+	}
 
 	spdk_nvme_ctrlr_get_default_io_qpair_opts(entry->u.nvme.ctrlr, &opts, sizeof(opts));
 	if (opts.io_queue_requests < entry->num_io_requests) {
 		opts.io_queue_requests = entry->num_io_requests;
 	}
+	opts.delay_pcie_doorbell = true;
 
-	ns_ctx->u.nvme.qpair = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
-			       sizeof(opts));
-	if (!ns_ctx->u.nvme.qpair) {
-		printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
-		return -1;
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		ns_ctx->u.nvme.qpair[i] = spdk_nvme_ctrlr_alloc_io_qpair(entry->u.nvme.ctrlr, &opts,
+					  sizeof(opts));
+		if (!ns_ctx->u.nvme.qpair[i]) {
+			printf("ERROR: spdk_nvme_ctrlr_alloc_io_qpair failed\n");
+			return -1;
+		}
 	}
 
 	return 0;
@@ -571,7 +603,13 @@ nvme_init_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 static void
 nvme_cleanup_ns_worker_ctx(struct ns_worker_ctx *ns_ctx)
 {
-	spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair);
+	int i;
+
+	for (i = 0; i < ns_ctx->u.nvme.num_qpairs; i++) {
+		spdk_nvme_ctrlr_free_io_qpair(ns_ctx->u.nvme.qpair[i]);
+	}
+
+	free(ns_ctx->u.nvme.qpair);
 }
 
 static const struct ns_fn_table nvme_fn_table = {
@@ -588,7 +626,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 {
 	struct ns_entry *entry;
 	const struct spdk_nvme_ctrlr_data *cdata;
-	uint32_t max_xfer_size, entries, ns_size, sector_size;
+	uint32_t max_xfer_size, entries, sector_size;
+	uint64_t ns_size;
 	struct spdk_nvme_io_qpair_opts opts;
 
 	cdata = spdk_nvme_ctrlr_get_data(ctrlr);
@@ -606,7 +645,7 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 
 	if (ns_size < g_io_size_bytes || sector_size > g_io_size_bytes) {
 		printf("WARNING: controller %-20.20s (%-20.20s) ns %u has invalid "
-		       "ns size %u / block size %u for I/O size %u\n",
+		       "ns size %" PRIu64 " / block size %u for I/O size %u\n",
 		       cdata->mn, cdata->sn, spdk_nvme_ns_get_id(ns),
 		       ns_size, spdk_nvme_ns_get_sector_size(ns), g_io_size_bytes);
 		g_warn = true;
@@ -920,7 +959,7 @@ work_fn(void *arg)
 
 	printf("Starting thread on core %u\n", worker->lcore);
 
-	/* Allocate a queue pair for each namespace. */
+	/* Allocate queue pairs for each namespace. */
 	ns_ctx = worker->ns_ctx;
 	while (ns_ctx != NULL) {
 		if (init_ns_worker_ctx(ns_ctx) != 0) {
@@ -990,6 +1029,7 @@ static void usage(char *program_name)
 	printf("\n");
 	printf("\t[-q io depth]\n");
 	printf("\t[-o io size in bytes]\n");
+	printf("\t[-n number of io queues per namespace. default: 1]\n");
 	printf("\t[-w io pattern type, must be one of\n");
 	printf("\t\t(read, write, randread, randwrite, rw, randrw)]\n");
 	printf("\t[-M rwmixread (100 for reads, 0 for writes)]\n");
@@ -1018,6 +1058,7 @@ static void usage(char *program_name)
 	printf("\t  PRCHK      Control of Protection Information Checking (PRCHK=GUARD|REFTAG|APPTAG)\n");
 	printf("\t Example: -e 'PRACT=0,PRCHK=GUARD|REFTAG|APPTAG'\n");
 	printf("\t          -e 'PRACT=1,PRCHK=GUARD'\n");
+	printf("\t[-k keep alive timeout period in millisecond]\n");
 	printf("\t[-s DPDK huge memory size in MB.]\n");
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
@@ -1422,12 +1463,14 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:o:q:r:s:t:w:DHILM:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DHILM:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
+		case 'n':
 		case 'o':
 		case 'q':
+		case 'k':
 		case 's':
 		case 't':
 		case 'M':
@@ -1443,11 +1486,17 @@ parse_args(int argc, char **argv)
 			case 'm':
 				g_max_completions = val;
 				break;
+			case 'n':
+				g_nr_io_queues_per_ns = val;
+				break;
 			case 'o':
 				g_io_size_bytes = val;
 				break;
 			case 'q':
 				g_queue_depth = val;
+				break;
+			case 'k':
+				g_keep_alive_timeout_in_ms = val;
 				break;
 			case 's':
 				g_dpdk_mem = val;
@@ -1498,6 +1547,11 @@ parse_args(int argc, char **argv)
 			usage(argv[0]);
 			return 1;
 		}
+	}
+
+	if (!g_nr_io_queues_per_ns) {
+		usage(argv[0]);
+		return 1;
 	}
 
 	if (!g_queue_depth) {
@@ -1661,6 +1715,8 @@ probe_cb(void *cb_ctx, const struct spdk_nvme_transport_id *trid,
 	/* Set the header and data_digest */
 	opts->header_digest = g_header_digest;
 	opts->data_digest = g_data_digest;
+	opts->keep_alive_timeout_ms = spdk_max(opts->keep_alive_timeout_ms,
+					       g_keep_alive_timeout_in_ms);
 
 	return true;
 }
@@ -1862,7 +1918,7 @@ int main(int argc, char **argv)
 
 	if (g_num_namespaces == 0) {
 		fprintf(stderr, "No valid NVMe controllers or AIO devices found\n");
-		return 0;
+		goto cleanup;
 	}
 
 	rc = pthread_create(&thread_id, NULL, &nvme_poll_ctrlrs, NULL);
@@ -1900,7 +1956,7 @@ int main(int argc, char **argv)
 	print_stats();
 
 cleanup:
-	if (pthread_cancel(thread_id) == 0) {
+	if (thread_id && pthread_cancel(thread_id) == 0) {
 		pthread_join(thread_id, NULL);
 	}
 	unregister_trids();

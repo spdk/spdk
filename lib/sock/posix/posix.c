@@ -373,6 +373,14 @@ spdk_posix_sock_recv(struct spdk_sock *_sock, void *buf, size_t len)
 }
 
 static ssize_t
+spdk_posix_sock_readv(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
+{
+	struct spdk_posix_sock *sock = __posix_sock(_sock);
+
+	return readv(sock->fd, iov, iovcnt);
+}
+
+static ssize_t
 spdk_posix_sock_writev(struct spdk_sock *_sock, struct iovec *iov, int iovcnt)
 {
 	struct spdk_posix_sock *sock = __posix_sock(_sock);
@@ -588,6 +596,7 @@ static struct spdk_net_impl g_posix_net_impl = {
 	.accept		= spdk_posix_sock_accept,
 	.close		= spdk_posix_sock_close,
 	.recv		= spdk_posix_sock_recv,
+	.readv		= spdk_posix_sock_readv,
 	.writev		= spdk_posix_sock_writev,
 	.set_recvlowat	= spdk_posix_sock_set_recvlowat,
 	.set_recvbuf	= spdk_posix_sock_set_recvbuf,

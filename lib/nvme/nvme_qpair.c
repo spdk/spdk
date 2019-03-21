@@ -269,12 +269,12 @@ static const struct nvme_string path_status[] = {
 	{ 0xFFFF, "PATH ERROR" }
 };
 
-static const char *
-get_status_string(uint16_t sct, uint16_t sc)
+const char *
+spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status)
 {
 	const struct nvme_string *entry;
 
-	switch (sct) {
+	switch (status->sct) {
 	case SPDK_NVME_SCT_GENERIC:
 		entry = generic_status;
 		break;
@@ -293,7 +293,7 @@ get_status_string(uint16_t sct, uint16_t sc)
 		return "RESERVED";
 	}
 
-	return nvme_get_string(entry, sc);
+	return nvme_get_string(entry, status->sc);
 }
 
 void
@@ -301,7 +301,7 @@ nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair,
 			    struct spdk_nvme_cpl *cpl)
 {
 	SPDK_NOTICELOG("%s (%02x/%02x) sqid:%d cid:%d cdw0:%x sqhd:%04x p:%x m:%x dnr:%x\n",
-		       get_status_string(cpl->status.sct, cpl->status.sc),
+		       spdk_nvme_cpl_get_status_string(&cpl->status),
 		       cpl->status.sct, cpl->status.sc, cpl->sqid, cpl->cid, cpl->cdw0,
 		       cpl->sqhd, cpl->status.p, cpl->status.m, cpl->status.dnr);
 }
@@ -539,6 +539,16 @@ nvme_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_request *re
 				return 0;
 			}
 		}
+	}
+
+	/* assign submit_tick before submitting req to specific transport */
+	if (spdk_unlikely(ctrlr->timeout_enabled)) {
+		if (req->submit_tick == 0) { /* req submitted for the first time */
+			req->submit_tick = spdk_get_ticks();
+			req->timed_out = false;
+		}
+	} else {
+		req->submit_tick = 0;
 	}
 
 	return nvme_transport_qpair_submit_request(qpair, req);

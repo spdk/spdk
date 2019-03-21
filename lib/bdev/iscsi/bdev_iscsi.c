@@ -80,7 +80,6 @@ struct bdev_iscsi_lun {
 	char				*url;
 	pthread_mutex_t			mutex;
 	uint32_t			ch_count;
-	struct bdev_iscsi_io_channel	*master_ch;
 	struct spdk_thread		*master_td;
 	struct spdk_poller		*no_master_ch_poller;
 	struct spdk_thread		*no_master_ch_poller_td;
@@ -167,7 +166,7 @@ static struct spdk_bdev_module g_iscsi_bdev_module = {
 	.async_init	= true,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&g_iscsi_bdev_module);
+SPDK_BDEV_MODULE_REGISTER(iscsi, &g_iscsi_bdev_module);
 
 static void
 _bdev_iscsi_io_complete(void *_iscsi_io)
@@ -397,8 +396,15 @@ bdev_iscsi_no_master_ch_poll(void *arg)
 	return rc;
 }
 
-static void bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_iscsi_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		      bool success)
 {
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
 	bdev_iscsi_readv((struct bdev_iscsi_lun *)bdev_io->bdev->ctxt,
 			 (struct bdev_iscsi_io *)bdev_io->driver_ctx,
 			 bdev_io->u.bdev.iovs,
@@ -490,9 +496,7 @@ bdev_iscsi_create_cb(void *io_device, void *ctx_buf)
 
 	pthread_mutex_lock(&lun->mutex);
 	if (lun->ch_count == 0) {
-		assert(lun->master_ch == NULL);
 		assert(lun->master_td == NULL);
-		lun->master_ch = ch;
 		lun->master_td = spdk_get_thread();
 		lun->poller = spdk_poller_register(bdev_iscsi_poll_lun, lun, 0);
 		ch->lun = lun;
@@ -511,10 +515,8 @@ bdev_iscsi_destroy_cb(void *io_device, void *ctx_buf)
 	pthread_mutex_lock(&lun->mutex);
 	lun->ch_count--;
 	if (lun->ch_count == 0) {
-		assert(lun->master_ch != NULL);
 		assert(lun->master_td != NULL);
 
-		lun->master_ch = NULL;
 		lun->master_td = NULL;
 		spdk_poller_unregister(&lun->poller);
 	}
@@ -534,12 +536,9 @@ bdev_iscsi_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct bdev_iscsi_lun *lun = ctx;
 
-	spdk_json_write_name(w, "iscsi");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "initiator_name");
-	spdk_json_write_string(w, lun->initiator_iqn);
-	spdk_json_write_name(w, "url");
-	spdk_json_write_string(w, lun->url);
+	spdk_json_write_named_object_begin(w, "iscsi");
+	spdk_json_write_named_string(w, "initiator_name", lun->initiator_iqn);
+	spdk_json_write_named_string(w, "url", lun->url);
 	spdk_json_write_object_end(w);
 
 	return 0;

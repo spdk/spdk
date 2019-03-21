@@ -41,6 +41,7 @@
 #include "spdk_internal/log.h"
 #include "spdk/event.h"
 #include "spdk/rpc.h"
+#include "spdk/config.h"
 
 #define SPDK_CACHE_LINE_SIZE RTE_CACHE_LINE_SIZE
 
@@ -95,6 +96,9 @@
 
 struct spdk_vhost_virtqueue {
 	struct rte_vhost_vring vring;
+	uint16_t last_avail_idx;
+	uint16_t last_used_idx;
+
 	void *tasks;
 
 	/* Request count from last stats check */
@@ -122,6 +126,9 @@ struct spdk_vhost_session {
 
 	int32_t lcore;
 
+	bool needs_restart;
+	bool forced_polling;
+
 	struct rte_vhost_memory *mem;
 
 	int task_cnt;
@@ -143,6 +150,8 @@ struct spdk_vhost_session {
 	struct spdk_vhost_virtqueue virtqueue[SPDK_VHOST_MAX_VQUEUES];
 
 	TAILQ_ENTRY(spdk_vhost_session) tailq;
+
+	struct spdk_vhost_session_fn_ctx *event_ctx;
 };
 
 struct spdk_vhost_dev {
@@ -173,11 +182,6 @@ struct spdk_vhost_dev {
 	uint32_t pending_async_op_num;
 
 	TAILQ_ENTRY(spdk_vhost_dev) tailq;
-};
-
-struct spdk_vhost_dev_destroy_ctx {
-	struct spdk_poller *poller;
-	void *event_ctx;
 };
 
 /**
@@ -220,8 +224,6 @@ struct spdk_vhost_dev_backend {
 	void (*write_config_json)(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 	int (*remove_device)(struct spdk_vhost_dev *vdev);
 };
-
-struct spdk_vhost_dev *spdk_vhost_dev_find(const char *ctrlr_name);
 
 void *spdk_vhost_gpa_to_vva(struct spdk_vhost_session *vsession, uint64_t addr, uint64_t len);
 
@@ -326,7 +328,7 @@ void spdk_vhost_dev_foreach_session(struct spdk_vhost_dev *dev,
  *
  * \param vsession vhost session
  * \param cb_fn the function to call. The void *arg parameter in cb_fn
- * must be passed to spdk_vhost_session_event_done().
+ * is always NULL.
  * \param timeout_sec timeout in seconds. This function will still
  * block after the timeout expires, but will print the provided errmsg.
  * \param errmsg error message to print once the timeout expires
@@ -338,17 +340,21 @@ int spdk_vhost_session_send_event(struct spdk_vhost_session *vsession,
 /**
  * Finish a blocking spdk_vhost_session_send_event() call.
  *
- * \param event_ctx event context
+ * \param vsession vhost session
  * \param response return code
  */
-void spdk_vhost_session_event_done(void *event_ctx, int response);
+void spdk_vhost_session_event_done(struct spdk_vhost_session *vsession, int response);
+
+struct spdk_vhost_session *spdk_vhost_session_find_by_vid(int vid);
+void spdk_vhost_session_install_rte_compat_hooks(struct spdk_vhost_session *vsession);
+void spdk_vhost_dev_install_rte_compat_hooks(struct spdk_vhost_dev *vdev);
 
 void spdk_vhost_free_reactor(uint32_t lcore);
 uint32_t spdk_vhost_allocate_reactor(struct spdk_cpuset *cpumask);
 
-void spdk_vhost_lock(void);
-void spdk_vhost_unlock(void);
 int spdk_remove_vhost_controller(struct spdk_vhost_dev *vdev);
+
+#ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 int spdk_vhost_nvme_admin_passthrough(int vid, void *cmd, void *cqe, void *buf);
 int spdk_vhost_nvme_set_cq_call(int vid, uint16_t qid, int fd);
 int spdk_vhost_nvme_set_bar_mr(int vid, void *bar_addr, uint64_t bar_size);
@@ -358,5 +364,6 @@ int spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_
 int spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev);
 int spdk_vhost_nvme_dev_add_ns(struct spdk_vhost_dev *vdev,
 			       const char *bdev_name);
+#endif
 
 #endif /* SPDK_VHOST_INTERNAL_H */

@@ -8,6 +8,8 @@ NVMF_TCP_IP_ADDRESS="127.0.0.1"
 : ${NVMF_APP_SHM_ID="0"}; export NVMF_APP_SHM_ID
 : ${NVMF_APP="./app/nvmf_tgt/nvmf_tgt -i $NVMF_APP_SHM_ID -e 0xFFFF"}; export NVMF_APP
 
+have_pci_nics=0
+
 function load_ib_rdma_modules()
 {
 	if [ `uname` != Linux ]; then
@@ -42,50 +44,57 @@ function detect_soft_roce_nics()
 	fi
 }
 
-function detect_mellanox_nics()
-{
-	if ! hash lspci; then
-		echo "No NICs"
-		return 0
-	fi
 
-	nvmf_nic_bdfs=`lspci | grep Ethernet | grep Mellanox | awk -F ' ' '{print "0000:"$1}'`
-	mlx_core_driver="mlx4_core"
-	mlx_ib_driver="mlx4_ib"
-	mlx_en_driver="mlx4_en"
+# args 1 and 2 represent the grep filters for finding our NICS.
+# subsequent args are all drivers that should be loaded if we find these NICs.
+# Those drivers should be supplied in the correct order.
+function detect_nics_and_probe_drivers()
+{
+	NIC_VENDOR="$1"
+	NIC_CLASS="$2"
+
+	nvmf_nic_bdfs=`lspci | grep Ethernet | grep "$NIC_VENDOR" | grep "$NIC_CLASS" | awk -F ' ' '{print "0000:"$1}'`
 
 	if [ -z "$nvmf_nic_bdfs" ]; then
-		echo "No NICs"
 		return 0
 	fi
 
-	# for nvmf target loopback test, suppose we only have one type of card.
-	for nvmf_nic_bdf in $nvmf_nic_bdfs
-	do
-		result=`lspci -vvv -s $nvmf_nic_bdf | grep 'Kernel modules' | awk -F ' ' '{print $3}'`
-		if [ "$result" == "mlx5_core" ]; then
-			mlx_core_driver="mlx5_core"
-			mlx_ib_driver="mlx5_ib"
-			mlx_en_driver=""
-		fi
-		break;
-	done
+	have_pci_nics=1
+	if [ $# -ge 2 ]; then
+		# shift out the first two positional arguments.
+		shift 2
+		# Iterate through the remaining arguments.
+		for i; do
+			modprobe "$i"
+		done
+	fi
+}
 
-	modprobe $mlx_core_driver
-	modprobe $mlx_ib_driver
-	if [ -n "$mlx_en_driver" ]; then
-		modprobe $mlx_en_driver
+
+function detect_pci_nics()
+{
+
+	if ! hash lspci; then
+		return 0
 	fi
 
-	# The mlx4 driver takes an extra few seconds to load after modprobe returns,
-	# otherwise iproute2 operations will do nothing.
+	detect_nics_and_probe_drivers "Mellanox" "ConnectX-4" "mlx4_core" "mlx4_ib" "mlx4_en"
+	detect_nics_and_probe_drivers "Mellanox" "ConnectX-5" "mlx5_core" "mlx5_ib"
+	detect_nics_and_probe_drivers "Intel" "X722" "i40e" "i40iw"
+	detect_nics_and_probe_drivers "Chelsio" "Unified Wire" "cxgb4" "iw_cxgb4"
+
+	if [ "$have_pci_nics" -eq "0" ]; then
+		return 0
+	fi
+
+	# Provide time for drivers to properly load.
 	sleep 5
 }
 
 function detect_rdma_nics()
 {
-	nics=$(detect_mellanox_nics)
-	if [ "$nics" == "No NICs" ]; then
+	detect_pci_nics
+	if [ "$have_pci_nics" -eq "0" ]; then
 		detect_soft_roce_nics
 	fi
 }

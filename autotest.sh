@@ -63,8 +63,44 @@ rm -f /var/tmp/spdk*.sock
 # Let the kernel discover any filesystems or partitions
 sleep 10
 
+if [ $(uname -s) = Linux ]; then
+	# OCSSD devices drivers don't support IO issues by kernel so
+	# detect OCSSD devices and blacklist them (unbind from any driver).
+	# If test scripts want to use this device it needs to do this explicitly.
+	#
+	# If some OCSSD device is bound to other driver than nvme we won't be able to
+	# discover if it is OCSSD or not so load the kernel driver first.
+
+
+	for dev in $(find /dev -maxdepth 1 -regex '/dev/nvme[0-9]+'); do
+		# Send Open Channel 2.0 Geometry opcode "0xe2" - not supported by NVMe device.
+		if nvme admin-passthru $dev --namespace-id=1 --data-len=4096  --opcode=0xe2 --read >/dev/null; then
+			bdf="$(basename $(readlink -e /sys/class/nvme/${dev#/dev/}/device))"
+			echo "INFO: blacklisting OCSSD device: $dev ($bdf)"
+			PCI_BLACKLIST+=" $bdf"
+			OCSSD_PCI_DEVICES+=" $bdf"
+		fi
+	done
+
+	export OCSSD_PCI_DEVICES
+
+	# Now, bind blacklisted devices to pci-stub module. This will prevent
+	# automatic grabbing these devices when we add device/vendor ID to
+	# proper driver.
+	if [[ -n "$PCI_BLACKLIST" ]]; then
+		PCI_WHITELIST="$PCI_BLACKLIST" \
+		PCI_BLACKLIST="" \
+		DRIVER_OVERRIDE="pci-stub" \
+			./scripts/setup.sh
+
+		# Export our blacklist so it will take effect during next setup.sh
+		export PCI_BLACKLIST
+	fi
+fi
+
 # Delete all leftover lvols and gpt partitions
 # Matches both /dev/nvmeXnY on Linux and /dev/nvmeXnsY on BSD
+# Filter out nvme with partitions - the "p*" suffix
 for dev in $(ls /dev/nvme*n* | grep -v p || true); do
 	dd if=/dev/zero of="$dev" bs=1M count=1
 done
@@ -105,103 +141,101 @@ if [ $SPDK_TEST_UNITTEST -eq 1 ]; then
 	timing_exit unittest
 fi
 
-timing_enter lib
 
-if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
-	run_test suite test/bdev/blockdev.sh
-fi
+if [ $SPDK_RUN_FUNCTIONAL_TEST -eq 1 ]; then
+	timing_enter lib
 
-if [ $SPDK_TEST_JSON -eq 1 ]; then
-	run_test suite test/config_converter/test_converter.sh
-fi
+	run_test suite test/env/env.sh
+	run_test suite test/rpc_client/rpc_client.sh
+	run_test suite ./test/json_config/json_config.sh
 
-if [ $SPDK_TEST_EVENT -eq 1 ]; then
-	run_test suite test/event/event.sh
-fi
-
-if [ $SPDK_TEST_NVME -eq 1 ]; then
-	run_test suite test/nvme/nvme.sh
-	if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
-		run_test suite test/nvme/spdk_nvme_cli.sh
+	if [ $SPDK_TEST_BLOCKDEV -eq 1 ]; then
+		run_test suite test/bdev/blockdev.sh
+		run_test suite test/bdev/bdev_raid.sh
 	fi
-	# Only test hotplug without ASAN enabled. Since if it is
-	# enabled, it catches SEGV earlier than our handler which
-	# breaks the hotplug logic.
-	# Temporary workaround for issue #542, annotated for no VM image.
-	#if [ $SPDK_RUN_ASAN -eq 0 ]; then
-	#	run_test suite test/nvme/hotplug.sh intel
-	#fi
+
+	if [ $SPDK_TEST_JSON -eq 1 ]; then
+		run_test suite test/config_converter/test_converter.sh
+	fi
+
+	if [ $SPDK_TEST_EVENT -eq 1 ]; then
+		run_test suite test/event/event.sh
+	fi
+
+	if [ $SPDK_TEST_NVME -eq 1 ]; then
+		run_test suite test/nvme/nvme.sh
+		if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
+			run_test suite test/nvme/spdk_nvme_cli.sh
+		fi
+		# Only test hotplug without ASAN enabled. Since if it is
+		# enabled, it catches SEGV earlier than our handler which
+		# breaks the hotplug logic.
+		# Temporary workaround for issue #542, annotated for no VM image.
+		#if [ $SPDK_RUN_ASAN -eq 0 ]; then
+		#	run_test suite test/nvme/hotplug.sh intel
+		#fi
+	fi
+
+	if [ $SPDK_TEST_IOAT -eq 1 ]; then
+		run_test suite test/ioat/ioat.sh
+	fi
+
+	timing_exit lib
+
+	if [ $SPDK_TEST_ISCSI -eq 1 ]; then
+		run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
+		run_test suite ./test/spdkcli/iscsi.sh
+	fi
+
+	if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
+		run_test suite ./test/blobfs/rocksdb/rocksdb.sh
+		run_test suite ./test/blobstore/blobstore.sh
+	fi
+
+	if [ $SPDK_TEST_NVMF -eq 1 ]; then
+		run_test suite ./test/nvmf/nvmf.sh
+		run_test suite ./test/spdkcli/nvmf.sh
+	fi
+
+	if [ $SPDK_TEST_VHOST -eq 1 ]; then
+		run_test suite ./test/vhost/vhost.sh
+		report_test_completion "vhost"
+	fi
+
+	if [ $SPDK_TEST_LVOL -eq 1 ]; then
+		timing_enter lvol
+		run_test suite ./test/lvol/lvol.sh --test-cases=all
+		run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
+		report_test_completion "lvol"
+		timing_exit lvol
+	fi
+
+	if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
+		timing_enter vhost_initiator
+		run_test suite ./test/vhost/initiator/blockdev.sh
+		run_test suite ./test/spdkcli/virtio.sh
+		run_test suite ./test/vhost/shared/shared.sh
+		report_test_completion "vhost_initiator"
+		timing_exit vhost_initiator
+	fi
+
+	if [ $SPDK_TEST_PMDK -eq 1 ]; then
+		run_test suite ./test/pmem/pmem.sh -x
+		run_test suite ./test/spdkcli/pmem.sh
+	fi
+
+	if [ $SPDK_TEST_RBD -eq 1 ]; then
+		run_test suite ./test/spdkcli/rbd.sh
+	fi
+
+	if [ $SPDK_TEST_OCF -eq 1 ]; then
+		run_test suite ./test/ocf/ocf.sh
+	fi
+
+	if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
+		run_test suite ./test/ftl/ftl.sh
+	fi
 fi
-
-run_test suite test/env/env.sh
-run_test suite test/rpc_client/rpc_client.sh
-
-if [ $SPDK_TEST_IOAT -eq 1 ]; then
-	run_test suite test/ioat/ioat.sh
-fi
-
-timing_exit lib
-
-if [ $SPDK_TEST_ISCSI -eq 1 ]; then
-	run_test suite ./test/iscsi_tgt/iscsi_tgt.sh posix
-	run_test suite ./test/spdkcli/iscsi.sh
-fi
-
-if [ $SPDK_TEST_BLOBFS -eq 1 ]; then
-	run_test suite ./test/blobfs/rocksdb/rocksdb.sh
-	run_test suite ./test/blobstore/blobstore.sh
-fi
-
-if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	run_test suite ./test/nvmf/nvmf.sh
-	run_test suite ./test/spdkcli/nvmf.sh
-fi
-
-if [ $SPDK_TEST_VHOST -eq 1 ]; then
-	run_test suite ./test/vhost/vhost.sh
-	report_test_completion "vhost"
-fi
-
-if [ $SPDK_TEST_LVOL -eq 1 ]; then
-	timing_enter lvol
-	test_cases="1,50,51,52,53,100,101,102,150,200,201,250,251,252,253,254,255,"
-	test_cases+="300,301,450,451,452,550,551,552,553,"
-	test_cases+="600,601,650,651,652,654,655,"
-	test_cases+="700,701,702,750,751,752,753,754,755,756,757,758,759,760,"
-	test_cases+="800,801,802,803,804,10000"
-	run_test suite ./test/lvol/lvol.sh --test-cases=$test_cases
-	run_test suite ./test/blobstore/blob_io_wait/blob_io_wait.sh
-	report_test_completion "lvol"
-	timing_exit lvol
-fi
-
-if [ $SPDK_TEST_VHOST_INIT -eq 1 ]; then
-	timing_enter vhost_initiator
-	run_test suite ./test/vhost/initiator/blockdev.sh
-	run_test suite ./test/spdkcli/virtio.sh
-	run_test suite ./test/vhost/shared/shared.sh
-	report_test_completion "vhost_initiator"
-	timing_exit vhost_initiator
-fi
-
-if [ $SPDK_TEST_PMDK -eq 1 ]; then
-	run_test suite ./test/pmem/pmem.sh -x
-	run_test suite ./test/spdkcli/pmem.sh
-fi
-
-if [ $SPDK_TEST_RBD -eq 1 ]; then
-	run_test suite ./test/spdkcli/rbd.sh
-fi
-
-if [ $SPDK_TEST_OCF -eq 1 ]; then
-	run_test suite ./test/ocf/ocf.sh
-fi
-
-if [ $SPDK_TEST_BDEV_FTL -eq 1 ]; then
-	run_test suite ./test/ftl/ftl.sh
-fi
-
-run_test suite ./test/json_config/json_config.sh
 
 timing_enter cleanup
 autotest_cleanup

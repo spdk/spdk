@@ -39,6 +39,10 @@
 #include "scsi/lun.c"
 
 #include "spdk_internal/mock.h"
+/* These unit tests aren't multithreads, but we need to allocate threads since
+ * the lun.c code will register pollers.
+ */
+#include "common/lib/ut_multithread.c"
 
 /* Unit test bdev mockup */
 struct spdk_bdev {
@@ -57,36 +61,12 @@ struct spdk_scsi_globals g_spdk_scsi;
 static bool g_lun_execute_fail = false;
 static int g_lun_execute_status = SPDK_SCSI_TASK_PENDING;
 static uint32_t g_task_count = 0;
-static struct spdk_poller g_lun_ut_poller;
-
-struct spdk_poller *
-spdk_poller_register(spdk_poller_fn fn,
-		     void *arg,
-		     uint64_t period_microseconds)
-{
-	return &g_lun_ut_poller;
-}
-
-void
-spdk_poller_unregister(struct spdk_poller **ppoller)
-{
-	if (ppoller != NULL) {
-		*ppoller = NULL;
-	}
-}
-
-DEFINE_STUB_V(spdk_thread_send_msg,
-	      (const struct spdk_thread *thread, spdk_msg_fn fn, void *ctx));
 
 struct spdk_trace_histories *g_trace_histories;
 
 DEFINE_STUB_V(_spdk_trace_record,
 	      (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 	       uint32_t size, uint64_t object_id, uint64_t arg1));
-
-DEFINE_STUB(spdk_get_ticks, uint64_t, (void), 0);
-
-DEFINE_STUB(spdk_get_ticks_hz, uint64_t, (void), 0);
 
 static void
 spdk_lun_ut_cpl_task(struct spdk_scsi_task *task)
@@ -107,32 +87,6 @@ ut_init_task(struct spdk_scsi_task *task)
 	spdk_scsi_task_construct(task, spdk_lun_ut_cpl_task,
 				 spdk_lun_ut_free_task);
 	g_task_count++;
-}
-
-void *
-spdk_dma_malloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = malloc(size);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
-}
-
-void *
-spdk_dma_zmalloc(size_t size, size_t align, uint64_t *phys_addr)
-{
-	void *buf = calloc(size, 1);
-	if (phys_addr) {
-		*phys_addr = (uint64_t)buf;
-	}
-	return buf;
-}
-
-void
-spdk_dma_free(void *buf)
-{
-	free(buf);
 }
 
 void
@@ -186,13 +140,6 @@ spdk_bdev_scsi_execute(struct spdk_scsi_task *task)
 
 DEFINE_STUB(spdk_bdev_get_io_channel, struct spdk_io_channel *,
 	    (struct spdk_bdev_desc *desc), NULL);
-
-DEFINE_STUB_V(spdk_put_io_channel, (struct spdk_io_channel *ch));
-
-DEFINE_STUB(spdk_io_channel_get_thread, struct spdk_thread *,
-	    (struct spdk_io_channel *ch), NULL);
-
-DEFINE_STUB(spdk_get_thread, struct spdk_thread *, (void), NULL);
 
 static _spdk_scsi_lun *
 lun_construct(void)
@@ -701,7 +648,10 @@ main(int argc, char **argv)
 	}
 
 	CU_basic_set_mode(CU_BRM_VERBOSE);
+	allocate_threads(1);
+	set_thread(0);
 	CU_basic_run_tests();
+	free_threads();
 	num_failures = CU_get_number_of_failures();
 	CU_cleanup_registry();
 	return num_failures;

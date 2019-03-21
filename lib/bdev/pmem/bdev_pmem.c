@@ -63,7 +63,7 @@ static struct spdk_bdev_module pmem_if = {
 
 };
 
-SPDK_BDEV_MODULE_REGISTER(&pmem_if)
+SPDK_BDEV_MODULE_REGISTER(pmem, &pmem_if)
 
 typedef int(*spdk_bdev_pmem_io_request)(PMEMblkpool *pbp, void *buf, long long blockno);
 
@@ -184,8 +184,14 @@ bdev_pmem_write_zeros(struct spdk_bdev_io *bdev_io, struct pmem_disk *pdisk,
 }
 
 static void
-bdev_pmem_io_get_buf_cb(struct spdk_io_channel *channel, struct spdk_bdev_io *bdev_io)
+bdev_pmem_io_get_buf_cb(struct spdk_io_channel *channel, struct spdk_bdev_io *bdev_io,
+			bool success)
 {
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
 	bdev_pmem_submit_io(bdev_io,
 			    bdev_io->bdev->ctxt,
 			    channel,
@@ -259,10 +265,8 @@ bdev_pmem_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct pmem_disk *pdisk = ctx;
 
-	spdk_json_write_name(w, "pmem");
-	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "pmem_file");
-	spdk_json_write_string(w, pdisk->pmem_file);
+	spdk_json_write_named_object_begin(w, "pmem");
+	spdk_json_write_named_string(w, "pmem_file", pdisk->pmem_file);
 	spdk_json_write_object_end(w);
 
 	return 0;

@@ -308,6 +308,21 @@ _spdk_nvmf_subsystem_remove_host(struct spdk_nvmf_subsystem *subsystem, struct s
 
 static int _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid);
 
+static void
+_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
+				struct spdk_nvmf_listener *listener)
+{
+	struct spdk_nvmf_transport *transport;
+
+	transport = spdk_nvmf_tgt_get_transport(subsystem->tgt, listener->trid.trtype);
+	if (transport != NULL) {
+		spdk_nvmf_transport_stop_listen(transport, &listener->trid);
+	}
+
+	TAILQ_REMOVE(&subsystem->listeners, listener, link);
+	free(listener);
+}
+
 void
 spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 {
@@ -325,8 +340,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "subsystem is %p\n", subsystem);
 
 	TAILQ_FOREACH_SAFE(listener, &subsystem->listeners, link, listener_tmp) {
-		TAILQ_REMOVE(&subsystem->listeners, listener, link);
-		free(listener);
+		_nvmf_subsystem_remove_listener(subsystem, listener);
 	}
 
 	TAILQ_FOREACH_SAFE(host, &subsystem->hosts, link, host_tmp) {
@@ -779,8 +793,7 @@ spdk_nvmf_subsystem_remove_listener(struct spdk_nvmf_subsystem *subsystem,
 		return -ENOENT;
 	}
 
-	TAILQ_REMOVE(&subsystem->listeners, listener, link);
-	free(listener);
+	_nvmf_subsystem_remove_listener(subsystem, listener);
 
 	return 0;
 }
@@ -883,6 +896,7 @@ static int
 _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t nsid)
 {
 	struct spdk_nvmf_ns *ns;
+	struct spdk_nvmf_registrant *reg, *reg_tmp;
 
 	assert(subsystem->state == SPDK_NVMF_SUBSYSTEM_PAUSED ||
 	       subsystem->state == SPDK_NVMF_SUBSYSTEM_INACTIVE);
@@ -903,6 +917,10 @@ _spdk_nvmf_subsystem_remove_ns(struct spdk_nvmf_subsystem *subsystem, uint32_t n
 
 	subsystem->ns[nsid - 1] = NULL;
 
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, reg_tmp) {
+		TAILQ_REMOVE(&ns->registrants, reg, link);
+		free(reg);
+	}
 	spdk_bdev_module_release_bdev(ns->bdev);
 	spdk_bdev_close(ns->desc);
 	free(ns);
@@ -995,12 +1013,6 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 		return 0;
 	}
 
-	if (spdk_bdev_get_block_size(bdev) % 512) {
-		SPDK_ERRLOG("Block size %u for Bdev %s is not supported now\n",
-			    spdk_bdev_get_block_size(bdev), spdk_bdev_get_name(bdev));
-		return 0;
-	}
-
 	spdk_nvmf_ns_opts_get_defaults(&opts, sizeof(opts));
 	if (user_opts) {
 		memcpy(&opts, user_opts, spdk_min(sizeof(opts), opts_size));
@@ -1085,6 +1097,7 @@ spdk_nvmf_subsystem_add_ns(struct spdk_nvmf_subsystem *subsystem, struct spdk_bd
 	}
 	subsystem->ns[opts.nsid - 1] = ns;
 	ns->nsid = opts.nsid;
+	TAILQ_INIT(&ns->registrants);
 
 	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "Subsystem %s: bdev %s assigned nsid %" PRIu32 "\n",
 		      spdk_nvmf_subsystem_get_nqn(subsystem),
@@ -1273,4 +1286,532 @@ uint32_t
 spdk_nvmf_subsystem_get_max_namespaces(const struct spdk_nvmf_subsystem *subsystem)
 {
 	return subsystem->max_allowed_nsid;
+}
+
+static struct spdk_nvmf_registrant *
+nvmf_ns_reservation_get_registrant(struct spdk_nvmf_ns *ns,
+				   struct spdk_uuid *uuid)
+{
+	struct spdk_nvmf_registrant *reg, *tmp;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		if (spdk_uuid_compare(&reg->hostid, uuid) == 0) {
+			return reg;
+		}
+	}
+
+	return NULL;
+}
+
+/* current reservation type is all registrants or not */
+static bool
+nvmf_ns_reservation_all_registrants_type(struct spdk_nvmf_ns *ns)
+{
+	return (ns->rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS ||
+		ns->rtype == SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
+}
+
+/* current registrant is reservation holder or not */
+static bool
+nvmf_ns_reservation_registrant_is_holder(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_registrant *reg)
+{
+	if (!reg) {
+		return false;
+	}
+
+	if (nvmf_ns_reservation_all_registrants_type(ns)) {
+		return true;
+	}
+
+	return (ns->holder == reg);
+}
+
+static int
+nvmf_ns_reservation_add_registrant(struct spdk_nvmf_ns *ns,
+				   struct spdk_nvmf_ctrlr *ctrlr,
+				   uint64_t nrkey)
+{
+	struct spdk_nvmf_registrant *reg;
+
+	reg = calloc(1, sizeof(*reg));
+	if (!reg) {
+		return -ENOMEM;
+	}
+
+	reg->rkey = nrkey;
+	/* set hostid for the registrant */
+	spdk_uuid_copy(&reg->hostid, &ctrlr->hostid);
+	TAILQ_INSERT_TAIL(&ns->registrants, reg, link);
+	ns->gen++;
+
+	return 0;
+}
+
+static void
+nvmf_ns_reservation_release_reservation(struct spdk_nvmf_ns *ns)
+{
+	ns->rtype = 0;
+	ns->crkey = 0;
+	ns->holder = NULL;
+}
+
+/* release the reservation if the last registrant was removed */
+static void
+nvmf_ns_reservation_check_release_on_remove_registrant(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *next_reg;
+
+	/* no reservation holder */
+	if (!ns->holder) {
+		assert(ns->rtype == 0);
+		return;
+	}
+
+	next_reg = TAILQ_FIRST(&ns->registrants);
+	if (next_reg && nvmf_ns_reservation_all_registrants_type(ns)) {
+		/* the next valid registrant is the new holder now */
+		ns->holder = next_reg;
+	} else if (nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
+		/* release the reservation */
+		nvmf_ns_reservation_release_reservation(ns);
+	}
+}
+
+static void
+nvmf_ns_reservation_remove_registrant(struct spdk_nvmf_ns *ns,
+				      struct spdk_nvmf_registrant *reg)
+{
+	TAILQ_REMOVE(&ns->registrants, reg, link);
+	nvmf_ns_reservation_check_release_on_remove_registrant(ns, reg);
+	free(reg);
+	ns->gen++;
+	return;
+}
+
+static uint32_t
+nvmf_ns_reservation_remove_registrants_by_key(struct spdk_nvmf_ns *ns,
+		uint64_t rkey)
+{
+	struct spdk_nvmf_registrant *reg, *tmp;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		if (reg->rkey == rkey) {
+			nvmf_ns_reservation_remove_registrant(ns, reg);
+			count++;
+		}
+	}
+	return count;
+}
+
+static uint32_t
+nvmf_ns_reservation_remove_all_other_registrants(struct spdk_nvmf_ns *ns,
+		struct spdk_nvmf_registrant *reg)
+{
+	struct spdk_nvmf_registrant *reg_tmp, *reg_tmp2;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH_SAFE(reg_tmp, &ns->registrants, link, reg_tmp2) {
+		if (reg_tmp != reg) {
+			nvmf_ns_reservation_remove_registrant(ns, reg_tmp);
+			count++;
+		}
+	}
+	return count;
+}
+
+static uint32_t
+nvmf_ns_reservation_clear_all_registrants(struct spdk_nvmf_ns *ns)
+{
+	struct spdk_nvmf_registrant *reg, *reg_tmp;
+	uint32_t count = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, reg_tmp) {
+		nvmf_ns_reservation_remove_registrant(ns, reg);
+		count++;
+	}
+	return count;
+}
+
+static void
+nvmf_ns_reservation_acquire_reservation(struct spdk_nvmf_ns *ns, uint64_t rkey,
+					enum spdk_nvme_reservation_type rtype,
+					struct spdk_nvmf_registrant *holder)
+{
+	ns->rtype = rtype;
+	ns->crkey = rkey;
+	assert(ns->holder == NULL);
+	ns->holder = holder;
+}
+
+static void
+nvmf_ns_reservation_register(struct spdk_nvmf_ns *ns,
+			     struct spdk_nvmf_ctrlr *ctrlr,
+			     struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint8_t rrega, iekey, cptpl;
+	struct spdk_nvme_reservation_register_data key;
+	struct spdk_nvmf_registrant *reg;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+	int rc;
+
+	rrega = cmd->cdw10 & 0x7u;
+	iekey = (cmd->cdw10 >> 3) & 0x1u;
+	cptpl = (cmd->cdw10 >> 30) & 0x3u;
+	memcpy(&key, req->data, sizeof(key));
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "REGISTER: RREGA %u, IEKEY %u, CPTPL %u, "
+		      "NRKEY 0x%"PRIx64", NRKEY 0x%"PRIx64"\n",
+		      rrega, iekey, cptpl, key.crkey, key.nrkey);
+
+	/* TODO: doesn't support for now */
+	if (cptpl == SPDK_NVME_RESERVE_PTPL_PERSIST_POWER_LOSS) {
+		SPDK_ERRLOG("Can't change persist through power loss for now\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+	/* current Host Identifier has registrant or not */
+	reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr->hostid);
+
+	switch (rrega) {
+	case SPDK_NVME_RESERVE_REGISTER_KEY:
+		if (!reg) {
+			/* register new controller */
+			if (key.nrkey == 0) {
+				SPDK_ERRLOG("Can't register zeroed new key\n");
+				status = SPDK_NVME_SC_INVALID_FIELD;
+				goto exit;
+			}
+			rc = nvmf_ns_reservation_add_registrant(ns, ctrlr, key.nrkey);
+			if (rc < 0) {
+				status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+				goto exit;
+			}
+		} else {
+			/* register with same key is not an error */
+			if (reg->rkey != key.nrkey) {
+				SPDK_ERRLOG("The same host already register a "
+					    "key with 0x%"PRIx64"\n",
+					    reg->rkey);
+				status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+				goto exit;
+			}
+		}
+		break;
+	case SPDK_NVME_RESERVE_UNREGISTER_KEY:
+		if (!reg || (!iekey && reg->rkey != key.crkey)) {
+			SPDK_ERRLOG("No registrant or current key doesn't match "
+				    "with existing registrant key\n");
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		nvmf_ns_reservation_remove_registrant(ns, reg);
+		break;
+	case SPDK_NVME_RESERVE_REPLACE_KEY:
+		if (!reg || (!iekey && reg->rkey != key.crkey)) {
+			SPDK_ERRLOG("No registrant or current key doesn't match "
+				    "with existing registrant key\n");
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		if (key.nrkey == 0) {
+			SPDK_ERRLOG("Can't register zeroed new key\n");
+			status = SPDK_NVME_SC_INVALID_FIELD;
+			goto exit;
+		}
+		reg->rkey = key.nrkey;
+		break;
+	default:
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
+static void
+nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
+			    struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint8_t racqa, iekey, rtype;
+	struct spdk_nvme_reservation_acquire_data key;
+	struct spdk_nvmf_registrant *reg;
+	bool all_regs = false;
+	uint32_t count = 0;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+
+	racqa = cmd->cdw10 & 0x7u;
+	iekey = (cmd->cdw10 >> 3) & 0x1u;
+	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	memcpy(&key, req->data, sizeof(key));
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIIRE: RACQA %u, IEKEY %u, RTYPE %u, "
+		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
+		      racqa, iekey, rtype, key.crkey, key.prkey);
+
+	if (iekey) {
+		SPDK_ERRLOG("Ignore existing key field set to 1\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+	reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr->hostid);
+	/* must be registrant and CRKEY must match */
+	if (!reg || reg->rkey != key.crkey) {
+		SPDK_ERRLOG("No registrant or current key doesn't match "
+			    "with existing registrant key\n");
+		status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+		goto exit;
+	}
+
+	all_regs = nvmf_ns_reservation_all_registrants_type(ns);
+
+	switch (racqa) {
+	case SPDK_NVME_RESERVE_ACQUIRE:
+		/* it's not an error for the holder to acquire same reservation type again */
+		if (nvmf_ns_reservation_registrant_is_holder(ns, reg) && ns->rtype == rtype) {
+			/* do nothing */
+		} else if (ns->holder == NULL) {
+			/* fisrt time to acquire the reservation */
+			nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
+		} else {
+			SPDK_ERRLOG("Invalid rtype or current registrant is not holder\n");
+			status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+			goto exit;
+		}
+		break;
+	case SPDK_NVME_RESERVE_PREEMPT:
+		/* no reservation holder */
+		if (!ns->holder) {
+			/* unregister with PRKEY */
+			nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+			break;
+		}
+		/* only 1 reservation holder and reservation key is valid */
+		if (!all_regs) {
+			/* preempt itself */
+			if (nvmf_ns_reservation_registrant_is_holder(ns, reg) &&
+			    ns->crkey == key.prkey) {
+				ns->rtype = rtype;
+				break;
+			}
+
+			if (ns->crkey == key.prkey) {
+				nvmf_ns_reservation_remove_registrant(ns, ns->holder);
+				nvmf_ns_reservation_acquire_reservation(ns, key.crkey, rtype, reg);
+			} else if (key.prkey != 0) {
+				nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+			} else {
+				/* PRKEY is zero */
+				SPDK_ERRLOG("Current PRKEY is zero\n");
+				status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+				goto exit;
+			}
+		} else {
+			/* release all other registrants except for the current one */
+			if (key.prkey == 0) {
+				nvmf_ns_reservation_remove_all_other_registrants(ns, reg);
+				assert(ns->holder == reg);
+			} else {
+				count = nvmf_ns_reservation_remove_registrants_by_key(ns, key.prkey);
+				if (count == 0) {
+					SPDK_ERRLOG("PRKEY doesn't match any registrant\n");
+					status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+					goto exit;
+				}
+			}
+		}
+		break;
+	default:
+		break;
+	}
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
+static void
+nvmf_ns_reservation_release(struct spdk_nvmf_ns *ns,
+			    struct spdk_nvmf_ctrlr *ctrlr,
+			    struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	uint8_t rrela, iekey, rtype;
+	struct spdk_nvmf_registrant *reg;
+	uint64_t crkey;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+
+	rrela = cmd->cdw10 & 0x7u;
+	iekey = (cmd->cdw10 >> 3) & 0x1u;
+	rtype = (cmd->cdw10 >> 8) & 0xffu;
+	memcpy(&crkey, req->data, sizeof(crkey));
+
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "RELEASE: RRELA %u, IEKEY %u, RTYPE %u, "
+		      "CRKEY 0x%"PRIx64"\n",  rrela, iekey, rtype, crkey);
+
+	if (iekey) {
+		SPDK_ERRLOG("Ignore existing key field set to 1\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+	reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr->hostid);
+	if (!reg || reg->rkey != crkey) {
+		SPDK_ERRLOG("No registrant or current key doesn't match "
+			    "with existing registrant key\n");
+		status = SPDK_NVME_SC_RESERVATION_CONFLICT;
+		goto exit;
+	}
+
+	switch (rrela) {
+	case SPDK_NVME_RESERVE_RELEASE:
+		if (!ns->holder) {
+			SPDK_DEBUGLOG(SPDK_LOG_NVMF, "RELEASE: no holder\n");
+			goto exit;
+		}
+		if (ns->rtype != rtype) {
+			SPDK_ERRLOG("Type doesn't match\n");
+			status = SPDK_NVME_SC_INVALID_FIELD;
+			goto exit;
+		}
+		if (!nvmf_ns_reservation_registrant_is_holder(ns, reg)) {
+			/* not the reservation holder, this isn't an error */
+			goto exit;
+		}
+		nvmf_ns_reservation_release_reservation(ns);
+		break;
+	case SPDK_NVME_RESERVE_CLEAR:
+		nvmf_ns_reservation_clear_all_registrants(ns);
+		break;
+	default:
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
+static void
+nvmf_ns_reservation_report(struct spdk_nvmf_ns *ns,
+			   struct spdk_nvmf_ctrlr *ctrlr,
+			   struct spdk_nvmf_request *req)
+{
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_subsystem *subsystem = ctrlr->subsys;
+	struct spdk_nvmf_ctrlr *ctrlr_tmp;
+	struct spdk_nvmf_registrant *reg, *tmp;
+	struct spdk_nvme_reservation_status_extended_data *status_data;
+	struct spdk_nvme_registered_ctrlr_extended_data *ctrlr_data;
+	uint8_t *payload;
+	uint32_t len, count = 0;
+	uint32_t regctl = 0;
+	uint8_t status = SPDK_NVME_SC_SUCCESS;
+
+	/* NVMeoF uses Extended Data Structure */
+	if ((cmd->cdw11 & 0x00000001u) == 0) {
+		SPDK_ERRLOG("NVMeoF uses extended controller data structure, "
+			    "please set EDS bit in cdw11 and try again\n");
+		status = SPDK_NVME_SC_INVALID_FIELD;
+		goto exit;
+	}
+
+	/* Get number of registerd controllers, one Host may have more than
+	 * one controller based on different ports.
+	 */
+	TAILQ_FOREACH(ctrlr_tmp, &subsystem->ctrlrs, link) {
+		reg = nvmf_ns_reservation_get_registrant(ns, &ctrlr_tmp->hostid);
+		if (reg) {
+			regctl++;
+		}
+	}
+
+	len = sizeof(*status_data) + sizeof(*ctrlr_data) * regctl;
+	payload = calloc(1, len);
+	if (!payload) {
+		status = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+		goto exit;
+	}
+
+	status_data = (struct spdk_nvme_reservation_status_extended_data *)payload;
+	status_data->data.gen = ns->gen;
+	status_data->data.rtype = ns->rtype;
+	status_data->data.regctl = regctl;
+	/* TODO: Don't support Persist Through Power Loss State for now */
+	status_data->data.ptpls = 0;
+
+	TAILQ_FOREACH_SAFE(reg, &ns->registrants, link, tmp) {
+		assert(count <= regctl);
+		ctrlr_data = (struct spdk_nvme_registered_ctrlr_extended_data *)
+			     (payload + sizeof(*status_data) + sizeof(*ctrlr_data) * count);
+		/* Set to 0xffffh for dynamic controller */
+		ctrlr_data->cntlid = 0xffff;
+		ctrlr_data->rcsts.status = (ns->holder == reg) ? true : false;
+		ctrlr_data->rkey = reg->rkey;
+		spdk_uuid_copy((struct spdk_uuid *)ctrlr_data->hostid, &reg->hostid);
+		count++;
+	}
+
+	memcpy(req->data, payload, spdk_min(len, (cmd->cdw10 + 1) * sizeof(uint32_t)));
+	free(payload);
+
+exit:
+	req->rsp->nvme_cpl.status.sct = SPDK_NVME_SCT_GENERIC;
+	req->rsp->nvme_cpl.status.sc = status;
+	return;
+}
+
+
+static void
+spdk_nvmf_ns_reservation_complete(void *ctx)
+{
+	struct spdk_nvmf_request *req = ctx;
+
+	spdk_nvmf_request_complete(req);
+}
+
+void
+spdk_nvmf_ns_reservation_request(void *ctx)
+{
+	struct spdk_nvmf_request *req = (struct spdk_nvmf_request *)ctx;
+	struct spdk_nvme_cmd *cmd = &req->cmd->nvme_cmd;
+	struct spdk_nvmf_poll_group *group = req->qpair->group;
+	struct spdk_nvmf_ctrlr *ctrlr = req->qpair->ctrlr;
+	uint32_t nsid;
+	struct spdk_nvmf_ns *ns;
+
+	nsid = cmd->nsid;
+	ns = _spdk_nvmf_subsystem_get_ns(ctrlr->subsys, nsid);
+	assert(ns != NULL);
+
+	switch (cmd->opc) {
+	case SPDK_NVME_OPC_RESERVATION_REGISTER:
+		nvmf_ns_reservation_register(ns, ctrlr, req);
+		break;
+	case SPDK_NVME_OPC_RESERVATION_ACQUIRE:
+		nvmf_ns_reservation_acquire(ns, ctrlr, req);
+		break;
+	case SPDK_NVME_OPC_RESERVATION_RELEASE:
+		nvmf_ns_reservation_release(ns, ctrlr, req);
+		break;
+	case SPDK_NVME_OPC_RESERVATION_REPORT:
+		nvmf_ns_reservation_report(ns, ctrlr, req);
+		break;
+	default:
+		break;
+	}
+	spdk_thread_send_msg(group->thread, spdk_nvmf_ns_reservation_complete, req);
 }

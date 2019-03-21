@@ -49,8 +49,9 @@
 #define SPDK_ENV_DPDK_DEFAULT_MEM_CHANNEL	-1
 #define SPDK_ENV_DPDK_DEFAULT_CORE_MASK		"0x1"
 
-static char **eal_cmdline = NULL;
-static int eal_cmdline_argcount = 0;
+static char **g_eal_cmdline;
+static int g_eal_cmdline_argcount;
+static bool g_external_init = true;
 
 static char *
 _sprintf_alloc(const char *format, ...)
@@ -163,6 +164,7 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 
 	tmp = realloc(args, sizeof(char *) * (*argcount + 1));
 	if (tmp == NULL) {
+		free(arg);
 		spdk_free_args(args, *argcount);
 		return NULL;
 	}
@@ -172,17 +174,6 @@ spdk_push_arg(char *args[], int *argcount, char *arg)
 
 	return tmp;
 }
-
-static void
-spdk_destruct_eal_cmdline(void)
-{
-	if (eal_cmdline) {
-		spdk_free_args(eal_cmdline, eal_cmdline_argcount);
-		eal_cmdline = NULL;
-		eal_cmdline_argcount = 0;
-	}
-}
-
 
 static int
 spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
@@ -314,6 +305,21 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 
+	/* Lower default EAL loglevel to RTE_LOG_NOTICE - normal, but significant messages.
+	 * This can be overridden by specifying the same option in opts->env_context
+	 */
+	args = spdk_push_arg(args, &argcount, strdup("--log-level=lib.eal:6"));
+	if (args == NULL) {
+		return -1;
+	}
+
+	if (opts->env_context) {
+		args = spdk_push_arg(args, &argcount, strdup(opts->env_context));
+		if (args == NULL) {
+			return -1;
+		}
+	}
+
 #ifdef __linux__
 	/* Set the base virtual address - it must be an address that is not in the
 	 * ASAN shadow region, otherwise ASAN-enabled builds will ignore the
@@ -332,6 +338,18 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	if (args == NULL) {
 		return -1;
 	}
+
+	/* --match-allocation prevents DPDK from merging or splitting system memory allocations under the hood.
+	 * This is critical for RDMA when attempting to use an rte_mempool based buffer pool. If DPDK merges two
+	 * physically or IOVA contiguous memory regions, then when we go to allocate a buffer pool, it can split
+	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
+	 */
+#if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
+	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
+	if (args == NULL) {
+		return -1;
+	}
+#endif
 
 	if (opts->shm_id < 0) {
 		args = spdk_push_arg(args, &argcount, _sprintf_alloc("--file-prefix=spdk_pid%d",
@@ -353,16 +371,15 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 		}
 	}
 #endif
-
-	if (!eal_cmdline && atexit(spdk_destruct_eal_cmdline) != 0) {
+/*
+	if (!g_eal_cmdline && atexit(spdk_destruct_eal_cmdline) != 0) {
  		fprintf(stderr, "Failed to register cleanup handler\n");
  	}
 	else {
 		spdk_destruct_eal_cmdline();
-	}
-	eal_cmdline = args;
-	eal_cmdline_argcount = argcount;
-
+	} */
+	g_eal_cmdline = args;
+	g_eal_cmdline_argcount = argcount;
 	return argcount;
 }
 
@@ -383,12 +400,20 @@ spdk_env_dpdk_post_init(void)
 	return 0;
 }
 
+void
+spdk_env_dpdk_post_fini(void)
+{
+	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
+}
+
 int
 spdk_env_init(const struct spdk_env_opts *opts)
 {
 	char **dpdk_args = NULL;
 	int i, rc;
 	int orig_optind;
+
+	g_external_init = false;
 
 	rc = spdk_build_eal_cmdline(opts);
 	if (rc < 0) {
@@ -398,8 +423,8 @@ spdk_env_init(const struct spdk_env_opts *opts)
 
 	printf("Starting %s / %s initialization...\n", SPDK_VERSION_STRING, rte_version());
 	printf("[ DPDK EAL parameters: ");
-	for (i = 0; i < eal_cmdline_argcount; i++) {
-		printf("%s ", eal_cmdline[i]);
+	for (i = 0; i < g_eal_cmdline_argcount; i++) {
+		printf("%s ", g_eal_cmdline[i]);
 	}
 	printf("]\n");
 
@@ -407,17 +432,17 @@ spdk_env_init(const struct spdk_env_opts *opts)
 	 * before passing so we can still free the individual strings
 	 * correctly.
 	 */
-	dpdk_args = calloc(eal_cmdline_argcount, sizeof(char *));
+	dpdk_args = calloc(g_eal_cmdline_argcount, sizeof(char *));
 	if (dpdk_args == NULL) {
 		fprintf(stderr, "Failed to allocate dpdk_args\n");
 		return -1;
 	}
-	memcpy(dpdk_args, eal_cmdline, sizeof(char *) * eal_cmdline_argcount);
+	memcpy(dpdk_args, g_eal_cmdline, sizeof(char *) * g_eal_cmdline_argcount);
 
 	fflush(stdout);
 	orig_optind = optind;
 	optind = 1;
-	rc = rte_eal_init(eal_cmdline_argcount, dpdk_args);
+	rc = rte_eal_init(g_eal_cmdline_argcount, dpdk_args);
 	optind = orig_optind;
 
 	free(dpdk_args);
@@ -438,8 +463,17 @@ spdk_env_init(const struct spdk_env_opts *opts)
 		spdk_env_unlink_shared_files();
 	}
 
-	/* Print only the significant EAL messages */
-	rte_log_set_level(RTE_LOGTYPE_EAL, RTE_LOG_NOTICE);
-
 	return spdk_env_dpdk_post_init();
+}
+
+void
+spdk_env_fini(void)
+{
+	spdk_env_dpdk_post_fini();
+}
+
+bool
+spdk_env_dpdk_external_init(void)
+{
+	return g_external_init;
 }

@@ -284,10 +284,8 @@ spdk_rpc_pmem_pool_info(struct spdk_jsonrpc_request *request,
 
 	spdk_json_write_array_begin(w);
 	spdk_json_write_object_begin(w);
-	spdk_json_write_name(w, "num_blocks");
-	spdk_json_write_uint64(w, num_blocks);
-	spdk_json_write_name(w, "block_size");
-	spdk_json_write_uint64(w, block_size);
+	spdk_json_write_named_uint64(w, "num_blocks", num_blocks);
+	spdk_json_write_named_uint64(w, "block_size", block_size);
 	spdk_json_write_object_end(w);
 	spdk_json_write_array_end(w);
 	spdk_jsonrpc_end_result(request, w);

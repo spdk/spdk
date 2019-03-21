@@ -24,8 +24,9 @@ function usage()
 	echo " --enable-ubsan            Enable undefined behavior sanitizer"
 	echo " --enable-coverage         Enable code coverage tracking"
 	echo " --enable-lto              Enable link-time optimization"
+	echo " --enable-pgo-capture      Enable generation of profile guided optimization data"
+	echo " --enable-pgo-use          Use previously captured profile guided optimization data"
 	echo " --disable-tests           Disable building of tests"
-	echo " --with-env=path           Use an alternate environment implementation"
 	echo ""
 	echo "Specifying Dependencies:"
 	echo "--with-DEPENDENCY[=path]   Use the given dependency. Optionally, provide the"
@@ -34,21 +35,26 @@ function usage()
 	echo "                           disable features and components."
 	echo ""
 	echo "Valid dependencies are listed below."
-	echo " crypto                    Required to build vbdev crypto module."
-	echo "                           No path required."
 	echo " dpdk                      Optional.  Uses dpdk submodule in spdk tree if not specified."
 	echo "                           example: /usr/share/dpdk/x86_64-default-linuxapp-gcc"
+	echo " env                       Use an alternate environment implementation instead of DPDK."
+	echo "                           Implies --without-dpdk."
+	echo " igb-uio-driver            Build and use DPDK's igb-uio driver instead of uio_pci_generic"
+	echo "                           or vfio-pci. Required on some systems to use qat devices"
+	echo "                           No path required"
+	echo " crypto                    Required to build vbdev crypto module."
+	echo "                           No path required."
 	echo " fio                       Required to build fio_plugin."
 	echo "                           example: /usr/src/fio"
-	echo " igb-uio-driver            Required on some systems to use qat devices"
-	echo "                           No path required"
 	echo " vhost                     Required to build vhost target."
+	echo "                           No path required."
+	echo " internal-vhost-lib        Use the internal copy of rte_vhost."
 	echo "                           No path required."
 	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
 	echo "                           No path required."
 	echo " pmdk                      Required to build persistent memory bdev."
 	echo "                           example: /usr/share/pmdk"
-	echo " reduce                    Required to build \"reduce\" (SPDK block compression)."
+	echo " reduce                    Required to build vbdev compression module."
 	echo "                           No path required."
 	echo " vpp                       Required to build VPP net module."
 	echo "                           example: /vpp_repo/build-root/install-vpp-native/vpp"
@@ -65,9 +71,15 @@ function usage()
 	echo " ocf                       Required to build OCF module."
 	echo "                           If argument is directory, interpret it as root of OCF repo"
 	echo "                           If argument is file, interpret it as compiled OCF lib"
+	echo "                           If no argument is specified, OCF git submodule is used by default"
 	echo "                           example: /usr/src/ocf/"
 	echo " isal                      Enabled by default on x86 architecture. Can be built without though."
 	echo "                           No path required."
+	echo " ftl                       Required to build FTL module."
+	echo "                           No path required."
+	echo " uring                     Required to support I/O uring on Linux. If no argument, searches"
+	echo "                           the standard installation directory. If an argument is provided, it is"
+	echo "                           considered a directory containing liburing.a and io_uring.h."
 	echo ""
 	echo "Environment variables:"
 	echo ""
@@ -146,6 +158,18 @@ for i in "$@"; do
 		--disable-lto)
 			CONFIG[LTO]=n
 			;;
+		--enable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=y
+			;;
+		--disable-pgo-capture)
+			CONFIG[PGO_CAPTURE]=n
+			;;
+		--enable-pgo-use)
+			CONFIG[PGO_USE]=y
+			;;
+		--disable-pgo-use)
+			CONFIG[PGO_USE]=n
+			;;
 		--enable-tests)
 			CONFIG[TESTS]=y
 			;;
@@ -157,6 +181,13 @@ for i in "$@"; do
 			;;
 		--disable-werror)
 			CONFIG[WERROR]=n
+			;;
+		--with-dpdk=*)
+			check_dir "$i"
+			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
+			;;
+		--without-dpdk)
+			CONFIG[DPDK_DIR]=
 			;;
 		--with-env=*)
 			CONFIG[ENV]="${i#*=}"
@@ -185,13 +216,6 @@ for i in "$@"; do
 		--without-iscsi-initiator)
 			CONFIG[ISCSI_INITIATOR]=n
 			;;
-		--with-dpdk=*)
-			check_dir "$i"
-			CONFIG[DPDK_DIR]=$(readlink -f ${i#*=})
-			;;
-		--without-dpdk)
-			CONFIG[DPDK_DIR]=
-			;;
 		--with-crypto)
 			CONFIG[CRYPTO]=y
 			;;
@@ -203,6 +227,12 @@ for i in "$@"; do
 			;;
 		--without-vhost)
 			CONFIG[VHOST]=n
+			;;
+		--with-internal-vhost-lib)
+			CONFIG[VHOST_INTERNAL_LIB]=y
+			;;
+		--without-internal-vhost-lib)
+			CONFIG[VHOST_INTERNAL_LIB]=n
 			;;
 		--with-virtio)
 			CONFIG[VIRTIO]=y
@@ -269,6 +299,10 @@ for i in "$@"; do
 		--without-ftl)
 			CONFIG[FTL]=n
 			;;
+		--with-ocf)
+			CONFIG[OCF]=y
+			CONFIG[OCF_PATH]=$(readlink -f "./ocf")
+			;;
 		--with-ocf=*)
 			CONFIG[OCF]=y
 			CONFIG[OCF_PATH]=$(readlink -f ${i#*=})
@@ -278,11 +312,23 @@ for i in "$@"; do
 			CONFIG[OCF_PATH]=
 			;;
 		--with-isal)
-                        CONFIG[ISAL]=y
-                        ;;
-                --without-isal)
-                        CONFIG[ISAL]=n
-                        ;;
+			CONFIG[ISAL]=y
+			;;
+		--without-isal)
+			CONFIG[ISAL]=n
+			;;
+		--with-uring=*)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=$(readlink -f ${i#*=})
+			;;
+		--with-uring)
+			CONFIG[URING]=y
+			CONFIG[URING_PATH]=
+			;;
+		--without-uring)
+			CONFIG[URING]=n
+			CONFIG[URING_PATH]=
+			;;
 		--)
 			break
 			;;
@@ -294,10 +340,15 @@ for i in "$@"; do
 done
 
 # Detect architecture and force no isal if non x86 archtecture
-arch=$(uname -i)
+arch=$(uname -m)
 if [[ $arch != x86_64* ]]; then
 	echo "Notice: ISAL auto-disabled due to CPU incompatiblity."
 	CONFIG[ISAL]=n
+fi
+
+if [[ "${CONFIG[ISAL]}" = "n" ]] && [[ "${CONFIG[REDUCE]}" = "y" ]]; then
+		echo "ERROR Conflicting options: --with-reduce is not compatible with --without-isal."
+		exit 1
 fi
 
 if [ -z "${CONFIG[ENV]}" ]; then
@@ -316,6 +367,11 @@ if [ -z "${CONFIG[ENV]}" ]; then
 		fi
 	fi
 else
+	if [ -n "${CONFIG[DPDK_DIR]}" ]; then
+		echo "--with-env and --with-dpdk are mutually exclusive."
+		exit 1
+	fi
+
 	if [ "${CONFIG[VHOST]}" = "y" ]; then
 		echo "Vhost is only supported when using the default DPDK environment. Disabling it."
 	fi
@@ -359,20 +415,9 @@ fi
 
 if [ "${CONFIG[RDMA]}" = "y" ]; then
 	if [ "$OSTYPE" != "FreeBSD"* ]; then
-		ibv_lib_file="$(ldconfig -p | grep 'libibverbs.so ' || true)"
-		if [ ! -z "$ibv_lib_file" ]; then
-			ibv_lib_file="${ibv_lib_file##*=> }"
-			ibv_lib_file="$(readlink -f $ibv_lib_file)" || true
-		fi
-
-		if [ -z $ibv_lib_file ]; then
-			ibv_lib_file="libibverbs.so.0.0.0"
-		fi
-
-		ibv_ver_str="$(basename $ibv_lib_file)"
-		ibv_maj_ver=`echo $ibv_ver_str | cut -d. -f3`
-		ibv_min_ver=`echo $ibv_ver_str | cut -d. -f4`
-		if [[ "$ibv_maj_var" -gt 1 || ("$ibv_maj_ver" -eq 1 && "$ibv_min_ver" -ge 1) ]]; then
+		if echo -e '#include <infiniband/verbs.h>\n \
+			int main(void){ return !!IBV_WR_SEND_WITH_INV; }\n' \
+			| ${CC:-cc} ${CFLAGS} -x c -c -o /dev/null - 2>/dev/null; then
 			CONFIG[RDMA_SEND_WITH_INVAL]="y"
 		else
 			CONFIG[RDMA_SEND_WITH_INVAL]="n"
@@ -395,13 +440,14 @@ than or equal to 4.14 will see significantly reduced performance.
 fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
-        if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
-		echo "Notice: ISAL, compression & crypto auto-disabled due to nasm dependency."
+	if [[ $(nasm -v | awk '{print $3}' | sed 's/[^0-9]*//g') -lt "21202" ]]; then
+		echo "Notice: ISA-L, compression & crypto auto-disabled due to nasm dependency."
 		echo "These features require NASM version 2.12.02 or newer.  Please install"
 		echo "or upgrade then re-run this script."
 		CONFIG[ISAL]=n
 		CONFIG[CRYPTO]=n
 		CONFIG[IPSEC_MB]=n
+		CONFIG[REDUCE]=n
 	else
 		if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 			CONFIG[IPSEC_MB]=y
@@ -411,14 +457,15 @@ fi
 
 if [[ "${CONFIG[ISAL]}" = "y" ]]; then
 	if [ ! -f "$rootdir"/isa-l/autogen.sh ]; then
-		echo "isa-l folder is not found; If you do want to install isa-l, run:"
+		echo "ISA-L was not found; To install ISA-L run:"
 		echo "  git submodule update --init"
 		exit 1
 	fi
 
 	if [[ "${CONFIG[RBD]}" = "y" ]]; then
-		echo "ISAL and RBD cannot co-exist currently so disabling ISAL."
+		echo "ISAL and RBD cannot co-exist currently so disabling ISAL and compression."
 		CONFIG[ISAL]=n
+		CONFIG[REDUCE]=n
 	else
 		cd $rootdir/isa-l
 		ISAL_LOG=/tmp/spdk-isal.log
@@ -439,32 +486,30 @@ if [[ "${CONFIG[REDUCE]}" = "y" ]]; then
 fi
 
 if [[ "${CONFIG[OCF]}" = "y" ]]; then
-	if [ -z "${CONFIG[OCF_PATH]}" ]; then
-		echo "When OCF module is enabled, you must specify"
-		echo "the OCF directory or path to OCF library using --with-ocf=path"
-		exit 1
-	fi
-
 	# If OCF_PATH is a file, assume it is a library and use it to compile with
 	if [ -f ${CONFIG[OCF_PATH]} ]; then
 		CONFIG[CUSTOMOCF]=y
 	else
 		CONFIG[CUSTOMOCF]=n
 	fi
+fi
 
-	# If OCF_PATH is not a library, we need to do sources export procedure using OCF Makefile
-	if [[ ${CONFIG[CUSTOMOCF]} = "n" ]]; then
-		echo "configuring OCF..."
-		rootdir=$(readlink -f $(dirname $0))
+if [[ "${CONFIG[PGO_CAPTURE]}" = "y" && "${CONFIG[PGO_USE]}" = "y" ]]; then
+	echo "ERROR: --enable-pgo-capture and --enable-pgo-use are mutually exclusive."
+	exit 1
+elif [[ "${CONFIG[PGO_USE]}" = "y" ]]; then
+	CC_TYPE=$($rootdir/scripts/detect_cc.sh --cc=$CC --cxx=$CXX --lto=$CONFIG[LTO] --ld=$LD | grep "CC_TYPE" | cut -d "=" -f 2)
+	if [[ "$CC_TYPE" = "clang" ]]; then
+		# For clang we need to run an extra step on gathered profiling data.
+		echo "Generating suitable profile data"
+		llvm-profdata merge -output=build/pgo/default.profdata build/pgo
+	fi
+fi
 
-		if pushd "${CONFIG[OCF_PATH]}" > /dev/null && \
-		   make inc O="$rootdir/lib/bdev/ocf/env/" && \
-		   make src O="$rootdir/lib/bdev/ocf/env/" CMD=cp 1>/dev/null && \
-		   popd > /dev/null
-		then
-			echo "done configuring OCF"
-		else
-			echo "Could not configure OCF"
+if [[ "${CONFIG[URING]}" = "y" ]]; then
+	if [[ -n "${CONFIG[URING_PATH]}" ]]; then
+		if [ ! -d "${CONFIG[URING_PATH]}" ]; then
+			echo "${CONFIG[URING_PATH]}: directory not found"
 			exit 1
 		fi
 	fi

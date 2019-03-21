@@ -224,13 +224,14 @@ _ftl_band_set_free(struct ftl_band *band)
 }
 
 static void
-_ftl_band_set_opening(struct ftl_band *band)
+_ftl_band_set_preparing(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md *md = &band->md;
 
 	/* Verify band's previous state */
-	assert(band->state == FTL_BAND_STATE_PREP);
+	assert(band->state == FTL_BAND_STATE_FREE);
+	/* Remove band from free list */
 	LIST_REMOVE(band, list_entry);
 
 	md->wr_cnt++;
@@ -467,8 +468,8 @@ ftl_band_set_state(struct ftl_band *band, enum ftl_band_state state)
 		_ftl_band_set_free(band);
 		break;
 
-	case FTL_BAND_STATE_OPENING:
-		_ftl_band_set_opening(band);
+	case FTL_BAND_STATE_PREP:
+		_ftl_band_set_preparing(band);
 		break;
 
 	case FTL_BAND_STATE_CLOSED:
@@ -816,7 +817,8 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 		return -ENOMEM;
 	}
 
-	return ftl_io_read((struct ftl_io *)io);
+	ftl_io_read((struct ftl_io *)io);
+	return 0;
 }
 
 int

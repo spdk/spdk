@@ -45,8 +45,8 @@ struct spdk_nvmf_transport_opts g_rdma_ut_transport_opts = {
 	.max_queue_depth = SPDK_NVMF_RDMA_DEFAULT_MAX_QUEUE_DEPTH,
 	.max_qpairs_per_ctrlr = SPDK_NVMF_RDMA_DEFAULT_MAX_QPAIRS_PER_CTRLR,
 	.in_capsule_data_size = SPDK_NVMF_RDMA_DEFAULT_IN_CAPSULE_DATA_SIZE,
-	.max_io_size = (SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
-	.io_unit_size = SPDK_NVMF_RDMA_DEFAULT_IO_BUFFER_SIZE,
+	.max_io_size = (SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE * RDMA_UT_UNITS_IN_MAX_IO),
+	.io_unit_size = SPDK_NVMF_RDMA_MIN_IO_BUFFER_SIZE,
 	.max_aq_depth = SPDK_NVMF_RDMA_DEFAULT_AQ_DEPTH,
 	.num_shared_buffers = SPDK_NVMF_RDMA_DEFAULT_NUM_SHARED_BUFFERS,
 };
@@ -128,6 +128,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	group.group.buf_cache_count = 0;
 	poller.group = &group;
 	rqpair.poller = &poller;
+	rqpair.max_send_sge = SPDK_NVMF_MAX_SGL_ENTRIES;
 
 	sgl = &cmd.nvme_cmd.dptr.sgl1;
 	rdma_req.recv = &recv;
@@ -135,6 +136,7 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rdma_req.req.rsp = &cpl;
 	rdma_req.data.wr.sg_list = rdma_req.data.sgl;
 	rdma_req.req.qpair = &rqpair.qpair;
+	rdma_req.req.xfer = SPDK_NVME_DATA_CONTROLLER_TO_HOST;
 
 	rtransport.transport.opts = g_rdma_ut_transport_opts;
 

@@ -15,6 +15,7 @@ trap "exit 1" SIGINT SIGTERM EXIT
 
 run_test suite test/nvmf/filesystem/filesystem.sh
 run_test suite test/nvmf/discovery/discovery.sh
+run_test suite test/nvmf/connect_disconnect/connect_disconnect.sh
 if [ $SPDK_TEST_NVME_CLI -eq 1 ]; then
 	run_test suite test/nvmf/nvme_cli/nvme_cli.sh
 fi
@@ -42,8 +43,6 @@ run_test suite test/nvmf/nmic/nmic.sh
 timing_exit host
 trap - SIGINT SIGTERM EXIT
 
-# TODO: enable nvme device detachment for multi-process so that
-#  we can use the stub for this test
 run_test suite test/nvmf/rpc/rpc.sh
 run_test suite test/nvmf/fio/fio.sh
 revert_soft_roce

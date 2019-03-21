@@ -36,7 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 ENV_NAME := $(notdir $(CONFIG_ENV))
 
-DIRS-y = vtophys
+DIRS-y = mem_callbacks vtophys
 
 ifeq ($(ENV_NAME),env_dpdk)
 DIRS-y += env_dpdk_post_init memory pci

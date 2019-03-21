@@ -42,17 +42,14 @@ class UINVMfTransports(UINode):
         max_io_size = self.ui_eval_param(max_io_size, "number", None)
         io_unit_size = self.ui_eval_param(io_unit_size, "number", None)
         max_aq_depth = self.ui_eval_param(max_aq_depth, "number", None)
-        try:
-            self.get_root().create_nvmf_transport(trtype=trtype,
-                                                  max_queue_depth=max_queue_depth,
-                                                  max_qpairs_per_ctrlr=max_qpairs_per_ctrlr,
-                                                  in_capsule_data_size=in_capsule_data_size,
-                                                  max_io_size=max_io_size,
-                                                  io_unit_size=io_unit_size,
-                                                  max_aq_depth=max_aq_depth)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.refresh()
+
+        self.get_root().create_nvmf_transport(trtype=trtype,
+                                              max_queue_depth=max_queue_depth,
+                                              max_qpairs_per_ctrlr=max_qpairs_per_ctrlr,
+                                              in_capsule_data_size=in_capsule_data_size,
+                                              max_io_size=max_io_size,
+                                              io_unit_size=io_unit_size,
+                                              max_aq_depth=max_aq_depth)
 
     def summary(self):
         return "Transports: %s" % len(self.children), None
@@ -75,10 +72,7 @@ class UINVMfSubsystems(UINode):
             UINVMfSubsystem(subsystem, self)
 
     def delete(self, subsystem_nqn):
-        try:
-            self.get_root().delete_nvmf_subsystem(nqn=subsystem_nqn)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
+        self.get_root().delete_nvmf_subsystem(nqn=subsystem_nqn)
 
     def ui_command_create(self, nqn, serial_number=None,
                           max_namespaces=None, allow_any_host="false"):
@@ -94,13 +88,9 @@ class UINVMfSubsystems(UINode):
         """
         allow_any_host = self.ui_eval_param(allow_any_host, "bool", False)
         max_namespaces = self.ui_eval_param(max_namespaces, "number", 0)
-        try:
-            self.get_root().create_nvmf_subsystem(nqn=nqn, serial_number=serial_number,
-                                                  allow_any_host=allow_any_host,
-                                                  max_namespaces=max_namespaces)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.refresh()
+        self.get_root().create_nvmf_subsystem(nqn=nqn, serial_number=serial_number,
+                                              allow_any_host=allow_any_host,
+                                              max_namespaces=max_namespaces)
 
     def ui_command_delete(self, subsystem_nqn):
         """Delete subsystem with given nqn.
@@ -109,13 +99,17 @@ class UINVMfSubsystems(UINode):
             nqn_subsystem - Name of susbsytem to delete
         """
         self.delete(subsystem_nqn)
-        self.refresh()
 
     def ui_command_delete_all(self):
         """Delete all subsystems"""
+        rpc_messages = ""
         for child in self._children:
-            self.delete(child.subsystem.nqn)
-        self.refresh()
+            try:
+                self.delete(child.subsystem.nqn)
+            except JSONRPCException as e:
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Subsystems: %s" % len(self.children), None
@@ -150,13 +144,8 @@ class UINVMfSubsystem(UINode):
             disable - Optional parameter. If false then enable, if true disable
         """
         disable = self.ui_eval_param(disable, "bool", None)
-        try:
-            self.get_root().nvmf_subsystem_allow_any_host(
-                nqn=self.subsystem.nqn, disable=disable)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.get_root().refresh()
-        self.refresh_node()
+        self.get_root().nvmf_subsystem_allow_any_host(
+            nqn=self.subsystem.nqn, disable=disable)
 
     def summary(self):
         sn = None
@@ -190,12 +179,9 @@ class UINVMfSubsystemListeners(UINode):
         self.refresh()
 
     def delete(self, trtype, traddr, trsvcid, adrfam=None):
-        try:
-            self.get_root().nvmf_subsystem_remove_listener(
-                nqn=self.parent.subsystem.nqn, trtype=trtype,
-                traddr=traddr, trsvcid=trsvcid, adrfam=adrfam)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
+        self.get_root().nvmf_subsystem_remove_listener(
+            nqn=self.parent.subsystem.nqn, trtype=trtype,
+            traddr=traddr, trsvcid=trsvcid, adrfam=adrfam)
 
     def ui_command_create(self, trtype, traddr, trsvcid, adrfam):
         """Create address listener for subsystem.
@@ -206,14 +192,9 @@ class UINVMfSubsystemListeners(UINode):
             trsvcid - NVMe-oF transport service id: e.g., a port number.
             adrfam - NVMe-oF transport adrfam: e.g., ipv4, ipv6, ib, fc.
         """
-        try:
-            self.get_root().nvmf_subsystem_add_listener(
-                nqn=self.parent.subsystem.nqn, trtype=trtype, traddr=traddr,
-                trsvcid=trsvcid, adrfam=adrfam)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.get_root().refresh()
-        self.refresh_node()
+        self.get_root().nvmf_subsystem_add_listener(
+            nqn=self.parent.subsystem.nqn, trtype=trtype, traddr=traddr,
+            trsvcid=trsvcid, adrfam=adrfam)
 
     def ui_command_delete(self, trtype, traddr, trsvcid, adrfam=None):
         """Remove address listener for subsystem.
@@ -225,15 +206,17 @@ class UINVMfSubsystemListeners(UINode):
             adrfam - Optional argument. Address family ("IPv4", "IPv6", "IB" or "FC").
         """
         self.delete(trtype, traddr, trsvcid, adrfam)
-        self.get_root().refresh()
-        self.refresh_node()
 
     def ui_command_delete_all(self):
         """Remove all address listeners from subsystem."""
+        rpc_messages = ""
         for la in self.listen_addresses:
-            self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
-        self.get_root().refresh()
-        self.refresh_node()
+            try:
+                self.delete(la['trtype'], la['traddr'], la['trsvcid'], la['adrfam'])
+            except JSONRPCException as e:
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Addresses: %s" % len(self.listen_addresses), None
@@ -267,11 +250,8 @@ class UINVMfSubsystemHosts(UINode):
         self.refresh()
 
     def delete(self, host):
-        try:
-            self.get_root().nvmf_subsystem_remove_host(
-                nqn=self.parent.subsystem.nqn, host=host)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
+        self.get_root().nvmf_subsystem_remove_host(
+            nqn=self.parent.subsystem.nqn, host=host)
 
     def ui_command_create(self, host):
         """Add a host NQN to the whitelist of allowed hosts.
@@ -279,13 +259,8 @@ class UINVMfSubsystemHosts(UINode):
         Args:
             host: Host NQN to add to the list of allowed host NQNs
         """
-        try:
-            self.get_root().nvmf_subsystem_add_host(
-                nqn=self.parent.subsystem.nqn, host=host)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.get_root().refresh()
-        self.refresh_node()
+        self.get_root().nvmf_subsystem_add_host(
+            nqn=self.parent.subsystem.nqn, host=host)
 
     def ui_command_delete(self, host):
         """Delete host from subsystem.
@@ -294,15 +269,17 @@ class UINVMfSubsystemHosts(UINode):
            host - NQN of host to remove.
         """
         self.delete(host)
-        self.get_root().refresh()
-        self.refresh_node()
 
     def ui_command_delete_all(self):
         """Delete host from subsystem"""
+        rpc_messages = ""
         for host in self.hosts:
-            self.delete(host['nqn'])
-        self.get_root().refresh()
-        self.refresh_node()
+            try:
+                self.delete(host['nqn'])
+            except JSONRPCException as e:
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Hosts: %s" % len(self.hosts), None
@@ -332,11 +309,8 @@ class UINVMfSubsystemNamespaces(UINode):
         self.refresh()
 
     def delete(self, nsid):
-        try:
-            self.get_root().nvmf_subsystem_remove_ns(
-                nqn=self.parent.subsystem.nqn, nsid=nsid)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
+        self.get_root().nvmf_subsystem_remove_ns(
+            nqn=self.parent.subsystem.nqn, nsid=nsid)
 
     def ui_command_create(self, bdev_name, nsid=None,
                           nguid=None, eui64=None, uuid=None):
@@ -351,14 +325,9 @@ class UINVMfSubsystemNamespaces(UINode):
             uuid: Namespace UUID.
         """
         nsid = self.ui_eval_param(nsid, "number", None)
-        try:
-            self.get_root().nvmf_subsystem_add_ns(
-                nqn=self.parent.subsystem.nqn, bdev_name=bdev_name,
-                nsid=nsid, nguid=nguid, eui64=eui64, uuid=uuid)
-        except JSONRPCException as e:
-            self.shell.log.error(e.message)
-        self.get_root().refresh()
-        self.refresh_node()
+        self.get_root().nvmf_subsystem_add_ns(
+            nqn=self.parent.subsystem.nqn, bdev_name=bdev_name,
+            nsid=nsid, nguid=nguid, eui64=eui64, uuid=uuid)
 
     def ui_command_delete(self, nsid):
         """Delete namespace from subsystem.
@@ -368,15 +337,17 @@ class UINVMfSubsystemNamespaces(UINode):
         """
         nsid = self.ui_eval_param(nsid, "number", None)
         self.delete(nsid)
-        self.get_root().refresh()
-        self.refresh_node()
 
     def ui_command_delete_all(self):
         """Delete all namespaces from subsystem."""
+        rpc_messages = ""
         for namespace in self.namespaces:
-            self.delete(namespace['nsid'])
-        self.get_root().refresh()
-        self.refresh_node()
+            try:
+                self.delete(namespace['nsid'])
+            except JSONRPCException as e:
+                rpc_messages += e.message
+        if rpc_messages:
+            raise JSONRPCException(rpc_messages)
 
     def summary(self):
         return "Namespaces: %s" % len(self.namespaces), None

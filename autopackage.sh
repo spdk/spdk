@@ -28,6 +28,8 @@ ipsec_pv=ipsec-$(date +%Y_%m_%d)
 ipsec_tarball=${ipsec_pv}.tar
 isal_pv=isal-$(date +%Y_%m_%d)
 isal_tarball=${isal_pv}.tar
+ocf_pv=ocf-$(date +%Y_%m_%d)
+ocf_tarball=${ocf_pv}.tar
 
 find . -iname "spdk-*.tar* dpdk-*.tar* ipsec-*.tar* isal-*.tar*" -delete
 git archive HEAD^{tree} --prefix=${spdk_pv}/ -o ${spdk_tarball}
@@ -56,6 +58,13 @@ if [ -d "isa-l" ]; then
 	git archive HEAD^{tree} --prefix=isa-l/ -o ../${isal_tarball}
 	cd ..
 	tar -C "$tmpdir/${spdk_pv}" -xf $isal_tarball
+fi
+
+if [ -d "ocf" ]; then
+	cd ocf
+	git archive HEAD^{tree} --prefix=ocf/ -o ../${ocf_tarball}
+	cd ..
+	tar -C "$tmpdir/${spdk_pv}" -xf $ocf_tarball
 fi
 
 (

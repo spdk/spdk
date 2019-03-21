@@ -12,6 +12,7 @@ fi
 timing_enter ext4test
 
 rpc_py="$rootdir/scripts/rpc.py"
+node_base="iqn.2013-06.com.intel.ch.spdk"
 
 timing_enter start_iscsi_tgt
 
@@ -19,10 +20,10 @@ $ISCSI_APP --wait-for-rpc &
 pid=$!
 echo "Process pid: $pid"
 
-trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1" SIGINT SIGTERM EXIT
+trap "$rpc_py destruct_split_vbdev Name0n1 || true; killprocess $pid; exit 1" SIGINT SIGTERM EXIT
 
 waitforlisten $pid
-$rpc_py set_iscsi_options -o 30 -a 4 -b "iqn.2013-06.com.intel.ch.spdk"
+$rpc_py set_iscsi_options -o 30 -a 4 -b $node_base
 $rpc_py start_subsystem_init
 $rootdir/scripts/gen_nvme.sh --json | $rpc_py load_subsystem_config
 $rpc_py construct_malloc_bdev 512 4096 --name Malloc0
@@ -43,7 +44,7 @@ iscsiadm -m discovery -t sendtargets -p $TARGET_IP:$ISCSI_PORT
 iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 
 trap 'for new_dir in `dir -d /mnt/*dir`; do umount $new_dir; rm -rf $new_dir; done; \
-	iscsicleanup; killprocess $pid; rm -f $testdir/iscsi.conf; exit 1' SIGINT SIGTERM EXIT
+	iscsicleanup; killprocess $pid; exit 1' SIGINT SIGTERM EXIT
 
 sleep 1
 
@@ -64,10 +65,10 @@ else
 fi
 set -e
 
-$rpc_py bdev_inject_error EE_Malloc0 'clear' 'failure'
-echo "Error injection test done"
-
 iscsicleanup
+$rpc_py bdev_inject_error EE_Malloc0 'clear' 'failure'
+$rpc_py delete_target_node $node_base:Target0
+echo "Error injection test done"
 
 if [ -z "$NO_NVME" ]; then
 	$rpc_py construct_split_vbdev Nvme0n1 2 -s 10000

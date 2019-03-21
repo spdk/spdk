@@ -104,13 +104,7 @@ _spdk_nvmf_shutdown_cb(void *arg1, void *arg2)
 static void
 spdk_nvmf_subsystem_fini(void)
 {
-	/* Always let the first core to handle the case */
-	if (spdk_env_get_current_core() != spdk_env_get_first_core()) {
-		spdk_event_call(spdk_event_allocate(spdk_env_get_first_core(),
-						    _spdk_nvmf_shutdown_cb, NULL, NULL));
-	} else {
-		_spdk_nvmf_shutdown_cb(NULL, NULL);
-	}
+	_spdk_nvmf_shutdown_cb(NULL, NULL);
 }
 
 static void
@@ -119,7 +113,10 @@ nvmf_tgt_poll_group_add(void *arg1, void *arg2)
 	struct spdk_nvmf_qpair *qpair = arg1;
 	struct nvmf_tgt_poll_group *pg = arg2;
 
-	spdk_nvmf_poll_group_add(pg->group, qpair);
+	if (spdk_nvmf_poll_group_add(pg->group, qpair) != 0) {
+		SPDK_ERRLOG("Unable to add the qpair to a poll group.\n");
+		spdk_nvmf_qpair_disconnect(qpair, NULL, NULL);
+	}
 }
 
 /* Round robin selection of cores */
@@ -472,7 +469,7 @@ get_conn_sched_string(enum spdk_nvmf_connect_sched sched)
 }
 
 static void
-spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk_event *done_ev)
+spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w)
 {
 	spdk_json_write_array_begin(w);
 
@@ -488,8 +485,6 @@ spdk_nvmf_subsystem_write_config_json(struct spdk_json_write_ctx *w, struct spdk
 
 	spdk_nvmf_tgt_write_config_json(w, g_spdk_nvmf_tgt);
 	spdk_json_write_array_end(w);
-
-	spdk_event_call(done_ev);
 }
 
 static struct spdk_subsystem g_spdk_subsystem_nvmf = {

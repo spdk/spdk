@@ -10,6 +10,7 @@ The Logical Volumes library is a flexible storage space management system. It pr
 * Type name:  struct spdk_lvol_store
 
 A logical volume store uses the super blob feature of blobstore to hold uuid (and in future other metadata). Blobstore types are implemented in blobstore itself, and saved on disk. An lvolstore will generate a UUID on creation, so that it can be uniquely identified from other lvolstores.
+By default when creating lvol store data region is unmapped. Optional --clear-method parameter can be passed on creation to change that behavior to writing zeroes or performing no operation.
 
 ## Logical volume {#lvol}
 
@@ -64,7 +65,8 @@ Blobs can be inflated to copy data from backing devices (e.g. snapshots) and all
 
 ## Decoupling {#lvol_decoupling}
 
-Blobs can be decoupled from all dependencies by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remaining unallocated clusters are kept thin provisioned.
+Blobs can be decoupled from their parent blob by copying data from backing devices (e.g. snapshots) for all allocated clusters. Remaining unallocated clusters are kept thin provisioned.
+Note: When decouple is performed, only single dependency is removed. To remove all dependencies in a chain of blobs depending on each other, multiple calls need to be issued.
 
 # Configuring Logical Volumes
 
@@ -84,6 +86,7 @@ construct_lvol_store [-h] [-c CLUSTER_SZ] bdev_name lvs_name
     Optional parameters:
     -h  show help
     -c  CLUSTER_SZ Specifies the size of cluster. By default its 4MiB.
+    --clear-method specify data region clear method "none", "unmap" (default), "write_zeroes"
 destroy_lvol_store [-h] [-u UUID] [-l LVS_NAME]
     Destroy lvolstore on specified bdev. Removes lvolstore along with lvols on
     it. User can identify lvol store by UUID or its name. Note that destroying

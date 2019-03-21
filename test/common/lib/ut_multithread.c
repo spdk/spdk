@@ -125,7 +125,7 @@ poll_thread(uintptr_t thread_id)
 	original_thread_id = g_thread_id;
 	set_thread(INVALID_THREAD);
 
-	while (spdk_thread_poll(thread->thread, 0) > 0) {
+	while (spdk_thread_poll(thread->thread, 0, 0) > 0) {
 		busy = true;
 	}
 

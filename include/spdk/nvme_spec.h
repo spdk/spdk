@@ -791,6 +791,7 @@ enum spdk_nvme_feat {
 	SPDK_NVME_FEAT_VOLATILE_WRITE_CACHE			= 0x06,
 	/** cdw11 layout defined by \ref spdk_nvme_feat_number_of_queues */
 	SPDK_NVME_FEAT_NUMBER_OF_QUEUES				= 0x07,
+	/** cdw11 layout defined by \ref spdk_nvme_feat_interrupt_coalescing */
 	SPDK_NVME_FEAT_INTERRUPT_COALESCING			= 0x08,
 	/** cdw11 layout defined by \ref spdk_nvme_feat_interrupt_vector_configuration */
 	SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION		= 0x09,
@@ -1788,7 +1789,16 @@ enum spdk_nvme_log_page {
 	/** Command effects log (optional) */
 	SPDK_NVME_LOG_COMMAND_EFFECTS_LOG	= 0x05,
 
-	/* 0x06-0x6F - reserved */
+	/** Device self test (optional) */
+	SPDK_NVME_LOG_DEVICE_SELF_TEST	= 0x06,
+
+	/** Host initiated telemetry log (optional) */
+	SPDK_NVME_LOG_TELEMETRY_HOST_INITIATED	= 0x07,
+
+	/** Controller initiated telemetry log (optional) */
+	SPDK_NVME_LOG_TELEMETRY_CTRLR_INITIATED	= 0x08,
+
+	/* 0x09-0x6F - reserved */
 
 	/** Discovery(refer to the NVMe over Fabrics specification) */
 	SPDK_NVME_LOG_DISCOVERY		= 0x70,
@@ -1919,6 +1929,24 @@ struct spdk_nvme_cmds_and_effect_log_page {
 	uint8_t reserved0[2048];
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_cmds_and_effect_log_page) == 4096, "Incorrect size");
+
+/*
+ * Get Log Page – Telemetry Host/Controller Initiated Log (Log Identifiers 07h/08h)
+ */
+struct spdk_nvme_telemetry_log_page_hdr {
+	uint8_t    lpi;			/* Log page identifier */
+	uint8_t    rsvd[4];
+	uint8_t    ieee_oui[3];
+	uint16_t   dalb1;		/* Data area 1 last block */
+	uint16_t   dalb2;		/* Data area 2 last block */
+	uint16_t   dalb3;		/* Data area 3 last block */
+	uint8_t    rsvd1[368];
+	uint8_t    ctrlr_avail;		/* Controller initiated data avail */
+	uint8_t    ctrlr_gen;		/* Controller initiated telemetry data generation */
+	uint8_t    rsnident[128];	/* Reason identifier */
+	uint8_t    telemetry_datablock[0];
+};
+SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_telemetry_log_page_hdr) == 512, "Incorrect size");
 
 /**
  * Asynchronous Event Type
@@ -2132,6 +2160,23 @@ union spdk_nvme_feat_number_of_queues {
 	} bits;
 };
 SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_number_of_queues) == 4, "Incorrect size");
+
+/**
+ * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_INTERRUPT_COALESCING
+ */
+union spdk_nvme_feat_interrupt_coalescing {
+	uint32_t raw;
+	struct {
+		/** Aggregation Threshold */
+		uint32_t thr : 8;
+
+		/** Aggregration time */
+		uint32_t time : 8;
+
+		uint32_t reserved : 16;
+	} bits;
+};
+SPDK_STATIC_ASSERT(sizeof(union spdk_nvme_feat_interrupt_coalescing) == 4, "Incorrect size");
 
 /**
  * Data used by Set Features/Get Features \ref SPDK_NVME_FEAT_INTERRUPT_VECTOR_CONFIGURATION
@@ -2452,8 +2497,17 @@ struct spdk_nvme_fw_commit {
 };
 SPDK_STATIC_ASSERT(sizeof(struct spdk_nvme_fw_commit) == 4, "Incorrect size");
 
-#define spdk_nvme_cpl_is_error(cpl)					\
-	((cpl)->status.sc != 0 || (cpl)->status.sct != 0)
+#define spdk_nvme_cpl_is_error(cpl)			\
+	((cpl)->status.sc != SPDK_NVME_SC_SUCCESS ||	\
+	 (cpl)->status.sct != SPDK_NVME_SCT_GENERIC)
+
+#define spdk_nvme_cpl_is_success(cpl)	(!spdk_nvme_cpl_is_error(cpl))
+
+#define spdk_nvme_cpl_is_pi_error(cpl)						\
+	((cpl)->status.sct == SPDK_NVME_SCT_MEDIA_ERROR &&			\
+	 ((cpl)->status.sc == SPDK_NVME_SC_GUARD_CHECK_ERROR ||			\
+	  (cpl)->status.sc == SPDK_NVME_SC_APPLICATION_TAG_CHECK_ERROR ||	\
+	  (cpl)->status.sc == SPDK_NVME_SC_REFERENCE_TAG_CHECK_ERROR))
 
 /** Enable protection information checking of the Logical Block Reference Tag field */
 #define SPDK_NVME_IO_FLAGS_PRCHK_REFTAG (1U << 26)

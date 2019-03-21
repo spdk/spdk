@@ -216,7 +216,7 @@ struct spdk_bdev_module bdev_ut_if = {
 	.fini_start = fini_start,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&bdev_ut_if)
+SPDK_BDEV_MODULE_REGISTER(bdev_ut, &bdev_ut_if)
 
 static void
 register_bdev(struct ut_bdev *ut_bdev, char *name, void *io_target)
@@ -671,6 +671,22 @@ basic_qos(void)
 	poll_threads();
 	CU_ASSERT(status == SPDK_BDEV_IO_STATUS_SUCCESS);
 
+	/*
+	 * Close the descriptor only, which should stop the qos channel as
+	 * the last descriptor removed.
+	 */
+	spdk_bdev_close(g_desc);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qos->ch == NULL);
+
+	/*
+	 * Open the bdev again which shall setup the qos channel as the
+	 * channels are valid.
+	 */
+	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qos->ch != NULL);
+
 	/* Tear down the channels */
 	set_thread(0);
 	spdk_put_io_channel(io_ch[0]);
@@ -684,7 +700,10 @@ basic_qos(void)
 	poll_threads();
 	CU_ASSERT(bdev->internal.qos->ch == NULL);
 
+	/* Open the bdev again, no qos channel setup without valid channels. */
 	spdk_bdev_open(bdev, true, NULL, NULL, &g_desc);
+	poll_threads();
+	CU_ASSERT(bdev->internal.qos->ch == NULL);
 
 	/* Create the channels in reverse order. */
 	set_thread(1);

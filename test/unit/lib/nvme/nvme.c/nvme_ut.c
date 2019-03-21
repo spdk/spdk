@@ -82,23 +82,20 @@ memset_trid(struct spdk_nvme_transport_id *trid1, struct spdk_nvme_transport_id 
 
 static bool ut_check_trtype = false;
 int
-nvme_transport_ctrlr_scan(const struct spdk_nvme_transport_id *trid,
-			  void *cb_ctx,
-			  spdk_nvme_probe_cb probe_cb,
-			  spdk_nvme_remove_cb remove_cb,
+nvme_transport_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 			  bool direct_connect)
 {
 	struct spdk_nvme_ctrlr *ctrlr = NULL;
 
 	if (ut_check_trtype == true) {
-		CU_ASSERT(trid->trtype == SPDK_NVME_TRANSPORT_PCIE);
+		CU_ASSERT(probe_ctx->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
 	}
 
-	if (direct_connect == true && probe_cb) {
+	if (direct_connect == true && probe_ctx->probe_cb) {
 		nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-		ctrlr = spdk_nvme_get_ctrlr_by_trid(trid);
+		ctrlr = spdk_nvme_get_ctrlr_by_trid(&probe_ctx->trid);
 		nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-		probe_cb(cb_ctx, trid, &ctrlr->opts);
+		probe_ctx->probe_cb(probe_ctx->cb_ctx, &probe_ctx->trid, &ctrlr->opts);
 	}
 	return 0;
 }
@@ -162,7 +159,6 @@ test_spdk_nvme_probe(void)
 
 	/* driver init passes, transport available, we are primary */
 	MOCK_SET(spdk_process_is_primary, true);
-	TAILQ_INIT(&g_nvme_init_ctrlrs);
 	rc = spdk_nvme_probe(trid, cb_ctx, probe_cb, attach_cb, remove_cb);
 	CU_ASSERT(rc == 0);
 
@@ -260,6 +256,18 @@ test_spdk_nvme_connect(void)
 	CU_ASSERT(ret_ctrlr == NULL);
 }
 
+static struct spdk_nvme_probe_ctx *
+test_nvme_init_get_probe_ctx(void)
+{
+	struct spdk_nvme_probe_ctx *probe_ctx;
+
+	probe_ctx = calloc(1, sizeof(*probe_ctx));
+	SPDK_CU_ASSERT_FATAL(probe_ctx != NULL);
+	TAILQ_INIT(&probe_ctx->init_ctrlrs);
+
+	return probe_ctx;
+}
+
 static void
 test_nvme_init_controllers(void)
 {
@@ -267,16 +275,16 @@ test_nvme_init_controllers(void)
 	struct nvme_driver test_driver;
 	void *cb_ctx = NULL;
 	spdk_nvme_attach_cb attach_cb = dummy_attach_cb;
-	struct spdk_nvme_ctrlr ctrlr;
+	struct spdk_nvme_probe_ctx *probe_ctx;
+	struct spdk_nvme_ctrlr *ctrlr;
 	pthread_mutexattr_t attr;
 
 	g_spdk_nvme_driver = &test_driver;
-	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
-	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	ctrlr = calloc(1, sizeof(*ctrlr));
+	SPDK_CU_ASSERT_FATAL(ctrlr != NULL);
+	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
 	CU_ASSERT(pthread_mutexattr_init(&attr) == 0);
 	CU_ASSERT(pthread_mutex_init(&test_driver.lock, &attr) == 0);
-	TAILQ_INIT(&g_nvme_init_ctrlrs);
-	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
 	TAILQ_INIT(&test_driver.shared_attached_ctrlrs);
 
 	/*
@@ -284,12 +292,17 @@ test_nvme_init_controllers(void)
 	 * Verify correct behavior when it does.
 	 */
 	MOCK_SET(nvme_ctrlr_process_init, 1);
+	MOCK_SET(spdk_process_is_primary, 1);
 	g_spdk_nvme_driver->initialized = false;
 	ut_destruct_called = false;
-	rc = nvme_init_controllers(cb_ctx, attach_cb);
-	CU_ASSERT(rc == -1);
+	probe_ctx = test_nvme_init_get_probe_ctx();
+	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+	probe_ctx->cb_ctx = cb_ctx;
+	probe_ctx->attach_cb = attach_cb;
+	probe_ctx->trid.trtype = SPDK_NVME_TRANSPORT_PCIE;
+	rc = nvme_init_controllers(probe_ctx);
+	CU_ASSERT(rc != 0);
 	CU_ASSERT(g_spdk_nvme_driver->initialized == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(ut_destruct_called == true);
 
 	/*
@@ -297,32 +310,34 @@ test_nvme_init_controllers(void)
 	 * forward by setting the ctrl state so that it can be moved
 	 * the shared_attached_ctrlrs list.
 	 */
-	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
-	ctrlr.state = NVME_CTRLR_STATE_READY;
+	probe_ctx = test_nvme_init_get_probe_ctx();
+	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+	ctrlr->state = NVME_CTRLR_STATE_READY;
 	MOCK_SET(nvme_ctrlr_process_init, 0);
-	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	rc = nvme_init_controllers(probe_ctx);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
-	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->shared_attached_ctrlrs) == &ctrlr);
-	TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, &ctrlr, tailq);
+	CU_ASSERT(TAILQ_FIRST(&g_spdk_nvme_driver->shared_attached_ctrlrs) == ctrlr);
+	TAILQ_REMOVE(&g_spdk_nvme_driver->shared_attached_ctrlrs, ctrlr, tailq);
 
 	/*
 	 * Non-PCIe controllers should be added to the per-process list, not the shared list.
 	 */
-	memset(&ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
-	ctrlr.trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
-	TAILQ_INSERT_TAIL(&g_nvme_init_ctrlrs, &ctrlr, tailq);
-	ctrlr.state = NVME_CTRLR_STATE_READY;
+	memset(ctrlr, 0, sizeof(struct spdk_nvme_ctrlr));
+	ctrlr->trid.trtype = SPDK_NVME_TRANSPORT_RDMA;
+	probe_ctx = test_nvme_init_get_probe_ctx();
+	TAILQ_INSERT_TAIL(&probe_ctx->init_ctrlrs, ctrlr, tailq);
+	ctrlr->state = NVME_CTRLR_STATE_READY;
 	MOCK_SET(nvme_ctrlr_process_init, 0);
-	rc = nvme_init_controllers(cb_ctx, attach_cb);
+	rc = nvme_init_controllers(probe_ctx);
 	CU_ASSERT(rc == 0);
 	CU_ASSERT(ut_attach_cb_called == true);
-	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
-	CU_ASSERT(TAILQ_FIRST(&g_nvme_attached_ctrlrs) == &ctrlr);
-	TAILQ_REMOVE(&g_nvme_attached_ctrlrs, &ctrlr, tailq);
+	CU_ASSERT(TAILQ_FIRST(&g_nvme_attached_ctrlrs) == ctrlr);
+	TAILQ_REMOVE(&g_nvme_attached_ctrlrs, ctrlr, tailq);
+	free(ctrlr);
+	CU_ASSERT(TAILQ_EMPTY(&g_nvme_attached_ctrlrs));
 
 	g_spdk_nvme_driver = NULL;
 	pthread_mutexattr_destroy(&attr);
@@ -397,7 +412,6 @@ test_nvme_driver_init(void)
 	g_spdk_nvme_driver = NULL;
 	rc = nvme_driver_init();
 	CU_ASSERT(g_spdk_nvme_driver->initialized == false);
-	CU_ASSERT(TAILQ_EMPTY(&g_nvme_init_ctrlrs));
 	CU_ASSERT(TAILQ_EMPTY(&g_spdk_nvme_driver->shared_attached_ctrlrs));
 	CU_ASSERT(rc == 0);
 
@@ -706,19 +720,23 @@ test_nvme_ctrlr_probe(void)
 	int rc = 0;
 	struct spdk_nvme_ctrlr ctrlr = {};
 	const struct spdk_nvme_transport_id trid = {};
+	struct spdk_nvme_probe_ctx probe_ctx = {};
 	void *devhandle = NULL;
 	void *cb_ctx = NULL;
 	struct spdk_nvme_ctrlr *dummy = NULL;
 
 	/* test when probe_cb returns false */
+
 	MOCK_SET(dummy_probe_cb, false);
-	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
+	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 1);
 
 	/* probe_cb returns true but we can't construct a ctrl */
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, NULL);
-	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
+	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == -1);
 
 	/* happy path */
@@ -726,12 +744,12 @@ test_nvme_ctrlr_probe(void)
 	SPDK_CU_ASSERT_FATAL(g_spdk_nvme_driver != NULL);
 	MOCK_SET(dummy_probe_cb, true);
 	MOCK_SET(nvme_transport_ctrlr_construct, &ctrlr);
-	TAILQ_INIT(&g_nvme_init_ctrlrs);
-	rc = nvme_ctrlr_probe(&trid, devhandle, dummy_probe_cb, cb_ctx);
+	spdk_nvme_probe_ctx_init(&probe_ctx, &trid, cb_ctx, dummy_probe_cb, NULL, NULL);
+	rc = nvme_ctrlr_probe(&trid, &probe_ctx, devhandle);
 	CU_ASSERT(rc == 0);
-	dummy = TAILQ_FIRST(&g_nvme_init_ctrlrs);
+	dummy = TAILQ_FIRST(&probe_ctx.init_ctrlrs);
 	CU_ASSERT(dummy == ut_nvme_transport_ctrlr_construct);
-	TAILQ_REMOVE(&g_nvme_init_ctrlrs, dummy, tailq);
+	TAILQ_REMOVE(&probe_ctx.init_ctrlrs, dummy, tailq);
 	MOCK_CLEAR_P(nvme_transport_ctrlr_construct);
 
 	free(g_spdk_nvme_driver);

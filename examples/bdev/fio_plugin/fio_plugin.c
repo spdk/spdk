@@ -140,7 +140,9 @@ spdk_fio_cleanup_thread(struct spdk_fio_thread *fio_thread)
 {
 	spdk_thread_send_msg(fio_thread->thread, spdk_fio_bdev_close_targets, fio_thread);
 
-	while (spdk_fio_poll_thread(fio_thread) > 0) {}
+	while (!spdk_thread_is_idle(fio_thread->thread)) {
+		spdk_fio_poll_thread(fio_thread);
+	}
 
 	spdk_set_thread(fio_thread->thread);
 
@@ -281,7 +283,7 @@ spdk_init_thread_poll(void *arg)
 	}
 	spdk_unaffinitize_thread();
 
-	spdk_thread_lib_init(NULL);
+	spdk_thread_lib_init(NULL, 0);
 
 	/* Create an SPDK thread temporarily */
 	rc = spdk_fio_init_thread(&td);
@@ -330,9 +332,7 @@ spdk_init_thread_poll(void *arg)
 
 	do {
 		spdk_fio_poll_thread(fio_thread);
-	} while (!done);
-
-	while (spdk_fio_poll_thread(fio_thread) > 0) {};
+	} while (!done && !spdk_thread_is_idle(fio_thread->thread));
 
 	spdk_fio_cleanup_thread(fio_thread);
 
@@ -649,7 +649,7 @@ spdk_fio_event(struct thread_data *td, int event)
 static size_t
 spdk_fio_poll_thread(struct spdk_fio_thread *fio_thread)
 {
-	return spdk_thread_poll(fio_thread->thread, 0);
+	return spdk_thread_poll(fio_thread->thread, 0, 0);
 }
 
 static int

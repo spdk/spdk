@@ -46,6 +46,12 @@ CONFIG_WERROR=n
 # Build with link-time optimization.
 CONFIG_LTO=n
 
+# Generate profile guided optimization data.
+CONFIG_PGO_CAPTURE=n
+
+# Use profile guided optimization data.
+CONFIG_PGO_USE=n
+
 # Build with code coverage instrumentation.
 CONFIG_COVERAGE=n
 
@@ -88,6 +94,7 @@ CONFIG_RBD=n
 
 # Build vhost library.
 CONFIG_VHOST=y
+CONFIG_VHOST_INTERNAL_LIB=y
 
 # Build vhost initiator (Virtio) driver.
 CONFIG_VIRTIO=y
@@ -96,7 +103,7 @@ CONFIG_VIRTIO=y
 CONFIG_PMDK=n
 CONFIG_PMDK_DIR=
 
-# Build with "reduce" (SPDK block compression)
+# Enable the dependencies for building the compress vbdev
 CONFIG_REDUCE=n
 
 # Build with VPP
@@ -132,3 +139,9 @@ CONFIG_CUSTOMOCF=n
 
 # Build ISA-L library
 CONFIG_ISAL=y
+
+# Build with IO_URING support
+CONFIG_URING=n
+
+# Path to custom built IO_URING library
+CONFIG_URING_PATH=

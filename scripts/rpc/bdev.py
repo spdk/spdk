@@ -168,19 +168,26 @@ def get_raid_bdevs(client, category):
     return client.call('get_raid_bdevs', params)
 
 
-def construct_raid_bdev(client, name, strip_size, raid_level, base_bdevs):
-    """Construct pooled device
+def construct_raid_bdev(client, name, raid_level, base_bdevs, strip_size=None, strip_size_kb=None):
+    """Construct pooled device. Either strip size arg will work but one is required.
 
     Args:
         name: user defined raid bdev name
-        strip_size: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, 512, 1024 etc
+        strip_size (deprecated): strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
+        strip_size_kb: strip size of raid bdev in KB, supported values like 8, 16, 32, 64, 128, 256, etc
         raid_level: raid level of raid bdev, supported values 0
         base_bdevs: Space separated names of Nvme bdevs in double quotes, like "Nvme0n1 Nvme1n1 Nvme2n1"
 
     Returns:
         None
     """
-    params = {'name': name, 'strip_size': strip_size, 'raid_level': raid_level, 'base_bdevs': base_bdevs}
+    params = {'name': name, 'raid_level': raid_level, 'base_bdevs': base_bdevs}
+
+    if strip_size:
+        params['strip_size'] = strip_size
+
+    if strip_size_kb:
+        params['strip_size_kb'] = strip_size_kb
 
     return client.call('construct_raid_bdev', params)
 
@@ -228,14 +235,16 @@ def delete_aio_bdev(client, name):
     return client.call('delete_aio_bdev', params)
 
 
-def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None, nvme_adminq_poll_period_us=None):
+def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry_count=None,
+                          nvme_adminq_poll_period_us=None, nvme_ioq_poll_period_us=None):
     """Set options for the bdev nvme. This is startup command.
 
     Args:
         action_on_timeout:  action to take on command time out. Valid values are: none, reset, abort (optional)
         timeout_us: Timeout for each command, in microseconds. If 0, don't track timeouts (optional)
         retry_count: The number of attempts per I/O when an I/O fails (optional)
-        nvme_adminq_poll_period_us: how often the admin queue is polled for asynchronous events in microsecon (optional)
+        nvme_adminq_poll_period_us: How often the admin queue is polled for asynchronous events in microseconds (optional)
+        nvme_ioq_poll_period_us: How often to poll I/O queues for completions in microseconds (optional)
     """
     params = {}
 
@@ -250,6 +259,9 @@ def set_bdev_nvme_options(client, action_on_timeout=None, timeout_us=None, retry
 
     if nvme_adminq_poll_period_us:
         params['nvme_adminq_poll_period_us'] = nvme_adminq_poll_period_us
+
+    if nvme_ioq_poll_period_us:
+        params['nvme_ioq_poll_period_us'] = nvme_ioq_poll_period_us
 
     return client.call('set_bdev_nvme_options', params)
 
@@ -269,7 +281,9 @@ def set_bdev_nvme_hotplug(client, enable, period_us=None):
     return client.call('set_bdev_nvme_hotplug', params)
 
 
-def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None, subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None):
+def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
+                        subnqn=None, hostnqn=None, hostaddr=None, hostsvcid=None,
+                        prchk_reftag=None, prchk_guard=None):
     """Construct NVMe namespace block devices.
 
     Args:
@@ -282,6 +296,8 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
         hostnqn: NQN to connect from (optional)
         hostaddr: host transport address (IP address for IP-based transports, NULL for PCIe or FC; optional)
         hostsvcid: host transport service ID (port number for IP-based transports, NULL for PCIe or FC; optional)
+        prchk_reftag: Enable checking of PI reference tag for I/O processing (optional)
+        prchk_guard: Enable checking of PI guard for I/O processing (optional)
 
     Returns:
         Names of created block devices.
@@ -307,6 +323,12 @@ def construct_nvme_bdev(client, name, trtype, traddr, adrfam=None, trsvcid=None,
 
     if subnqn:
         params['subnqn'] = subnqn
+
+    if prchk_reftag:
+        params['prchk_reftag'] = prchk_reftag
+
+    if prchk_guard:
+        params['prchk_guard'] = prchk_guard
 
     return client.call('construct_nvme_bdev', params)
 
@@ -557,16 +579,6 @@ def get_bdevs_iostat(client, name=None):
     if name:
         params['name'] = name
     return client.call('get_bdevs_iostat', params)
-
-
-def delete_bdev(client, bdev_name):
-    """Remove a bdev from the system.
-
-    Args:
-        bdev_name: name of bdev to delete
-    """
-    params = {'name': bdev_name}
-    return client.call('delete_bdev', params)
 
 
 def enable_bdev_histogram(client, name, enable):

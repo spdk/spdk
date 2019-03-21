@@ -83,9 +83,6 @@ struct rte_vhost_vring {
 	int			callfd;
 	int			kickfd;
 	uint16_t		size;
-
-	uint16_t		last_avail_idx;
-	uint16_t		last_used_idx;
 };
 
 /**
@@ -469,7 +466,10 @@ int rte_vhost_get_vhost_vring(int vid, uint16_t vring_idx,
  * @return
  *  0 on success, -1 on failure
  */
-int rte_vhost_set_vhost_vring_last_idx(int vid, uint16_t vring_idx,
-			      uint16_t last_avail_idx, uint16_t last_used_idx);
+int rte_vhost_set_vring_base(int vid, uint16_t queue_id,
+		uint16_t last_avail_idx, uint16_t last_used_idx);
+
+int rte_vhost_get_vring_base(int vid, uint16_t queue_id,
+		uint16_t *last_avail_idx, uint16_t *last_used_idx);
 
 #endif /* _RTE_VHOST_H_ */

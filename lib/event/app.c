@@ -59,15 +59,18 @@
 
 struct spdk_app {
 	struct spdk_conf		*config;
+	const char			*json_config_file;
+	const char			*rpc_addr;
 	int				shm_id;
 	spdk_app_shutdown_cb		shutdown_cb;
 	int				rc;
 };
 
 static struct spdk_app g_spdk_app;
-static struct spdk_event *g_app_start_event = NULL;
+static spdk_msg_fn g_start_fn = NULL;
+static void *g_start_arg = NULL;
 static struct spdk_event *g_shutdown_event = NULL;
-static int g_init_lcore;
+static uint32_t g_init_lcore;
 static bool g_delay_subsystem_init = false;
 static bool g_shutdown_sig_received = false;
 static char *g_executable_name;
@@ -279,7 +282,6 @@ spdk_app_opts_init(struct spdk_app_opts *opts)
 	opts->master_core = SPDK_APP_DPDK_DEFAULT_MASTER_CORE;
 	opts->mem_channel = SPDK_APP_DPDK_DEFAULT_MEM_CHANNEL;
 	opts->reactor_mask = NULL;
-	opts->max_delay_us = 0;
 	opts->print_level = SPDK_APP_DEFAULT_LOG_PRINT_LEVEL;
 	opts->rpc_addr = SPDK_DEFAULT_RPC_ADDR;
 	opts->num_entries = SPDK_APP_DEFAULT_NUM_TRACE_ENTRIES;
@@ -347,27 +349,19 @@ static void
 spdk_app_start_application(void)
 {
 	spdk_rpc_set_state(SPDK_RPC_RUNTIME);
-	spdk_event_call(g_app_start_event);
+
+	assert(spdk_env_get_current_core() == g_init_lcore);
+
+	g_start_fn(g_start_arg);
 }
 
 static void
-spdk_app_start_rpc(void *arg1, void *arg2)
+spdk_app_start_rpc(void *arg1)
 {
-	const char *rpc_addr = arg1;
-
-	spdk_rpc_initialize(rpc_addr);
+	spdk_rpc_initialize(g_spdk_app.rpc_addr);
 	if (!g_delay_subsystem_init) {
 		spdk_app_start_application();
 	}
-}
-
-static void
-_spdk_app_json_config_load(void *_app_opts, void *_event_done)
-{
-	struct spdk_app_opts *app_opts = _app_opts;
-	struct spdk_event *event_done = _event_done;
-
-	spdk_app_json_config_load(app_opts, event_done);
 }
 
 static struct spdk_conf *
@@ -565,14 +559,30 @@ spdk_app_setup_trace(struct spdk_app_opts *opts)
 	return 0;
 }
 
+static void
+bootstrap_fn(void *arg1, void *arg2)
+{
+	if (g_spdk_app.json_config_file) {
+		g_delay_subsystem_init = false;
+		spdk_app_json_config_load(g_spdk_app.json_config_file, g_spdk_app.rpc_addr, spdk_app_start_rpc,
+					  NULL);
+	} else {
+		if (!g_delay_subsystem_init) {
+			spdk_subsystem_init(spdk_app_start_rpc, NULL);
+		} else {
+			spdk_rpc_initialize(g_spdk_app.rpc_addr);
+		}
+	}
+}
+
 int
-spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
-	       void *arg1, void *arg2)
+spdk_app_start(struct spdk_app_opts *opts, spdk_msg_fn start_fn,
+	       void *arg1)
 {
 	struct spdk_conf	*config = NULL;
 	int			rc;
-	struct spdk_event	*rpc_start_event, *config_load_event;
 	char			*tty;
+	struct spdk_event	*event;
 
 	if (!opts) {
 		SPDK_ERRLOG("opts should not be NULL\n");
@@ -626,14 +636,12 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 	spdk_log_open();
 	SPDK_NOTICELOG("Total cores available: %d\n", spdk_env_get_core_count());
 
-	spdk_thread_lib_init(NULL);
-
 	/*
 	 * If mask not specified on command line or in configuration file,
 	 *  reactor_mask will be 0x1 which will enable core 0 to run one
 	 *  reactor.
 	 */
-	if ((rc = spdk_reactors_init(opts->max_delay_us)) != 0) {
+	if ((rc = spdk_reactors_init()) != 0) {
 		SPDK_ERRLOG("Reactor Initilization failed: rc = %d\n", rc);
 		goto app_start_log_close_err;
 	}
@@ -655,28 +663,20 @@ spdk_app_start(struct spdk_app_opts *opts, spdk_event_fn start_fn,
 
 	memset(&g_spdk_app, 0, sizeof(g_spdk_app));
 	g_spdk_app.config = config;
+	g_spdk_app.json_config_file = opts->json_config_file;
+	g_spdk_app.rpc_addr = opts->rpc_addr;
 	g_spdk_app.shm_id = opts->shm_id;
 	g_spdk_app.shutdown_cb = opts->shutdown_cb;
 	g_spdk_app.rc = 0;
+
 	g_init_lcore = spdk_env_get_current_core();
 	g_delay_subsystem_init = opts->delay_subsystem_init;
-	g_app_start_event = spdk_event_allocate(g_init_lcore, start_fn, arg1, arg2);
+	g_start_fn = start_fn;
+	g_start_arg = arg1;
 
-	rpc_start_event = spdk_event_allocate(g_init_lcore, spdk_app_start_rpc,
-					      (void *)opts->rpc_addr, NULL);
+	event = spdk_event_allocate(g_init_lcore, bootstrap_fn, NULL, NULL);
 
-	if (opts->json_config_file) {
-		g_delay_subsystem_init = false;
-		config_load_event = spdk_event_allocate(g_init_lcore, _spdk_app_json_config_load,
-							opts, rpc_start_event);
-		spdk_event_call(config_load_event);
-	} else {
-		if (!g_delay_subsystem_init) {
-			spdk_subsystem_init(rpc_start_event);
-		} else {
-			spdk_event_call(rpc_start_event);
-		}
-	}
+	spdk_event_call(event);
 
 	/* This blocks until spdk_app_stop is called */
 	spdk_reactors_start();
@@ -698,21 +698,17 @@ spdk_app_fini(void)
 {
 	spdk_trace_cleanup();
 	spdk_reactors_fini();
+	spdk_env_fini();
 	spdk_conf_free(g_spdk_app.config);
 	g_spdk_app.config = NULL;
 	spdk_log_close();
-	spdk_thread_lib_fini();
 }
 
 static void
 _spdk_app_stop(void *arg1, void *arg2)
 {
-	struct spdk_event *app_stop_event;
-
 	spdk_rpc_finish();
-
-	app_stop_event = spdk_event_allocate(spdk_env_get_current_core(), spdk_reactors_stop, NULL, NULL);
-	spdk_subsystem_fini(app_stop_event);
+	spdk_subsystem_fini(spdk_reactors_stop, NULL);
 }
 
 void
@@ -860,7 +856,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			retval = SPDK_APP_PARSE_ARGS_HELP;
 			goto out;
 		case SHM_ID_OPT_IDX:
-			opts->shm_id = spdk_strtol(optarg, 10);
+			opts->shm_id = spdk_strtol(optarg, 0);
 			if (opts->shm_id < 0) {
 				fprintf(stderr, "Invalid shared memory ID %s\n", optarg);
 				goto out;
@@ -870,14 +866,14 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			opts->reactor_mask = optarg;
 			break;
 		case MEM_CHANNELS_OPT_IDX:
-			opts->mem_channel = spdk_strtol(optarg, 10);
+			opts->mem_channel = spdk_strtol(optarg, 0);
 			if (opts->mem_channel < 0) {
 				fprintf(stderr, "Invalid memory channel %s\n", optarg);
 				goto out;
 			}
 			break;
 		case MASTER_CORE_OPT_IDX:
-			opts->master_core = spdk_strtol(optarg, 10);
+			opts->master_core = spdk_strtol(optarg, 0);
 			if (opts->master_core < 0) {
 				fprintf(stderr, "Invalid master core %s\n", optarg);
 				goto out;
@@ -991,12 +987,8 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			}
 			break;
 		case MAX_REACTOR_DELAY_OPT_IDX:
-			tmp = spdk_strtol(optarg, 10);
-			if (tmp < 0) {
-				fprintf(stderr, "Invalid maximum latency %s\n", optarg);
-				goto out;
-			}
-			opts->max_delay_us = (uint64_t)tmp;
+			fprintf(stderr,
+				"Deprecation warning: The maximum allowed latency parameter is no longer supported.\n");
 			break;
 		case '?':
 			/*
@@ -1057,10 +1049,12 @@ spdk_app_usage(void)
 }
 
 static void
-spdk_rpc_start_subsystem_init_cpl(void *arg1, void *arg2)
+spdk_rpc_start_subsystem_init_cpl(void *arg1)
 {
 	struct spdk_jsonrpc_request *request = arg1;
 	struct spdk_json_write_ctx *w;
+
+	assert(spdk_env_get_current_core() == g_init_lcore);
 
 	spdk_app_start_application();
 
@@ -1077,17 +1071,13 @@ static void
 spdk_rpc_start_subsystem_init(struct spdk_jsonrpc_request *request,
 			      const struct spdk_json_val *params)
 {
-	struct spdk_event *cb_event;
-
 	if (params != NULL) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "start_subsystem_init requires no parameters");
 		return;
 	}
 
-	cb_event = spdk_event_allocate(g_init_lcore, spdk_rpc_start_subsystem_init_cpl,
-				       request, NULL);
-	spdk_subsystem_init(cb_event);
+	spdk_subsystem_init(spdk_rpc_start_subsystem_init_cpl, request);
 }
 SPDK_RPC_REGISTER("start_subsystem_init", spdk_rpc_start_subsystem_init, SPDK_RPC_STARTUP)
 

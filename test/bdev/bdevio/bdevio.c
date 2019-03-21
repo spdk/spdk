@@ -912,7 +912,7 @@ __run_ut_thread(void *arg1, void *arg2)
 }
 
 static void
-test_main(void *arg1, void *arg2)
+test_main(void *arg1)
 {
 	struct spdk_event *event;
 
@@ -957,7 +957,7 @@ main(int argc, char **argv)
 	struct spdk_app_opts	opts = {};
 
 	spdk_app_opts_init(&opts);
-	opts.name = "bdevtest";
+	opts.name = "bdevio";
 	opts.rpc_addr = NULL;
 	opts.reactor_mask = "0x7";
 
@@ -967,7 +967,7 @@ main(int argc, char **argv)
 		return rc;
 	}
 
-	rc = spdk_app_start(&opts, test_main, NULL, NULL);
+	rc = spdk_app_start(&opts, test_main, NULL);
 	spdk_app_fini();
 
 	return rc;

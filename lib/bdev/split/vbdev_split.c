@@ -95,7 +95,7 @@ static struct spdk_bdev_module split_if = {
 	.config_json = vbdev_split_config_json,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&split_if)
+SPDK_BDEV_MODULE_REGISTER(split, &split_if)
 
 static void
 vbdev_split_base_free(void *ctx)
@@ -178,13 +178,10 @@ vbdev_split_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	struct spdk_bdev *split_base_bdev = spdk_bdev_part_get_base_bdev(part);
 	uint64_t offset_blocks = spdk_bdev_part_get_offset_blocks(part);
 
-	spdk_json_write_name(w, "split");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "split");
 
-	spdk_json_write_name(w, "base_bdev");
-	spdk_json_write_string(w, spdk_bdev_get_name(split_base_bdev));
-	spdk_json_write_name(w, "offset_blocks");
-	spdk_json_write_uint64(w, offset_blocks);
+	spdk_json_write_named_string(w, "base_bdev", spdk_bdev_get_name(split_base_bdev));
+	spdk_json_write_named_uint64(w, "offset_blocks", offset_blocks);
 
 	spdk_json_write_object_end(w);
 

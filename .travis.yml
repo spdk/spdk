@@ -27,6 +27,7 @@ script:
   - ./test/unit/unittest.sh
 
 notifications:
+  if: repository_slug = spdk/spdk
   irc:
     channels:
       - "chat.freenode.net#spdk"

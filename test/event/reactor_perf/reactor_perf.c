@@ -64,7 +64,7 @@ __submit_next(void *arg1, void *arg2)
 }
 
 static void
-test_start(void *arg1, void *arg2)
+test_start(void *arg1)
 {
 	int i;
 
@@ -92,7 +92,6 @@ static void
 usage(const char *program_name)
 {
 	printf("%s options\n", program_name);
-	printf("\t[-d Allowed delay when passing messages between cores in microseconds]\n");
 	printf("\t[-q Queue depth (default: 1)]\n");
 	printf("\t[-t time in seconds]\n");
 }
@@ -107,12 +106,11 @@ main(int argc, char **argv)
 
 	spdk_app_opts_init(&opts);
 	opts.name = "reactor_perf";
-	opts.max_delay_us = 1000;
 
 	g_time_in_sec = 0;
 	g_queue_depth = 1;
 
-	while ((op = getopt(argc, argv, "d:q:t:")) != -1) {
+	while ((op = getopt(argc, argv, "q:t:")) != -1) {
 		if (op == '?') {
 			usage(argv[0]);
 			exit(1);
@@ -123,9 +121,6 @@ main(int argc, char **argv)
 			exit(1);
 		}
 		switch (op) {
-		case 'd':
-			opts.max_delay_us = (uint64_t)val;
-			break;
 		case 'q':
 			g_queue_depth = val;
 			break;
@@ -145,7 +140,7 @@ main(int argc, char **argv)
 
 	opts.shutdown_cb = test_cleanup;
 
-	rc = spdk_app_start(&opts, test_start, NULL, NULL);
+	rc = spdk_app_start(&opts, test_start, NULL);
 
 	spdk_app_fini();
 

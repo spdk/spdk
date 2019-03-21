@@ -35,13 +35,16 @@ SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 CFLAGS += -I.
-CFLAGS += -Irte_vhost
 CFLAGS += $(ENV_CFLAGS)
 
-C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c vhost_nvme.c
+C_SRCS = vhost.c vhost_rpc.c vhost_scsi.c vhost_blk.c rte_vhost_compat.c
+
+ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
+C_SRCS += vhost_nvme.c
+DIRS-y += rte_vhost
+CFLAGS := -Irte_vhost $(CFLAGS)
+endif
 
 LIBNAME = vhost
-
-DIRS-y += rte_vhost
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

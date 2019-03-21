@@ -37,6 +37,7 @@
 #include "spdk/endian.h"
 #include "spdk/env.h"
 #include "spdk/event.h"
+#include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/queue.h"
 #include "spdk/trace.h"
@@ -910,6 +911,47 @@ spdk_iscsi_conn_read_data(struct spdk_iscsi_conn *conn, int bytes,
 	return SPDK_ISCSI_CONNECTION_FATAL;
 }
 
+int
+spdk_iscsi_conn_readv_data(struct spdk_iscsi_conn *conn,
+			   struct iovec *iov, int iovcnt)
+{
+	int ret;
+
+	if (iov == NULL || iovcnt == 0) {
+		return 0;
+	}
+
+	if (iovcnt == 1) {
+		return spdk_iscsi_conn_read_data(conn, iov[0].iov_len,
+						 iov[0].iov_base);
+	}
+
+	ret = spdk_sock_readv(conn->sock, iov, iovcnt);
+
+	if (ret > 0) {
+		spdk_trace_record(TRACE_ISCSI_READ_FROM_SOCKET_DONE, conn->id, ret, 0, 0);
+		return ret;
+	}
+
+	if (ret < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK) {
+			return 0;
+		}
+
+		/* For connect reset issue, do not output error log */
+		if (errno == ECONNRESET) {
+			SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "spdk_sock_readv() failed, errno %d: %s\n",
+				      errno, spdk_strerror(errno));
+		} else {
+			SPDK_ERRLOG("spdk_sock_readv() failed, errno %d: %s\n",
+				    errno, spdk_strerror(errno));
+		}
+	}
+
+	/* connection closed */
+	return SPDK_ISCSI_CONNECTION_FATAL;
+}
+
 void
 spdk_iscsi_task_mgmt_cpl(struct spdk_scsi_task *scsi_task)
 {
@@ -1148,13 +1190,13 @@ spdk_iscsi_conn_handle_nop(struct spdk_iscsi_conn *conn)
 static int
 spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 {
-	const int array_size = 32;
-	struct iovec	iovec_array[array_size];
-	struct iovec	*iov = iovec_array;
-	int iovec_cnt = 0;
+	const int num_iovs = 32;
+	struct iovec iovs[num_iovs];
+	struct iovec *iov = iovs;
+	int iovcnt = 0;
 	int bytes = 0;
-	int total_length = 0;
-	uint32_t writev_offset;
+	uint32_t total_length = 0;
+	uint32_t mapped_length = 0;
 	struct spdk_iscsi_pdu *pdu;
 	int pdu_length;
 
@@ -1166,41 +1208,22 @@ spdk_iscsi_conn_flush_pdus_internal(struct spdk_iscsi_conn *conn)
 
 	/*
 	 * Build up a list of iovecs for the first few PDUs in the
-	 *  connection's write_pdu_list.
+	 *  connection's write_pdu_list. For the first PDU, check if it was
+	 *  partially written out the last time this function was called, and
+	 *  if so adjust the iovec array accordingly. This check is done in
+	 *  spdk_iscsi_build_iovs() and so applied to remaining PDUs too.
+	 *  But extra overhead is negligible.
 	 */
-	while (pdu != NULL && ((array_size - iovec_cnt) >= 5)) {
-		pdu_length = spdk_iscsi_get_pdu_length(pdu,
-						       conn->header_digest,
-						       conn->data_digest);
-		iovec_cnt += spdk_iscsi_build_iovecs(conn,
-						     &iovec_array[iovec_cnt],
-						     pdu);
-		total_length += pdu_length;
+	while (pdu != NULL && ((num_iovs - iovcnt) > 0)) {
+		iovcnt += spdk_iscsi_build_iovs(conn, &iovs[iovcnt], num_iovs - iovcnt,
+						pdu, &mapped_length);
+		total_length += mapped_length;
 		pdu = TAILQ_NEXT(pdu, tailq);
 	}
 
-	/*
-	 * Check if the first PDU was partially written out the last time
-	 *  this function was called, and if so adjust the iovec array
-	 *  accordingly.
-	 */
-	writev_offset = TAILQ_FIRST(&conn->write_pdu_list)->writev_offset;
-	total_length -= writev_offset;
-	while (writev_offset > 0) {
-		if (writev_offset >= iov->iov_len) {
-			writev_offset -= iov->iov_len;
-			iov++;
-			iovec_cnt--;
-		} else {
-			iov->iov_len -= writev_offset;
-			iov->iov_base = (char *)iov->iov_base + writev_offset;
-			writev_offset = 0;
-		}
-	}
+	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovcnt);
 
-	spdk_trace_record(TRACE_ISCSI_FLUSH_WRITEBUF_START, conn->id, total_length, 0, iovec_cnt);
-
-	bytes = spdk_sock_writev(conn->sock, iov, iovec_cnt);
+	bytes = spdk_sock_writev(conn->sock, iov, iovcnt);
 	if (bytes == -1) {
 		if (errno == EWOULDBLOCK || errno == EAGAIN) {
 			return 1;
@@ -1303,10 +1326,42 @@ spdk_iscsi_conn_flush_pdus(void *_conn)
 	return 1;
 }
 
+static int
+spdk_iscsi_dif_verify(struct spdk_iscsi_pdu *pdu, struct spdk_dif_ctx *dif_ctx)
+{
+	struct iovec iov;
+	struct spdk_dif_error err_blk = {};
+	uint32_t num_blocks;
+	int rc;
+
+	iov.iov_base = pdu->data;
+	iov.iov_len = pdu->data_buf_len;
+	num_blocks = pdu->data_buf_len / dif_ctx->block_size;
+
+	rc = spdk_dif_verify(&iov, 1, num_blocks, dif_ctx, &err_blk);
+	if (rc != 0) {
+		SPDK_ERRLOG("DIF error detected. type=%d, offset=%" PRIu32 "\n",
+			    err_blk.err_type, err_blk.err_offset);
+	}
+
+	return rc;
+}
+
 void
 spdk_iscsi_conn_write_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 {
 	uint32_t crc32c;
+	int rc;
+
+	if (spdk_unlikely(spdk_iscsi_get_dif_ctx(conn, pdu, &pdu->dif_ctx))) {
+		rc = spdk_iscsi_dif_verify(pdu, &pdu->dif_ctx);
+		if (rc != 0) {
+			spdk_iscsi_conn_free_pdu(conn, pdu);
+			conn->state = ISCSI_CONN_STATE_EXITING;
+			return;
+		}
+		pdu->dif_insert_or_strip = true;
+	}
 
 	if (pdu->bhs.opcode != ISCSI_OP_LOGIN_RSP) {
 		/* Header Digest */

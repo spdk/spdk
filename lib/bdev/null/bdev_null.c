@@ -39,6 +39,7 @@
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/string.h"
+#include "spdk/likely.h"
 
 #include "spdk/bdev_module.h"
 #include "spdk_internal/log.h"
@@ -70,7 +71,7 @@ static struct spdk_bdev_module null_if = {
 	.async_fini = true,
 };
 
-SPDK_BDEV_MODULE_REGISTER(&null_if)
+SPDK_BDEV_MODULE_REGISTER(null, &null_if)
 
 static int
 bdev_null_destruct(void *ctx)
@@ -79,7 +80,7 @@ bdev_null_destruct(void *ctx)
 
 	TAILQ_REMOVE(&g_null_bdev_head, bdev, tailq);
 	free(bdev->bdev.name);
-	spdk_dma_free(bdev);
+	free(bdev);
 
 	return 0;
 }
@@ -93,8 +94,17 @@ bdev_null_submit_request(struct spdk_io_channel *_ch, struct spdk_bdev_io *bdev_
 	case SPDK_BDEV_IO_TYPE_READ:
 		if (bdev_io->u.bdev.iovs[0].iov_base == NULL) {
 			assert(bdev_io->u.bdev.iovcnt == 1);
-			bdev_io->u.bdev.iovs[0].iov_base = g_null_read_buf;
-			bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			if (spdk_likely(bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen <=
+					SPDK_BDEV_LARGE_BUF_MAX_SIZE)) {
+				bdev_io->u.bdev.iovs[0].iov_base = g_null_read_buf;
+				bdev_io->u.bdev.iovs[0].iov_len = bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen;
+			} else {
+				SPDK_ERRLOG("Overflow occurred. Read I/O size %" PRIu64 " was larger than permitted %d\n",
+					    bdev_io->u.bdev.num_blocks * bdev_io->bdev->blocklen,
+					    SPDK_BDEV_LARGE_BUF_MAX_SIZE);
+				spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+				return;
+			}
 		}
 		TAILQ_INSERT_TAIL(&ch->io, bdev_io, module_link);
 		break;
@@ -178,7 +188,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 		return NULL;
 	}
 
-	bdev = spdk_dma_zmalloc(sizeof(*bdev), 0, NULL);
+	bdev = calloc(1, sizeof(*bdev));
 	if (!bdev) {
 		SPDK_ERRLOG("could not allocate null_bdev\n");
 		return NULL;
@@ -186,7 +196,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 
 	bdev->bdev.name = strdup(name);
 	if (!bdev->bdev.name) {
-		spdk_dma_free(bdev);
+		free(bdev);
 		return NULL;
 	}
 	bdev->bdev.product_name = "Null disk";
@@ -207,7 +217,7 @@ create_null_bdev(const char *name, const struct spdk_uuid *uuid,
 	rc = spdk_bdev_register(&bdev->bdev);
 	if (rc) {
 		free(bdev->bdev.name);
-		spdk_dma_free(bdev);
+		free(bdev);
 		return NULL;
 	}
 
@@ -285,7 +295,8 @@ bdev_null_initialize(void)
 	 *  Instead of using a real rbuf from the bdev pool, just always point to
 	 *  this same zeroed buffer.
 	 */
-	g_null_read_buf = spdk_dma_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL);
+	g_null_read_buf = spdk_zmalloc(SPDK_BDEV_LARGE_BUF_MAX_SIZE, 0, NULL,
+				       SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 
 	/*
 	 * We need to pick some unique address as our "io device" - so just use the
@@ -355,7 +366,7 @@ end:
 static void
 _bdev_null_finish_cb(void *arg)
 {
-	spdk_dma_free(g_null_read_buf);
+	spdk_free(g_null_read_buf);
 	spdk_bdev_module_finish_done();
 }
 

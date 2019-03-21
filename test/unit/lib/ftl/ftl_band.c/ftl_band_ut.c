@@ -88,19 +88,6 @@ ppa_from_punit(uint64_t punit)
 	return ppa;
 }
 
-static uint64_t
-offset_from_ppa(struct ftl_ppa ppa, struct ftl_band *band)
-{
-	struct spdk_ftl_dev *dev = band->dev;
-	unsigned int punit;
-
-	/* TODO: ftl_ppa_flatten_punit should return uint32_t */
-	punit = ftl_ppa_flatten_punit(dev, ppa);
-	CU_ASSERT_EQUAL(ppa.chk, band->id);
-
-	return punit * ftl_dev_lbks_in_chunk(dev) + ppa.lbk;
-}
-
 static void
 test_band_lbkoff_from_ppa_base(void)
 {
@@ -134,7 +121,7 @@ test_band_lbkoff_from_ppa_lbk(void)
 
 			offset = ftl_band_lbkoff_from_ppa(g_band, ppa);
 
-			expect = offset_from_ppa(ppa, g_band);
+			expect = test_offset_from_ppa(ppa, g_band);
 			CU_ASSERT_EQUAL(offset, expect);
 		}
 	}
@@ -177,7 +164,7 @@ test_band_set_addr(void)
 
 	CU_ASSERT_EQUAL(md->num_vld, 0);
 
-	offset = offset_from_ppa(ppa, g_band);
+	offset = test_offset_from_ppa(ppa, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
 	CU_ASSERT_EQUAL(md->num_vld, 1);
@@ -185,13 +172,13 @@ test_band_set_addr(void)
 	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
 
 	ppa.pu++;
-	offset = offset_from_ppa(ppa, g_band);
+	offset = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
 	CU_ASSERT_EQUAL(md->num_vld, 2);
 	CU_ASSERT_EQUAL(md->lba_map[offset], TEST_LBA + 1);
 	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
 	ppa.pu--;
-	offset = offset_from_ppa(ppa, g_band);
+	offset = test_offset_from_ppa(ppa, g_band);
 	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset));
 	cleanup_band();
 }
@@ -207,7 +194,7 @@ test_invalidate_addr(void)
 	md = &g_band->md;
 	ppa = ppa_from_punit(g_range.begin);
 	ppa.chk = TEST_BAND_IDX;
-	offset[0] = offset_from_ppa(ppa, g_band);
+	offset[0] = test_offset_from_ppa(ppa, g_band);
 
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
 	CU_ASSERT_EQUAL(md->num_vld, 1);
@@ -216,10 +203,10 @@ test_invalidate_addr(void)
 	CU_ASSERT_EQUAL(md->num_vld, 0);
 	CU_ASSERT_FALSE(spdk_bit_array_get(md->vld_map, offset[0]));
 
-	offset[0] = offset_from_ppa(ppa, g_band);
+	offset[0] = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA, ppa);
 	ppa.pu++;
-	offset[1] = offset_from_ppa(ppa, g_band);
+	offset[1] = test_offset_from_ppa(ppa, g_band);
 	ftl_band_set_addr(g_band, TEST_LBA + 1, ppa);
 	CU_ASSERT_EQUAL(md->num_vld, 2);
 	CU_ASSERT_TRUE(spdk_bit_array_get(md->vld_map, offset[0]));

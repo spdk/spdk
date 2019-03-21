@@ -249,7 +249,7 @@ Create one initiator group with id 2 to accept any connection from 10.0.0.2/32:
 $ python ./scripts/rpc.py add_initiator_group 2 ANY 10.0.0.2/32
 ```
 
-Finaly construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
+Finally construct one target using previously created bdevs as LUN0 (Malloc0) and LUN1 (Malloc1)
 with a name "disk1" and alias "Data Disk1" using portal group 1 and initiator group 2.
 
 ```

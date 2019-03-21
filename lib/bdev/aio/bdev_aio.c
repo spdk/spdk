@@ -35,16 +35,63 @@
 
 #include "spdk/stdinc.h"
 
+#include "spdk/barrier.h"
 #include "spdk/bdev.h"
+#include "spdk/bdev_module.h"
 #include "spdk/conf.h"
 #include "spdk/env.h"
 #include "spdk/fd.h"
+#include "spdk/likely.h"
 #include "spdk/thread.h"
 #include "spdk/json.h"
 #include "spdk/util.h"
 #include "spdk/string.h"
 
 #include "spdk_internal/log.h"
+
+#include <libaio.h>
+
+struct bdev_aio_io_channel {
+	uint64_t				io_inflight;
+	struct bdev_aio_group_channel		*group_ch;
+};
+
+struct bdev_aio_group_channel {
+	struct spdk_poller			*poller;
+	io_context_t				io_ctx;
+};
+
+struct bdev_aio_task {
+	struct iocb			iocb;
+	uint64_t			len;
+	struct bdev_aio_io_channel	*ch;
+	TAILQ_ENTRY(bdev_aio_task)	link;
+};
+
+struct file_disk {
+	struct bdev_aio_task	*reset_task;
+	struct spdk_poller	*reset_retry_timer;
+	struct spdk_bdev	disk;
+	char			*filename;
+	int			fd;
+	TAILQ_ENTRY(file_disk)  link;
+	bool			block_size_override;
+};
+
+/* For user space reaping of completions */
+struct spdk_aio_ring {
+	uint32_t id;
+	uint32_t size;
+	uint32_t head;
+	uint32_t tail;
+
+	uint32_t version;
+	uint32_t compat_features;
+	uint32_t incompat_features;
+	uint32_t header_length;
+};
+
+#define SPDK_AIO_RING_VERSION	0xa10a10a1
 
 static int bdev_aio_initialize(void);
 static void bdev_aio_fini(void);
@@ -69,12 +116,7 @@ static struct spdk_bdev_module aio_if = {
 	.get_ctx_size	= bdev_aio_get_ctx_size,
 };
 
-struct bdev_aio_group_channel {
-	struct spdk_poller	*poller;
-	int			epfd;
-};
-
-SPDK_BDEV_MODULE_REGISTER(&aio_if)
+SPDK_BDEV_MODULE_REGISTER(aio, &aio_if)
 
 static int
 bdev_aio_open(struct file_disk *disk)
@@ -131,12 +173,12 @@ bdev_aio_readv(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_preadv(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = nbytes;
-	io_set_eventfd(iocb, aio_ch->efd);
+	aio_task->ch = aio_ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "read %d iovs size %lu to off: %#lx\n",
 		      iovcnt, nbytes, offset);
 
-	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->group_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
@@ -162,12 +204,12 @@ bdev_aio_writev(struct file_disk *fdisk, struct spdk_io_channel *ch,
 	io_prep_pwritev(iocb, fdisk->fd, iov, iovcnt, offset);
 	iocb->data = aio_task;
 	aio_task->len = len;
-	io_set_eventfd(iocb, aio_ch->efd);
+	aio_task->ch = aio_ch;
 
 	SPDK_DEBUGLOG(SPDK_LOG_AIO, "write %d iovs size %lu from off: %#lx\n",
 		      iovcnt, len, offset);
 
-	rc = io_submit(aio_ch->io_ctx, 1, &iocb);
+	rc = io_submit(aio_ch->group_ch->io_ctx, 1, &iocb);
 	if (rc < 0) {
 		if (rc == -EAGAIN) {
 			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), SPDK_BDEV_IO_STATUS_NOMEM);
@@ -207,68 +249,96 @@ bdev_aio_destruct(void *ctx)
 }
 
 static int
-bdev_aio_initialize_io_channel(struct bdev_aio_io_channel *ch)
+bdev_user_io_getevents(io_context_t io_ctx, unsigned int max, struct io_event *uevents)
 {
-	ch->efd = eventfd(0, EFD_NONBLOCK | EFD_CLOEXEC);
-	if (ch->efd == -1) {
-		SPDK_ERRLOG("Cannot create efd\n");
-		return -1;
+	uint32_t head, tail, count;
+	struct spdk_aio_ring *ring;
+	struct timespec timeout;
+	struct io_event *kevents;
+
+	ring = (struct spdk_aio_ring *)io_ctx;
+
+	if (spdk_unlikely(ring->version != SPDK_AIO_RING_VERSION || ring->incompat_features != 0)) {
+		timeout.tv_sec = 0;
+		timeout.tv_nsec = 0;
+
+		return io_getevents(io_ctx, 0, max, uevents, &timeout);
 	}
 
-	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
-		close(ch->efd);
-		SPDK_ERRLOG("async I/O context setup failure\n");
-		return -1;
+	/* Read the current state out of the ring */
+	head = ring->head;
+	tail = ring->tail;
+
+	/* This memory barrier is required to prevent the loads above
+	 * from being re-ordered with stores to the events array
+	 * potentially occurring on other threads. */
+	spdk_smp_rmb();
+
+	/* Calculate how many items are in the circular ring */
+	count = tail - head;
+	if (tail < head) {
+		count += ring->size;
 	}
 
-	return 0;
+	/* Reduce the count to the limit provided by the user */
+	count = spdk_min(max, count);
+
+	/* Grab the memory location of the event array */
+	kevents = (struct io_event *)((uintptr_t)ring + ring->header_length);
+
+	/* Copy the events out of the ring. */
+	if ((head + count) <= ring->size) {
+		/* Only one copy is required */
+		memcpy(uevents, &kevents[head], count * sizeof(struct io_event));
+	} else {
+		uint32_t first_part = ring->size - head;
+		/* Two copies are required */
+		memcpy(uevents, &kevents[head], first_part * sizeof(struct io_event));
+		memcpy(&uevents[first_part], &kevents[0], (count - first_part) * sizeof(struct io_event));
+	}
+
+	/* Update the head pointer. On x86, stores will not be reordered with older loads,
+	 * so the copies out of the event array will always be complete prior to this
+	 * update becoming visible. On other architectures this is not guaranteed, so
+	 * add a barrier. */
+#if defined(__i386__) || defined(__x86_64__)
+	spdk_compiler_barrier();
+#else
+	spdk_mb();
+#endif
+	ring->head = (head + count) % ring->size;
+
+	return count;
 }
 
 static int
 bdev_aio_group_poll(void *arg)
 {
 	struct bdev_aio_group_channel *group_ch = arg;
-	struct bdev_aio_io_channel *ch;
-	int nr, i, j, rc, total_nr = 0;
+	int nr, i = 0;
 	enum spdk_bdev_io_status status;
 	struct bdev_aio_task *aio_task;
-	struct timespec timeout;
 	struct io_event events[SPDK_AIO_QUEUE_DEPTH];
-	struct epoll_event epevents[MAX_EVENTS_PER_POLL];
 
-	timeout.tv_sec = 0;
-	timeout.tv_nsec = 0;
-	rc = epoll_wait(group_ch->epfd, epevents, MAX_EVENTS_PER_POLL, 0);
-	if (rc == -1) {
-		SPDK_ERRLOG("epoll_wait error(%d): %s on ch=%p\n", errno, spdk_strerror(errno), group_ch);
+	nr = bdev_user_io_getevents(group_ch->io_ctx, SPDK_AIO_QUEUE_DEPTH, events);
+
+	if (nr < 0) {
 		return -1;
 	}
 
-	for (j = 0; j < rc; j++) {
-		ch = epevents[j].data.ptr;
-		nr = io_getevents(ch->io_ctx, 1, SPDK_AIO_QUEUE_DEPTH,
-				  events, &timeout);
-
-		if (nr < 0) {
-			SPDK_ERRLOG("Returned %d on bdev_aio_io_channel %p\n", nr, ch);
-			continue;
+	for (i = 0; i < nr; i++) {
+		aio_task = events[i].data;
+		if (events[i].res != aio_task->len) {
+			status = SPDK_BDEV_IO_STATUS_FAILED;
+		} else {
+			status = SPDK_BDEV_IO_STATUS_SUCCESS;
 		}
 
-		total_nr += nr;
-		for (i = 0; i < nr; i++) {
-			aio_task = events[i].data;
-			if (events[i].res != aio_task->len) {
-				status = SPDK_BDEV_IO_STATUS_FAILED;
-			} else {
-				status = SPDK_BDEV_IO_STATUS_SUCCESS;
-			}
-
-			spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
-			ch->io_inflight--;
-		}
+		spdk_bdev_io_complete(spdk_bdev_io_from_ctx(aio_task), status);
+		aio_task->ch->io_inflight--;
 	}
 
-	return total_nr;
+	return nr;
 }
 
 static void
@@ -325,8 +395,15 @@ bdev_aio_reset(struct file_disk *fdisk, struct bdev_aio_task *aio_task)
 	bdev_aio_reset_retry_timer(fdisk);
 }
 
-static void bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_aio_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
 {
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
+
 	switch (bdev_io->type) {
 	case SPDK_BDEV_IO_TYPE_READ:
 		bdev_aio_readv((struct file_disk *)bdev_io->bdev->ctxt,
@@ -403,41 +480,18 @@ static int
 bdev_aio_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_io_channel *ch = ctx_buf;
-	struct bdev_aio_group_channel *group_ch_ctx;
-	struct epoll_event epevent;
 
-	if (bdev_aio_initialize_io_channel(ch) != 0) {
-		return -1;
-	}
+	ch->group_ch = spdk_io_channel_get_ctx(spdk_get_io_channel(&aio_if));
 
-	ch->group_ch = spdk_get_io_channel(&aio_if);
-	group_ch_ctx = spdk_io_channel_get_ctx(ch->group_ch);
-
-	epevent.events = EPOLLIN | EPOLLET;
-	epevent.data.ptr = ch;
-	if (epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_ADD, ch->efd, &epevent)) {
-		close(ch->efd);
-		io_destroy(ch->io_ctx);
-		spdk_put_io_channel(ch->group_ch);
-		SPDK_ERRLOG("epoll_ctl error\n");
-		return -1;
-	}
 	return 0;
 }
 
 static void
 bdev_aio_destroy_cb(void *io_device, void *ctx_buf)
 {
-	struct bdev_aio_io_channel *io_channel = ctx_buf;
-	struct bdev_aio_group_channel *group_ch_ctx;
-	struct epoll_event event;
+	struct bdev_aio_io_channel *ch = ctx_buf;
 
-	group_ch_ctx = spdk_io_channel_get_ctx(io_channel->group_ch);
-	epoll_ctl(group_ch_ctx->epfd, EPOLL_CTL_DEL, io_channel->efd, &event);
-	spdk_put_io_channel(io_channel->group_ch);
-	close(io_channel->efd);
-	io_destroy(io_channel->io_ctx);
-
+	spdk_put_io_channel(spdk_io_channel_from_ctx(ch->group_ch));
 }
 
 static struct spdk_io_channel *
@@ -454,11 +508,9 @@ bdev_aio_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct file_disk *fdisk = ctx;
 
-	spdk_json_write_name(w, "aio");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "aio");
 
-	spdk_json_write_name(w, "filename");
-	spdk_json_write_string(w, fdisk->filename);
+	spdk_json_write_named_string(w, "filename", fdisk->filename);
 
 	spdk_json_write_object_end(w);
 
@@ -509,9 +561,8 @@ bdev_aio_group_create_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
-	ch->epfd = epoll_create1(0);
-	if (ch->epfd == -1) {
-		SPDK_ERRLOG("cannot create epoll fd\n");
+	if (io_setup(SPDK_AIO_QUEUE_DEPTH, &ch->io_ctx) < 0) {
+		SPDK_ERRLOG("async I/O context setup failure\n");
 		return -1;
 	}
 
@@ -524,12 +575,13 @@ bdev_aio_group_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct bdev_aio_group_channel *ch = ctx_buf;
 
-	close(ch->epfd);
+	io_destroy(ch->io_ctx);
+
 	spdk_poller_unregister(&ch->poller);
 }
 
 struct spdk_bdev *
-create_aio_disk(const char *name, const char *filename, uint32_t block_size)
+create_aio_bdev(const char *name, const char *filename, uint32_t block_size)
 {
 	struct file_disk *fdisk;
 	uint32_t detected_block_size;
@@ -628,24 +680,24 @@ error_return:
 	return NULL;
 }
 
-struct delete_aio_disk_ctx {
-	spdk_delete_aio_complete cb_fn;
+struct delete_aio_bdev_ctx {
+	delete_aio_bdev_complete cb_fn;
 	void *cb_arg;
 };
 
 static void
 aio_bdev_unregister_cb(void *arg, int bdeverrno)
 {
-	struct delete_aio_disk_ctx *ctx = arg;
+	struct delete_aio_bdev_ctx *ctx = arg;
 
 	ctx->cb_fn(ctx->cb_arg, bdeverrno);
 	free(ctx);
 }
 
 void
-delete_aio_disk(struct spdk_bdev *bdev, spdk_delete_aio_complete cb_fn, void *cb_arg)
+delete_aio_bdev(struct spdk_bdev *bdev, delete_aio_bdev_complete cb_fn, void *cb_arg)
 {
-	struct delete_aio_disk_ctx *ctx;
+	struct delete_aio_bdev_ctx *ctx;
 
 	if (!bdev || bdev->module != &aio_if) {
 		cb_fn(cb_arg, -ENODEV);
@@ -711,7 +763,7 @@ bdev_aio_initialize(void)
 			block_size = (uint32_t)tmp;
 		}
 
-		bdev = create_aio_disk(name, file, block_size);
+		bdev = create_aio_bdev(name, file, block_size);
 		if (!bdev) {
 			SPDK_ERRLOG("Unable to create AIO bdev from file %s\n", file);
 			i++;

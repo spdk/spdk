@@ -736,11 +736,22 @@ print_namespace(struct spdk_nvme_ns *ns)
 	       nsdata->nsfeat.thin_prov ? "Supported" : "Not Supported");
 	printf("Per-NS Atomic Units:         %s\n",
 	       nsdata->nsfeat.ns_atomic_write_unit ? "Yes" : "No");
-	if (nsdata->nawun) {
-		printf("Atomic Write Unit (Normal):  %d\n", nsdata->nawun + 1);
-	}
-	if (nsdata->nawupf) {
-		printf("Atomic Write Unit (PFail):   %d\n", nsdata->nawupf + 1);
+	if (nsdata->nsfeat.ns_atomic_write_unit) {
+		if (nsdata->nawun) {
+			printf("  Atomic Write Unit (Normal):    %d\n", nsdata->nawun + 1);
+		}
+
+		if (nsdata->nawupf) {
+			printf("  Atomic Write Unit (PFail):     %d\n", nsdata->nawupf + 1);
+		}
+
+		if (nsdata->nacwu) {
+			printf("  Atomic Compare & Write Unit:   %d\n", nsdata->nacwu + 1);
+		}
+
+		printf("  Atomic Boundary Size (Normal): %d\n", nsdata->nabsn);
+		printf("  Atomic Boundary Size (PFail):  %d\n", nsdata->nabspf);
+		printf("  Atomic Boundary Offset:        %d\n", nsdata->nabo);
 	}
 
 	printf("NGUID/EUI64 Never Reused:    %s\n",
@@ -865,6 +876,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	const struct spdk_nvme_ctrlr_data	*cdata;
 	union spdk_nvme_cap_register		cap;
 	union spdk_nvme_vs_register		vs;
+	union spdk_nvme_cmbsz_register		cmbsz;
 	uint8_t					str[512];
 	uint32_t				i;
 	struct spdk_nvme_error_information_entry *error_entry;
@@ -875,6 +887,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 
 	cap = spdk_nvme_ctrlr_get_regs_cap(ctrlr);
 	vs = spdk_nvme_ctrlr_get_regs_vs(ctrlr);
+	cmbsz = spdk_nvme_ctrlr_get_regs_cmbsz(ctrlr);
 
 	if (!spdk_nvme_ctrlr_is_discovery(ctrlr)) {
 		/*
@@ -996,6 +1009,31 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->ctratt.host_id_exhid_supported ? "Supported" : "Not Supported");
 	printf("\n");
 
+	printf("Controller Memory Buffer Support\n");
+	printf("================================\n");
+	if (cmbsz.raw != 0) {
+		uint64_t size = cmbsz.bits.sz;
+
+		/* Convert the size to bytes by multiplying by the granularity.
+		   By spec, szu is at most 6 and sz is 20 bits, so size requires
+		   at most 56 bits. */
+		size *= (0x1000 << (cmbsz.bits.szu * 4));
+
+		printf("Supported:                             Yes\n");
+		printf("Total Size:                            %lu bytes\n", size);
+		printf("Submission Queues in CMB:              %s\n",
+		       cmbsz.bits.sqs ? "Supported" : "Not Supported");
+		printf("Completion Queues in CMB:              %s\n",
+		       cmbsz.bits.cqs ? "Supported" : "Not Supported");
+		printf("Read data and metadata in CMB          %s\n",
+		       cmbsz.bits.rds ? "Supported" : "Not Supported");
+		printf("Write data and metadata in CMB:        %s\n",
+		       cmbsz.bits.wds ? "Supported" : "Not Supported");
+	} else {
+		printf("Supported:                             No\n");
+	}
+	printf("\n");
+
 	printf("Admin Command Set Attributes\n");
 	printf("============================\n");
 	printf("Security Send/Receive:                 %s\n",
@@ -1083,6 +1121,7 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->vwc.present ? "Present" : "Not Present");
 	printf("Atomic Write Unit (Normal):  %d\n", cdata->awun + 1);
 	printf("Atomic Write Unit (PFail):   %d\n", cdata->awupf + 1);
+	printf("Atomic Compare & Write Unit: %d\n", cdata->acwu + 1);
 	printf("Scatter-Gather List\n");
 	printf("  SGL Command Set:           %s\n",
 	       cdata->sgls.supported == SPDK_NVME_SGLS_SUPPORTED ? "Supported" :
@@ -1102,6 +1141,16 @@ print_controller(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport
 	       cdata->sgls.sgl_offset ? "Supported" : "Not Supported");
 	printf("  Transport SGL Data Block:  %s\n",
 	       cdata->sgls.transport_sgl ? "Supported" : "Not Supported");
+	printf("Replay Protected Memory Block:");
+	if (cdata->rpmbs.num_rpmb_units > 0) {
+		printf("  Supported\n");
+		printf("  Number of RPMB Units:  %d\n", cdata->rpmbs.num_rpmb_units);
+		printf("  Authentication Method: %s\n", cdata->rpmbs.auth_method == 0 ? "HMAC SHA-256" : "Unknown");
+		printf("  Total Size (in 128KB units) = %d\n", cdata->rpmbs.total_size + 1);
+		printf("  Access Size (in 512B units) = %d\n", cdata->rpmbs.access_size + 1);
+	} else {
+		printf("  Not Supported\n");
+	}
 	printf("\n");
 
 	printf("Firmware Slot Information\n");

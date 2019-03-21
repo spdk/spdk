@@ -55,7 +55,7 @@ if [ -s /etc/redhat-release ]; then
 	fi
 
 	yum install -y gcc gcc-c++ make CUnit-devel libaio-devel openssl-devel \
-		git astyle python-pep8 lcov python clang-analyzer libuuid-devel \
+		git astyle python-pycodestyle lcov python clang-analyzer libuuid-devel \
 		sg3_utils libiscsi-devel pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
 	yum install -y libunwind-devel || true
@@ -77,6 +77,8 @@ elif [ -f /etc/debian_version ]; then
 	# Includes Ubuntu, Debian
 	apt-get install -y gcc g++ make libcunit1-dev libaio-dev libssl-dev \
 		git astyle pep8 lcov clang uuid-dev sg3-utils libiscsi-dev pciutils
+	# Additional python style checker not available on ubuntu 16.04 or earlier.
+	apt-get install -y pycodestyle || true
 	# Additional (optional) dependencies for showing backtrace in logs
 	apt-get install -y libunwind-dev || true
 	# Additional dependencies for NVMe over Fabrics
@@ -90,9 +92,9 @@ elif [ -f /etc/debian_version ]; then
 		"Note: Some SPDK CLI dependencies could not be installed."
 	# Additional dependencies for ISA-L used in compression
 	apt-get install -y autoconf automake libtool
-elif [ -f /etc/SuSE-release ]; then
+elif [ -f /etc/SuSE-release ] || [ -f /etc/SUSE-brand ]; then
 	zypper install -y gcc gcc-c++ make cunit-devel libaio-devel libopenssl-devel \
-		git-core lcov python-base python-pep8 libuuid-devel sg3_utils pciutils
+		git-core lcov python-base python-pycodestyle libuuid-devel sg3_utils pciutils
 	# Additional (optional) dependencies for showing backtrace in logs
 	zypper install libunwind-devel || true
 	# Additional dependencies for NVMe over Fabrics

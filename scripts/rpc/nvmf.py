@@ -44,7 +44,8 @@ def nvmf_create_transport(client,
                           io_unit_size=None,
                           max_aq_depth=None,
                           num_shared_buffers=None,
-                          buf_cache_size=None):
+                          buf_cache_size=None,
+                          max_srq_depth=None):
     """NVMf Transport Create options.
 
     Args:
@@ -56,7 +57,8 @@ def nvmf_create_transport(client,
         io_unit_size: I/O unit size in bytes (optional)
         max_aq_depth: Max size admin quque per controller (optional)
         num_shared_buffers: The number of pooled data buffers available to the transport (optional)
-        buf_cache_size: The number of shared buffers to cache per poll group (optional)
+        buf_cache_size: The number of shared buffers to reserve for each poll group(optional)
+        max_srq_depth: Max number of outstanding I/O per shared receive queue (optional)
 
     Returns:
         True or False
@@ -80,6 +82,8 @@ def nvmf_create_transport(client,
         params['num_shared_buffers'] = num_shared_buffers
     if buf_cache_size:
         params['buf_cache_size'] = buf_cache_size
+    if max_srq_depth:
+        params['max_srq_depth'] = max_srq_depth
     return client.call('nvmf_create_transport', params)
 
 

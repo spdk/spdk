@@ -215,7 +215,7 @@ struct spdk_ftl_dev {
 typedef void (*ftl_restore_fn)(struct spdk_ftl_dev *, struct ftl_restore *, int);
 
 void	ftl_apply_limits(struct spdk_ftl_dev *dev);
-int	ftl_io_read(struct ftl_io *io);
+void	ftl_io_read(struct ftl_io *io);
 int	ftl_io_write(struct ftl_io *io);
 int	ftl_io_erase(struct ftl_io *io);
 int	ftl_io_flush(struct ftl_io *io);

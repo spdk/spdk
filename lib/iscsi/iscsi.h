@@ -46,6 +46,7 @@
 #include "iscsi/tgt_node.h"
 
 #include "spdk/assert.h"
+#include "spdk/dif.h"
 #include "spdk/util.h"
 
 #define SPDK_ISCSI_DEFAULT_NODEBASE "iqn.2016-06.io.spdk"
@@ -58,9 +59,7 @@
 #define MAX_PORTAL 1024
 #define MAX_INITIATOR 256
 #define MAX_NETMASK 256
-#define MAX_SESSIONS 1024
-#define MAX_ISCSI_CONNECTIONS MAX_SESSIONS
-#define MAX_FIRSTBURSTLENGTH	16777215
+#define MAX_ISCSI_CONNECTIONS 1024
 
 #define DEFAULT_PORT 3260
 #define DEFAULT_MAX_SESSIONS 128
@@ -68,7 +67,6 @@
 #define DEFAULT_MAXOUTSTANDINGR2T 1
 #define DEFAULT_DEFAULTTIME2WAIT 2
 #define DEFAULT_DEFAULTTIME2RETAIN 20
-#define DEFAULT_FIRSTBURSTLENGTH 8192
 #define DEFAULT_INITIALR2T true
 #define DEFAULT_IMMEDIATEDATA true
 #define DEFAULT_DATAPDUINORDER true
@@ -86,12 +84,6 @@
 #define SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH  65536
 
 /*
- * SPDK iSCSI target will only send a maximum of SPDK_BDEV_LARGE_BUF_MAX_SIZE data segments, even if the
- * connection can support more.
- */
-#define SPDK_ISCSI_MAX_SEND_DATA_SEGMENT_LENGTH SPDK_BDEV_LARGE_BUF_MAX_SIZE
-
-/*
  * Defines maximum number of data out buffers each connection can have in
  *  use at any given time.
  */
@@ -103,12 +95,6 @@
  *  SPDK_BDEV_SMALL_BUF_MAX_SIZE.
  */
 #define MAX_LARGE_DATAIN_PER_CONNECTION 64
-
-/*
- * Defines default maximum queue depth per connection and this can be
- * changed by configuration file.
- */
-#define DEFAULT_MAX_QUEUE_DEPTH	64
 
 #define SPDK_ISCSI_MAX_BURST_LENGTH	\
 		(SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH * MAX_DATA_OUT_PER_CONNECTION)
@@ -126,6 +112,14 @@
  *  SCSI command.
  */
 #define SPDK_ISCSI_MIN_FIRST_BURST_LENGTH	512
+
+#define SPDK_ISCSI_MAX_FIRST_BURST_LENGTH	16777215
+
+/*
+ * Defines default maximum queue depth per connection and this can be
+ * changed by configuration file.
+ */
+#define DEFAULT_MAX_QUEUE_DEPTH	64
 
 /** Defines how long we should wait for a TCP close after responding to a
  *   logout request, before terminating the connection ourselves.
@@ -159,8 +153,6 @@
 struct spdk_mobj {
 	struct spdk_mempool *mp;
 	void *buf;
-	size_t len;
-	uint64_t reserved; /* do not use */
 };
 
 struct spdk_iscsi_pdu {
@@ -181,6 +173,9 @@ struct spdk_iscsi_pdu {
 	struct spdk_iscsi_task *task; /* data tied to a task buffer */
 	uint32_t cmd_sn;
 	uint32_t writev_offset;
+	uint32_t data_buf_len;
+	bool dif_insert_or_strip;
+	struct spdk_dif_ctx dif_ctx;
 	TAILQ_ENTRY(spdk_iscsi_pdu)	tailq;
 
 
@@ -413,10 +408,11 @@ void spdk_iscsi_send_nopin(struct spdk_iscsi_conn *conn);
 void spdk_iscsi_task_response(struct spdk_iscsi_conn *conn,
 			      struct spdk_iscsi_task *task);
 int spdk_iscsi_execute(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu);
-int spdk_iscsi_build_iovecs(struct spdk_iscsi_conn *conn,
-			    struct iovec *iovec, struct spdk_iscsi_pdu *pdu);
-int
-spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu);
+int spdk_iscsi_build_iovs(struct spdk_iscsi_conn *conn, struct iovec *iovs, int num_iovs,
+			  struct spdk_iscsi_pdu *pdu, uint32_t *mapped_length);
+int spdk_iscsi_read_pdu(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu **_pdu);
+bool spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
+			    struct spdk_dif_ctx *dif_ctx);
 void spdk_iscsi_task_mgmt_response(struct spdk_iscsi_conn *conn,
 				   struct spdk_iscsi_task *task);
 
@@ -448,7 +444,7 @@ void spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task,
 				  uint8_t function);
 
 static inline int
-spdk_get_immediate_data_buffer_size(void)
+spdk_get_max_immediate_data_size(void)
 {
 	/*
 	 * Specify enough extra space in addition to FirstBurstLength to
@@ -462,12 +458,6 @@ spdk_get_immediate_data_buffer_size(void)
 	       ISCSI_DIGEST_LEN + /* header digest */
 	       8 +		   /* bidirectional AHS */
 	       52;		   /* extended CDB AHS (for a 64-byte CDB) */
-}
-
-static inline int
-spdk_get_data_out_buffer_size(void)
-{
-	return SPDK_ISCSI_MAX_RECV_DATA_SEGMENT_LENGTH;
 }
 
 #endif /* SPDK_ISCSI_H */

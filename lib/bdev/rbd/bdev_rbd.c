@@ -278,7 +278,7 @@ static struct spdk_bdev_module rbd_if = {
 	.get_ctx_size = bdev_rbd_get_ctx_size,
 
 };
-SPDK_BDEV_MODULE_REGISTER(&rbd_if)
+SPDK_BDEV_MODULE_REGISTER(rbd, &rbd_if)
 
 static int64_t
 bdev_rbd_rw(struct bdev_rbd *disk, struct spdk_io_channel *ch,
@@ -373,9 +373,16 @@ bdev_rbd_destruct(void *ctx)
 	return 0;
 }
 
-static void bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io)
+static void
+bdev_rbd_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io,
+		    bool success)
 {
 	int ret;
+
+	if (!success) {
+		spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
+		return;
+	}
 
 	ret = bdev_rbd_rw(bdev_io->bdev->ctxt,
 			  ch,
@@ -605,14 +612,11 @@ bdev_rbd_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 {
 	struct bdev_rbd *rbd_bdev = ctx;
 
-	spdk_json_write_name(w, "rbd");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "rbd");
 
-	spdk_json_write_name(w, "pool_name");
-	spdk_json_write_string(w, rbd_bdev->pool_name);
+	spdk_json_write_named_string(w, "pool_name", rbd_bdev->pool_name);
 
-	spdk_json_write_name(w, "rbd_name");
-	spdk_json_write_string(w, rbd_bdev->rbd_name);
+	spdk_json_write_named_string(w, "rbd_name", rbd_bdev->rbd_name);
 
 	if (rbd_bdev->user_id) {
 		spdk_json_write_named_string(w, "user_id", rbd_bdev->user_id);
@@ -621,8 +625,7 @@ bdev_rbd_dump_info_json(void *ctx, struct spdk_json_write_ctx *w)
 	if (rbd_bdev->config) {
 		char **entry = rbd_bdev->config;
 
-		spdk_json_write_name(w, "config");
-		spdk_json_write_object_begin(w);
+		spdk_json_write_named_object_begin(w, "config");
 		while (*entry) {
 			spdk_json_write_named_string(w, entry[0], entry[1]);
 			entry += 2;
@@ -656,8 +659,7 @@ bdev_rbd_write_config_json(struct spdk_bdev *bdev, struct spdk_json_write_ctx *w
 	if (rbd->config) {
 		char **entry = rbd->config;
 
-		spdk_json_write_name(w, "config");
-		spdk_json_write_object_begin(w);
+		spdk_json_write_named_object_begin(w, "config");
 		while (*entry) {
 			spdk_json_write_named_string(w, entry[0], entry[1]);
 			entry += 2;

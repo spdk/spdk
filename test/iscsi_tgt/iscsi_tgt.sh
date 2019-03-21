@@ -49,8 +49,6 @@ fi
 trap "cleanup_veth_interfaces $TEST_TYPE; exit 1" SIGINT SIGTERM EXIT
 
 if [ $SPDK_TEST_NVMF -eq 1 ]; then
-	# TODO: enable remote NVMe controllers with multi-process so that
-	#  we can use the stub for this test
 	# Test configure remote NVMe device from rpc and conf file
 	run_test suite ./test/iscsi_tgt/nvme_remote/fio_remote_nvme.sh
 fi

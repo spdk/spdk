@@ -116,9 +116,15 @@ extern pid_t g_spdk_nvme_pid;
  */
 #define NVME_INTEL_QUIRK_NO_LOG_PAGES 0x100
 
+/*
+ * The controller does not set SHST_COMPLETE in a reasonable amount of time.  This
+ * is primarily seen in virtual VMWare NVMe SSDs.  This quirk merely adds an additional
+ * error message that on VMWare NVMe SSDs, the shutdown timeout may be expected.
+ */
+#define NVME_QUIRK_SHST_COMPLETE 0x200
+
 #define NVME_MAX_ASYNC_EVENTS	(8)
 
-#define NVME_MIN_TIMEOUT_PERIOD		(5)
 #define NVME_MAX_TIMEOUT_PERIOD		(120)
 
 /* Maximum log page size to fetch for AERs. */
@@ -152,13 +158,6 @@ enum nvme_payload_type {
 
 	/** nvme_request::u.sgl is valid for this request */
 	NVME_PAYLOAD_TYPE_SGL,
-};
-
-/*
- * Controller support flags.
- */
-enum spdk_nvme_ctrlr_flags {
-	SPDK_NVME_CTRLR_SGL_SUPPORTED		= 0x1, /**< The SGL is supported */
 };
 
 /**
@@ -325,14 +324,7 @@ struct nvme_async_event_request {
 };
 
 struct spdk_nvme_qpair {
-	STAILQ_HEAD(, nvme_request)	free_req;
-	STAILQ_HEAD(, nvme_request)	queued_req;
-	/** Commands opcode in this list will return error */
-	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
-	/** Requests in this list will return error */
-	STAILQ_HEAD(, nvme_request)	err_req_head;
-
-	enum spdk_nvme_transport_type	trtype;
+	struct spdk_nvme_ctrlr		*ctrlr;
 
 	uint16_t			id;
 
@@ -352,7 +344,15 @@ struct spdk_nvme_qpair {
 	 */
 	uint8_t				no_deletion_notification_needed: 1;
 
-	struct spdk_nvme_ctrlr		*ctrlr;
+	enum spdk_nvme_transport_type	trtype;
+
+	STAILQ_HEAD(, nvme_request)	free_req;
+	STAILQ_HEAD(, nvme_request)	queued_req;
+
+	/** Commands opcode in this list will return error */
+	TAILQ_HEAD(, nvme_error_cmd)	err_cmd_head;
+	/** Requests in this list will return error */
+	STAILQ_HEAD(, nvme_request)	err_req_head;
 
 	/* List entry for spdk_nvme_ctrlr::active_io_qpairs */
 	TAILQ_ENTRY(spdk_nvme_qpair)	tailq;
@@ -692,6 +692,15 @@ struct spdk_nvme_ctrlr {
 	uint32_t			outstanding_aborts;
 };
 
+struct spdk_nvme_probe_ctx {
+	struct spdk_nvme_transport_id		trid;
+	void					*cb_ctx;
+	spdk_nvme_probe_cb			probe_cb;
+	spdk_nvme_attach_cb			attach_cb;
+	spdk_nvme_remove_cb			remove_cb;
+	TAILQ_HEAD(, spdk_nvme_ctrlr)		init_ctrlrs;
+};
+
 struct nvme_driver {
 	pthread_mutex_t			lock;
 
@@ -705,14 +714,6 @@ struct nvme_driver {
 extern struct nvme_driver *g_spdk_nvme_driver;
 
 int nvme_driver_init(void);
-
-/*
- * Used for the spdk_nvme_connect() public API to save user specified opts.
- */
-struct spdk_nvme_ctrlr_connect_opts {
-	const struct spdk_nvme_ctrlr_opts	*opts;
-	size_t					opts_size;
-};
 
 #define nvme_delay		usleep
 
@@ -794,6 +795,9 @@ int	spdk_nvme_wait_for_completion(struct spdk_nvme_qpair *qpair,
 int	spdk_nvme_wait_for_completion_robust_lock(struct spdk_nvme_qpair *qpair,
 		struct nvme_completion_poll_status *status,
 		pthread_mutex_t *robust_mutex);
+int	spdk_nvme_wait_for_completion_timeout(struct spdk_nvme_qpair *qpair,
+		struct nvme_completion_poll_status *status,
+		uint64_t timeout_in_secs);
 
 struct spdk_nvme_ctrlr_process *spdk_nvme_ctrlr_get_process(struct spdk_nvme_ctrlr *ctrlr,
 		pid_t pid);
@@ -802,20 +806,22 @@ int	nvme_ctrlr_add_process(struct spdk_nvme_ctrlr *ctrlr, void *devhandle);
 void	nvme_ctrlr_free_processes(struct spdk_nvme_ctrlr *ctrlr);
 struct spdk_pci_device *nvme_ctrlr_proc_get_devhandle(struct spdk_nvme_ctrlr *ctrlr);
 
-int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid, void *devhandle,
-			 spdk_nvme_probe_cb probe_cb, void *cb_ctx);
+int	nvme_ctrlr_probe(const struct spdk_nvme_transport_id *trid,
+			 struct spdk_nvme_probe_ctx *probe_ctx, void *devhandle);
 
 int	nvme_ctrlr_construct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct_finish(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr);
 void	nvme_ctrlr_fail(struct spdk_nvme_ctrlr *ctrlr, bool hot_remove);
 int	nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr);
-void	nvme_ctrlr_connected(struct spdk_nvme_ctrlr *ctrlr);
+void	nvme_ctrlr_connected(struct spdk_nvme_probe_ctx *probe_ctx,
+			     struct spdk_nvme_ctrlr *ctrlr);
 
 int	nvme_ctrlr_submit_admin_request(struct spdk_nvme_ctrlr *ctrlr,
 					struct nvme_request *req);
 int	nvme_ctrlr_get_cap(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cap_register *cap);
 int	nvme_ctrlr_get_vs(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_vs_register *vs);
+int	nvme_ctrlr_get_cmbsz(struct spdk_nvme_ctrlr *ctrlr, union spdk_nvme_cmbsz_register *cmbsz);
 void	nvme_ctrlr_init_cap(struct spdk_nvme_ctrlr *ctrlr, const union spdk_nvme_cap_register *cap,
 			    const union spdk_nvme_vs_register *vs);
 int	nvme_qpair_init(struct spdk_nvme_qpair *qpair, uint16_t id,
@@ -838,8 +844,8 @@ int	nvme_fabric_ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, 
 int	nvme_fabric_ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value);
 int	nvme_fabric_ctrlr_get_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t *value);
 int	nvme_fabric_ctrlr_get_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t *value);
-int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr, void *cb_ctx,
-				   spdk_nvme_probe_cb probe_cb);
+int	nvme_fabric_ctrlr_discover(struct spdk_nvme_ctrlr *ctrlr,
+				   struct spdk_nvme_probe_ctx *probe_ctx);
 int	nvme_fabric_qpair_connect(struct spdk_nvme_qpair *qpair, uint32_t num_entries);
 
 static inline struct nvme_request *
@@ -955,6 +961,7 @@ uint64_t nvme_get_quirks(const struct spdk_pci_id *id);
 int	nvme_robust_mutex_init_shared(pthread_mutex_t *mtx);
 int	nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx);
 
+const char *spdk_nvme_cpl_get_status_string(const struct spdk_nvme_status *status);
 bool	nvme_completion_is_retry(const struct spdk_nvme_cpl *cpl);
 void	nvme_qpair_print_command(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cmd *cmd);
 void	nvme_qpair_print_completion(struct spdk_nvme_qpair *qpair, struct spdk_nvme_cpl *cpl);
@@ -967,7 +974,7 @@ struct spdk_nvme_ctrlr *spdk_nvme_get_ctrlr_by_trid_unsafe(
 	struct spdk_nvme_ctrlr *nvme_ ## name ## _ctrlr_construct(const struct spdk_nvme_transport_id *trid, const struct spdk_nvme_ctrlr_opts *opts, \
 		void *devhandle); \
 	int nvme_ ## name ## _ctrlr_destruct(struct spdk_nvme_ctrlr *ctrlr); \
-	int nvme_ ## name ## _ctrlr_scan(const struct spdk_nvme_transport_id *trid, void *cb_ctx, spdk_nvme_probe_cb probe_cb, spdk_nvme_remove_cb remove_cb, bool direct_connect); \
+	int nvme_ ## name ## _ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx, bool direct_connect); \
 	int nvme_ ## name ## _ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr); \
 	int nvme_ ## name ## _ctrlr_set_reg_4(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint32_t value); \
 	int nvme_ ## name ## _ctrlr_set_reg_8(struct spdk_nvme_ctrlr *ctrlr, uint32_t offset, uint64_t value); \

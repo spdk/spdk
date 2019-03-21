@@ -40,10 +40,14 @@ ifneq ($(Q),)
 REDIRECT=> /dev/null
 endif
 
-all:
+$(ISAL_DIR)/isa-l:
+	@ln -s $(ISAL_DIR)/include $(ISAL_DIR)/isa-l
+
+all: $(ISAL_DIR)/isa-l
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l -j$(NPROC) all CC=cc $(REDIRECT)
 
 install: all
 
 clean:
 	$(Q)$(MAKE) -C $(SPDK_ROOT_DIR)/isa-l clean $(REDIRECT)
+	$(Q)rm -f $(ISAL_DIR)/isa-l

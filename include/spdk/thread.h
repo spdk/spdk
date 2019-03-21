@@ -177,10 +177,13 @@ struct spdk_io_channel {
  *
  * \param new_thread_fn Called each time a new SPDK thread is created. The implementor
  * is expected to frequently call spdk_thread_poll() on the provided thread.
+ * \param ctx_sz For each thread allocated, an additional region of memory of
+ * size ctx_size will also be allocated, for use by the thread scheduler. A pointer
+ * to this region may be obtained by calling spdk_thread_get_ctx().
  *
  * \return 0 on success. Negated errno on failure.
  */
-int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn);
+int spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz);
 
 /**
  * Release all resources associated with this library.
@@ -210,16 +213,38 @@ struct spdk_thread *spdk_thread_create(const char *name);
 void spdk_thread_exit(struct spdk_thread *thread);
 
 /**
+ * Return a pointer to this thread's context.
+ *
+ * \param thread The thread on which to get the context.
+ *
+ * \return a pointer to the per-thread context, or NULL if there is
+ * no per-thread context.
+ */
+void *spdk_thread_get_ctx(struct spdk_thread *thread);
+
+/**
+ * Return the thread object associated with the context handle previously
+ * obtained by calling spdk_thread_get_ctx().
+ *
+ * \param ctx A context previously obtained by calling spdk_thread_get_ctx()
+ *
+ * \return The associated thread.
+ */
+struct spdk_thread *spdk_thread_get_from_ctx(void *ctx);
+
+/**
  * Perform one iteration worth of processing on the thread. This includes
  * both expired and continuous pollers as well as messages.
  *
  * \param thread The thread to process
  * \param max_msgs The maximum number of messages that will be processed.
  *                 Use 0 to process the default number of messages (8).
+ * \param now The current time, in ticks. Optional. If 0 is passed, this
+ *            function may call spdk_get_ticks() to get the current time.
  *
  * \return 1 if work was done. 0 if no work was done. -1 if unknown.
  */
-int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs);
+int spdk_thread_poll(struct spdk_thread *thread, uint32_t max_msgs, uint64_t now);
 
 /**
  * Return the number of ticks until the next timed poller
@@ -241,6 +266,25 @@ uint64_t spdk_thread_next_poller_expiration(struct spdk_thread *thread);
  * \return 1 if there is at least one active poller, 0 otherwise.
  */
 int spdk_thread_has_active_pollers(struct spdk_thread *thread);
+
+/**
+ * Returns whether there are any pollers registered to be run
+ * on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return true if there is any active poller, false otherwise.
+ */
+bool spdk_thread_has_pollers(struct spdk_thread *thread);
+
+/**
+ * Returns whether there are scheduled operations to be run on the thread.
+ *
+ * \param thread The thread to check.
+ *
+ * \return true if there are no scheduled operations, false otherwise.
+ */
+bool spdk_thread_is_idle(struct spdk_thread *thread);
 
 /**
  * Get count of allocated threads.
@@ -267,6 +311,21 @@ struct spdk_thread *spdk_get_thread(void);
  * \return the name of the thread.
  */
 const char *spdk_thread_get_name(const struct spdk_thread *thread);
+
+struct spdk_thread_stats {
+	uint64_t busy_tsc;
+	uint64_t idle_tsc;
+	uint64_t unknown_tsc;
+};
+
+/**
+ * Get statistics about the current thread.
+ *
+ * Copy cumulative thread stats values to the provided thread stats structure.
+ *
+ * \param stats User's thread_stats structure.
+ */
+int spdk_thread_get_stats(struct spdk_thread_stats *stats);
 
 /**
  * Send a message to the given thread.

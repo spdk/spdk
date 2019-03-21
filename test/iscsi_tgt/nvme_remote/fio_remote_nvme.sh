@@ -28,7 +28,6 @@ NETMASK=$INITIATOR_IP/32
 function run_nvme_remote() {
 	echo "now use $1 method to run iscsi tgt."
 
-	# Start the iSCSI target without using stub
 	iscsi_rpc_addr="/var/tmp/spdk-iscsi.sock"
 	ISCSI_APP="$rootdir/app/iscsi_tgt/iscsi_tgt"
 	$ISCSI_APP -r "$iscsi_rpc_addr" -m 0x1 -p 0 -s 512 --wait-for-rpc &

@@ -78,7 +78,7 @@ struct spdk_vhost_blk_session {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_poller *requestq_poller;
 	struct spdk_io_channel *io_channel;
-	struct spdk_vhost_dev_destroy_ctx destroy_ctx;
+	struct spdk_poller *stop_poller;
 };
 
 /* forward declaration */
@@ -596,21 +596,17 @@ _spdk_vhost_session_bdev_remove_cb(struct spdk_vhost_dev *vdev, struct spdk_vhos
 	return 0;
 }
 
-static int
-_bdev_remove_cb(struct spdk_vhost_dev *vdev, void *arg)
-{
-	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
-		     vdev->name);
-	spdk_vhost_dev_foreach_session(vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
-	return 0;
-}
-
 static void
 bdev_remove_cb(void *remove_ctx)
 {
 	struct spdk_vhost_blk_dev *bvdev = remove_ctx;
 
-	spdk_vhost_call_external_event(bvdev->vdev.name, _bdev_remove_cb, bvdev);
+	SPDK_WARNLOG("Controller %s: Hot-removing bdev - all further requests will fail.\n",
+		     bvdev->vdev.name);
+
+	spdk_vhost_lock();
+	spdk_vhost_dev_foreach_session(&bvdev->vdev, _spdk_vhost_session_bdev_remove_cb, NULL);
+	spdk_vhost_unlock();
 }
 
 static void
@@ -678,7 +674,7 @@ alloc_task_pool(struct spdk_vhost_blk_session *bvsession)
 
 static int
 spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
-			struct spdk_vhost_session *vsession, void *event_ctx)
+			struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_dev *bvdev;
 	struct spdk_vhost_blk_session *bvsession;
@@ -725,7 +721,7 @@ spdk_vhost_blk_start_cb(struct spdk_vhost_dev *vdev,
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Started poller for vhost controller %s on lcore %d\n",
 		     vdev->name, vsession->lcore);
 out:
-	spdk_vhost_session_event_done(event_ctx, rc);
+	spdk_vhost_session_event_done(vsession, rc);
 	return rc;
 }
 
@@ -770,15 +766,15 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	free_task_pool(bvsession);
-	spdk_poller_unregister(&bvsession->destroy_ctx.poller);
-	spdk_vhost_session_event_done(bvsession->destroy_ctx.event_ctx, 0);
+	spdk_poller_unregister(&bvsession->stop_poller);
+	spdk_vhost_session_event_done(vsession, 0);
 
 	return -1;
 }
 
 static int
 spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
-		       struct spdk_vhost_session *vsession, void *event_ctx)
+		       struct spdk_vhost_session *vsession, void *unused)
 {
 	struct spdk_vhost_blk_session *bvsession;
 
@@ -788,14 +784,13 @@ spdk_vhost_blk_stop_cb(struct spdk_vhost_dev *vdev,
 		goto err;
 	}
 
-	bvsession->destroy_ctx.event_ctx = event_ctx;
 	spdk_poller_unregister(&bvsession->requestq_poller);
-	bvsession->destroy_ctx.poller = spdk_poller_register(destroy_session_poller_cb,
-					bvsession, 1000);
+	bvsession->stop_poller = spdk_poller_register(destroy_session_poller_cb,
+				 bvsession, 1000);
 	return 0;
 
 err:
-	spdk_vhost_session_event_done(event_ctx, -1);
+	spdk_vhost_session_event_done(vsession, -1);
 	return -1;
 }
 
@@ -827,11 +822,9 @@ spdk_vhost_blk_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_writ
 	}
 
 	assert(bvdev != NULL);
-	spdk_json_write_name(w, "block");
-	spdk_json_write_object_begin(w);
+	spdk_json_write_named_object_begin(w, "block");
 
-	spdk_json_write_name(w, "readonly");
-	spdk_json_write_bool(w, bvdev->readonly);
+	spdk_json_write_named_bool(w, "readonly", bvdev->readonly);
 
 	spdk_json_write_name(w, "bdev");
 	if (bdev) {

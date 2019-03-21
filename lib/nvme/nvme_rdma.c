@@ -141,6 +141,8 @@ struct spdk_nvme_rdma_req {
 	struct ibv_sge				send_sgl[NVME_RDMA_DEFAULT_TX_SGE];
 
 	TAILQ_ENTRY(spdk_nvme_rdma_req)		link;
+
+	bool					request_ready_to_put;
 };
 
 static const char *rdma_cm_event_str[] = {
@@ -198,6 +200,7 @@ nvme_rdma_req_get(struct nvme_rdma_qpair *rqpair)
 static void
 nvme_rdma_req_put(struct nvme_rdma_qpair *rqpair, struct spdk_nvme_rdma_req *rdma_req)
 {
+	rdma_req->request_ready_to_put = false;
 	TAILQ_REMOVE(&rqpair->outstanding_reqs, rdma_req, link);
 	TAILQ_INSERT_HEAD(&rqpair->free_reqs, rdma_req, link);
 }
@@ -491,7 +494,12 @@ nvme_rdma_recv(struct nvme_rdma_qpair *rqpair, uint64_t rsp_idx)
 	req = rdma_req->req;
 	nvme_rdma_req_complete(req, rsp);
 
-	nvme_rdma_req_put(rqpair, rdma_req);
+	if (rdma_req->request_ready_to_put) {
+		nvme_rdma_req_put(rqpair, rdma_req);
+	} else {
+		rdma_req->request_ready_to_put = true;
+	}
+
 	if (nvme_rdma_post_recv(rqpair, rsp_idx)) {
 		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
 		return -1;
@@ -914,14 +922,23 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 	assert(nvme_payload_type(&req->payload) == NVME_PAYLOAD_TYPE_CONTIG);
 
 	requested_size = req->payload_size;
-	mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
-			(uint64_t)payload, &requested_size);
 
-	if (mr == NULL || requested_size < req->payload_size) {
-		if (mr) {
-			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+	if (!g_nvme_hooks.get_rkey) {
+		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map,
+				(uint64_t)payload, &requested_size);
+
+		if (mr == NULL || requested_size < req->payload_size) {
+			if (mr) {
+				SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
+			}
+			return -EINVAL;
 		}
-		return -EINVAL;
+		rdma_req->send_sgl[1].lkey = mr->lkey;
+	} else {
+		rdma_req->send_sgl[1].lkey = spdk_mem_map_translate(rqpair->mr_map->map,
+					     (uint64_t)payload,
+					     &requested_size);
+
 	}
 
 	/* The first element of this SGL is pointing at an
@@ -932,7 +949,6 @@ nvme_rdma_build_contig_inline_request(struct nvme_rdma_qpair *rqpair,
 
 	rdma_req->send_sgl[1].addr = (uint64_t)payload;
 	rdma_req->send_sgl[1].length = (uint32_t)req->payload_size;
-	rdma_req->send_sgl[1].lkey = mr->lkey;
 
 	/* The RDMA SGL contains two elements. The first describes
 	 * the NVMe command and the second describes the data
@@ -1328,10 +1344,7 @@ nvme_rdma_ctrlr_enable(struct spdk_nvme_ctrlr *ctrlr)
 
 /* This function must only be called while holding g_spdk_nvme_driver->lock */
 int
-nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
-		     void *cb_ctx,
-		     spdk_nvme_probe_cb probe_cb,
-		     spdk_nvme_remove_cb remove_cb,
+nvme_rdma_ctrlr_scan(struct spdk_nvme_probe_ctx *probe_ctx,
 		     bool direct_connect)
 {
 	struct spdk_nvme_ctrlr_opts discovery_opts;
@@ -1340,9 +1353,9 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	int rc;
 	struct nvme_completion_poll_status status;
 
-	if (strcmp(discovery_trid->subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
+	if (strcmp(probe_ctx->trid.subnqn, SPDK_NVMF_DISCOVERY_NQN) != 0) {
 		/* It is not a discovery_ctrlr info and try to directly connect it */
-		rc = nvme_ctrlr_probe(discovery_trid, NULL, probe_cb, cb_ctx);
+		rc = nvme_ctrlr_probe(&probe_ctx->trid, probe_ctx, NULL);
 		return rc;
 	}
 
@@ -1350,7 +1363,7 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	/* For discovery_ctrlr set the timeout to 0 */
 	discovery_opts.keep_alive_timeout_ms = 0;
 
-	discovery_ctrlr = nvme_rdma_ctrlr_construct(discovery_trid, &discovery_opts, NULL);
+	discovery_ctrlr = nvme_rdma_ctrlr_construct(&probe_ctx->trid, &discovery_opts, NULL);
 	if (discovery_ctrlr == NULL) {
 		return -1;
 	}
@@ -1386,12 +1399,12 @@ nvme_rdma_ctrlr_scan(const struct spdk_nvme_transport_id *discovery_trid,
 	if (direct_connect == true) {
 		/* Set the ready state to skip the normal init process */
 		discovery_ctrlr->state = NVME_CTRLR_STATE_READY;
-		nvme_ctrlr_connected(discovery_ctrlr);
+		nvme_ctrlr_connected(probe_ctx, discovery_ctrlr);
 		nvme_ctrlr_add_process(discovery_ctrlr, 0);
 		return 0;
 	}
 
-	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, cb_ctx, probe_cb);
+	rc = nvme_fabric_ctrlr_discover(discovery_ctrlr, probe_ctx);
 	nvme_ctrlr_destruct(discovery_ctrlr);
 	return rc;
 }
@@ -1521,13 +1534,6 @@ nvme_rdma_qpair_submit_request(struct spdk_nvme_qpair *qpair,
 		return -1;
 	}
 
-	req->timed_out = false;
-	if (spdk_unlikely(rqpair->qpair.ctrlr->timeout_enabled)) {
-		req->submit_tick = spdk_get_ticks();
-	} else {
-		req->submit_tick = 0;
-	}
-
 	wr = &rdma_req->send_wr;
 
 	nvme_rdma_trace_ibv_sge(wr->sg_list);
@@ -1644,11 +1650,12 @@ int
 nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				    uint32_t max_completions)
 {
-	struct nvme_rdma_qpair	*rqpair = nvme_rdma_qpair(qpair);
-	struct ibv_wc		wc[MAX_COMPLETIONS_PER_POLL];
-	int			i, rc, batch_size;
-	uint32_t		reaped;
-	struct ibv_cq		*cq;
+	struct nvme_rdma_qpair		*rqpair = nvme_rdma_qpair(qpair);
+	struct ibv_wc			wc[MAX_COMPLETIONS_PER_POLL];
+	int				i, rc, batch_size;
+	uint32_t			reaped;
+	struct ibv_cq			*cq;
+	struct spdk_nvme_rdma_req	*rdma_req;
 
 	if (max_completions == 0) {
 		max_completions = rqpair->num_entries;
@@ -1697,6 +1704,13 @@ nvme_rdma_qpair_process_completions(struct spdk_nvme_qpair *qpair,
 				break;
 
 			case IBV_WC_SEND:
+				rdma_req = (struct spdk_nvme_rdma_req *)wc[i].wr_id;
+
+				if (rdma_req->request_ready_to_put) {
+					nvme_rdma_req_put(rqpair, rdma_req);
+				} else {
+					rdma_req->request_ready_to_put = true;
+				}
 				break;
 
 			default:
