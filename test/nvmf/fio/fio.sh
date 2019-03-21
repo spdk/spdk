@@ -60,15 +60,15 @@ waitforblk "nvme0n1"
 waitforblk "nvme0n2"
 waitforblk "nvme0n3"
 
-$testdir/nvmf_fio.py 4096 1 write 1 verify
-$testdir/nvmf_fio.py 4096 1 randwrite 1 verify
-$testdir/nvmf_fio.py 4096 128 write 1 verify
-$testdir/nvmf_fio.py 4096 128 randwrite 1 verify
+$rootdir/scripts/fio.py nvmf 4096 1 write 1 verify
+$rootdir/scripts/fio.py nvmf 4096 1 randwrite 1 verify
+$rootdir/scripts/fio.py nvmf 4096 128 write 1 verify
+$rootdir/scripts/fio.py nvmf 4096 128 randwrite 1 verify
 
 sync
 
 #start hotplug test case
-$testdir/nvmf_fio.py 4096 1 read 10 &
+$rootdir/scripts/fio.py nvmf 4096 1 read 10 &
 fio_pid=$!
 
 sleep 3

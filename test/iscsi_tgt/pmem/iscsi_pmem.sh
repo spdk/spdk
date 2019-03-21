@@ -54,7 +54,7 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 timing_exit discovery
 
 timing_enter fio_test
-$fio_py $BLOCKSIZE 64 randwrite $RUNTIME verify
+$fio_py iscsi $BLOCKSIZE 64 randwrite $RUNTIME verify
 timing_exit fio_test
 
 iscsicleanup

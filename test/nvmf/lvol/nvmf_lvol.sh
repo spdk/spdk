@@ -99,7 +99,7 @@ for i in `seq 1 $SUBSYS_NR`; do
 	done
 done
 
-$testdir/../fio/nvmf_fio.py 262144 64 randwrite 10 verify
+$rootdir/scripts/fio.py nvmf 262144 64 randwrite 10 verify
 
 sync
 disconnect_nvmf
