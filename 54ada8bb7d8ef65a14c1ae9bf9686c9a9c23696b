@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "5b76108d_817846b0",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T14:28:41Z",
+      "side": 1,
+      "message": "{} is used throughout this file. It\u0027s supported by both gcc and clang, so I don\u0027t see the problem.",
+      "parentUuid": "b489093d_620be388",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fffbd9ef_49397b80",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 1
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-21T14:19:14Z",
       "side": 1,
       "message": "Not sure if we shouldn\u0027t allow to use 0 UUID - perhaps at least we should mention this fact somewhere in doc/usage?\nWe can change ftl_setup_initial_state to retry uuid_generate in such case.",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cde595d7_d9adf5b6",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T14:28:41Z",
+      "side": 1,
+      "message": "We\u0027re the ones generating the UUID, the user cannot just say \"I want to create a device with this UUID\", so I don\u0027t think to we need to mention such thing in docs. And if the uuid_generate results with an all zero UUID, there\u0027s something seriously wrong with the random number genarator.",
+      "parentUuid": "fffbd9ef_49397b80",
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "84cb57f2_e51be768",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T14:28:41Z",
+      "side": 1,
+      "message": "See my previous comment about this.",
+      "parentUuid": "4992c637_727e3fb4",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1663f1bb_c5303939",
         "filename": "scripts/gen_ftl.sh",
         "patchSetId": 1
@@ -64,6 +118,24 @@
       "writtenOn": "2019-03-21T14:19:14Z",
       "side": 1,
       "message": "Maybe something like printf \"%05d-%04d-%05d\" 0 will look better?",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e3bc30e4_3cb3d53d",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-21T14:28:41Z",
+      "side": 1,
+      "message": "We\u0027ll never change these values, so I don\u0027t see a point in using printf for that.",
+      "parentUuid": "1663f1bb_c5303939",
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
