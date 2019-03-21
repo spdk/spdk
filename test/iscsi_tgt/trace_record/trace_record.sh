@@ -71,7 +71,7 @@ echo "Trace record pid: $record_pid"
 trap "iscsicleanup; killprocess $iscsi_pid; killprocess $record_pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
 
 echo "Running FIO"
-$fio_py 131072 32 randrw 1
+$fio_py iscsi 131072 32 randrw 1
 
 iscsicleanup
 # Delete Malloc blockdevs and targets

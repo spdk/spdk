@@ -36,7 +36,7 @@ function running_config() {
 	timing_exit start_iscsi_tgt2
 
 	sleep 1
-	$fio_py 4096 1 randrw 5
+	$fio_py iscsi 4096 1 randrw 5
 }
 
 if [ -z "$TARGET_IP" ]; then
@@ -92,12 +92,12 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 trap "iscsicleanup; killprocess $pid; delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
 
 sleep 1
-$fio_py 4096 1 randrw 1 verify
-$fio_py 131072 32 randrw 1 verify
-$fio_py 524288 128 randrw 1 verify
+$fio_py iscsi 4096 1 randrw 1 verify
+$fio_py iscsi 131072 32 randrw 1 verify
+$fio_py iscsi 524288 128 randrw 1 verify
 
 if [ $RUN_NIGHTLY -eq 1 ]; then
-	$fio_py 4096 1 write 300 verify
+	$fio_py iscsi 4096 1 write 300 verify
 
 	# Run the running_config test which will generate a config file from the
 	#  running iSCSI target, then kill and restart the iSCSI target using the
@@ -107,7 +107,7 @@ if [ $RUN_NIGHTLY -eq 1 ]; then
 fi
 
 # Start hotplug test case.
-$fio_py 1048576 128 rw 10 &
+$fio_py iscsi 1048576 128 rw 10 &
 fio_pid=$!
 
 sleep 3

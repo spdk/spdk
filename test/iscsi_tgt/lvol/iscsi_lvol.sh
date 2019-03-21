@@ -70,7 +70,7 @@ iscsiadm -m node --login -p $TARGET_IP:$ISCSI_PORT
 timing_exit discovery
 
 timing_enter fio
-$fio_py 131072 8 randwrite 10 verify
+$fio_py iscsi 131072 8 randwrite 10 verify
 timing_exit fio
 
 rm -f ./local-job0-0-verify.state

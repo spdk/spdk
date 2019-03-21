@@ -88,7 +88,7 @@ trap "iscsicleanup; killprocess $iscsipid; killprocess $nvmfpid; \
 sleep 1
 
 echo "Running FIO"
-$fio_py 4096 1 randrw 1 verify
+$fio_py iscsi 4096 1 randrw 1 verify
 
 rm -f ./local-job0-0-verify.state
 iscsicleanup
@@ -97,7 +97,7 @@ killprocess $iscsipid
 run_nvme_remote "remote"
 
 echo "Running FIO"
-$fio_py 4096 1 randrw 1 verify
+$fio_py iscsi 4096 1 randrw 1 verify
 
 rm -f ./local-job0-0-verify.state
 trap - SIGINT SIGTERM EXIT
