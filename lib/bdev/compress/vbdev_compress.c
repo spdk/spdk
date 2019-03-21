@@ -100,6 +100,7 @@ struct vbdev_compress {
 	struct comp_device_qp		*device_qp;
 	struct spdk_thread		*reduce_thread;
 	pthread_mutex_t			reduce_lock;
+	bool				ch_delete_in_progress;
 	uint32_t			ch_count;
 	TAILQ_HEAD(, spdk_bdev_io)	pending_comp_ios;	/* outstanding operations to a comp library */
 	TAILQ_ENTRY(vbdev_compress)	link;
@@ -135,6 +136,7 @@ static void vbdev_compress_examine(struct spdk_bdev *bdev);
 static void vbdev_compress_claim(struct vbdev_compress *comp_bdev);
 static void vbdev_compress_queue_io(struct spdk_bdev_io *bdev_io);
 static void vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io);
+static void comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf);
 
 /* Called by vbdev_init_compress_drivers() to init each discovered compression device */
 static int
@@ -608,11 +610,15 @@ _clear_qp_and_put_channel(struct vbdev_compress *comp_bdev)
 	spdk_put_io_channel(comp_bdev->base_ch);
 	comp_bdev->reduce_thread = NULL;
 	spdk_poller_unregister(&comp_bdev->comp_ch->poller);
+
+	pthread_mutex_lock(&comp_bdev->reduce_lock);
+	comp_bdev->ch_delete_in_progress = false;
+	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 }
 
 /* Used to reroute destroy_ch to the correct thread */
 static void
-_comp_bdev_ch_destroy_cb(void *arg)
+_comp_bdev_ch_destroy(void *arg)
 {
 	struct vbdev_compress *comp_bdev = arg;
 
@@ -624,6 +630,15 @@ _comp_bdev_ch_destroy_cb(void *arg)
 	pthread_mutex_unlock(&comp_bdev->reduce_lock);
 }
 
+/* Used to reroute destroy_ch to the correct thread */
+static void
+_comp_bdev_ch_defer_destroy(void *arg)
+{
+	struct vbdev_compress *comp_bdev = arg;
+
+	comp_bdev_ch_destroy_cb(comp_bdev, comp_bdev->comp_ch);
+}
+
 /* We provide this callback for the SPDK channel code to destroy a channel
  * created with our create callback. We just need to undo anything we did
  * when we created. If this bdev used its own poller, we'd unregsiter it here.
@@ -632,18 +647,33 @@ static void
 comp_bdev_ch_destroy_cb(void *io_device, void *ctx_buf)
 {
 	struct vbdev_compress *comp_bdev = io_device;
+	bool on_reduce_thread;
+
+	on_reduce_thread = (comp_bdev->reduce_thread == spdk_get_thread());
 
 	pthread_mutex_lock(&comp_bdev->reduce_lock);
 	comp_bdev->ch_count--;
 	if (comp_bdev->ch_count == 0) {
+		if (comp_bdev->ch_delete_in_progress == false)  {
 
-		pthread_mutex_unlock(&comp_bdev->reduce_lock);
+			comp_bdev->ch_delete_in_progress = true;
+			pthread_mutex_unlock(&comp_bdev->reduce_lock);
 
-		/* Send this request to the thread where the channel was created. */
-		if (comp_bdev->reduce_thread != spdk_get_thread()) {
-			spdk_thread_send_msg(comp_bdev->reduce_thread,
-					     _comp_bdev_ch_destroy_cb, comp_bdev);
+			/* Send this request to the thread where the channel was created. */
+			if (on_reduce_thread == false) {
+				spdk_thread_send_msg(comp_bdev->reduce_thread,
+						     _comp_bdev_ch_destroy, comp_bdev);
+			}
 		} else {
+			/* Need to defer this channel put */
+			pthread_mutex_unlock(&comp_bdev->reduce_lock);
+			if (on_reduce_thread == false) {
+				spdk_thread_send_msg(comp_bdev->reduce_thread,
+						     _comp_bdev_ch_defer_destroy, comp_bdev);
+			}
+		}
+		/* Didn't defer to send to another thread, put now */
+		if (on_reduce_thread == true) {
 			_clear_qp_and_put_channel(comp_bdev);
 		}
 	}
