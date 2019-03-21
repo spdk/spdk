@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "b60db6e1_0f79ee56",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 488,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:51:51Z",
+      "side": 1,
+      "message": "It was just a suggestion, I was thinking that { 0 } s more common in SPDK",
+      "parentUuid": "5b76108d_817846b0",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fffbd9ef_49397b80",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 1
@@ -69,6 +87,24 @@
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1b63c6b1_70a9e0c6",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 549,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:51:51Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "cde595d7_d9adf5b6",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -136,6 +172,24 @@
       "side": 1,
       "message": "We\u0027ll never change these values, so I don\u0027t see a point in using printf for that.",
       "parentUuid": "1663f1bb_c5303939",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78bcc53b_f04849ee",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 22,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-21T14:51:51Z",
+      "side": 1,
+      "message": "It is hard to count how many zeros are there - with printf it is easier - but again it was only sugestion",
+      "parentUuid": "e3bc30e4_3cb3d53d",
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
