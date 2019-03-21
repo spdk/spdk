@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "d670fd16_39f41623",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T08:38:43Z",
+      "side": 1,
+      "message": "Just fix the segmentation fault. I will update the commit msg.",
+      "parentUuid": "236d60f6_bcbbe56f",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 21
+      },
+      "revId": "5adf76dfa9dd0dcd6b09e1dc19f7c899d1802c51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f76bcba8_22994ac0",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 2
@@ -45,6 +69,30 @@
       "revId": "5adf76dfa9dd0dcd6b09e1dc19f7c899d1802c51",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2cdd68aa_88a12eea",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1015333
+      },
+      "writtenOn": "2019-03-21T08:38:43Z",
+      "side": 1,
+      "message": "That‘s why i put a ERRLOG here, because the assert() just work in debug mode.",
+      "parentUuid": "f76bcba8_22994ac0",
+      "range": {
+        "startLine": 1207,
+        "startChar": 1,
+        "endLine": 1211,
+        "endChar": 2
+      },
+      "revId": "5adf76dfa9dd0dcd6b09e1dc19f7c899d1802c51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
