@@ -2144,7 +2144,13 @@ spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
 
 	if (file->last == NULL) {
 		if (file->append_pos % CACHE_BUFFER_SIZE == 0) {
-			cache_append_buffer(file);
+			last = cache_append_buffer(file);
+			if (last == NULL) {
+				BLOBFS_TRACE(file, "nomem\n");
+				pthread_spin_unlock(&file->lock);
+				return -ENOMEM;
+			}
+
 		} else {
 			int rc;
 
