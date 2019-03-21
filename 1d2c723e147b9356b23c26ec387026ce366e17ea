@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa9fd3b3_7d202323",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 352,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-21T11:21:27Z",
+      "side": 1,
+      "message": "Pls use:\n  \n  spdk_json_write_string_fmt(w, \"%s%s%s%s\", ....)\n\nor better, split it to \n\nSplit version to:\n\n {\n    \"major\" : ...\n    \"minor\" : ...\n    \"patch\" : ...\n    \"sufix\" : ...\n }",
+      "range": {
+        "startLine": 352,
+        "startChar": 1,
+        "endLine": 352,
+        "endChar": 40
+      },
+      "revId": "1d2c723e147b9356b23c26ec387026ce366e17ea",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
