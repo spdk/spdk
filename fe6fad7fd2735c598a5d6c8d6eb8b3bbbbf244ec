@@ -1,0 +1,140 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c266fc11_b5b4257c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "Is there really a 1:1 correspondence between the number of sgl descriptors and the number of required work requests? What if the sgl descriptor describes a region of memory larger than 8k?\n\nI think you need to take a different approach to implementing spdk_nvmf_rdma_request_fill_iovs_multi_sgl where you just have one top level loop over the descriptors and you grab both work requests and data buffers out of the pools one by one as you need them. We\u0027ll end up hammering the spdk_mempool_get function in the first implementation, but I think ultimately we\u0027ll want to cache the wrs per thread like we do with the data buffers anyway.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "32a89ed9_20947626",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "Can you rename \u0027inline_sgl\u0027 to \u0027inline_segment\u0027? Trying to follow the exact terms used in the spec. You could also consider \u0027inline_desc\u0027 too - the inline SGL segment always contains exactly 1 descriptor, so for this particular case they are interchangeable pointers.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06326cab_17e3a1c8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1509,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "I think in theory num_sgl_descriptors could be 1. This would be a stupid way to send an I/O that only has 1 data buffer, but I do think it\u0027s valid. I\u0027m not sure what happens inside nvmf_request_fill_data here if you tell it to get you 0 wrs from the pool.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc3b7cae_eff54480",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1510,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "This nvmf_request_fill_data function is just grabbing a set of wrs up front - it\u0027s not filling the data buffers in at all. I think the name is really confusing. I think the name was probably derived from filling in the \"request_data\" structures, but I feel like that\u0027s gotten lost. Something like alloc_wrs would be better.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8654efb2_372de502",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1518,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "Instead of using cmd_sgl_segment[ui] throughout the loop, can you store a variable called segment that points to this region (line 1506) and then at the top of the loop, set a pointer to a \"desc\" correctly for the current iteration? Then you can use \"desc\" everywhere, which I think is both shorter and closer to the language used in the spec.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ef84b47e_235454c1",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "Put a comment here that the only allowed descriptor type in this location is a KEYED_DATA_BLOCK. Also, does the subtype need to be a specific type? Should you check that here?",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5fa2ce3e_7235834f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1523,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "remaining_desc_length I think is better - the spec calls each element of an SGL a descriptor.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "12d4cba0_f27ca305",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1527,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T23:16:10Z",
+      "side": 1,
+      "message": "Is this little section that grabs a data buffer something we could break out into an inline static function? Is this used anywhere else?",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
