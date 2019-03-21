@@ -41,6 +41,7 @@
 #include "spdk/log.h"
 #include "spdk/string.h"
 #include "spdk/util.h"
+#include "spdk/version.h"
 
 #define RPC_DEFAULT_PORT	"5260"
 
@@ -309,3 +310,71 @@ spdk_rpc_get_rpc_methods(struct spdk_jsonrpc_request *request,
 	spdk_jsonrpc_end_result(request, w);
 }
 SPDK_RPC_REGISTER("get_rpc_methods", spdk_rpc_get_rpc_methods, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
+
+static void
+spdk_rpc_get_version(struct spdk_jsonrpc_request *request, const struct spdk_json_val *params)
+{
+	struct spdk_json_write_ctx *w;
+	char *major, *minor, *patch = NULL, *suffix = NULL;
+
+	if (params != NULL) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+						 "get_spdk_version method requires no parameters");
+	}
+
+	major = spdk_sprintf_alloc("%s", SPDK_VERSION_MAJOR_STRING);
+	if (major == NULL) {
+		SPDK_ERRLOG("Mem allocation failed\n");
+		return;
+	}
+
+	minor = spdk_sprintf_alloc("%s", SPDK_VERSION_STRINGIFY(SPDK_VERSION_MINOR));
+	if (minor == NULL) {
+		SPDK_ERRLOG("Mem allocation failed\n");
+		return;
+	}
+
+	if (SPDK_VERSION_PATCH != 0) {
+		patch = spdk_sprintf_alloc("%s", SPDK_VERSION_STRINGIFY(SPDK_VERSION_PATCH));
+		if (patch == NULL) {
+			SPDK_ERRLOG("Mem allocation failed\n");
+			return;
+		}
+	}
+
+	if (SPDK_VERSION_SUFFIX) {
+		suffix = spdk_sprintf_alloc("%s", SPDK_VERSION_SUFFIX);
+		if (suffix == NULL) {
+			SPDK_ERRLOG("Mem allocation failed\n");
+			return;
+		}
+	}
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_array_begin(w);
+
+	spdk_json_write_object_begin(w);
+	spdk_json_write_named_string(w, "major", major);
+	spdk_json_write_named_string(w, "minor", minor);
+	if (patch != NULL) {
+		spdk_json_write_named_string(w, "patch", patch);
+		free(patch);
+	}
+
+	if (suffix != NULL) {
+		spdk_json_write_named_string(w, "suffix", suffix);
+		free(suffix);
+	}
+	spdk_json_write_object_end(w);
+	spdk_json_write_array_end(w);
+
+	spdk_jsonrpc_end_result(request, w);
+
+	free(major);
+	free(minor);
+}
+SPDK_RPC_REGISTER("get_spdk_version", spdk_rpc_get_version, SPDK_RPC_STARTUP | SPDK_RPC_RUNTIME)
