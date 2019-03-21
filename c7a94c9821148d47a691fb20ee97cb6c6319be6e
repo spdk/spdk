@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1d0a6f33_59ed8f8e",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T21:04:03Z",
+      "side": 1,
+      "message": "I agree with Darek\u0027s earlier comments that this doesn\u0027t really fix anything.  It makes the segfault go away, but it also means this bdev_io will get leaked.\n\nI\u0027d rather figure out how we\u0027re getting a bdev_io with no mgmt_ch.",
+      "revId": "c7a94c9821148d47a691fb20ee97cb6c6319be6e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
