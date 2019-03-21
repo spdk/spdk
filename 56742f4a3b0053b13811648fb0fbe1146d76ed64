@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9579680_f0e49540",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 53
+      },
+      "lineNbr": 620,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T21:19:56Z",
+      "side": 1,
+      "message": "I don\u0027t think you can decrement again here.  You already did it in comp_bdev_ch_destroy_cb before sending this message.  You could assert(comp_bdev-\u003ech_count \u003d\u003d 0) though.",
+      "revId": "56742f4a3b0053b13811648fb0fbe1146d76ed64",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
