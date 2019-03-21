@@ -55,6 +55,23 @@
     },
     {
       "key": {
+        "uuid": "13239aac_4c422265",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T20:32:57Z",
+      "side": 1,
+      "message": "a lot of these trid changes are unrelated to UUID - can you break this stuff out into a separate patch?",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fffbd9ef_49397b80",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 1
@@ -108,6 +125,23 @@
     },
     {
       "key": {
+        "uuid": "93c59b67_25776aac",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T20:32:57Z",
+      "side": 1,
+      "message": "I think the code would be a bit more clear if we moved the opts-\u003emode \u003d SPDK_FTL_MODE_CREATE down here as an else clause on this new if statement",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "4992c637_727e3fb4",
         "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
         "patchSetId": 1
@@ -137,6 +171,23 @@
       "side": 1,
       "message": "See my previous comment about this.",
       "parentUuid": "4992c637_727e3fb4",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "817defb7_05ae7a5a",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-21T20:32:57Z",
+      "side": 1,
+      "message": "similar to comment on previous file - it\u0027s a bit different here, but I think it\u0027s a bit hard to read to set mode 40 lines earlier, and then here clear that same flag - setting explicitly to either 0 or SPDK_FTL_MODE_CREATE would be simpler I think",
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
