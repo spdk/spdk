@@ -273,6 +273,7 @@ alloc_fs_request(struct spdk_fs_channel *channel)
 	}
 
 	if (req == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Cannot allocate req on spfk_fs_channel =%p\n", channel);
 		return NULL;
 	}
 	memset(req, 0, sizeof(*req));
