@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "236d60f6_bcbbe56f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-21T06:59:04Z",
+      "side": 1,
+      "message": "spdk_bdev_free_io() will still fail the assertion in debug builds, so does it really fix #615?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 21
+      },
+      "revId": "5adf76dfa9dd0dcd6b09e1dc19f7c899d1802c51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f76bcba8_22994ac0",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1211,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-21T06:59:04Z",
+      "side": 1,
+      "message": "Could we just assert ch !\u003d NULL? The full check can prevent the immediate segfault, but that would just hide the error, possibly leading to different problems later on. If we have a chance - let\u0027s crash as soon as possible, so the user is immediately notified there\u0027s a serious problem in (his) code.",
+      "range": {
+        "startLine": 1207,
+        "startChar": 1,
+        "endLine": 1211,
+        "endChar": 2
+      },
+      "revId": "5adf76dfa9dd0dcd6b09e1dc19f7c899d1802c51",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
