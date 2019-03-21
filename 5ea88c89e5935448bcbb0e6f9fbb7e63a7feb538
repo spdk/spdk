@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "562e2303_919ac533",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T18:28:35Z",
+      "side": 1,
+      "message": "Before this operation could only fail synchronously, so we used a return code. Now, however, it can fail asynchronously. I think you\u0027ll need to modify the callback function signature to also accept the return code and pass that to it here.",
+      "revId": "5ea88c89e5935448bcbb0e6f9fbb7e63a7feb538",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
