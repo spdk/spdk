@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "066960d4_2eb34ce8",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T20:40:13Z",
+      "side": 1,
+      "message": "Unlock?",
+      "revId": "e9643bc5ac610e0b1035886c935360baaa60e8d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6dc38ff_fed49d25",
+        "filename": "lib/notify/notify.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 136,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T20:40:13Z",
+      "side": 1,
+      "message": "You also need to catch the case where the event at start_idx has already been overwritten. You can catch this by making sure that start_idx is at least equal to g_events_head minus the size of the ring.",
+      "revId": "e9643bc5ac610e0b1035886c935360baaa60e8d6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
