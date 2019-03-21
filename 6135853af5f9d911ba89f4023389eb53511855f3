@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "166dee0f_eb2787ef",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-21T07:42:44Z",
+      "side": 1,
+      "message": "Do we need this do while loop. I think it is not needed. I checked the function spdk_nvme_ctrlr_security_receive, it already encapsule the async function.\n\nI think that if ret \u003d spdk_nvme_ctrlr_security_receive (ret \u003c 0, you need to try it again, you may limit the loop times. Otherwise, it seems that we do not need to do the for loop )\n\nAlso in my mind, ret \u003d 0, mean this function is successful, but you check while (!ret). So probably, you need to change the code here.\n\nIn my mind, you do not need the loop, you may use the same style in opal_send_cmd. Just an switch case.",
+      "range": {
+        "startLine": 111,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 5
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a41ef11d_50d7ad78",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-21T07:42:44Z",
+      "side": 1,
+      "message": "For spdk_nvme_ctrlr_security_receive, if it succeeds, it will return 0. So I am confused here.",
+      "range": {
+        "startLine": 135,
+        "startChar": 8,
+        "endLine": 135,
+        "endChar": 15
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c91c2e1b_704a0a9a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-21T07:42:44Z",
+      "side": 1,
+      "message": "Better to add an empty line after if case, or before the return statement.",
+      "range": {
+        "startLine": 479,
+        "startChar": 1,
+        "endLine": 479,
+        "endChar": 2
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a06f7fd4_a2704dfd",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-21T07:42:44Z",
+      "side": 1,
+      "message": "Add an empty line before this statement.",
+      "range": {
+        "startLine": 562,
+        "startChar": 1,
+        "endLine": 562,
+        "endChar": 32
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
