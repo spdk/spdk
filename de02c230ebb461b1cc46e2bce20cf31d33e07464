@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4f7daa6d_d3640684",
+        "filename": "include/spdk/notify.h",
+        "patchSetId": 48
+      },
+      "lineNbr": 106,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-21T03:58:45Z",
+      "side": 1,
+      "message": "Ok - I talked to Jim. In order to move this feature along, let\u0027s just take a lock inside spdk_notify_send and spdk_notify_get_events for now to do the synchronization. Then we can get this merged and work on more complex solutions later.",
+      "parentUuid": "cdb79d9b_58ac22f9",
+      "revId": "de02c230ebb461b1cc46e2bce20cf31d33e07464",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fc6f9997_2f659595",
         "filename": "include/spdk/notify.h",
         "patchSetId": 48
