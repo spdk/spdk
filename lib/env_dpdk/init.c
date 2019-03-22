@@ -329,7 +329,12 @@ spdk_build_eal_cmdline(const struct spdk_env_opts *opts)
 	 * the memory for a buffer over two allocations meaning the buffer will be split over a memory region.
 	 */
 #if RTE_VERSION >= RTE_VERSION_NUM(19, 02, 0, 0)
-	args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
+	if (opts->env_context && strcmp(opts->env_context, "--legacy-mem") == 0) {
+		/* Legacy memory mode is required to use. */
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--legacy-mem"));
+	} else {
+		args = spdk_push_arg(args, &argcount, _sprintf_alloc("%s", "--match-allocations"));
+	}
 	if (args == NULL) {
 		return -1;
 	}
