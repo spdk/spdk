@@ -586,6 +586,16 @@ ftl_dev_init_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread,
 	return 0;
 }
 
+static void
+ftl_dev_free_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread)
+{
+	assert(thread->poller == NULL);
+
+	spdk_nvme_ctrlr_free_io_qpair(thread->qpair);
+	thread->thread = NULL;
+	thread->qpair = NULL;
+}
+
 static int
 ftl_dev_init_threads(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts *opts)
 {
@@ -600,20 +610,11 @@ ftl_dev_init_threads(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_op
 
 	if (ftl_dev_init_thread(dev, &dev->read_thread, opts->read_thread, ftl_task_read, 0)) {
 		SPDK_ERRLOG("Unable to initialize read thread\n");
+		ftl_dev_free_thread(dev, &dev->core_thread);
 		return -1;
 	}
 
 	return 0;
-}
-
-static void
-ftl_dev_free_thread(struct spdk_ftl_dev *dev, struct ftl_thread *thread)
-{
-	assert(thread->poller == NULL);
-
-	spdk_nvme_ctrlr_free_io_qpair(thread->qpair);
-	thread->thread = NULL;
-	thread->qpair = NULL;
 }
 
 static int
