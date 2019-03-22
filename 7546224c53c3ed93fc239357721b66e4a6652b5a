@@ -1,0 +1,158 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "038f4af8_0d3c899e",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 185,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "I think we can add ns_worker_ctx as the first or the second parameter and merge io_uring_setup_payload_ns_worker_ctx() into io_uring_setup_payload().\n\nAIO and NVMe can set ns_worker_ctx to NULL for setup_payload.",
+      "range": {
+        "startLine": 185,
+        "startChar": 1,
+        "endLine": 185,
+        "endChar": 64
+      },
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a68c616e_2fc686f9",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "if and else execute the same operation. Can we remove if - else block?",
+      "range": {
+        "startLine": 462,
+        "startChar": 0,
+        "endLine": 468,
+        "endChar": 2
+      },
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e3594f09_ce6a176f",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 481,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "this empty line is removable.",
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "654931df_8d782626",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 516,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "I have a simple question. Why the same variables are used in the line 508 and here ?",
+      "range": {
+        "startLine": 516,
+        "startChar": 20,
+        "endLine": 516,
+        "endChar": 47
+      },
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e225619f_f3945124",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 526,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "you can remove one line.",
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6294221a_10a27377",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "you can remove one line.",
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b2d9ad95_647c69c0",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 587,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "you can remove one line.",
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d5f01968_3aa98070",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 618,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:24:58Z",
+      "side": 1,
+      "message": "you can remove this line.",
+      "revId": "7546224c53c3ed93fc239357721b66e4a6652b5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
