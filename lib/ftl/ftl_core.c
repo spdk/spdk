@@ -1340,7 +1340,7 @@ _spdk_ftl_write(struct ftl_io *io)
 
 	rc = ftl_io_write(io);
 	if (rc == -EAGAIN) {
-		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ch),
+		spdk_thread_send_msg(spdk_io_channel_get_thread(io->ioch),
 				     _ftl_write, io);
 		return 0;
 	}
