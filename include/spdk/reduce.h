@@ -88,6 +88,18 @@ typedef void (*spdk_reduce_vol_op_with_handle_complete)(void *ctx,
 		struct spdk_reduce_vol *vol,
 		int reduce_errno);
 
+/**
+ * Defines function type for callback functions called when backing_dev
+ *  operations are complete.
+ *
+ * \param cb_arg Callback argument
+ * \param reduce_errno Completion status of backing_dev operation
+ *		       Negative values indicate negated errno value
+ *		       0 indicates successful readv/writev/unmap operation
+ *		       Positive value indicates successful compress/decompress
+ *		       operations; number indicates number of bytes written to
+ *		       destination iovs
+ */
 typedef void (*spdk_reduce_dev_cpl)(void *cb_arg, int reduce_errno);
 
 struct spdk_reduce_vol_cb_args {
@@ -104,6 +116,16 @@ struct spdk_reduce_backing_dev {
 
 	void (*unmap)(struct spdk_reduce_backing_dev *dev,
 		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
+
+	void (*compress)(struct spdk_reduce_backing_dev *dev,
+			 struct iovec *src_iov, int src_iovcnt,
+			 struct iovec *dst_iov, int dst_iovcnt,
+			 struct spdk_reduce_vol_cb_args *args);
+
+	void (*decompress)(struct spdk_reduce_backing_dev *dev,
+			   struct iovec *src_iov, int src_iovcnt,
+			   struct iovec *dst_iov, int dst_iovcnt,
+			   struct spdk_reduce_vol_cb_args *args);
 
 	uint64_t	blockcnt;
 	uint32_t	blocklen;
