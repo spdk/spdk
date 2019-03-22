@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/ftl.h"
+#include "spdk/likely.h"
 
 #include "ftl_io.h"
 #include "ftl_core.h"
@@ -190,7 +191,12 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	struct spdk_ftl_dev *dev = opts->dev;
 
 	if (!io) {
-		io = ftl_io_alloc(dev->ioch);
+		if (opts->parent) {
+			io = ftl_io_alloc_child(opts->parent);
+		} else {
+			io = ftl_io_alloc(dev->ioch);
+		}
+
 		if (!io) {
 			return NULL;
 		}
@@ -288,14 +294,63 @@ ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size
 void
 ftl_io_complete(struct ftl_io *io)
 {
-	int keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
+	struct ftl_io *child, *temp, *parent = io->parent;
+	bool parent_done, keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
+	int num_outstanding;
 
 	io->flags &= ~FTL_IO_INITIALIZED;
-	io->cb.fn(io->cb.ctx, io->status);
 
-	if (!keep_alive) {
-		ftl_io_free(io);
+	pthread_spin_lock(&io->lock);
+	num_outstanding = io->child_outstanding;
+	io->done = true;
+	pthread_spin_unlock(&io->lock);
+
+	if (num_outstanding == 0) {
+		LIST_FOREACH_SAFE(child, &io->children, child_entry, temp) {
+			io->status = io->status ? : child->status;
+			assert(child->done);
+			ftl_io_free(child);
+		}
+
+		if (io->cb.fn) {
+			io->cb.fn(io->cb.ctx, io->status);
+		}
+
+		if (parent) {
+			pthread_spin_lock(&parent->lock);
+			parent_done = parent->done;
+			num_outstanding = --parent->child_outstanding;
+			pthread_spin_unlock(&parent->lock);
+
+			if (num_outstanding == 0 && parent_done) {
+				ftl_io_complete(parent);
+			}
+		}
+
+		if (!parent && !keep_alive) {
+			ftl_io_free(io);
+		}
 	}
+}
+
+struct ftl_io *
+ftl_io_alloc_child(struct ftl_io *parent)
+{
+	struct ftl_io *io;
+
+	io = ftl_io_alloc(parent->ioch);
+	if (!io) {
+		return NULL;
+	}
+
+	io->parent = parent;
+
+	pthread_spin_lock(&parent->lock);
+	LIST_INSERT_HEAD(&parent->children, io, child_entry);
+	parent->child_outstanding++;
+	pthread_spin_unlock(&parent->lock);
+
+	return io;
 }
 
 void
@@ -332,7 +387,13 @@ ftl_io_alloc(struct spdk_io_channel *ch)
 	}
 
 	memset(io, 0, ioch->elem_size);
-	io->ch = ch;
+	io->ioch = ch;
+
+	if (pthread_spin_init(&io->lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("pthread_spin_init failed\n");
+		return NULL;
+	}
+
 	return io;
 }
 
@@ -359,15 +420,27 @@ void
 ftl_io_free(struct ftl_io *io)
 {
 	struct ftl_io_channel *ioch;
+	struct ftl_io *parent = io->parent;
 
 	if (!io) {
 		return;
+	}
+
+	assert(LIST_EMPTY(&io->children));
+
+	if (parent) {
+		pthread_spin_lock(&parent->lock);
+		LIST_REMOVE(io, child_entry);
+		if (!io->done) {
+			parent->child_outstanding--;
+		}
+		pthread_spin_unlock(&parent->lock);
 	}
 
 	if ((io->flags & FTL_IO_INTERNAL) && io->iov_cnt > 1) {
 		free(io->iovs);
 	}
 
-	ioch = spdk_io_channel_get_ctx(io->ch);
+	ioch = spdk_io_channel_get_ctx(io->ioch);
 	spdk_mempool_put(ioch->io_pool, io);
 }
