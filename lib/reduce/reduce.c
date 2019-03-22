@@ -958,7 +958,8 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 }
 
 static void
-_reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
+_reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn,
+			uint32_t compressed_size)
 {
 	struct spdk_reduce_vol *vol = req->vol;
 	uint32_t i;
@@ -972,7 +973,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	spdk_bit_array_set(vol->allocated_chunk_maps, req->chunk_map_index);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
-	req->chunk->compressed_size = vol->params.chunk_size;
+	req->chunk->compressed_size = compressed_size;
 
 	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
 		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
@@ -986,13 +987,74 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	_issue_backing_ops(req, vol, next_fn, true /* write */);
 }
 
+
 static void
-_write_read_done(void *_req, int reduce_errno)
+_compress_complete_req(void *_req, int reduce_errno)
+{
+	struct spdk_reduce_vol_request *req = _req;
+
+	if (req->reduce_errno < 0) {
+		_reduce_vol_complete_req(req, req->reduce_errno);
+		return;
+	}
+
+	_reduce_vol_write_chunk(req, _write_complete_req, (uint32_t)reduce_errno);
+}
+
+static void
+_reduce_vol_compress_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+
+	req->backing_cb_args.cb_fn = next_fn;
+	req->backing_cb_args.cb_arg = req;
+	req->compress_buf_iov[0].iov_base = req->compress_buf;
+	req->compress_buf_iov[0].iov_len = vol->params.chunk_size;
+	req->rw_buf_iov[0].iov_base = req->rw_buf;
+	req->rw_buf_iov[0].iov_len = vol->params.chunk_size;
+	vol->backing_dev->compress(vol->backing_dev,
+				   req->compress_buf_iov, 1, req->rw_buf_iov, 1,
+				   &req->backing_cb_args);
+}
+
+static void
+_reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn next_fn)
+{
+	struct spdk_reduce_vol *vol = req->vol;
+
+	req->backing_cb_args.cb_fn = next_fn;
+	req->backing_cb_args.cb_arg = req;
+	req->compress_buf_iov[0].iov_base = req->compress_buf;
+	req->compress_buf_iov[0].iov_len = vol->params.chunk_size;
+	req->rw_buf_iov[0].iov_base = req->rw_buf;
+	req->rw_buf_iov[0].iov_len = vol->params.chunk_size;
+	vol->backing_dev->decompress(vol->backing_dev,
+				     req->rw_buf_iov, 1, req->compress_buf_iov, 1,
+				     &req->backing_cb_args);
+}
+
+static void
+_write_decompress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	uint64_t chunk_offset;
 	uint8_t *buf;
 	int i;
+
+	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
+	buf = req->compress_buf + chunk_offset * req->vol->params.logical_block_size;
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
+		buf += req->iov[i].iov_len;
+	}
+
+	_reduce_vol_compress_chunk(req, _compress_complete_req);
+}
+
+static void
+_write_read_done(void *_req, int reduce_errno)
+{
+	struct spdk_reduce_vol_request *req = _req;
 
 	if (reduce_errno != 0) {
 		req->reduce_errno = reduce_errno;
@@ -1008,18 +1070,11 @@ _write_read_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
-	buf = req->rw_buf + chunk_offset * req->vol->params.logical_block_size;
-	for (i = 0; i < req->iovcnt; i++) {
-		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
-		buf += req->iov[i].iov_len;
-	}
-
-	_reduce_vol_write_chunk(req, _write_complete_req);
+	_reduce_vol_decompress_chunk(req, _write_decompress_done);
 }
 
 static void
-_read_complete_req(void *_req, int reduce_errno)
+_decompress_complete_req(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	uint64_t chunk_offset;
@@ -1054,7 +1109,7 @@ _read_read_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	_read_complete_req(req, 0);
+	_reduce_vol_decompress_chunk(req, _decompress_complete_req);
 }
 
 static void
@@ -1189,7 +1244,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 		return;
 	}
 
-	buf = req->rw_buf;
+	buf = req->compress_buf;
 	lbsize = vol->params.logical_block_size;
 	lb_per_chunk = vol->logical_blocks_per_chunk;
 	/* Note: we must zero out parts of req->buf not specified by this write operation. */
@@ -1206,7 +1261,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	if (chunk_offset != lb_per_chunk) {
 		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
 	}
-	_reduce_vol_write_chunk(req, _write_complete_req);
+	_reduce_vol_compress_chunk(req, _compress_complete_req);
 }
 
 void
