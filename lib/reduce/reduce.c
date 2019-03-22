@@ -82,6 +82,8 @@ struct spdk_reduce_pm_file {
 #define REDUCE_IO_WRITEV	2
 
 struct spdk_reduce_chunk_map {
+	uint32_t		compressed_size;
+	uint32_t		reserved;
 	uint64_t		io_unit_index[0];
 };
 
@@ -958,6 +960,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	spdk_bit_array_set(vol->allocated_chunk_maps, req->chunk_map_index);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
+	req->chunk->compressed_size = vol->params.chunk_size;
 
 	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
 		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
@@ -1043,6 +1046,7 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 	assert(req->chunk_map_index != UINT32_MAX);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
+	assert(req->chunk->compressed_size == vol->params.chunk_size);
 	_issue_backing_ops(req, vol, next_fn, false /* read */);
 }
 
