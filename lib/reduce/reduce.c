@@ -112,6 +112,8 @@ struct spdk_reduce_vol_request {
 	int					reduce_errno;
 	int					iovcnt;
 	int					num_backing_ops;
+	uint32_t				num_io_units;
+	bool					chunk_is_compressed;
 	uint64_t				offset;
 	uint64_t				logical_map_index;
 	uint64_t				length;
@@ -944,20 +946,30 @@ static void
 _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
 		   reduce_request_fn next_fn, bool is_write)
 {
+	struct iovec *iov;
+	uint8_t *buf;
 	uint32_t i;
 
-	req->num_backing_ops = vol->backing_io_units_per_chunk;
+	if (req->chunk_is_compressed) {
+		iov = req->comp_buf_iov;
+		buf = req->comp_buf;
+	} else {
+		iov = req->decomp_buf_iov;
+		buf = req->decomp_buf;
+	}
+
+	req->num_backing_ops = req->num_io_units;
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
-	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		req->comp_buf_iov[i].iov_base = req->comp_buf + i * vol->params.backing_io_unit_size;
-		req->comp_buf_iov[i].iov_len = vol->params.backing_io_unit_size;
+	for (i = 0; i < req->num_io_units; i++) {
+		iov[i].iov_base = buf + i * vol->params.backing_io_unit_size;
+		iov[i].iov_len = vol->params.backing_io_unit_size;
 		if (is_write) {
-			vol->backing_dev->writev(vol->backing_dev, &req->comp_buf_iov[i], 1,
+			vol->backing_dev->writev(vol->backing_dev, &iov[i], 1,
 						 req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		} else {
-			vol->backing_dev->readv(vol->backing_dev, &req->comp_buf_iov[i], 1,
+			vol->backing_dev->readv(vol->backing_dev, &iov[i], 1,
 						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		}
@@ -980,9 +992,13 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	spdk_bit_array_set(vol->allocated_chunk_maps, req->chunk_map_index);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
-	req->chunk->compressed_size = compressed_size;
+	req->num_io_units = spdk_divide_round_up(compressed_size,
+						 vol->params.backing_io_unit_size);
+	req->chunk_is_compressed = (req->num_io_units == vol->backing_io_units_per_chunk);
+	req->chunk->compressed_size =
+		req->chunk_is_compressed ? compressed_size : vol->params.chunk_size;
 
-	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
+	for (i = 0; i < req->num_io_units; i++) {
 		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
 		/* TODO: fail if no backing block found - but really this should also not
 		 * happen (see comment above).
@@ -990,10 +1006,12 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		assert(req->chunk->io_unit_index[i] != UINT32_MAX);
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 	}
+	while (i < vol->backing_io_units_per_chunk) {
+		req->chunk->io_unit_index[i++] = REDUCE_EMPTY_MAP_ENTRY;
+	}
 
 	_issue_backing_ops(req, vol, next_fn, true /* write */);
 }
-
 
 static void
 _write_compress_done(void *_req, int reduce_errno)
@@ -1095,7 +1113,11 @@ _write_read_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	_reduce_vol_decompress_chunk(req, _write_decompress_done);
+	if (req->chunk_is_compressed) {
+		_reduce_vol_decompress_chunk(req, _write_decompress_done);
+	} else {
+		_write_decompress_done(req, req->chunk->compressed_size);
+	}
 }
 
 static void
@@ -1150,7 +1172,11 @@ _read_read_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	_reduce_vol_decompress_chunk(req, _read_decompress_done);
+	if (req->chunk_is_compressed) {
+		_reduce_vol_decompress_chunk(req, _read_decompress_done);
+	} else {
+		_read_decompress_done(req, req->chunk->compressed_size);
+	}
 }
 
 static void
@@ -1163,6 +1189,10 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
 	assert(req->chunk->compressed_size == vol->params.chunk_size);
+	req->num_io_units = spdk_divide_round_up(req->chunk->compressed_size,
+						 vol->params.backing_io_unit_size);
+	req->chunk_is_compressed = (req->num_io_units == vol->backing_io_units_per_chunk);
+
 	_issue_backing_ops(req, vol, next_fn, false /* read */);
 }
 
