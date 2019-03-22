@@ -81,6 +81,10 @@ struct spdk_reduce_pm_file {
 #define REDUCE_IO_READV		1
 #define REDUCE_IO_WRITEV	2
 
+struct spdk_reduce_chunk_map {
+	uint64_t		io_unit_index[0];
+};
+
 struct spdk_reduce_vol_request {
 	/**
 	 *  Scratch buffer used for read/modify/write operations on
@@ -99,7 +103,7 @@ struct spdk_reduce_vol_request {
 	uint64_t				logical_map_index;
 	uint64_t				length;
 	uint64_t				chunk_map_index;
-	uint64_t				*chunk;
+	struct spdk_reduce_chunk_map		*chunk;
 	spdk_reduce_vol_op_complete		cb_fn;
 	void					*cb_arg;
 	TAILQ_ENTRY(spdk_reduce_vol_request)	tailq;
@@ -189,12 +193,23 @@ _get_pm_total_chunks_size(uint64_t vol_size, uint64_t chunk_size, uint64_t backi
 	       REDUCE_PM_SIZE_ALIGNMENT;
 }
 
-static uint64_t *
+static inline uint32_t
+_reduce_vol_get_chunk_struct_size(struct spdk_reduce_vol *vol)
+{
+	return sizeof(struct spdk_reduce_chunk_map) + sizeof(uint64_t) * vol->backing_io_units_per_chunk;
+}
+
+static struct spdk_reduce_chunk_map *
 _reduce_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
 {
+	uintptr_t chunk_map_addr;
+
 	assert(chunk_map_index < _get_total_chunks(vol->params.vol_size, vol->params.chunk_size));
 
-	return vol->pm_chunk_maps + (chunk_map_index * vol->backing_io_units_per_chunk);
+	chunk_map_addr = (uintptr_t)vol->pm_chunk_maps;
+	chunk_map_addr += chunk_map_index * _reduce_vol_get_chunk_struct_size(vol);
+
+	return (struct spdk_reduce_chunk_map *)chunk_map_addr;
 }
 
 static int
@@ -565,7 +580,7 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 	struct spdk_reduce_vol *vol = load_ctx->vol;
 	uint64_t backing_dev_size;
 	uint64_t i, num_chunks, logical_map_index;
-	uint64_t *chunk;
+	struct spdk_reduce_chunk_map *chunk;
 	size_t mapped_len;
 	uint32_t j;
 	int rc;
@@ -629,8 +644,8 @@ _load_read_super_and_path_cpl(void *cb_arg, int reduce_errno)
 		spdk_bit_array_set(vol->allocated_chunk_maps, logical_map_index);
 		chunk = _reduce_vol_get_chunk_map(vol, logical_map_index);
 		for (j = 0; j < vol->backing_io_units_per_chunk; j++) {
-			if (chunk[j] != REDUCE_EMPTY_MAP_ENTRY) {
-				spdk_bit_array_set(vol->allocated_backing_io_units, chunk[j]);
+			if (chunk->io_unit_index[j] != REDUCE_EMPTY_MAP_ENTRY) {
+				spdk_bit_array_set(vol->allocated_backing_io_units, chunk->io_unit_index[j]);
 			}
 		}
 	}
@@ -857,7 +872,7 @@ _write_complete_req(void *_req, int reduce_errno)
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
 	uint64_t old_chunk_map_index;
-	uint64_t *old_chunk;
+	struct spdk_reduce_chunk_map *old_chunk;
 	uint32_t i;
 
 	if (reduce_errno != 0) {
@@ -878,12 +893,12 @@ _write_complete_req(void *_req, int reduce_errno)
 	if (old_chunk_map_index != REDUCE_EMPTY_MAP_ENTRY) {
 		old_chunk = _reduce_vol_get_chunk_map(vol, old_chunk_map_index);
 		for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-			if (old_chunk[i] == REDUCE_EMPTY_MAP_ENTRY) {
+			if (old_chunk->io_unit_index[i] == REDUCE_EMPTY_MAP_ENTRY) {
 				break;
 			}
-			assert(spdk_bit_array_get(vol->allocated_backing_io_units, old_chunk[i]) == true);
-			spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk[i]);
-			old_chunk[i] = REDUCE_EMPTY_MAP_ENTRY;
+			assert(spdk_bit_array_get(vol->allocated_backing_io_units, old_chunk->io_unit_index[i]) == true);
+			spdk_bit_array_clear(vol->allocated_backing_io_units, old_chunk->io_unit_index[i]);
+			old_chunk->io_unit_index[i] = REDUCE_EMPTY_MAP_ENTRY;
 		}
 		spdk_bit_array_clear(vol->allocated_chunk_maps, old_chunk_map_index);
 	}
@@ -895,7 +910,7 @@ _write_complete_req(void *_req, int reduce_errno)
 	 */
 
 	/* Persist the new chunk map.  This must be persisted before we update the logical map. */
-	_reduce_persist(vol, req->chunk, sizeof(uint64_t) * vol->backing_io_units_per_chunk);
+	_reduce_persist(vol, req->chunk, _reduce_vol_get_chunk_struct_size(vol));
 
 	vol->pm_logical_map[req->logical_map_index] = req->chunk_map_index;
 
@@ -918,11 +933,11 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 		req->buf_iov[i].iov_len = vol->params.backing_io_unit_size;
 		if (is_write) {
 			vol->backing_dev->writev(vol->backing_dev, &req->buf_iov[i], 1,
-						 req->chunk[i] * vol->backing_lba_per_io_unit,
+						 req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		} else {
 			vol->backing_dev->readv(vol->backing_dev, &req->buf_iov[i], 1,
-						req->chunk[i] * vol->backing_lba_per_io_unit,
+						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		}
 	}
@@ -945,12 +960,12 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
 
 	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		req->chunk[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
+		req->chunk->io_unit_index[i] = spdk_bit_array_find_first_clear(vol->allocated_backing_io_units, 0);
 		/* TODO: fail if no backing block found - but really this should also not
 		 * happen (see comment above).
 		 */
-		assert(req->chunk[i] != UINT32_MAX);
-		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk[i]);
+		assert(req->chunk->io_unit_index[i] != UINT32_MAX);
+		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 	}
 
 	_issue_backing_ops(req, vol, next_fn, true /* write */);
