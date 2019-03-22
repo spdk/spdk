@@ -22,6 +22,30 @@
       "revId": "bccfa7af13d3b2bb85bc0b87193746bb8208090b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a9b18628_8a7dea66",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T09:27:00Z",
+      "side": 1,
+      "message": "Good to know. Thank you for your review. Fixed.",
+      "parentUuid": "6a8bbddc_2b1c590b",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 365,
+        "endChar": 49
+      },
+      "revId": "bccfa7af13d3b2bb85bc0b87193746bb8208090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
