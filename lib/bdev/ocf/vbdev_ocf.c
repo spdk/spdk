@@ -113,8 +113,14 @@ static void
 stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 {
 	struct vbdev_ocf *vbdev = priv;
+	struct vbdev_ocf_cache_ctx *cache_ctx;
+
+	cache_ctx = ocf_cache_get_priv(cache);
+	ocf_queue_put(cache_ctx->mngt_queue);
 
 	ocf_mngt_cache_unlock(cache);
+	free(cache_ctx);
+
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
@@ -638,11 +644,81 @@ start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
+/* OCF management queue deinitialization */
+static void
+vbdev_ocf_ctx_mngt_queue_stop(ocf_queue_t q)
+{
+	struct spdk_poller *poller = ocf_queue_get_priv(q);
+
+	if (poller) {
+		spdk_poller_unregister(&poller);
+	}
+}
+
+static int
+mngt_queue_poll(void *opaque)
+{
+	ocf_queue_t q = opaque;
+	uint32_t iono = ocf_queue_pending_io(q);
+	int i, max = spdk_min(32, iono);
+
+	for (i = 0; i < max; i++) {
+		ocf_queue_run_single(q);
+	}
+
+	if (iono > 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+vbdev_ocf_ctx_mngt_queue_kick(ocf_queue_t q)
+{
+}
+
+/* Queue ops is an interface for running queue thread
+ * stop() operation in called just before queue gets destroyed */
+const struct ocf_queue_ops mngt_queue_ops = {
+	.kick_sync = NULL,
+	.kick = vbdev_ocf_ctx_mngt_queue_kick,
+	.stop = vbdev_ocf_ctx_mngt_queue_stop,
+};
+
+static int
+create_management_queue(struct vbdev_ocf *vbdev)
+{
+	struct spdk_poller *mngt_poller;
+	struct vbdev_ocf_cache_ctx *cache_ctx;
+	int rc;
+
+	cache_ctx = ocf_cache_get_priv(vbdev->ocf_cache);
+
+	rc = ocf_queue_create(vbdev->ocf_cache, &cache_ctx->mngt_queue, &mngt_queue_ops);
+	if (rc) {
+		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
+		return rc;
+	}
+
+	mngt_poller = spdk_poller_register(mngt_queue_poll, cache_ctx->mngt_queue, 0);
+	if (mngt_poller == NULL) {
+		SPDK_ERRLOG("Unable to initiate mngt request: %s", spdk_strerror(ENOMEM));
+		return -ENOMEM;
+	}
+
+	ocf_queue_set_priv(cache_ctx->mngt_queue, mngt_poller);
+	ocf_mngt_cache_set_mngt_queue(vbdev->ocf_cache, cache_ctx->mngt_queue);
+
+	return 0;
+}
+
 /* Start OCF cache, attach caching device */
 static void
 start_cache(struct vbdev_ocf *vbdev)
 {
 	ocf_cache_t existing;
+	struct vbdev_ocf_cache_ctx *cache_ctx;
 	int rc;
 
 	if (vbdev->ocf_cache) {
@@ -660,13 +736,30 @@ start_cache(struct vbdev_ocf *vbdev)
 		return;
 	}
 
+	cache_ctx = calloc(1, sizeof(*cache_ctx));
+	if (cache_ctx == NULL) {
+		vbdev_ocf_mngt_continue(vbdev, -ENOMEM);
+		return;
+	}
+
 	rc = ocf_mngt_cache_start(vbdev_ocf_ctx, &vbdev->ocf_cache, &vbdev->cfg.cache);
 	if (rc) {
+		SPDK_ERRLOG("Unable to start cache: %d\n", rc);
+		free(cache_ctx);
 		vbdev_ocf_mngt_continue(vbdev, rc);
 		return;
 	}
 
 	vbdev->cache.id = ocf_cache_get_id(vbdev->ocf_cache);
+	ocf_cache_set_priv(vbdev->ocf_cache, cache_ctx);
+
+	rc = create_management_queue(vbdev);
+	if (rc) {
+		SPDK_ERRLOG("Unable to create mngt_queue: %d\n", rc);
+		free(cache_ctx);
+		vbdev_ocf_mngt_continue(vbdev, rc);
+		return;
+	}
 
 	ocf_mngt_cache_attach(vbdev->ocf_cache, &vbdev->cfg.device, start_cache_cmpl, vbdev);
 }
@@ -709,7 +802,8 @@ attach_core(struct vbdev_ocf *vbdev)
 
 /* Poller function for the OCF queue
  * We execute OCF requests here synchronously */
-static int queue_poll(void *opaque)
+static int
+queue_poll(void *opaque)
 {
 	struct vbdev_ocf_qcxt *qctx = opaque;
 	uint32_t iono = ocf_queue_pending_io(qctx->queue);
