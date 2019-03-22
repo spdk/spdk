@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "79909671_efe82b49",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T09:23:27Z",
+      "side": 1,
+      "message": "You could change order to avoid holes in this structure:\n\n\tuint64_t handle;\n \t\n \tuint32_t id;\n\tuint32_t context;\n \t\n\tbool is_server;\n\tbool is_listen;",
+      "range": {
+        "startLine": 101,
+        "startChar": 0,
+        "endLine": 107,
+        "endChar": 18
+      },
+      "revId": "5882218af92f665e84f98ed669f44110b62ddeed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a46d6a89_9d13a024",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 256,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T09:23:27Z",
+      "side": 1,
+      "message": "Where you destroy this lock?",
+      "range": {
+        "startLine": 256,
+        "startChar": 1,
+        "endLine": 256,
+        "endChar": 57
+      },
+      "revId": "5882218af92f665e84f98ed669f44110b62ddeed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
