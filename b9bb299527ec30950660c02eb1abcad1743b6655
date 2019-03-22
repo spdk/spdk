@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b87a7d84_10544908",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:54:28Z",
+      "side": 1,
+      "message": "If we want this to be an option, then it should default to true in my opinion.\n\nBut overall, I think we\u0027re better if this is not an option and is enabled by default.",
+      "range": {
+        "startLine": 528,
+        "startChar": 1,
+        "endLine": 528,
+        "endChar": 24
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fdbca3dc_a9b56da7",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -16,6 +39,98 @@
       "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "74103846_3e3afee0",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:54:28Z",
+      "side": 1,
+      "message": "Function naming.\nAll VM-related functions start with \"vm_\".\nvm_run\nvm_shutdown\nvm_wait_for_boot\netc",
+      "range": {
+        "startLine": 870,
+        "startChar": 9,
+        "endLine": 870,
+        "endChar": 22
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0abbd1a8_e7bb07e5",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:54:28Z",
+      "side": 1,
+      "message": "Youre using a relative path here. Im not 100% sure now from which directory level we run all of these commands, but I think it\u0027s safer to use $VM_BASE_DIR/$vm/qemu.log. Look at vm_run() function as an example",
+      "range": {
+        "startLine": 875,
+        "startChar": 4,
+        "endLine": 875,
+        "endChar": 25
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "be778782_6ce1d750",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:54:28Z",
+      "side": 1,
+      "message": "I think it\u0027d be better to say WHICH log specifically.",
+      "range": {
+        "startLine": 878,
+        "startChar": 2,
+        "endLine": 878,
+        "endChar": 25
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b0ba3675_91f80770",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:54:28Z",
+      "side": 1,
+      "message": "This should be printed after the warning about timeout.",
+      "range": {
+        "startLine": 936,
+        "startChar": 4,
+        "endLine": 936,
+        "endChar": 23
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
