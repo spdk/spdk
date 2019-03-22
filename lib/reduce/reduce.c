@@ -888,7 +888,7 @@ _reduce_vol_complete_req(struct spdk_reduce_vol_request *req, int reduce_errno)
 }
 
 static void
-_write_complete_req(void *_req, int reduce_errno)
+_write_write_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	struct spdk_reduce_vol *vol = req->vol;
@@ -1022,7 +1022,7 @@ _write_read_done(void *_req, int reduce_errno)
 		buf += req->iov[i].iov_len;
 	}
 
-	_reduce_vol_write_chunk(req, _write_complete_req);
+	_reduce_vol_write_chunk(req, _write_write_done);
 }
 
 static void
@@ -1213,7 +1213,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 	if (chunk_offset != lb_per_chunk) {
 		memset(buf, 0, (lb_per_chunk - chunk_offset) * lbsize);
 	}
-	_reduce_vol_write_chunk(req, _write_complete_req);
+	_reduce_vol_write_chunk(req, _write_write_done);
 }
 
 void
