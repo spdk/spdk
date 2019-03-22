@@ -49,6 +49,23 @@
     },
     {
       "key": {
+        "uuid": "d7b01d51_63a75ef6",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 333,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T07:34:58Z",
+      "side": 1,
+      "message": "see below",
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "44017d41_f4292c9d",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 2
@@ -93,6 +110,57 @@
       "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "996837af_1f8690d2",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 340,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T07:34:58Z",
+      "side": 1,
+      "message": "v",
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9219a42_52c9b2da",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 348,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T07:34:58Z",
+      "side": 1,
+      "message": "v",
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5a4aaed_116f37ba",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T07:34:58Z",
+      "side": 1,
+      "message": "Please free all the allocated strings. You could probably initialize all variables to NULL and then have a single\nerr_out label to free all of them at once:\n\nerr_out:\n  free(major);\n  free(minor);\n  free(patch);\n  free(suffix);",
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
