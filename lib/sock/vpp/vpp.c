@@ -133,6 +133,9 @@ static struct spdk_vpp_main {
 
 	struct spdk_poller *vpp_queue_poller;
 	struct spdk_poller *app_queue_poller;
+
+	/* VPP VNET_API_ERROR_* -> "Error string" hashtable */
+	uword *error_string_by_error_number;
 } g_svm;
 
 /* Set 63th bit of handle to mark it as listeners handle */
@@ -225,6 +228,26 @@ _wait_for_session_state_change(struct spdk_vpp_session *session)
 	/* timeout */
 	errno = ETIMEDOUT;
 	return -1;
+}
+
+/* VPP-like error code to the message string translation
+ * TODO: made it more SPDK friendly!
+ */
+static u8 *
+vpp_format_api_error(u8 *s, va_list *args)
+{
+	i32 error = va_arg(*args, u32);
+	uword *p;
+
+	p = hash_get(g_svm.error_string_by_error_number, -error);
+
+	if (p) {
+		s = format(s, "%s", p[0]);
+	} else {
+		s = format(s, "%d", error);
+	}
+
+	return s;
 }
 
 /******************************************************************************
@@ -383,7 +406,11 @@ vl_api_connect_session_reply_t_handler(vl_api_connect_session_reply_t *mp)
 	}
 
 	if (mp->retval) {
-		SPDK_ERRLOG("Connection failed (%d).\n", ntohl(mp->retval));
+		clib_warning("vpp handle 0x%llx, sid %u: "
+			     "connect failed! %U",
+			     mp->handle, mp->context,
+			     vpp_format_api_error, ntohl(mp->retval));
+
 		session->app_session.session_state = STATE_FAILED;
 		return;
 	}
@@ -519,7 +546,8 @@ vl_api_bind_sock_reply_t_handler(vl_api_bind_sock_reply_t *mp)
 	session = _spdk_vpp_session_get(mp->context);
 
 	if (mp->retval) {
-		SPDK_ERRLOG("Bind failed (%d).\n", ntohl(mp->retval));
+		clib_warning("bind failed: %U", vpp_format_api_error,
+			     ntohl(mp->retval));
 		session->app_session.session_state = STATE_FAILED;
 		return;
 	}
@@ -1075,7 +1103,8 @@ static void
 vl_api_session_enable_disable_reply_t_handler(vl_api_session_enable_disable_reply_t *mp)
 {
 	if (mp->retval) {
-		SPDK_ERRLOG("Session enable failed (%d).\n", ntohl(mp->retval));
+		clib_warning("session enable/disable failed: %U",
+			     vpp_format_api_error, ntohl(mp->retval));
 	} else {
 		SPDK_NOTICELOG("Session layer enabled\n");
 		g_svm.vpp_state = VPP_STATE_ENABLED;
@@ -1126,7 +1155,7 @@ ssvm_segment_attach(char *name, ssvm_segment_type_t type, int fd)
 	}
 
 	if ((rv = svm_fifo_segment_attach(&g_svm.segment_main, &a))) {
-		SPDK_ERRLOG("Segment '%s' attach failed (%d).\n", name, rv);
+		clib_warning("svm_fifo_segment_attach ('%s') failed", name);
 		return rv;
 	}
 
@@ -1141,8 +1170,8 @@ vl_api_application_attach_reply_t_handler(vl_api_application_attach_reply_t *mp)
 	u32 n_fds = 0;
 
 	if (mp->retval) {
-		SPDK_ERRLOG("Application attach to VPP failed (%d)\n",
-			    ntohl(mp->retval));
+		clib_warning("attach failed: %U", vpp_format_api_error,
+			     ntohl(mp->retval));
 		goto err;
 	}
 
@@ -1210,7 +1239,8 @@ static void
 vl_api_application_detach_reply_t_handler(vl_api_application_detach_reply_t *mp)
 {
 	if (mp->retval) {
-		SPDK_ERRLOG("Application detach from VPP failed (%d).\n", ntohl(mp->retval));
+		clib_warning("detach failed: %U", vpp_format_api_error,
+			     ntohl(mp->retval));
 		g_svm.vpp_state = VPP_STATE_FAILED;
 		return;
 	}
@@ -1290,6 +1320,13 @@ spdk_vpp_net_framework_init(void)
 	clib_mem_init_thread_safe(0, SPDK_VPP_CLIB_MEM_SIZE);
 	svm_fifo_segment_main_init(&g_svm.segment_main, SPDK_VPP_SEGMENT_BASEVA,
 				   SPDK_VPP_SEGMENT_TIMEOUT);
+
+	/* Initialize and set VPP error hashtable (string by vpp errno) */
+	g_svm.error_string_by_error_number = hash_create(0, sizeof(uword));
+	hash_set(g_svm.error_string_by_error_number, 99, "Misc");
+#define _(n,v,s) hash_set (g_svm.error_string_by_error_number, -v, s);
+	foreach_vnet_api_error;
+#undef _
 
 	app_name = spdk_sprintf_alloc("SPDK_%d", getpid());
 	if (app_name == NULL) {
