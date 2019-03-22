@@ -142,12 +142,15 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.uuid) {
-		opts.mode = 0;
 		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							     "Failed to parse uuid: %s",
 							     req.uuid);
 			goto invalid;
+		}
+
+		if (!spdk_mem_all_zero(&opts.uuid, sizeof(opts.uuid))) {
+			opts.mode &= ~SPDK_FTL_MODE_CREATE;
 		}
 	}
 

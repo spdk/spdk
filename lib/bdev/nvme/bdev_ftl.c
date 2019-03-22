@@ -40,6 +40,7 @@
 #include "spdk/string.h"
 #include "spdk/likely.h"
 #include "spdk/util.h"
+#include "spdk/string.h"
 #include "spdk/ftl.h"
 #include "spdk_internal/log.h"
 
@@ -508,8 +509,6 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			continue;
 		}
 
-		opts->mode = SPDK_FTL_MODE_CREATE;
-
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
 		if (!val) {
 			SPDK_ERRLOG("No name provided for TransportID: %s\n", trid);
@@ -533,7 +532,9 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
 		if (!val) {
-			continue;
+			SPDK_ERRLOG("No UUID provided for TransportID: %s\n", trid);
+			rc = -1;
+			break;
 		}
 
 		rc = spdk_uuid_parse(&opts->uuid, val);
@@ -543,7 +544,11 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			break;
 		}
 
-		opts->mode = 0;
+		if (spdk_mem_all_zero(&opts->uuid, sizeof(opts->uuid))) {
+			opts->mode = SPDK_FTL_MODE_CREATE;
+		} else {
+			opts->mode = 0;
+		}
 	}
 
 	if (!rc) {

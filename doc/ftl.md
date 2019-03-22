@@ -236,7 +236,7 @@ Example config:
 
 ```
 [Ftl]
- TransportID "trtype:PCIe traddr:00:0a.0" nvme0 "0-3"
+ TransportID "trtype:PCIe traddr:00:0a.0" nvme0 "0-3" 00000000-0000-0000-0000-000000000000
  TransportID "trtype:PCIe traddr:00:0a.0" nvme1 "4-5" e9825835-b03c-49d7-bc3e-5827cbde8a88
 ```
 
