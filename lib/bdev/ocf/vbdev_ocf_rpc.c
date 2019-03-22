@@ -79,7 +79,7 @@ spdk_rpc_construct_ocf_bdev(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	ret = vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name);
+	ret = vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name, NULL, NULL);
 	if (ret) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not create OCF vbdev: %s",
