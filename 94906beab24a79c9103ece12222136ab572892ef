@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b363c376_0e8dd4cc",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1842,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T08:30:52Z",
+      "side": 1,
+      "message": "By the way, this is uintmax_t, why don\u0027t we use PRIu64 anywhere in this file?",
+      "range": {
+        "startLine": 1842,
+        "startChar": 71,
+        "endLine": 1842,
+        "endChar": 73
+      },
+      "revId": "94906beab24a79c9103ece12222136ab572892ef",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
