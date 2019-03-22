@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17ef61be_33037c9b",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 54
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:51:16Z",
+      "side": 1,
+      "message": "create_compress_bdev and create_compress_bdev will be better. Sorry for my late reply. Please see https://review.gerrithub.io/#/c/spdk/spdk/+/445334/",
+      "range": {
+        "startLine": 51,
+        "startChar": 20,
+        "endLine": 51,
+        "endChar": 24
+      },
+      "revId": "04bbb5cfd2008d4a53c4a19626f6b45c707da303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
