@@ -89,12 +89,11 @@ struct spdk_reduce_chunk_map {
 
 struct spdk_reduce_vol_request {
 	/**
-	 *  Scratch buffer used for read/modify/write operations on
-	 *  I/Os less than a full chunk size, and as the intermediate
-	 *  buffer for compress/decompress operations.
+	 *  Scratch buffer used for read/write operations to the backing
+	 *  storage device.
 	 */
-	uint8_t					*buf;
-	struct iovec				*buf_iov;
+	uint8_t					*rw_buf;
+	struct iovec				*rw_buf_iov;
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
 	int					type;
@@ -331,8 +330,8 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
-		req->buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
-		req->buf = vol->buf_mem + i * vol->params.chunk_size;
+		req->rw_buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
+		req->rw_buf = vol->buf_mem + i * vol->params.chunk_size;
 	}
 
 	return 0;
@@ -931,14 +930,14 @@ _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
 	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		req->buf_iov[i].iov_base = req->buf + i * vol->params.backing_io_unit_size;
-		req->buf_iov[i].iov_len = vol->params.backing_io_unit_size;
+		req->rw_buf_iov[i].iov_base = req->rw_buf + i * vol->params.backing_io_unit_size;
+		req->rw_buf_iov[i].iov_len = vol->params.backing_io_unit_size;
 		if (is_write) {
-			vol->backing_dev->writev(vol->backing_dev, &req->buf_iov[i], 1,
+			vol->backing_dev->writev(vol->backing_dev, &req->rw_buf_iov[i], 1,
 						 req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		} else {
-			vol->backing_dev->readv(vol->backing_dev, &req->buf_iov[i], 1,
+			vol->backing_dev->readv(vol->backing_dev, &req->rw_buf_iov[i], 1,
 						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		}
@@ -997,7 +996,7 @@ _write_read_done(void *_req, int reduce_errno)
 	}
 
 	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
-	buf = req->buf + chunk_offset * req->vol->params.logical_block_size;
+	buf = req->rw_buf + chunk_offset * req->vol->params.logical_block_size;
 	for (i = 0; i < req->iovcnt; i++) {
 		memcpy(buf, req->iov[i].iov_base, req->iov[i].iov_len);
 		buf += req->iov[i].iov_len;
@@ -1029,7 +1028,7 @@ _read_read_done(void *_req, int reduce_errno)
 	}
 
 	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
-	buf = req->buf + chunk_offset * req->vol->params.logical_block_size;
+	buf = req->rw_buf + chunk_offset * req->vol->params.logical_block_size;
 	for (i = 0; i < req->iovcnt; i++) {
 		memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
 		buf += req->iov[i].iov_len;
@@ -1169,7 +1168,7 @@ _start_writev_request(struct spdk_reduce_vol_request *req)
 		return;
 	}
 
-	buf = req->buf;
+	buf = req->rw_buf;
 	lbsize = vol->params.logical_block_size;
 	lb_per_chunk = vol->logical_blocks_per_chunk;
 	/* Note: we must zero out parts of req->buf not specified by this write operation. */
