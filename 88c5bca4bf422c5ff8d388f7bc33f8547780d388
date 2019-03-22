@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2cd3b19d_945da06c",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T11:45:20Z",
+      "side": 1,
+      "message": "1. spdk_json_write_named_string_fmt\n\n2. SPDK_VERSION_STRING already contains all MAJOR, MINOR, PATCH and SUFFIX part. You should decide if you want concatenated version or spited version.",
+      "range": {
+        "startLine": 333,
+        "startChar": 0,
+        "endLine": 334,
+        "endChar": 58
+      },
+      "revId": "88c5bca4bf422c5ff8d388f7bc33f8547780d388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe0ec2e6_212a09eb",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 345,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T11:45:20Z",
+      "side": 1,
+      "message": "I think this is always true.",
+      "range": {
+        "startLine": 345,
+        "startChar": 1,
+        "endLine": 345,
+        "endChar": 27
+      },
+      "revId": "88c5bca4bf422c5ff8d388f7bc33f8547780d388",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
