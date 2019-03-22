@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "30cff39a_c560d87f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 58
+      },
+      "lineNbr": 742,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T06:55:40Z",
+      "side": 1,
+      "message": "Are they planned to be used later? I haven\u0027t found the code in this patch series yet.",
+      "range": {
+        "startLine": 742,
+        "startChar": 42,
+        "endLine": 742,
+        "endChar": 86
+      },
+      "revId": "816116d7ac7537a4d0dfda21b97d0bf9d352e1f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
