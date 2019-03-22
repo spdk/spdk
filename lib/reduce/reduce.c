@@ -94,6 +94,11 @@ struct spdk_reduce_vol_request {
 	 */
 	uint8_t					*rw_buf;
 	struct iovec				*rw_buf_iov;
+	/**
+	 *  Scratch buffer used for compress/decompress operations.
+	 */
+	uint8_t					*compress_buf;
+	struct iovec				*compress_buf_iov;
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
 	int					type;
@@ -305,7 +310,10 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	struct spdk_reduce_vol_request *req;
 	int i;
 
-	vol->buf_mem = spdk_dma_malloc(REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
+	/* Allocate 2x since we need buffers for both read/write and compress/decompress
+	 *  intermediate buffers.
+	 */
+	vol->buf_mem = spdk_dma_malloc(2 * REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
 	if (vol->buf_mem == NULL) {
 		return -ENOMEM;
 	}
@@ -317,8 +325,11 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 		return -ENOMEM;
 	}
 
+	/* Allocate 2x since we need iovs for both read/write and compress/decompress intermediate
+	 *  buffers.
+	 */
 	vol->buf_iov_mem = calloc(REDUCE_NUM_VOL_REQUESTS,
-				  sizeof(struct iovec) * vol->backing_io_units_per_chunk);
+				  2 * sizeof(struct iovec) * vol->backing_io_units_per_chunk);
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
 		spdk_dma_free(vol->buf_mem);
@@ -330,8 +341,10 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
-		req->rw_buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
-		req->rw_buf = vol->buf_mem + i * vol->params.chunk_size;
+		req->rw_buf_iov = &vol->buf_iov_mem[(2 * i) * vol->backing_io_units_per_chunk];
+		req->rw_buf = vol->buf_mem + (2 * i) * vol->params.chunk_size;
+		req->compress_buf_iov = &vol->buf_iov_mem[(2 * i + 1) * vol->backing_io_units_per_chunk];
+		req->compress_buf = vol->buf_mem + (2 * i + 1) * vol->params.chunk_size;
 	}
 
 	return 0;
