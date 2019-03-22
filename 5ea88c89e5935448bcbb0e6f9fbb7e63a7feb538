@@ -16,6 +16,24 @@
       "revId": "5ea88c89e5935448bcbb0e6f9fbb7e63a7feb538",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b4d5895d_5345133e",
+        "filename": "lib/bdev/nvme/bdev_nvme.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 1216,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-22T00:53:37Z",
+      "side": 1,
+      "message": "The RPC callback will check the number of created controllers, 0 is an invalid value.  It\u0027s fine to me with a return value in the callback, I will add it.",
+      "parentUuid": "562e2303_919ac533",
+      "revId": "5ea88c89e5935448bcbb0e6f9fbb7e63a7feb538",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
