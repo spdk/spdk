@@ -33,6 +33,7 @@
 
 #include "spdk/stdinc.h"
 #include "spdk/ftl.h"
+#include "spdk/likely.h"
 
 #include "ftl_io.h"
 #include "ftl_core.h"
@@ -190,7 +191,12 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	struct spdk_ftl_dev *dev = opts->dev;
 
 	if (!io) {
-		io = ftl_io_alloc(dev->ioch);
+		if (opts->parent) {
+			io = ftl_io_alloc_child(opts->parent);
+		} else {
+			io = ftl_io_alloc(dev->ioch);
+		}
+
 		if (!io) {
 			return NULL;
 		}
@@ -285,17 +291,76 @@ ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size
 	ftl_trace_lba_io_init(io->dev, io);
 }
 
+static bool
+ftl_io_children_done(const struct ftl_io *parent)
+{
+	struct ftl_io *child;
+
+	LIST_FOREACH(child, &parent->children, child_entry) {
+		if (!child->done) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 void
 ftl_io_complete(struct ftl_io *io)
 {
-	int keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
+	struct ftl_io *child, *parent = io->parent;
+	bool complete = false, keep_alive = io->flags & FTL_IO_KEEP_ALIVE;
 
 	io->flags &= ~FTL_IO_INITIALIZED;
-	io->cb.fn(io->cb.ctx, io->status);
 
-	if (!keep_alive) {
-		ftl_io_free(io);
+	if (parent) {
+		pthread_spin_lock(&parent->lock);
+		io->done = true;
+		complete = parent->done && ftl_io_children_done(parent);
+		pthread_spin_unlock(&parent->lock);
+
+		io->cb.fn(io->cb.ctx, io->status);
+		if (complete) {
+			ftl_io_complete(parent);
+		}
+	} else {
+		pthread_spin_lock(&io->lock);
+		io->done = true;
+		complete = ftl_io_children_done(io);
+		pthread_spin_unlock(&io->lock);
+
+		if (complete) {
+			io->cb.fn(io->cb.ctx, io->status);
+
+			while ((child = LIST_FIRST(&io->children))) {
+				/* ftl_io_free removes the IO from children list */
+				ftl_io_free(child);
+			}
+
+			if (!keep_alive) {
+				ftl_io_free(io);
+			}
+		}
 	}
+}
+
+struct ftl_io *
+ftl_io_alloc_child(struct ftl_io *parent)
+{
+	struct ftl_io *io;
+
+	/* Only allow one level of relationship for now */
+	assert(parent->parent == NULL);
+
+	io = ftl_io_alloc(parent->ioch);
+	if (!io) {
+		return NULL;
+	}
+
+	io->parent = parent;
+	LIST_INSERT_HEAD(&parent->children, io, child_entry);
+
+	return io;
 }
 
 void
@@ -332,7 +397,13 @@ ftl_io_alloc(struct spdk_io_channel *ch)
 	}
 
 	memset(io, 0, ioch->elem_size);
-	io->ch = ch;
+	io->ioch = ch;
+
+	if (pthread_spin_init(&io->lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("pthread_spin_init failed\n");
+		return NULL;
+	}
+
 	return io;
 }
 
@@ -364,10 +435,16 @@ ftl_io_free(struct ftl_io *io)
 		return;
 	}
 
+	assert(LIST_EMPTY(&io->children));
+
+	if (io->parent) {
+		LIST_REMOVE(io, child_entry);
+	}
+
 	if ((io->flags & FTL_IO_INTERNAL) && io->iov_cnt > 1) {
 		free(io->iovs);
 	}
 
-	ioch = spdk_io_channel_get_ctx(io->ch);
+	ioch = spdk_io_channel_get_ctx(io->ioch);
 	spdk_mempool_put(ioch->io_pool, io);
 }
