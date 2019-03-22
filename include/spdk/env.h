@@ -599,6 +599,17 @@ size_t spdk_ring_enqueue(struct spdk_ring *ring, void **objs, size_t count);
 size_t spdk_ring_dequeue(struct spdk_ring *ring, void **objs, size_t count);
 
 /**
+ * Dequeue count objects from the ring into the array objs.
+ *
+ * \param ring A pointer to the ring.
+ * \param objs A pointer to the array to be dequeued.
+ * \param count Maximum number of elements to be dequeued.
+ *
+ * \return the number of objects dequeued which is either count or 0.
+ */
+size_t spdk_ring_dequeue_fixed(struct spdk_ring *ring, void **objs, size_t count);
+
+/**
  * Reports whether the SPDK application is using the IOMMU for DMA
  *
  * \return True if we are using the IOMMU, false otherwise.
