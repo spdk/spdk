@@ -22,6 +22,30 @@
       "revId": "04bbb5cfd2008d4a53c4a19626f6b45c707da303",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0e8ad443_702d2b68",
+        "filename": "lib/bdev/compress/vbdev_compress.h",
+        "patchSetId": 54
+      },
+      "lineNbr": 51,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T06:44:46Z",
+      "side": 1,
+      "message": "Sorry it\u0027s OK to use create_compress_disk and delete_compress_disk. (I see crypto bdev is as same as compress bdev)",
+      "parentUuid": "17ef61be_33037c9b",
+      "range": {
+        "startLine": 51,
+        "startChar": 20,
+        "endLine": 51,
+        "endChar": 24
+      },
+      "revId": "04bbb5cfd2008d4a53c4a19626f6b45c707da303",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
