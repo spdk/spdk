@@ -97,6 +97,15 @@ struct spdk_reduce_vol_request {
 	 */
 	uint8_t					*decomp_buf;
 	struct iovec				*decomp_buf_iov;
+	/**
+	 *  Scratch buffer used for compressed chunk.  This is used for:
+	 *   1) destination buffer for compression operations
+	 *   2) source buffer for decompression operations
+	 *   3) data buffer when writing compressed chunk to disk
+	 *   4) data buffer when reading compressed chunk from disk
+	 */
+	uint8_t					*comp_buf;
+	struct iovec				*comp_buf_iov;
 	struct iovec				*iov;
 	struct spdk_reduce_vol			*vol;
 	int					type;
@@ -308,7 +317,10 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	struct spdk_reduce_vol_request *req;
 	int i;
 
-	vol->buf_mem = spdk_dma_malloc(REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
+	/* Allocate 2x since we need buffers for both read/write and compress/decompress
+	 *  intermediate buffers.
+	 */
+	vol->buf_mem = spdk_dma_malloc(2 * REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
 	if (vol->buf_mem == NULL) {
 		return -ENOMEM;
 	}
@@ -320,8 +332,11 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 		return -ENOMEM;
 	}
 
+	/* Allocate 2x since we need iovs for both read/write and compress/decompress intermediate
+	 *  buffers.
+	 */
 	vol->buf_iov_mem = calloc(REDUCE_NUM_VOL_REQUESTS,
-				  sizeof(struct iovec) * vol->backing_io_units_per_chunk);
+				  2 * sizeof(struct iovec) * vol->backing_io_units_per_chunk);
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
 		spdk_dma_free(vol->buf_mem);
@@ -333,8 +348,10 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	for (i = 0; i < REDUCE_NUM_VOL_REQUESTS; i++) {
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
-		req->decomp_buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
-		req->decomp_buf = vol->buf_mem + i * vol->params.chunk_size;
+		req->decomp_buf_iov = &vol->buf_iov_mem[(2 * i) * vol->backing_io_units_per_chunk];
+		req->decomp_buf = vol->buf_mem + (2 * i) * vol->params.chunk_size;
+		req->comp_buf_iov = &vol->buf_iov_mem[(2 * i + 1) * vol->backing_io_units_per_chunk];
+		req->comp_buf = vol->buf_mem + (2 * i + 1) * vol->params.chunk_size;
 	}
 
 	return 0;
