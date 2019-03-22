@@ -22,6 +22,69 @@
       "revId": "1e9dfa9f45a8694f750e816b74daeac83d359f00",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e332acfc_9ae5af2a",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-22T12:34:36Z",
+      "side": 1,
+      "message": "one too many new lines",
+      "revId": "1e9dfa9f45a8694f750e816b74daeac83d359f00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2aa0a552_3282dd4a",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 238,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-22T12:34:36Z",
+      "side": 1,
+      "message": "Is this needed here, since it already is present in ctx.h ?",
+      "range": {
+        "startLine": 238,
+        "startChar": 0,
+        "endLine": 238,
+        "endChar": 24
+      },
+      "revId": "1e9dfa9f45a8694f750e816b74daeac83d359f00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "bc7b395b_8f1baab5",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-22T12:34:36Z",
+      "side": 1,
+      "message": "Are those 2 threads needed ?",
+      "range": {
+        "startLine": 250,
+        "startChar": 1,
+        "endLine": 250,
+        "endChar": 21
+      },
+      "revId": "1e9dfa9f45a8694f750e816b74daeac83d359f00",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
