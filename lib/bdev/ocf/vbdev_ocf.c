@@ -110,6 +110,14 @@ get_other_cache_instance(struct vbdev_ocf *vbdev)
 }
 
 static void
+put_cache_cleaner_channel(void *ctx)
+{
+	struct spdk_io_channel *ch = ctx;
+
+	spdk_put_io_channel(ch);
+}
+
+static void
 stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 {
 	struct vbdev_ocf *vbdev = priv;
@@ -119,6 +127,11 @@ stop_vbdev_cmpl(ocf_cache_t cache, void *priv, int error)
 	ocf_queue_put(cache_ctx->mngt_queue);
 
 	ocf_mngt_cache_unlock(cache);
+
+	spdk_thread_send_msg(cache_ctx->cleaner_thread,
+			     put_cache_cleaner_channel,
+			     cache_ctx->cache_channel);
+
 	free(cache_ctx);
 
 	vbdev_ocf_mngt_continue(vbdev, error);
@@ -172,14 +185,39 @@ stop_vbdev(struct vbdev_ocf *vbdev)
 	vbdev_ocf_mngt_poll(vbdev, stop_vbdev_poll);
 }
 
+static void
+put_core_cleaner_channel(void *base_opaque)
+{
+	struct vbdev_ocf_base *base = base_opaque;
+
+	spdk_put_io_channel(base->cleaner_channel);
+}
+
+static void
+get_core_cleaner_channel(void *base_opaque)
+{
+	struct vbdev_ocf_base *base = base_opaque;
+
+	base->cleaner_channel = spdk_bdev_get_io_channel(base->desc);
+}
+
 /* Close and unclaim base bdev */
 static void
 remove_base_bdev(struct vbdev_ocf_base *base)
 {
+	struct vbdev_ocf_cache_ctx *cctx;
+
 	if (base->attached) {
 		spdk_bdev_module_release_bdev(base->bdev);
 		spdk_bdev_close(base->desc);
 		base->attached = false;
+	}
+
+	if (base->parent->state.started) {
+		cctx = ocf_cache_get_priv(base->parent->ocf_cache);
+		if (base->cleaner_channel) {
+			spdk_thread_send_msg(cctx->cleaner_thread, put_core_cleaner_channel, base);
+		}
 	}
 }
 
@@ -648,8 +686,18 @@ static void
 start_cache_cmpl(ocf_cache_t cache, void *priv, int error)
 {
 	struct vbdev_ocf *vbdev = priv;
+	struct vbdev_ocf_cache_ctx *cctx = ocf_cache_get_priv(cache);
 
 	ocf_mngt_cache_unlock(cache);
+
+	if (error) {
+		SPDK_ERRLOG("Failed to attach cache device: %d\n", error);
+	} else {
+		/* This callback is guaranteed to be on the same thread as cleaner
+		 * so we can directly set io channel for its cache device */
+		cctx->cache_channel = spdk_bdev_get_io_channel(vbdev->cache.desc);
+	}
+
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
@@ -777,6 +825,7 @@ static void
 add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 {
 	struct vbdev_ocf *vbdev = priv;
+	struct vbdev_ocf_cache_ctx *cctx = ocf_cache_get_priv(cache);
 
 	ocf_mngt_cache_unlock(cache);
 
@@ -787,6 +836,7 @@ add_core_cmpl(ocf_cache_t cache, ocf_core_t core, void *priv, int error)
 		vbdev->core.id  = ocf_core_get_id(core);
 	}
 
+	spdk_thread_send_msg(cctx->cleaner_thread, get_core_cleaner_channel, &vbdev->core);
 	vbdev_ocf_mngt_continue(vbdev, error);
 }
 
