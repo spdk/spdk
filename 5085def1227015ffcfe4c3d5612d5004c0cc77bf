@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1aeaedad_b061af56",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 232,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-22T22:13:43Z",
+      "side": 1,
+      "message": "lines 233-238 could be replaced with a single call to end_target() to reduce code duplication",
+      "revId": "5085def1227015ffcfe4c3d5612d5004c0cc77bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b9899886_f2593043",
+        "filename": "test/bdev/bdevperf/bdevperf.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-22T22:13:43Z",
+      "side": 1,
+      "message": "do we need this current_queue_depth check here?  I\u0027m trying to understand why bdevperf_complete won\u0027t handle this - you\u0027ve set is_draining \u003d true, so bdevperf_complete will see that flag and send this event for you\n\nif that\u0027s all true, then you can literally just pass end_target to spdk_bdev_open",
+      "revId": "5085def1227015ffcfe4c3d5612d5004c0cc77bf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
