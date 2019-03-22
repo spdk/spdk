@@ -287,17 +287,108 @@ vbdev_ocf_ctx_data_secure_erase(ctx_data_t *ctx_data)
 	}
 }
 
+struct cleaner_priv {
+	struct spdk_poller *poller;
+	ocf_queue_t         queue;
+	uint64_t            next_run;
+};
+
 static int
-vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t c)
+cleaner_poll(void *arg)
 {
-	/* TODO [writeback]: implement with writeback mode support */
+	ocf_cleaner_t cleaner = arg;
+	struct cleaner_priv *priv = ocf_cleaner_get_priv(cleaner);
+	uint32_t iono = ocf_queue_pending_io(priv->queue);
+	int i, max = spdk_min(32, iono);
+
+	for (i = 0; i < max; i++) {
+		ocf_queue_run_single(priv->queue);
+	}
+
+	if (spdk_get_ticks() >= priv->next_run) {
+		ocf_cleaner_run(cleaner, priv->queue);
+		return 1;
+	}
+
+	if (iono > 0) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static void
+cleaner_cmpl(ocf_cleaner_t cleaner, uint32_t interval)
+{
+	struct cleaner_priv *priv = ocf_cleaner_get_priv(cleaner);
+
+	priv->next_run = spdk_get_ticks() + ((interval * spdk_get_ticks_hz()) / 1000);
+}
+
+static void
+cleaner_queue_kick(ocf_queue_t q)
+{
+}
+
+static void
+cleaner_queue_stop(ocf_queue_t q)
+{
+	struct cleaner_priv *cpriv = ocf_queue_get_priv(q);
+
+	if (cpriv) {
+		spdk_poller_unregister(&cpriv->poller);
+		free(cpriv);
+	}
+}
+
+const struct ocf_queue_ops cleaner_queue_ops = {
+	.kick_sync = cleaner_queue_kick,
+	.kick = cleaner_queue_kick,
+	.stop = cleaner_queue_stop,
+};
+
+static int
+vbdev_ocf_ctx_cleaner_init(ocf_cleaner_t cleaner)
+{
+	int rc;
+	struct cleaner_priv        *priv  = calloc(1, sizeof(*priv));
+	ocf_cache_t                 cache = ocf_cleaner_get_cache(cleaner);
+	struct vbdev_ocf_cache_ctx *cctx  = ocf_cache_get_priv(cache);
+
+	if (priv == NULL) {
+		return -ENOMEM;
+	}
+
+	rc = ocf_queue_create(cache, &priv->queue, &cleaner_queue_ops);
+	if (rc) {
+		free(priv);
+		return rc;
+	}
+
+	priv->poller = spdk_poller_register(cleaner_poll, cleaner, 0);
+	if (priv->poller == NULL) {
+		ocf_queue_put(priv->queue);
+		free(priv);
+		return -ENOMEM;
+	}
+
+	ocf_queue_set_priv(priv->queue, priv);
+
+	cctx->cleaner_queue  = priv->queue;
+	cctx->cleaner_thread = spdk_get_thread();
+
+	ocf_cleaner_set_cmpl(cleaner, cleaner_cmpl);
+	ocf_cleaner_set_priv(cleaner, priv);
+
 	return 0;
 }
 
 static void
-vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
+vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t cleaner)
 {
-	/* TODO [writeback]: implement with writeback mode support */
+	struct cleaner_priv *priv = ocf_cleaner_get_priv(cleaner);
+
+	ocf_queue_put(priv->queue);
 }
 
 static int vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
