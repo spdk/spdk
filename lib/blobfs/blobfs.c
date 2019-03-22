@@ -1974,8 +1974,6 @@ __file_flush_done(void *arg, int bserrno)
 
 	pthread_spin_unlock(&file->lock);
 
-	__check_sync_reqs(file);
-
 	__file_flush(args);
 }
 
