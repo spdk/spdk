@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf6949c2_901183dc",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T10:36:08Z",
+      "side": 1,
+      "message": "This is duplicated with above. I have to skip here",
+      "revId": "17da8df1c9e94254d1b549938b3bf853001acf45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
