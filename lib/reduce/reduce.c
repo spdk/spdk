@@ -1019,12 +1019,26 @@ _write_read_done(void *_req, int reduce_errno)
 }
 
 static void
-_read_read_done(void *_req, int reduce_errno)
+_read_complete_req(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 	uint64_t chunk_offset;
 	uint8_t *buf;
 	int i;
+
+	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
+	buf = req->rw_buf + chunk_offset * req->vol->params.logical_block_size;
+	for (i = 0; i < req->iovcnt; i++) {
+		memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
+		buf += req->iov[i].iov_len;
+	}
+	_reduce_vol_complete_req(req, 0);
+}
+
+static void
+_read_read_done(void *_req, int reduce_errno)
+{
+	struct spdk_reduce_vol_request *req = _req;
 
 	if (reduce_errno != 0) {
 		req->reduce_errno = reduce_errno;
@@ -1040,13 +1054,7 @@ _read_read_done(void *_req, int reduce_errno)
 		return;
 	}
 
-	chunk_offset = req->offset % req->vol->logical_blocks_per_chunk;
-	buf = req->rw_buf + chunk_offset * req->vol->params.logical_block_size;
-	for (i = 0; i < req->iovcnt; i++) {
-		memcpy(req->iov[i].iov_base, buf, req->iov[i].iov_len);
-		buf += req->iov[i].iov_len;
-	}
-	_reduce_vol_complete_req(req, 0);
+	_read_complete_req(req, 0);
 }
 
 static void
