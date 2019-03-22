@@ -75,6 +75,9 @@ has been added. This function requires an additional argument for the desired al
 the mempool. Any items taken from a pool created with spdk_mempool_create_aligned are quaranteed to be aligned
 to the argument supplied to the function.
 
+`spdk_mempool_create_ctor` has been removed in favor of `spdk_mempool_create` which now gives us the same
+functionality we used to require from `spdk_mempool_create_ctor`.
+
 ## v19.01:
 
 ### ocf bdev

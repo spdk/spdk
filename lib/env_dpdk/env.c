@@ -252,35 +252,6 @@ static const struct rte_mempool_ops spdk_mempool_ops = {
 
 MEMPOOL_REGISTER_OPS(spdk_mempool_ops);
 
-struct spdk_mempool *
-spdk_mempool_create_ctor(const char *name, size_t count,
-			 size_t ele_size, size_t cache_size, int socket_id,
-			 spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg)
-{
-	struct rte_mempool *mp;
-	size_t tmp;
-
-	if (socket_id == SPDK_ENV_SOCKET_ID_ANY) {
-		socket_id = SOCKET_ID_ANY;
-	}
-
-	/* No more than half of all elements can be in cache */
-	tmp = (count / 2) / rte_lcore_count();
-	if (cache_size > tmp) {
-		cache_size = tmp;
-	}
-
-	if (cache_size > RTE_MEMPOOL_CACHE_MAX_SIZE) {
-		cache_size = RTE_MEMPOOL_CACHE_MAX_SIZE;
-	}
-
-	mp = rte_mempool_create(name, count, ele_size, cache_size,
-				0, NULL, NULL, (rte_mempool_obj_cb_t *)obj_init, obj_init_arg,
-				socket_id, MEMPOOL_F_NO_PHYS_CONTIG);
-
-	return (struct spdk_mempool *)mp;
-}
-
 static void
 mempool_free_chunk(struct rte_mempool_memhdr *memhdr, void *opaque)
 {
