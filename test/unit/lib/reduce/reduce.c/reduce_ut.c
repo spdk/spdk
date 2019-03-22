@@ -574,12 +574,6 @@ _vol_get_chunk_map_index(struct spdk_reduce_vol *vol, uint64_t offset)
 	return vol->pm_logical_map[logical_map_index];
 }
 
-static uint64_t *
-_vol_get_chunk_map(struct spdk_reduce_vol *vol, uint64_t chunk_map_index)
-{
-	return &vol->pm_chunk_maps[chunk_map_index * vol->backing_io_units_per_chunk];
-}
-
 static void
 write_cb(void *arg, int reduce_errno)
 {
@@ -601,7 +595,7 @@ _write_maps(uint32_t backing_blocklen)
 	char buf[16 * 1024]; /* chunk size */
 	uint32_t i;
 	uint64_t old_chunk0_map_index, new_chunk0_map_index;
-	uint64_t *old_chunk0_map, *new_chunk0_map;
+	struct spdk_reduce_chunk_map *old_chunk0_map, *new_chunk0_map;
 
 	params.chunk_size = 16 * 1024;
 	params.backing_io_unit_size = 4096;
@@ -630,10 +624,11 @@ _write_maps(uint32_t backing_blocklen)
 	CU_ASSERT(old_chunk0_map_index != REDUCE_EMPTY_MAP_ENTRY);
 	CU_ASSERT(spdk_bit_array_get(g_vol->allocated_chunk_maps, old_chunk0_map_index) == true);
 
-	old_chunk0_map = _vol_get_chunk_map(g_vol, old_chunk0_map_index);
+	old_chunk0_map = _reduce_vol_get_chunk_map(g_vol, old_chunk0_map_index);
 	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
-		CU_ASSERT(old_chunk0_map[i] != REDUCE_EMPTY_MAP_ENTRY);
-		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, old_chunk0_map[i]) == true);
+		CU_ASSERT(old_chunk0_map->io_unit_index[i] != REDUCE_EMPTY_MAP_ENTRY);
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units,
+					     old_chunk0_map->io_unit_index[i]) == true);
 	}
 
 	g_reduce_errno = -1;
@@ -647,13 +642,15 @@ _write_maps(uint32_t backing_blocklen)
 	CU_ASSERT(spdk_bit_array_get(g_vol->allocated_chunk_maps, old_chunk0_map_index) == false);
 
 	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
-		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, old_chunk0_map[i]) == false);
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units,
+					     old_chunk0_map->io_unit_index[i]) == false);
 	}
 
-	new_chunk0_map = _vol_get_chunk_map(g_vol, new_chunk0_map_index);
+	new_chunk0_map = _reduce_vol_get_chunk_map(g_vol, new_chunk0_map_index);
 	for (i = 0; i < g_vol->backing_io_units_per_chunk; i++) {
-		CU_ASSERT(new_chunk0_map[i] != REDUCE_EMPTY_MAP_ENTRY);
-		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units, new_chunk0_map[i]) == true);
+		CU_ASSERT(new_chunk0_map->io_unit_index[i] != REDUCE_EMPTY_MAP_ENTRY);
+		CU_ASSERT(spdk_bit_array_get(g_vol->allocated_backing_io_units,
+					     new_chunk0_map->io_unit_index[i]) == true);
 	}
 
 	g_reduce_errno = -1;
