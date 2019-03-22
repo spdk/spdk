@@ -35,6 +35,7 @@
 #define VBDEV_OCF_CTX_H
 
 #include <ocf/ocf.h>
+#include "spdk/thread.h"
 
 extern ocf_ctx_t vbdev_ocf_ctx;
 
@@ -45,6 +46,9 @@ extern ocf_ctx_t vbdev_ocf_ctx;
 /* Context of cache instance */
 struct vbdev_ocf_cache_ctx {
 	ocf_queue_t                  mngt_queue;
+	struct spdk_thread          *cleaner_thread;
+	ocf_queue_t                  cleaner_queue;
+	struct spdk_io_channel      *cache_channel;
 };
 
 int vbdev_ocf_ctx_init(void);
