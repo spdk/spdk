@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "f3f7c9ec_63d0dba6",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-22T10:19:23Z",
+      "side": 1,
+      "message": "Assert for what? Yeah, if the cache_bdev is set, that means that the cache bdev exists and spdk_bdev_get_name cannot fail.",
+      "parentUuid": "93acb063_761a3ae0",
+      "revId": "a8a083eee5a2fc22235e807aae3951c67fdad884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1e313454_a6909bbd",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 4
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-22T09:56:29Z",
       "side": 1,
       "message": "Why we have assert here. Isn\u0027t is clean shutdown path?",
+      "revId": "a8a083eee5a2fc22235e807aae3951c67fdad884",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "90cef10f_18cb72c4",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-22T10:19:23Z",
+      "side": 1,
+      "message": "No, it\u0027s a callback called when the bdev is \u0027hot\u0027 removed (someone pulled the disk out).",
+      "parentUuid": "1e313454_a6909bbd",
       "revId": "a8a083eee5a2fc22235e807aae3951c67fdad884",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
