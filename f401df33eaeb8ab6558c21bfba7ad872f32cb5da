@@ -347,6 +347,30 @@
     },
     {
       "key": {
+        "uuid": "612f917c_aefcecdb",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1333,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-03-22T07:54:40Z",
+      "side": 1,
+      "message": "Update after talking offline with TomekK. Unfortunately not using the patch brings another set of issues. We should be fine cherry-picking a patch on VPP right now, and as we update to newer than VPP 19.01.1 version - it is no longer required. Please update vm_setup.sh with this cherry-pick:\nhttps://github.com/FDio/vpp/commit/97dcf5bd26ca6de580943f5d39681f0144782c3d",
+      "parentUuid": "04a351ce_57addb24",
+      "range": {
+        "startLine": 1333,
+        "startChar": 0,
+        "endLine": 1333,
+        "endChar": 58
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0197ddd0_aad58727",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
