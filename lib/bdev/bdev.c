@@ -57,10 +57,10 @@
 int __itt_init_ittlib(const char *, __itt_group_id);
 #endif
 
-#define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024)
+#define SPDK_BDEV_IO_POOL_SIZE			(64 * 1024 - 1)
 #define SPDK_BDEV_IO_CACHE_SIZE			256
-#define BUF_SMALL_POOL_SIZE			8192
-#define BUF_LARGE_POOL_SIZE			1024
+#define BUF_SMALL_POOL_SIZE			8191
+#define BUF_LARGE_POOL_SIZE			1023
 #define NOMEM_THRESHOLD_COUNT			8
 #define ZERO_BUFFER_SIZE			0x100000
 
