@@ -133,7 +133,7 @@ struct spdk_reduce_vol {
 	TAILQ_HEAD(, spdk_reduce_vol_request)	queued_requests;
 
 	/* Single contiguous buffer used for all request buffers for this volume. */
-	uint8_t					*reqbufspace;
+	uint8_t					*buf_mem;
 	struct iovec				*buf_iov_mem;
 };
 
@@ -306,15 +306,15 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 	struct spdk_reduce_vol_request *req;
 	int i;
 
-	vol->reqbufspace = spdk_dma_malloc(REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
-	if (vol->reqbufspace == NULL) {
+	vol->buf_mem = spdk_dma_malloc(REDUCE_NUM_VOL_REQUESTS * vol->params.chunk_size, 64, NULL);
+	if (vol->buf_mem == NULL) {
 		return -ENOMEM;
 	}
 
 	vol->request_mem = calloc(REDUCE_NUM_VOL_REQUESTS, sizeof(*req));
 	if (vol->request_mem == NULL) {
-		spdk_dma_free(vol->reqbufspace);
-		vol->reqbufspace = NULL;
+		spdk_dma_free(vol->buf_mem);
+		vol->buf_mem = NULL;
 		return -ENOMEM;
 	}
 
@@ -322,9 +322,9 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 				  sizeof(struct iovec) * vol->backing_io_units_per_chunk);
 	if (vol->buf_iov_mem == NULL) {
 		free(vol->request_mem);
-		spdk_dma_free(vol->reqbufspace);
+		spdk_dma_free(vol->buf_mem);
 		vol->request_mem = NULL;
-		vol->reqbufspace = NULL;
+		vol->buf_mem = NULL;
 		return -ENOMEM;
 	}
 
@@ -332,7 +332,7 @@ _allocate_vol_requests(struct spdk_reduce_vol *vol)
 		req = &vol->request_mem[i];
 		TAILQ_INSERT_HEAD(&vol->free_requests, req, tailq);
 		req->buf_iov = &vol->buf_iov_mem[i * vol->backing_io_units_per_chunk];
-		req->buf = vol->reqbufspace + i * vol->params.chunk_size;
+		req->buf = vol->buf_mem + i * vol->params.chunk_size;
 	}
 
 	return 0;
@@ -353,7 +353,7 @@ _init_load_cleanup(struct spdk_reduce_vol *vol, struct reduce_init_load_ctx *ctx
 		spdk_bit_array_free(&vol->allocated_backing_io_units);
 		free(vol->request_mem);
 		free(vol->buf_iov_mem);
-		spdk_dma_free(vol->reqbufspace);
+		spdk_dma_free(vol->buf_mem);
 		free(vol);
 	}
 }
