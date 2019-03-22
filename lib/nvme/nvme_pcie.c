@@ -160,6 +160,7 @@ struct nvme_pcie_qpair {
 	uint16_t max_completions_cap;
 
 	uint16_t last_sq_tail;
+	uint16_t last_cq_head;
 	uint16_t sq_tail;
 	uint16_t cq_head;
 	uint16_t sq_head;
@@ -943,7 +944,8 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
-	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->cq_head = 0;
+	pqpair->last_sq_tail = pqpair->sq_tail = 0;
+	pqpair->last_cq_head = pqpair->cq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -2165,7 +2167,27 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 	}
 
 	if (num_completions > 0) {
-		nvme_pcie_qpair_ring_cq_doorbell(qpair);
+		if (pqpair->flags.delay_pcie_doorbell) {
+			/* Calculate the distance between the last written cq head
+			 * value and the current location in the completion queue
+			 * we've read. If that distance is more than the number of
+			 * entries divided by two, ring the doorbell. */
+			uint32_t count = 0;
+
+			if (pqpair->last_cq_head > pqpair->cq_head) {
+				count += pqpair->num_entries - pqpair->last_cq_head;
+				count += pqpair->cq_head;
+			} else {
+				count += pqpair->cq_head - pqpair->last_cq_head;
+			}
+
+			if (count >= (pqpair->num_entries >> 1)) {
+				nvme_pcie_qpair_ring_cq_doorbell(qpair);
+				pqpair->last_cq_head = pqpair->cq_head;
+			}
+		} else {
+			nvme_pcie_qpair_ring_cq_doorbell(qpair);
+		}
 	}
 
 	if (pqpair->flags.delay_pcie_doorbell) {
