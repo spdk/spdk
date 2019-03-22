@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0e8f568b_414768f8",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1122,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:02:51Z",
+      "side": 1,
+      "message": "this change should be done in before last patch.",
+      "range": {
+        "startLine": 1122,
+        "startChar": 26,
+        "endLine": 1122,
+        "endChar": 44
+      },
+      "revId": "b8acdaa407db616beeda0d7a7052fa795d8a123b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b1bbc72_77182ddd",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1212,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T01:02:51Z",
+      "side": 1,
+      "message": "you can use logical_map_index here.",
+      "range": {
+        "startLine": 1212,
+        "startChar": 26,
+        "endLine": 1212,
+        "endChar": 64
+      },
+      "revId": "b8acdaa407db616beeda0d7a7052fa795d8a123b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
