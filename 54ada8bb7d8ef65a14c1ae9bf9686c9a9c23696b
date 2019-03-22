@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "c9bf0f35_de209a4a",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 495,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-22T10:21:07Z",
+      "side": 1,
+      "message": "It was such a minor change that I thought I\u0027d include it here. I\u0027ve moved these changes to https://review.gerrithub.io/c/spdk/spdk/+/448713/3",
+      "parentUuid": "13239aac_4c422265",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "fffbd9ef_49397b80",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 1
@@ -142,6 +160,24 @@
     },
     {
       "key": {
+        "uuid": "85b55734_292d9a34",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 550,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-22T10:21:07Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "93c59b67_25776aac",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4992c637_727e3fb4",
         "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
         "patchSetId": 1
@@ -188,6 +224,24 @@
       "writtenOn": "2019-03-21T20:32:57Z",
       "side": 1,
       "message": "similar to comment on previous file - it\u0027s a bit different here, but I think it\u0027s a bit hard to read to set mode 40 lines earlier, and then here clear that same flag - setting explicitly to either 0 or SPDK_FTL_MODE_CREATE would be simpler I think",
+      "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f04c27a3_565392bf",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 154,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-22T10:21:07Z",
+      "side": 1,
+      "message": "I\u0027ve intentionally replaced setting it to 0 with just clearing the create flag. The mode can potentially hold other flags (although the only one right one is SPDK_FTL_MODE_CREATE), so just clearing the appropriate one here seems more future-proof.",
+      "parentUuid": "817defb7_05ae7a5a",
       "revId": "54ada8bb7d8ef65a14c1ae9bf9686c9a9c23696b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
