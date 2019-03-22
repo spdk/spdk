@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "afebc8ca_9d3351ac",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-22T05:17:31Z",
+      "side": 1,
+      "message": "SPDK_VERSION_MINOR_STRING",
+      "range": {
+        "startLine": 331,
+        "startChar": 34,
+        "endLine": 331,
+        "endChar": 76
+      },
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "44017d41_f4292c9d",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-03-22T05:17:31Z",
+      "side": 1,
+      "message": "just use SPDK_VERSION_PATCH_STRING",
+      "range": {
+        "startLine": 338,
+        "startChar": 35,
+        "endLine": 338,
+        "endChar": 76
+      },
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
