@@ -209,7 +209,7 @@ __initialize_cache(void)
 					   g_fs_cache_size / CACHE_BUFFER_SIZE,
 					   CACHE_BUFFER_SIZE,
 					   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					   SPDK_ENV_SOCKET_ID_ANY);
+					   SPDK_ENV_SOCKET_ID_ANY, NULL, NULL);
 	if (!g_cache_pool) {
 		SPDK_ERRLOG("Create mempool failed, you may "
 			    "increase the memory and try again\n");

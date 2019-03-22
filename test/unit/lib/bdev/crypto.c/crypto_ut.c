@@ -325,7 +325,8 @@ test_setup(void)
 	/* Allocate a real mbuf pool so we can test error paths */
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
 					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+					SPDK_ENV_SOCKET_ID_ANY,
+					NULL, NULL);
 
 	/* Instead of allocating real rte mempools for these, it's easier and provides the
 	 * same coverage just calloc them here.

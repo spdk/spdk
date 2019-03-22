@@ -379,7 +379,7 @@ vbdev_crypto_init_crypto_drivers(void)
 
 	g_mbuf_mp = spdk_mempool_create("mbuf_mp", NUM_MBUFS, sizeof(struct rte_mbuf),
 					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+					SPDK_ENV_SOCKET_ID_ANY, NULL, NULL);
 	if (g_mbuf_mp == NULL) {
 		SPDK_ERRLOG("Cannot create mbuf pool\n");
 		rc = -ENOMEM;

@@ -1136,7 +1136,8 @@ main(int argc, char **argv)
 	task_count *= g_arbitration.queue_depth;
 
 	task_pool = spdk_mempool_create(task_pool_name, task_count,
-					sizeof(struct arb_task), 0, SPDK_ENV_SOCKET_ID_ANY);
+					sizeof(struct arb_task), 0, SPDK_ENV_SOCKET_ID_ANY,
+					NULL, NULL);
 	if (task_pool == NULL) {
 		fprintf(stderr, "could not initialize task pool\n");
 		return 1;

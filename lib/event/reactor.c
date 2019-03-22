@@ -368,7 +368,8 @@ spdk_reactors_init(void)
 			       262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
 			       sizeof(struct spdk_event),
 			       SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-			       SPDK_ENV_SOCKET_ID_ANY);
+			       SPDK_ENV_SOCKET_ID_ANY,
+			       NULL, NULL);
 
 	if (g_spdk_event_mempool == NULL) {
 		SPDK_ERRLOG("spdk_event_mempool creation failed\n");

@@ -1875,7 +1875,7 @@ spdk_nvmf_rdma_create(struct spdk_nvmf_transport_opts *opts)
 				   opts->max_queue_depth * SPDK_NVMF_MAX_SGL_ENTRIES,
 				   sizeof(struct spdk_nvmf_rdma_request_data),
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-				   SPDK_ENV_SOCKET_ID_ANY);
+				   SPDK_ENV_SOCKET_ID_ANY, NULL, NULL);
 	if (!rtransport->data_wr_pool) {
 		SPDK_ERRLOG("Unable to allocate work request pool for poll group\n");
 		spdk_nvmf_rdma_destroy(&rtransport->transport);

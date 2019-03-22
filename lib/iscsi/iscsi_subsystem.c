@@ -154,7 +154,8 @@ static int spdk_iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_pool = spdk_mempool_create("PDU_Pool",
 					      PDU_POOL_SIZE(iscsi),
 					      sizeof(struct spdk_iscsi_pdu),
-					      256, SPDK_ENV_SOCKET_ID_ANY);
+					      256, SPDK_ENV_SOCKET_ID_ANY,
+					      NULL, NULL);
 	if (!iscsi->pdu_pool) {
 		SPDK_ERRLOG("create PDU pool failed\n");
 		return -1;
@@ -206,7 +207,8 @@ spdk_iscsi_initialize_task_pool(void)
 	iscsi->task_pool = spdk_mempool_create("SCSI_TASK_Pool",
 					       DEFAULT_TASK_POOL_SIZE,
 					       sizeof(struct spdk_iscsi_task),
-					       128, SPDK_ENV_SOCKET_ID_ANY);
+					       128, SPDK_ENV_SOCKET_ID_ANY,
+					       NULL, NULL);
 	if (!iscsi->task_pool) {
 		SPDK_ERRLOG("create task pool failed\n");
 		return -1;

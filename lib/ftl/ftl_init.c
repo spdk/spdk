@@ -477,7 +477,7 @@ ftl_init_wptr_list(struct spdk_ftl_dev *dev)
 	dev->lba_pool = spdk_mempool_create(pool_name, 2 + 8,
 					    ftl_num_band_lbks(dev) * sizeof(uint64_t),
 					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					    SPDK_ENV_SOCKET_ID_ANY);
+					    SPDK_ENV_SOCKET_ID_ANY, NULL, NULL);
 	if (!dev->lba_pool) {
 		return -ENOMEM;
 	}
@@ -796,7 +796,8 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 					  dev->conf.user_io_pool_size,
 					  ch->elem_size,
 					  0,
-					  SPDK_ENV_SOCKET_ID_ANY);
+					  SPDK_ENV_SOCKET_ID_ANY,
+					  NULL, NULL);
 
 	if (!ch->io_pool) {
 		return -1;

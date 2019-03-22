@@ -385,9 +385,11 @@ mempool_populate_aligned(struct rte_mempool *pool, size_t alignment)
 
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size, int socket_id)
+		    size_t ele_size, size_t cache_size, int socket_id,
+		    spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg)
 {
-	return spdk_mempool_create_aligned(name, count, ele_size, 0, cache_size, socket_id, NULL, NULL);
+	return spdk_mempool_create_aligned(name, count, ele_size, 0, cache_size, socket_id, obj_init,
+					   obj_init_arg);
 }
 
 struct spdk_mempool *

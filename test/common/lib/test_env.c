@@ -207,7 +207,8 @@ struct test_mempool {
 DEFINE_RETURN_MOCK(spdk_mempool_create, struct spdk_mempool *);
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
-		    size_t ele_size, size_t cache_size, int socket_id)
+		    size_t ele_size, size_t cache_size, int socket_id,
+		    spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg)
 {
 	struct test_mempool *mp;
 

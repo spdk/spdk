@@ -176,7 +176,8 @@ spdk_thread_lib_init(spdk_new_thread_fn new_thread_fn, size_t ctx_sz)
 			     262144 - 1, /* Power of 2 minus 1 is optimal for memory consumption */
 			     sizeof(struct spdk_msg),
 			     0, /* No cache. We do our own. */
-			     SPDK_ENV_SOCKET_ID_ANY);
+			     SPDK_ENV_SOCKET_ID_ANY,
+			     NULL, NULL);
 
 	if (!g_spdk_msg_mempool) {
 		return -1;

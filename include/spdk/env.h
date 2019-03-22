@@ -329,7 +329,7 @@ struct spdk_mempool;
 /**
  * An object callback function for memory pool.
  *
- * Used by spdk_mempool_create_ctor() and spdk_mempool_create_aligned().
+ * Used by the spdk_mempool_create function family.
  */
 typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
 				     void *opaque, void *obj, unsigned obj_idx);
@@ -344,11 +344,14 @@ typedef void (spdk_mempool_obj_cb_t)(struct spdk_mempool *mp,
  * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
  * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
  * for any socket.
+ * \param obj_init User provided object calllback initialization function.
+ * \param obj_init_arg User provided callback initialization function argument.
  *
  * \return a pointer to the created memory pool.
  */
 struct spdk_mempool *spdk_mempool_create(const char *name, size_t count,
-		size_t ele_size, size_t cache_size, int socket_id);
+		size_t ele_size, size_t cache_size, int socket_id,
+		spdk_mempool_obj_cb_t *obj_init, void *obj_init_arg);
 
 /**
  * Create a thread-safe memory pool with aligned elements.
