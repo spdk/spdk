@@ -942,22 +942,27 @@ _write_write_done(void *_req, int reduce_errno)
 
 static void
 _issue_backing_ops(struct spdk_reduce_vol_request *req, struct spdk_reduce_vol *vol,
-		   reduce_request_fn next_fn, bool is_write)
+		   reduce_request_fn next_fn, uint32_t num_io_units, bool is_write)
 {
+	struct iovec *iov;
+	uint8_t *buf;
 	uint32_t i;
 
-	req->num_backing_ops = vol->backing_io_units_per_chunk;
+	iov = req->comp_buf_iov;
+	buf = req->comp_buf;
+
+	req->num_backing_ops = num_io_units;
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
-	for (i = 0; i < vol->backing_io_units_per_chunk; i++) {
-		req->comp_buf_iov[i].iov_base = req->comp_buf + i * vol->params.backing_io_unit_size;
-		req->comp_buf_iov[i].iov_len = vol->params.backing_io_unit_size;
+	for (i = 0; i < num_io_units; i++) {
+		iov[i].iov_base = buf + i * vol->params.backing_io_unit_size;
+		iov[i].iov_len = vol->params.backing_io_unit_size;
 		if (is_write) {
-			vol->backing_dev->writev(vol->backing_dev, &req->comp_buf_iov[i], 1,
+			vol->backing_dev->writev(vol->backing_dev, &iov[i], 1,
 						 req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						 vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		} else {
-			vol->backing_dev->readv(vol->backing_dev, &req->comp_buf_iov[i], 1,
+			vol->backing_dev->readv(vol->backing_dev, &iov[i], 1,
 						req->chunk->io_unit_index[i] * vol->backing_lba_per_io_unit,
 						vol->backing_lba_per_io_unit, &req->backing_cb_args);
 		}
@@ -991,7 +996,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 		spdk_bit_array_set(vol->allocated_backing_io_units, req->chunk->io_unit_index[i]);
 	}
 
-	_issue_backing_ops(req, vol, next_fn, true /* write */);
+	_issue_backing_ops(req, vol, next_fn, vol->backing_io_units_per_chunk, true /* write */);
 }
 
 
@@ -1163,7 +1168,7 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
 	assert(req->chunk->compressed_size == vol->params.chunk_size);
-	_issue_backing_ops(req, vol, next_fn, false /* read */);
+	_issue_backing_ops(req, vol, next_fn, vol->backing_io_units_per_chunk, false /* read */);
 }
 
 static bool
