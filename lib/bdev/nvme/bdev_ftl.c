@@ -485,6 +485,7 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			  struct ftl_bdev_init_opts *opts,
 			  size_t *num_bdevs)
 {
+	const struct spdk_uuid null_uuid = {};
 	const char *val, *trid;
 	int i, rc = 0;
 
@@ -507,8 +508,6 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			SPDK_ERRLOG("Unsupported transport type for TransportID: %s\n", trid);
 			continue;
 		}
-
-		opts->mode = SPDK_FTL_MODE_CREATE;
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 1);
 		if (!val) {
@@ -533,7 +532,9 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 
 		val = spdk_conf_section_get_nmval(sp, "TransportID", i, 3);
 		if (!val) {
-			continue;
+			SPDK_ERRLOG("No UUID provided for TransportID: %s\n", trid);
+			rc = -1;
+			break;
 		}
 
 		rc = spdk_uuid_parse(&opts->uuid, val);
@@ -543,7 +544,11 @@ bdev_ftl_read_bdev_config(struct spdk_conf_section *sp,
 			break;
 		}
 
-		opts->mode = 0;
+		if (!spdk_uuid_compare(&opts->uuid, &null_uuid)) {
+			opts->mode = SPDK_FTL_MODE_CREATE;
+		} else {
+			opts->mode = 0;
+		}
 	}
 
 	if (!rc) {

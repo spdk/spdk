@@ -98,6 +98,7 @@ static void
 spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
+	const struct spdk_uuid null_uuid = {};
 	struct rpc_construct_ftl req = {};
 	struct ftl_bdev_init_opts opts = {};
 	char range[FTL_RANGE_MAX_LENGTH];
@@ -142,12 +143,15 @@ spdk_rpc_construct_ftl_bdev(struct spdk_jsonrpc_request *request,
 	}
 
 	if (req.uuid) {
-		opts.mode = 0;
 		if (spdk_uuid_parse(&opts.uuid, req.uuid) < 0) {
 			spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 							     "Failed to parse uuid: %s",
 							     req.uuid);
 			goto invalid;
+		}
+
+		if (spdk_uuid_compare(&opts.uuid, &null_uuid)) {
+			opts.mode &= ~SPDK_FTL_MODE_CREATE;
 		}
 	}
 
