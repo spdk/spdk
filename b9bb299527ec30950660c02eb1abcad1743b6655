@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6f5fbbdd_edee161d",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b87a7d84_10544908",
+      "range": {
+        "startLine": 528,
+        "startChar": 1,
+        "endLine": 528,
+        "endChar": 24
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fdbca3dc_a9b56da7",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -42,6 +66,24 @@
     },
     {
       "key": {
+        "uuid": "e15b3da3_6ee7e8a8",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Good comment. Done.",
+      "parentUuid": "fdbca3dc_a9b56da7",
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "74103846_3e3afee0",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -53,6 +95,30 @@
       "writtenOn": "2019-03-22T09:54:28Z",
       "side": 1,
       "message": "Function naming.\nAll VM-related functions start with \"vm_\".\nvm_run\nvm_shutdown\nvm_wait_for_boot\netc",
+      "range": {
+        "startLine": 870,
+        "startChar": 9,
+        "endLine": 870,
+        "endChar": 22
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d6da3298_57318c0b",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 870,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "74103846_3e3afee0",
       "range": {
         "startLine": 870,
         "startChar": 9,
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "5bb971dc_16d9d0f7",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 875,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "0abbd1a8_e7bb07e5",
+      "range": {
+        "startLine": 875,
+        "startChar": 4,
+        "endLine": 875,
+        "endChar": 25
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "be778782_6ce1d750",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "ad681e36_076fd2e4",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 878,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "be778782_6ce1d750",
+      "range": {
+        "startLine": 878,
+        "startChar": 2,
+        "endLine": 878,
+        "endChar": 25
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "b0ba3675_91f80770",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 2
@@ -122,6 +236,30 @@
       "writtenOn": "2019-03-22T09:54:28Z",
       "side": 1,
       "message": "This should be printed after the warning about timeout.",
+      "range": {
+        "startLine": 936,
+        "startChar": 4,
+        "endLine": 936,
+        "endChar": 23
+      },
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1765ce6_922c9df6",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 936,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-22T13:37:27Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "b0ba3675_91f80770",
       "range": {
         "startLine": 936,
         "startChar": 4,
