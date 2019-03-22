@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6a8bbddc_2b1c590b",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 365,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T08:41:18Z",
+      "side": 1,
+      "message": "There exist\n  \n  spdk_json_write_named_string_fmt()\n\nwhich will free your mind from all this alloc()/free() stuff.",
+      "range": {
+        "startLine": 363,
+        "startChar": 0,
+        "endLine": 365,
+        "endChar": 49
+      },
+      "revId": "bccfa7af13d3b2bb85bc0b87193746bb8208090b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
