@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fdbca3dc_a9b56da7",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 738,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-22T09:36:31Z",
+      "side": 1,
+      "message": "why do we add this here for each disk? Shouldn\u0027t we do it just once in line #692?",
+      "revId": "b9bb299527ec30950660c02eb1abcad1743b6655",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
