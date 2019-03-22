@@ -84,6 +84,9 @@ struct ftl_io_init_opts {
 	/* IO descriptor */
 	struct ftl_io				*io;
 
+	/* Parent request */
+	struct ftl_io				*parent;
+
 	/* Size of IO descriptor */
 	size_t                                  size;
 
@@ -137,7 +140,7 @@ struct ftl_io {
 	struct spdk_ftl_dev			*dev;
 
 	/* IO channel */
-	struct spdk_io_channel			*ch;
+	struct spdk_io_channel			*ioch;
 
 	union {
 		/* LBA table */
@@ -197,8 +200,22 @@ struct ftl_io {
 	/* IO type */
 	enum ftl_io_type			type;
 
+	/* Done flag */
+	bool					done;
+	/* Children lock */
+	pthread_spinlock_t			lock;
+
+	/* Parent request */
+	struct ftl_io				*parent;
+	/* Child requests */
+	LIST_HEAD(, ftl_io)			children;
+	/* Child list link */
+	LIST_ENTRY(ftl_io)			child_entry;
+
 	/* Trace group id */
 	uint64_t				trace;
+
+	unsigned int				child_outstanding;
 
 	TAILQ_ENTRY(ftl_io)			retry_entry;
 };
@@ -234,12 +251,13 @@ ftl_io_mode_lba(const struct ftl_io *io)
 }
 
 static inline bool
-ftl_io_done(const struct ftl_io *io)
+ftl_io_done(struct ftl_io *io)
 {
 	return io->req_cnt == 0 && !(io->flags & FTL_IO_RETRY);
 }
 
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
+struct ftl_io *ftl_io_alloc_child(struct ftl_io *parent);
 void ftl_io_free(struct ftl_io *io);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 void ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn cb,
@@ -264,6 +282,7 @@ void ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba,
 		      spdk_ftl_fn fn, void *cb_arg, int type);
 void *ftl_io_get_md(const struct ftl_io *io);
 void ftl_io_complete(struct ftl_io *io);
+bool ftl_io_done(struct ftl_io *io);
 void ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
 
 #endif /* FTL_IO_H */
