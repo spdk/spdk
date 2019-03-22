@@ -44,6 +44,7 @@
 #include "spdk/queue.h"
 #include "spdk/nvme_spec.h"
 #include "spdk/scsi_spec.h"
+#include "spdk/notify.h"
 #include "spdk/util.h"
 #include "spdk/trace.h"
 
@@ -798,6 +799,9 @@ spdk_bdev_init_complete(int rc)
 				m->init_complete();
 			}
 		}
+
+		spdk_notify_type_register("bdev_register");
+		spdk_notify_type_register("bdev_unregister");
 	}
 
 	cb_fn(cb_arg, rc);
@@ -3741,6 +3745,7 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 		spdk_bdev_start(bdev);
 	}
 
+	spdk_notify_send("bdev_register", spdk_bdev_get_name(bdev));
 	return rc;
 }
 
@@ -3809,6 +3814,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	if (rc == 0) {
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list done\n", bdev->name);
+		spdk_notify_send("bdev_unregister", spdk_bdev_get_name(bdev));
 	}
 
 	return rc;
