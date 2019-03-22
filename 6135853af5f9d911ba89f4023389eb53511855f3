@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "07ebe42a_2a56dcd8",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:17:35Z",
+      "side": 1,
+      "message": "Hi Ziye. Thanks for reviewing my patch. Host need to receive until the tper has prepared the response and host get all the data. But under certain circumstances, there is chance that the tper goes wrong and the loop never ends. Thus I added a timeout in the loop to make sure it returns.Thank you for noticing this.",
+      "parentUuid": "166dee0f_eb2787ef",
+      "range": {
+        "startLine": 111,
+        "startChar": 1,
+        "endLine": 111,
+        "endChar": 5
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a41ef11d_50d7ad78",
         "filename": "lib/opal/opal.c",
         "patchSetId": 37
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-21T07:42:44Z",
       "side": 1,
       "message": "For spdk_nvme_ctrlr_security_receive, if it succeeds, it will return 0. So I am confused here.",
+      "range": {
+        "startLine": 135,
+        "startChar": 8,
+        "endLine": 135,
+        "endChar": 15
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "028cee75_d294e09f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:17:35Z",
+      "side": 1,
+      "message": "Add a return value check after every security receive.",
+      "parentUuid": "a41ef11d_50d7ad78",
       "range": {
         "startLine": 135,
         "startChar": 8,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "00c16006_374b23c0",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 479,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:17:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "c91c2e1b_704a0a9a",
+      "range": {
+        "startLine": 479,
+        "startChar": 1,
+        "endLine": 479,
+        "endChar": 2
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a06f7fd4_a2704dfd",
         "filename": "lib/opal/opal.c",
         "patchSetId": 37
@@ -82,6 +154,30 @@
       "writtenOn": "2019-03-21T07:42:44Z",
       "side": 1,
       "message": "Add an empty line before this statement.",
+      "range": {
+        "startLine": 562,
+        "startChar": 1,
+        "endLine": 562,
+        "endChar": 32
+      },
+      "revId": "6135853af5f9d911ba89f4023389eb53511855f3",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8b60ce07_ca6ce70f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 37
+      },
+      "lineNbr": 562,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:17:35Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "a06f7fd4_a2704dfd",
       "range": {
         "startLine": 562,
         "startChar": 1,
