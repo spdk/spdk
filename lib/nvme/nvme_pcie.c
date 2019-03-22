@@ -159,6 +159,7 @@ struct nvme_pcie_qpair {
 	uint16_t max_completions_cap;
 
 	uint16_t last_sq_tail;
+	uint16_t last_cq_head;
 	uint16_t sq_tail;
 	uint16_t cq_head;
 	uint16_t sq_head;
@@ -956,7 +957,8 @@ nvme_pcie_qpair_reset(struct spdk_nvme_qpair *qpair)
 {
 	struct nvme_pcie_qpair *pqpair = nvme_pcie_qpair(qpair);
 
-	pqpair->last_sq_tail = pqpair->sq_tail = pqpair->cq_head = 0;
+	pqpair->last_sq_tail = pqpair->sq_tail = 0;
+	pqpair->last_cq_head = pqpair->cq_head = 0;
 
 	/*
 	 * First time through the completion queue, HW will set phase
@@ -2101,6 +2103,20 @@ nvme_pcie_qpair_check_timeout(struct spdk_nvme_qpair *qpair)
 	}
 }
 
+/* Return the number of slots between two points in a circular ring */
+static inline uint32_t
+nvme_ring_delta(uint32_t head, uint32_t tail, uint32_t ring_size)
+{
+	uint32_t count = 0;
+
+	if (tail > head) {
+		count += ring_size;
+	}
+	count += head - tail;
+
+	return count;
+}
+
 int32_t
 nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
@@ -2171,8 +2187,41 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		}
 	}
 
-	if (num_completions > 0) {
-		nvme_pcie_qpair_ring_cq_doorbell(qpair);
+	if (!pqpair->flags.delay_pcie_doorbell) {
+		if (num_completions > 0) {
+			nvme_pcie_qpair_ring_cq_doorbell(qpair);
+		}
+	} else {
+		if (pqpair->sq_tail == pqpair->sq_head) {
+			if (pqpair->last_cq_head != pqpair->cq_head) {
+				nvme_pcie_qpair_ring_cq_doorbell(qpair);
+				pqpair->last_cq_head = pqpair->cq_head;
+			}
+		}
+
+		if (pqpair->last_cq_head != pqpair->cq_head) {
+			if (num_completions == 0) {
+				/* This is a workaround for some device firmware. If there are
+				 * CQEs we haven't acknowledged and we just polled and
+				 * found nothing, ring the doorbell. Some devices are incorrectly
+				 * waiting on that acknowledgement in certain scenarios. */
+				nvme_pcie_qpair_ring_cq_doorbell(qpair);
+				pqpair->last_cq_head = pqpair->cq_head;
+			} else {
+				uint32_t count;
+
+				/* Add up the number of used CQEs plus the number of incoming SQEs */
+				count = nvme_ring_delta(pqpair->cq_head, pqpair->last_cq_head, pqpair->num_entries);
+				count += nvme_ring_delta(pqpair->sq_tail, pqpair->sq_head, pqpair->num_entries);
+
+				/* If this number is greater than half of the number of entries in the queue,
+				 * ring the doorbell */
+				if (count > (pqpair->num_entries >> 1)) {
+					nvme_pcie_qpair_ring_cq_doorbell(qpair);
+					pqpair->last_cq_head = pqpair->cq_head;
+				}
+			}
+		}
 	}
 
 	if (pqpair->flags.delay_pcie_doorbell) {
