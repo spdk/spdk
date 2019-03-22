@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "a065f24f_210ef6d3",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 331,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:23:03Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. SPDK_VERSION_MINOR_STRING will have a `.` in the front of the string which will make the seperate response look ugly, like this:{\"minor\": \".04\"}. And that\u0027s the reason I use SPDK_VERSION_STRINGIFY here. Which do you think is better?",
+      "parentUuid": "afebc8ca_9d3351ac",
+      "range": {
+        "startLine": 331,
+        "startChar": 34,
+        "endLine": 331,
+        "endChar": 76
+      },
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "44017d41_f4292c9d",
         "filename": "lib/rpc/rpc.c",
         "patchSetId": 2
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-22T05:17:31Z",
       "side": 1,
       "message": "just use SPDK_VERSION_PATCH_STRING",
+      "range": {
+        "startLine": 338,
+        "startChar": 35,
+        "endLine": 338,
+        "endChar": 76
+      },
+      "revId": "4f4d1f3aef32fff1be867fbcbb257b42ffe9ad88",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "80116c01_8966ddee",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-22T06:23:03Z",
+      "side": 1,
+      "message": "Same for SPDK_VERSION_PATCH_STRING too...",
+      "parentUuid": "44017d41_f4292c9d",
       "range": {
         "startLine": 338,
         "startChar": 35,
