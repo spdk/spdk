@@ -1839,8 +1839,8 @@ cache_insert_buffer(struct spdk_file *file, uint64_t offset)
 		 *  semaphore to block until a buffer becomes available.
 		 */
 		if (count++ == 100) {
-			SPDK_ERRLOG("could not allocate cache buffer\n");
-			assert(false);
+			SPDK_ERRLOG("Could not allocate cache buffer for file=%p on offset=%jx\n",
+				    file, offset);
 			free(buf);
 			return NULL;
 		}
