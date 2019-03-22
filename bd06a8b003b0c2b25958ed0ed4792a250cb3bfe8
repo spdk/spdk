@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dac8c595_a709105f",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:44:18Z",
+      "side": 1,
+      "message": "tabs/spaces",
+      "range": {
+        "startLine": 544,
+        "startChar": 0,
+        "endLine": 544,
+        "endChar": 32
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c4caa32_e521412c",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:44:18Z",
+      "side": 1,
+      "message": "Isn\u0027t that the same param as line above? You added this but not using it.",
+      "range": {
+        "startLine": 544,
+        "startChar": 32,
+        "endLine": 544,
+        "endChar": 84
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "38bc5e34_8e62433c",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:44:18Z",
+      "side": 1,
+      "message": "Once again, why cant this variable be:\nbarmem_id\u003d\"mem${disk}\"?\n\nThat way line 763 could be\ncmd+\u003d\"-device vhost-user-nvme,num_io_queues\u003d${queue_number},barmem\u003d${barmem_id},chardev\u003dchar_$disk\"",
+      "range": {
+        "startLine": 760,
+        "startChar": 5,
+        "endLine": 760,
+        "endChar": 35
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da8777c1_b0c0cde7",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:44:18Z",
+      "side": 1,
+      "message": "This looks like an option specific to vhost-nvme, so you should probably mention that.",
+      "range": {
+        "startLine": 45,
+        "startChar": 33,
+        "endLine": 45,
+        "endChar": 71
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52df1257_4544d1b3",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-03-22T09:44:18Z",
+      "side": 1,
+      "message": "?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 18
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
