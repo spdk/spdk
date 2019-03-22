@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "74bf6fe1_c3a93b09",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1062,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-22T00:56:40Z",
+      "side": 1,
+      "message": "you can use logical_map_idx (please see the line 1037).",
+      "range": {
+        "startLine": 1062,
+        "startChar": 26,
+        "endLine": 1062,
+        "endChar": 65
+      },
+      "revId": "7c5181c8c72692fc38d05d43c5d1ee95e1249122",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
