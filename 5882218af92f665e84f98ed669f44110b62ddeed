@@ -45,6 +45,29 @@
       "revId": "5882218af92f665e84f98ed669f44110b62ddeed",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "874fa156_0fd0db79",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 66
+      },
+      "lineNbr": 842,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-22T09:35:06Z",
+      "side": 1,
+      "message": "Is svm_fifo_max_dequeue returning u32?",
+      "range": {
+        "startLine": 842,
+        "startChar": 1,
+        "endLine": 842,
+        "endChar": 8
+      },
+      "revId": "5882218af92f665e84f98ed669f44110b62ddeed",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
