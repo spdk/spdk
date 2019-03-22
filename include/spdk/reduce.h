@@ -105,6 +105,16 @@ struct spdk_reduce_backing_dev {
 	void (*unmap)(struct spdk_reduce_backing_dev *dev,
 		      uint64_t lba, uint32_t lba_count, struct spdk_reduce_vol_cb_args *args);
 
+	void (*compress)(struct spdk_reduce_backing_dev *dev,
+			 struct iovec *src_iov, int src_iovcnt,
+			 struct iovec *dst_iov, int dst_iovcnt,
+			 struct spdk_reduce_vol_cb_args *args);
+
+	void (*decompress)(struct spdk_reduce_backing_dev *dev,
+			   struct iovec *src_iov, int src_iovcnt,
+			   struct iovec *dst_iov, int dst_iovcnt,
+			   struct spdk_reduce_vol_cb_args *args);
+
 	uint64_t	blockcnt;
 	uint32_t	blocklen;
 };

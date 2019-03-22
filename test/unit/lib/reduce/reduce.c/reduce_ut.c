@@ -390,6 +390,32 @@ backing_dev_io_execute(uint32_t count)
 }
 
 static void
+backing_dev_compress(struct spdk_reduce_backing_dev *backing_dev,
+		     struct iovec *src_iov, int src_iovcnt,
+		     struct iovec *dst_iov, int dst_iovcnt,
+		     struct spdk_reduce_vol_cb_args *args)
+{
+	CU_ASSERT(src_iovcnt == 1);
+	CU_ASSERT(dst_iovcnt == 1);
+	CU_ASSERT(src_iov[0].iov_len == dst_iov[0].iov_len);
+	memcpy(dst_iov[0].iov_base, src_iov[0].iov_base, src_iov[0].iov_len);
+	args->cb_fn(args->cb_arg, src_iov[0].iov_len);
+}
+
+static void
+backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
+		       struct iovec *src_iov, int src_iovcnt,
+		       struct iovec *dst_iov, int dst_iovcnt,
+		       struct spdk_reduce_vol_cb_args *args)
+{
+	CU_ASSERT(src_iovcnt == 1);
+	CU_ASSERT(dst_iovcnt == 1);
+	CU_ASSERT(src_iov[0].iov_len == dst_iov[0].iov_len);
+	memcpy(dst_iov[0].iov_base, src_iov[0].iov_base, src_iov[0].iov_len);
+	args->cb_fn(args->cb_arg, src_iov[0].iov_len);
+}
+
+static void
 backing_dev_destroy(struct spdk_reduce_backing_dev *backing_dev)
 {
 	/* We don't free this during backing_dev_close so that we can test init/unload/load
@@ -411,6 +437,8 @@ backing_dev_init(struct spdk_reduce_backing_dev *backing_dev, struct spdk_reduce
 	backing_dev->readv = backing_dev_readv;
 	backing_dev->writev = backing_dev_writev;
 	backing_dev->unmap = backing_dev_unmap;
+	backing_dev->compress = backing_dev_compress;
+	backing_dev->decompress = backing_dev_decompress;
 
 	g_backing_dev_buf = calloc(1, size);
 	SPDK_CU_ASSERT_FATAL(g_backing_dev_buf != NULL);
