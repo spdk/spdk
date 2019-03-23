@@ -251,6 +251,13 @@ nvme_pcie_ctrlr_setup_signal(void)
 	sigaction(SIGBUS, &sa, NULL);
 }
 
+static inline struct nvme_pcie_ctrlr *
+nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
+{
+	assert(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
+	return SPDK_CONTAINEROF(ctrlr, struct nvme_pcie_ctrlr, ctrlr);
+}
+
 static int
 _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 {
@@ -299,28 +306,35 @@ _nvme_pcie_hotplug_monitor(struct spdk_nvme_probe_ctx *probe_ctx)
 
 	/* This is a work around for vfio-attached device hot remove detection. */
 	TAILQ_FOREACH_SAFE(ctrlr, &g_spdk_nvme_driver->shared_attached_ctrlrs, tailq, tmp) {
-		/* NVMe controller BAR must be mapped to secondary process space before any access. */
+		bool do_remove = false;
+
+		if (ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE) {
+			struct nvme_pcie_ctrlr *pctrlr = nvme_pcie_ctrlr(ctrlr);
+
+			if (spdk_pci_device_is_removed(pctrlr->devhandle)) {
+				do_remove = true;
+			}
+		}
+
+		/* NVMe controller BAR must be mapped in the current process before any access. */
 		proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
 		if (proc) {
 			csts = spdk_nvme_ctrlr_get_regs_csts(ctrlr);
 			if (csts.raw == 0xffffffffU) {
-				nvme_ctrlr_fail(ctrlr, true);
-				if (probe_ctx->remove_cb) {
-					nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
-					probe_ctx->remove_cb(probe_ctx->cb_ctx, ctrlr);
-					nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
-				}
+				do_remove = true;
+			}
+		}
+
+		if (do_remove) {
+			nvme_ctrlr_fail(ctrlr, true);
+			if (probe_ctx->remove_cb) {
+				nvme_robust_mutex_unlock(&g_spdk_nvme_driver->lock);
+				probe_ctx->remove_cb(probe_ctx->cb_ctx, ctrlr);
+				nvme_robust_mutex_lock(&g_spdk_nvme_driver->lock);
 			}
 		}
 	}
 	return 0;
-}
-
-static inline struct nvme_pcie_ctrlr *
-nvme_pcie_ctrlr(struct spdk_nvme_ctrlr *ctrlr)
-{
-	assert(ctrlr->trid.trtype == SPDK_NVME_TRANSPORT_PCIE);
-	return SPDK_CONTAINEROF(ctrlr, struct nvme_pcie_ctrlr, ctrlr);
 }
 
 static inline struct nvme_pcie_qpair *

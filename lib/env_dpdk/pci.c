@@ -120,6 +120,42 @@ spdk_pci_driver_register(struct spdk_pci_driver *driver)
 	TAILQ_INSERT_TAIL(&g_pci_drivers, driver, tailq);
 }
 
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
+static void
+spdk_pci_device_rte_hotremove(const char *device_name,
+			      enum rte_dev_event_type event,
+			      void *cb_arg)
+{
+	struct spdk_pci_device *dev;
+
+	if (event != RTE_DEV_EVENT_REMOVE) {
+		return;
+	}
+
+	pthread_mutex_lock(&g_pci_mutex);
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+		struct rte_pci_device *rte_dev = dev->dev_handle;
+
+		if (strcmp(rte_dev->name, device_name) == 0) {
+			if (!dev->internal.pending_removal &&
+			    !dev->internal.attached) {
+				/* if device is not attached, we
+				 * can remove it right away.
+				 */
+				spdk_detach_rte(dev);
+			} else {
+				/* otherwise we let the upper layers
+				 * detach it first.
+				 */
+				dev->internal.pending_removal = true;
+			}
+			break;
+		}
+	}
+	pthread_mutex_unlock(&g_pci_mutex);
+}
+#endif
+
 void
 spdk_pci_init(void)
 {
@@ -145,6 +181,13 @@ spdk_pci_init(void)
 		rte_pci_register(&driver->driver);
 	}
 #endif
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
+	/* Register a single hotremove callback for all devices. */
+	if (spdk_process_is_primary()) {
+		rte_dev_event_callback_register(NULL, spdk_pci_device_rte_hotremove, NULL);
+	}
+#endif
 }
 
 void
@@ -159,6 +202,12 @@ spdk_pci_fini(void)
 			fprintf(stderr, "Device %s is still attached at shutdown!\n", bdf);
 		}
 	}
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 5, 0, 0)
+	if (spdk_process_is_primary()) {
+		rte_dev_event_callback_unregister(NULL, spdk_pci_device_rte_hotremove, NULL);
+	}
+#endif
 }
 
 int
@@ -533,6 +582,12 @@ struct spdk_pci_addr
 spdk_pci_device_get_addr(struct spdk_pci_device *dev)
 {
 	return dev->addr;
+}
+
+bool
+spdk_pci_device_is_removed(struct spdk_pci_device *dev)
+{
+	return dev->internal.pending_removal;
 }
 
 int
