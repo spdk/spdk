@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "4c8fa4a3_2b63b1de",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 547,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-23T08:25:00Z",
+      "side": 1,
+      "message": "I would suggest using spdk_mem_all_zero() to determine whether the uuid is null, please reference following code from lib/reduce/reduce.c:\n\n        if (spdk_mem_all_zero(\u0026params-\u003euuid, sizeof(params-\u003euuid))) {\n                spdk_uuid_generate(\u0026params-\u003euuid);\n        }\n\nSo we can remove local variable null_uuid.",
+      "revId": "e612b7722f96bffa3899071e3927dcac94ee08da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "04558695_45593b8d",
+        "filename": "lib/bdev/nvme/bdev_ftl_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-23T08:25:00Z",
+      "side": 1,
+      "message": "Ditto.",
+      "revId": "e612b7722f96bffa3899071e3927dcac94ee08da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
