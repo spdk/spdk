@@ -25,6 +25,9 @@ performance.
 
 New API spdk_nvme_ctrlr_get_flags() was added.
 
+NVMe hotplug poller is now able to detach devices hotremoved from the system
+via `/sys/bus/pci/devices/<bdf>/remove` and `/sys/bus/pci/devices/<bdf>/driver/unbind`.
+
 ### raid
 
 Added new strip_size_kb rpc param on create to replace the more ambiguous
@@ -59,6 +62,9 @@ Default size is 4096.
 
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.
 For retrieving physical addresses, spdk_vtophys() should be used instead.
+
+spdk_pci_device_is_removed() has been added to let the upper-layer SPDK drivers know
+that device has a pending external hotremove request.
 
 ### DPDK
 

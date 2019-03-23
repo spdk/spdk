@@ -653,6 +653,7 @@ struct spdk_pci_device {
 	struct _spdk_pci_device_internal {
 		struct spdk_pci_driver		*driver;
 		bool				attached;
+		bool				pending_removal;
 		TAILQ_ENTRY(spdk_pci_device)	tailq;
 	} internal;
 };
@@ -976,6 +977,19 @@ int spdk_pci_device_cfg_read32(struct spdk_pci_device *dev, uint32_t *value, uin
  * \return 0 on success, -1 on failure.
  */
 int spdk_pci_device_cfg_write32(struct spdk_pci_device *dev, uint32_t value, uint32_t offset);
+
+/**
+ * Check if device was requested to be removed from the process. This can be
+ * caused either by physical device hotremoval or OS-triggered removal. In the
+ * latter case, the device may continue to function properly even if this
+ * function returns \c true . The upper-layer driver may check this function
+ * periodically and eventually detach the device.
+ *
+ * \param dev PCI device.
+ *
+ * \return if device was requested to be removed
+ */
+bool spdk_pci_device_is_removed(struct spdk_pci_device *dev);
 
 /**
  * Compare two PCI addresses.
