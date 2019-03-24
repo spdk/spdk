@@ -33,6 +33,7 @@
 
 #include "env_internal.h"
 
+#include <rte_alarm.h>
 #include "spdk/env.h"
 
 #define SYSFS_PCI_DRIVERS	"/sys/bus/pci/drivers"
@@ -97,11 +98,9 @@ spdk_cfg_write_rte(struct spdk_pci_device *dev, void *value, uint32_t len, uint3
 }
 
 static void
-spdk_detach_rte(struct spdk_pci_device *dev)
+spdk_detach_rte_cb(void *_dev)
 {
-	struct rte_pci_device *rte_dev = dev->dev_handle;
-
-#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
+	struct rte_pci_device *rte_dev = _dev;
 	char bdf[32];
 	int i = 0, rc;
 
@@ -109,6 +108,19 @@ spdk_detach_rte(struct spdk_pci_device *dev)
 	do {
 		rc = rte_eal_hotplug_remove("pci", bdf);
 	} while (rc == -ENOMSG && ++i <= DPDK_HOTPLUG_RETRY_COUNT);
+}
+
+static void
+spdk_detach_rte(struct spdk_pci_device *dev)
+{
+	struct rte_pci_device *rte_dev = dev->dev_handle;
+
+#if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
+	/* The device was already marked as available and could be attached
+	 * again while we go asynchronous, so we explicitly forbid that.
+	 */
+	dev->internal.pending_removal = true;
+	rte_eal_alarm_set(10, spdk_detach_rte_cb, rte_dev);
 #else
 	rte_eal_dev_detach(&rte_dev->device);
 #endif
@@ -313,7 +325,7 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	}
 
 	if (dev != NULL && dev->internal.driver == driver) {
-		if (dev->internal.attached) {
+		if (dev->internal.attached || dev->internal.pending_removal) {
 			pthread_mutex_unlock(&g_pci_mutex);
 			return -1;
 		}
@@ -373,7 +385,9 @@ spdk_pci_enumerate(struct spdk_pci_driver *driver,
 	pthread_mutex_lock(&g_pci_mutex);
 
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
-		if (dev->internal.attached || dev->internal.driver != driver) {
+		if (dev->internal.attached ||
+		    dev->internal.driver != driver ||
+		    dev->internal.pending_removal) {
 			continue;
 		}
 
