@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e34ab172_d42cd4ce",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2171,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-24T22:42:16Z",
+      "side": 1,
+      "message": "This may be personal preference.\n\ncq_head - last_cq_head is negative when wrap-around occurs.\n\nif (last_cq_head \u003e cq_head)\n  count +\u003d num_entries - last_cq_head + cq_head;\nelse\n  count +\u003d cq_head - last_cq_head;\n\nis easier for me to understand.",
+      "range": {
+        "startLine": 2168,
+        "startChar": 0,
+        "endLine": 2171,
+        "endChar": 51
+      },
+      "revId": "2e679b178ae9778b56366dda10e5d72894eaf206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1744e031_7e852371",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 2176,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-24T22:42:16Z",
+      "side": 1,
+      "message": "why ringing doorbell if sum of unfinished sq and cq entries is more than half of size of cq/sq?\n\nThis should be tunable?\n\nAdding any comment will be very helpful.",
+      "range": {
+        "startLine": 2176,
+        "startChar": 16,
+        "endLine": 2176,
+        "endChar": 40
+      },
+      "revId": "2e679b178ae9778b56366dda10e5d72894eaf206",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
