@@ -109,6 +109,24 @@
       "revId": "7b31a6a429e77ceae8b21711bddb8492c3ad1979",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "484995a3_79e80d72",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1773,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-25T01:46:31Z",
+      "side": 1,
+      "message": "It is used in nvme_transport_ctrlr_reinit_io_qpair called in nvme_transport.c. So it should not be static.",
+      "parentUuid": "e6e77621_3b9a6561",
+      "revId": "7b31a6a429e77ceae8b21711bddb8492c3ad1979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
