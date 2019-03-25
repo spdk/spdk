@@ -48,6 +48,30 @@
     },
     {
       "key": {
+        "uuid": "2cf73cee_efc3bc17",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 544,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-25T14:24:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dac8c595_a709105f",
+      "range": {
+        "startLine": 544,
+        "startChar": 0,
+        "endLine": 544,
+        "endChar": 32
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "38bc5e34_8e62433c",
         "filename": "test/vhost/common/common.sh",
         "patchSetId": 4
@@ -59,6 +83,30 @@
       "writtenOn": "2019-03-22T09:44:18Z",
       "side": 1,
       "message": "Once again, why cant this variable be:\nbarmem_id\u003d\"mem${disk}\"?\n\nThat way line 763 could be\ncmd+\u003d\"-device vhost-user-nvme,num_io_queues\u003d${queue_number},barmem\u003d${barmem_id},chardev\u003dchar_$disk\"",
+      "range": {
+        "startLine": 760,
+        "startChar": 5,
+        "endLine": 760,
+        "endChar": 35
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d281be98_39e6a31a",
+        "filename": "test/vhost/common/common.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 760,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-25T14:24:29Z",
+      "side": 1,
+      "message": "If we don\u0027t want to use barmem then this variable will be removed (barmem shouldn\u0027t be assigned to empty value). When we want barmem here then we assign value to it.",
+      "parentUuid": "38bc5e34_8e62433c",
       "range": {
         "startLine": 760,
         "startChar": 5,
@@ -94,6 +142,30 @@
     },
     {
       "key": {
+        "uuid": "2dea8abb_4aacda46",
+        "filename": "test/vhost/fiotest/autotest.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-25T14:24:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "da8777c1_b0c0cde7",
+      "range": {
+        "startLine": 45,
+        "startChar": 33,
+        "endLine": 45,
+        "endChar": 71
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52df1257_4544d1b3",
         "filename": "test/vhost/spdk_vhost.sh",
         "patchSetId": 4
@@ -105,6 +177,30 @@
       "writtenOn": "2019-03-22T09:44:18Z",
       "side": 1,
       "message": "?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 202,
+        "endChar": 18
+      },
+      "revId": "bd06a8b003b0c2b25958ed0ed4792a250cb3bfe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a83e3764_c76784d2",
+        "filename": "test/vhost/spdk_vhost.sh",
+        "patchSetId": 4
+      },
+      "lineNbr": 202,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-25T14:24:29Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "52df1257_4544d1b3",
       "range": {
         "startLine": 201,
         "startChar": 0,
