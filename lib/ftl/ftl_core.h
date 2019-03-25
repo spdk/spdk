@@ -198,7 +198,7 @@ struct spdk_ftl_dev {
 	/* Current user write limit */
 	int					limit;
 
-	/* Inflight io operations */
+	/* Inflight IO operations */
 	uint32_t				num_inflight;
 
 	/* Manages data relocation */
