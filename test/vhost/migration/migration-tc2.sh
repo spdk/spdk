@@ -140,7 +140,7 @@ function migration_tc2_configure_vhost()
 	vm_run $incoming_vm $target_vm
 
 	# Wait only for incoming VM, as target is waiting for migration
-	vm_wait_for_boot 600 $incoming_vm
+	vm_wait_for_boot 300 $incoming_vm
 
 	notice "Configuration done"
 

@@ -99,7 +99,7 @@ function vms_setup() {
 
 function vm_run_with_arg() {
     vm_run $@
-    vm_wait_for_boot 600 $@
+    vm_wait_for_boot 300 $@
 }
 
 function vms_setup_and_run() {

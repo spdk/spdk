@@ -142,7 +142,7 @@ vm_setup --disk-type=spdk_vhost_scsi --force=$vm_no --os=$os_image \
 vm_run $vm_no
 
 timing_enter vm_wait_for_boot
-vm_wait_for_boot 600 $vm_no
+vm_wait_for_boot 300 $vm_no
 timing_exit vm_wait_for_boot
 
 timing_enter vm_scp_spdk

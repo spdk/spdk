@@ -68,7 +68,7 @@ function migration_tc1()
 	vm_run $incoming_vm $target_vm
 
 	# Wait only for incoming VM, as target is waiting for migration
-	vm_wait_for_boot 600 $incoming_vm
+	vm_wait_for_boot 300 $incoming_vm
 
 	# Run fio before migration
 	notice "Starting FIO"

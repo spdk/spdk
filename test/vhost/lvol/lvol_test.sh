@@ -221,7 +221,7 @@ $rpc_py get_vhost_controllers
 
 # Run VMs
 vm_run $used_vms
-vm_wait_for_boot 600 $used_vms
+vm_wait_for_boot 300 $used_vms
 
 # Get disk names from VMs and run FIO traffic
 
