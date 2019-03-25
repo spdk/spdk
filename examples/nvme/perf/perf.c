@@ -1839,35 +1839,34 @@ associate_workers_with_ns(void)
 	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
-	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
+	count = g_num_workers;
 
 	for (i = 0; i < count; i++) {
 		if (entry == NULL) {
 			break;
 		}
 
-		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
-		if (!ns_ctx) {
-			return -1;
-		}
+		while (entry) {
+			ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
+			if (!ns_ctx) {
+				return -1;
+			}
 
-		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->min_tsc = UINT64_MAX;
-		ns_ctx->entry = entry;
-		ns_ctx->next = worker->ns_ctx;
-		ns_ctx->histogram = spdk_histogram_data_alloc();
-		worker->ns_ctx = ns_ctx;
+			printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
+			ns_ctx->min_tsc = UINT64_MAX;
+			ns_ctx->entry = entry;
+			ns_ctx->next = worker->ns_ctx;
+			ns_ctx->histogram = spdk_histogram_data_alloc();
+			worker->ns_ctx = ns_ctx;
+			entry = entry->next;
+		}
 
 		worker = worker->next;
 		if (worker == NULL) {
 			worker = g_workers;
 		}
 
-		entry = entry->next;
-		if (entry == NULL) {
-			entry = g_namespaces;
-		}
-
+		entry = g_namespaces;
 	}
 
 	return 0;
