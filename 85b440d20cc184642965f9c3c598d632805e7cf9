@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68c4f444_8567ab4d",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 9
+      },
+      "lineNbr": 5112,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:43:36Z",
+      "side": 1,
+      "message": "This still needs to be wrapped with double quotes \"",
+      "range": {
+        "startLine": 5112,
+        "startChar": 16,
+        "endLine": 5112,
+        "endChar": 20
+      },
+      "revId": "85b440d20cc184642965f9c3c598d632805e7cf9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
