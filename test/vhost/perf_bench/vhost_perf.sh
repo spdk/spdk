@@ -13,7 +13,7 @@ max_disks=""
 ctrl_type="spdk_vhost_scsi"
 use_split=false
 kernel_cpus=""
-lvol_precondition=false
+run_precondition=false
 lvol_stores=()
 lvol_bdevs=()
 used_vms=""
@@ -55,7 +55,7 @@ function usage()
 	echo "                            Default: spdk_vhost_scsi"
 	echo "    --use-split             Use split vbdevs instead of Logical Volumes"
 	echo "    --limit-kernel-vhost=INT  Limit kernel vhost to run only on a number of CPU cores."
-	echo "    --lvol-precondition     Precondition lvols after creating. Default: true."
+	echo "    --run-precondition      Precondition lvols after creating. Default: true."
 	echo "    --precond-fio-bin       FIO binary used for SPDK fio plugin precondition. Default: /usr/src/fio/fio."
 	echo "    --custom-cpu-cfg=PATH   Custom CPU config for test."
 	echo "                            Default: spdk/test/vhost/common/autotest.config"
@@ -119,7 +119,7 @@ while getopts 'xh-:' optchar; do
 			max-disks=*) max_disks="${OPTARG#*=}" ;;
 			ctrl-type=*) ctrl_type="${OPTARG#*=}" ;;
 			use-split) use_split=true ;;
-			lvol-precondition) lvol_precondition=true ;;
+			run-precondition) run_precondition=true ;;
 			precond-fio-bin=*) precond_fio_bin="${OPTARG#*=}" ;;
 			limit-kernel-vhost=*) kernel_cpus="${OPTARG#*=}" ;;
 			custom-cpu-cfg=*) custom_cpu_cfg="${OPTARG#*=}" ;;
@@ -183,6 +183,22 @@ notice "Preparing NVMe setup..."
 notice "Using $max_disks physical NVMe drives"
 notice "Nvme split list: ${splits[@]}"
 
+# ===== Precondition NVMes if specified =====
+if [[ $run_precondition == true ]]; then
+	# Using the same precondition routine possible for lvols thanks
+	# to --clear-method option. Lvols should not UNMAP on creation.
+    $SPDK_BUILD_DIR/scripts/gen_nvme.sh > $SPDK_BUILD_DIR/nvme.cfg
+    nvmes=$(cat $SPDK_BUILD_DIR/nvme.cfg | grep -oP "Nvme\d+")
+    nvmes=($nvmes)
+    fio_filename=$(printf ":%sn1" "${nvmes[@]}")
+    fio_filename=${fio_filename:1}
+    $precond_fio_bin --name="precondition" \
+    --ioengine="${SPDK_BUILD_DIR}/examples/bdev/fio_plugin/fio_plugin" \
+    --rw="write" --spdk_conf="${SPDK_BUILD_DIR}/nvme.cfg" --thread="1" \
+    --group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
+    --iodepth=32 --filename="${fio_filename}" || true
+fi
+
 # ===== Prepare NVMe splits & run vhost process =====
 if [[ "$ctrl_type" == "kernel_vhost" ]]; then
 	trap 'vm_kill_all; sleep 1; cleanup_kernel_vhost; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
@@ -245,32 +261,17 @@ else
 		notice "Using logical volumes"
 		trap 'cleanup_lvol_cfg; error_exit "${FUNCNAME}" "${LINENO}"' INT ERR
 		for (( i=0; i<$max_disks; i++ ));do
-			ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i)
+			ls_guid=$($rpc_py construct_lvol_store Nvme${i}n1 lvs_$i --clear-method none)
 			lvol_stores+=("$ls_guid")
 			for (( j=0; j<${splits[$i]}; j++)); do
 				free_mb=$(get_lvs_free_mb "$ls_guid")
 				size=$((free_mb / (${splits[$i]}-j) ))
-				lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $size)
+				lb_name=$($rpc_py construct_lvol_bdev -u $ls_guid lbd_$j $size --clear-method none)
 				lvol_bdevs+=("$lb_name")
 			done
 		done
 		bdevs=("${lvol_bdevs[@]}")
 	fi
-fi
-
-if [[ ! "$ctrl_type" == "kernel_vhost" && $lvol_precondition == true && $use_split == false ]]; then
-	# Need to precondition lvols due to UNMAP done after creation
-	# of lvol_stores. Kill vhost for now and run fio_plugin over all lvol bdevs
-	spdk_vhost_kill
-	$SPDK_BUILD_DIR/scripts/gen_nvme.sh > $SPDK_BUILD_DIR/nvme.cfg
-	fio_filename=$(printf ":%s" "${bdevs[@]}")
-	fio_filename=${fio_filename:1}
-	$precond_fio_bin --name="lvol_precondition" \
-	--ioengine="${SPDK_BUILD_DIR}/examples/bdev/fio_plugin/fio_plugin" \
-	--rw="write" --spdk_conf="${SPDK_BUILD_DIR}/nvme.cfg" --thread="1" \
-	--group_reporting --direct="1" --size="100%" --loops="2" --bs="256k" \
-	--filename="${fio_filename}" || true
-	spdk_vhost_run
 fi
 
 # Prepare VMs and controllers
