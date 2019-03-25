@@ -88,7 +88,7 @@ function blk_ro_tc1()
 	vm_setup --disk-type=spdk_vhost_blk --force=$vm_no --os=$vm_img --disks=$disk --read-only=true
 
 	vm_run $vm_no
-	vm_wait_for_boot 600 $vm_no
+	vm_wait_for_boot 300 $vm_no
 	notice "Preparing partition and file on guest VM"
 	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/disabled_readonly_vm.sh
 	sleep 1
@@ -100,7 +100,7 @@ function blk_ro_tc1()
 	$rpc_py construct_vhost_blk_controller -r $vhost_blk_name $disk_name
 
 	vm_run $vm_no
-	vm_wait_for_boot 600 $vm_no
+	vm_wait_for_boot 300 $vm_no
 	notice "Testing readonly feature on guest VM"
 	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/enabled_readonly_vm.sh
 	sleep 3
@@ -112,7 +112,7 @@ function blk_ro_tc1()
 	$rpc_py construct_vhost_blk_controller $vhost_blk_name $disk_name
 
 	vm_run $vm_no
-	vm_wait_for_boot 600 $vm_no
+	vm_wait_for_boot 300 $vm_no
 	notice "Removing partition and file from test disk on guest VM"
 	vm_ssh $vm_no "bash -s" < $READONLY_BASE_DIR/delete_partition_vm.sh
 	sleep 1
