@@ -219,6 +219,42 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 }
 
 struct ftl_io *
+ftl_io_child_write_init(struct ftl_io *parent, struct ftl_ppa ppa,
+			void *data, void *md, spdk_ftl_fn cb)
+{
+	struct ftl_io *io;
+	struct spdk_ftl_dev *dev = parent->dev;
+	struct ftl_io_init_opts opts = {
+		.dev		= dev,
+		.io		= NULL,
+		.rwb_batch	= NULL,
+		.band		= parent->band,
+		.size		= sizeof(struct ftl_io),
+		.flags		= 0,
+		.type		= FTL_IO_WRITE,
+		.iov_cnt	= 1,
+		.req_size	= dev->xfer_size,
+		.fn		= cb,
+		.data		= data,
+		.md		= md,
+	};
+
+	assert(parent->band);
+	io = ftl_io_alloc_child(parent);
+	if (!io) {
+		return NULL;
+	}
+
+	/* TODO: This init should be refactored */
+	opts.io = io;
+	io = ftl_io_init_internal(&opts);
+	io->flags |= FTL_IO_KEEP_ALIVE;
+	io->ppa = ppa;
+
+	return io;
+}
+
+struct ftl_io *
 ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 		struct ftl_rwb_batch *batch, spdk_ftl_fn cb)
 {
