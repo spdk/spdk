@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cdb7ca70_d94e403b",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-25T17:36:45Z",
+      "side": 1,
+      "message": "Can you update the documentation here to say \"Dequeue up to \u0027count\u0027 objects from the ring into the provided array\"\n\nFor the return statement, can you make it \"The actual number of objects dequeued, which is less than or equal to \u0027count\u0027\"",
+      "revId": "30a80e02cce307ea5305cceb1ecbe5a04890cded",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85120d63_e97806f6",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 601,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-25T17:36:45Z",
+      "side": 1,
+      "message": "The naming is tough here, but I\u0027m leaning toward \"spdk_ring_dequeue_atomic\".\n\nThe documentation here should say \"Dequeue exactly \u0027count\u0027 objects from the ring into the provided array\"\n\nThen you can also add a line below that says \"If unable to dequeue the full count of objects, this call will fail.\"",
+      "revId": "30a80e02cce307ea5305cceb1ecbe5a04890cded",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bd30e779_c3dba429",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 607,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-25T17:36:45Z",
+      "side": 1,
+      "message": "This should return a negative number on failure or 0 on success to be consistent with the rest of our interfaces. Also, make this one return just an int. I know this is different than how DPDK works, but I think we should make the behavior consistent at our abstraction layer.",
+      "revId": "30a80e02cce307ea5305cceb1ecbe5a04890cded",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
