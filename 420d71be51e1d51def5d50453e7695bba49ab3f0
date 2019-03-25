@@ -2,6 +2,40 @@
   "comments": [
     {
       "key": {
+        "uuid": "6b4f1b09_3d873b8b",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 46,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T03:47:44Z",
+      "side": 1,
+      "message": "this change is unrelated.",
+      "revId": "420d71be51e1d51def5d50453e7695bba49ab3f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1b8c015b_6404904d",
+        "filename": "lib/event/subsystems/nvmf/conf.c",
+        "patchSetId": 15
+      },
+      "lineNbr": 280,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T03:47:44Z",
+      "side": 1,
+      "message": "if (mn !\u003d NULL) {\n  if (spdk_nvmf_subsystem_set_mn(subsystem, mn)) {\n    (snip)\n  }\n}\n\nmay be consistent with nvmf_rpc. Default value is already set in spdk_nvmf_subsystem_create().",
+      "revId": "420d71be51e1d51def5d50453e7695bba49ab3f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8ca72ae4_dc401379",
         "filename": "scripts/rpc/nvmf.py",
         "patchSetId": 15
