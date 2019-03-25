@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "42e2a031_c6687315",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-25T09:18:37Z",
+      "side": 1,
+      "message": "There already is a variable called opts, I think init is a good name too (since the struct is called ftl_deferred_init).",
+      "parentUuid": "a41dba82_8c0bc260",
+      "revId": "c63db5f1510829ec7170f764cfd5f3e29e7f052b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "8232ccde_5364ca4b",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 2
