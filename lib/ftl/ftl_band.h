@@ -55,6 +55,9 @@ struct ftl_chunk {
 	/* Block state */
 	enum ftl_chunk_state			state;
 
+	/* Indicates that there is inflight write */
+	bool					busy;
+
 	/* First PPA */
 	struct ftl_ppa				start_ppa;
 
@@ -250,7 +253,9 @@ ftl_band_chunk_is_first(struct ftl_band *band, struct ftl_chunk *chunk)
 static inline int
 ftl_chunk_is_writable(const struct ftl_chunk *chunk)
 {
-	return chunk->state == FTL_CHUNK_STATE_OPEN || chunk->state == FTL_CHUNK_STATE_FREE;
+	return (chunk->state == FTL_CHUNK_STATE_OPEN ||
+		chunk->state == FTL_CHUNK_STATE_FREE) &&
+	       !chunk->busy;
 }
 
 #endif /* FTL_BAND_H */
