@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e2684d07_68f138fe",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 910,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T22:43:26Z",
+      "side": 1,
+      "message": "This may be duplicated with line 893 to 896.",
+      "range": {
+        "startLine": 907,
+        "startChar": 0,
+        "endLine": 910,
+        "endChar": 83
+      },
+      "revId": "d261ea5af1867b08d32e92bf6ccb0d1c86eda417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b442c961_9e339e67",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1017,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T22:43:26Z",
+      "side": 1,
+      "message": "non-registrant",
+      "range": {
+        "startLine": 1017,
+        "startChar": 40,
+        "endLine": 1017,
+        "endChar": 41
+      },
+      "revId": "d261ea5af1867b08d32e92bf6ccb0d1c86eda417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eb9df9d5_9f42b67a",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1017,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T22:43:26Z",
+      "side": 1,
+      "message": "Read and Write",
+      "range": {
+        "startLine": 1017,
+        "startChar": 23,
+        "endLine": 1017,
+        "endChar": 27
+      },
+      "revId": "d261ea5af1867b08d32e92bf6ccb0d1c86eda417",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
