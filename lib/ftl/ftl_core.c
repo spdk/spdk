@@ -69,6 +69,9 @@ struct ftl_wptr {
 	/* Metadata DMA buffer */
 	void				*md_buf;
 
+	/* IO that need to be retried */
+	struct ftl_io			*retry_io;
+
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
 };
@@ -259,6 +262,7 @@ ftl_wptr_open_band(struct ftl_wptr *wptr)
 {
 	struct ftl_band *band = wptr->band;
 
+
 	assert(ftl_band_chunk_is_first(band, wptr->chunk));
 	assert(band->md.num_vld == 0);
 
@@ -446,6 +450,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 		ftl_band_set_state(band, FTL_BAND_STATE_FULL);
 	}
 
+	wptr->chunk->busy = true;
 	wptr->ppa = ftl_band_next_xfer_ppa(band, wptr->ppa, xfer_size);
 	wptr->chunk = ftl_band_next_operational_chunk(band, wptr->chunk);
 
@@ -463,6 +468,7 @@ static int
 ftl_wptr_ready(struct ftl_wptr *wptr)
 {
 	struct ftl_band *band = wptr->band;
+	int rc;
 
 	/* TODO: add handling of empty bands */
 
@@ -482,7 +488,8 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 	}
 
 	if (band->state == FTL_BAND_STATE_FULL) {
-		if (ftl_wptr_close_band(wptr)) {
+		rc = ftl_wptr_close_band(wptr);
+		if (rc && rc != -EAGAIN) {
 			/* TODO: need recovery here */
 			assert(false);
 		}
@@ -490,7 +497,8 @@ ftl_wptr_ready(struct ftl_wptr *wptr)
 	}
 
 	if (band->state != FTL_BAND_STATE_OPEN) {
-		if (ftl_wptr_open_band(wptr)) {
+		rc = ftl_wptr_open_band(wptr);
+		if (rc && rc != -EAGAIN) {
 			/* TODO: need recovery here */
 			assert(false);
 		}
@@ -968,6 +976,16 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 	pthread_spin_unlock(&band->md.lock);
 }
 
+static void
+ftl_io_release_chunk(void *ctx, int status)
+{
+	struct ftl_chunk *chunk;
+	struct ftl_io *io = ctx;
+
+	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	chunk->busy = false;
+}
+
 static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
@@ -975,17 +993,33 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
 	size_t			i;
+	struct ftl_io		*child_io;
 
-	for (i = 0; i < io->iov_cnt; ++i) {
+	for (i = io->iov_pos; i < io->iov_cnt; ++i) {
 		assert(iov[i].iov_len > 0);
 		assert(iov[i].iov_len / PAGE_SIZE == dev->xfer_size);
 
+		if (wptr->chunk->busy) {
+			wptr->retry_io = io;
+			return -EAGAIN;
+		}
+
 		ftl_trace_submission(dev, io, wptr->ppa, iov[i].iov_len / PAGE_SIZE);
+
+		child_io = ftl_io_alloc_child(io);
+		child_io->ppa = wptr->ppa;
+		child_io->band = wptr->band;
+		child_io->type = io->type;
+		child_io->dev = dev;
+		child_io->req_cnt = 0;
+		child_io->cb.fn = ftl_io_release_chunk;
+		child_io->cb.ctx = child_io;
+
 		rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
 						    iov[i].iov_base, ftl_io_get_md(io),
 						    ftl_ppa_addr_pack(dev, wptr->ppa),
 						    iov[i].iov_len / PAGE_SIZE,
-						    ftl_io_cmpl_cb, io, 0, 0, 0);
+						    ftl_io_cmpl_cb, child_io, 0, 0, 0);
 		if (rc) {
 			SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
 				    rc, wptr->ppa.ppa);
@@ -993,14 +1027,13 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
-		io->pos = iov[i].iov_len / PAGE_SIZE;
-		ftl_io_inc_req(io);
+
+		ftl_io_update_iovec(io, iov[i].iov_len / PAGE_SIZE);
+		ftl_io_inc_req(child_io);
 		ftl_wptr_advance(wptr, iov[i].iov_len / PAGE_SIZE);
 	}
 
-	if (ftl_io_done(io)) {
-		ftl_io_complete(io);
-	}
+	ftl_io_complete(io);
 
 	return rc;
 }
@@ -1034,6 +1067,14 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
+
+	if (wptr->retry_io) {
+		SPDK_ERRLOG("Retraing io: %p band: %p\n", wptr->retry_io, wptr->band);
+		if (ftl_submit_write(wptr, wptr->retry_io) == -EAGAIN) {
+			return 0;
+		}
+		wptr->retry_io = NULL;
+	}
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {

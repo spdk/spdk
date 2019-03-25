@@ -55,6 +55,9 @@ struct ftl_chunk {
 	/* Block state */
 	enum ftl_chunk_state			state;
 
+	/* Indicates that there is inflight write */
+	bool					busy;
+
 	/* First PPA */
 	struct ftl_ppa				start_ppa;
 
@@ -204,6 +207,13 @@ ftl_band_next_chunk(struct ftl_band *band, struct ftl_chunk *chunk)
 	return CIRCLEQ_LOOP_NEXT(&band->chunks, chunk, circleq);
 }
 
+static inline struct ftl_chunk *
+ftl_band_prev_chunk(struct ftl_band *band, struct ftl_chunk *chunk)
+{
+	assert(chunk->state != FTL_CHUNK_STATE_BAD);
+	return CIRCLEQ_LOOP_PREV(&band->chunks, chunk, circleq);
+}
+
 static inline void
 ftl_band_set_next_state(struct ftl_band *band)
 {
@@ -247,7 +257,9 @@ ftl_band_chunk_is_first(struct ftl_band *band, struct ftl_chunk *chunk)
 static inline int
 ftl_chunk_is_writable(const struct ftl_chunk *chunk)
 {
-	return chunk->state == FTL_CHUNK_STATE_OPEN || chunk->state == FTL_CHUNK_STATE_FREE;
+	return (chunk->state == FTL_CHUNK_STATE_OPEN ||
+		chunk->state == FTL_CHUNK_STATE_FREE) &&
+	       !chunk->busy;
 }
 
 #endif /* FTL_BAND_H */
