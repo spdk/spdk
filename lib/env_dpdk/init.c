@@ -385,6 +385,8 @@ spdk_env_dpdk_post_init(void)
 void
 spdk_env_dpdk_post_fini(void)
 {
+	spdk_pci_fini();
+
 	spdk_free_args(g_eal_cmdline, g_eal_cmdline_argcount);
 }
 
