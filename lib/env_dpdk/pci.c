@@ -147,6 +147,20 @@ spdk_pci_init(void)
 #endif
 }
 
+void
+spdk_pci_fini(void)
+{
+	struct spdk_pci_device *dev;
+	char bdf[32];
+
+	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
+		if (dev->internal.attached) {
+			spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->addr);
+			fprintf(stderr, "Device %s is still attached at shutdown!\n", bdf);
+		}
+	}
+}
+
 int
 spdk_pci_device_init(struct rte_pci_driver *_drv,
 		     struct rte_pci_device *_dev)
