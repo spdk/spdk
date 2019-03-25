@@ -99,6 +99,12 @@ ftl_io_complete(struct ftl_io *io)
 	free(io);
 }
 
+void
+ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt)
+{
+	io->pos += lbk_cnt;
+}
+
 static void
 setup_wptr_test(struct spdk_ftl_dev **dev, const struct spdk_ocssd_geometry_data *geo,
 		const struct spdk_ftl_punit_range *range)

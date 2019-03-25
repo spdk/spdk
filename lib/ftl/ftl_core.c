@@ -69,6 +69,9 @@ struct ftl_wptr {
 	/* Metadata DMA buffer */
 	void				*md_buf;
 
+	/* IO that is currently processed */
+	struct ftl_io			*current_io;
+
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
 };
@@ -294,16 +297,18 @@ ftl_submit_erase(struct ftl_io *io)
 		assert(ppa.lbk == 0);
 		ppa_packed = ftl_ppa_addr_pack(dev, ppa);
 
-		ftl_io_inc_req(io);
-
 		ftl_trace_submission(dev, io, ppa, 1);
 		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
 				&ppa_packed, 1, NULL, ftl_io_cmpl_cb, io);
+
+		ftl_io_update_iovec(io, 1);
+
 		if (rc) {
 			SPDK_ERRLOG("Vector reset failed with status: %d\n", rc);
-			ftl_io_dec_req(io);
 			break;
 		}
+
+		ftl_io_inc_req(io);
 	}
 
 	if (ftl_io_done(io)) {
@@ -448,6 +453,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 		ftl_band_set_state(band, FTL_BAND_STATE_FULL);
 	}
 
+	wptr->chunk->busy = true;
 	wptr->ppa = ftl_band_next_xfer_ppa(band, wptr->ppa, xfer_size);
 	wptr->chunk = ftl_band_next_operational_chunk(band, wptr->chunk);
 
@@ -746,6 +752,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 			ftl_add_to_retry_queue(io);
 			break;
 		} else if (rc) {
+			ftl_io_update_iovec(io, lbk_cnt);
 			io->status = rc;
 			break;
 		}
@@ -988,6 +995,16 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 	pthread_spin_unlock(&band->md.lock);
 }
 
+static void
+ftl_io_child_write_cb(void *ctx, int status)
+{
+	struct ftl_chunk *chunk;
+	struct ftl_io *io = ctx;
+
+	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	chunk->busy = false;
+}
+
 static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
@@ -995,17 +1012,36 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
 	size_t			i, lbk_cnt;
+	struct ftl_io		*child;
 
-	for (i = 0; i < io->iov_cnt; ++i) {
+	for (i = io->iov_pos; i < io->iov_cnt; ++i) {
 		lbk_cnt = iov[i].iov_len / PAGE_SIZE;
 		assert(iov[i].iov_len > 0);
 		assert(lbk_cnt == dev->xfer_size);
 
-		ftl_trace_submission(dev, io, wptr->ppa, iov[i].iov_len / PAGE_SIZE);
+		/* There are no guarantees of the order of completion of NVMe IO submission queue */
+		/* so wait until chunk is not busy before submitting another write */
+		if (wptr->chunk->busy) {
+			wptr->current_io = io;
+			rc = -EAGAIN;
+			break;
+		}
+
+		ftl_trace_submission(dev, io, wptr->ppa, lbk_cnt);
+
+		/* Split IO to child requests and release chunk immediately after child is completed */
+		child = ftl_io_init_child_write(io, wptr->ppa, iov[i].iov_base,
+						ftl_io_get_md(io), ftl_io_child_write_cb);
+		if (!child) {
+			wptr->current_io = io;
+			rc = -EAGAIN;
+			break;
+		}
+
 		rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
-						    iov[i].iov_base, ftl_io_get_md(io),
+						    child->iov.iov_base, child->md,
 						    ftl_ppa_addr_pack(dev, wptr->ppa),
-						    lbk_cnt, ftl_io_cmpl_cb, io, 0, 0, 0);
+						    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
 		if (rc) {
 			SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
 				    rc, wptr->ppa.ppa);
@@ -1013,12 +1049,18 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 			break;
 		}
 
+		/* Update parent iovec */
 		ftl_io_update_iovec(io, lbk_cnt);
-		ftl_io_inc_req(io);
+
+		/* Update child iovec */
+		ftl_io_update_iovec(child, lbk_cnt);
+		ftl_io_inc_req(child);
+
 		ftl_wptr_advance(wptr, lbk_cnt);
 	}
 
 	if (ftl_io_done(io)) {
+		/* Parent IO will complete after all children are completed */
 		ftl_io_complete(io);
 	}
 
@@ -1054,6 +1096,13 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
+
+	if (wptr->current_io) {
+		if (ftl_submit_write(wptr, wptr->current_io) == -EAGAIN) {
+			return 0;
+		}
+		wptr->current_io = NULL;
+	}
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {
