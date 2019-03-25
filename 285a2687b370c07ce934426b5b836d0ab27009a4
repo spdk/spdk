@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0420def5_c015d388",
+        "filename": "test/env/mempool/mempool.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 58,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:34:59Z",
+      "side": 1,
+      "message": "please make all those defines uppercase",
+      "range": {
+        "startLine": 58,
+        "startChar": 78,
+        "endLine": 58,
+        "endChar": 86
+      },
+      "revId": "285a2687b370c07ce934426b5b836d0ab27009a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "733f50e0_889b2527",
+        "filename": "test/env/mempool/mempool.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 64,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:34:59Z",
+      "side": 1,
+      "message": "You could also assert\n\n((uintptr_t)items[j] \u0026 align512_mask) \u003d\u003d 0\n\nSeems a bit easier.",
+      "range": {
+        "startLine": 64,
+        "startChar": 13,
+        "endLine": 64,
+        "endChar": 51
+      },
+      "revId": "285a2687b370c07ce934426b5b836d0ab27009a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d6b4bd5d_c427d23b",
+        "filename": "test/env/mempool/mempool.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 71,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:34:59Z",
+      "side": 1,
+      "message": "nitpick: should be mempool_4k",
+      "range": {
+        "startLine": 71,
+        "startChar": 36,
+        "endLine": 71,
+        "endChar": 47
+      },
+      "revId": "285a2687b370c07ce934426b5b836d0ab27009a4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
