@@ -16,6 +16,24 @@
       "revId": "957f4e0aefb8fe587e0fcf02739f190a65c008fd",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5be275a_6c6ec228",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T20:49:03Z",
+      "side": 1,
+      "message": "Don\u0027t we use those buffers across multiple queues, which multiple processes can own?",
+      "parentUuid": "f682840d_3b10aba4",
+      "revId": "957f4e0aefb8fe587e0fcf02739f190a65c008fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
