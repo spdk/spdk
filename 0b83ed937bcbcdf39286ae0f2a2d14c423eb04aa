@@ -22,6 +22,30 @@
       "revId": "0b83ed937bcbcdf39286ae0f2a2d14c423eb04aa",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4845bf65_01bc779a",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-25T04:25:48Z",
+      "side": 1,
+      "message": "Maybe there is no need for array. I will go with object only. Do you think that OK?",
+      "parentUuid": "853b6623_3e2c6e60",
+      "range": {
+        "startLine": 329,
+        "startChar": 1,
+        "endLine": 329,
+        "endChar": 32
+      },
+      "revId": "0b83ed937bcbcdf39286ae0f2a2d14c423eb04aa",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
