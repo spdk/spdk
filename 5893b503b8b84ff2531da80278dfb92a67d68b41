@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fbcccc94_ab48c285",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 287,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:20:04Z",
+      "side": 1,
+      "message": "where is memhdr itself freed?",
+      "range": {
+        "startLine": 287,
+        "startChar": 11,
+        "endLine": 287,
+        "endChar": 17
+      },
+      "revId": "5893b503b8b84ff2531da80278dfb92a67d68b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "63cb8fca_aa75983e",
+        "filename": "lib/env_dpdk/env.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 377,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:20:04Z",
+      "side": 1,
+      "message": "can this function use directly RTE_BAD_IOVA inside? The mem_region is not guaranteed to be IOVA-contiguous anyway, so this logic looks broken.",
+      "range": {
+        "startLine": 377,
+        "startChar": 37,
+        "endLine": 377,
+        "endChar": 49
+      },
+      "revId": "5893b503b8b84ff2531da80278dfb92a67d68b41",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
