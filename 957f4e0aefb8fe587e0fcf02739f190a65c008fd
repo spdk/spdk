@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f682840d_3b10aba4",
+        "filename": "lib/nvme/nvme_ctrlr.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 770,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-25T20:41:46Z",
+      "side": 1,
+      "message": "I don\u0027t actually think any of these allocations need the SPDK_MALLOC_SHARE flag. I think the allocations that need that flag are already marked as such.",
+      "revId": "957f4e0aefb8fe587e0fcf02739f190a65c008fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
