@@ -765,6 +765,7 @@ ftl_band_write_md(struct ftl_band *band, void *data, size_t lbk_cnt,
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_io *io;
+	int rc;
 
 	io = ftl_io_init_md_write(dev, band, data,
 				  spdk_divide_round_up(lbk_cnt, dev->xfer_size), cb);
@@ -774,7 +775,12 @@ ftl_band_write_md(struct ftl_band *band, void *data, size_t lbk_cnt,
 
 	md_fn(dev, &band->md, data);
 
-	return ftl_io_write(io);
+	rc = ftl_io_write(io);
+	if (rc == -EAGAIN) {
+		rc = 0;
+	}
+
+	return rc;
 }
 
 void
