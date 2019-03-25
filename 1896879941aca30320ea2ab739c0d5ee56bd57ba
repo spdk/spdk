@@ -2,6 +2,52 @@
   "comments": [
     {
       "key": {
+        "uuid": "8e883882_c89f51ea",
+        "filename": "examples/nvme/hotplug/hotplug.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T06:51:34Z",
+      "side": 1,
+      "message": "Please do the locking changes in a separate patch. They are valuable, but this patch is huge already.",
+      "range": {
+        "startLine": 127,
+        "startChar": 1,
+        "endLine": 127,
+        "endChar": 19
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fccd6700_471acaa9",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T06:51:34Z",
+      "side": 1,
+      "message": "This is implemented in lib/nvme and used directly by the application, so why do we declare this in env? Shouldn\u0027t it be declared in nvme.h?",
+      "range": {
+        "startLine": 1147,
+        "startChar": 0,
+        "endLine": 1147,
+        "endChar": 97
+      },
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a680a4b6_aa276dd0",
         "filename": "include/spdk/env.h",
         "patchSetId": 6
@@ -234,6 +280,23 @@
       "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e9d32d2a_613df0b1",
+        "filename": "lib/env_dpdk/pci_dev_event.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T06:51:34Z",
+      "side": 1,
+      "message": "spdk_dev_hotplug_monitor_stop() for a single device will stop the monitor for all devices.\n\nThis needs to maintain at least a refcount.",
+      "revId": "1896879941aca30320ea2ab739c0d5ee56bd57ba",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
