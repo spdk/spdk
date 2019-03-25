@@ -71,6 +71,30 @@
     },
     {
       "key": {
+        "uuid": "1f0dc37a_14cc51f2",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-03-25T01:37:17Z",
+      "side": 1,
+      "message": "Hi, Shuhei,\n\nI think if there are no reqs are finished next, it will be yes. For anytime, if there are reqs are completed, I think that we should not return -1.\n\nAlso if there are socket error detected, it will be early. Until the connection is resumed or all the reqs are aborted.",
+      "parentUuid": "57c8d7b0_a95c0fb9",
+      "range": {
+        "startLine": 1602,
+        "startChar": 3,
+        "endLine": 1602,
+        "endChar": 68
+      },
+      "revId": "7b31a6a429e77ceae8b21711bddb8492c3ad1979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6e77621_3b9a6561",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 8
