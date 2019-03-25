@@ -275,6 +275,8 @@ size_t ftl_io_iovec_len_left(struct ftl_io *io);
 int ftl_io_init_iovec(struct ftl_io *io, void *buf,
 		      size_t iov_cnt, size_t req_size);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
+struct ftl_io *ftl_io_init_child_write(struct ftl_io *parent, struct ftl_ppa ppa,
+				       void *data, void *md, spdk_ftl_fn cb);
 struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 			       struct ftl_rwb_batch *entry, spdk_ftl_fn cb);
 struct ftl_io *ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb);
