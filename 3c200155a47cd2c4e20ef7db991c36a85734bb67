@@ -22,6 +22,30 @@
       "revId": "3c200155a47cd2c4e20ef7db991c36a85734bb67",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82280932_b07002c6",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-25T09:51:36Z",
+      "side": 1,
+      "message": "Yes, you are right. It seems that previous implementation had similar issue. This need to be done in different way.",
+      "parentUuid": "24aecc8b_2d11db49",
+      "range": {
+        "startLine": 589,
+        "startChar": 0,
+        "endLine": 598,
+        "endChar": 0
+      },
+      "revId": "3c200155a47cd2c4e20ef7db991c36a85734bb67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
