@@ -155,7 +155,10 @@ static inline uint64_t env_get_free_memory(void)
 
 #define OCF_ALLOCATOR_NAME_MAX 128
 
-typedef struct spdk_mempool env_allocator;
+typedef struct allocator_wrapper {
+	struct spdk_mempool *mempool;
+	size_t element_size;
+} env_allocator;
 
 env_allocator *env_allocator_create(uint32_t size, const char *name);
 

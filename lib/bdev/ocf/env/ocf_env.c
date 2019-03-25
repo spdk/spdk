@@ -52,7 +52,13 @@ static env_atomic g_env_allocator_index = 0;
 void *
 env_allocator_new(env_allocator *allocator)
 {
-	return spdk_mempool_get(allocator);
+	void *mem = spdk_mempool_get(allocator->mempool);
+
+	if (spdk_likely(mem)) {
+		memset(mem, 0, allocator->element_size);
+	}
+
+	return mem;
 }
 
 env_allocator *
@@ -63,10 +69,22 @@ env_allocator_create(uint32_t size, const char *name)
 
 	snprintf(qualified_name, 128, "ocf_env_%d", env_atomic_inc_return(&g_env_allocator_index));
 
-	allocator = spdk_mempool_create(qualified_name,
-					ENV_ALLOCATOR_NBUFS, size,
-					SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
-					SPDK_ENV_SOCKET_ID_ANY);
+	allocator = calloc(1, sizeof(*allocator));
+	if (!allocator) {
+		return NULL;
+	}
+
+	allocator->mempool = spdk_mempool_create(qualified_name,
+			     ENV_ALLOCATOR_NBUFS, size,
+			     SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
+			     SPDK_ENV_SOCKET_ID_ANY);
+
+	if (!allocator->mempool) {
+		free(allocator);
+		return NULL;
+	}
+
+	allocator->element_size = size;
 
 	return allocator;
 }
@@ -74,19 +92,20 @@ env_allocator_create(uint32_t size, const char *name)
 void
 env_allocator_del(env_allocator *allocator, void *item)
 {
-	spdk_mempool_put(allocator, item);
+	spdk_mempool_put(allocator->mempool, item);
 }
 
 void
 env_allocator_destroy(env_allocator *allocator)
 {
 	if (allocator) {
-		if (ENV_ALLOCATOR_NBUFS - spdk_mempool_count(allocator)) {
+		if (ENV_ALLOCATOR_NBUFS - spdk_mempool_count(allocator->mempool)) {
 			SPDK_ERRLOG("Not all objects deallocated\n");
 			assert(false);
 		}
 
-		spdk_mempool_free(allocator);
+		spdk_mempool_free(allocator->mempool);
+		free(allocator);
 	}
 }
 
