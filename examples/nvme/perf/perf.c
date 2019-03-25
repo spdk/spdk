@@ -183,6 +183,7 @@ struct ns_fn_table {
 static int g_outstanding_commands;
 
 static bool g_latency_ssd_tracking_enable = false;
+static bool g_all_namespaces_each_core = false;
 static int g_latency_sw_tracking_level = 0;
 
 static struct ctrlr_entry *g_controllers = NULL;
@@ -1094,6 +1095,7 @@ static void usage(char *program_name)
 #else
 	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
 #endif
+	printf("\t[-a enable all namespaces for each core.]\n");
 }
 
 static void
@@ -1494,7 +1496,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
+	while ((op = getopt(argc, argv, "ac:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1588,6 +1590,9 @@ parse_args(int argc, char **argv)
 			break;
 		case 'L':
 			g_latency_sw_tracking_level++;
+			break;
+		case 'a':
+			g_all_namespaces_each_core = true;
 			break;
 		default:
 			usage(argv[0]);
@@ -1849,42 +1854,73 @@ unregister_controllers(void)
 }
 
 static int
+_associate_workers_with_ns(struct worker_thread *worker, struct ns_entry *entry)
+{
+	struct ns_worker_ctx *ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
+	if (!ns_ctx) {
+		return -1;
+	}
+
+	printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
+	ns_ctx->min_tsc = UINT64_MAX;
+	ns_ctx->entry = entry;
+	ns_ctx->next = worker->ns_ctx;
+	ns_ctx->histogram = spdk_histogram_data_alloc();
+	worker->ns_ctx = ns_ctx;
+
+	return 0;
+}
+
+static int
 associate_workers_with_ns(void)
 {
 	struct ns_entry		*entry = g_namespaces;
 	struct worker_thread	*worker = g_workers;
-	struct ns_worker_ctx	*ns_ctx;
 	int			i, count;
 
-	count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
+	if (g_all_namespaces_each_core == false) {
+		count = g_num_namespaces > g_num_workers ? g_num_namespaces : g_num_workers;
+		for (i = 0; i < count; i++) {
+			if (entry == NULL) {
+				break;
+			}
 
-	for (i = 0; i < count; i++) {
-		if (entry == NULL) {
-			break;
+			if (_associate_workers_with_ns(worker, entry) == -1) {
+				return -1;
+			}
+
+			worker = worker->next;
+			if (worker == NULL) {
+				worker = g_workers;
+			}
+
+			entry = entry->next;
+			if (entry == NULL) {
+				entry = g_namespaces;
+			}
 		}
+	} else {
+		count = g_num_workers;
+		for (i = 0; i < count; i++) {
+			if (entry == NULL) {
+				break;
+			}
 
-		ns_ctx = calloc(1, sizeof(struct ns_worker_ctx));
-		if (!ns_ctx) {
-			return -1;
-		}
+			while (entry) {
+				if (_associate_workers_with_ns(worker, entry) == -1) {
+					return -1;
+				}
 
-		printf("Associating %s with lcore %d\n", entry->name, worker->lcore);
-		ns_ctx->min_tsc = UINT64_MAX;
-		ns_ctx->entry = entry;
-		ns_ctx->next = worker->ns_ctx;
-		ns_ctx->histogram = spdk_histogram_data_alloc();
-		worker->ns_ctx = ns_ctx;
+				entry = entry->next;
+			}
 
-		worker = worker->next;
-		if (worker == NULL) {
-			worker = g_workers;
-		}
+			worker = worker->next;
+			if (worker == NULL) {
+				worker = g_workers;
+			}
 
-		entry = entry->next;
-		if (entry == NULL) {
 			entry = g_namespaces;
 		}
-
 	}
 
 	return 0;
