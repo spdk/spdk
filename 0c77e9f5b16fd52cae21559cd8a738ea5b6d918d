@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "14823eff_6cb26b0f",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 335,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T07:43:51Z",
+      "side": 1,
+      "message": "Can we print this unconditionally? I know it\u0027s not included in the version string by default, but the string is only meant to be printed. This, however, is meant to be parsed and it might be troublesome for the user to parse JSON fields that are not always present.\n\nSimilarly, shouldn\u0027t we output numbers instead of strings? This information is supposed to be parsed and possibly compared to something. Strings only complicate that.",
+      "range": {
+        "startLine": 335,
+        "startChar": 1,
+        "endLine": 335,
+        "endChar": 31
+      },
+      "revId": "0c77e9f5b16fd52cae21559cd8a738ea5b6d918d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8ca21ecc_c5c2e682",
+        "filename": "lib/rpc/rpc.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 339,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T07:43:51Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 339,
+        "startChar": 1,
+        "endLine": 339,
+        "endChar": 46
+      },
+      "revId": "0c77e9f5b16fd52cae21559cd8a738ea5b6d918d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
