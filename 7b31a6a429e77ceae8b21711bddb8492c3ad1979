@@ -95,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "b4b68a18_26195660",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 1602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-25T02:41:41Z",
+      "side": 1,
+      "message": "Thank you Ziye. I understood that we should process fully read requests even if read failed in the later loop.",
+      "parentUuid": "1f0dc37a_14cc51f2",
+      "range": {
+        "startLine": 1602,
+        "startChar": 3,
+        "endLine": 1602,
+        "endChar": 68
+      },
+      "revId": "7b31a6a429e77ceae8b21711bddb8492c3ad1979",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e6e77621_3b9a6561",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 8
