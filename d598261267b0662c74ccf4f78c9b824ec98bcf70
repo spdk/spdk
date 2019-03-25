@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "acba41eb_e1809096",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "96a43603_70e98063",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "a68946b3_932d6228",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-19T21:48:32Z",
       "side": 1,
       "message": "I think we can use the same callback for both readv and writev",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "be87c38e_ef66aca7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 376,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "agreed, didn\u0027t realize that til I coded them",
+      "parentUuid": "a68946b3_932d6228",
       "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "4cf64270_b1f88ed7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "ignore that comment, will delete. If you recall it was in reduce and I suggested we not do it there, I wrote this comment before we had talked about it",
+      "parentUuid": "0ec5fe1f_2a89c95a",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6ce687c7_46ee9ab1",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -64,6 +118,24 @@
       "writtenOn": "2019-03-19T21:48:32Z",
       "side": 1,
       "message": "don\u0027t need to print out ziperrno if you know it\u0027s 0",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9d8eb8ef_1e15d2a7",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 637,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "this is just while I\u0027m getting it working so I don\u0027t have to break here every time to know that things are working.  It\u0027ll go away soon",
+      "parentUuid": "6ce687c7_46ee9ab1",
       "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -84,6 +156,24 @@
       "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "182b1fd2_4bcc6fad",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 792,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85b3246d_80814ca5",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -118,6 +208,24 @@
       "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06380429_7eaabd19",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 1002,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-25T23:17:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "827f4030_2e5c3c53",
+      "revId": "d598261267b0662c74ccf4f78c9b824ec98bcf70",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
