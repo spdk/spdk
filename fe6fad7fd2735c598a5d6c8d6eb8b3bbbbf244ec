@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "231b9748_d9c2c0e7",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1384,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "If the sgl descriptor references a memory region larger than 8k, then we use the scatter gather list inside of the wr object. The 1-1 correspondence between a work request and an sgl descriptor will always hold for the following reasons.\n1. Each sgl descriptor can only describe a single contiguous region of memory.\n2. Each wr has an ibv_sge large enough to handle the maximum I/O size (This is necessary from the single sgl case).\n\nThere is a pretty serious performance problem with allocating either buffers or work requests one by one. Say we are processing an I/O with 16 SGL descriptors that needs 16 buffers (this could be a 128k I/O with 8k segments). When we process that I/O we could do 15 iterations of pulling buffers and requests off of the mempool and then realize we don\u0027t have a 16th buffer available. IF we were provisioning one by one, then we would have to unwind the whole I/O, put everything back and try again later. This whole process is really really expensive. There would also be no guarantee that we would have enough resources next time we tried.\nI have measured this and it tanks performance at high queue depths. That is why I added this patch https://review.gerrithub.io/c/spdk/spdk/+/440765/22",
+      "parentUuid": "c266fc11_b5b4257c",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "32a89ed9_20947626",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 69
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "01a6a5cf_7d48b7ba",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1501,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "32a89ed9_20947626",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "06326cab_17e3a1c8",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 69
@@ -47,6 +83,24 @@
       "writtenOn": "2019-03-21T23:16:10Z",
       "side": 1,
       "message": "I think in theory num_sgl_descriptors could be 1. This would be a stupid way to send an I/O that only has 1 data buffer, but I do think it\u0027s valid. I\u0027m not sure what happens inside nvmf_request_fill_data here if you tell it to get you 0 wrs from the pool.",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "164935a9_dc32aaaa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1509,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "In the event that num_sgl_descriptors is zero, we don\u0027t allocate anything from the pool, we use the data struct embedded in the rdma_req. (i.e. current_wr \u003d \u0026rdma_req-\u003edata.wr). That case works very similarly to the original fill_iovs function.",
+      "parentUuid": "06326cab_17e3a1c8",
       "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "3e7f932b_db912dab",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1510,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "bc3b7cae_eff54480",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8654efb2_372de502",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 69
@@ -84,6 +156,24 @@
       "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7e15975c_4efc778a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1518,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8654efb2_372de502",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -104,6 +194,24 @@
     },
     {
       "key": {
+        "uuid": "7be7ae9b_16edbc94",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1519,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ef84b47e_235454c1",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5fa2ce3e_7235834f",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 69
@@ -121,6 +229,24 @@
     },
     {
       "key": {
+        "uuid": "ba3f0e34_057eaf84",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1523,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5fa2ce3e_7235834f",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "12d4cba0_f27ca305",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 69
@@ -135,6 +261,24 @@
       "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e5f1eb5b_8ac7a411",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 69
+      },
+      "lineNbr": 1527,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-25T23:21:28Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "12d4cba0_f27ca305",
+      "revId": "fe6fad7fd2735c598a5d6c8d6eb8b3bbbbf244ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
