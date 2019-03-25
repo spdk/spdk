@@ -16,6 +16,24 @@
       "revId": "17da8df1c9e94254d1b549938b3bf853001acf45",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cab34cfc_48b53a9a",
+        "filename": "lib/env_dpdk/init.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 334,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-25T13:55:52Z",
+      "side": 1,
+      "message": "It should be okay to provide --legacy-mem multiple times.",
+      "parentUuid": "bf6949c2_901183dc",
+      "revId": "17da8df1c9e94254d1b549938b3bf853001acf45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
