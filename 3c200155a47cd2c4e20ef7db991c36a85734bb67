@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "24aecc8b_2d11db49",
+        "filename": "lib/ftl/ftl_init.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 598,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-25T09:16:36Z",
+      "side": 1,
+      "message": "I don\u0027t think you can do that. ftl_dev_init_thread sends a message to call _ftl_dev_init_thread on a specified thread, which will crash if this is called first or the assertion here will fail.",
+      "range": {
+        "startLine": 589,
+        "startChar": 0,
+        "endLine": 598,
+        "endChar": 0
+      },
+      "revId": "3c200155a47cd2c4e20ef7db991c36a85734bb67",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
