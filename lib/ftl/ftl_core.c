@@ -66,6 +66,9 @@ struct ftl_wptr {
 	/* Current erase block */
 	struct ftl_chunk		*chunk;
 
+	/* IO that is currently processed */
+	struct ftl_io			*current_io;
+
 	/* List link */
 	LIST_ENTRY(ftl_wptr)		list_entry;
 };
@@ -438,6 +441,7 @@ ftl_wptr_advance(struct ftl_wptr *wptr, size_t xfer_size)
 		ftl_band_set_state(band, FTL_BAND_STATE_FULL);
 	}
 
+	wptr->chunk->busy = true;
 	wptr->ppa = ftl_band_next_xfer_ppa(band, wptr->ppa, xfer_size);
 	wptr->chunk = ftl_band_next_operational_chunk(band, wptr->chunk);
 
@@ -740,8 +744,8 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 			break;
 		}
 
-		ftl_io_update_iovec(io, lbk_cnt);
 		ftl_io_inc_req(io);
+		ftl_io_update_iovec(io, lbk_cnt);
 	}
 
 	/* If we didn't have to read anything from the device, */
@@ -978,37 +982,91 @@ ftl_update_l2p(struct spdk_ftl_dev *dev, const struct ftl_rwb_entry *entry,
 	pthread_spin_unlock(&band->md.lock);
 }
 
+static void
+ftl_io_child_write_cb(void *ctx, int status)
+{
+	struct ftl_chunk *chunk;
+	struct ftl_io *io = ctx;
+
+	chunk = ftl_band_chunk_from_ppa(io->band, io->ppa);
+	chunk->busy = false;
+}
+
+static int
+ftl_submit_child_write(struct ftl_wptr *wptr, struct ftl_io *io, int lbk_cnt)
+{
+	struct spdk_ftl_dev	*dev = io->dev;
+	struct ftl_io		*child;
+	struct iovec		*iov = ftl_io_iovec(io);
+	int rc;
+
+	/* Split IO to child requests and release chunk immediately after child is completed */
+	child = ftl_io_init_child_write(io, wptr->ppa, iov[io->iov_pos].iov_base,
+					ftl_io_get_md(io), ftl_io_child_write_cb);
+	if (!child) {
+		return -EAGAIN;
+	}
+
+	rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
+					    child->iov.iov_base, child->md,
+					    ftl_ppa_addr_pack(dev, wptr->ppa),
+					    lbk_cnt, ftl_io_cmpl_cb, child, 0, 0, 0);
+	if (rc) {
+		ftl_io_fail(child, rc);
+		ftl_io_complete(child);
+		SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
+			    rc, wptr->ppa.ppa);
+
+		return rc;
+	}
+
+	ftl_io_inc_req(child);
+	ftl_io_update_iovec(child, lbk_cnt);
+
+	return 0;
+}
+
 static int
 ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 {
 	struct spdk_ftl_dev	*dev = io->dev;
 	struct iovec		*iov = ftl_io_iovec(io);
 	int			rc = 0;
-	size_t			i, lbk_cnt;
+	size_t			lbk_cnt;
 
-	for (i = 0; i < io->iov_cnt; ++i) {
-		lbk_cnt = iov[i].iov_len / PAGE_SIZE;
-		assert(iov[i].iov_len > 0);
+	while (io->iov_pos < io->iov_cnt) {
+		lbk_cnt = iov[io->iov_pos].iov_len / PAGE_SIZE;
+		assert(iov[io->iov_pos].iov_len > 0);
 		assert(lbk_cnt == dev->xfer_size);
 
-		ftl_trace_submission(dev, io, wptr->ppa, iov[i].iov_len / PAGE_SIZE);
-		rc = spdk_nvme_ns_cmd_write_with_md(dev->ns, ftl_get_write_qpair(dev),
-						    iov[i].iov_base, ftl_io_get_md(io),
-						    ftl_ppa_addr_pack(dev, wptr->ppa),
-						    lbk_cnt, ftl_io_cmpl_cb, io, 0, 0, 0);
-		if (rc) {
-			ftl_io_fail(io, rc);
-			SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
-				    rc, wptr->ppa.ppa);
+		/* There are no guarantees of the order of completion of NVMe IO submission queue */
+		/* so wait until chunk is not busy before submitting another write */
+		if (wptr->chunk->busy) {
+			wptr->current_io = io;
+			rc = -EAGAIN;
 			break;
 		}
 
-		ftl_io_inc_req(io);
+		rc = ftl_submit_child_write(wptr, io, lbk_cnt);
+
+		if (rc == -EAGAIN) {
+			wptr->current_io = io;
+			break;
+		} else if (rc) {
+			ftl_io_fail(io, rc);
+			break;
+		}
+
+		/* Update parent iovec */
 		ftl_io_update_iovec(io, lbk_cnt);
+
+		ftl_trace_submission(dev, io, wptr->ppa, lbk_cnt);
+
 		ftl_wptr_advance(wptr, lbk_cnt);
 	}
 
 	if (ftl_io_done(io)) {
+		/* Parent IO will complete after all children are completed */
 		ftl_io_complete(io);
 	}
 
@@ -1044,6 +1102,13 @@ ftl_wptr_process_writes(struct ftl_wptr *wptr)
 	struct ftl_rwb_entry	*entry;
 	struct ftl_io		*io;
 	struct ftl_ppa		ppa, prev_ppa;
+
+	if (wptr->current_io) {
+		if (ftl_submit_write(wptr, wptr->current_io) == -EAGAIN) {
+			return 0;
+		}
+		wptr->current_io = NULL;
+	}
 
 	/* Make sure the band is prepared for writing */
 	if (!ftl_wptr_ready(wptr)) {
