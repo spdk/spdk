@@ -702,6 +702,15 @@ ftl_read_canceled(int rc)
 }
 
 static void
+ftl_add_to_retry_queue(struct ftl_io *io)
+{
+	if (!(io->flags & FTL_IO_RETRY)) {
+		io->flags |= FTL_IO_RETRY;
+		TAILQ_INSERT_TAIL(&io->dev->retry_queue, io, retry_entry);
+	}
+}
+
+static int
 ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 		void *ctx)
 {
@@ -733,11 +742,12 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 					   ftl_io_iovec_addr(io),
 					   ftl_ppa_addr_pack(io->dev, ppa), lbk_cnt,
 					   ftl_io_cmpl_cb, io, 0);
-		if (rc) {
+		if (rc == -ENOMEM) {
+			ftl_add_to_retry_queue(io);
+			break;
+		} else if (rc) {
 			io->status = rc;
-			if (rc != -ENOMEM) {
-				SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
-			}
+			SPDK_ERRLOG("spdk_nvme_ns_cmd_read failed with status: %d\n", rc);
 			break;
 		}
 
@@ -750,6 +760,8 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
+
+	return rc;
 }
 
 static int
@@ -1372,7 +1384,7 @@ spdk_ftl_write(struct spdk_ftl_dev *dev, struct spdk_io_channel *ch, uint64_t lb
 	return _spdk_ftl_write(io);
 }
 
-void
+int
 ftl_io_read(struct ftl_io *io)
 {
 	struct spdk_ftl_dev *dev = io->dev;
@@ -1385,10 +1397,11 @@ ftl_io_read(struct ftl_io *io)
 			next_ppa = ftl_lba_read_next_ppa;
 		}
 
-		ftl_submit_read(io, next_ppa, NULL);
+		return ftl_submit_read(io, next_ppa, NULL);
 	}
 
 	spdk_thread_send_msg(ftl_get_read_thread(dev), _ftl_read, io);
+	return 0;
 }
 
 static void
@@ -1504,12 +1517,37 @@ ftl_process_anm_event(struct ftl_anm_event *event)
 	ftl_anm_event_complete(event);
 }
 
+static void
+ftl_process_retry_queue(struct spdk_ftl_dev *dev)
+{
+	struct ftl_io *io;
+
+	while (!TAILQ_EMPTY(&dev->retry_queue)) {
+		io = TAILQ_FIRST(&dev->retry_queue);
+
+		/* Retry only if IO is still healthy */
+		if (spdk_likely(io->status == 0)) {
+			if (ftl_io_read(io) == -ENOMEM) {
+				break;
+			}
+		}
+
+		io->flags &= ~FTL_IO_RETRY;
+		TAILQ_REMOVE(&dev->retry_queue, io, retry_entry);
+
+		if (ftl_io_done(io)) {
+			ftl_io_complete(io);
+		}
+	}
+}
+
 int
 ftl_task_read(void *ctx)
 {
 	struct ftl_thread *thread = ctx;
 	struct spdk_ftl_dev *dev = thread->dev;
 	struct spdk_nvme_qpair *qpair = ftl_get_read_qpair(dev);
+	size_t num_completed;
 
 	if (dev->halt) {
 		if (ftl_shutdown_complete(dev)) {
@@ -1518,7 +1556,13 @@ ftl_task_read(void *ctx)
 		}
 	}
 
-	return spdk_nvme_qpair_process_completions(qpair, 0);
+	num_completed = spdk_nvme_qpair_process_completions(qpair, 0);
+
+	if (num_completed && !TAILQ_EMPTY(&dev->retry_queue)) {
+		ftl_process_retry_queue(dev);
+	}
+
+	return num_completed;
 }
 
 int
