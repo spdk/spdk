@@ -66,4 +66,9 @@ void spdk_file_read_async(struct spdk_file *file, struct spdk_io_channel *channe
 void spdk_file_sync_async(struct spdk_file *file, struct spdk_io_channel *channel,
 			  spdk_file_op_complete cb_fn, void *cb_arg);
 
+
+struct spdk_io_channel *spdk_fs_get_sync_io_channel(struct spdk_filesystem *fs);
+
+struct spdk_io_channel *spdk_fs_get_md_io_channel(struct spdk_filesystem *fs);
+
 #endif /* SPDK_BLOBFS_INTERNAL_H_ */
