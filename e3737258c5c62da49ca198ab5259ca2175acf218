@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68324868_48499dab",
+        "filename": "lib/bdev/ocf/env/ocf_env.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-26T08:37:04Z",
+      "side": 1,
+      "message": "You free the allocator only if allocator-\u003emempool is set.\n\nIt looks like you can get rid of this condition. env_allocator_create() won\u0027t allow creating such incomplete allocator.",
+      "range": {
+        "startLine": 101,
+        "startChar": 18,
+        "endLine": 101,
+        "endChar": 36
+      },
+      "revId": "e3737258c5c62da49ca198ab5259ca2175acf218",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
