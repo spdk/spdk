@@ -269,6 +269,11 @@ struct spdk_nvmf_rdma_resource_opts {
 	bool				shared;
 };
 
+struct spdk_nvmf_send_wr_list {
+	struct ibv_send_wr	*first;
+	struct ibv_send_wr	*last;
+};
+
 struct spdk_nvmf_rdma_resources {
 	/* Array of size "max_queue_depth" containing RDMA requests. */
 	struct spdk_nvmf_rdma_request		*reqs;
@@ -338,6 +343,9 @@ struct spdk_nvmf_rdma_qpair {
 
 	/* The maximum number of SGEs per WR on the recv queue */
 	uint32_t				max_recv_sge;
+
+	/* The list of pending send requests for a transfer */
+	struct spdk_nvmf_send_wr_list		sends_to_post;
 
 	struct spdk_nvmf_rdma_resources		*resources;
 
@@ -926,6 +934,9 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	spdk_trace_record(TRACE_RDMA_QP_CREATE, 0, 0, (uintptr_t)rqpair->cm_id, 0);
 	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "New RDMA Connection: %p\n", qpair);
 
+	rqpair->sends_to_post.first = NULL;
+	rqpair->sends_to_post.last = NULL;
+
 	if (rqpair->poller->srq == NULL) {
 		rtransport = SPDK_CONTAINEROF(qpair->transport, struct spdk_nvmf_rdma_transport, transport);
 		transport = &rtransport->transport;
@@ -960,14 +971,34 @@ error:
 	return -1;
 }
 
+
+/* Append the given send wr structure to the qpair's outstanding sends list. */
+/* This function accepts either a single wr or the first wr in a linked list. */
+static void
+nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_send_wr *first)
+{
+	struct ibv_send_wr *last;
+
+	last = first;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+
+	if (rqpair->sends_to_post.first == NULL) {
+		rqpair->sends_to_post.first = first;
+		rqpair->sends_to_post.last = last;
+	} else {
+		rqpair->sends_to_post.last->next = first;
+		rqpair->sends_to_post.last = last;
+	}
+}
+
 static int
 request_transfer_in(struct spdk_nvmf_request *req)
 {
-	int				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	struct ibv_send_wr		*bad_wr = NULL;
 
 	qpair = req->qpair;
 	rdma_req = SPDK_CONTAINEROF(req, struct spdk_nvmf_rdma_request, req);
@@ -976,13 +1007,7 @@ request_transfer_in(struct spdk_nvmf_request *req)
 	assert(req->xfer == SPDK_NVME_DATA_HOST_TO_CONTROLLER);
 	assert(rdma_req != NULL);
 
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA READ POSTED. Request: %p Connection: %p\n", req, qpair);
-
-	rc = ibv_post_send(rqpair->cm_id->qp, &rdma_req->data.wr, &bad_wr);
-	if (rc) {
-		SPDK_ERRLOG("Unable to transfer data from host to target\n");
-		return -1;
-	}
+	nvmf_rdma_qpair_queue_send_wrs(rqpair, &rdma_req->data.wr);
 	rqpair->current_read_depth += rdma_req->num_outstanding_data_wr;
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr;
 	return 0;
@@ -997,7 +1022,7 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct spdk_nvme_cpl		*rsp;
 	struct ibv_recv_wr		*bad_recv_wr = NULL;
-	struct ibv_send_wr		*send_wr, *bad_send_wr = NULL;
+	struct ibv_send_wr		*first = NULL;
 
 	*data_posted = 0;
 	qpair = req->qpair;
@@ -1036,24 +1061,15 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	 * RDMA WRITE to transfer data, plus an RDMA SEND
 	 * containing the response.
 	 */
-	send_wr = &rdma_req->rsp.wr;
+	first = &rdma_req->rsp.wr;
 
 	if (rsp->status.sc == SPDK_NVME_SC_SUCCESS &&
 	    req->xfer == SPDK_NVME_DATA_CONTROLLER_TO_HOST) {
-		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA WRITE POSTED. Request: %p Connection: %p\n", req, qpair);
-		send_wr = &rdma_req->data.wr;
+		first = &rdma_req->data.wr;
 		*data_posted = 1;
 	}
 
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA SEND POSTED. Request: %p Connection: %p\n", req, qpair);
-
-	/* Send the completion */
-	rc = ibv_post_send(rqpair->cm_id->qp, send_wr, &bad_send_wr);
-	if (rc) {
-		SPDK_ERRLOG("Unable to send response capsule\n");
-		return rc;
-	}
-	/* +1 for the rsp wr */
+	nvmf_rdma_qpair_queue_send_wrs(rqpair, first);
 	rqpair->current_send_depth += rdma_req->num_outstanding_data_wr + 1;
 
 	return 0;
@@ -1543,6 +1559,8 @@ nvmf_rdma_request_free(struct spdk_nvmf_rdma_request *rdma_req,
 	rdma_req->req.length = 0;
 	rdma_req->req.iovcnt = 0;
 	rdma_req->req.data = NULL;
+	rdma_req->rsp.wr.next = NULL;
+	rdma_req->data.wr.next = NULL;
 	rqpair->qd--;
 
 	STAILQ_INSERT_HEAD(&rqpair->resources->free_queue, rdma_req, state_link);
@@ -3113,6 +3131,10 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller;
+	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct ibv_send_wr		*bad_wr = NULL;
+	struct spdk_nvmf_rdma_wr	*bad_rdma_wr;
+	struct spdk_nvmf_rdma_request	*prev_rdma_req = NULL, *cur_rdma_req = NULL;
 	int				count, rc;
 
 	rtransport = SPDK_CONTAINEROF(group->transport, struct spdk_nvmf_rdma_transport, transport);
@@ -3125,6 +3147,53 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			return rc;
 		}
 		count += rc;
+		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+			if (rqpair->sends_to_post.first != NULL) {
+				rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_wr);
+				/* bad wr always points to the first wr that failed. */
+				if (rc) {
+					SPDK_ERRLOG("Failed to post a send for the qpair %p with errno %d\n", rqpair, -rc);
+					for (; bad_wr != NULL; bad_wr = bad_wr->next) {
+						bad_rdma_wr = (struct spdk_nvmf_rdma_wr *)bad_wr->wr_id;
+						switch (bad_rdma_wr->type) {
+						case RDMA_WR_TYPE_DATA:
+							cur_rdma_req = SPDK_CONTAINEROF(bad_rdma_wr, struct spdk_nvmf_rdma_request, data.rdma_wr);
+							break;
+						case RDMA_WR_TYPE_SEND:
+							cur_rdma_req = SPDK_CONTAINEROF(bad_rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
+							break;
+						default:
+							SPDK_ERRLOG("Found a RECV in the list of pending SEND requests for qpair %p\n", rqpair);
+							prev_rdma_req = cur_rdma_req;
+							continue;
+						}
+
+						if (prev_rdma_req == cur_rdma_req) {
+							/* this request was handled by an earlier wr. i.e. we were performing an nvme read. */
+							/* We only have to check against prev_wr since each requests wrs are contiguous in this list. */
+							continue;
+						} else if (cur_rdma_req->state == RDMA_REQUEST_STATE_TRANSFERRING_HOST_TO_CONTROLLER) {
+							cur_rdma_req->req.rsp->nvme_cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
+							cur_rdma_req->state = RDMA_REQUEST_STATE_READY_TO_COMPLETE;
+						} else if (cur_rdma_req->state == RDMA_REQUEST_STATE_READY_TO_COMPLETE) {
+							cur_rdma_req->state = RDMA_REQUEST_STATE_COMPLETED;
+						} else {
+							SPDK_ERRLOG("Found a request in a bad state %d when draining pending SEND requests for qpair %p\n",
+								    cur_rdma_req->state, rqpair);
+						}
+						spdk_nvmf_rdma_request_process(rtransport, cur_rdma_req);
+						prev_rdma_req = cur_rdma_req;
+					}
+
+					if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
+						/* Disconnect the connection. */
+						spdk_nvmf_rdma_start_disconnect(rqpair);
+					}
+				}
+				rqpair->sends_to_post.first = NULL;
+				rqpair->sends_to_post.last = NULL;
+			}
+		}
 	}
 
 	return count;
