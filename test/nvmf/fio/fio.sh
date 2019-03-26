@@ -60,10 +60,10 @@ waitforblk "nvme0n1"
 waitforblk "nvme0n2"
 waitforblk "nvme0n3"
 
-$testdir/nvmf_fio.py 4096 1 write 1 verify
-$testdir/nvmf_fio.py 4096 1 randwrite 1 verify
-$testdir/nvmf_fio.py 4096 128 write 1 verify
-$testdir/nvmf_fio.py 4096 128 randwrite 1 verify
+$testdir/nvmf_fio.py 4096 1 write 10 verify
+$testdir/nvmf_fio.py 4096 1 randwrite 10 verify
+$testdir/nvmf_fio.py 4096 128 write 10 verify
+$testdir/nvmf_fio.py 4096 128 randwrite 10 verify
 
 sync
 
