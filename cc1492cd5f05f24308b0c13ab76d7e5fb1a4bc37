@@ -16,6 +16,24 @@
       "revId": "cc1492cd5f05f24308b0c13ab76d7e5fb1a4bc37",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bb6bbc16_d1bec272",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 14
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-26T11:27:45Z",
+      "side": 1,
+      "message": "Ack, I will add all fields that are needed here to vbdev structure so they are allocated at initialization.\n\nI have been thinking about this issue and my main concern was that after adopting new asynchronous OCF API, there will be many more simmilar arguments which are allocated dynamically at this point.\nIf we will instead use fields of vbdev structure, the code will become more complex, because of state management.\nAlso, even if we get rid of dynamic allocations in this file, pollers are still allocated dynamically, so management operation is still going to be exposed to failures caused by lack of memory.\nOther thing is that keeping state in vbdev structure implicitly assumes that there can be only single management operation at a time, which currently is true and likely will be true forever, but I am not sure.",
+      "parentUuid": "6c62922e_c75a401c",
+      "revId": "cc1492cd5f05f24308b0c13ab76d7e5fb1a4bc37",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
