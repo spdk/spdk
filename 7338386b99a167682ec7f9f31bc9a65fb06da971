@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6de2c467_f7557fc8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 72,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T05:33:46Z",
+      "side": 1,
+      "message": "maybe \"the running SPDK application\"",
+      "range": {
+        "startLine": 72,
+        "startChar": 71,
+        "endLine": 72,
+        "endChar": 97
+      },
+      "revId": "7338386b99a167682ec7f9f31bc9a65fb06da971",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "24b28432_d7b5aa7b",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 11
+      },
+      "lineNbr": 5080,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T05:33:46Z",
+      "side": 1,
+      "message": "the running SPDK application ?",
+      "range": {
+        "startLine": 5080,
+        "startChar": 24,
+        "endLine": 5080,
+        "endChar": 51
+      },
+      "revId": "7338386b99a167682ec7f9f31bc9a65fb06da971",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "056ac5b2_5d877f4e",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T05:33:46Z",
+      "side": 1,
+      "message": "just \"SPDK version\" may be better?",
+      "range": {
+        "startLine": 60,
+        "startChar": 59,
+        "endLine": 60,
+        "endChar": 79
+      },
+      "revId": "7338386b99a167682ec7f9f31bc9a65fb06da971",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
