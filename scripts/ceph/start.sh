@@ -27,7 +27,7 @@ mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
 if [ ! -e $image ]; then
-	fallocate -l 10G $image
+        fallocate -l 4G $image
 fi
 
 mknod ${dev_backend} b 7 200 || true
@@ -39,9 +39,9 @@ SGDISK="sgdisk"
 echo "Partitioning ${dev}"
 ${PARTED} ${dev} mktable gpt
 sleep 2
-${PARTED} ${dev} mkpart primary    0%    5GiB
-${PARTED} ${dev} mkpart primary   5GiB  100%
 
+${PARTED} ${dev} mkpart primary    0%    2GiB
+${PARTED} ${dev} mkpart primary   2GiB  100%
 
 partno=0
 echo "Setting name on ${dev}"
