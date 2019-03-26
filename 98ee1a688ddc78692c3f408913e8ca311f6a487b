@@ -16,6 +16,24 @@
       "revId": "98ee1a688ddc78692c3f408913e8ca311f6a487b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9709302d_ab5ad35f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-26T11:02:18Z",
+      "side": 1,
+      "message": "state.started is set to false by calloc at initialization (line #799).\nIt should be checked here because because of scenarios where only single base device is attached - cache is not started then, so if we do stop_vbdev(), the \u0027status\u0027 will be -EINVAL or -EFAULT instad of 0\n\nShould we change state fields to be explicitely set to false?",
+      "parentUuid": "204361d0_913b55c2",
+      "revId": "98ee1a688ddc78692c3f408913e8ca311f6a487b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
