@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d1c5c0c5_b882d0b1",
+        "filename": "lib/bdev/ocf/env/ocf_env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-03-26T09:37:25Z",
+      "side": 1,
+      "message": "This can be defined like `typedef struct { spdk_mempool mempool , size_t size } env_allocator` to match the style of other env definitions.",
+      "range": {
+        "startLine": 158,
+        "startChar": 0,
+        "endLine": 162,
+        "endChar": 0
+      },
+      "revId": "df5736422cf0319cd4d0daaacc5b7760382e4422",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
