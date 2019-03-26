@@ -129,9 +129,10 @@ struct ftl_cb {
 struct ftl_io_channel {
 	/* IO pool element size */
 	size_t					elem_size;
-
 	/* IO pool */
 	struct spdk_mempool			*io_pool;
+	/* Persistent cache IO channel */
+	struct spdk_io_channel			*cache_ioch;
 };
 
 /* General IO descriptor */
