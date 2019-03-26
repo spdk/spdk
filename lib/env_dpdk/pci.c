@@ -104,6 +104,9 @@ spdk_detach_rte_cb(void *_dev)
 	char bdf[32];
 	int i = 0, rc;
 
+	fprintf(stderr, "spdk_detach_rte_cb in %s %d\n",
+		spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
+
 	snprintf(bdf, sizeof(bdf), "%s", rte_dev->device.name);
 	do {
 		rc = rte_eal_hotplug_remove("pci", bdf);
@@ -114,6 +117,9 @@ static void
 spdk_detach_rte(struct spdk_pci_device *dev)
 {
 	struct rte_pci_device *rte_dev = dev->dev_handle;
+
+	fprintf(stderr, "spdk_detach_rte in %s %d\n", spdk_process_is_primary() ? "PRIMARY" : "SECONDARY",
+		getpid());
 
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	/* The device was already marked as available and could be attached
@@ -151,6 +157,9 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 		if (strcmp(rte_dev->name, device_name) == 0) {
 			if (!dev->internal.pending_removal &&
 			    !dev->internal.attached) {
+				fprintf(stderr, "spdk_pci_device_rte_hotremove detach in %s %d\n",
+					spdk_process_is_primary() ? "PRIMARY" : "SECONDARY",
+					getpid());
 				/* if device is not attached, we
 				 * can remove it right away.
 				 */
@@ -168,9 +177,19 @@ spdk_pci_device_rte_hotremove(const char *device_name,
 }
 #endif
 
+static void
+spdk_dummy_alarm_cb(void *arg)
+{
+}
+
 void
 spdk_pci_init(void)
 {
+	fprintf(stderr, "spdk_pci_init in %s %d\n", spdk_process_is_primary() ? "PRIMARY" : "SECONDARY",
+		getpid());
+
+	rte_eal_alarm_set(10, spdk_dummy_alarm_cb, NULL);
+
 #if RTE_VERSION >= RTE_VERSION_NUM(18, 11, 0, 0)
 	struct spdk_pci_driver *driver;
 
@@ -206,6 +225,9 @@ spdk_pci_fini(void)
 	struct spdk_pci_device *dev;
 	char bdf[32];
 
+	fprintf(stderr, "spdk_pci_fini in %s %d\n", spdk_process_is_primary() ? "PRIMARY" : "SECONDARY",
+		getpid());
+
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (dev->internal.attached) {
 			spdk_pci_addr_fmt(bdf, sizeof(bdf), &dev->addr);
@@ -225,6 +247,9 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	struct spdk_pci_driver *driver = (struct spdk_pci_driver *)_drv;
 	struct spdk_pci_device *dev;
 	int rc;
+
+	fprintf(stderr, "spdk_pci_device_init in %s %d\n",
+		spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
 
 #if RTE_VERSION < RTE_VERSION_NUM(18, 11, 0, 0)
 	if (!driver->cb_fn) {
@@ -261,12 +286,17 @@ spdk_pci_device_init(struct rte_pci_driver *_drv,
 	dev->internal.driver = driver;
 
 	if (driver->cb_fn != NULL) {
+		fprintf(stderr, "spdk_pci_device_init attach in %s %d\n",
+			spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
 		rc = driver->cb_fn(driver->cb_arg, dev);
 		if (rc != 0) {
 			free(dev);
 			return rc;
 		}
 		dev->internal.attached = true;
+	} else {
+		fprintf(stderr, "spdk_pci_device_init w/o attach in %s %d\n",
+			spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
 	}
 
 	TAILQ_INSERT_TAIL(&g_pci_devices, dev, internal.tailq);
@@ -279,6 +309,9 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 {
 	struct spdk_pci_device *dev;
 
+	fprintf(stderr, "spdk_pci_device_fini in %s %d\n",
+		spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
+
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (dev->dev_handle == _dev) {
 			break;
@@ -286,8 +319,14 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 	}
 
 	if (dev == NULL || dev->internal.attached) {
+		fprintf(stderr, "spdk_pci_device_fini w/o detach in %s %d\n",
+			spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
+
 		/* The device might be still referenced somewhere in SPDK. */
 		return -1;
+	} else {
+		fprintf(stderr, "spdk_pci_device_fini detach in %s %d\n",
+			spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
 	}
 
 	spdk_vtophys_pci_device_removed(dev->dev_handle);
@@ -300,6 +339,9 @@ spdk_pci_device_fini(struct rte_pci_device *_dev)
 void
 spdk_pci_device_detach(struct spdk_pci_device *dev)
 {
+	fprintf(stderr, "spdk_pci_device_detach in %s %d\n",
+		spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
+
 	assert(dev->internal.attached);
 	dev->internal.attached = false;
 	dev->detach(dev);
@@ -317,6 +359,9 @@ spdk_pci_device_attach(struct spdk_pci_driver *driver,
 	spdk_pci_addr_fmt(bdf, sizeof(bdf), pci_address);
 
 	pthread_mutex_lock(&g_pci_mutex);
+
+	fprintf(stderr, "spdk_pci_device_attach in %s %d\n",
+		spdk_process_is_primary() ? "PRIMARY" : "SECONDARY", getpid());
 
 	TAILQ_FOREACH(dev, &g_pci_devices, internal.tailq) {
 		if (spdk_pci_addr_compare(&dev->addr, pci_address) == 0) {
