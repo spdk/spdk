@@ -1337,6 +1337,7 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 	void		*buf = NULL;
 	uint64_t	translation_len;
 	uint32_t	remaining_length = length;
+	uint32_t	iovcnt;
 	uint32_t	i = 0;
 
 
@@ -1353,14 +1354,16 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 		}
 
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-						~NVMF_DATA_BUFFER_MASK);
-		rdma_req->req.iov[i].iov_len  = spdk_min(remaining_length, rtransport->transport.opts.io_unit_size);
+		iovcnt = rdma_req->req.iovcnt;
+		rdma_req->req.iov[iovcnt].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
+						     ~NVMF_DATA_BUFFER_MASK);
+		rdma_req->req.iov[iovcnt].iov_len  = spdk_min(remaining_length,
+						     rtransport->transport.opts.io_unit_size);
 		rdma_req->req.iovcnt++;
-		rdma_req->data.buffers[i] = buf;
-		wr->sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
-		wr->sg_list[i].length = rdma_req->req.iov[i].iov_len;
-		translation_len = rdma_req->req.iov[i].iov_len;
+		rdma_req->data.buffers[iovcnt] = buf;
+		wr->sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[iovcnt].iov_base);
+		wr->sg_list[i].length = rdma_req->req.iov[iovcnt].iov_len;
+		translation_len = rdma_req->req.iov[iovcnt].iov_len;
 
 		if (!g_nvmf_hooks.get_rkey) {
 			wr->sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
@@ -1370,9 +1373,9 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 					      (uint64_t)buf, &translation_len);
 		}
 
-		remaining_length -= rdma_req->req.iov[i].iov_len;
+		remaining_length -= rdma_req->req.iov[iovcnt].iov_len;
 
-		if (translation_len < rdma_req->req.iov[i].iov_len) {
+		if (translation_len < rdma_req->req.iov[iovcnt].iov_len) {
 			SPDK_ERRLOG("Data buffer split over multiple RDMA Memory Regions\n");
 			return -EINVAL;
 		}
