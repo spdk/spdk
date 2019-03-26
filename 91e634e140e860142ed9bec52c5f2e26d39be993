@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "960f2580_fe6fd5ba",
+        "filename": "test/unit/lib/reduce/reduce.c/reduce_ut.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1140,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T01:54:48Z",
+      "side": 1,
+      "message": "maybe we can add the following here.\n\ndecompressed_len \u003d 2047;\nrc \u003d ut_decompress(decompressed_data, \u0026decompressed_len, compressed_data, compressed_len);\nCU_ASSERT(rc \u003d\u003d -ENOSPC);",
+      "revId": "91e634e140e860142ed9bec52c5f2e26d39be993",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
