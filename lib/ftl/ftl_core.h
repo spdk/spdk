@@ -103,6 +103,17 @@ struct ftl_global_md {
 	uint64_t				num_lbas;
 };
 
+struct ftl_nv_cache {
+	/* Write buffer cache bdev */
+	struct spdk_bdev_desc			*bdev_desc;
+	/* Write pointer */
+	uint64_t				current_addr;
+	/* Number of available blocks left */
+	uint64_t				num_available;
+	/* Cache lock */
+	pthread_spinlock_t			lock;
+};
+
 struct spdk_ftl_dev {
 	/* Device instance */
 	struct spdk_uuid			uuid;
@@ -137,8 +148,9 @@ struct spdk_ftl_dev {
 	struct spdk_nvme_ns			*ns;
 	/* NVMe transport ID */
 	struct spdk_nvme_transport_id		trid;
-	/* Write buffer cache */
-	struct spdk_bdev_desc			*cache_bdev_desc;
+
+	/* Non-volatile write buffer cache */
+	struct ftl_nv_cache			nv_cache;
 
 	/* LBA map memory pool */
 	struct spdk_mempool			*lba_pool;

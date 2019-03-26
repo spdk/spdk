@@ -419,6 +419,46 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 }
 
 static int
+ftl_dev_init_nv_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc)
+{
+	struct spdk_bdev *bdev;
+
+	if (!bdev_desc) {
+		return 0;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(bdev_desc);
+	SPDK_INFOLOG(SPDK_LOG_FTL_INIT, "Using %s as write buffer cache\n",
+		     spdk_bdev_get_name(bdev));
+
+	if (spdk_bdev_get_block_size(bdev) != FTL_BLOCK_SIZE) {
+		SPDK_ERRLOG("Unsupported block size (%d)\n", spdk_bdev_get_block_size(bdev));
+		return -1;
+	}
+
+	/* The cache needs to be capable of storing at least two full bands. This requirement comes
+	 * from the fact that cache works as a protection against power loss, so before the data
+	 * inside the cache can be overwritten, the band it's stored on has to be closed.
+	 */
+	if (spdk_bdev_get_num_blocks(bdev) < ftl_num_band_lbks(dev) * 2) {
+		SPDK_ERRLOG("Insufficient number of blocks for write buffer cache(%"PRIu64"\n",
+			    spdk_bdev_get_num_blocks(bdev));
+		return -1;
+	}
+
+	if (pthread_spin_init(&dev->nv_cache.lock, PTHREAD_PROCESS_PRIVATE)) {
+		SPDK_ERRLOG("Failed to initialize cache lock\n");
+		return -1;
+	}
+
+	dev->nv_cache.bdev_desc = bdev_desc;
+	dev->nv_cache.current_addr = 0;
+	dev->nv_cache.num_available = spdk_bdev_get_num_blocks(bdev);
+
+	return 0;
+}
+
+static int
 ftl_conf_validate(const struct spdk_ftl_conf *conf)
 {
 	size_t i;
@@ -786,20 +826,30 @@ ftl_restore_state(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 static int
 ftl_io_channel_create_cb(void *io_device, void *ctx)
 {
-	struct ftl_io_channel *ch = ctx;
-	char mempool_name[32];
 	struct spdk_ftl_dev *dev = io_device;
+	struct ftl_io_channel *ioch = ctx;
+	char mempool_name[32];
 
-	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ch);
-	ch->elem_size = sizeof(struct ftl_md_io);
-	ch->io_pool = spdk_mempool_create(mempool_name,
-					  dev->conf.user_io_pool_size,
-					  ch->elem_size,
-					  0,
-					  SPDK_ENV_SOCKET_ID_ANY);
-
-	if (!ch->io_pool) {
+	snprintf(mempool_name, sizeof(mempool_name), "ftl_io_%p", ioch);
+	ioch->cache_ioch = NULL;
+	ioch->elem_size = sizeof(struct ftl_md_io);
+	ioch->io_pool = spdk_mempool_create(mempool_name,
+					    dev->conf.user_io_pool_size,
+					    ioch->elem_size,
+					    0,
+					    SPDK_ENV_SOCKET_ID_ANY);
+	if (!ioch->io_pool) {
+		SPDK_ERRLOG("Failed to create IO channel's IO pool\n");
 		return -1;
+	}
+
+	if (dev->nv_cache.bdev_desc) {
+		ioch->cache_ioch = spdk_bdev_get_io_channel(dev->nv_cache.bdev_desc);
+		if (!ioch->cache_ioch) {
+			SPDK_ERRLOG("Failed to create cache IO channel\n");
+			spdk_mempool_free(ioch->io_pool);
+			return -1;
+		}
 	}
 
 	return 0;
@@ -808,9 +858,28 @@ ftl_io_channel_create_cb(void *io_device, void *ctx)
 static void
 ftl_io_channel_destroy_cb(void *io_device, void *ctx)
 {
-	struct ftl_io_channel *ch = ctx;
+	struct ftl_io_channel *ioch = ctx;
 
-	spdk_mempool_free(ch->io_pool);
+	spdk_mempool_free(ioch->io_pool);
+
+	if (ioch->cache_ioch) {
+		spdk_put_io_channel(ioch->cache_ioch);
+	}
+}
+
+static int
+ftl_dev_init_io_channel(struct spdk_ftl_dev *dev)
+{
+	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
+				sizeof(struct ftl_io_channel),
+				NULL);
+
+	dev->ioch = spdk_get_io_channel(dev);
+	if (!dev->ioch) {
+		return -1;
+	}
+
+	return 0;
 }
 
 int
@@ -834,17 +903,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		spdk_ftl_conf_init_defaults(&dev->conf);
 	}
 
-	spdk_io_device_register(dev, ftl_io_channel_create_cb, ftl_io_channel_destroy_cb,
-				sizeof(struct ftl_io_channel),
-				NULL);
-
 	TAILQ_INIT(&dev->retry_queue);
-	dev->ioch = spdk_get_io_channel(dev);
 	dev->init_cb = cb;
 	dev->init_arg = cb_arg;
 	dev->range = opts->range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
-	dev->cache_bdev_desc = opts->cache_bdev_desc;
 
 	dev->name = strdup(opts->name);
 	if (!dev->name) {
@@ -884,6 +947,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 		goto fail_sync;
 	}
 
+	if (ftl_dev_init_nv_cache(dev, opts->cache_bdev_desc)) {
+		SPDK_ERRLOG("Unable to initialize persistent cache\n");
+		goto fail_sync;
+	}
+
 	dev->rwb = ftl_rwb_init(&dev->conf, dev->geo.ws_opt, dev->md_size);
 	if (!dev->rwb) {
 		SPDK_ERRLOG("Unable to initialize rwb structures\n");
@@ -893,6 +961,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 	dev->reloc = ftl_reloc_init(dev);
 	if (!dev->reloc) {
 		SPDK_ERRLOG("Unable to initialize reloc structures\n");
+		goto fail_sync;
+	}
+
+	if (ftl_dev_init_io_channel(dev)) {
+		SPDK_ERRLOG("Unable to initialize IO channels\n");
 		goto fail_sync;
 	}
 
