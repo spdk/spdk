@@ -68,6 +68,29 @@
       "revId": "7338386b99a167682ec7f9f31bc9a65fb06da971",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ebe73466_297fa617",
+        "filename": "scripts/rpc/__init__.py",
+        "patchSetId": 11
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-26T07:38:54Z",
+      "side": 1,
+      "message": "Get SPDK version",
+      "range": {
+        "startLine": 45,
+        "startChar": 7,
+        "endLine": 45,
+        "endChar": 33
+      },
+      "revId": "7338386b99a167682ec7f9f31bc9a65fb06da971",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
