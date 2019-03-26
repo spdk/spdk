@@ -505,6 +505,11 @@ function start_stub() {
 	done
 	# dump process memory map contents to help debug random ASLR failures
 	pmap -pX $stubpid || pmap -x $stubpid || true
+	# Let the stub attach all NVMe devices. DPDK currently has a nasty data race when
+	# IPC hotplug messages arrive to processes that are still being initialized. The
+	# stub application will probe all (NVMe) PCIe devices as soon as possible. Only
+	# after it's done we'll be able to start secondary processes safely.
+	sleep 4
 	echo done.
 }
 
