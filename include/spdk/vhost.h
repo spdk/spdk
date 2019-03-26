@@ -319,6 +319,41 @@ int spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tg
 int spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_name,
 			     bool readonly);
 
+
+
+/**
+ * Called when a blobfs has been loaded.
+ */
+typedef void (*spdk_vhost_fs_construct_cb)(void *cb_arg, int rc);
+
+/**
+ * Construct a vhost fs device.  This will create a Unix domain
+ * socket together with a vhost-user slave server waiting for a
+ * connection on this socket. Creating the vdev does not start
+ * any I/O pollers and does not hog the CPU. I/O processing starts
+ * after receiving proper message on the created socket.
+ * See QEMU's vhost-user documentation for details. Vhost fs
+ * device is tightly associated with given SPDK bdev. Given
+ * bdev can not be changed, unless it has been hotremoved. This
+ * would result in all I/O failing with virtio \c ???
+ * error code.
+ * *
+ * \param name name of the vhost fs device. The name will also be
+ * used for socket name, which is exactly \c socket_base_dir/name
+ * \param cpumask string containing cpumask in hex. The leading *0x*
+ * is allowed but not required. The mask itself can be constructed as:
+ * ((1 << cpu0) | (1 << cpu1) | ... | (1 << cpuN)).
+ * \param dev_name bdev name to associate with this vhost device
+ * \param readonly if set, all writes to the device will fail with
+ * \param cb_fn Called when the blobfs has been loaded.
+ * \param cb_arg Passed to cb_fn.
+ *
+ * \c ??? error code.
+ */
+int spdk_vhost_fs_construct(const char *name, const char *cpumask, const char *dev_name,
+			    bool readonly,
+			    spdk_vhost_fs_construct_cb cb_fn, void *cb_arg);
+
 /**
  * Remove a vhost device. The device must not have any open connections on it's socket.
  *

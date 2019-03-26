@@ -116,6 +116,25 @@ def vhost_create_blk_controller(client, ctrlr, dev_name, cpumask=None, readonly=
     return client.call('vhost_create_blk_controller', params)
 
 
+def construct_vhost_fs_controller(client, ctrlr, dev_name, cpumask=None, readonly=None):
+    """Construct vhost FUSE controller.
+    Args:
+        ctrlr: controller name
+        dev_name: device name to add to controller
+        cpumask: cpu mask for this controller
+        readonly: set controller as read-only
+    """
+    params = {
+        'ctrlr': ctrlr,
+        'dev_name': dev_name,
+    }
+    if cpumask:
+        params['cpumask'] = cpumask
+    if readonly:
+        params['readonly'] = readonly
+    return client.call('construct_vhost_fs_controller', params)
+
+
 @deprecated_alias('get_vhost_controllers')
 def vhost_get_controllers(client, name=None):
     """Get information about configured vhost controllers.
