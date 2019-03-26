@@ -307,6 +307,99 @@ invalid:
 SPDK_RPC_REGISTER("construct_vhost_blk_controller", spdk_rpc_construct_vhost_blk_controller,
 		  SPDK_RPC_RUNTIME)
 
+struct rpc_vhost_fs_ctrlr {
+	char *ctrlr;
+	char *dev_name;
+	char *cpumask;
+	bool readonly;
+
+	struct spdk_jsonrpc_request *request;
+};
+
+static const struct spdk_json_object_decoder rpc_construct_vhost_fs_ctrlr[] = {
+	{"ctrlr", offsetof(struct rpc_vhost_fs_ctrlr, ctrlr), spdk_json_decode_string },
+	{"dev_name", offsetof(struct rpc_vhost_fs_ctrlr, dev_name), spdk_json_decode_string },
+	{"cpumask", offsetof(struct rpc_vhost_fs_ctrlr, cpumask), spdk_json_decode_string, true},
+	{"readonly", offsetof(struct rpc_vhost_fs_ctrlr, readonly), spdk_json_decode_bool, true},
+};
+
+static void
+free_rpc_vhost_fs_ctrlr(struct rpc_vhost_fs_ctrlr *req)
+{
+	free(req->ctrlr);
+	free(req->dev_name);
+	free(req->cpumask);
+}
+
+static void
+spdk_rpc_vhost_fs_construct_cb(void *cb_arg, int rc)
+{
+	struct rpc_vhost_fs_ctrlr *req = cb_arg;
+	struct spdk_json_write_ctx *w;
+	struct spdk_jsonrpc_request *request = req->request;
+
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "%s to construct vhost fs\n", rc ? "Failed" : "Succeed");
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	free_rpc_vhost_fs_ctrlr(req);
+
+	w = spdk_jsonrpc_begin_result(request);
+	if (w == NULL) {
+		return;
+	}
+
+	spdk_json_write_bool(w, true);
+	spdk_jsonrpc_end_result(request, w);
+	return;
+
+invalid:
+	free_rpc_vhost_fs_ctrlr(req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+}
+
+static void
+spdk_rpc_construct_vhost_fs_controller(struct spdk_jsonrpc_request *request,
+				       const struct spdk_json_val *params)
+{
+	struct rpc_vhost_fs_ctrlr *req;
+	int rc = 0;
+
+	req = calloc(1, sizeof(*req));
+	if (req == NULL) {
+		rc = -ENOMEM;
+		goto invalid;
+	}
+	req->request = request;
+
+	if (spdk_json_decode_object(params, rpc_construct_vhost_fs_ctrlr,
+				    SPDK_COUNTOF(rpc_construct_vhost_fs_ctrlr),
+				    req)) {
+		SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "spdk_json_decode_object failed\n");
+		rc = -EINVAL;
+		goto invalid;
+	}
+
+	rc = spdk_vhost_fs_construct(req->ctrlr, req->cpumask, req->dev_name, req->readonly,
+				     spdk_rpc_vhost_fs_construct_cb, req);
+	if (rc != 0) {
+		goto invalid;
+	}
+
+	return;
+
+invalid:
+	SPDK_DEBUGLOG(SPDK_LOG_VHOST_RPC, "Failed to construct vhost fs on %s\n", req->dev_name);
+	free_rpc_vhost_fs_ctrlr(req);
+	spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
+					 spdk_strerror(-rc));
+
+}
+SPDK_RPC_REGISTER("construct_vhost_fs_controller", spdk_rpc_construct_vhost_fs_controller,
+		  SPDK_RPC_RUNTIME)
+
 struct rpc_remove_vhost_ctrlr {
 	char *ctrlr;
 };
