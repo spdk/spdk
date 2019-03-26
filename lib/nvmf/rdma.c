@@ -383,6 +383,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 
+	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	recv_link;
+
 	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	send_link;
 
 	/* IBV queue pair attributes: they are used to manage
@@ -424,6 +426,8 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_resources		*resources;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_recv;
 
 	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_send;
 
@@ -1052,6 +1056,9 @@ nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_r
 	if (rqpair->resources->recvs_to_post.first == NULL) {
 		rqpair->resources->recvs_to_post.first = first;
 		rqpair->resources->recvs_to_post.last = last;
+		if (rqpair->srq == NULL) {
+			STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_recv, rqpair, recv_link);
+		}
 	} else {
 		rqpair->resources->recvs_to_post.last->next = first;
 		rqpair->resources->recvs_to_post.last = last;
@@ -2978,6 +2985,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 
 		TAILQ_INIT(&poller->qpairs);
 		STAILQ_INIT(&poller->qpairs_pending_send);
+		STAILQ_INIT(&poller->qpairs_pending_recv);
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 		if (transport->opts.no_srq == false && device->attr.max_srq != 0) {
@@ -3279,16 +3287,16 @@ _poller_submit_recvs(struct spdk_nvmf_rdma_transport *rtransport,
 			rpoller->resources->recvs_to_post.last = NULL;
 		}
 	} else {
-		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-			if (!rqpair->resources->recvs_to_post.first) {
-				continue;
-			}
+		while (!STAILQ_EMPTY(&rpoller->qpairs_pending_recv)) {
+			rqpair = STAILQ_FIRST(&rpoller->qpairs_pending_recv);
+			assert(rqpair->resources->recvs_to_post.first != NULL);
 			rc = ibv_post_recv(rqpair->cm_id->qp, rqpair->resources->recvs_to_post.first, &bad_recv_wr);
 			if (rc) {
 				_qp_reset_failed_recvs(rqpair, bad_recv_wr, rc);
 			}
 			rqpair->resources->recvs_to_post.first = NULL;
 			rqpair->resources->recvs_to_post.last = NULL;
+			STAILQ_REMOVE_HEAD(&rpoller->qpairs_pending_recv, recv_link);
 		}
 	}
 }
