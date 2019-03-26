@@ -361,6 +361,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 
+	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	send_link;
+
 	/* IBV queue pair attributes: they are used to manage
 	 * qp state and recover from errors.
 	 */
@@ -400,6 +402,8 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_resources		*resources;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_send;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
 };
@@ -1031,6 +1035,7 @@ nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_s
 	if (rqpair->sends_to_post.first == NULL) {
 		rqpair->sends_to_post.first = first;
 		rqpair->sends_to_post.last = last;
+		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
 	} else {
 		rqpair->sends_to_post.last->next = first;
 		rqpair->sends_to_post.last = last;
@@ -2868,6 +2873,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->group = rgroup;
 
 		TAILQ_INIT(&poller->qpairs);
+		STAILQ_INIT(&poller->qpairs_pending_send);
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 		if (device->attr.max_srq != 0) {
@@ -3306,7 +3312,7 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_transport *rtransport;
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller;
-	struct spdk_nvmf_rdma_qpair	*rqpair;
+	struct spdk_nvmf_rdma_qpair	*rqpair, *tmp;
 	struct ibv_send_wr		*bad_wr = NULL;
 	struct spdk_nvmf_rdma_wr	*bad_rdma_wr;
 	struct spdk_nvmf_rdma_request	*prev_rdma_req = NULL, *cur_rdma_req = NULL;
@@ -3322,7 +3328,7 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			return rc;
 		}
 		count += rc;
-		TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+		STAILQ_FOREACH_SAFE(rqpair, &rpoller->qpairs_pending_send, send_link, tmp) {
 			if (rqpair->sends_to_post.first != NULL) {
 				rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_wr);
 				/* bad wr always points to the first wr that failed. */
@@ -3375,6 +3381,7 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 				}
 				rqpair->sends_to_post.first = NULL;
 				rqpair->sends_to_post.last = NULL;
+				STAILQ_REMOVE_HEAD(&rpoller->qpairs_pending_send, send_link);
 			}
 		}
 	}
