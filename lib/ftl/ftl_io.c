@@ -39,7 +39,7 @@
 #include "ftl_rwb.h"
 #include "ftl_band.h"
 
-size_t
+void
 ftl_io_inc_req(struct ftl_io *io)
 {
 	struct ftl_band *band = io->band;
@@ -50,10 +50,10 @@ ftl_io_inc_req(struct ftl_io *io)
 
 	__atomic_fetch_add(&io->dev->num_inflight, 1, __ATOMIC_SEQ_CST);
 
-	return ++io->req_cnt;
+	++io->req_cnt;
 }
 
-size_t
+void
 ftl_io_dec_req(struct ftl_io *io)
 {
 	struct ftl_band *band = io->band;
@@ -68,7 +68,7 @@ ftl_io_dec_req(struct ftl_io *io)
 	assert(num_inflight > 0);
 	assert(io->req_cnt > 0);
 
-	return --io->req_cnt;
+	--io->req_cnt;
 }
 
 struct iovec *
