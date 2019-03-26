@@ -44,6 +44,10 @@ C_SRCS += vhost_nvme.c
 CFLAGS := -I../rte_vhost $(CFLAGS)
 endif
 
+ifeq ($(CONFIG_VHOST_FS),y)
+C_SRCS += vhost_fs.c vhost_fs_fuse_lowlevel.c vhost_fs_fuse_blobfs.c
+endif
+
 LIBNAME = vhost
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
