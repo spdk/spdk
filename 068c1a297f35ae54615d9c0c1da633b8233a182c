@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa4d3d82_5dae24f4",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-26T23:45:35Z",
+      "side": 1,
+      "message": "this is a nit - but are these whitespace changes needed?",
+      "revId": "068c1a297f35ae54615d9c0c1da633b8233a182c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "01293351_1abea43f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 660,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-26T23:45:35Z",
+      "side": 1,
+      "message": "you can simplify this by removing both on_reduce_thread \u003d\u003d false checks and instead add an else clause to your on_reduce_thread \u003d\u003d true check below",
+      "revId": "068c1a297f35ae54615d9c0c1da633b8233a182c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a54cf770_ed074f28",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 668,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-26T23:45:35Z",
+      "side": 1,
+      "message": "I still think this is racy.  We\u0027ve released the lock, ch_count \u003d\u003d 0, meaning some other thread could create a channel and then reduce_thread will get set and we\u0027ll use the wrong thread here.\n\nLet\u0027s just remove this whole patch for now and the two of us take an AR to go back and look at this once we get more of these patches merged.  I don\u0027t want to hold off getting the \u0027happy\u0027 case working.",
+      "revId": "068c1a297f35ae54615d9c0c1da633b8233a182c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
