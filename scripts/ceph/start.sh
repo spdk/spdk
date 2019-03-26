@@ -26,8 +26,24 @@ fi
 mkdir ${base_dir}
 cp ${script_dir}/ceph.conf $ceph_conf
 
+# check image file if is valid
+if [ -e $image ]; then
+        filesize=`du -b $image |awk '{print $1}'`
+        if [ $filesize -eq 0 ]; then
+                echo "file is invalid, remove it."
+                rm -f $image
+        fi
+fi
+
 if [ ! -e $image ]; then
-	fallocate -l 10G $image
+        fallocate -l 10G $image || true
+        filesize=`du -b $image |awk '{print $1}'`
+        if [ $filesize -eq 0 ]; then
+                echo "decrease the size to 4G."
+                rm -f $image
+                fallocate -l 4G $image
+                filesize=`du -b $image |awk '{print $1}'`
+        fi
 fi
 
 mknod ${dev_backend} b 7 200 || true
@@ -39,9 +55,9 @@ SGDISK="sgdisk"
 echo "Partitioning ${dev}"
 ${PARTED} ${dev} mktable gpt
 sleep 2
-${PARTED} ${dev} mkpart primary    0%    5GiB
-${PARTED} ${dev} mkpart primary   5GiB  100%
 
+${PARTED} ${dev} mkpart primary    0%    $[$filesize/2/1024/1024/1024]GiB
+${PARTED} ${dev} mkpart primary   $[$filesize/2/1024/1024/1024]GiB  100%
 
 partno=0
 echo "Setting name on ${dev}"
