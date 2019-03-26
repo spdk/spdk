@@ -241,8 +241,8 @@ struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 void ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn cb,
 		   void *ctx, int flags, int type);
 void ftl_io_clear(struct ftl_io *io);
-size_t ftl_io_inc_req(struct ftl_io *io);
-size_t ftl_io_dec_req(struct ftl_io *io);
+void ftl_io_inc_req(struct ftl_io *io);
+void ftl_io_dec_req(struct ftl_io *io);
 struct iovec *ftl_io_iovec(struct ftl_io *io);
 uint64_t ftl_io_current_lba(struct ftl_io *io);
 void ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt);
