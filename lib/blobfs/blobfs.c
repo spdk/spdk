@@ -192,6 +192,18 @@ struct spdk_fs_cb_args {
 	} op;
 };
 
+struct spdk_io_channel *
+spdk_fs_get_sync_io_channel(struct spdk_filesystem *fs)
+{
+	return fs->sync_target.sync_io_channel;
+}
+
+struct spdk_io_channel *
+spdk_fs_get_md_io_channel(struct spdk_filesystem *fs)
+{
+	return fs->md_target.md_io_channel;
+}
+
 static void cache_free_buffers(struct spdk_file *file);
 
 void
