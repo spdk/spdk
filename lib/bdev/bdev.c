@@ -148,7 +148,7 @@ struct spdk_bdev_qos_limit {
 	uint32_t max_per_timeslice;
 
 	/** Function to check whether to queue the IO. */
-	bool (*queue_io)(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io);
+	bool (*queue_io)(struct spdk_bdev_qos *qos, int type, struct spdk_bdev_io *io);
 
 	/** Function to update for the submitted IO. */
 	void (*update_quota)(struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io);
@@ -167,6 +167,12 @@ struct spdk_bdev_qos {
 	/** Queue of I/O waiting to be issued. */
 	bdev_io_tailq_t queued;
 
+	/** Queue of read I/O waiting to be issued. */
+	bdev_io_tailq_t read_queued;
+
+	/** Queue of write I/O waiting to be issued. */
+	bdev_io_tailq_t write_queued;
+
 	/** Size of a timeslice in tsc ticks. */
 	uint64_t timeslice_size;
 
@@ -175,6 +181,15 @@ struct spdk_bdev_qos {
 
 	/** Poller that processes queued I/O commands each time slice. */
 	struct spdk_poller *poller;
+
+	/** Flag to queue I/Os in this timeslice. */
+	bool queue_io_this_timeslice;
+
+	/** Flag to queue read I/Os in this timeslice. */
+	bool queue_read_io_this_timeslice;
+
+	/** Flag to queue write I/Os in this timeslice. */
+	bool queue_write_io_this_timeslice;
 };
 
 struct spdk_bdev_mgmt_channel {
@@ -1295,9 +1310,24 @@ _spdk_bdev_get_io_size_in_byte(struct spdk_bdev_io *bdev_io)
 }
 
 static bool
-_spdk_bdev_qos_rw_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+_spdk_bdev_qos_rw_queue_io(struct spdk_bdev_qos *qos, int type, struct spdk_bdev_io *io)
 {
-	if (limit->max_per_timeslice > 0 && limit->remaining_this_timeslice <= 0) {
+	if (qos->rate_limits[type].max_per_timeslice > 0 &&
+	    qos->rate_limits[type].remaining_this_timeslice <= 0) {
+		if (type == SPDK_BDEV_QOS_RW_IOPS_RATE_LIMIT ||
+		    type == SPDK_BDEV_QOS_RW_BPS_RATE_LIMIT) {
+			qos->queue_io_this_timeslice = true;
+		} else if (type == SPDK_BDEV_QOS_R_BPS_RATE_LIMIT) {
+			qos->queue_read_io_this_timeslice = true;
+			if (qos->queue_write_io_this_timeslice == true) {
+				qos->queue_io_this_timeslice = true;
+			}
+		} else if (type == SPDK_BDEV_QOS_W_BPS_RATE_LIMIT) {
+			qos->queue_write_io_this_timeslice = true;
+			if (qos->queue_read_io_this_timeslice == true) {
+				qos->queue_io_this_timeslice = true;
+			}
+		}
 		return true;
 	} else {
 		return false;
@@ -1305,23 +1335,23 @@ _spdk_bdev_qos_rw_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_
 }
 
 static bool
-_spdk_bdev_qos_r_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+_spdk_bdev_qos_r_queue_io(struct spdk_bdev_qos *qos, int type, struct spdk_bdev_io *io)
 {
 	if (_spdk_bdev_is_read_io(io) == false) {
 		return false;
 	}
 
-	return _spdk_bdev_qos_rw_queue_io(limit, io);
+	return _spdk_bdev_qos_rw_queue_io(qos, type, io);
 }
 
 static bool
-_spdk_bdev_qos_w_queue_io(const struct spdk_bdev_qos_limit *limit, struct spdk_bdev_io *io)
+_spdk_bdev_qos_w_queue_io(struct spdk_bdev_qos *qos, int type, struct spdk_bdev_io *io)
 {
 	if (_spdk_bdev_is_read_io(io) == true) {
 		return false;
 	}
 
-	return _spdk_bdev_qos_rw_queue_io(limit, io);
+	return _spdk_bdev_qos_rw_queue_io(qos, type, io);
 }
 
 static void
@@ -1394,23 +1424,38 @@ _spdk_bdev_qos_set_ops(struct spdk_bdev_qos *qos)
 static int
 _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos)
 {
-	struct spdk_bdev_io		*bdev_io = NULL, *tmp = NULL;
+	struct spdk_bdev_io		*bdev_io = NULL, *next_bdev_io = NULL;
 	struct spdk_bdev		*bdev = ch->bdev;
 	struct spdk_bdev_shared_resource *shared_resource = ch->shared_resource;
 	int				i, submitted_ios = 0;
 
-	TAILQ_FOREACH_SAFE(bdev_io, &qos->queued, internal.link, tmp) {
+	bdev_io = TAILQ_FIRST(&qos->queued);
+	while (bdev_io != NULL) {
 		if (_spdk_bdev_qos_io_to_limit(bdev_io) == true) {
 			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 				if (!qos->rate_limits[i].queue_io) {
 					continue;
 				}
 
-				if (qos->rate_limits[i].queue_io(&qos->rate_limits[i],
-								 bdev_io) == true) {
-					return submitted_ios;
+				if (qos->rate_limits[i].queue_io(qos, i, bdev_io) == true) {
+					if (qos->queue_io_this_timeslice == true) {
+						return submitted_ios;
+					}
+					if (qos->queue_read_io_this_timeslice == true) {
+						bdev_io = TAILQ_FIRST(&qos->write_queued);
+					} else if (qos->queue_write_io_this_timeslice == true) {
+						bdev_io = TAILQ_FIRST(&qos->read_queued);
+					} else {
+						bdev_io = TAILQ_NEXT(bdev_io, internal.link);
+					}
+					break;
 				}
 			}
+			/* Continue to check the submission of next IO */
+			if (i != SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES) {
+				continue;
+			}
+
 			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 				if (!qos->rate_limits[i].update_quota) {
 					continue;
@@ -1420,13 +1465,21 @@ _spdk_bdev_qos_io_submit(struct spdk_bdev_channel *ch, struct spdk_bdev_qos *qos
 			}
 		}
 
-		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
 		ch->io_outstanding++;
 		shared_resource->io_outstanding++;
 		bdev_io->internal.in_submit_request = true;
 		bdev->fn_table->submit_request(ch->channel, bdev_io);
 		bdev_io->internal.in_submit_request = false;
 		submitted_ios++;
+
+		next_bdev_io = TAILQ_NEXT(bdev_io, internal.link);
+		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
+		if (_spdk_bdev_is_read_io(bdev_io) == true) {
+			TAILQ_REMOVE(&qos->read_queued, bdev_io, internal.rw_link);
+		} else {
+			TAILQ_REMOVE(&qos->write_queued, bdev_io, internal.rw_link);
+		}
+		bdev_io = next_bdev_io;
 	}
 
 	return submitted_ios;
@@ -1702,6 +1755,11 @@ _spdk_bdev_io_submit(void *ctx)
 		bdev_ch->io_outstanding--;
 		shared_resource->io_outstanding--;
 		TAILQ_INSERT_TAIL(&bdev->internal.qos->queued, bdev_io, internal.link);
+		if (_spdk_bdev_is_read_io(bdev_io)) {
+			TAILQ_INSERT_TAIL(&bdev->internal.qos->read_queued, bdev_io, internal.rw_link);
+		} else {
+			TAILQ_INSERT_TAIL(&bdev->internal.qos->write_queued, bdev_io, internal.rw_link);
+		}
 		_spdk_bdev_qos_io_submit(bdev_ch, bdev->internal.qos);
 	} else {
 		SPDK_ERRLOG("unknown bdev_ch flag %x found\n", bdev_ch->flags);
@@ -1830,6 +1888,10 @@ spdk_bdev_qos_update_max_quota_per_timeslice(struct spdk_bdev_qos *qos)
 		qos->rate_limits[i].remaining_this_timeslice = qos->rate_limits[i].max_per_timeslice;
 	}
 
+	qos->queue_io_this_timeslice = false;
+	qos->queue_read_io_this_timeslice = false;
+	qos->queue_write_io_this_timeslice = false;
+
 	_spdk_bdev_qos_set_ops(qos);
 }
 
@@ -1868,6 +1930,10 @@ spdk_bdev_channel_poll_qos(void *arg)
 				qos->rate_limits[i].max_per_timeslice;
 		}
 	}
+
+	qos->queue_io_this_timeslice = false;
+	qos->queue_read_io_this_timeslice = false;
+	qos->queue_write_io_this_timeslice = false;
 
 	return _spdk_bdev_qos_io_submit(qos->ch, qos);
 }
@@ -1917,6 +1983,8 @@ _spdk_bdev_enable_qos(struct spdk_bdev *bdev, struct spdk_bdev_channel *ch)
 			qos->thread = spdk_io_channel_get_thread(io_ch);
 
 			TAILQ_INIT(&qos->queued);
+			TAILQ_INIT(&qos->read_queued);
+			TAILQ_INIT(&qos->write_queued);
 
 			for (i = 0; i < SPDK_BDEV_QOS_NUM_RATE_LIMIT_TYPES; i++) {
 				if (_spdk_bdev_qos_is_iops_rate_limit(i) == true) {
@@ -2128,6 +2196,8 @@ spdk_bdev_qos_destroy(struct spdk_bdev *bdev)
 	new_qos->thread = NULL;
 	new_qos->poller = NULL;
 	TAILQ_INIT(&new_qos->queued);
+	TAILQ_INIT(&new_qos->read_queued);
+	TAILQ_INIT(&new_qos->write_queued);
 	/*
 	 * The limit member of spdk_bdev_qos_limit structure is not zeroed.
 	 * It will be used later for the new QoS structure.
@@ -2928,6 +2998,7 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 	struct spdk_bdev_channel	*channel;
 	struct spdk_bdev_mgmt_channel	*mgmt_channel;
 	struct spdk_bdev_shared_resource *shared_resource;
+	struct spdk_bdev_io		*bdev_io, *tmp;
 	bdev_io_tailq_t			tmp_queued;
 
 	TAILQ_INIT(&tmp_queued);
@@ -2947,6 +3018,14 @@ _spdk_bdev_reset_freeze_channel(struct spdk_io_channel_iter *i)
 		pthread_mutex_lock(&channel->bdev->internal.mutex);
 		if (channel->bdev->internal.qos->ch == channel) {
 			TAILQ_SWAP(&channel->bdev->internal.qos->queued, &tmp_queued, spdk_bdev_io, internal.link);
+			/* Remove I/Os from the read specifc queue */
+			TAILQ_FOREACH_SAFE(bdev_io, &channel->bdev->internal.qos->read_queued, internal.rw_link, tmp) {
+				TAILQ_REMOVE(&channel->bdev->internal.qos->read_queued, bdev_io, internal.rw_link);
+			}
+			/* Remove I/Os from the write specifc queue */
+			TAILQ_FOREACH_SAFE(bdev_io, &channel->bdev->internal.qos->write_queued, internal.rw_link, tmp) {
+				TAILQ_REMOVE(&channel->bdev->internal.qos->write_queued, bdev_io, internal.rw_link);
+			}
 		}
 		pthread_mutex_unlock(&channel->bdev->internal.mutex);
 	}
@@ -4153,6 +4232,11 @@ _spdk_bdev_disable_qos_done(void *cb_arg)
 		/* Send queued I/O back to their original thread for resubmission. */
 		bdev_io = TAILQ_FIRST(&qos->queued);
 		TAILQ_REMOVE(&qos->queued, bdev_io, internal.link);
+		if (_spdk_bdev_is_read_io(bdev_io) == true) {
+			TAILQ_REMOVE(&qos->read_queued, bdev_io, internal.rw_link);
+		} else {
+			TAILQ_REMOVE(&qos->write_queued, bdev_io, internal.rw_link);
+		}
 
 		if (bdev_io->internal.io_submit_ch) {
 			/*
