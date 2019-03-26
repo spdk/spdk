@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4992835_b9d9b725",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 999,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T03:55:11Z",
+      "side": 1,
+      "message": "compressed_size will be passed by this? Any comment will be helpful because this doesn\u0027t look errno.",
+      "range": {
+        "startLine": 999,
+        "startChar": 39,
+        "endLine": 999,
+        "endChar": 51
+      },
+      "revId": "7d65acb4776c728be2b2d84b3bd290121081d650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "15dbdca8_8d086f59",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1044,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-26T03:55:11Z",
+      "side": 1,
+      "message": "This will be decompressed_size ?",
+      "range": {
+        "startLine": 1044,
+        "startChar": 39,
+        "endLine": 1044,
+        "endChar": 51
+      },
+      "revId": "7d65acb4776c728be2b2d84b3bd290121081d650",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
