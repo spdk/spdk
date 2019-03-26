@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "faa16591_454cd1e6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1012287
+      },
+      "writtenOn": "2019-03-26T18:53:18Z",
+      "side": 1,
+      "message": "SPDK_DEBUGLOG() might be proper than SPDK_ERRLOG().",
+      "range": {
+        "startLine": 1072,
+        "startChar": 2,
+        "endLine": 1072,
+        "endChar": 13
+      },
+      "revId": "29276f141ce6b4403d31baddc2bcd462561b766e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
