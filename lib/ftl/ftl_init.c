@@ -419,6 +419,37 @@ ftl_dev_nvme_init(struct spdk_ftl_dev *dev, const struct spdk_ftl_dev_init_opts 
 }
 
 static int
+ftl_dev_init_persistent_cache(struct spdk_ftl_dev *dev, struct spdk_bdev_desc *bdev_desc)
+{
+	struct spdk_bdev *bdev;
+
+	if (!bdev_desc) {
+		return 0;
+	}
+
+	bdev = spdk_bdev_desc_get_bdev(bdev_desc);
+	SPDK_INFOLOG(SPDK_LOG_FTL_INIT, "Using %s as write buffer cache\n",
+		     spdk_bdev_get_name(bdev));
+
+	if (spdk_bdev_get_block_size(bdev) != FTL_BLOCK_SIZE) {
+		SPDK_ERRLOG("Unsupported block size (%d)\n", spdk_bdev_get_block_size(bdev));
+		return -EINVAL;
+	}
+
+	if (spdk_bdev_get_num_blocks(bdev) < ftl_num_band_lbks(dev) * 2) {
+		SPDK_ERRLOG("Insufficient number of blocks for write buffer cache(%"PRIu64"\n",
+			    spdk_bdev_get_num_blocks(bdev));
+		return -EINVAL;
+	}
+
+	dev->cache_bdev = bdev_desc;
+	dev->cache_addr = 0;
+	dev->cache_left = spdk_bdev_get_num_blocks(bdev);
+
+	return 0;
+}
+
+static int
 ftl_conf_validate(const struct spdk_ftl_conf *conf)
 {
 	size_t i;
@@ -843,7 +874,6 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 	dev->init_arg = cb_arg;
 	dev->range = opts->range;
 	dev->limit = SPDK_FTL_LIMIT_MAX;
-	dev->cache_bdev = opts->cache_bdev;
 
 	dev->name = strdup(opts->name);
 	if (!dev->name) {
@@ -880,6 +910,11 @@ spdk_ftl_dev_init(const struct spdk_ftl_dev_init_opts *opts, spdk_ftl_init_fn cb
 
 	if (ftl_dev_init_bands(dev)) {
 		SPDK_ERRLOG("Unable to initialize band array\n");
+		goto fail_sync;
+	}
+
+	if (ftl_dev_init_persistent_cache(dev, opts->cache_bdev)) {
+		SPDK_ERRLOG("Unable to initialize persistent cache\n");
 		goto fail_sync;
 	}
 
