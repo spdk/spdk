@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "781b1935_ace6d16f",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 359,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-26T08:23:30Z",
+      "side": 1,
+      "message": "Besides ocf, do we have any other use for this?\n\nI feel like for ocf we could add a single getter for rte_mempool-\u003eelt_size. If there\u0027s a need to store more mempool context in ocf, then ocf should maintain a separate mempool structure, e.g:\n\nstruct env_mempool {\n  struct spdk_mempool *;\n  uint64_t;\n}\n\nPrivate mempool data is a nice concept, but it wasn\u0027t provided in the original env API and extending it now looks like an overkill.",
+      "revId": "9f47603ec3ee5ca53bfdccbccf956c9ae7247811",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
