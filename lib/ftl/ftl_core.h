@@ -137,8 +137,15 @@ struct spdk_ftl_dev {
 	struct spdk_nvme_ns			*ns;
 	/* NVMe transport ID */
 	struct spdk_nvme_transport_id		trid;
+
 	/* Write buffer cache */
 	struct spdk_bdev_desc			*cache_bdev_desc;
+	/* Write buffer write address */
+	uint64_t				cache_addr;
+	/* Number of blocks left */
+	uint64_t				cache_available;
+	/* Write buffer cache lock */
+	pthread_spinlock_t			cache_lock;
 
 	/* LBA map memory pool */
 	struct spdk_mempool			*lba_pool;
