@@ -307,6 +307,7 @@ int spdk_vhost_dev_unregister(struct spdk_vhost_dev *vdev);
 
 int spdk_vhost_scsi_controller_construct(void);
 int spdk_vhost_blk_controller_construct(void);
+int spdk_vhost_fs_controller_construct(void);
 void spdk_vhost_dump_info_json(struct spdk_vhost_dev *vdev, struct spdk_json_write_ctx *w);
 
 /*
