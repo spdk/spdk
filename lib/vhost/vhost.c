@@ -1449,6 +1449,12 @@ spdk_vhost_init(void)
 		return -1;
 	}
 
+	ret = spdk_vhost_fs_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost FUSE controllers\n");
+		return -1;
+	}
+
 #ifdef SPDK_CONFIG_VHOST_INTERNAL_LIB
 	ret = spdk_vhost_nvme_controller_construct();
 	if (ret != 0) {
