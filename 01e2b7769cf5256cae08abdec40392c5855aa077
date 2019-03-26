@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c5279403_cc5dbf29",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 86,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-26T13:53:35Z",
+      "side": 1,
+      "message": "So, the field \"reserved\" is used as padding. Should we add\n\n    SPDK_STATIC_ASSERT(offsetof(struct spdk_reduce_chunk_map, io_unit_index[0]) \u003d\u003d 8);\n\nhere?",
+      "revId": "01e2b7769cf5256cae08abdec40392c5855aa077",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
