@@ -45,6 +45,30 @@
       "revId": "028743526ea3b6697388a7721fe83104624bbfdf",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9975930b_80e4771b",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 10
+      },
+      "lineNbr": 5088,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-26T05:23:59Z",
+      "side": 1,
+      "message": "Done. Thanks for your review.",
+      "parentUuid": "adf964a7_0727e1f4",
+      "range": {
+        "startLine": 5088,
+        "startChar": 108,
+        "endLine": 5088,
+        "endChar": 118
+      },
+      "revId": "028743526ea3b6697388a7721fe83104624bbfdf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
