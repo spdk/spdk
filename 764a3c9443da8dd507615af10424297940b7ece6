@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "db21e2e6_119c3e33",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-26T08:22:18Z",
+      "side": 1,
+      "message": "What\u0027s the point of this?",
+      "revId": "764a3c9443da8dd507615af10424297940b7ece6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
