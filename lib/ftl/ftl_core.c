@@ -136,7 +136,9 @@ ftl_io_cmpl_cb(void *arg, const struct spdk_nvme_cpl *status)
 
 	ftl_trace_completion(io->dev, io, FTL_TRACE_COMPLETION_DISK);
 
-	if (!ftl_io_dec_req(io)) {
+	ftl_io_dec_req(io);
+
+	if (ftl_io_done(io)) {
 		ftl_io_complete(io);
 	}
 }
