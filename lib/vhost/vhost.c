@@ -1466,6 +1466,15 @@ vhost_create_poll_group_done(void *ctx)
 	}
 #endif
 
+#ifdef SPDK_CONFIG_VHOST_FS
+	//TODO: spdk_vhost_fs_controller_construct has deferred callback, so init_cb should be called in callback
+	ret = spdk_vhost_fs_controller_construct();
+	if (ret != 0) {
+		SPDK_ERRLOG("Cannot construct vhost FUSE controllers\n");
+		goto out;
+	}
+#endif
+
 out:
 	init_cb(ret);
 }

@@ -45,6 +45,11 @@ DIRS-y += rte_vhost
 CFLAGS := -Irte_vhost $(CFLAGS)
 endif
 
+ifeq ($(CONFIG_VHOST_FS),y)
+C_SRCS += vhost_fs.c vhost_fs_ops.c
+CFLAGS := -I$(CONFIG_LIBFUSE_DIR)/include $(CFLAGS)
+endif
+
 LIBNAME = vhost
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

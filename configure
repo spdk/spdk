@@ -48,6 +48,11 @@ function usage()
 	echo "                           example: /usr/src/fio"
 	echo " vhost                     Required to build vhost target."
 	echo "                           No path required."
+	echo " vhost-fs                  Required to build vhost-fs target."
+	echo "                           No path required."
+	echo " libfuse                   Required to build vhost-fs target. An argument should be provided"
+	echo "                           as the path of libfuse which contains fuse_kernel.h and other fuse"
+	echo "                           fuse headers."
 	echo " internal-vhost-lib        Use the internal copy of rte_vhost."
 	echo "                           No path required."
 	echo " virtio                    Required to build vhost initiator (Virtio) bdev module."
@@ -226,6 +231,19 @@ for i in "$@"; do
 			;;
 		--without-vhost)
 			CONFIG[VHOST]=n
+			;;
+		--with-vhost-fs)
+			CONFIG[VHOST_FS]=y
+			;;
+		--without-vhost-fs)
+			CONFIG[VHOST_FS]=n
+			;;
+		--with-libfuse=*)
+			check_dir "$i"
+			CONFIG[LIBFUSE_DIR]="${i#*=}"
+			;;
+		--without-libfuse)
+			CONFIG[LIBFUSE_DIR]=
 			;;
 		--with-internal-vhost-lib)
 			CONFIG[VHOST_INTERNAL_LIB]=y
@@ -408,6 +426,17 @@ if [ "${CONFIG[FIO_PLUGIN]}" = "y" ]; then
 	fi
 else
 	CONFIG[FIO_SOURCE_DIR]=
+fi
+
+if [ "${CONFIG[VHOST_FS]}" = "y" ]; then
+	if [ "${CONFIG[VHOST]}" = "n" ]; then
+		echo "Vhost-fs is only supported when vhost is enabled."
+		exit 1
+	fi
+	if [ -z "${CONFIG[LIBFUSE_DIR]}" ]; then
+		echo "When vhost-fs is enabled, you must specify the libfuse directory using --with-fuse=path"
+		exit 1
+	fi
 fi
 
 if [ "${CONFIG[VTUNE]}" = "y" ]; then
