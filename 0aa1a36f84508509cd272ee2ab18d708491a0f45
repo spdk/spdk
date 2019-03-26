@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1e33d83e_daeda221",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 139,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-26T08:24:05Z",
+      "side": 1,
+      "message": "I think we should either make this return ftl_io_done or make it void (same with ftl_io_inc_req).",
+      "range": {
+        "startLine": 139,
+        "startChar": 1,
+        "endLine": 139,
+        "endChar": 15
+      },
+      "revId": "0aa1a36f84508509cd272ee2ab18d708491a0f45",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
