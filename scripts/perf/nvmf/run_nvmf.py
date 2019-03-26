@@ -154,10 +154,10 @@ class Target(Server):
             total = ["{0:.3f}".format(sum(c)) for c in zip(*inits_avg_results)]
             rows.add(",".join([job_name, *total]))
 
-            # Save results to file
-            for row in rows:
-                with open(os.path.join(results_dir, csv_file), "a") as fh:
-                    fh.write(row + "\n")
+        # Save results to file
+        for row in rows:
+            with open(os.path.join(results_dir, csv_file), "a") as fh:
+                fh.write(row + "\n")
 
     def measure_sar(self, results_dir, sar_file_name):
         self.log_print("Waiting %d delay before measuring SAR stats" % self.sar_delay)
