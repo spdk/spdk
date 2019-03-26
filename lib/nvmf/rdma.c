@@ -375,6 +375,8 @@ struct spdk_nvmf_rdma_qpair {
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_qpair)	link;
 
+	STAILQ_ENTRY(spdk_nvmf_rdma_qpair)	send_link;
+
 	/* IBV queue pair attributes: they are used to manage
 	 * qp state and recover from errors.
 	 */
@@ -414,6 +416,8 @@ struct spdk_nvmf_rdma_poller {
 	struct spdk_nvmf_rdma_resources		*resources;
 
 	TAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs;
+
+	STAILQ_HEAD(, spdk_nvmf_rdma_qpair)	qpairs_pending_send;
 
 	TAILQ_ENTRY(spdk_nvmf_rdma_poller)	link;
 };
@@ -1041,6 +1045,7 @@ nvmf_rdma_qpair_queue_send_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_s
 	if (rqpair->sends_to_post.first == NULL) {
 		rqpair->sends_to_post.first = first;
 		rqpair->sends_to_post.last = last;
+		STAILQ_INSERT_TAIL(&rqpair->poller->qpairs_pending_send, rqpair, send_link);
 	} else {
 		rqpair->sends_to_post.last->next = first;
 		rqpair->sends_to_post.last = last;
@@ -2955,6 +2960,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		poller->group = rgroup;
 
 		TAILQ_INIT(&poller->qpairs);
+		STAILQ_INIT(&poller->qpairs_pending_send);
 
 		TAILQ_INSERT_TAIL(&rgroup->pollers, poller, link);
 		if (transport->opts.no_srq == false && device->attr.max_srq != 0) {
@@ -3277,16 +3283,18 @@ _poller_submit_sends(struct spdk_nvmf_rdma_transport *rtransport,
 	struct ibv_send_wr		*bad_wr = NULL;
 	int				rc;
 
-	TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-		if (rqpair->sends_to_post.first != NULL) {
-			rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_wr);
-			/* bad wr always points to the first wr that failed. */
-			if (rc) {
-				_qp_reset_failed_sends(rtransport, rqpair, bad_wr, rc);
-			}
-			rqpair->sends_to_post.first = NULL;
-			rqpair->sends_to_post.last = NULL;
+	while (!STAILQ_EMPTY(&rpoller->qpairs_pending_send)) {
+		rqpair = STAILQ_FIRST(&rpoller->qpairs_pending_send);
+		assert(rqpair->sends_to_post.first != NULL);
+		rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_wr);
+
+		/* bad wr always points to the first wr that failed. */
+		if (rc) {
+			_qp_reset_failed_sends(rtransport, rqpair, bad_wr, rc);
 		}
+		rqpair->sends_to_post.first = NULL;
+		rqpair->sends_to_post.last = NULL;
+		STAILQ_REMOVE_HEAD(&rpoller->qpairs_pending_send, send_link);
 	}
 }
 
