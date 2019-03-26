@@ -274,6 +274,11 @@ struct spdk_nvmf_send_wr_list {
 	struct ibv_send_wr	*last;
 };
 
+struct spdk_nvmf_recv_wr_list {
+	struct ibv_recv_wr	*first;
+	struct ibv_recv_wr	*last;
+};
+
 struct spdk_nvmf_rdma_resources {
 	/* Array of size "max_queue_depth" containing RDMA requests. */
 	struct spdk_nvmf_rdma_request		*reqs;
@@ -298,6 +303,9 @@ struct spdk_nvmf_rdma_resources {
 	 */
 	void					*bufs;
 	struct ibv_mr				*bufs_mr;
+
+	/* The list of pending recvs to transfer */
+	struct spdk_nvmf_recv_wr_list		recvs_to_post;
 
 	/* Receives that are waiting for a request object */
 	STAILQ_HEAD(, spdk_nvmf_rdma_recv)	incoming_queue;
@@ -975,6 +983,25 @@ error:
 	return -1;
 }
 
+/* Append the given recv wr structure to the resource structs outstanding recvs list. */
+/* This function accepts either a single wr or the first wr in a linked list. */
+static void
+nvmf_rdma_qpair_queue_recv_wrs(struct spdk_nvmf_rdma_qpair *rqpair, struct ibv_recv_wr *first)
+{
+	struct ibv_recv_wr *last;
+	last = first;
+	while (last->next != NULL) {
+		last = last->next;
+	}
+
+	if (rqpair->resources->recvs_to_post.first == NULL) {
+		rqpair->resources->recvs_to_post.first = first;
+		rqpair->resources->recvs_to_post.last = last;
+	} else {
+		rqpair->resources->recvs_to_post.last->next = first;
+		rqpair->resources->recvs_to_post.last = last;
+	}
+}
 
 /* Append the given send wr structure to the qpair's outstanding sends list. */
 /* This function accepts either a single wr or the first wr in a linked list. */
@@ -1021,12 +1048,10 @@ request_transfer_in(struct spdk_nvmf_request *req)
 static int
 request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 {
-	int				rc;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_qpair		*qpair;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
 	struct spdk_nvme_cpl		*rsp;
-	struct ibv_recv_wr		*bad_recv_wr = NULL;
 	struct ibv_send_wr		*first = NULL;
 
 	*data_posted = 0;
@@ -1043,21 +1068,13 @@ request_transfer_out(struct spdk_nvmf_request *req, int *data_posted)
 	}
 	rsp->sqhd = qpair->sq_head;
 
-	/* Post the capsule to the recv buffer */
+	/* queue the capsule for the recv buffer */
 	assert(rdma_req->recv != NULL);
-	SPDK_DEBUGLOG(SPDK_LOG_RDMA, "RDMA RECV POSTED. Recv: %p Connection: %p\n", rdma_req->recv,
-		      rqpair);
-	if (rqpair->srq == NULL) {
-		rc = ibv_post_recv(rqpair->cm_id->qp, &rdma_req->recv->wr, &bad_recv_wr);
-	} else {
+	if (rqpair->srq != NULL) {
 		rdma_req->recv->qpair = NULL;
-		rc = ibv_post_srq_recv(rqpair->srq, &rdma_req->recv->wr, &bad_recv_wr);
 	}
+	nvmf_rdma_qpair_queue_recv_wrs(rqpair, &rdma_req->recv->wr);
 
-	if (rc) {
-		SPDK_ERRLOG("Unable to re-post rx descriptor\n");
-		return rc;
-	}
 	rdma_req->recv = NULL;
 	assert(rqpair->current_recv_depth > 0);
 	rqpair->current_recv_depth--;
@@ -3006,6 +3023,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 				assert(rqpair != NULL);
 
+				rdma_recv->wr.next = NULL;
 				/* Dump this into the incoming queue. This gets cleaned up when
 				 * the queue pair disconnects or recovers. */
 				STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
@@ -3109,6 +3127,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 				rqpair->current_recv_depth++;
 			}
 
+			rdma_recv->wr.next = NULL;
 			STAILQ_INSERT_TAIL(&rqpair->resources->incoming_queue, rdma_recv, link);
 			/* Try to process other queued requests */
 			spdk_nvmf_rdma_qpair_process_pending(rtransport, rqpair, false);
@@ -3138,6 +3157,7 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 	struct spdk_nvmf_rdma_poll_group *rgroup;
 	struct spdk_nvmf_rdma_poller	*rpoller;
 	struct spdk_nvmf_rdma_qpair	*rqpair, *tmp;
+	struct ibv_recv_wr		*bad_recv_wr;
 	struct ibv_send_wr		*bad_wr = NULL;
 	struct spdk_nvmf_rdma_wr	*bad_rdma_wr;
 	struct spdk_nvmf_rdma_request	*prev_rdma_req = NULL, *cur_rdma_req = NULL;
@@ -3153,6 +3173,33 @@ spdk_nvmf_rdma_poll_group_poll(struct spdk_nvmf_transport_poll_group *group)
 			return rc;
 		}
 		count += rc;
+
+		if (rpoller->srq) {
+			if (rpoller->resources->recvs_to_post.first != NULL) {
+				rc = ibv_post_srq_recv(rpoller->srq, rpoller->resources->recvs_to_post.first, &bad_recv_wr);
+				if (rc) {
+					SPDK_ERRLOG("Failed to post a recv for the poller %p with errno %d\n", rpoller, -rc);
+				}
+				rpoller->resources->recvs_to_post.first = NULL;
+				rpoller->resources->recvs_to_post.last = NULL;
+			}
+		} else {
+			TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
+				if (rqpair->resources->recvs_to_post.first) {
+					rc = ibv_post_recv(rqpair->cm_id->qp, rqpair->resources->recvs_to_post.first, &bad_recv_wr);
+					if (rc) {
+						SPDK_ERRLOG("Failed to post a recv for the qpair %p with errno %d\n", rqpair, -rc);
+						if (rqpair->qpair.state == SPDK_NVMF_QPAIR_ACTIVE) {
+							/* Disconnect the connection. */
+							spdk_nvmf_rdma_start_disconnect(rqpair);
+						}
+					}
+					rqpair->resources->recvs_to_post.first = NULL;
+					rqpair->resources->recvs_to_post.last = NULL;
+				}
+			}
+		}
+
 		STAILQ_FOREACH_SAFE(rqpair, &rpoller->qpairs_pending_send, send_link, tmp) {
 			if (rqpair->sends_to_post.first != NULL) {
 				rc = ibv_post_send(rqpair->cm_id->qp, rqpair->sends_to_post.first, &bad_wr);
