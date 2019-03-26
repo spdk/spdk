@@ -172,6 +172,18 @@
   # Use device which named Raid0
   #Dev Raid0
 
+#[VhostFS0]
+  # Define name for controller
+  #Name vhost.3
+  # Use first partition from the second Malloc device
+  #Dev Malloc2p0
+  # Put controller in read-only mode
+  #ReadOnly no
+  # Start the poller for this vhost controller on one of the cores in
+  #  this cpumask.  By default, it not specified, will use any core in the
+  #  SPDK process.
+  #Cpumask 0x1
+
 #[VhostNvme0]
   # Define name for controller
   #Name vhost.0
