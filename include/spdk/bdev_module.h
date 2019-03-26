@@ -552,6 +552,9 @@ struct spdk_bdev_io {
 		/** Member used for linking child I/Os together. */
 		TAILQ_ENTRY(spdk_bdev_io) link;
 
+		/** Member used for linking read or write I/Os together. */
+		TAILQ_ENTRY(spdk_bdev_io) rw_link;
+
 		/** Entry to the list need_buf of struct spdk_bdev. */
 		STAILQ_ENTRY(spdk_bdev_io) buf_link;
 

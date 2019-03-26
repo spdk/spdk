@@ -616,6 +616,8 @@ basic_qos(void)
 	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
+	TAILQ_INIT(&bdev->internal.qos->read_queued);
+	TAILQ_INIT(&bdev->internal.qos->write_queued);
 	/*
 	 * Enable read/write IOPS, read only byte per second and
 	 * read/write byte per second rate limits.
@@ -748,6 +750,8 @@ io_during_qos_queue(void)
 	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
+	TAILQ_INIT(&bdev->internal.qos->read_queued);
+	TAILQ_INIT(&bdev->internal.qos->write_queued);
 	/*
 	 * Enable read/write IOPS, read only byte per sec, write only
 	 * byte per sec and read/write byte per sec rate limits.
@@ -806,6 +810,9 @@ io_during_qos_queue(void)
 	} else {
 		CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	}
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.qos->queued));
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.qos->read_queued));
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.qos->write_queued));
 	/* The write I/O should complete. */
 	CU_ASSERT(status2 == SPDK_BDEV_IO_STATUS_SUCCESS);
 
@@ -823,6 +830,8 @@ io_during_qos_queue(void)
 	/* Now the second read I/O should be done */
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_SUCCESS);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.qos->queued));
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.qos->read_queued));
 
 	/* Tear down the channels */
 	set_thread(1);
@@ -851,6 +860,8 @@ io_during_qos_reset(void)
 	bdev->internal.qos = calloc(1, sizeof(*bdev->internal.qos));
 	SPDK_CU_ASSERT_FATAL(bdev->internal.qos != NULL);
 	TAILQ_INIT(&bdev->internal.qos->queued);
+	TAILQ_INIT(&bdev->internal.qos->read_queued);
+	TAILQ_INIT(&bdev->internal.qos->write_queued);
 	/*
 	 * Enable read/write IOPS, write only byte per sec and
 	 * read/write byte per second rate limits.
@@ -889,6 +900,8 @@ io_during_qos_reset(void)
 	poll_threads();
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_PENDING);
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_PENDING);
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.qos->queued));
+	CU_ASSERT(!TAILQ_EMPTY(&bdev->internal.qos->write_queued));
 
 	/* Reset the bdev. */
 	reset_status = SPDK_BDEV_IO_STATUS_PENDING;
@@ -906,6 +919,8 @@ io_during_qos_reset(void)
 	CU_ASSERT(reset_status == SPDK_BDEV_IO_STATUS_SUCCESS);
 	CU_ASSERT(status0 == SPDK_BDEV_IO_STATUS_FAILED);
 	CU_ASSERT(status1 == SPDK_BDEV_IO_STATUS_FAILED);
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.qos->queued));
+	CU_ASSERT(TAILQ_EMPTY(&bdev->internal.qos->write_queued));
 
 	/* Tear down the channels */
 	set_thread(1);
