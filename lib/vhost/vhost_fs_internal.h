@@ -120,6 +120,9 @@ struct spdk_vhost_fs_task {
 		struct spdk_file *fp; // used by lookup
 		uint64_t *file_offset_p; // used by read/write/release...
 		char *filepath; // used by create
+		/* In order to align with SPDK FUSE app, vhost-fs stores files with "/" as a prefix to their name */
+		char *oldname; // used by unlink and rename
+		char *newname; // used by rename
 		struct fuse_write_in *arg; // used by write
 	} u;
 };
