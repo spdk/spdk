@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d5dd437e_2b54e772",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 40
+      },
+      "lineNbr": 5058,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-27T17:13:18Z",
+      "side": 1,
+      "message": "is there a CRLF at the end of this line? Seems like the next line is on a new line for no reason.",
+      "revId": "1d8cc769b449d3b09dbc2431d4829ff7d7517fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fd1cb585_9c902ef2",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 40
+      },
+      "lineNbr": 5075,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-27T17:13:18Z",
+      "side": 1,
+      "message": "resul --\u003e result. Also, same question on CRLFs here, maybe its just my browser",
+      "revId": "1d8cc769b449d3b09dbc2431d4829ff7d7517fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bff01552_5d15de07",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 40
+      },
+      "lineNbr": 119,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-27T17:13:18Z",
+      "side": 1,
+      "message": "why not set and rc and goto invalid? I assume this is because of invalid input?",
+      "revId": "1d8cc769b449d3b09dbc2431d4829ff7d7517fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
