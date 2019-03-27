@@ -22,6 +22,29 @@
       "revId": "6d9713c408416e55a3fb74f28f64ac9d3996a834",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0fca453b_7a769340",
+        "filename": "scripts/rpc/client.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 155,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-27T22:48:53Z",
+      "side": 1,
+      "message": "Missing \"return response\" statement.",
+      "range": {
+        "startLine": 155,
+        "startChar": 39,
+        "endLine": 155,
+        "endChar": 39
+      },
+      "revId": "6d9713c408416e55a3fb74f28f64ac9d3996a834",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
