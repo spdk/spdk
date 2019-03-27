@@ -126,6 +126,7 @@ struct spdk_vhost_session {
 
 	int32_t lcore;
 
+	bool initialized;
 	bool needs_restart;
 	bool forced_polling;
 
