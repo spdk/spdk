@@ -430,6 +430,88 @@ void spdk_mempool_put_bulk(struct spdk_mempool *mp, void **ele_arr, size_t count
  */
 size_t spdk_mempool_count(const struct spdk_mempool *pool);
 
+struct spdk_bufferpool_ele {
+	STAILQ_ENTRY(spdk_bufferpool_ele) link;
+	void *buffer;
+};
+
+/**
+ * Create a thread-safe buffer pool with aligned elements.
+ *
+ * \param name Name for the memory pool.
+ * \param count Count of elements.
+ * \param ele_size Element size in bytes.
+ * \param alignment Element alignment in bytes.
+ * \param cache_size How many elements may be cached in per-core caches. Use
+ * SPDK_MEMPOOL_DEFAULT_CACHE_SIZE for a reasonable default, or 0 for no per-core cache.
+ * \param socket_id Socket ID to allocate memory on, or SPDK_ENV_SOCKET_ID_ANY
+ * for any socket.
+ *
+ * \return a pointer to the created buffer pool.
+ */
+struct spdk_bufferpool *spdk_bufferpool_create(const char *name, size_t count,
+		size_t ele_size, size_t alignment, size_t cache_size, int socket_id);
+
+/**
+ * Get the name of a buffer pool.
+ *
+ * \param bp Buffer pool to query.
+ *
+ * \return the name of the buffer pool.
+ */
+char *spdk_bufferpool_get_name(struct spdk_bufferpool *bp);
+
+/**
+ * Free a buffer pool.
+ */
+void spdk_bufferpool_free(struct spdk_bufferpool *bp);
+
+/**
+ * Get an element from a buffer pool. If no elements remain, return NULL.
+ *
+ * \param bp Buffer pool to query.
+ *
+ * \return a pointer to the element.
+ */
+void *spdk_bufferpool_get(struct spdk_bufferpool *bp);
+
+/**
+ * Get multiple elements from a buffer pool.
+ *
+ * \param bp Buffer pool to get multiple elements from.
+ * \param ele_arr Array of the elements to fill.
+ * \param count Count of elements to get.
+ *
+ * \return 0 on success, negative errno on failure.
+ */
+int spdk_bufferpool_get_bulk(struct spdk_bufferpool *bp, void **ele_arr, size_t count);
+
+/**
+ * Put an element back into the buffer pool.
+ *
+ * \param bp Buffer pool to put element back into.
+ * \param ele Element to put.
+ */
+void spdk_bufferpool_put(struct spdk_bufferpool *bp, void *ele);
+
+/**
+ * Put multiple elements back into the buffer pool.
+ *
+ * \param bp Buffer pool to put multiple elements back into.
+ * \param ele_arr Array of the elements to put.
+ * \param count Count of elements to put.
+ */
+void spdk_bufferpool_put_bulk(struct spdk_bufferpool *bp, void **ele_arr, size_t count);
+
+/**
+ * Get the number of entries in the buffer pool.
+ *
+ * \param bp Buffer pool to query.
+ *
+ * \return the number of entries in the buffer pool.
+ */
+size_t spdk_bufferpool_count(const struct spdk_bufferpool *bp);
+
 /**
  * Get the number of dedicated CPU cores utilized by this env abstraction.
  *
