@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "34306418_1bc2ff7f",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 3
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T08:50:55Z",
+      "side": 1,
+      "message": "I try to understand what this change really changes but I think I\u0027m far from that. Technically this and all other changes in this series are correct but can\u0027t see how it is solving any issue.\n\nOnly thing that this changes is moving bug from one core to another. Adding mutexes won\u0027t help if it is released in spdk_vhost_session_send_event().",
+      "range": {
+        "startLine": 21,
+        "startChar": 1,
+        "endLine": 23,
+        "endChar": 47
+      },
+      "revId": "291117fadecdfcdc5d16860374c58c887aebde18",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
