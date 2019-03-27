@@ -1083,7 +1083,11 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 
 	if (ch->ref == 0) {
 		ch->destroy_ref++;
-		spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+		if (ch->thread != spdk_get_thread()) {
+			spdk_thread_send_msg(ch->thread, _spdk_put_io_channel, ch);
+		} else {
+			_spdk_put_io_channel(ch);
+		}
 	}
 }
 
