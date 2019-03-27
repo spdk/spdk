@@ -77,6 +77,7 @@ struct bdev_iscsi_lun {
 	struct spdk_bdev		bdev;
 	struct iscsi_context		*context;
 	char				*initiator_iqn;
+	int				lun_id;
 	char				*url;
 	pthread_mutex_t			mutex;
 	uint32_t			ch_count;
@@ -99,6 +100,7 @@ struct bdev_iscsi_conn_req {
 	spdk_bdev_iscsi_create_cb		create_cb;
 	spdk_bdev_iscsi_create_cb		create_cb_arg;
 	bool					unmap_supported;
+	int					lun;
 	TAILQ_ENTRY(bdev_iscsi_conn_req)	link;
 };
 
@@ -217,7 +219,7 @@ bdev_iscsi_readv(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "read %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
-	task = iscsi_read16_task(lun->context, 0, lba, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
+	task = iscsi_read16_task(lun->context, lun->lun_id, lba, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
 				 bdev_iscsi_command_cb, iscsi_io);
 	if (task == NULL) {
 		SPDK_ERRLOG("failed to get read16_task\n");
@@ -244,7 +246,8 @@ bdev_iscsi_writev(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io,
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI_INIT, "write %d iovs size %lu to lba: %#lx\n",
 		      iovcnt, nbytes, lba);
 
-	task = iscsi_write16_task(lun->context, 0, lba, NULL, nbytes, lun->bdev.blocklen, 0, 0, 0, 0, 0,
+	task = iscsi_write16_task(lun->context, lun->lun_id, lba, NULL, nbytes, lun->bdev.blocklen, 0, 0, 0,
+				  0, 0,
 				  bdev_iscsi_command_cb, iscsi_io);
 	if (task == NULL) {
 		SPDK_ERRLOG("failed to get write16_task\n");
@@ -287,7 +290,7 @@ bdev_iscsi_flush(struct bdev_iscsi_lun *lun, struct bdev_iscsi_io *iscsi_io, uin
 {
 	struct scsi_task *task;
 
-	task = iscsi_synchronizecache16_task(lun->context, 0, lba,
+	task = iscsi_synchronizecache16_task(lun->context, lun->lun_id, lba,
 					     num_blocks, 0, immed, bdev_iscsi_command_cb, iscsi_io);
 	if (task == NULL) {
 		SPDK_ERRLOG("failed to get sync16_task\n");
@@ -338,7 +341,7 @@ _bdev_iscsi_reset(void *_bdev_io)
 	struct bdev_iscsi_io *iscsi_io = (struct bdev_iscsi_io *)bdev_io->driver_ctx;
 	struct iscsi_context *context = lun->context;
 
-	rc = iscsi_task_mgmt_lun_reset_async(context, 0,
+	rc = iscsi_task_mgmt_lun_reset_async(context, lun->lun_id,
 					     bdev_iscsi_reset_cb, iscsi_io);
 	if (rc != 0) {
 		SPDK_ERRLOG("failed to do iscsi reset\n");
@@ -574,7 +577,8 @@ static const struct spdk_bdev_fn_table iscsi_fn_table = {
 };
 
 static int
-create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, char *name,
+create_iscsi_lun(struct iscsi_context *context, int lun_id, char *url, char *initiator_iqn,
+		 char *name,
 		 uint64_t num_blocks, uint32_t block_size, struct spdk_bdev **bdev, bool unmap_supported)
 {
 	struct bdev_iscsi_lun *lun;
@@ -587,6 +591,7 @@ create_iscsi_lun(struct iscsi_context *context, char *url, char *initiator_iqn, 
 	}
 
 	lun->context = context;
+	lun->lun_id = lun_id;
 	lun->url = url;
 	lun->initiator_iqn = initiator_iqn;
 
@@ -641,7 +646,7 @@ iscsi_readcapacity16_cb(struct iscsi_context *iscsi, int status,
 		goto ret;
 	}
 
-	status = create_iscsi_lun(req->context, req->url, req->initiator_iqn, req->bdev_name,
+	status = create_iscsi_lun(req->context, req->lun, req->url, req->initiator_iqn, req->bdev_name,
 				  readcap16->returned_lba + 1, readcap16->block_length, &bdev, req->unmap_supported);
 	if (status) {
 		SPDK_ERRLOG("Unable to create iscsi bdev: %s (%d)\n", spdk_strerror(-status), status);
@@ -666,7 +671,7 @@ bdev_iscsi_inquiry_cb(struct iscsi_context *context, int status, void *_task, vo
 		}
 	}
 
-	task = iscsi_readcapacity16_task(context, 0, iscsi_readcapacity16_cb, req);
+	task = iscsi_readcapacity16_task(context, req->lun, iscsi_readcapacity16_cb, req);
 	if (task) {
 		return;
 	}
@@ -686,7 +691,7 @@ iscsi_connect_cb(struct iscsi_context *iscsi, int status,
 		goto ret;
 	}
 
-	task = iscsi_inquiry_task(iscsi, 0, 1,
+	task = iscsi_inquiry_task(iscsi, req->lun, 1,
 				  SCSI_INQUIRY_PAGECODE_LOGICAL_BLOCK_PROVISIONING,
 				  255, bdev_iscsi_inquiry_cb, req);
 	if (task) {
@@ -763,6 +768,7 @@ create_iscsi_disk(const char *bdev_name, const char *url, const char *initiator_
 		goto err;
 	}
 
+	req->lun = iscsi_url->lun;
 	rc = iscsi_set_session_type(req->context, ISCSI_SESSION_NORMAL);
 	rc = rc ? rc : iscsi_set_header_digest(req->context, ISCSI_HEADER_DIGEST_NONE);
 	rc = rc ? rc : iscsi_set_targetname(req->context, iscsi_url->target);
