@@ -16,6 +16,24 @@
       "revId": "a4706747368ec0973b342117a84436754d70b931",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6873b80d_9658cf7d",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3767,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T21:01:15Z",
+      "side": 1,
+      "message": "Yeah - seems like that is missing.\n\nBut I think we should just do a single bdev_register event.  I don\u0027t think we need separate ones.  A client who gets this event will end up calling the same RPC (get_bdev) for either case.\n\nLooking at spdk_bdev_register and spdk_vbdev_register - they are implemented completely differently although they do the exact same thing!  But obviously we can clean that up separately.  It\u0027s probably a side effect from removing use of the base_bdevs and base_bdev_count parameters.  I think we talked about deprecating spdk_vbdev_register completely too.",
+      "parentUuid": "56333384_16c2c005",
+      "revId": "a4706747368ec0973b342117a84436754d70b931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
