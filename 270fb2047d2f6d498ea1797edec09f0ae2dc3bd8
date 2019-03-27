@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "61ea8811_1ac90ba4",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1412,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-27T07:52:25Z",
+      "side": 1,
+      "message": "this will be always (null)",
+      "range": {
+        "startLine": 1412,
+        "startChar": 27,
+        "endLine": 1412,
+        "endChar": 29
+      },
+      "revId": "270fb2047d2f6d498ea1797edec09f0ae2dc3bd8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
