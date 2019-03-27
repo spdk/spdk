@@ -170,7 +170,7 @@ list_negotiation_test(void)
 	do { \
 		snprintf(valid_list_buf, sizeof(valid_list_buf), "%s", valid_list); \
 		snprintf(in_val_buf, sizeof(in_val_buf), "%s", in_val); \
-		new_val = spdk_iscsi_negotiate_param_list(&add_param_value, &param, valid_list_buf, in_val_buf, NULL); \
+		new_val = iscsi_negotiate_param_list(&add_param_value, &param, valid_list_buf, in_val_buf, NULL); \
 		if (expected_result) { \
 			SPDK_CU_ASSERT_FATAL(new_val != NULL); \
 			CU_ASSERT_STRING_EQUAL(new_val, expected_result); \
