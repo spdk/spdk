@@ -100,8 +100,11 @@ struct ftl_md {
 	/* Bitmap of valid LBAs */
 	struct spdk_bit_array			*vld_map;
 
-	/* LBA map (only valid for open bands) */
+	/* LBA map (only valid for open/relocating bands) */
 	uint64_t				*lba_map;
+
+	/* Metadata DMA buffer (only valid for open/relocating bands) */
+	void					*buf;
 };
 
 enum ftl_band_state {
