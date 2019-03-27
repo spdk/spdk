@@ -71,6 +71,9 @@ enum spdk_scsi_dev_vhost_status {
 	/* Target ID is empty. */
 	VHOST_SCSI_DEV_EMPTY,
 
+	/* Target is still being added. */
+	VHOST_SCSI_DEV_ADDING,
+
 	/* Target ID occupied. */
 	VHOST_SCSI_DEV_PRESENT,
 
@@ -933,7 +936,13 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	int rc;
 
 	if (vsession == NULL) {
-		/* Nothing more to do */
+		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
+						    struct spdk_vhost_scsi_dev, vdev);
+		vhost_sdev = &svdev->scsi_dev_state[scsi_tgt_num];
+
+		/* All sessions have added the target */
+		assert(vhost_sdev->status == VHOST_SCSI_DEV_ADDING);
+		vhost_sdev->status = VHOST_SCSI_DEV_PRESENT;
 		return 0;
 	}
 
@@ -942,7 +951,7 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 
 	session_sdev->dev = vhost_sdev->dev;
-	session_sdev->status = vhost_sdev->status;
+	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
 
 	if (vsession->lcore == -1) {
 		/* All done. */
@@ -1033,7 +1042,7 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	lun_id_list[0] = 0;
 	bdev_names_list[0] = (char *)bdev_name;
 
-	state->status = VHOST_SCSI_DEV_PRESENT;
+	state->status = VHOST_SCSI_DEV_ADDING;
 	state->dev = spdk_scsi_dev_construct(target_name, bdev_names_list, lun_id_list, 1,
 					     SPDK_SPC_PROTOCOL_IDENTIFIER_SAS,
 					     spdk_vhost_scsi_lun_hotremove, svdev);
@@ -1116,7 +1125,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 	}
 
 	scsi_dev_state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (scsi_dev_state->dev == NULL) {
+	if (scsi_dev_state->dev == NULL || scsi_dev_state->status == VHOST_SCSI_DEV_ADDING) {
 		SPDK_ERRLOG("Controller %s target %u is not occupied\n", vdev->name, scsi_tgt_num);
 		return -ENODEV;
 	}
