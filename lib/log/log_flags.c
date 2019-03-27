@@ -197,6 +197,6 @@ spdk_log_usage(FILE *f, const char *log_arg)
 	fprintf(f, ")\n");
 #else
 	fprintf(f, " %s, --logflag <flag>    enable debug log flag (not supported"
-		" - must rebuild with --enable-debug)\n", log_arg);
+		" - must reconfigure with --enable-debug)\n", log_arg);
 #endif
 }
