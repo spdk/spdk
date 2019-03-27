@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3cadabdc_c1336062",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T21:44:06Z",
+      "side": 1,
+      "message": "Should this go into a separate patch?  I see the added call to ftl_trace_defrag_band here, but it\u0027s not really explained in the commit message why this is needed as part of the refactoring.",
+      "revId": "4d895e9c98d89b242de19df53355bfc94ce8d7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
