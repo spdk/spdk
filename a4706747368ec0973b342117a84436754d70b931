@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "56333384_16c2c005",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3767,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-27T16:55:39Z",
+      "side": 1,
+      "message": "I don\u0027t see spdk_notify_type_register() for vbdevs, am I missing it somewhere or is it not needed for some reason?",
+      "revId": "a4706747368ec0973b342117a84436754d70b931",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
