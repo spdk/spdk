@@ -934,7 +934,7 @@ spdk_app_parse_args(int argc, char **argv, struct spdk_app_opts *opts,
 			break;
 		case LOGFLAG_OPT_IDX:
 #ifndef DEBUG
-			fprintf(stderr, "%s must be built with CONFIG_DEBUG=y for -L flag\n",
+			fprintf(stderr, "%s must be configured with --enable-debug for -L flag\n",
 				argv[0]);
 			usage(app_usage);
 			goto out;
