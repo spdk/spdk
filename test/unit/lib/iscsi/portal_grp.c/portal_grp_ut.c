@@ -178,7 +178,7 @@ parse_portal_ipv4_normal_case(void)
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -206,7 +206,7 @@ parse_portal_ipv6_normal_case(void)
 
 	spdk_cpuset_set_cpu(cpumask_val, 0, true);
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -231,7 +231,7 @@ parse_portal_ipv4_skip_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -254,7 +254,7 @@ parse_portal_ipv6_skip_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -277,7 +277,7 @@ parse_portal_ipv4_skip_port_and_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
@@ -300,7 +300,7 @@ parse_portal_ipv6_skip_port_and_cpumask_case(void)
 
 	cpumask_val = spdk_app_get_core_mask();
 
-	rc = spdk_iscsi_parse_portal(string, &p, 0);
+	rc = iscsi_parse_portal(string, &p, 0);
 	CU_ASSERT(rc == 0);
 	SPDK_CU_ASSERT_FATAL(p != NULL);
 	CU_ASSERT(strcmp(p->host, host_str) == 0);
