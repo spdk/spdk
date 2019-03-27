@@ -85,10 +85,6 @@ static void srandomdev(void);
 /* static uint32_t arc4random(void); */
 #endif /* HAVE_ARC4RANDOM */
 
-/* convert from/to bin/hex */
-static int spdk_bin2hex(char *buf, size_t len, const uint8_t *data, size_t data_len);
-static int spdk_hex2bin(uint8_t *data, size_t data_len, const char *str);
-
 static int spdk_add_transfer_task(struct spdk_iscsi_conn *conn,
 				  struct spdk_iscsi_task *task);
 
