@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f20b827b_e4bab087",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:39:51Z",
+      "side": 1,
+      "message": "I\u0027m not sure about this call here.  The destruct callbacks get invoked at shutdown too so that the bdev modules can clean up after themselves for any bdevs that are still registered.  This would destroy the metadata on that bdev such that it can\u0027t be reloaded next time.  What am I missing?",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bdc3dda9_39b3fef2",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:39:51Z",
+      "side": 1,
+      "message": "similar to comment above - this callback doesn\u0027t only get called on hot remove - it also gets called during normal app shutdown\n\nor maybe you\u0027re including that as a \"hot remove\"?",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "201e2262_e051ad51",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:39:51Z",
+      "side": 1,
+      "message": "I don\u0027t think this check is needed.  We\u0027ve already checked the bdev is not NULL above.  If the bdev is not NULL, then the SPDK_CONTAINEROF operation won\u0027t return NULL either.  (Technically yes, there is one very specific non-NULL value for bdev that could result in SPDK_CONTAINEROF returning NULL - but that\u0027s not worth putting a check for it.)",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "50dfc110_359b7515",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:39:51Z",
+      "side": 1,
+      "message": "liib \u003d\u003e lib",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
