@@ -943,7 +943,7 @@ spdk_vhost_event_async_foreach_fn(void *arg1, void *arg2)
 	}
 
 	vsession = spdk_vhost_session_find_by_id(vdev, ctx->vsession_id);
-	if (vsession == NULL) {
+	if (vsession == NULL || !vsession->initialized) {
 		/* The session must have been removed in the meantime, so we
 		 * just skip it in our foreach chain
 		 */
@@ -1183,6 +1183,7 @@ start_device(int vid)
 
 	spdk_vhost_session_set_coalescing(vdev, vsession, NULL);
 	spdk_vhost_session_mem_register(vsession);
+	vsession->initialized = true;
 	rc = vdev->backend->start_session(vsession);
 	if (rc != 0) {
 		spdk_vhost_session_mem_unregister(vsession);
@@ -1346,6 +1347,7 @@ new_connection(int vid)
 	vsession->id = vdev->vsessions_num++;
 	vsession->vid = vid;
 	vsession->lcore = -1;
+	vsession->initialized = false;
 	vsession->next_stats_check_time = 0;
 	vsession->stats_check_interval = SPDK_VHOST_STATS_CHECK_INTERVAL_MS *
 					 spdk_get_ticks_hz() / 1000UL;
@@ -1390,10 +1392,13 @@ spdk_vhost_external_event_foreach_continue(struct spdk_vhost_dev *vdev,
 	}
 
 	while (vsession->lcore == -1) {
-		rc = fn(vdev, vsession, arg);
-		if (rc < 0) {
-			return;
+		if (vsession->initialized) {
+			rc = fn(vdev, vsession, arg);
+			if (rc < 0) {
+				return;
+			}
 		}
+
 		vsession = spdk_vhost_session_next(vdev, vsession->id);
 		if (vsession == NULL) {
 			goto out_finish_foreach;
