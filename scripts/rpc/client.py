@@ -86,6 +86,7 @@ class JSONRPCClient(object):
 
         self._logger.debug("append request:\n%s\n", json.dumps(req))
         self._reqs.append(req)
+        return self._request_id
 
     def flush(self):
         self._logger.debug("Flushing buffer")
@@ -96,8 +97,9 @@ class JSONRPCClient(object):
         self.sock.sendall(reqstr.encode("utf-8"))
 
     def send(self, method, params=None):
-        self.add_request(method, params)
+        id = self.add_request(method, params)
         self.flush()
+        return id
 
     def decode_one_response(self):
         try:
