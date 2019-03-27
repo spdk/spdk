@@ -1867,11 +1867,10 @@ spdk_bdev_channel_poll_qos(void *arg)
 }
 
 static void
-_spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
+__spdk_bdev_channel_destroy_resource(void *arg)
 {
 	struct spdk_bdev_shared_resource *shared_resource;
-
-	spdk_put_io_channel(ch->channel);
+	struct spdk_bdev_channel *ch = arg;
 
 	shared_resource = ch->shared_resource;
 
@@ -1884,6 +1883,16 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 		spdk_put_io_channel(spdk_io_channel_from_ctx(shared_resource->mgmt_ch));
 		free(shared_resource);
 	}
+}
+
+static void
+_spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
+{
+	struct spdk_io_channel *io_channel = spdk_io_channel_from_ctx(ch);
+
+	spdk_put_io_channel(ch->channel);
+
+	spdk_thread_send_msg(io_channel->thread, __spdk_bdev_channel_destroy_resource, ch);
 }
 
 /* Caller must hold bdev->internal.mutex. */
