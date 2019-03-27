@@ -38,7 +38,7 @@
 #include "iscsi/task.h"
 
 static void
-spdk_iscsi_task_free(struct spdk_scsi_task *scsi_task)
+iscsi_task_free(struct spdk_scsi_task *scsi_task)
 {
 	struct spdk_iscsi_task *task = spdk_iscsi_task_from_scsi_task(scsi_task);
 
@@ -71,7 +71,7 @@ spdk_iscsi_task_get(struct spdk_iscsi_conn *conn, struct spdk_iscsi_task *parent
 	conn->pending_task_cnt++;
 	spdk_scsi_task_construct(&task->scsi,
 				 cpl_fn,
-				 spdk_iscsi_task_free);
+				 iscsi_task_free);
 	if (parent) {
 		parent->scsi.ref++;
 		task->parent = parent;
