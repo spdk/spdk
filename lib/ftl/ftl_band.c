@@ -174,7 +174,9 @@ ftl_band_free_md(struct ftl_band *band)
 	}
 
 	spdk_mempool_put(dev->lba_pool, md->lba_map);
+	spdk_dma_free(md->dma_buf);
 	md->lba_map = NULL;
+	md->dma_buf = NULL;
 }
 
 static void
@@ -657,6 +659,13 @@ ftl_band_alloc_md(struct ftl_band *band)
 
 	md->lba_map = spdk_mempool_get(dev->lba_pool);
 	if (!md->lba_map) {
+		return -1;
+	}
+
+	md->dma_buf = spdk_dma_zmalloc(ftl_tail_md_num_lbks(dev) * FTL_BLOCK_SIZE,
+				       FTL_BLOCK_SIZE, NULL);
+	if (!md->dma_buf) {
+		spdk_mempool_put(dev->lba_pool, md->lba_map);
 		return -1;
 	}
 

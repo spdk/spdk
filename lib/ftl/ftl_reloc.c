@@ -77,9 +77,6 @@ struct ftl_band_reloc {
 	struct spdk_ring			*write_queue;
 
 	TAILQ_ENTRY(ftl_band_reloc)		entry;
-
-	/* TODO: get rid of md_buf */
-	void					*md_buf;
 };
 
 struct ftl_reloc {
@@ -172,7 +169,6 @@ ftl_reloc_read_lba_map_cb(void *arg, int status)
 	struct ftl_band_reloc *breloc = ftl_io_get_band_reloc(io);
 
 	assert(status == 0);
-	spdk_dma_free(breloc->md_buf);
 	ftl_io_free(io);
 	_ftl_reloc_prep(breloc);
 }
@@ -189,17 +185,11 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 	io->cb.ctx = io;
 	io->cb.fn = ftl_reloc_read_lba_map_cb;
 
-	breloc->md_buf = spdk_dma_zmalloc(ftl_lba_map_num_lbks(dev) * FTL_BLOCK_SIZE,
-					  FTL_BLOCK_SIZE, NULL);
-	if (!breloc->md_buf) {
-		return -1;
-	}
-
 	if (ftl_band_alloc_md(band)) {
 		assert(false);
 	}
 
-	return ftl_band_read_lba_map(band, &band->md, breloc->md_buf, &io->cb);
+	return ftl_band_read_lba_map(band, &band->md, band->md.dma_buf, &io->cb);
 }
 
 static void
