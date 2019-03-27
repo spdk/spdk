@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6ed42e97_531a23cb",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 276,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:22:32Z",
+      "side": 1,
+      "message": "but I still think the ERRLOG is not as useful here - it would be more useful to know details about the kind of request that failed\n\nthere are 18 calls to alloc_fs_request so adding an ERRLOG for all of them might be too much - maybe keep this one here but add an extra ERRLOG to the read/write/sync paths?",
+      "revId": "4962bf90b64ddd831b5594075e7146052a2e92f1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
