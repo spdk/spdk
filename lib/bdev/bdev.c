@@ -1877,7 +1877,7 @@ _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
 	struct spdk_bdev_shared_resource *shared_resource;
 
-	spdk_put_io_channel(ch->channel);
+	spdk_put_io_channel_without_delay(ch->channel);
 
 	shared_resource = ch->shared_resource;
 
