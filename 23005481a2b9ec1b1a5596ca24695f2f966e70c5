@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8645bd71_35811a2a",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "You should add some info that events are placed in ring and can be overwritten and lost if not polled quick enough.",
+      "range": {
+        "startLine": 1,
+        "startChar": 0,
+        "endLine": 1,
+        "endChar": 35
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4101d124_773b68e4",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "I think there is no consumer any more. We can only query events using API.",
+      "range": {
+        "startLine": 6,
+        "startChar": 27,
+        "endLine": 7,
+        "endChar": 74
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d1e47609_e58173af",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "` ` ?",
+      "range": {
+        "startLine": 12,
+        "startChar": 0,
+        "endLine": 12,
+        "endChar": 43
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "1abba5ea_cfe55900",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 23,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "There is no listener anymore. You need to update this section to reflect current implementation.",
+      "range": {
+        "startLine": 18,
+        "startChar": 0,
+        "endLine": 23,
+        "endChar": 44
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c6f3a92b_538fd3e3",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "strings",
+      "range": {
+        "startLine": 27,
+        "startChar": 66,
+        "endLine": 27,
+        "endChar": 81
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e817e97_659109f0",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 41,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "Waiting for event has been removed form current implementation.\n\nYou need to update this section to reflect current implementation.",
+      "range": {
+        "startLine": 38,
+        "startChar": 61,
+        "endLine": 41,
+        "endChar": 86
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8be713da_f92ce675",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "^",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 95
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83990f5b_3fc5a7d8",
+        "filename": "doc/notify.md",
+        "patchSetId": 14
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-27T09:27:24Z",
+      "side": 1,
+      "message": "Current format is:\n\n { \n  \"jsonrpc\": \"2.0\",\n  \"id\": 1,\n  \"result\": [\n    {\n      \"ctx\": \"Malloc1\",\n      \"type\": \"bdev_register\",\n      \"id\": 1\n    },\n    {\n      \"ctx\": \"Malloc2\",\n      \"type\": \"bdev_register\",\n      \"id\": 2\n    }\n  ]\n}",
+      "range": {
+        "startLine": 50,
+        "startChar": 0,
+        "endLine": 50,
+        "endChar": 153
+      },
+      "revId": "23005481a2b9ec1b1a5596ca24695f2f966e70c5",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
