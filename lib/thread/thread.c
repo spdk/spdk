@@ -1087,6 +1087,28 @@ spdk_put_io_channel(struct spdk_io_channel *ch)
 	}
 }
 
+int
+spdk_put_io_channel_sync(struct spdk_io_channel *ch)
+{
+	SPDK_DEBUGLOG(SPDK_LOG_THREAD,
+		      "Putting io_channel %p for io_device %s (%p) on thread %s refcnt %u\n",
+		      ch, ch->dev->name, ch->dev->io_device, ch->thread->name, ch->ref);
+
+	if (ch->thread != spdk_get_thread()) {
+		SPDK_ERRLOG("func isn't in the right thread\n");
+		return -1;
+	}
+
+	ch->ref--;
+
+	if (ch->ref == 0) {
+		ch->destroy_ref++;
+		_spdk_put_io_channel(ch);
+	}
+
+	return 0;
+}
+
 struct spdk_io_channel *
 spdk_io_channel_from_ctx(void *ctx)
 {

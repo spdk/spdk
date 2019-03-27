@@ -1869,9 +1869,11 @@ spdk_bdev_channel_poll_qos(void *arg)
 static void
 _spdk_bdev_channel_destroy_resource(struct spdk_bdev_channel *ch)
 {
+	int rc = 0;
 	struct spdk_bdev_shared_resource *shared_resource;
 
-	spdk_put_io_channel(ch->channel);
+	rc = spdk_put_io_channel_sync(ch->channel);
+	assert(rc == 0);
 
 	shared_resource = ch->shared_resource;
 
