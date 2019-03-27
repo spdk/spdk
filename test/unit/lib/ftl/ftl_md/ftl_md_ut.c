@@ -63,7 +63,7 @@ setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo,
 	dev = test_init_ftl_dev(geo, range);
 	*band = test_init_ftl_band(dev, 0);
 	rc = ftl_band_alloc_md(*band);
-	CU_ASSERT_EQUAL_FATAL(rc, 0);
+	SPDK_CU_ASSERT_FATAL(rc == 0);
 	ftl_band_clear_md(*band);
 }
 
