@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4d33558_d955a5ae",
+        "filename": "test/nvme/perf/common.sh",
+        "patchSetId": 22
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011260
+      },
+      "writtenOn": "2019-03-27T11:33:12Z",
+      "side": 1,
+      "message": "Is it needed?",
+      "range": {
+        "startLine": 108,
+        "startChar": 1,
+        "endLine": 108,
+        "endChar": 8
+      },
+      "revId": "9f50ad6c50d866908207de56a5c7d6bd790d280a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
