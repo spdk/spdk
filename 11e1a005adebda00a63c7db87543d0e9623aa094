@@ -1,0 +1,123 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f584d42c_700c3c09",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "let\u0027s name this cache_bdev_desc",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5d06dcdb_25e583e3",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "463e1a10_8660c8bb",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "cache_bdev_desc",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2e9649d0_d3b66f67",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "whitespace changes to this function should be removed\n\nif it was just removing the two newlines, I\u0027d be ok with it, but then here it adds a newline - so I\u0027d say just keep the whitespace the same in this patch",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "11198abc_0e5f1d03",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "you can break out these changes to the bdev_ftl_create parameters in a separate patch before this one",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d166875e_fcd82cda",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "let\u0027s name this cache_bdev_desc instead of just cache_bdev\n\nusually when something ends in \"bdev\", it means it\u0027s a pointer to a bdev - adding \"desc\" to the name will make it more clear what the type of the member is",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b0f6b17_12714200",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T17:54:39Z",
+      "side": 1,
+      "message": "buffer",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
