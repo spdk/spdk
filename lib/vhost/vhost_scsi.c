@@ -946,17 +946,17 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
+	if (vsession->lcore == -1) {
+		/* Nothing to do. */
+		return 0;
+	}
+
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	vhost_sdev = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
 	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
 
 	session_sdev->dev = vhost_sdev->dev;
 	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
-
-	if (vsession->lcore == -1) {
-		/* All done. */
-		return 0;
-	}
 
 	rc = spdk_scsi_dev_allocate_io_channels(svsession->scsi_dev_state[scsi_tgt_num].dev);
 	if (rc != 0) {
@@ -1083,19 +1083,18 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 		return rc;
 	}
 
+	if (vsession->lcore == -1) {
+		/* Nothing to do */
+		return 0;
+	}
+
 	/* Mark the target for removal */
 	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	state = &svsession->scsi_dev_state[scsi_tgt_num];
 	assert(state->status == VHOST_SCSI_DEV_PRESENT);
 	state->status = VHOST_SCSI_DEV_REMOVING;
 
-	/* If the session isn't currently polled, unset the dev straight away */
-	if (vsession->lcore == -1) {
-		state->dev = NULL;
-		return 0;
-	}
-
-	/* Otherwise, send a hotremove Virtio event and wait for the session's
+	/* Send a hotremove Virtio event and wait for the session's
 	 * management poller to remove the target after all its pending I/O
 	 * has finished.
 	 */
@@ -1311,6 +1310,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 		if (state->dev == NULL) {
 			continue;
 		}
+		assert(svsession->scsi_dev_state[i].status == VHOST_SCSI_DEV_EMPTY);
 		svsession->scsi_dev_state[i].dev = state->dev;
 		svsession->scsi_dev_state[i].status = state->status;
 		rc = spdk_scsi_dev_allocate_io_channels(state->dev);
@@ -1393,6 +1393,8 @@ destroy_session_poller_cb(void *arg)
 	}
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
+		enum spdk_scsi_dev_vhost_status prev_status;
+
 		state = &svsession->scsi_dev_state[i];
 		if (state->dev == NULL) {
 			continue;
@@ -1400,9 +1402,11 @@ destroy_session_poller_cb(void *arg)
 
 		spdk_scsi_dev_free_io_channels(state->dev);
 
-		if (state->status == VHOST_SCSI_DEV_REMOVING) {
-			state->dev = NULL;
-			state->status = VHOST_SCSI_DEV_REMOVED;
+		prev_status = state->status;
+		state->status = VHOST_SCSI_DEV_EMPTY;
+		state->dev = NULL;
+
+		if (prev_status == VHOST_SCSI_DEV_REMOVING) {
 			/* try to detach it globally */
 			spdk_vhost_dev_foreach_session(vsession->vdev,
 						       spdk_vhost_scsi_session_process_removed,
