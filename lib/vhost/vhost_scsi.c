@@ -1063,11 +1063,17 @@ spdk_vhost_scsi_dev_add_tgt(struct spdk_vhost_dev *vdev, int scsi_tgt_num,
 	return scsi_tgt_num;
 }
 
+struct scsi_tgt_hotplug_ctx {
+	unsigned scsi_tgt_num;
+	bool async_fini;
+};
+
 static int
 spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
-				   struct spdk_vhost_session *vsession, void *ctx)
+				   struct spdk_vhost_session *vsession, void *_ctx)
 {
-	unsigned scsi_tgt_num = (unsigned)(uintptr_t)ctx;
+	struct scsi_tgt_hotplug_ctx *ctx = _ctx;
+	unsigned scsi_tgt_num = ctx->scsi_tgt_num;
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_session_state *state;
 	int rc = 0;
@@ -1076,33 +1082,37 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
 						    struct spdk_vhost_scsi_dev, vdev);
 
-		if (vdev->active_session_num == 0) {
+		if (!ctx->async_fini) {
 			/* there aren't any active sessions, so remove the dev and exit */
 			rc = remove_scsi_tgt(svdev, scsi_tgt_num);
 		}
+
+		free(ctx);
 		return rc;
 	}
 
-	if (vsession->lcore == -1) {
+	svsession = (struct spdk_vhost_scsi_session *)vsession;
+	state = &svsession->scsi_dev_state[scsi_tgt_num];
+
+	if (vsession->lcore == -1 || state->dev == NULL) {
 		/* Nothing to do */
 		return 0;
 	}
 
 	/* Mark the target for removal */
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
-	state = &svsession->scsi_dev_state[scsi_tgt_num];
 	assert(state->status == VHOST_SCSI_DEV_PRESENT);
 	state->status = VHOST_SCSI_DEV_REMOVING;
 
-	/* Send a hotremove Virtio event and wait for the session's
-	 * management poller to remove the target after all its pending I/O
-	 * has finished.
-	 */
+	/* Send a hotremove Virtio event */
 	if (spdk_vhost_dev_has_feature(vsession, VIRTIO_SCSI_F_HOTPLUG)) {
 		eventq_enqueue(svsession, scsi_tgt_num,
 			       VIRTIO_SCSI_T_TRANSPORT_RESET, VIRTIO_SCSI_EVT_RESET_REMOVED);
 	}
 
+	/* Wait for the session's management poller to remove the target after
+	 * all its pending I/O has finished.
+	 */
+	ctx->async_fini = true;
 	return 0;
 }
 
@@ -1112,6 +1122,7 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 {
 	struct spdk_vhost_scsi_dev *svdev;
 	struct spdk_scsi_dev_vhost_state *scsi_dev_state;
+	struct scsi_tgt_hotplug_ctx *ctx;
 
 	if (scsi_tgt_num >= SPDK_VHOST_SCSI_CTRLR_MAX_DEVS) {
 		SPDK_ERRLOG("%s: invalid target number %d\n", vdev->name, scsi_tgt_num);
@@ -1136,12 +1147,20 @@ spdk_vhost_scsi_dev_remove_tgt(struct spdk_vhost_dev *vdev, unsigned scsi_tgt_nu
 		return -EBUSY;
 	}
 
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		SPDK_ERRLOG("calloc failed\n");
+		return -ENOMEM;
+	}
+
+	ctx->scsi_tgt_num = scsi_tgt_num;
+	ctx->async_fini = false;
+
 	scsi_dev_state->remove_cb = cb_fn;
 	scsi_dev_state->remove_ctx = cb_arg;
 	scsi_dev_state->status = VHOST_SCSI_DEV_REMOVING;
 
-	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_remove_tgt,
-				       (void *)(uintptr_t)scsi_tgt_num);
+	spdk_vhost_dev_foreach_session(vdev, spdk_vhost_scsi_session_remove_tgt, ctx);
 	return 0;
 }
 
@@ -1308,9 +1327,10 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 
 	for (i = 0; i < SPDK_VHOST_SCSI_CTRLR_MAX_DEVS; i++) {
 		state = &svdev->scsi_dev_state[i];
-		if (state->dev == NULL) {
+		if (state->dev == NULL || state->status == VHOST_SCSI_DEV_REMOVING) {
 			continue;
 		}
+
 		assert(svsession->scsi_dev_state[i].status == VHOST_SCSI_DEV_EMPTY);
 		svsession->scsi_dev_state[i].dev = state->dev;
 		svsession->scsi_dev_state[i].status = state->status;
