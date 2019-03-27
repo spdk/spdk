@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "38f68e1e_d82181bb",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-27T19:58:27Z",
+      "side": 1,
+      "message": "instead of adding this extra member, could we just check if ctx-\u003evol !\u003d NULL?  in both cases where this gets set to TRUE, we set the -\u003evol at the exact same time\n\nyou\u0027ll just need to set -\u003evol \u003d NULL where you currently set vol_loaded \u003d FALSE",
+      "revId": "ca4ba84ce28a4f1f43df6984f528ddab19bbe028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
