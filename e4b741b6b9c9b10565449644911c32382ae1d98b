@@ -1,0 +1,107 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "17053409_62bfafcf",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-27T10:54:05Z",
+      "side": 1,
+      "message": "Maybe instead of lock and done flag we could use atomics. parent-\u003edone could be atomic bool and instead of lock we could track number of children on atomic variable. We can get rid of ftl_io_children_done in such case. Anyway this is only idea, I don\u0027t insist on this - this code looks fine, the spinlock is probably very rare.",
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14b88282_79ae2e30",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-27T10:54:05Z",
+      "side": 1,
+      "message": "Maybe split if .. else body to two separate functions e.g _ftl_io_child_complete, _ftl_io_parent_complete?",
+      "range": {
+        "startLine": 310,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 2
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbf841e0_b4e4cc30",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-27T10:54:05Z",
+      "side": 1,
+      "message": "I think we should consider to change this API so it can call ftl_io_init_internal insted ftl_io_alloc or change ftl_io_init_internal to be able to initiazlize child IO. ftl_io_init_internal clears all flags in current implementation. Second option is probably better.",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 342,
+        "endChar": 41
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64880f8a_865c803a",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-27T10:54:05Z",
+      "side": 1,
+      "message": "Please add comment e.g. This lock is used for synchronization between children and parent.",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 199,
+        "endChar": 27
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46c6231c_80cf0c53",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-27T10:54:05Z",
+      "side": 1,
+      "message": "Please call it child_entry. We will have retry_entry in ftl_io soon.",
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
