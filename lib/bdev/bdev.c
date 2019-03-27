@@ -3794,8 +3794,8 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	int			rc = 0;
 
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
+		rc = -EBUSY;
 		if (desc->remove_cb) {
-			rc = -EBUSY;
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and

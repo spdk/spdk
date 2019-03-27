@@ -255,7 +255,12 @@ bdev_ut_create_ch(void *io_device, void *ctx_buf)
 static void
 bdev_ut_destroy_ch(void *io_device, void *ctx_buf)
 {
+	struct bdev_ut_channel *ch = ctx_buf;
 	CU_ASSERT(g_bdev_ut_channel != NULL);
+	if (ch->outstanding_io_count != 0) {
+		stub_complete_io(ch->outstanding_io_count);
+		CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+	}
 	g_bdev_ut_channel = NULL;
 }
 
@@ -829,6 +834,62 @@ bdev_io_wait_test(void)
 	spdk_put_io_channel(io_ch);
 	spdk_bdev_close(desc);
 	free_bdev(bdev);
+	spdk_bdev_finish(bdev_fini_cb, NULL);
+	poll_threads();
+}
+
+static void
+bdev_remove(struct spdk_bdev *bdev, struct spdk_io_channel *io_ch, struct spdk_bdev_desc *desc)
+{
+	spdk_put_io_channel(io_ch);
+	spdk_bdev_close(desc);
+	free_bdev(bdev);
+}
+
+
+static void
+bdev_hotremove_test(void)
+{
+	struct spdk_bdev *bdev;
+	struct spdk_bdev_desc *desc = NULL;
+	struct spdk_io_channel *io_ch;
+	struct spdk_bdev_opts bdev_opts = {
+		.bdev_io_pool_size = 4,
+		.bdev_io_cache_size = 2,
+	};
+	int rc;
+
+	rc = spdk_bdev_set_opts(&bdev_opts);
+	CU_ASSERT(rc == 0);
+	spdk_bdev_initialize(bdev_init_cb, NULL);
+	poll_threads();
+
+	bdev = allocate_bdev("bdev0");
+
+	rc = spdk_bdev_open(bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(rc == 0);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+	io_ch = spdk_bdev_get_io_channel(desc);
+	CU_ASSERT(io_ch != NULL);
+
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	rc = spdk_bdev_read_blocks(desc, io_ch, NULL, 0, 1, io_done, NULL);
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 4);
+
+	stub_complete_io(2);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 2);
+
+	/* just like RPC delete cmd */
+	bdev_remove(bdev, io_ch, desc);
+	CU_ASSERT(g_bdev_ut_channel->outstanding_io_count == 0);
+
 	spdk_bdev_finish(bdev_fini_cb, NULL);
 	poll_threads();
 }
@@ -1572,7 +1633,8 @@ main(int argc, char **argv)
 		CU_add_test(suite, "bdev_io_split", bdev_io_split) == NULL ||
 		CU_add_test(suite, "bdev_io_split_with_io_wait", bdev_io_split_with_io_wait) == NULL ||
 		CU_add_test(suite, "bdev_io_alignment", bdev_io_alignment) == NULL ||
-		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL
+		CU_add_test(suite, "bdev_histograms", bdev_histograms) == NULL ||
+		CU_add_test(suite, "bdev_hotremove", bdev_hotremove_test) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
