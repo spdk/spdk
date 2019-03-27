@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "27b9288d_7e57ad72",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-27T10:45:12Z",
+      "side": 1,
+      "message": "to",
+      "range": {
+        "startLine": 7,
+        "startChar": 44,
+        "endLine": 7,
+        "endChar": 47
+      },
+      "revId": "fbbfb67bff32d1bd24feb0f8ede1f591b2e886f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2b16f554_523630d6",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-27T10:45:12Z",
+      "side": 1,
+      "message": "karol - please add your sign off",
+      "revId": "fbbfb67bff32d1bd24feb0f8ede1f591b2e886f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
