@@ -16,6 +16,24 @@
       "revId": "29448a0717654ba4ce9df67feecd31c0596eb8b0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8d5b6b22_1d43664f",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 203,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T14:36:15Z",
+      "side": 1,
+      "message": "Actually this flag shouldn\u0027t be used by child IOs (they should just rely on the io-\u003eparent). I\u0027ll remove setting it when allocating child IOs.",
+      "parentUuid": "9ab34417_71a2eec0",
+      "revId": "29448a0717654ba4ce9df67feecd31c0596eb8b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
