@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3fcaefbe_1ba0ac68",
+        "filename": "lib/reduce/reduce.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 997,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-27T06:08:35Z",
+      "side": 1,
+      "message": "clever idea. if compressed size is smaller than original, this will be true.",
+      "revId": "0730157bbe63749aa6cd51485bcaeae5903c8056",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
