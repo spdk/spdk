@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "4f587261_2a32aa27",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 310,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T12:35:21Z",
+      "side": 1,
+      "message": "Yeah, that sounds like a good improvement, but as you\u0027ve already noticed, the contention on the lock should be very rare. Let\u0027s put it off for later.",
+      "parentUuid": "17053409_62bfafcf",
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "14b88282_79ae2e30",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 2
@@ -30,6 +48,30 @@
       "writtenOn": "2019-03-27T10:54:05Z",
       "side": 1,
       "message": "Maybe split if .. else body to two separate functions e.g _ftl_io_child_complete, _ftl_io_parent_complete?",
+      "range": {
+        "startLine": 310,
+        "startChar": 0,
+        "endLine": 338,
+        "endChar": 2
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6d5870a_e46e8d0f",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 338,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T12:35:21Z",
+      "side": 1,
+      "message": "It\u0027ll just be called from here and this function isn\u0027t that big, so I think we can leave it as it is.",
+      "parentUuid": "14b88282_79ae2e30",
       "range": {
         "startLine": 310,
         "startChar": 0,
@@ -65,6 +107,30 @@
     },
     {
       "key": {
+        "uuid": "592d476f_bbc62753",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 342,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T12:35:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "dbf841e0_b4e4cc30",
+      "range": {
+        "startLine": 341,
+        "startChar": 0,
+        "endLine": 342,
+        "endChar": 41
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "64880f8a_865c803a",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 2
@@ -88,6 +154,30 @@
     },
     {
       "key": {
+        "uuid": "2fc01d2a_e645dcf4",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 199,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T12:35:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "64880f8a_865c803a",
+      "range": {
+        "startLine": 198,
+        "startChar": 1,
+        "endLine": 199,
+        "endChar": 27
+      },
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "46c6231c_80cf0c53",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 2
@@ -102,6 +192,24 @@
       "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "70a31d8a_b18a92c5",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-27T12:35:21Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "46c6231c_80cf0c53",
+      "revId": "e4b741b6b9c9b10565449644911c32382ae1d98b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
