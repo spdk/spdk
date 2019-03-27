@@ -133,18 +133,13 @@ class JSONRPCClient(object):
             raise JSONRPCException("Timeout while waiting for response:\n%s\n" % self._recv_buf)
 
         self._logger.info("response:\n%s\n", json.dumps(response, indent=2))
-        if 'error' in response:
-            msg = "\n".join(["Got JSON-RPC error response",
-                             "response:",
-                             json.dumps(response['error'], indent=2)])
-            raise JSONRPCException(msg)
         return response
 
     def call(self, method, params=None):
         self._logger.debug("call('%s')" % method)
         self.send(method, params)
         try:
-            return self.recv()['result']
+            response = self.recv()['result']
         except JSONRPCException as e:
             """ Don't expect response to kill """
             if not self.sock and method == "kill_instance":
@@ -152,3 +147,9 @@ class JSONRPCClient(object):
                 return {}
             else:
                 raise e
+
+        if 'error' in response:
+            msg = "\n".join(["Got JSON-RPC error response",
+                             "response:",
+                             json.dumps(response['error'], indent=2)])
+            raise JSONRPCException(msg)
