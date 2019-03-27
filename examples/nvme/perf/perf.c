@@ -45,6 +45,7 @@
 #include "spdk/endian.h"
 #include "spdk/dif.h"
 #include "spdk/util.h"
+#include "spdk/log.h"
 
 #if HAVE_LIBAIO
 #include <libaio.h>
@@ -1088,6 +1089,11 @@ static void usage(char *program_name)
 	printf("\t[-m max completions per poll]\n");
 	printf("\t\t(default: 0 - unlimited)\n");
 	printf("\t[-i shared memory group ID]\n");
+#ifdef DEBUG
+	printf("\t[-G enable debug logging]\n");
+#else
+	printf("\t[-G enable debug logging (flag disabled, must reconfigure with --enable-debug)\n");
+#endif
 }
 
 static void
@@ -1488,7 +1494,7 @@ parse_args(int argc, char **argv)
 	g_core_mask = NULL;
 	g_max_completions = 0;
 
-	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DHILM:U:")) != -1) {
+	while ((op = getopt(argc, argv, "c:e:i:lm:n:o:q:r:k:s:t:w:DGHILM:U:")) != -1) {
 		switch (op) {
 		case 'i':
 		case 'm':
@@ -1563,6 +1569,17 @@ parse_args(int argc, char **argv)
 		case 'D':
 			g_disable_sq_cmb = 1;
 			break;
+		case 'G':
+#ifndef DEBUG
+			fprintf(stderr, "%s must be configured with --enable-debug for -G flag\n",
+				argv[0]);
+			usage(argv[0]);
+			return 1;
+#else
+			spdk_log_set_flag("nvme");
+			spdk_log_set_print_level(SPDK_LOG_DEBUG);
+			break;
+#endif
 		case 'H':
 			g_header_digest = 1;
 			break;
