@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "58014b5e_0a4cc115",
+        "filename": "lib/ut_mock/mock.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-28T18:55:24Z",
+      "side": 1,
+      "message": "you\u0027ll need to define these in the unit tests that need them - then you won\u0027t need to add the __attribute__((weak)) here",
+      "revId": "7ac345add6e1e66ee036eb6d4e2099f255477511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "15d1c301_e21b5e42",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 84,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-28T18:55:24Z",
+      "side": 1,
+      "message": "you should set event \u003d NULL before each of the spdk_notify_get_events calls - maybe also add an SPDK_CU_ASSERT_FATAL(event !\u003d NULL) as well",
+      "revId": "7ac345add6e1e66ee036eb6d4e2099f255477511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "36b34060_eba15d7f",
+        "filename": "test/unit/lib/notify/notify.c/notify_ut.c",
+        "patchSetId": 49
+      },
+      "lineNbr": 109,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-28T18:55:24Z",
+      "side": 1,
+      "message": "this can all be one line",
+      "revId": "7ac345add6e1e66ee036eb6d4e2099f255477511",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
