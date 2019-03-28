@@ -189,7 +189,8 @@ ftl_reloc_read_lba_map(struct ftl_band_reloc *breloc)
 		assert(false);
 	}
 
-	return ftl_band_read_lba_map(band, &band->md, band->md.dma_buf, &io->cb);
+	return ftl_band_read_lba_map(band, &band->md, 0,
+				     ftl_num_band_lbks(dev), &io->cb);
 }
 
 static void
