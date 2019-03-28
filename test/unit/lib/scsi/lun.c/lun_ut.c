@@ -525,7 +525,7 @@ lun_reset_task_wait_scsi_task_complete(void)
 	CU_ASSERT(lun->reset_poller != NULL);
 
 	/* Execute the poller to check if the task prior to the reset task complete. */
-	spdk_scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
+	scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
 
 	CU_ASSERT(!TAILQ_EMPTY(&lun->mgmt_tasks));
 	CU_ASSERT(lun->reset_poller != NULL);
@@ -536,7 +536,7 @@ lun_reset_task_wait_scsi_task_complete(void)
 	CU_ASSERT(TAILQ_EMPTY(&lun->tasks));
 
 	/* Execute the poller to check if the task prior to the reset task complete. */
-	spdk_scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
+	scsi_lun_reset_check_outstanding_tasks(&mgmt_task);
 
 	CU_ASSERT(TAILQ_EMPTY(&lun->mgmt_tasks));
 	CU_ASSERT(lun->reset_poller == NULL);

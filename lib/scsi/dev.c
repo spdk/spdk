@@ -103,7 +103,7 @@ spdk_scsi_dev_destruct(struct spdk_scsi_dev *dev)
 }
 
 static int
-spdk_scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
+scsi_dev_find_lowest_free_lun_id(struct spdk_scsi_dev *dev)
 {
 	int i;
 
@@ -133,7 +133,7 @@ spdk_scsi_dev_add_lun(struct spdk_scsi_dev *dev, const char *bdev_name, int lun_
 
 	/* Search the lowest free LUN ID if LUN ID is default */
 	if (lun_id == -1) {
-		lun_id = spdk_scsi_dev_find_lowest_free_lun_id(dev);
+		lun_id = scsi_dev_find_lowest_free_lun_id(dev);
 		if (lun_id == -1) {
 			SPDK_ERRLOG("Free LUN ID is not found\n");
 			return -1;
@@ -265,7 +265,7 @@ spdk_scsi_dev_queue_task(struct spdk_scsi_dev *dev,
 }
 
 static struct spdk_scsi_port *
-spdk_scsi_dev_find_free_port(struct spdk_scsi_dev *dev)
+scsi_dev_find_free_port(struct spdk_scsi_dev *dev)
 {
 	int i;
 
@@ -295,7 +295,7 @@ spdk_scsi_dev_add_port(struct spdk_scsi_dev *dev, uint64_t id, const char *name)
 		return -1;
 	}
 
-	port = spdk_scsi_dev_find_free_port(dev);
+	port = scsi_dev_find_free_port(dev);
 	if (port == NULL) {
 		assert(false);
 		return -1;
