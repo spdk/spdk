@@ -1,0 +1,99 @@
+ftl_core.o: ftl_core.c \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/likely.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/stdinc.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/nvme.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/config.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/env.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/queue.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/queue_extras.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_spec.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/assert.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/nvmf_spec.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/io_channel.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/thread.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/bdev_module.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/bdev.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/scsi_spec.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/json.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/histogram_data.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/dif.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/util.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/uuid.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk_internal/log.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/log.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/ftl.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_ocssd.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_ocssd_spec.h \
+ ftl_core.h ftl_ppa.h ftl_io.h ftl_trace.h ftl_band.h \
+ /home/wojtek/Repos/american_bar-spdk/include/spdk/bit_array.h ftl_anm.h \
+ ftl_rwb.h ftl_debug.h ftl_reloc.h
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/likely.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/stdinc.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/nvme.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/config.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/env.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/queue.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/queue_extras.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_spec.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/assert.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/nvmf_spec.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/io_channel.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/thread.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/bdev_module.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/bdev.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/scsi_spec.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/json.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/histogram_data.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/dif.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/util.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/uuid.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk_internal/log.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/log.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/ftl.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_ocssd.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/nvme_ocssd_spec.h:
+
+ftl_core.h:
+
+ftl_ppa.h:
+
+ftl_io.h:
+
+ftl_trace.h:
+
+ftl_band.h:
+
+/home/wojtek/Repos/american_bar-spdk/include/spdk/bit_array.h:
+
+ftl_anm.h:
+
+ftl_rwb.h:
+
+ftl_debug.h:
+
+ftl_reloc.h:
