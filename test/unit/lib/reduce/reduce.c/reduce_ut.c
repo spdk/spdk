@@ -389,6 +389,84 @@ backing_dev_io_execute(uint32_t count)
 	}
 }
 
+static int
+ut_compress(char *outbuf, uint32_t *compressed_len, char *inbuf, uint32_t inbuflen)
+{
+	uint32_t len = 0;
+	uint8_t count;
+	char last;
+
+	while (true) {
+		if (inbuflen == 0) {
+			*compressed_len = len;
+			return 0;
+		}
+
+		if (*compressed_len < (len + 2)) {
+			return -ENOSPC;
+		}
+
+		last = *inbuf;
+		count = 1;
+		inbuflen--;
+		inbuf++;
+
+		while (inbuflen > 0 && *inbuf == last && count < UINT8_MAX) {
+			count++;
+			inbuflen--;
+			inbuf++;
+		}
+
+		outbuf[len] = count;
+		outbuf[len + 1] = last;
+		len += 2;
+	}
+}
+
+static int
+ut_decompress(uint8_t *outbuf, uint32_t *compressed_len, uint8_t *inbuf, uint32_t inbuflen)
+{
+	uint32_t len = 0;
+
+	SPDK_CU_ASSERT_FATAL(inbuflen % 2 == 0);
+
+	while (true) {
+		if (inbuflen == 0) {
+			*compressed_len = len;
+			return 0;
+		}
+
+		if ((len + inbuf[0]) > *compressed_len) {
+			return -ENOSPC;
+		}
+
+		memset(outbuf, inbuf[1], inbuf[0]);
+		outbuf += inbuf[0];
+		len += inbuf[0];
+		inbuflen -= 2;
+		inbuf += 2;
+	}
+}
+
+static void
+ut_build_data_buffer(uint8_t *data, uint32_t data_len, uint8_t init_val, uint32_t repeat)
+{
+	uint32_t _repeat = repeat;
+
+	SPDK_CU_ASSERT_FATAL(repeat > 0);
+
+	while (data_len > 0) {
+		*data = init_val;
+		data++;
+		data_len--;
+		_repeat--;
+		if (_repeat == 0) {
+			init_val++;
+			_repeat = repeat;
+		}
+	}
+}
+
 static void
 backing_dev_compress(struct spdk_reduce_backing_dev *backing_dev,
 		     struct iovec *src_iov, int src_iovcnt,
@@ -1050,84 +1128,6 @@ overlapped(void)
 
 	persistent_pm_buf_destroy();
 	backing_dev_destroy(&backing_dev);
-}
-
-static int
-ut_compress(char *outbuf, uint32_t *compressed_len, char *inbuf, uint32_t inbuflen)
-{
-	uint32_t len = 0;
-	uint8_t count;
-	char last;
-
-	while (true) {
-		if (inbuflen == 0) {
-			*compressed_len = len;
-			return 0;
-		}
-
-		if (*compressed_len < (len + 2)) {
-			return -ENOSPC;
-		}
-
-		last = *inbuf;
-		count = 1;
-		inbuflen--;
-		inbuf++;
-
-		while (inbuflen > 0 && *inbuf == last && count < UINT8_MAX) {
-			count++;
-			inbuflen--;
-			inbuf++;
-		}
-
-		outbuf[len] = count;
-		outbuf[len + 1] = last;
-		len += 2;
-	}
-}
-
-static int
-ut_decompress(uint8_t *outbuf, uint32_t *compressed_len, uint8_t *inbuf, uint32_t inbuflen)
-{
-	uint32_t len = 0;
-
-	SPDK_CU_ASSERT_FATAL(inbuflen % 2 == 0);
-
-	while (true) {
-		if (inbuflen == 0) {
-			*compressed_len = len;
-			return 0;
-		}
-
-		if ((len + inbuf[0]) > *compressed_len) {
-			return -ENOSPC;
-		}
-
-		memset(outbuf, inbuf[1], inbuf[0]);
-		outbuf += inbuf[0];
-		len += inbuf[0];
-		inbuflen -= 2;
-		inbuf += 2;
-	}
-}
-
-static void
-ut_build_data_buffer(uint8_t *data, uint32_t data_len, uint8_t init_val, uint32_t repeat)
-{
-	uint32_t _repeat = repeat;
-
-	SPDK_CU_ASSERT_FATAL(repeat > 0);
-
-	while (data_len > 0) {
-		*data = init_val;
-		data++;
-		data_len--;
-		_repeat--;
-		if (_repeat == 0) {
-			init_val++;
-			_repeat = repeat;
-		}
-	}
 }
 
 #define BUFSIZE 4096
