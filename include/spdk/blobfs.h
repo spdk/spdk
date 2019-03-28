@@ -177,15 +177,6 @@ void spdk_fs_unload(struct spdk_filesystem *fs, spdk_fs_op_complete cb_fn, void 
 struct spdk_io_channel *spdk_fs_alloc_io_channel(struct spdk_filesystem *fs);
 
 /**
- * Allocate an I/O channel for synchronous operations.
- *
- * \param fs Blobstore filesystem to allocate I/O channel.
- *
- * \return a pointer to the I/O channel on success or NULL otherwise.
- */
-struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs);
-
-/**
  * Free I/O channel.
  *
  * This function will decrease the references of this I/O channel. If the reference
@@ -196,17 +187,33 @@ struct spdk_io_channel *spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs
 void spdk_fs_free_io_channel(struct spdk_io_channel *channel);
 
 /**
+ * Allocate a context for synchronous operations.
+ *
+ * \param fs Blobstore filesystem for this context.
+ *
+ * \return a pointer to the context on success or NULL otherwise.
+ */
+struct spdk_fs_thread_ctx *spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs);
+
+/**
+ * Free thread context.
+ *
+ * \param ctx Thread context to free.
+ */
+void spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx);
+
+/**
  * Get statistics about the file including the underlying blob id and the file size.
  *
  * \param fs Blobstore filesystem.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param name The file name used to look up the matched file in the blobstore filesystem.
  * \param stat Caller allocated structure to store the obtained information about
  * this file.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
+int spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		      const char *name, struct spdk_file_stat *stat);
 
 #define SPDK_BLOBFS_OPEN_CREATE	(1ULL << 0)
@@ -215,37 +222,37 @@ int spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *channe
  * Create a new file on the given blobstore filesystem.
  *
  * \param fs Blobstore filesystem.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param name The file name for this new file.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
+int spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 			const char *name);
 
 /**
  * Open the file.
  *
  * \param fs Blobstore filesystem.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param name The file name used to look up the matched file in the blobstore filesystem.
  * \param flags This flags will be used to control the open mode.
  * \param file It will point to the open file if sccessful or NULL otherwirse.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
+int spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		      const char *name, uint32_t flags, struct spdk_file **file);
 
 /**
  * Close the file.
  *
  * \param file File to close.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_file_close(struct spdk_file *file, struct spdk_io_channel *channel);
+int spdk_file_close(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx);
 
 /**
  * Change the file name.
@@ -254,25 +261,25 @@ int spdk_file_close(struct spdk_file *file, struct spdk_io_channel *channel);
  * same name.
  *
  * \param fs Blobstore filesystem.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param old_name Old name of the file.
  * \param new_name New name of the file.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
+int spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 			const char *old_name, const char *new_name);
 
 /**
  * Delete the file.
  *
  * \param fs Blobstore filesystem.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param name The name of the file to be deleted.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *channel,
+int spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 			const char *name);
 
 /**
@@ -299,12 +306,12 @@ spdk_fs_iter spdk_fs_iter_next(spdk_fs_iter iter);
  * Truncate the file.
  *
  * \param file File to truncate.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param length New size in bytes of the file.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *channel,
+int spdk_file_truncate(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		       uint64_t length);
 
 /**
@@ -329,28 +336,28 @@ uint64_t spdk_file_get_length(struct spdk_file *file);
  * Write data to the given file.
  *
  * \param file File to write.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param payload The specified buffer which should contain the data to be transmitted.
  * \param offset The beginning position to write data.
  * \param length The size in bytes of data to write.
  *
  * \return 0 on success, negative errno on failure.
  */
-int spdk_file_write(struct spdk_file *file, struct spdk_io_channel *channel,
+int spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		    void *payload, uint64_t offset, uint64_t length);
 
 /**
  * Read data to user buffer from the given file.
  *
  * \param file File to read.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  * \param payload The specified buffer which will store the obtained data.
  * \param offset The beginning position to read.
  * \param length The size in bytes of data to read.
  *
  * \return the end position of this read operation on success, negated errno on failure.
  */
-int64_t spdk_file_read(struct spdk_file *file, struct spdk_io_channel *channel,
+int64_t spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		       void *payload, uint64_t offset, uint64_t length);
 
 /**
@@ -382,11 +389,11 @@ void spdk_file_set_priority(struct spdk_file *file, uint32_t priority);
  * Synchronize the data from the cache to the disk.
  *
  * \param file File to sync.
- * \param channel The I/O channel used to allocate file request.
+ * \param ctx The thread context for this operation
  *
  * \return 0 on success.
  */
-int spdk_file_sync(struct spdk_file *file, struct spdk_io_channel *channel);
+int spdk_file_sync(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx);
 
 /**
  * Get the unique ID for the file.

@@ -254,6 +254,12 @@ struct spdk_fs_channel {
 	pthread_spinlock_t		lock;
 };
 
+/* For now, this is effectively an alias. But eventually we'll shift
+ * some data members over. */
+struct spdk_fs_thread_ctx {
+	struct spdk_fs_channel	ch;
+};
+
 static struct spdk_fs_request *
 alloc_fs_request(struct spdk_fs_channel *channel)
 {
@@ -849,10 +855,10 @@ __file_stat(void *arg)
 }
 
 int
-spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
+spdk_fs_file_stat(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		  const char *name, struct spdk_file_stat *stat)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	int rc;
 
@@ -1003,9 +1009,9 @@ __fs_create_file(void *arg)
 }
 
 int
-spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel, const char *name)
+spdk_fs_create_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx, const char *name)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	int rc;
@@ -1148,10 +1154,10 @@ __fs_open_file(void *arg)
 }
 
 int
-spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
+spdk_fs_open_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		  const char *name, uint32_t flags, struct spdk_file **file)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	int rc;
@@ -1288,10 +1294,10 @@ __fs_rename_file(void *arg)
 }
 
 int
-spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
+spdk_fs_rename_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		    const char *old_name, const char *new_name)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	int rc;
@@ -1396,10 +1402,10 @@ __fs_delete_file(void *arg)
 }
 
 int
-spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_io_channel *_channel,
+spdk_fs_delete_file(struct spdk_filesystem *fs, struct spdk_fs_thread_ctx *ctx,
 		    const char *name)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	int rc;
@@ -1545,10 +1551,10 @@ __truncate(void *arg)
 }
 
 int
-spdk_file_truncate(struct spdk_file *file, struct spdk_io_channel *_channel,
+spdk_file_truncate(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		   uint64_t length)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 	int rc;
@@ -1723,8 +1729,14 @@ spdk_fs_alloc_io_channel(struct spdk_filesystem *fs)
 	return io_channel;
 }
 
-struct spdk_io_channel *
-spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs)
+void
+spdk_fs_free_io_channel(struct spdk_io_channel *channel)
+{
+	spdk_put_io_channel(channel);
+}
+
+struct spdk_fs_thread_ctx *
+spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs)
 {
 	struct spdk_io_channel *io_channel;
 	struct spdk_fs_channel *fs_channel;
@@ -1735,13 +1747,15 @@ spdk_fs_alloc_io_channel_sync(struct spdk_filesystem *fs)
 	fs_channel->sync = 1;
 	pthread_spin_init(&fs_channel->lock, 0);
 
-	return io_channel;
+	/* These two types are currently equivalent */
+	return (struct spdk_fs_thread_ctx *)fs_channel;
 }
 
+
 void
-spdk_fs_free_io_channel(struct spdk_io_channel *channel)
+spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx)
 {
-	spdk_put_io_channel(channel);
+	spdk_put_io_channel(spdk_io_channel_from_ctx(ctx));
 }
 
 void
@@ -2120,10 +2134,10 @@ __send_rw_from_file(struct spdk_file *file, sem_t *sem, void *payload,
 }
 
 int
-spdk_file_write(struct spdk_file *file, struct spdk_io_channel *_channel,
+spdk_file_write(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 		void *payload, uint64_t offset, uint64_t length)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_cb_args *args;
 	uint64_t rem_length, copy, blob_size, cluster_sz;
 	uint32_t cache_buffers_filled = 0;
@@ -2334,10 +2348,10 @@ __file_read(struct spdk_file *file, void *payload, uint64_t offset, uint64_t len
 }
 
 int64_t
-spdk_file_read(struct spdk_file *file, struct spdk_io_channel *_channel,
+spdk_file_read(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx,
 	       void *payload, uint64_t offset, uint64_t length)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	uint64_t final_offset, final_length;
 	uint32_t sub_reads = 0;
 	int rc = 0;
@@ -2443,9 +2457,9 @@ _file_sync(struct spdk_file *file, struct spdk_fs_channel *channel,
 }
 
 int
-spdk_file_sync(struct spdk_file *file, struct spdk_io_channel *_channel)
+spdk_file_sync(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_cb_args args = {};
 
 	args.sem = &channel->sem;
@@ -2559,9 +2573,9 @@ __file_close(void *arg)
 }
 
 int
-spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
+spdk_file_close(struct spdk_file *file, struct spdk_fs_thread_ctx *ctx)
 {
-	struct spdk_fs_channel *channel = spdk_io_channel_get_ctx(_channel);
+	struct spdk_fs_channel *channel = (struct spdk_fs_channel *)ctx;
 	struct spdk_fs_request *req;
 	struct spdk_fs_cb_args *args;
 
@@ -2572,7 +2586,7 @@ spdk_file_close(struct spdk_file *file, struct spdk_io_channel *_channel)
 
 	args = &req->args;
 
-	spdk_file_sync(file, _channel);
+	spdk_file_sync(file, ctx);
 	BLOBFS_TRACE(file, "name=%s\n", file->name);
 	args->file = file;
 	args->sem = &channel->sem;

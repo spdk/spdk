@@ -51,7 +51,7 @@ pthread_t g_fuse_thread;
 
 struct spdk_bs_dev *g_bs_dev;
 struct spdk_filesystem *g_fs;
-struct spdk_io_channel *g_channel;
+struct spdk_fs_thread_ctx *g_channel;
 struct spdk_file *g_file;
 int g_fserrno;
 int g_fuse_argc = 0;
@@ -292,7 +292,7 @@ init_cb(void *ctx, struct spdk_filesystem *fs, int fserrno)
 	struct spdk_event *event;
 
 	g_fs = fs;
-	g_channel = spdk_fs_alloc_io_channel_sync(g_fs);
+	g_channel = spdk_fs_alloc_thread_ctx(g_fs);
 	event = spdk_event_allocate(1, start_fuse_fn, NULL, NULL);
 	spdk_event_call(event);
 }
@@ -309,7 +309,7 @@ shutdown_cb(void *ctx, int fserrno)
 {
 	fuse_session_exit(fuse_get_session(g_fuse));
 	pthread_kill(g_fuse_thread, SIGINT);
-	spdk_fs_free_io_channel(g_channel);
+	spdk_fs_free_thread_ctx(g_channel);
 	spdk_app_stop(0);
 }
 

@@ -59,7 +59,7 @@ std::string g_bdev_name;
 volatile bool g_spdk_ready = false;
 volatile bool g_spdk_start_failure = false;
 struct sync_args {
-	struct spdk_io_channel *channel;
+	struct spdk_fs_thread_ctx *channel;
 };
 
 __thread struct sync_args g_sync_args;
@@ -586,7 +586,7 @@ void SpdkInitializeThread(void)
 	if (g_fs != NULL) {
 		thread = spdk_thread_create("spdk_rocksdb");
 		spdk_set_thread(thread);
-		g_sync_args.channel = spdk_fs_alloc_io_channel_sync(g_fs);
+		g_sync_args.channel = spdk_fs_alloc_thread_ctx(g_fs);
 	}
 }
 
