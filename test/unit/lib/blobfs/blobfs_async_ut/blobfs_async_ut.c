@@ -485,7 +485,7 @@ channel_ops_sync(void)
 {
 	struct spdk_filesystem *fs;
 	struct spdk_bs_dev *dev;
-	struct spdk_io_channel *channel;
+	struct spdk_fs_thread_ctx *channel;
 
 	dev = init_dev();
 
@@ -496,10 +496,10 @@ channel_ops_sync(void)
 	fs = g_fs;
 	SPDK_CU_ASSERT_FATAL(fs->bs->dev == dev);
 
-	channel =  spdk_fs_alloc_io_channel_sync(fs);
+	channel =  spdk_fs_alloc_thread_ctx(fs);
 	CU_ASSERT(channel != NULL);
 
-	spdk_fs_free_io_channel(channel);
+	spdk_fs_free_thread_ctx(channel);
 
 	g_fserrno = 1;
 	spdk_fs_unload(fs, fs_op_complete, NULL);
