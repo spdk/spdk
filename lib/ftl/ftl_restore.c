@@ -268,7 +268,7 @@ ftl_restore_head_md(struct ftl_restore *restore)
 		rband = &restore->bands[i];
 		cb.ctx = rband;
 
-		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf, &cb)) {
+		if (ftl_band_read_head_md(rband->band, &rband->band->md, head_buf, cb)) {
 			if (spdk_likely(rband->band->num_chunks)) {
 				SPDK_ERRLOG("Failed to read metadata on band %zu\n", i);
 
@@ -399,7 +399,7 @@ ftl_restore_tail_md(struct ftl_restore_band *rband)
 	band->tail_md_ppa = ftl_band_tail_md_ppa(band);
 	band->md.lba_map = restore->lba_map;
 
-	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, &cb)) {
+	if (ftl_band_read_tail_md(band, &band->md, restore->md_buf, band->tail_md_ppa, cb)) {
 		SPDK_ERRLOG("Failed to send tail metadata read\n");
 		ftl_restore_complete(restore, -EIO);
 		return -EIO;
