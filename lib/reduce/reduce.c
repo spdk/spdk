@@ -1056,7 +1056,7 @@ _reduce_vol_decompress_chunk(struct spdk_reduce_vol_request *req, reduce_request
 	req->backing_cb_args.cb_fn = next_fn;
 	req->backing_cb_args.cb_arg = req;
 	req->comp_buf_iov[0].iov_base = req->comp_buf;
-	req->comp_buf_iov[0].iov_len = vol->params.chunk_size;
+	req->comp_buf_iov[0].iov_len = req->chunk->compressed_size;
 	req->decomp_buf_iov[0].iov_base = req->decomp_buf;
 	req->decomp_buf_iov[0].iov_len = vol->params.chunk_size;
 	vol->backing_dev->decompress(vol->backing_dev,
@@ -1192,7 +1192,6 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 	assert(req->chunk_map_index != UINT32_MAX);
 
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
-	assert(req->chunk->compressed_size == vol->params.chunk_size);
 	req->num_io_units = spdk_divide_round_up(req->chunk->compressed_size,
 			    vol->params.backing_io_unit_size);
 	req->chunk_is_compressed = (req->num_io_units != vol->backing_io_units_per_chunk);
