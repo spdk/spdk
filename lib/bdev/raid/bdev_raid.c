@@ -175,7 +175,6 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 	TAILQ_REMOVE(&g_spdk_raid_bdev_list, raid_bdev, global_link);
 	free(raid_bdev->bdev.name);
 	raid_bdev->bdev.name = NULL;
-	assert(raid_bdev->base_bdev_info);
 	free(raid_bdev->base_bdev_info);
 	raid_bdev->base_bdev_info = NULL;
 	if (raid_bdev->config) {
