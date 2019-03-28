@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ac74ac16_322c8c0f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 384,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-28T22:52:02Z",
+      "side": 1,
+      "message": "Let\u0027s add the following in the separate patch.\n\nif success is not true, return spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_FAILED)",
+      "revId": "449a69df235c71539b2707013e26582f49e5bbaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5161f968_9c62be55",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 551,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-28T22:52:02Z",
+      "side": 1,
+      "message": "reduceLib",
+      "range": {
+        "startLine": 551,
+        "startChar": 9,
+        "endLine": 551,
+        "endChar": 19
+      },
+      "revId": "449a69df235c71539b2707013e26582f49e5bbaf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
