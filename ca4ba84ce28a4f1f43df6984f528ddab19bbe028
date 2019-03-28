@@ -16,6 +16,24 @@
       "revId": "ca4ba84ce28a4f1f43df6984f528ddab19bbe028",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "61675207_cd4dcd2b",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-28T19:10:18Z",
+      "side": 1,
+      "message": "indeed!",
+      "parentUuid": "38f68e1e_d82181bb",
+      "revId": "ca4ba84ce28a4f1f43df6984f528ddab19bbe028",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
