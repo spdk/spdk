@@ -70,6 +70,29 @@
     },
     {
       "key": {
+        "uuid": "db2ddda8_4f279ad0",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-28T09:07:07Z",
+      "side": 1,
+      "message": "Why this should be called in the callback? We can call this just after opening bdev?",
+      "range": {
+        "startLine": 686,
+        "startChar": 6,
+        "endLine": 686,
+        "endChar": 33
+      },
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "11198abc_0e5f1d03",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 7
