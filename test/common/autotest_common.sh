@@ -489,6 +489,7 @@ function rbd_setup() {
 function rbd_cleanup() {
 	if hash ceph; then
 		$rootdir/scripts/ceph/stop.sh || true
+		rm -f /var/tmp/ceph_raw.img
 	fi
 }
 
