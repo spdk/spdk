@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ff27be6d_24efa456",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-28T21:44:54Z",
+      "side": 1,
+      "message": "We need to unregister the memory before we free it - the rdma_dereg_mr should come before the free(rqpair-\u003ersps)",
+      "revId": "2683a8625b4495c1537e91892f28da9cf23d5106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dd578c9f_21593333",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-28T21:44:54Z",
+      "side": 1,
+      "message": "This isn\u0027t right - we need to unregister the memory region (rdma_dereg_mr) before releasing the memory it is describing (rqpair-\u003ecmds).\n\nI think this particular function was correct before. You could potentially remove the check that rdma_reqs isn\u0027t NULL.",
+      "revId": "2683a8625b4495c1537e91892f28da9cf23d5106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
