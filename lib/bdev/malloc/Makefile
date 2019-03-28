@@ -37,5 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = bdev_malloc.c bdev_malloc_rpc.c
 LIBNAME = bdev_malloc
 LOCAL_SYS_LIBS = -luuid
+SPDK_DEP_LIBNAMES = conf copy env_dpdk json jsonrpc log rpc util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

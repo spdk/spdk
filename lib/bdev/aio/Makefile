@@ -37,5 +37,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 C_SRCS = bdev_aio.c bdev_aio_rpc.c
 LIBNAME = bdev_aio
 LOCAL_SYS_LIBS = -laio
+SPDK_DEP_LIBNAMES = conf bdev json jsonrpc log rpc thread util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

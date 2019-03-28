@@ -36,5 +36,6 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 C_SRCS = bdev.c bdev_rpc.c
 LIBNAME = event_bdev
+SPDK_DEP_LIBNAMES = bdev json jsonrpc log
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

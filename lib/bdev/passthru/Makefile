@@ -38,5 +38,6 @@ CFLAGS += -I$(SPDK_ROOT_DIR)/lib/bdev/
 
 C_SRCS = vbdev_passthru.c vbdev_passthru_rpc.c
 LIBNAME = bdev_passthru
+SPDK_DEP_LIBNAMES = conf json jsonrpc rpc log util
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

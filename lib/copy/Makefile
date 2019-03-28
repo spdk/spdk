@@ -36,6 +36,7 @@ include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
 LIBNAME = copy
 C_SRCS = copy_engine.c
+SPDK_DEP_LIBNAMES = thread
 
 DIRS-y = ioat
 

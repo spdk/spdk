@@ -41,6 +41,7 @@ endif
 C_SRCS = bdev.c part.c scsi_nvme.c
 C_SRCS-$(CONFIG_VTUNE) += vtune.c
 LIBNAME = bdev
+SPDK_DEP_LIBNAMES = conf trace
 
 DIRS-y += error gpt lvol malloc null nvme passthru raid rpc split
 

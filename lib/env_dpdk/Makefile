@@ -38,5 +38,6 @@ CFLAGS += $(ENV_CFLAGS)
 C_SRCS = env.c memory.c pci.c init.c threads.c
 C_SRCS += pci_nvme.c pci_ioat.c pci_virtio.c
 LIBNAME = env_dpdk
+DPDK_DEP_LIBNAMES = eal mempool bus_pci
 
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

@@ -34,8 +34,10 @@
 SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
+CFLAGS += $(ENV_CFLAGS)
 LIBNAME = event
 C_SRCS = app.c reactor.c rpc.c subsystem.c json_config.c
+SPDK_DEP_LIBNAMES = conf env_dpdk json jsonrpc log rpc thread trace util
 
 DIRS-y = rpc subsystems
 
