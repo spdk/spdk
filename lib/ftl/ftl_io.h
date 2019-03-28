@@ -47,7 +47,7 @@ struct ftl_band;
 struct ftl_io;
 struct ftl_md;
 
-typedef int (*ftl_md_pack_fn)(struct spdk_ftl_dev *, struct ftl_md *, void *);
+typedef int (*ftl_md_unpack_fn)(struct spdk_ftl_dev *, struct ftl_md *, void *, size_t, size_t);
 
 /* IO flags */
 enum ftl_io_flags {
@@ -210,8 +210,11 @@ struct ftl_md_io {
 	/* Metadata's buffer */
 	void					*buf;
 
-	/* Serialization/deserialization callback */
-	ftl_md_pack_fn				pack_fn;
+	/* Offset for deserialization callback */
+	size_t					offset;
+
+	/* Deserialization callback */
+	ftl_md_unpack_fn			unpack_fn;
 
 	/* User's callback */
 	struct ftl_cb				cb;
