@@ -473,11 +473,17 @@ backing_dev_compress(struct spdk_reduce_backing_dev *backing_dev,
 		     struct iovec *dst_iov, int dst_iovcnt,
 		     struct spdk_reduce_vol_cb_args *args)
 {
+	uint32_t compressed_len;
+	int rc;
+
 	CU_ASSERT(src_iovcnt == 1);
 	CU_ASSERT(dst_iovcnt == 1);
 	CU_ASSERT(src_iov[0].iov_len == dst_iov[0].iov_len);
-	memcpy(dst_iov[0].iov_base, src_iov[0].iov_base, src_iov[0].iov_len);
-	args->cb_fn(args->cb_arg, src_iov[0].iov_len);
+
+	compressed_len = dst_iov[0].iov_len;
+	rc = ut_compress(dst_iov[0].iov_base, &compressed_len,
+			 src_iov[0].iov_base, src_iov[0].iov_len);
+	args->cb_fn(args->cb_arg, rc ? rc : (int)compressed_len);
 }
 
 static void
@@ -486,11 +492,16 @@ backing_dev_decompress(struct spdk_reduce_backing_dev *backing_dev,
 		       struct iovec *dst_iov, int dst_iovcnt,
 		       struct spdk_reduce_vol_cb_args *args)
 {
+	uint32_t decompressed_len;
+	int rc;
+
 	CU_ASSERT(src_iovcnt == 1);
 	CU_ASSERT(dst_iovcnt == 1);
-	CU_ASSERT(src_iov[0].iov_len == dst_iov[0].iov_len);
-	memcpy(dst_iov[0].iov_base, src_iov[0].iov_base, src_iov[0].iov_len);
-	args->cb_fn(args->cb_arg, src_iov[0].iov_len);
+
+	decompressed_len = dst_iov[0].iov_len;
+	rc = ut_decompress(dst_iov[0].iov_base, &decompressed_len,
+			   src_iov[0].iov_base, src_iov[0].iov_len);
+	args->cb_fn(args->cb_arg, rc ? rc : (int)decompressed_len);
 }
 
 static void
@@ -1040,10 +1051,11 @@ defer_bdev_io(void)
 	/* Callback should not have executed, so this should still equal -100. */
 	CU_ASSERT(g_reduce_errno == -100);
 	CU_ASSERT(!TAILQ_EMPTY(&g_pending_bdev_io));
-	/* We wrote to part of one chunk which was previously unallocated.  This should result in
-	 * 4 pending I/O - one for each backing io unit in the chunk.
+	/* We wrote to just 512 bytes of one chunk which was previously unallocated.  This
+	 * should result in 1 pending I/O since the rest of this chunk will be zeroes and
+	 * very compressible.
 	 */
-	CU_ASSERT(g_pending_bdev_io_count == params.chunk_size / params.backing_io_unit_size);
+	CU_ASSERT(g_pending_bdev_io_count == 1);
 
 	backing_dev_io_execute(0);
 	CU_ASSERT(TAILQ_EMPTY(&g_pending_bdev_io));
@@ -1100,7 +1112,11 @@ overlapped(void)
 	/* Callback should not have executed, so this should still equal -100. */
 	CU_ASSERT(g_reduce_errno == -100);
 	CU_ASSERT(!TAILQ_EMPTY(&g_pending_bdev_io));
-	CU_ASSERT(g_pending_bdev_io_count == params.chunk_size / params.backing_io_unit_size);
+	/* We wrote to just 512 bytes of one chunk which was previously unallocated.  This
+	 * should result in 1 pending I/O since the rest of this chunk will be zeroes and
+	 * very compressible.
+	 */
+	CU_ASSERT(g_pending_bdev_io_count == 1);
 
 	/* Now do an overlapped I/O to the same chunk. */
 	spdk_reduce_vol_writev(g_vol, &iov, 1, 1, 1, write_cb, NULL);
@@ -1110,7 +1126,7 @@ overlapped(void)
 	/* The second I/O overlaps with the first one.  So we should only see pending bdev_io
 	 * related to the first I/O here - the second one won't start until the first one is completed.
 	 */
-	CU_ASSERT(g_pending_bdev_io_count == params.chunk_size / params.backing_io_unit_size);
+	CU_ASSERT(g_pending_bdev_io_count == 1);
 
 	backing_dev_io_execute(0);
 	CU_ASSERT(g_reduce_errno == 0);
