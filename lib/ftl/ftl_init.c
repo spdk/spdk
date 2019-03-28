@@ -475,7 +475,7 @@ ftl_init_wptr_list(struct spdk_ftl_dev *dev)
 	 * unnecessary overhead and should be replaced by different data structure.
 	 */
 	dev->lba_pool = spdk_mempool_create(pool_name, 2 + 8,
-					    ftl_num_band_lbks(dev) * sizeof(uint64_t),
+					    ftl_lba_map_num_lbks(dev) * FTL_BLOCK_SIZE,
 					    SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 					    SPDK_ENV_SOCKET_ID_ANY);
 	if (!dev->lba_pool) {
