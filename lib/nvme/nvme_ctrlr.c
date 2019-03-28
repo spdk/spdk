@@ -2123,8 +2123,6 @@ nvme_ctrlr_process_init(struct spdk_nvme_ctrlr *ctrlr)
 		break;
 
 	case NVME_CTRLR_STATE_IDENTIFY_ID_DESCS:
-		nvme_ctrlr_set_state(ctrlr, NVME_CTRLR_STATE_WAIT_FOR_IDENTIFY_ID_DESCS,
-				     ctrlr->opts.admin_timeout_ms);
 		rc = nvme_ctrlr_identify_id_desc_namespaces(ctrlr);
 		break;
 
