@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c793985_45d7f1ef",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1128,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-28T11:00:25Z",
+      "side": 1,
+      "message": "is checking scsi_dev_state-\u003edev \u003d\u003d NULL still needed?",
+      "range": {
+        "startLine": 1128,
+        "startChar": 5,
+        "endLine": 1128,
+        "endChar": 32
+      },
+      "revId": "60377d1951d0763b1903594b89a42afd64f85f08",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
