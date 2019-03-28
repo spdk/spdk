@@ -2069,10 +2069,10 @@ spdk_nvmf_tcp_request_free_buffers(struct spdk_nvmf_tcp_req *tcp_req,
 		assert(tcp_req->buffers[i] != NULL);
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)tcp_req->buffers[i], link);
+					   (struct spdk_bufferpool_ele *)tcp_req->buffers[i], link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, tcp_req->buffers[i]);
+			spdk_bufferpool_put(transport->data_buf_pool, tcp_req->buffers[i]);
 		}
 		tcp_req->req.iov[i].iov_base = NULL;
 		tcp_req->buffers[i] = NULL;
@@ -2085,7 +2085,7 @@ static int
 spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			    struct spdk_nvmf_tcp_req *tcp_req)
 {
-	void					*buf = NULL;
+	struct spdk_bufferpool_ele		*buf = NULL;
 	uint32_t				length = tcp_req->req.length;
 	uint32_t				i = 0;
 	struct spdk_nvmf_tcp_qpair		*tqpair;
@@ -2101,15 +2101,14 @@ spdk_nvmf_tcp_req_fill_iovs(struct spdk_nvmf_tcp_transport *ttransport,
 			buf = STAILQ_FIRST(&group->buf_cache);
 			STAILQ_REMOVE_HEAD(&group->buf_cache, link);
 		} else {
-			buf = spdk_mempool_get(ttransport->transport.data_buf_pool);
+			buf = spdk_bufferpool_get(ttransport->transport.data_buf_pool);
 			if (!buf) {
 				goto nomem;
 			}
 		}
 
-		tcp_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-							~NVMF_DATA_BUFFER_MASK);
-		tcp_req->req.iov[i].iov_len  = spdk_min(length, ttransport->transport.opts.io_unit_size);
+		tcp_req->req.iov[i].iov_base = buf->buffer;
+		tcp_req->req.iov[i].iov_len = spdk_min(length, ttransport->transport.opts.io_unit_size);
 		tcp_req->req.iovcnt++;
 		tcp_req->buffers[i] = buf;
 		length -= tcp_req->req.iov[i].iov_len;

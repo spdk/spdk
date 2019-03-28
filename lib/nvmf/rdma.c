@@ -1251,10 +1251,10 @@ spdk_nvmf_rdma_request_free_buffers(struct spdk_nvmf_rdma_request *rdma_req,
 	for (uint32_t i = 0; i < rdma_req->req.iovcnt; i++) {
 		if (group->buf_cache_count < group->buf_cache_size) {
 			STAILQ_INSERT_HEAD(&group->buf_cache,
-					   (struct spdk_nvmf_transport_pg_cache_buf *)rdma_req->data.buffers[i], link);
+					   (struct spdk_bufferpool_ele *)rdma_req->data.buffers[i], link);
 			group->buf_cache_count++;
 		} else {
-			spdk_mempool_put(transport->data_buf_pool, rdma_req->data.buffers[i]);
+			spdk_bufferpool_put(transport->data_buf_pool, rdma_req->data.buffers[i]);
 		}
 		rdma_req->req.iov[i].iov_base = NULL;
 		rdma_req->data.buffers[i] = NULL;
@@ -1333,7 +1333,7 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 {
 	struct spdk_nvmf_rdma_qpair		*rqpair;
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
-	void					*buf = NULL;
+	struct spdk_bufferpool_ele		*buf = NULL;
 	uint32_t				length = rdma_req->req.length;
 	uint64_t				translation_len;
 	uint32_t				i = 0;
@@ -1349,16 +1349,15 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 			STAILQ_REMOVE_HEAD(&rgroup->group.buf_cache, link);
 			assert(buf != NULL);
 		} else {
-			buf = spdk_mempool_get(rtransport->transport.data_buf_pool);
+			buf = spdk_bufferpool_get(rtransport->transport.data_buf_pool);
 			if (!buf) {
 				rc = -ENOMEM;
 				goto err_exit;
 			}
 		}
 
-		rdma_req->req.iov[i].iov_base = (void *)((uintptr_t)(buf + NVMF_DATA_BUFFER_MASK) &
-						~NVMF_DATA_BUFFER_MASK);
-		rdma_req->req.iov[i].iov_len  = spdk_min(length, rtransport->transport.opts.io_unit_size);
+		rdma_req->req.iov[i].iov_base = buf->buffer;
+		rdma_req->req.iov[i].iov_len = spdk_min(length, rtransport->transport.opts.io_unit_size);
 		rdma_req->req.iovcnt++;
 		rdma_req->data.buffers[i] = buf;
 		rdma_req->data.wr.sg_list[i].addr = (uintptr_t)(rdma_req->req.iov[i].iov_base);
@@ -1367,10 +1366,10 @@ spdk_nvmf_rdma_request_fill_iovs(struct spdk_nvmf_rdma_transport *rtransport,
 
 		if (!g_nvmf_hooks.get_rkey) {
 			rdma_req->data.wr.sg_list[i].lkey = ((struct ibv_mr *)spdk_mem_map_translate(device->map,
-							     (uint64_t)buf, &translation_len))->lkey;
+							     (uint64_t)buf->buffer, &translation_len))->lkey;
 		} else {
 			rdma_req->data.wr.sg_list[i].lkey = spdk_mem_map_translate(device->map,
-							    (uint64_t)buf, &translation_len);
+							    (uint64_t)buf->buffer, &translation_len);
 		}
 
 		length -= rdma_req->req.iov[i].iov_len;
