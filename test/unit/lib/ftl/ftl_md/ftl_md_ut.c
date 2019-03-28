@@ -64,7 +64,6 @@ setup_band(struct ftl_band **band, const struct spdk_ocssd_geometry_data *geo,
 	*band = test_init_ftl_band(dev, 0);
 	rc = ftl_band_alloc_md(*band);
 	SPDK_CU_ASSERT_FATAL(rc == 0);
-	ftl_band_clear_md(*band);
 }
 
 static void
@@ -72,6 +71,7 @@ cleanup_band(struct ftl_band *band)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 
+	ftl_band_clear_md(band);
 	test_free_ftl_band(band);
 	test_free_ftl_dev(dev);
 }
@@ -81,22 +81,19 @@ test_md_unpack(void)
 {
 	struct ftl_band *band;
 	struct ftl_md *md;
-	void *data;
 
 	setup_band(&band, &g_geo, &g_range);
 
 	md = &band->md;
 
-	data = malloc(ftl_tail_md_num_lbks(band->dev) * FTL_BLOCK_SIZE);
-	SPDK_CU_ASSERT_FATAL(data);
+	SPDK_CU_ASSERT_FATAL(md->dma_buf);
 
-	ftl_pack_head_md(band->dev, md, data);
-	CU_ASSERT_EQUAL(ftl_unpack_head_md(band->dev, md, data), FTL_MD_SUCCESS);
+	ftl_pack_head_md(band->dev, md, md->dma_buf);
+	CU_ASSERT_EQUAL(ftl_unpack_head_md(band->dev, md, md->dma_buf), FTL_MD_SUCCESS);
 
-	ftl_pack_tail_md(band->dev, md, data);
-	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, data), FTL_MD_SUCCESS);
+	ftl_pack_tail_md(band->dev, md, md->dma_buf);
+	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, md->dma_buf), FTL_MD_SUCCESS);
 
-	free(data);
 	cleanup_band(band);
 }
 
@@ -106,38 +103,35 @@ test_md_unpack_fail(void)
 	struct ftl_band *band;
 	struct ftl_md *md;
 	struct ftl_md_hdr *hdr;
-	void *data;
 
 	setup_band(&band, &g_geo, &g_range);
 
 	md = &band->md;
 
-	data = malloc(ftl_tail_md_num_lbks(band->dev) * FTL_BLOCK_SIZE);
-	SPDK_CU_ASSERT_FATAL(data);
+	SPDK_CU_ASSERT_FATAL(md->dma_buf);
 
 	/* check crc */
-	ftl_pack_tail_md(band->dev, md, data);
+	ftl_pack_tail_md(band->dev, md, md->dma_buf);
 	/* flip last bit of lba_map */
-	*((char *)data + ftl_tail_md_num_lbks(band->dev) * FTL_BLOCK_SIZE - 1) ^= 0x1;
-	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, data), FTL_MD_INVALID_CRC);
+	*((char *)md->dma_buf + ftl_tail_md_num_lbks(band->dev) * FTL_BLOCK_SIZE - 1) ^= 0x1;
+	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, md->dma_buf), FTL_MD_INVALID_CRC);
 
 	/* check invalid version */
-	hdr = data;
-	ftl_pack_tail_md(band->dev, md, data);
+	hdr = md->dma_buf;
+	ftl_pack_tail_md(band->dev, md, md->dma_buf);
 	hdr->ver++;
-	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, data), FTL_MD_INVALID_VER);
+	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, md->dma_buf), FTL_MD_INVALID_VER);
 
 	/* check wrong UUID */
-	ftl_pack_head_md(band->dev, md, data);
+	ftl_pack_head_md(band->dev, md, md->dma_buf);
 	hdr->uuid.u.raw[0] ^= 0x1;
-	CU_ASSERT_EQUAL(ftl_unpack_head_md(band->dev, md, data), FTL_MD_NO_MD);
+	CU_ASSERT_EQUAL(ftl_unpack_head_md(band->dev, md, md->dma_buf), FTL_MD_NO_MD);
 
 	/* check invalid size */
-	ftl_pack_tail_md(band->dev, md, data);
+	ftl_pack_tail_md(band->dev, md, md->dma_buf);
 	band->dev->geo.clba--;
-	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, data), FTL_MD_INVALID_SIZE);
+	CU_ASSERT_EQUAL(ftl_unpack_tail_md(band->dev, md, md->dma_buf), FTL_MD_INVALID_SIZE);
 
-	free(data);
 	cleanup_band(band);
 }
 

@@ -96,7 +96,7 @@ ftl_lba_map_num_lbks(const struct spdk_ftl_dev *dev)
 
 int
 ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
-		      void *data, const struct ftl_cb *cb)
+		      size_t offset, size_t lbk_cnt, const struct ftl_cb *cb)
 {
 	cb->fn(cb->ctx, 0);
 	return 0;
