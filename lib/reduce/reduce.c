@@ -1018,10 +1018,14 @@ _write_compress_done(void *_req, int reduce_errno)
 {
 	struct spdk_reduce_vol_request *req = _req;
 
-	/* Negative reduce_errno indicates failure for compression operations. */
+	/* Negative reduce_errno indicates failure for compression operations.
+	 * Just write the uncompressed data instead.  Force this to happen
+	 * by just passing the full chunk size to _reduce_vol_write_chunk.
+	 * When it sees the data couldn't be compressed, it will just write
+	 * the uncompressed buffer to disk.
+	 */
 	if (reduce_errno < 0) {
-		_reduce_vol_complete_req(req, reduce_errno);
-		return;
+		reduce_errno = req->vol->params.chunk_size;
 	}
 
 	/* Positive reduce_errno indicates number of bytes in compressed buffer. */
