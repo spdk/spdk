@@ -382,13 +382,6 @@ ftl_unpack_tail_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 }
 
 static int
-ftl_unpack_lba_map(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
-{
-	memcpy(md->lba_map, data, ftl_num_band_lbks(dev) * sizeof(uint64_t));
-	return FTL_MD_SUCCESS;
-}
-
-static int
 ftl_unpack_head_md(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data)
 {
 	struct ftl_head_md *head = data;
@@ -617,6 +610,21 @@ ftl_band_next_xfer_ppa(struct ftl_band *band, struct ftl_ppa ppa, size_t num_lbk
 	return ppa;
 }
 
+static size_t
+ftl_xfer_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
+{
+	unsigned int punit_num;
+	size_t off, num_req, xfer_size = band->dev->xfer_size;
+
+	assert(ppa.chk == band->id);
+	punit_num = ftl_ppa_flatten_punit(band->dev, ppa);
+
+	num_req = ppa.lbk / xfer_size * band->num_chunks;
+	off = ppa.lbk % xfer_size;
+
+	return xfer_size * (num_req + punit_num) + off;
+}
+
 struct ftl_ppa
 ftl_band_ppa_from_lbkoff(struct ftl_band *band, uint64_t lbkoff)
 {
@@ -705,8 +713,8 @@ ftl_read_md_cb(void *arg, int status)
 
 static struct ftl_md_io *
 ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, struct ftl_ppa ppa,
-		    struct ftl_band *band, size_t lbk_cnt, ftl_md_pack_fn fn,
-		    const struct ftl_cb *cb)
+		    struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn fn,
+		    ftl_md_pack_fn pack_fn, struct ftl_cb cb)
 {
 	struct ftl_md_io *io;
 	struct ftl_io_init_opts opts = {
@@ -719,7 +727,7 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 		.type		= FTL_IO_READ,
 		.iov_cnt	= 1,
 		.req_size	= lbk_cnt,
-		.fn		= ftl_read_md_cb,
+		.fn		= fn,
 		.data		= data,
 	};
 
@@ -731,8 +739,8 @@ ftl_io_init_md_read(struct spdk_ftl_dev *dev, struct ftl_md *md, void *data, str
 	io->io.ppa = ppa;
 	io->md = md;
 	io->buf = data;
-	io->pack_fn = fn;
-	io->cb = *cb;
+	io->pack_fn = pack_fn;
+	io->cb = cb;
 
 	return io;
 }
@@ -760,20 +768,20 @@ ftl_io_init_md_write(struct spdk_ftl_dev *dev, struct ftl_band *band,
 }
 
 static int
-ftl_band_write_md(struct ftl_band *band, void *data, size_t lbk_cnt,
+ftl_band_write_md(struct ftl_band *band, size_t lbk_cnt,
 		  ftl_md_pack_fn md_fn, spdk_ftl_fn cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_io *io;
 	int rc;
 
-	io = ftl_io_init_md_write(dev, band, data,
+	io = ftl_io_init_md_write(dev, band, band->md.dma_buf,
 				  spdk_divide_round_up(lbk_cnt, dev->xfer_size), cb);
 	if (!io) {
 		return -ENOMEM;
 	}
 
-	md_fn(dev, &band->md, data);
+	md_fn(dev, &band->md, band->md.dma_buf);
 
 	rc = ftl_io_write(io);
 	if (rc == -EAGAIN) {
@@ -793,30 +801,32 @@ ftl_band_md_clear(struct ftl_md *md)
 }
 
 int
-ftl_band_write_head_md(struct ftl_band *band, void *data, spdk_ftl_fn cb)
+ftl_band_write_head_md(struct ftl_band *band, spdk_ftl_fn cb)
 {
-	return ftl_band_write_md(band, data, ftl_head_md_num_lbks(band->dev),
+	return ftl_band_write_md(band, ftl_head_md_num_lbks(band->dev),
 				 ftl_pack_head_md, cb);
 }
 
 int
-ftl_band_write_tail_md(struct ftl_band *band, void *data, spdk_ftl_fn cb)
+ftl_band_write_tail_md(struct ftl_band *band, spdk_ftl_fn cb)
 {
-	return ftl_band_write_md(band, data, ftl_tail_md_num_lbks(band->dev),
+	return ftl_band_write_md(band, ftl_tail_md_num_lbks(band->dev),
 				 ftl_pack_tail_md, cb);
 }
 
 static struct ftl_ppa
-ftl_band_lba_map_ppa(struct ftl_band *band)
+ftl_band_lba_map_ppa(struct ftl_band *band, size_t offset)
 {
 	return ftl_band_next_xfer_ppa(band, band->tail_md_ppa,
 				      ftl_tail_md_hdr_num_lbks() +
-				      ftl_vld_map_num_lbks(band->dev));
+				      ftl_vld_map_num_lbks(band->dev) +
+				      offset);
 }
 
 static int
-ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lbk_cnt,
-		 struct ftl_ppa start_ppa, ftl_md_pack_fn unpack_fn, const struct ftl_cb *cb)
+ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data,
+		 size_t lbk_cnt, struct ftl_ppa start_ppa, spdk_ftl_fn fn,
+		 ftl_md_pack_fn pack_fn, const struct ftl_cb cb)
 {
 	struct spdk_ftl_dev *dev = band->dev;
 	struct ftl_md_io *io;
@@ -826,7 +836,7 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 	}
 
 	io = ftl_io_init_md_read(dev, md, data, start_ppa, band, lbk_cnt,
-				 unpack_fn, cb);
+				 fn, pack_fn, cb);
 	if (!io) {
 		return -ENOMEM;
 	}
@@ -837,35 +847,71 @@ ftl_band_read_md(struct ftl_band *band, struct ftl_md *md, void *data, size_t lb
 
 int
 ftl_band_read_tail_md(struct ftl_band *band, struct ftl_md *md,
-		      void *data, struct ftl_ppa ppa, const struct ftl_cb *cb)
+		      void *data, struct ftl_ppa ppa, struct ftl_cb cb)
 {
 	return ftl_band_read_md(band, md, data,
 				ftl_tail_md_num_lbks(band->dev),
 				ppa,
+				ftl_read_md_cb,
 				ftl_unpack_tail_md,
 				cb);
 }
 
-int
-ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md,
-		      void *data, const struct ftl_cb *cb)
+static size_t
+ftl_lba_map_offset_from_ppa(struct ftl_band *band, struct ftl_ppa ppa)
 {
-	/* TODO: change this interface to allow reading parts of the LBA map instead of */
-	/* reading whole metadata */
-	return ftl_band_read_md(band, md, data,
-				ftl_lba_map_num_lbks(band->dev),
-				ftl_band_lba_map_ppa(band),
-				ftl_unpack_lba_map,
-				cb);
+	size_t offset;
+	struct ftl_ppa start_ppa = ftl_band_lba_map_ppa(band, 0);
+
+	offset =  ftl_xfer_offset_from_ppa(band, ppa) - ftl_xfer_offset_from_ppa(band, start_ppa);
+	assert(offset < ftl_lba_map_num_lbks(band->dev));
+
+	return offset;
+}
+
+static void
+ftl_read_lba_map_cb(void *arg, int status)
+{
+	struct ftl_md_io *md_io = arg;
+	struct ftl_io *io = &md_io->io;
+	struct ftl_md *md = md_io->md;
+	uint64_t offset;
+
+	offset = ftl_lba_map_offset_from_ppa(io->band, io->ppa);
+	assert(offset + io->lbk_cnt <= ftl_lba_map_num_lbks(io->dev));
+
+	if (!status) {
+		memcpy((char *)md->lba_map + offset * FTL_BLOCK_SIZE, md->dma_buf,
+		       io->lbk_cnt * FTL_BLOCK_SIZE);
+	}
+
+	md_io->cb.fn(md_io->cb.ctx, status);
+}
+
+int
+ftl_band_read_lba_map(struct ftl_band *band, struct ftl_md *md, size_t offset, size_t lba_cnt,
+		      struct ftl_cb cb)
+{
+	size_t lbk_cnt, lbk_off;
+
+	lbk_off = offset * sizeof(uint64_t) / FTL_BLOCK_SIZE;
+	lbk_cnt = spdk_divide_round_up(lba_cnt * sizeof(uint64_t), FTL_BLOCK_SIZE);
+
+	assert(lbk_off + lbk_cnt <= ftl_lba_map_num_lbks(band->dev));
+
+	return ftl_band_read_md(band, md, md->dma_buf,
+				lbk_cnt, ftl_band_lba_map_ppa(band, lbk_off),
+				ftl_read_lba_map_cb, NULL, cb);
 }
 
 int
 ftl_band_read_head_md(struct ftl_band *band, struct ftl_md *md,
-		      void *data, const struct ftl_cb *cb)
+		      void *data, struct ftl_cb cb)
 {
 	return ftl_band_read_md(band, md, data,
 				ftl_head_md_num_lbks(band->dev),
 				ftl_band_head_md_ppa(band),
+				ftl_read_md_cb,
 				ftl_unpack_head_md,
 				cb);
 }
