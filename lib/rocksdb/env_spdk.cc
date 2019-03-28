@@ -590,6 +590,10 @@ void SpdkInitializeThread(void)
 	}
 }
 
+void SpdkFinalizeThread(void)
+{
+}
+
 struct SpdkThreadState {
 	void (*user_function)(void *);
 	void *arg;
@@ -601,6 +605,7 @@ static void SpdkStartThreadWrapper(void *arg)
 
 	SpdkInitializeThread();
 	state->user_function(state->arg);
+	SpdkFinalizeThread();
 	delete state;
 }
 
@@ -722,6 +727,7 @@ SpdkEnv::~SpdkEnv()
 		if (!g_sync_args.channel) {
 			SpdkInitializeThread();
 		}
+
 		iter = spdk_fs_iter_first(g_fs);
 		while (iter != NULL) {
 			file = spdk_fs_iter_get_file(iter);
@@ -730,6 +736,7 @@ SpdkEnv::~SpdkEnv()
 		}
 	}
 
+	SpdkFinalizeThread();
 	spdk_app_start_shutdown();
 	pthread_join(mSpdkTid, NULL);
 }
