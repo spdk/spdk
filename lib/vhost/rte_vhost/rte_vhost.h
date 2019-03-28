@@ -74,11 +74,25 @@ struct rte_vhost_memory {
 	struct rte_vhost_mem_region regions[0];
 };
 
+typedef struct VhostUserInflightEntry {
+	uint8_t inflight;
+} VhostUserInflightEntry;
+
+typedef struct VhostInflightInfo {
+	uint16_t version;
+	uint16_t last_inflight_io;
+	uint16_t used_idx;
+	VhostUserInflightEntry desc[0];
+} VhostInflightInfo;
+
 struct rte_vhost_vring {
 	struct vring_desc	*desc;
 	struct vring_avail	*avail;
 	struct vring_used	*used;
 	uint64_t		log_guest_addr;
+	VhostInflightInfo	*inflight;
+	uint16_t                *inflight_reqs;
+	uint16_t                inflight_cnt;
 
 	int			callfd;
 	int			kickfd;

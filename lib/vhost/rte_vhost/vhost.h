@@ -115,6 +115,11 @@ struct vhost_virtqueue {
 
 	struct vring_used_elem  *shadow_used_ring;
 	uint16_t                shadow_used_idx;
+
+	VhostInflightInfo	*inflight;
+	uint16_t                *inflight_reqs;
+	uint16_t                inflight_cnt;
+
 } __rte_cache_aligned;
 
 /* Old kernels have no such macros defined */
@@ -167,6 +172,13 @@ struct guest_page {
 	uint64_t size;
 };
 
+typedef struct VuDevInflightInfo {
+	int fd;
+	void *addr;
+	uint64_t size;
+	uint32_t pervq_inflight_size;
+} VuDevInflightInfo;
+
 /**
  * Device structure contains all configuration information relating
  * to the device.
@@ -186,6 +198,7 @@ struct virtio_net {
 	uint32_t		nr_vring;
 	int			dequeue_zero_copy;
 	struct vhost_virtqueue	*virtqueue[VHOST_MAX_QUEUE_PAIRS * 2];
+	VuDevInflightInfo inflight_info;
 #define IF_NAME_SZ (PATH_MAX > IFNAMSIZ ? PATH_MAX : IFNAMSIZ)
 	char			ifname[IF_NAME_SZ];
 	uint64_t		log_size;
