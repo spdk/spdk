@@ -1111,6 +1111,25 @@ ut_decompress(uint8_t *outbuf, uint32_t *compressed_len, uint8_t *inbuf, uint32_
 	}
 }
 
+static void
+ut_build_data_buffer(uint8_t *data, uint32_t data_len, uint8_t init_val, uint32_t repeat)
+{
+	uint32_t _repeat = repeat;
+
+	SPDK_CU_ASSERT_FATAL(repeat > 0);
+
+	while (data_len > 0) {
+		*data = init_val;
+		data++;
+		data_len--;
+		_repeat--;
+		if (_repeat == 0) {
+			init_val++;
+			_repeat = repeat;
+		}
+	}
+}
+
 #define BUFSIZE 4096
 
 static void
@@ -1119,10 +1138,10 @@ compress_algorithm(void)
 	uint8_t original_data[BUFSIZE];
 	uint8_t compressed_data[BUFSIZE];
 	uint8_t decompressed_data[BUFSIZE];
-	uint32_t compressed_len, decompressed_len, i;
+	uint32_t compressed_len, decompressed_len;
 	int rc;
 
-	memset(original_data, 0xAA, BUFSIZE);
+	ut_build_data_buffer(original_data, BUFSIZE, 0xAA, BUFSIZE);
 	compressed_len = sizeof(compressed_data);
 	rc = ut_compress(compressed_data, &compressed_len, original_data, UINT8_MAX);
 	CU_ASSERT(rc == 0);
@@ -1151,9 +1170,7 @@ compress_algorithm(void)
 	CU_ASSERT(decompressed_len == UINT8_MAX + 1);
 	CU_ASSERT(memcmp(original_data, decompressed_data, decompressed_len) == 0);
 
-	for (i = 0; i < sizeof(original_data); i++) {
-		original_data[i] = i & 0xFF;
-	}
+	ut_build_data_buffer(original_data, BUFSIZE, 0x00, 1);
 	compressed_len = sizeof(compressed_data);
 	rc = ut_compress(compressed_data, &compressed_len, original_data, 2048);
 	CU_ASSERT(rc == 0);
