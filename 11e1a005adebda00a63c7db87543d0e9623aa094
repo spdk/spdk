@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "56a1e7fc_9e48ec8b",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 108,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "f584d42c_700c3c09",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5d06dcdb_25e583e3",
         "filename": "include/spdk/ftl.h",
         "patchSetId": 7
@@ -33,6 +51,24 @@
       "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dbd43633_a0f81c31",
+        "filename": "include/spdk/ftl.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5d06dcdb_25e583e3",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "88918d86_4a54302c",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "463e1a10_8660c8bb",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e9649d0_d3b66f67",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 7
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "05d54978_4e79e873",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "2e9649d0_d3b66f67",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "db2ddda8_4f279ad0",
         "filename": "lib/bdev/nvme/bdev_ftl.c",
         "patchSetId": 7
@@ -81,6 +153,30 @@
       "writtenOn": "2019-03-28T09:07:07Z",
       "side": 1,
       "message": "Why this should be called in the callback? We can call this just after opening bdev?",
+      "range": {
+        "startLine": 686,
+        "startChar": 6,
+        "endLine": 686,
+        "endChar": 33
+      },
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c44c6c2_e011f6fa",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 686,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "You\u0027re right, it can be called right after opening bdev, it\u0027s changed in the latest patchset.",
+      "parentUuid": "db2ddda8_4f279ad0",
       "range": {
         "startLine": 686,
         "startChar": 6,
@@ -110,6 +206,24 @@
     },
     {
       "key": {
+        "uuid": "aefcbe59_1e3d66b6",
+        "filename": "lib/bdev/nvme/bdev_ftl.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 925,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done, have a look at https://review.gerrithub.io/c/spdk/spdk/+/449405",
+      "parentUuid": "11198abc_0e5f1d03",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d166875e_fcd82cda",
         "filename": "lib/ftl/ftl_core.h",
         "patchSetId": 7
@@ -127,6 +241,24 @@
     },
     {
       "key": {
+        "uuid": "eab46210_fb892299",
+        "filename": "lib/ftl/ftl_core.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 141,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d166875e_fcd82cda",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5b0f6b17_12714200",
         "filename": "scripts/rpc.py",
         "patchSetId": 7
@@ -141,6 +273,24 @@
       "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5ca29cc0_799c3414",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 7
+      },
+      "lineNbr": 1292,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:14:45Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "5b0f6b17_12714200",
+      "revId": "11e1a005adebda00a63c7db87543d0e9623aa094",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
