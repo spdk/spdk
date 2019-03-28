@@ -183,12 +183,15 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	struct spdk_scsi_dev_vhost_state *state;
 	struct spdk_scsi_dev *dev;
 
+    SPDK_ERRLOG(".\n");
 	state = &svdev->scsi_dev_state[scsi_tgt_num];
 	if (state->dev == NULL) {
+    SPDK_ERRLOG("already removed\n");
 		/* we've been already removed in the meantime */
 		return 0;
 	}
 
+    SPDK_ERRLOG("removing\n");
 	dev = state->dev;
 	state->dev = NULL;
 	assert(state->status == VHOST_SCSI_DEV_REMOVING);
@@ -211,11 +214,13 @@ spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 	struct spdk_vhost_scsi_session *svsession;
 	struct spdk_scsi_dev_session_state *state;
 
+    SPDK_ERRLOG(". %u\n", scsi_tgt_num);
 	if (vsession == NULL) {
 		/* all sessions have already detached the device */
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
 						    struct spdk_vhost_scsi_dev, vdev);
 
+        SPDK_ERRLOG("detaching %u globally\n", scsi_tgt_num);
 		return remove_scsi_tgt(svdev, scsi_tgt_num);
 	}
 
@@ -223,6 +228,7 @@ spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 	state = &svsession->scsi_dev_state[scsi_tgt_num];
 
 	if (state->dev != NULL) {
+        SPDK_ERRLOG("for %u there's still a session\n", scsi_tgt_num);
 		/* there's still a session that references this device,
 		 * so abort our foreach chain here. We'll be called
 		 * again from this session's management poller after it
@@ -246,6 +252,7 @@ process_removed_devs(struct spdk_vhost_scsi_session *svsession)
 		dev = state->dev;
 
 		if (dev && state->status == VHOST_SCSI_DEV_REMOVING && !spdk_scsi_dev_has_pending_tasks(dev)) {
+    SPDK_ERRLOG("detaching %u\n", i);
 			/* detach the device from this session */
 			spdk_scsi_dev_free_io_channels(dev);
 			state->dev = NULL;
@@ -1078,12 +1085,16 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 	struct spdk_scsi_dev_session_state *state;
 	int rc = 0;
 
+    SPDK_ERRLOG(". %u     async:%d\n", ctx->scsi_tgt_num, ctx->async_fini);
+
 	if (vsession == NULL) {
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
 						    struct spdk_vhost_scsi_dev, vdev);
 
+    SPDK_ERRLOG("last %u     async:%d\n", ctx->scsi_tgt_num, ctx->async_fini);
 		if (!ctx->async_fini) {
 			/* there aren't any active sessions, so remove the dev and exit */
+    SPDK_ERRLOG("removing dev %u     async:%d\n", ctx->scsi_tgt_num, ctx->async_fini);
 			rc = remove_scsi_tgt(svdev, scsi_tgt_num);
 		}
 
@@ -1099,6 +1110,7 @@ spdk_vhost_scsi_session_remove_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
+    SPDK_ERRLOG("scheduling %u     async:%d\n", ctx->scsi_tgt_num, ctx->async_fini);
 	/* Mark the target for removal */
 	assert(state->status == VHOST_SCSI_DEV_PRESENT);
 	state->status = VHOST_SCSI_DEV_REMOVING;
@@ -1428,7 +1440,9 @@ destroy_session_poller_cb(void *arg)
 		state->status = VHOST_SCSI_DEV_EMPTY;
 		state->dev = NULL;
 
+        SPDK_ERRLOG("session %u removed in state %d\n", i, prev_status);
 		if (prev_status == VHOST_SCSI_DEV_REMOVING) {
+        SPDK_ERRLOG("detaching %u globally\n", i);
 			/* try to detach it globally */
 			spdk_vhost_dev_foreach_session(vsession->vdev,
 						       spdk_vhost_scsi_session_process_removed,
