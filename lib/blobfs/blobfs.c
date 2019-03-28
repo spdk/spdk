@@ -1738,24 +1738,28 @@ spdk_fs_free_io_channel(struct spdk_io_channel *channel)
 struct spdk_fs_thread_ctx *
 spdk_fs_alloc_thread_ctx(struct spdk_filesystem *fs)
 {
-	struct spdk_io_channel *io_channel;
-	struct spdk_fs_channel *fs_channel;
+	struct spdk_fs_thread_ctx *ctx;
 
-	io_channel = spdk_get_io_channel(&fs->io_target);
-	fs_channel = spdk_io_channel_get_ctx(io_channel);
-	fs_channel->send_request = fs->send_request;
-	fs_channel->sync = 1;
-	pthread_spin_init(&fs_channel->lock, 0);
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		return NULL;
+	}
 
-	/* These two types are currently equivalent */
-	return (struct spdk_fs_thread_ctx *)fs_channel;
+	_spdk_fs_channel_create(fs, &ctx->ch, 512);
+
+	ctx->ch.send_request = fs->send_request;
+	ctx->ch.sync = 1;
+	pthread_spin_init(&ctx->ch.lock, 0);
+
+	return ctx;
 }
 
 
 void
 spdk_fs_free_thread_ctx(struct spdk_fs_thread_ctx *ctx)
 {
-	spdk_put_io_channel(spdk_io_channel_from_ctx(ctx));
+	_spdk_fs_channel_destroy(NULL, &ctx->ch);
+	free(ctx);
 }
 
 void

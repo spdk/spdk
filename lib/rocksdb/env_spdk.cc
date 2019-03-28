@@ -592,6 +592,9 @@ void SpdkInitializeThread(void)
 
 void SpdkFinalizeThread(void)
 {
+	if (g_sync_args.channel) {
+		spdk_fs_free_thread_ctx(g_sync_args.channel);
+	}
 }
 
 struct SpdkThreadState {
