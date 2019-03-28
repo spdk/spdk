@@ -51,7 +51,7 @@ spdk_scsi_lun_complete_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *ta
 }
 
 static void
-spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	TAILQ_REMOVE(&lun->mgmt_tasks, task, scsi_link);
 
@@ -62,24 +62,24 @@ spdk_scsi_lun_complete_mgmt_task(struct spdk_scsi_lun *lun, struct spdk_scsi_tas
 }
 
 static bool
-spdk_scsi_lun_has_outstanding_tasks(struct spdk_scsi_lun *lun)
+scsi_lun_has_outstanding_tasks(struct spdk_scsi_lun *lun)
 {
 	return !TAILQ_EMPTY(&lun->tasks);
 }
 
 /* Reset task have to wait until all prior outstanding tasks complete. */
 static int
-spdk_scsi_lun_reset_check_outstanding_tasks(void *arg)
+scsi_lun_reset_check_outstanding_tasks(void *arg)
 {
 	struct spdk_scsi_task *task = (struct spdk_scsi_task *)arg;
 	struct spdk_scsi_lun *lun = task->lun;
 
-	if (spdk_scsi_lun_has_outstanding_tasks(lun)) {
+	if (scsi_lun_has_outstanding_tasks(lun)) {
 		return 0;
 	}
 	spdk_poller_unregister(&lun->reset_poller);
 
-	spdk_scsi_lun_complete_mgmt_task(lun, task);
+	scsi_lun_complete_mgmt_task(lun, task);
 	return 1;
 }
 
@@ -87,20 +87,20 @@ void
 spdk_scsi_lun_complete_reset_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	if (task->status == SPDK_SCSI_STATUS_GOOD) {
-		if (spdk_scsi_lun_has_outstanding_tasks(lun)) {
+		if (scsi_lun_has_outstanding_tasks(lun)) {
 			lun->reset_poller =
-				spdk_poller_register(spdk_scsi_lun_reset_check_outstanding_tasks,
+				spdk_poller_register(scsi_lun_reset_check_outstanding_tasks,
 						     task, 10);
 			return;
 		}
 	}
 
-	spdk_scsi_lun_complete_mgmt_task(lun, task);
+	scsi_lun_complete_mgmt_task(lun, task);
 }
 
 static void
-_spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
-				 struct spdk_scsi_task *task)
+_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
+			    struct spdk_scsi_task *task)
 {
 	TAILQ_INSERT_TAIL(&lun->mgmt_tasks, task, scsi_link);
 
@@ -130,7 +130,7 @@ _spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun,
 		break;
 	}
 
-	spdk_scsi_lun_complete_mgmt_task(lun, task);
+	scsi_lun_complete_mgmt_task(lun, task);
 }
 
 void
@@ -157,11 +157,11 @@ spdk_scsi_lun_execute_mgmt_task(struct spdk_scsi_lun *lun)
 	}
 	TAILQ_REMOVE(&lun->pending_mgmt_tasks, task, scsi_link);
 
-	_spdk_scsi_lun_execute_mgmt_task(lun, task);
+	_scsi_lun_execute_mgmt_task(lun, task);
 }
 
 static void
-_spdk_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
+_scsi_lun_execute_task(struct spdk_scsi_lun *lun, struct spdk_scsi_task *task)
 {
 	int rc;
 
@@ -207,12 +207,12 @@ spdk_scsi_lun_execute_tasks(struct spdk_scsi_lun *lun)
 
 	TAILQ_FOREACH_SAFE(task, &lun->pending_tasks, scsi_link, task_tmp) {
 		TAILQ_REMOVE(&lun->pending_tasks, task, scsi_link);
-		_spdk_scsi_lun_execute_task(lun, task);
+		_scsi_lun_execute_task(lun, task);
 	}
 }
 
 static void
-spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
+scsi_lun_remove(struct spdk_scsi_lun *lun)
 {
 	spdk_bdev_close(lun->bdev_desc);
 
@@ -221,7 +221,7 @@ spdk_scsi_lun_remove(struct spdk_scsi_lun *lun)
 }
 
 static int
-spdk_scsi_lun_check_io_channel(void *arg)
+scsi_lun_check_io_channel(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
@@ -230,12 +230,12 @@ spdk_scsi_lun_check_io_channel(void *arg)
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
 
-	spdk_scsi_lun_remove(lun);
+	scsi_lun_remove(lun);
 	return -1;
 }
 
 static void
-spdk_scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
+scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 {
 	struct spdk_scsi_desc *desc, *tmp;
 
@@ -252,15 +252,15 @@ spdk_scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 	}
 
 	if (lun->io_channel) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_io_channel,
+		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_io_channel,
 					lun, 10);
 	} else {
-		spdk_scsi_lun_remove(lun);
+		scsi_lun_remove(lun);
 	}
 }
 
 static int
-spdk_scsi_lun_check_pending_tasks(void *arg)
+scsi_lun_check_pending_tasks(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
 
@@ -270,26 +270,26 @@ spdk_scsi_lun_check_pending_tasks(void *arg)
 	}
 	spdk_poller_unregister(&lun->hotremove_poller);
 
-	spdk_scsi_lun_notify_hot_remove(lun);
+	scsi_lun_notify_hot_remove(lun);
 	return -1;
 }
 
 static void
-_spdk_scsi_lun_hot_remove(void *arg1)
+_scsi_lun_hot_remove(void *arg1)
 {
 	struct spdk_scsi_lun *lun = arg1;
 
 	if (spdk_scsi_lun_has_pending_tasks(lun) ||
 	    spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
-		lun->hotremove_poller = spdk_poller_register(spdk_scsi_lun_check_pending_tasks,
+		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_pending_tasks,
 					lun, 10);
 	} else {
-		spdk_scsi_lun_notify_hot_remove(lun);
+		scsi_lun_notify_hot_remove(lun);
 	}
 }
 
 static void
-spdk_scsi_lun_hot_remove(void *remove_ctx)
+scsi_lun_hot_remove(void *remove_ctx)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)remove_ctx;
 	struct spdk_thread *thread;
@@ -300,15 +300,15 @@ spdk_scsi_lun_hot_remove(void *remove_ctx)
 
 	lun->removed = true;
 	if (lun->io_channel == NULL) {
-		_spdk_scsi_lun_hot_remove(lun);
+		_scsi_lun_hot_remove(lun);
 		return;
 	}
 
 	thread = spdk_io_channel_get_thread(lun->io_channel);
 	if (thread != spdk_get_thread()) {
-		spdk_thread_send_msg(thread, _spdk_scsi_lun_hot_remove, lun);
+		spdk_thread_send_msg(thread, _scsi_lun_hot_remove, lun);
 	} else {
-		_spdk_scsi_lun_hot_remove(lun);
+		_scsi_lun_hot_remove(lun);
 	}
 }
 
@@ -339,7 +339,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 		return NULL;
 	}
 
-	rc = spdk_bdev_open(bdev, true, spdk_scsi_lun_hot_remove, lun, &lun->bdev_desc);
+	rc = spdk_bdev_open(bdev, true, scsi_lun_hot_remove, lun, &lun->bdev_desc);
 
 	if (rc != 0) {
 		SPDK_ERRLOG("bdev %s cannot be opened, error=%d\n", spdk_bdev_get_name(bdev), rc);
@@ -364,7 +364,7 @@ spdk_scsi_lun_construct(struct spdk_bdev *bdev,
 void
 spdk_scsi_lun_destruct(struct spdk_scsi_lun *lun)
 {
-	spdk_scsi_lun_hot_remove(lun);
+	scsi_lun_hot_remove(lun);
 }
 
 int

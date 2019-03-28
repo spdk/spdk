@@ -591,7 +591,7 @@ scsi_name_padding_test(void)
 	/* case 1 */
 	memset(name, '\0', sizeof(name));
 	memset(name, 'x', 251);
-	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+	written = bdev_scsi_pad_scsi_name(buf, name);
 
 	CU_ASSERT(written == 252);
 	CU_ASSERT(buf[250] == 'x');
@@ -600,7 +600,7 @@ scsi_name_padding_test(void)
 	/* case 2:  */
 	memset(name, '\0', sizeof(name));
 	memset(name, 'x', 252);
-	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+	written = bdev_scsi_pad_scsi_name(buf, name);
 
 	CU_ASSERT(written == 256);
 	CU_ASSERT(buf[251] == 'x');
@@ -611,7 +611,7 @@ scsi_name_padding_test(void)
 	/* case 3 */
 	memset(name, '\0', sizeof(name));
 	memset(name, 'x', 255);
-	written = spdk_bdev_scsi_pad_scsi_name(buf, name);
+	written = bdev_scsi_pad_scsi_name(buf, name);
 
 	CU_ASSERT(written == 256);
 	CU_ASSERT(buf[254] == 'x');
@@ -635,7 +635,7 @@ task_complete_test(void)
 	task.lun = &lun;
 
 	bdev_io.internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
-	spdk_bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
+	bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_GOOD);
 	CU_ASSERT(g_scsi_cb_called == 1);
 	g_scsi_cb_called = 0;
@@ -645,7 +645,7 @@ task_complete_test(void)
 	bdev_io.internal.error.scsi.sk = SPDK_SCSI_SENSE_HARDWARE_ERROR;
 	bdev_io.internal.error.scsi.asc = SPDK_SCSI_ASC_WARNING;
 	bdev_io.internal.error.scsi.ascq = SPDK_SCSI_ASCQ_POWER_LOSS_EXPECTED;
-	spdk_bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
+	bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_HARDWARE_ERROR);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_WARNING);
@@ -654,7 +654,7 @@ task_complete_test(void)
 	g_scsi_cb_called = 0;
 
 	bdev_io.internal.status = SPDK_BDEV_IO_STATUS_FAILED;
-	spdk_bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
+	bdev_scsi_task_complete_cmd(&bdev_io, bdev_io.internal.status, &task);
 	CU_ASSERT_EQUAL(task.status, SPDK_SCSI_STATUS_CHECK_CONDITION);
 	CU_ASSERT_EQUAL(task.sense_data[2] & 0xf, SPDK_SCSI_SENSE_ABORTED_COMMAND);
 	CU_ASSERT_EQUAL(task.sense_data[12], SPDK_SCSI_ASC_NO_ADDITIONAL_SENSE);
