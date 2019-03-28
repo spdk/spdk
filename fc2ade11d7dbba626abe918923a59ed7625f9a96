@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "a3c8ef49_47821a3d",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-28T18:58:10Z",
+      "side": 1,
+      "message": "this patch only fixes delete bdev, the RPC.  It still has bugs but they are fixed later in the series.  In this patch the unload callback is only associated with an RPC delete",
+      "parentUuid": "f20b827b_e4bab087",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bdc3dda9_39b3fef2",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-27T19:39:51Z",
       "side": 1,
       "message": "similar to comment above - this callback doesn\u0027t only get called on hot remove - it also gets called during normal app shutdown\n\nor maybe you\u0027re including that as a \"hot remove\"?",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8830392b_329befd6",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-28T18:58:10Z",
+      "side": 1,
+      "message": "yes, and you can see this is missing the vol unload which is another patch. When unload is added to this path a different callback is used so that the vol is not destroyed.  I was fixing things as I ran into them and putting them into the series to make smaller patches for review.  I can rework them and put all the delete, destroy and unload stuff in one patch?",
+      "parentUuid": "bdc3dda9_39b3fef2",
       "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "5dfec191_83560572",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1094,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-28T18:58:10Z",
+      "side": 1,
+      "message": "Sure I can remove it",
+      "parentUuid": "201e2262_e051ad51",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "50dfc110_359b7515",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -67,6 +121,24 @@
       "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0363adee_637e221c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1103,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-03-28T18:58:10Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "50dfc110_359b7515",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
