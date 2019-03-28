@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "455c0d11_cf8aabc3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 2
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-28T12:19:16Z",
+      "side": 1,
+      "message": "Could you explain more about this patch? I can\u0027t see any necessity of this patch.",
+      "revId": "294dc123b2a9c7c28c6473395f6ce22e74cb1be0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
