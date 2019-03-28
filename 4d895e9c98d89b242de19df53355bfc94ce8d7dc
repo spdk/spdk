@@ -16,6 +16,24 @@
       "revId": "4d895e9c98d89b242de19df53355bfc94ce8d7dc",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9f09cf92_48620b80",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 1272,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-28T12:30:29Z",
+      "side": 1,
+      "message": "Yeah, it could be a separate patch. I\u0027ve added it, since the trace API had the capability to trace bands used for defrag, but it wasn\u0027t used anywhere. But you\u0027re correct, it has nothing to do with the actual refactoring.",
+      "parentUuid": "3cadabdc_c1336062",
+      "revId": "4d895e9c98d89b242de19df53355bfc94ce8d7dc",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
