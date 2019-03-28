@@ -14,11 +14,11 @@ make
 ~~~
 
 Clone the RocksDB repository from the SPDK GitHub fork into a separate directory.
-Make sure you check out the `spdk-v5.6.1` branch.
+Make sure you check out the `spdk-v5.18.3` branch.
 
 ~~~{.sh}
 cd ..
-git clone -b spdk-v5.6.1 https://github.com/spdk/rocksdb.git
+git clone -b spdk-v5.18.3 https://github.com/spdk/rocksdb.git
 ~~~
 
 Build RocksDB.  Only the `db_bench` benchmarking tool is integrated with BlobFS.
