@@ -3326,13 +3326,13 @@ static void
 _spdk_bdev_reset_complete(struct spdk_io_channel_iter *i, int status)
 {
 	struct spdk_bdev_io *bdev_io = spdk_io_channel_iter_get_ctx(i);
-
-	if (bdev_io->u.reset.ch_ref != NULL) {
-		spdk_put_io_channel(bdev_io->u.reset.ch_ref);
-		bdev_io->u.reset.ch_ref = NULL;
-	}
+	struct spdk_io_channel *ch = bdev_io->u.reset.ch_ref;
 
 	_spdk_bdev_io_complete(bdev_io);
+
+	if (ch != NULL) {
+		spdk_put_io_channel(ch);
+	}
 }
 
 static void
