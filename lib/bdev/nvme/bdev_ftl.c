@@ -676,16 +676,15 @@ error_dev:
 }
 
 static int
-bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_id *trid,
-		const char *name, struct spdk_ftl_punit_range *range, unsigned int mode,
-		const struct spdk_uuid *uuid, ftl_bdev_init_fn cb, void *cb_arg)
+bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct ftl_bdev_init_opts *bdev_opts,
+		ftl_bdev_init_fn cb, void *cb_arg)
 {
 	struct ftl_bdev *ftl_bdev = NULL;
 	struct nvme_bdev_ctrlr *ftl_ctrlr;
 	struct spdk_ftl_dev_init_opts opts = {};
 	int rc;
 
-	ftl_ctrlr = bdev_ftl_add_ctrlr(ctrlr, trid);
+	ftl_ctrlr = bdev_ftl_add_ctrlr(ctrlr, &bdev_opts->trid);
 	if (!ftl_ctrlr) {
 		spdk_nvme_detach(ctrlr);
 		return -ENOMEM;
@@ -698,7 +697,7 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 		goto error_ctrlr;
 	}
 
-	ftl_bdev->bdev.name = strdup(name);
+	ftl_bdev->bdev.name = strdup(bdev_opts->name);
 	if (!ftl_bdev->bdev.name) {
 		rc = -ENOMEM;
 		goto error_ctrlr;
@@ -708,13 +707,14 @@ bdev_ftl_create(struct spdk_nvme_ctrlr *ctrlr, const struct spdk_nvme_transport_
 	ftl_bdev->init_cb = cb;
 	ftl_bdev->init_arg = cb_arg;
 
-	opts.conf = NULL;
 	opts.ctrlr = ctrlr;
-	opts.trid = *trid;
-	opts.range = *range;
-	opts.mode = mode;
-	opts.uuid = *uuid;
+	opts.trid = bdev_opts->trid;
+	opts.range = bdev_opts->range;
+	opts.mode = bdev_opts->mode;
+	opts.uuid = bdev_opts->uuid;
 	opts.name = ftl_bdev->bdev.name;
+	opts.conf = NULL;
+
 	/* TODO: set threads based on config */
 	opts.core_thread = opts.read_thread = spdk_get_thread();
 
@@ -852,8 +852,7 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 	TAILQ_FOREACH(ftl_ctrlr, &g_nvme_bdev_ctrlrs, tailq) {
 		if (!spdk_nvme_transport_id_compare(&ftl_ctrlr->trid, &opts->trid)) {
 			pthread_mutex_unlock(&g_bdev_nvme_mutex);
-			return bdev_ftl_create(ftl_ctrlr->ctrlr, &ftl_ctrlr->trid, opts->name,
-					       &opts->range, opts->mode, &opts->uuid, cb, cb_arg);
+			return bdev_ftl_create(ftl_ctrlr->ctrlr, opts, cb, cb_arg);
 		}
 	}
 
@@ -869,8 +868,7 @@ bdev_ftl_init_bdev(struct ftl_bdev_init_opts *opts, ftl_bdev_init_fn cb, void *c
 		return -EPERM;
 	}
 
-	return bdev_ftl_create(ctrlr, &opts->trid, opts->name, &opts->range,
-			       opts->mode, &opts->uuid, cb, cb_arg);
+	return bdev_ftl_create(ctrlr, opts, cb, cb_arg);
 }
 
 void
