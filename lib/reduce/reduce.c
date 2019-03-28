@@ -994,7 +994,7 @@ _reduce_vol_write_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn n
 	req->chunk = _reduce_vol_get_chunk_map(vol, req->chunk_map_index);
 	req->num_io_units = spdk_divide_round_up(compressed_size,
 			    vol->params.backing_io_unit_size);
-	req->chunk_is_compressed = (req->num_io_units == vol->backing_io_units_per_chunk);
+	req->chunk_is_compressed = (req->num_io_units != vol->backing_io_units_per_chunk);
 	req->chunk->compressed_size =
 		req->chunk_is_compressed ? compressed_size : vol->params.chunk_size;
 
@@ -1191,7 +1191,7 @@ _reduce_vol_read_chunk(struct spdk_reduce_vol_request *req, reduce_request_fn ne
 	assert(req->chunk->compressed_size == vol->params.chunk_size);
 	req->num_io_units = spdk_divide_round_up(req->chunk->compressed_size,
 			    vol->params.backing_io_unit_size);
-	req->chunk_is_compressed = (req->num_io_units == vol->backing_io_units_per_chunk);
+	req->chunk_is_compressed = (req->num_io_units != vol->backing_io_units_per_chunk);
 
 	_issue_backing_ops(req, vol, next_fn, false /* read */);
 }
