@@ -248,7 +248,7 @@ ftl_wptr_close_band(struct ftl_wptr *wptr)
 	band->tail_md_ppa = wptr->ppa;
 
 	assert(band->md.buf);
-	return ftl_band_write_tail_md(band, band->md.buf, ftl_md_write_cb);
+	return ftl_band_write_tail_md(band, ftl_md_write_cb);
 }
 
 static int
@@ -265,7 +265,7 @@ ftl_wptr_open_band(struct ftl_wptr *wptr)
 	ftl_band_set_state(band, FTL_BAND_STATE_OPENING);
 
 	assert(band->md.buf);
-	return ftl_band_write_head_md(band, band->md.buf, ftl_md_write_cb);
+	return ftl_band_write_head_md(band, ftl_md_write_cb);
 }
 
 static int
