@@ -120,9 +120,9 @@ spdk_nvmf_transport_create(enum spdk_nvme_transport_type type,
 		return NULL;
 	}
 
-	transport->data_buf_pool = spdk_mempool_create(spdk_mempool_name,
+	transport->data_buf_pool = spdk_bufferpool_create(spdk_mempool_name,
 				   opts->num_shared_buffers,
-				   opts->io_unit_size + NVMF_DATA_BUFFER_ALIGNMENT,
+				   opts->io_unit_size, NVMF_DATA_BUFFER_ALIGNMENT,
 				   SPDK_MEMPOOL_DEFAULT_CACHE_SIZE,
 				   SPDK_ENV_SOCKET_ID_ANY);
 
@@ -151,15 +151,15 @@ int
 spdk_nvmf_transport_destroy(struct spdk_nvmf_transport *transport)
 {
 	if (transport->data_buf_pool != NULL) {
-		if (spdk_mempool_count(transport->data_buf_pool) !=
+		if (spdk_bufferpool_count(transport->data_buf_pool) !=
 		    transport->opts.num_shared_buffers) {
 			SPDK_ERRLOG("transport buffer pool count is %zu but should be %u\n",
-				    spdk_mempool_count(transport->data_buf_pool),
+				    spdk_bufferpool_count(transport->data_buf_pool),
 				    transport->opts.num_shared_buffers);
 		}
 	}
 
-	spdk_mempool_free(transport->data_buf_pool);
+	spdk_bufferpool_free(transport->data_buf_pool);
 
 	return transport->ops->destroy(transport);
 }
@@ -196,7 +196,7 @@ struct spdk_nvmf_transport_poll_group *
 spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 {
 	struct spdk_nvmf_transport_poll_group *group;
-	struct spdk_nvmf_transport_pg_cache_buf *buf;
+	struct spdk_bufferpool_ele *buf;
 
 	group = transport->ops->poll_group_create(transport);
 	if (!group) {
@@ -210,7 +210,7 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 		group->buf_cache_count = 0;
 		group->buf_cache_size = transport->opts.buf_cache_size;
 		while (group->buf_cache_count < group->buf_cache_size) {
-			buf = (struct spdk_nvmf_transport_pg_cache_buf *)spdk_mempool_get(transport->data_buf_pool);
+			buf = (struct spdk_bufferpool_ele *)spdk_bufferpool_get(transport->data_buf_pool);
 			if (!buf) {
 				SPDK_NOTICELOG("Unable to reserve the full number of buffers for the pg buffer cache.\n");
 				break;
@@ -225,11 +225,11 @@ spdk_nvmf_transport_poll_group_create(struct spdk_nvmf_transport *transport)
 void
 spdk_nvmf_transport_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 {
-	struct spdk_nvmf_transport_pg_cache_buf *buf, *tmp;
+	struct spdk_bufferpool_ele *buf, *tmp;
 
 	STAILQ_FOREACH_SAFE(buf, &group->buf_cache, link, tmp) {
-		STAILQ_REMOVE(&group->buf_cache, buf, spdk_nvmf_transport_pg_cache_buf, link);
-		spdk_mempool_put(group->transport->data_buf_pool, buf);
+		STAILQ_REMOVE(&group->buf_cache, buf, spdk_bufferpool_ele, link);
+		spdk_bufferpool_put(group->transport->data_buf_pool, buf);
 	}
 	group->transport->ops->poll_group_destroy(group);
 }

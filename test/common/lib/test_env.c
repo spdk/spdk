@@ -204,6 +204,11 @@ struct test_mempool {
 	size_t	ele_size;
 };
 
+struct test_bufferpool {
+	struct test_mempool *mp;
+	size_t alignment;
+};
+
 DEFINE_RETURN_MOCK(spdk_mempool_create, struct spdk_mempool *);
 struct spdk_mempool *
 spdk_mempool_create(const char *name, size_t count,
@@ -304,6 +309,99 @@ spdk_mempool_count(const struct spdk_mempool *_mp)
 	} else {
 		return 1024;
 	}
+}
+
+DEFINE_RETURN_MOCK(spdk_bufferpool_create, struct spdk_bufferpool *);
+struct spdk_bufferpool *
+spdk_bufferpool_create(const char *name, size_t count,
+		       size_t ele_size, size_t alignment, size_t cache_size, int socket_id)
+{
+	struct test_bufferpool *bp;
+
+	HANDLE_RETURN_MOCK(spdk_bufferpool_create);
+
+	bp = calloc(1, sizeof(*bp));
+	if (bp == NULL) {
+		return NULL;
+	}
+
+	bp->mp = (struct test_mempool *)spdk_mempool_create(name, count, ele_size, cache_size, socket_id);
+	if (bp->mp == NULL) {
+		free(bp);
+		return NULL;
+	}
+
+	return (struct spdk_bufferpool *)bp;
+}
+
+void
+spdk_bufferpool_free(struct spdk_bufferpool *_bp)
+{
+	struct test_bufferpool *bp = (struct test_bufferpool *)_bp;
+	if (bp) {
+		spdk_mempool_free((struct spdk_mempool *)bp->mp);
+		free(bp);
+	}
+}
+
+DEFINE_RETURN_MOCK(spdk_bufferpool_get, void *);
+void *
+spdk_bufferpool_get(struct spdk_bufferpool *_bp)
+{
+	struct test_bufferpool *bp = (struct test_bufferpool *)_bp;
+	struct test_mempool *mp = NULL;
+	struct spdk_bufferpool_ele *buffer_ele;
+	size_t ele_size = 0x10000;
+	size_t alignment = 0x10000;
+	void *buf;
+
+	HANDLE_RETURN_MOCK(spdk_bufferpool_get);
+
+	if (bp && mp && mp->count == 0) {
+		return NULL;
+	}
+
+	buffer_ele = calloc(1, sizeof(struct spdk_bufferpool_ele));
+	if (!buffer_ele) {
+		return NULL;
+	}
+
+	if (bp) {
+		alignment = bp->alignment;
+	}
+
+	if (mp) {
+		ele_size = mp->ele_size;
+	}
+
+	if (posix_memalign(&buf, alignment, spdk_align32pow2(ele_size))) {
+		return NULL;
+	} else {
+		buffer_ele->buffer = buf;
+		if (mp) {
+			mp->count--;
+		}
+		return buffer_ele;
+	}
+}
+
+void
+spdk_bufferpool_put(struct spdk_bufferpool *_bp, void *ele)
+{
+	struct test_bufferpool *bp = (struct test_bufferpool *)_bp;
+	struct spdk_bufferpool_ele *buffer_ele;
+	struct test_mempool *mp = NULL;
+
+	if (bp) {
+		mp = (struct test_mempool *)bp->mp;
+	}
+
+	if (mp) {
+		mp->count++;
+	}
+	buffer_ele = (struct spdk_bufferpool_ele *)ele;
+	free(buffer_ele->buffer);
+	free(ele);
 }
 
 struct spdk_ring_ele {
