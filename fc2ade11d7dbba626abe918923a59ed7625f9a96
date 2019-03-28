@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "e12f589c_94b3050a",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 548,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-28T21:00:50Z",
+      "side": 1,
+      "message": "Oh - yeah, I see it now.  Never mind.",
+      "parentUuid": "a3c8ef49_47821a3d",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "bdc3dda9_39b3fef2",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 16
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "yes, and you can see this is missing the vol unload which is another patch. When unload is added to this path a different callback is used so that the vol is not destroyed.  I was fixing things as I ran into them and putting them into the series to make smaller patches for review.  I can rework them and put all the delete, destroy and unload stuff in one patch?",
       "parentUuid": "bdc3dda9_39b3fef2",
+      "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88fe715e_1366fc0e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 552,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-28T21:00:50Z",
+      "side": 1,
+      "message": "This is fine for now.  Personally I think when people see \"hot remove callback\" they won\u0027t consider the shutdown case as \"hot remove\".  But we can fix the comment later.",
+      "parentUuid": "8830392b_329befd6",
       "revId": "fc2ade11d7dbba626abe918923a59ed7625f9a96",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
