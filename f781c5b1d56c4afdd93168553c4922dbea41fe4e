@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "569ba674_310585cf",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1330,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-28T11:44:49Z",
+      "side": 1,
+      "message": "if you have ex 10 sessions.\n\nThis is session eg 3\n\nSessions 0, 1, 2 are started\nSession 3 is stopped\nSessions 4...9 are started\n\nYou ignore this target in line 949 and you ignore this target here as well.\n\nSo when/where this target gets added?",
+      "range": {
+        "startLine": 1330,
+        "startChar": 2,
+        "endLine": 1330,
+        "endChar": 48
+      },
+      "revId": "f781c5b1d56c4afdd93168553c4922dbea41fe4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
