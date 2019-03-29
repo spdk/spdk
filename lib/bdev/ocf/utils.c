@@ -34,6 +34,7 @@
 #include "spdk/stdinc.h"
 
 #include "utils.h"
+#include "vbdev_ocf.h"
 
 static char *cache_modes[ocf_cache_mode_max] = {
 	[ocf_cache_mode_wt] = "wt",
@@ -65,4 +66,72 @@ ocf_get_cache_modename(ocf_cache_mode_t mode)
 	} else {
 		return NULL;
 	}
+}
+
+static int
+mngt_poll_fn(void *opaque)
+{
+	struct vbdev_ocf *vbdev = opaque;
+
+	if (vbdev->mngt_ctx.poller_fn) {
+		vbdev->mngt_ctx.poller_fn(vbdev);
+	}
+
+	return 0;
+}
+
+int
+vbdev_ocf_mngt_start(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn *path,
+		     vbdev_ocf_mngt_callback cb, void *cb_arg)
+{
+	if (vbdev->mngt_ctx.current_step) {
+		return -EBUSY;
+	}
+
+	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
+
+	vbdev->mngt_ctx.poller = spdk_poller_register(mngt_poll_fn, vbdev, 200);
+	if (vbdev->mngt_ctx.poller == NULL) {
+		return -ENOMEM;
+	}
+
+	vbdev->mngt_ctx.current_step = path;
+	vbdev->mngt_ctx.cb = cb;
+	vbdev->mngt_ctx.cb_arg = cb_arg;
+
+	(*vbdev->mngt_ctx.current_step)(vbdev);
+
+	return 0;
+}
+
+void
+vbdev_ocf_mngt_poll(struct vbdev_ocf *vbdev, vbdev_ocf_mngt_fn fn)
+{
+	assert(vbdev->mngt_ctx.poller != NULL);
+	vbdev->mngt_ctx.poller_fn = fn;
+}
+
+void
+vbdev_ocf_mngt_continue(struct vbdev_ocf *vbdev, int status)
+{
+	if (vbdev->mngt_ctx.current_step == NULL) {
+		return;
+	}
+
+	assert((*vbdev->mngt_ctx.current_step) != NULL);
+
+	vbdev->mngt_ctx.status = status;
+	vbdev->mngt_ctx.poller_fn = NULL;
+
+	vbdev->mngt_ctx.current_step++;
+	if (*vbdev->mngt_ctx.current_step) {
+		(*vbdev->mngt_ctx.current_step)(vbdev);
+		return;
+	}
+
+	spdk_poller_unregister(&vbdev->mngt_ctx.poller);
+	if (vbdev->mngt_ctx.cb) {
+		vbdev->mngt_ctx.cb(vbdev->mngt_ctx.status, vbdev->mngt_ctx.cb_arg);
+	}
+	memset(&vbdev->mngt_ctx, 0, sizeof(vbdev->mngt_ctx));
 }
