@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eda306ad_25da77b6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "It\u0027s not a good name - the IO is not really being retried, but it\u0027s paused until the chunk it\u0027s supposed to go to becomes available. I\u0027d change the name to something like \u0027current\u0027.",
+      "range": {
+        "startLine": 73,
+        "startChar": 18,
+        "endLine": 73,
+        "endChar": 26
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1a5b710b_0379f46d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 493,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "You shouldn\u0027t propagate EAGAIN up here. EAGAIN means that the function should be called again, while in this case ftl_wptr_close_band isn\u0027t supposed to be called multiple times. This should return 0, even if ftl_submit_write returns EAGAIN.",
+      "range": {
+        "startLine": 492,
+        "startChar": 0,
+        "endLine": 493,
+        "endChar": 28
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b8fd3b33_311d2426",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 502,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 501,
+        "startChar": 0,
+        "endLine": 502,
+        "endChar": 28
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e2e22552_7a49f98c",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1015,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Let\u0027s just call it \u0027child\u0027.",
+      "range": {
+        "startLine": 1015,
+        "startChar": 17,
+        "endLine": 1015,
+        "endChar": 25
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58d7a6b0_04816f70",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this set the rc and break from the loop?",
+      "range": {
+        "startLine": 1026,
+        "startChar": 3,
+        "endLine": 1026,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c5f14d8b_23600504",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 1035,
+        "startChar": 1,
+        "endLine": 1035,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1e285969_d8c0add8",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1055,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Why is this called without ftl_io_done? If the parent is supposed to be completed right away, ftl_io_done should return true anyway.",
+      "range": {
+        "startLine": 1055,
+        "startChar": 1,
+        "endLine": 1055,
+        "endChar": 16
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8ec0d47_d78037d1",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 6
+      },
+      "lineNbr": 275,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:24:17Z",
+      "side": 1,
+      "message": "Let\u0027s call it ftl_io_init_child_write",
+      "range": {
+        "startLine": 275,
+        "startChar": 15,
+        "endLine": 275,
+        "endChar": 38
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
