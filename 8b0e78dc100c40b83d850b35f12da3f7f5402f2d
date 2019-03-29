@@ -97,6 +97,30 @@
     },
     {
       "key": {
+        "uuid": "48a125d9_f59c6b01",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T15:04:20Z",
+      "side": 1,
+      "message": "The md_buf was part of a different structure (which didn\u0027t have those buffers), so it\u0027s a different case. Sure, you can change the name later, but until then, let\u0027s stick with the most descriptive one.",
+      "parentUuid": "afde05ac_3b9f79f4",
+      "range": {
+        "startLine": 107,
+        "startChar": 11,
+        "endLine": 107,
+        "endChar": 14
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "687513b0_3caca098",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
