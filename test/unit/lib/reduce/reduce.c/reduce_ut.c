@@ -698,14 +698,16 @@ _write_maps(uint32_t backing_blocklen)
 	struct spdk_reduce_vol_params params = {};
 	struct spdk_reduce_backing_dev backing_dev = {};
 	struct iovec iov;
-	char buf[16 * 1024]; /* chunk size */
-	uint32_t i;
+	const int bufsize = 16 * 1024; /* chunk size */
+	char buf[bufsize];
+	uint32_t num_lbas, i;
 	uint64_t old_chunk0_map_index, new_chunk0_map_index;
 	struct spdk_reduce_chunk_map *old_chunk0_map, *new_chunk0_map;
 
-	params.chunk_size = 16 * 1024;
+	params.chunk_size = bufsize;
 	params.backing_io_unit_size = 4096;
 	params.logical_block_size = 512;
+	num_lbas = bufsize / params.logical_block_size;
 	spdk_uuid_generate(&params.uuid);
 
 	backing_dev_init(&backing_dev, &params, backing_blocklen);
@@ -720,10 +722,11 @@ _write_maps(uint32_t backing_blocklen)
 		CU_ASSERT(_vol_get_chunk_map_index(g_vol, i) == REDUCE_EMPTY_MAP_ENTRY);
 	}
 
+	ut_build_data_buffer(buf, bufsize, 0x00, 1);
 	iov.iov_base = buf;
-	iov.iov_len = params.logical_block_size;
+	iov.iov_len = bufsize;
 	g_reduce_errno = -1;
-	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, 1, write_cb, NULL);
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, num_lbas, write_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 
 	old_chunk0_map_index = _vol_get_chunk_map_index(g_vol, 0);
@@ -738,7 +741,7 @@ _write_maps(uint32_t backing_blocklen)
 	}
 
 	g_reduce_errno = -1;
-	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, 1, write_cb, NULL);
+	spdk_reduce_vol_writev(g_vol, &iov, 1, 0, num_lbas, write_cb, NULL);
 	CU_ASSERT(g_reduce_errno == 0);
 
 	new_chunk0_map_index = _vol_get_chunk_map_index(g_vol, 0);
