@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c4875a22_b6efb514",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1377,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-29T06:18:41Z",
+      "side": 1,
+      "message": "what we should do if offset + length \u003e avail_log_len ?",
+      "range": {
+        "startLine": 1377,
+        "startChar": 5,
+        "endLine": 1377,
+        "endChar": 28
+      },
+      "revId": "9e89170def7ce9a3ec3b971f4c47a62841390b38",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
