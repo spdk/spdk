@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "61dddae5_725c93e6",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 40
+      },
+      "lineNbr": 5058,
+      "author": {
+        "id": 1011230
+      },
+      "writtenOn": "2019-03-29T08:52:20Z",
+      "side": 1,
+      "message": "I can\u0027t see any CRLF here :P",
+      "parentUuid": "d5dd437e_2b54e772",
+      "revId": "1d8cc769b449d3b09dbc2431d4829ff7d7517fb2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fd1cb585_9c902ef2",
         "filename": "doc/jsonrpc.md",
         "patchSetId": 40
