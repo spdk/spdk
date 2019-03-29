@@ -3539,6 +3539,8 @@ blob_dirty_shutdown(void)
 	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -3645,6 +3647,8 @@ blob_dirty_shutdown(void)
 	free_clusters = spdk_bs_free_cluster_count(g_bs);
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -3749,6 +3753,7 @@ blob_dirty_shutdown(void)
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -3769,6 +3774,7 @@ blob_dirty_shutdown(void)
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
 	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
@@ -3806,6 +3812,8 @@ blob_dirty_shutdown(void)
 	CU_ASSERT(free_clusters == spdk_bs_free_cluster_count(g_bs));
 
 	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
 	blob = NULL;
 	g_blob = NULL;
 	g_blobid = SPDK_BLOBID_INVALID;
