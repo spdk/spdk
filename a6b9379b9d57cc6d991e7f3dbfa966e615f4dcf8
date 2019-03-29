@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "41bb322c_272816de",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T20:11:24Z",
+      "side": 1,
+      "message": "don\u0027t forget to change this back to 18.10.x, after you change the previous patch to use 18.10.2 here",
+      "revId": "a6b9379b9d57cc6d991e7f3dbfa966e615f4dcf8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
