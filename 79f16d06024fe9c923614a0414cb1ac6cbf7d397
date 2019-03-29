@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "03638405_4d8aa6ef",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1007,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T08:56:14Z",
+      "side": 1,
+      "message": "We are iterating over iov here - some chunks can be ready for write\u0027s.",
+      "parentUuid": "6766e90e_59123dac",
+      "range": {
+        "startLine": 1001,
+        "startChar": 0,
+        "endLine": 1007,
+        "endChar": 3
+      },
+      "revId": "79f16d06024fe9c923614a0414cb1ac6cbf7d397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "f09ca809_7bd757da",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 4
@@ -48,6 +72,30 @@
     },
     {
       "key": {
+        "uuid": "dc76efae_39c46372",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T08:56:14Z",
+      "side": 1,
+      "message": "ftl_io_done here is not needed anymore, we should always have inflight child here, and we need to complete parent at some point anyway.",
+      "parentUuid": "f09ca809_7bd757da",
+      "range": {
+        "startLine": 1035,
+        "startChar": 0,
+        "endLine": 1037,
+        "endChar": 0
+      },
+      "revId": "79f16d06024fe9c923614a0414cb1ac6cbf7d397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d3755502_f5412ea5",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 4
@@ -59,6 +107,30 @@
       "writtenOn": "2019-03-29T08:24:17Z",
       "side": 1,
       "message": "Remove this.",
+      "range": {
+        "startLine": 246,
+        "startChar": 0,
+        "endLine": 246,
+        "endChar": 32
+      },
+      "revId": "79f16d06024fe9c923614a0414cb1ac6cbf7d397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0676db39_57c16798",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 246,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T08:56:14Z",
+      "side": 1,
+      "message": "Pleas look at patchset 5.",
+      "parentUuid": "d3755502_f5412ea5",
       "range": {
         "startLine": 246,
         "startChar": 0,
