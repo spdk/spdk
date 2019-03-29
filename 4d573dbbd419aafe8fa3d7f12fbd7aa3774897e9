@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "68d6520b_47f07962",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 7,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T22:58:06Z",
+      "side": 1,
+      "message": "should this be \"hot added drive cannot be attached\"?",
+      "revId": "4d573dbbd419aafe8fa3d7f12fbd7aa3774897e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2dd4ab06_ff7d9a70",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T22:58:06Z",
+      "side": 1,
+      "message": "\"may\" seems to indicate this might happen, but not always - but I think you really mean to say \"will\" instead.",
+      "revId": "4d573dbbd419aafe8fa3d7f12fbd7aa3774897e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "78baa96a_1b9f370e",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 10,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T22:58:06Z",
+      "side": 1,
+      "message": "automatically\n\n(I normally wouldn\u0027t comment on a misspelling in a commit message, but since you\u0027re already fixing other things here I figured I\u0027d comment.)",
+      "revId": "4d573dbbd419aafe8fa3d7f12fbd7aa3774897e9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
