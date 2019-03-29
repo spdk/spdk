@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a3875bce_ef55ed64",
+        "filename": "scripts/gen_ftl.sh",
+        "patchSetId": 6
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T13:04:00Z",
+      "side": 1,
+      "message": "Why did you remove this?",
+      "range": {
+        "startLine": 8,
+        "startChar": 16,
+        "endLine": 8,
+        "endChar": 21
+      },
+      "revId": "cf54ed5339b2b48c0f49ef65234e92f376b13542",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
