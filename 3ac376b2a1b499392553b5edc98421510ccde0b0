@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7ad09926_f9db6f24",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 355,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "Can\u0027t you use md-\u003ebuf?",
+      "range": {
+        "startLine": 355,
+        "startChar": 64,
+        "endLine": 355,
+        "endChar": 74
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "053c4615_d89bcdb3",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 356,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "I don\u0027t understand this change. These two aren\u0027t used neither by this function, nor by any others.",
+      "range": {
+        "startLine": 355,
+        "startChar": 76,
+        "endLine": 356,
+        "endChar": 20
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7a727b3b_c212d480",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 389,
+        "startChar": 76,
+        "endLine": 390,
+        "endChar": 20
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6859d27b_d144ace1",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 398,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "Same here.",
+      "range": {
+        "startLine": 397,
+        "startChar": 76,
+        "endLine": 398,
+        "endChar": 20
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c7a47a01_faa278c4",
+        "filename": "lib/ftl/ftl_band.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 857,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "Let\u0027s verify if these two are actually inside the LBA map area.",
+      "range": {
+        "startLine": 857,
+        "startChar": 64,
+        "endLine": 857,
+        "endChar": 93
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a79802d9_e7aa60b9",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 214,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T08:43:21Z",
+      "side": 1,
+      "message": "I don\u0027t understand this. Why do we need an offset for deserialization? It\u0027s easy to calculate the offset for both head_md and tail_md.",
+      "range": {
+        "startLine": 214,
+        "startChar": 0,
+        "endLine": 214,
+        "endChar": 19
+      },
+      "revId": "3ac376b2a1b499392553b5edc98421510ccde0b0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
