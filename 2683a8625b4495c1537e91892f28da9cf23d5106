@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "b9b0de62_3c835946",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-03-29T03:47:21Z",
+      "side": 1,
+      "message": "hi ben, thanks for reviewing my patch, I\u0027m cleared after what you said.",
+      "parentUuid": "ff27be6d_24efa456",
+      "revId": "2683a8625b4495c1537e91892f28da9cf23d5106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "dd578c9f_21593333",
         "filename": "lib/nvme/nvme_rdma.c",
         "patchSetId": 2
@@ -30,6 +48,24 @@
       "writtenOn": "2019-03-28T21:44:54Z",
       "side": 1,
       "message": "This isn\u0027t right - we need to unregister the memory region (rdma_dereg_mr) before releasing the memory it is describing (rqpair-\u003ecmds).\n\nI think this particular function was correct before. You could potentially remove the check that rdma_reqs isn\u0027t NULL.",
+      "revId": "2683a8625b4495c1537e91892f28da9cf23d5106",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "40dae390_cbe3448d",
+        "filename": "lib/nvme/nvme_rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 406,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-03-29T03:47:21Z",
+      "side": 1,
+      "message": "thanks ben! \nlike nvme_rdma_alloc_rsps:\n\trqpair-\u003ersp_mr \u003d NULL;\n\trqpair-\u003ersps \u003d NULL;\n\trqpair-\u003ersp_recv_wrs \u003d NULL;\n\trqpair-\u003ersp_sgls \u003d NULL;  //treat this one the same as others.\nin nvme_rdma_alloc_reqs, alse do this: // treat this the same as nvme_rdma_alloc_rsps, there\u0027re many failed cases to deal with.\n        rqpair-\u003ecmds \u003d NULL;\n\trqpair-\u003ecmd_mr \u003d NULL;\n\trqpair-\u003erdma_reqs \u003d NULL;\n        that no need :\t\n        if (!rqpair-\u003erdma_reqs) { // \n\t\treturn;\n\t}\nIf you think these are useless, I will abandon it.",
+      "parentUuid": "dd578c9f_21593333",
       "revId": "2683a8625b4495c1537e91892f28da9cf23d5106",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
