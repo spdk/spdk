@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "490b9fa7_69be8106",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T20:10:25Z",
+      "side": 1,
+      "message": "18.10.2",
+      "revId": "87ecb6bfd4b4c47ade9be5d37c1ab8d33fb06431",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
