@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a9e0fd40_a8f1a788",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 658,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T18:36:26Z",
+      "side": 1,
+      "message": "just to be extra safe, should we go ahead and set meta_ctx-\u003ebase_desc to NULL here?",
+      "revId": "27a4e767181035b2c4b4db5ed569c6e2e81c39fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ae93ef8d_ac75b392",
+        "filename": "test/unit/lib/bdev/compress.c/compress_ut.c",
+        "patchSetId": 34
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T18:36:26Z",
+      "side": 1,
+      "message": "I think this comment needs to be moved - it looks out of place here",
+      "revId": "27a4e767181035b2c4b4db5ed569c6e2e81c39fd",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
