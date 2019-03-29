@@ -1,0 +1,222 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "dc43eba7_2f4200f8",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 41
+      },
+      "lineNbr": 77,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "\"nvme_manage tool\" is better",
+      "range": {
+        "startLine": 77,
+        "startChar": 13,
+        "endLine": 77,
+        "endChar": 24
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "85e2db64_c13f8f6f",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "remove extra line",
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d672ff1b_9a1ffde4",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "better to have same alignment for all below members.",
+      "range": {
+        "startLine": 125,
+        "startChar": 15,
+        "endLine": 125,
+        "endChar": 16
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d662f935_372814b4",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "remove extra line",
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5f3269c7_a56be01b",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "Is this Received or Sent?",
+      "range": {
+        "startLine": 81,
+        "startChar": 32,
+        "endLine": 81,
+        "endChar": 36
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5a273566_db341d0c",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "could we define a Macro instead of using a hard-coded value?",
+      "range": {
+        "startLine": 93,
+        "startChar": 11,
+        "endLine": 93,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8cef1f15_ac7adef1",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "remove this extra space",
+      "range": {
+        "startLine": 153,
+        "startChar": 34,
+        "endLine": 153,
+        "endChar": 35
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7eef6610_e2cf3f54",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "dev is a better name",
+      "range": {
+        "startLine": 195,
+        "startChar": 37,
+        "endLine": 195,
+        "endChar": 40
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "42a2bda1_e078625f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "from the below implementation, looks like this is opal_set_lock(), similar for above opal_check_xxx",
+      "range": {
+        "startLine": 274,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9766fbba_922e9062",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T09:12:36Z",
+      "side": 1,
+      "message": "better to check\nsupported \u003d\u003d false\n\nsame for below single_user and found_com_id",
+      "range": {
+        "startLine": 408,
+        "startChar": 5,
+        "endLine": 408,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
