@@ -2,6 +2,8 @@
 
 ## v18.10.2: (Upcoming Release)
 
+DPDK 18.11 is now supported.
+
 ## v18.10.1:
 
 ### Packaging
