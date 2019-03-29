@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "afde05ac_3b9f79f4",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:54:17Z",
+      "side": 1,
+      "message": "We had md_buf before so why we want to start emphasise it now. This name will be a subject to change in next patches when I try to get rid of lba_map mempool.",
+      "parentUuid": "25c5a97a_d133fd05",
+      "range": {
+        "startLine": 107,
+        "startChar": 11,
+        "endLine": 107,
+        "endChar": 14
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "687513b0_3caca098",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
