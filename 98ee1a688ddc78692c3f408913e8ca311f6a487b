@@ -34,6 +34,24 @@
       "revId": "98ee1a688ddc78692c3f408913e8ca311f6a487b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f545d7a4_cd3b3a99",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 22
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T21:57:02Z",
+      "side": 1,
+      "message": "But unregister_cb can only get called via the spdk_io_device_unregister call at line 232.  That call only happens if vbdev-\u003estate.started \u003d\u003d true.  So I don\u0027t see how it could change from true to false.",
+      "parentUuid": "9709302d_ab5ad35f",
+      "revId": "98ee1a688ddc78692c3f408913e8ca311f6a487b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
