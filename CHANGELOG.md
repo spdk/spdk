@@ -1,6 +1,6 @@
 # Changelog
 
-## v18.10.2: (Upcoming Release)
+## v18.10.2:
 
 DPDK 18.11 is now supported.
 
