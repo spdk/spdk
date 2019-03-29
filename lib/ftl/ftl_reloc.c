@@ -464,7 +464,12 @@ ftl_reloc_io_init(struct ftl_band_reloc *breloc, struct ftl_io *io,
 	}
 
 	io = ftl_io_init_internal(&opts);
+	if (!io) {
+		return -1;
+	}
+
 	io->ppa = ppa;
+
 	return 0;
 }
 
