@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "bbd3ed15_43e03e77",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 39
+      },
+      "lineNbr": 49,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "If we make it hardcode to NVMe, then this variable is no longer needed. Removed.",
+      "parentUuid": "92916ee0_5ba0c98d",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 49,
+        "endChar": 10
+      },
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ea7642f0_5240a4a2",
         "filename": "lib/opal/opal.c",
         "patchSetId": 39
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-28T08:18:26Z",
       "side": 1,
       "message": "move to opal.h.",
+      "range": {
+        "startLine": 40,
+        "startChar": 0,
+        "endLine": 40,
+        "endChar": 36
+      },
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "586ffcc2_42eee7bb",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 40,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "ea7642f0_5240a4a2",
       "range": {
         "startLine": 40,
         "startChar": 0,
@@ -65,6 +113,24 @@
     },
     {
       "key": {
+        "uuid": "77733461_c95db1d2",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "81fc7bd7_f496e6d0",
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "356a2613_327bc30f",
         "filename": "lib/opal/opal.c",
         "patchSetId": 39
@@ -76,6 +142,30 @@
       "writtenOn": "2019-03-28T08:18:26Z",
       "side": 1,
       "message": "This can be moved to opal.h.",
+      "range": {
+        "startLine": 48,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 29
+      },
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "233bb873_d9bb881d",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "This is together with the below spdk_opal_errors. So I will put all to opal.h",
+      "parentUuid": "356a2613_327bc30f",
       "range": {
         "startLine": 48,
         "startChar": 0,
@@ -111,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "363b35b7_0ba0c08a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 417,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "6a23d069_fe4936c4",
+      "range": {
+        "startLine": 413,
+        "startChar": 1,
+        "endLine": 417,
+        "endChar": 2
+      },
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e43ef20_c9ceb7bc",
         "filename": "lib/opal/opal.c",
         "patchSetId": 39
@@ -122,6 +236,30 @@
       "writtenOn": "2019-03-28T08:18:26Z",
       "side": 1,
       "message": "The mutex should be initialized before using, I don\u0027t see any where doing this. Maybe you can remove it, I don\u0027t see any data structure that you want to protect with.",
+      "range": {
+        "startLine": 554,
+        "startChar": 26,
+        "endLine": 554,
+        "endChar": 36
+      },
+      "revId": "b60b37d8d8c377764487ea5e84642d598cdf3f69",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c5c342a7_806c63f9",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 39
+      },
+      "lineNbr": 554,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-03-29T02:23:05Z",
+      "side": 1,
+      "message": "Maybe not neccessary for now. Removed.",
+      "parentUuid": "9e43ef20_c9ceb7bc",
       "range": {
         "startLine": 554,
         "startChar": 26,
