@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "46db1aac_2b0252b4",
+        "filename": "include/spdk/env.h",
+        "patchSetId": 2
+      },
+      "lineNbr": 475,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-29T20:28:54Z",
+      "side": 1,
+      "message": "This should return an spdk_bufferpool_ele struct - that\u0027s what it\u0027s actually returning so you may as well make the return type be that explicitly.\n\nI think the original idea on the DPDK mailing list was that the indirection could be hidden, but it can\u0027t in reality. I think we\u0027re back to what I suggested where we just make our own mempool object on top of a ring directly.",
+      "revId": "81ddf32ea7966c763bbe59c00a6521d376274a63",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
