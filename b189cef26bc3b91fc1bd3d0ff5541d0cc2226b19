@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "649767eb_e706cbde",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T20:27:27Z",
+      "side": 1,
+      "message": "Waiting until here to register these notify types means that any bdevs created during initial bring up will not generate notify events.\n\nI\u0027m not sure if that was intended or not.  I could see good reasoning to not generate events during initialization.  But I\u0027d suggest adding a comment here explaining that.\n\nOr if you do want to generate events during initialization, then these notify types need to be registered earlier.",
+      "revId": "b189cef26bc3b91fc1bd3d0ff5541d0cc2226b19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
