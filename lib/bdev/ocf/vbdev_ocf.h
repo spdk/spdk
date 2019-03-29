@@ -81,6 +81,31 @@ struct vbdev_ocf_config {
 	struct ocf_mngt_core_config         core;
 };
 
+/* Types for management operations */
+typedef void (*vbdev_ocf_mngt_fn)(struct vbdev_ocf *);
+typedef void (*vbdev_ocf_mngt_callback)(int, void *);
+
+/* Context for asynchronous management operations
+ * Single management operation usually contains a list of sub procedures,
+ * this structure handles sharing between those sub procedures */
+struct vbdev_ocf_mngt_ctx {
+	/* Pointer to function that is currently being executed
+	 * It gets incremented on each step until it dereferences to NULL */
+	vbdev_ocf_mngt_fn                  *current_step;
+
+	/* Poller, registered once per whole management operation */
+	struct spdk_poller                 *poller;
+	/* Function that gets invoked by poller on each iteration */
+	vbdev_ocf_mngt_fn                   poller_fn;
+
+	/* Status of management operation */
+	int                                 status;
+
+	/* External callback and its argument */
+	vbdev_ocf_mngt_callback             cb;
+	void                               *cb_arg;
+};
+
 /* Base device info */
 struct vbdev_ocf_base {
 	/* OCF unique internal id */
@@ -124,6 +149,9 @@ struct vbdev_ocf {
 	/* Parameters */
 	struct vbdev_ocf_config      cfg;
 	struct vbdev_ocf_state       state;
+
+	/* Management context */
+	struct vbdev_ocf_mngt_ctx    mngt_ctx;
 
 	/* Exposed SPDK bdev. Registered in bdev layer */
 	struct spdk_bdev             exp_bdev;
