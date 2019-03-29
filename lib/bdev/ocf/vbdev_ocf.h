@@ -81,6 +81,20 @@ struct vbdev_ocf_config {
 	struct ocf_mngt_core_config         core;
 };
 
+/* Types for management operations */
+typedef void (*vbdev_ocf_mngt_fn)(struct vbdev_ocf *);
+typedef void (*vbdev_ocf_mngt_callback)(int, void *);
+
+/* Context for asynchronous management operations */
+struct vbdev_ocf_mngt_ctx {
+	vbdev_ocf_mngt_fn                  *current_step;
+	struct spdk_poller                 *poller;
+	vbdev_ocf_mngt_fn                   poller_fn;
+	int                                 status;
+	vbdev_ocf_mngt_callback             cb;
+	void                               *cb_arg;
+};
+
 /* Base device info */
 struct vbdev_ocf_base {
 	/* OCF unique internal id */
@@ -124,6 +138,9 @@ struct vbdev_ocf {
 	/* Parameters */
 	struct vbdev_ocf_config      cfg;
 	struct vbdev_ocf_state       state;
+
+	/* Management context */
+	struct vbdev_ocf_mngt_ctx    mngt_ctx;
 
 	/* Exposed SPDK bdev. Registered in bdev layer */
 	struct spdk_bdev             exp_bdev;
