@@ -34,6 +34,24 @@
       "revId": "4246cd9ed296ad60d0d5b0adc1fa24a334b859c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2d73dcd3_13a47c72",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-29T19:58:23Z",
+      "side": 1,
+      "message": "Yeah, I think in terms of performance the two approaches are identical. But we save a little bit of memory moving the list up to the poll group. instead of at the poller.",
+      "parentUuid": "174e0fd9_e22bb1aa",
+      "revId": "4246cd9ed296ad60d0d5b0adc1fa24a334b859c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
