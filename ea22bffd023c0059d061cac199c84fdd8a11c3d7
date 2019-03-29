@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7378f11_8ab7707b",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1469,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-03-29T06:07:25Z",
+      "side": 1,
+      "message": "I feel preempt notification means preventing notification. Does this match your thought?\n\nimmediate_notification may fit well?",
+      "range": {
+        "startLine": 1469,
+        "startChar": 5,
+        "endLine": 1469,
+        "endChar": 25
+      },
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
