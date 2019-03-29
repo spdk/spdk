@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6abbe250_a986ee0d",
+        "filename": "lib/ftl/ftl_band.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 107,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "I think this name is good enough. This is used in a lot of chain calls so lets keep it short.",
+      "parentUuid": "76af46cc_4e192850",
+      "range": {
+        "startLine": 107,
+        "startChar": 11,
+        "endLine": 107,
+        "endChar": 14
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "687513b0_3caca098",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
@@ -36,6 +60,30 @@
       "writtenOn": "2019-03-29T08:35:47Z",
       "side": 1,
       "message": "This doesn\u0027t add anything, remove it.",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 22
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3499be76_d132115b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "Yeh, it was needed for debug, I will remove it.",
+      "parentUuid": "687513b0_3caca098",
       "range": {
         "startLine": 250,
         "startChar": 0,
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "30fce676_07700b8b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 251,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "This is done in next patch.",
+      "parentUuid": "56c2f8b8_5c59215d",
+      "range": {
+        "startLine": 251,
+        "startChar": 31,
+        "endLine": 251,
+        "endChar": 49
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "98369bd7_ffda886a",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 3
@@ -82,6 +154,30 @@
       "writtenOn": "2019-03-29T08:35:47Z",
       "side": 1,
       "message": "Same here.",
+      "range": {
+        "startLine": 267,
+        "startChar": 0,
+        "endLine": 267,
+        "endChar": 22
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c03d1c1_bd63f3c1",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 267,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "98369bd7_ffda886a",
       "range": {
         "startLine": 267,
         "startChar": 0,
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "01e3fba2_ecf58725",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 268,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "5a17c700_5c0a839b",
+      "range": {
+        "startLine": 268,
+        "startChar": 31,
+        "endLine": 268,
+        "endChar": 49
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ed847dc6_18f059d6",
         "filename": "lib/ftl/ftl_reloc.c",
         "patchSetId": 3
@@ -140,6 +260,30 @@
     },
     {
       "key": {
+        "uuid": "d2eb4b37_dd813b4c",
+        "filename": "lib/ftl/ftl_reloc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 192,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "^",
+      "parentUuid": "ed847dc6_18f059d6",
+      "range": {
+        "startLine": 192,
+        "startChar": 30,
+        "endLine": 192,
+        "endChar": 59
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5940b86b_b0fe7bf5",
         "filename": "test/unit/lib/ftl/ftl_md/ftl_md_ut.c",
         "patchSetId": 3
@@ -151,6 +295,30 @@
       "writtenOn": "2019-03-29T08:35:47Z",
       "side": 1,
       "message": "What\u0027s the point of this change?",
+      "range": {
+        "startLine": 66,
+        "startChar": 1,
+        "endLine": 66,
+        "endChar": 31
+      },
+      "revId": "8b0e78dc100c40b83d850b35f12da3f7f5402f2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0e330921_4a395cb6",
+        "filename": "test/unit/lib/ftl/ftl_md/ftl_md_ut.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 66,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-03-29T14:11:22Z",
+      "side": 1,
+      "message": "scan-build complain",
+      "parentUuid": "5940b86b_b0fe7bf5",
       "range": {
         "startLine": 66,
         "startChar": 1,
