@@ -61,6 +61,8 @@ DEFINE_STUB_V(spdk_trace_register_description, (const char *name, const char *sh
 		uint8_t arg1_is_ptr, const char *arg1_name));
 DEFINE_STUB_V(_spdk_trace_record, (uint64_t tsc, uint16_t tpoint_id, uint16_t poller_id,
 				   uint32_t size, uint64_t object_id, uint64_t arg1));
+DEFINE_STUB(spdk_notify_send, uint64_t, (const char *type, const char *ctx), 0);
+DEFINE_STUB(spdk_notify_type_register, struct spdk_notify_type *, (const char *type), NULL);
 
 static void
 _part_cleanup(struct spdk_bdev_part *part)
