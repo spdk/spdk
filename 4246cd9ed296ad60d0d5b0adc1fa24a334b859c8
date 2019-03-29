@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "190373b3_9998be03",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-29T17:45:22Z",
+      "side": 1,
+      "message": "Could you actually move this up to the rdma poller group?",
+      "revId": "4246cd9ed296ad60d0d5b0adc1fa24a334b859c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
