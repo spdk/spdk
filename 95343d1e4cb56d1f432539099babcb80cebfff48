@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "311d79f7_0082e435",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1379,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T19:02:07Z",
+      "side": 1,
+      "message": "nit - no space needed before work_requests",
+      "revId": "95343d1e4cb56d1f432539099babcb80cebfff48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f95759b9_7d380cc8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1542,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T19:02:07Z",
+      "side": 1,
+      "message": "goto err_exit means this will return -ENOMEM - is that the right errno for this failure?",
+      "revId": "95343d1e4cb56d1f432539099babcb80cebfff48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0dcb77cf_e03bd8ca",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 1733,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T19:02:07Z",
+      "side": 1,
+      "message": "these whitespace changes don\u0027t seem relevant to this patch (nor switching rgroup and device)",
+      "revId": "95343d1e4cb56d1f432539099babcb80cebfff48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9d0d308_c29263b8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 72
+      },
+      "lineNbr": 3002,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-03-29T19:02:07Z",
+      "side": 1,
+      "message": "these whitespace changes don\u0027t seem relevant to this patch",
+      "revId": "95343d1e4cb56d1f432539099babcb80cebfff48",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
