@@ -2206,6 +2206,35 @@ _spdk_blob_lookup(struct spdk_blob_store *bs, spdk_blob_id blobid)
 	return NULL;
 }
 
+static void
+_spdk_blob_get_snapshot_and_clone_entries(struct spdk_blob *blob,
+		struct spdk_blob_list **snapshot_entry, struct spdk_blob_list **clone_entry)
+{
+	assert(blob != NULL);
+	*snapshot_entry = NULL;
+	*clone_entry = NULL;
+
+	if (blob->parent_id == SPDK_BLOBID_INVALID) {
+		return;
+	}
+
+	TAILQ_FOREACH(*snapshot_entry, &blob->bs->snapshots, link) {
+		if ((*snapshot_entry)->id == blob->parent_id) {
+			break;
+		}
+	}
+
+	if (*snapshot_entry != NULL) {
+		TAILQ_FOREACH(*clone_entry, &(*snapshot_entry)->clones, link) {
+			if ((*clone_entry)->id == blob->id) {
+				break;
+			}
+		}
+
+		assert(clone_entry != NULL);
+	}
+}
+
 static int
 _spdk_bs_channel_create(void *io_device, void *ctx_buf)
 {
@@ -2350,30 +2379,12 @@ _spdk_bs_blob_list_remove(struct spdk_blob *blob)
 {
 	struct spdk_blob_list *snapshot_entry = NULL;
 	struct spdk_blob_list *clone_entry = NULL;
-	spdk_blob_id snapshot_id;
 
-	assert(blob != NULL);
+	_spdk_blob_get_snapshot_and_clone_entries(blob, &snapshot_entry, &clone_entry);
 
-	snapshot_id = blob->parent_id;
-	if (snapshot_id == SPDK_BLOBID_INVALID) {
+	if (snapshot_entry == NULL) {
 		return 0;
 	}
-
-	TAILQ_FOREACH(snapshot_entry, &blob->bs->snapshots, link) {
-		if (snapshot_entry->id == snapshot_id) {
-			break;
-		}
-	}
-
-	assert(snapshot_entry != NULL);
-
-	TAILQ_FOREACH(clone_entry, &snapshot_entry->clones, link) {
-		if (clone_entry->id == blob->id) {
-			break;
-		}
-	}
-
-	assert(clone_entry != NULL);
 
 	blob->parent_id = SPDK_BLOBID_INVALID;
 	TAILQ_REMOVE(&snapshot_entry->clones, clone_entry, link);
