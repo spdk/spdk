@@ -256,6 +256,10 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 	};
 
 	io = ftl_io_init_internal(&opts);
+	if (!io) {
+		return NULL;
+	}
+
 	io->lbk_cnt = lbk_cnt;
 
 	return io;
