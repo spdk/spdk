@@ -237,6 +237,30 @@
     },
     {
       "key": {
+        "uuid": "c5b9b3e1_1ee8c550",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T15:17:19Z",
+      "side": 1,
+      "message": "Then there\u0027s something wrong here. We should have to rely on returning early or risk completing unfinished IO. The IO should be able to track the number of IOs to be sent and if not all are sent, ftl_io_done should return false.",
+      "parentUuid": "febb81be_18a113d1",
+      "range": {
+        "startLine": 1026,
+        "startChar": 3,
+        "endLine": 1026,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c5f14d8b_23600504",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 6
@@ -272,6 +296,30 @@
       "side": 1,
       "message": "Yeh, we should break here",
       "parentUuid": "c5f14d8b_23600504",
+      "range": {
+        "startLine": 1035,
+        "startChar": 1,
+        "endLine": 1035,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0a28838_88e044c3",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T15:17:19Z",
+      "side": 1,
+      "message": "You can only break here, if ftl_io_done(parent) returns false until all the requests are sent out. The behaviour should be the same as in the condition above (wptr-\u003echunk-\u003ebusy).",
+      "parentUuid": "010a1350_7c7fbc4a",
       "range": {
         "startLine": 1035,
         "startChar": 1,
