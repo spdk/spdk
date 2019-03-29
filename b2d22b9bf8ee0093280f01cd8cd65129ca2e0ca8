@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "cf3c22be_5c1e739b",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 4
+      },
+      "lineNbr": 13,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T07:32:14Z",
+      "side": 1,
+      "message": "Maybe:\n\nIn some cases, we could configure perf with more than 1 cores and currently we used the round robin algorithm to assoicate the cores and namespaces. In this case, one namespace may only be accessed through one core.\n\nThis patch adds a new parameter to let all cores to access all the namespaces.",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 13,
+        "endChar": 59
+      },
+      "revId": "b2d22b9bf8ee0093280f01cd8cd65129ca2e0ca8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2be114f3_c5a4f9fc",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1881,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-03-29T07:32:14Z",
+      "side": 1,
+      "message": "Maybe we can introduce a new function as these lines are same for below lines from 1901 to 1911.\n\nSomething like\n\nstatic int\n_associate_worker_with_ns(struct worker_thread *worker)\n{\n    struct ns_worker_ctx *ns_ctx \u003d calloc....\n    ....\n    worker-\u003ens_ctx \u003d ns_ctx;\n}\n\nAnd here and below, it just calls the same function\nif(_associate_worker_with_ns(worker) \u003d\u003d -1) {\n    return -1;\n}",
+      "range": {
+        "startLine": 1871,
+        "startChar": 3,
+        "endLine": 1881,
+        "endChar": 27
+      },
+      "revId": "b2d22b9bf8ee0093280f01cd8cd65129ca2e0ca8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
