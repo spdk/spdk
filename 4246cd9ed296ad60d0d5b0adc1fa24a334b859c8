@@ -16,6 +16,24 @@
       "revId": "4246cd9ed296ad60d0d5b0adc1fa24a334b859c8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "174e0fd9_e22bb1aa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 402,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-29T19:06:45Z",
+      "side": 1,
+      "message": "You could move it up, but I\u0027ve changed my mind. This is fine - let\u0027s just do everything per-NIC port like you have it.",
+      "parentUuid": "190373b3_9998be03",
+      "revId": "4246cd9ed296ad60d0d5b0adc1fa24a334b859c8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
