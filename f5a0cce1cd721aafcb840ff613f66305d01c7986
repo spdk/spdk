@@ -16,6 +16,24 @@
       "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6cc6f540_fd42616a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-03-29T19:58:58Z",
+      "side": 1,
+      "message": "There\u0027s a check on line 3097 in this file that currently checks recv-\u003eqpair and assigns it a new one if it\u0027s NULL.\nBut you are right. We just need to know if the recv came from a shared recv queue. If it did we need to reset it.\nI will change that up.",
+      "parentUuid": "9f0216e3_c110437f",
+      "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
