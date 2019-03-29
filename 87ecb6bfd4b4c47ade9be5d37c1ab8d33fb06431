@@ -16,6 +16,24 @@
       "revId": "87ecb6bfd4b4c47ade9be5d37c1ab8d33fb06431",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a276b61f_122d1f37",
+        "filename": "pkg/spdk.spec",
+        "patchSetId": 1
+      },
+      "lineNbr": 5,
+      "author": {
+        "id": 1011995
+      },
+      "writtenOn": "2019-03-29T20:20:52Z",
+      "side": 1,
+      "message": "Yikes, [rhetorically], how\u0027d I miss that?  ;-).   I guess I was so focused on the line that *did* change.",
+      "parentUuid": "490b9fa7_69be8106",
+      "revId": "87ecb6bfd4b4c47ade9be5d37c1ab8d33fb06431",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
