@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "8fae1c71_d723e6cb",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1007,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T11:41:26Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "03638405_4d8aa6ef",
+      "range": {
+        "startLine": 1001,
+        "startChar": 0,
+        "endLine": 1007,
+        "endChar": 3
+      },
+      "revId": "79f16d06024fe9c923614a0414cb1ac6cbf7d397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f09ca809_7bd757da",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 4
@@ -84,6 +108,30 @@
       "side": 1,
       "message": "ftl_io_done here is not needed anymore, we should always have inflight child here, and we need to complete parent at some point anyway.",
       "parentUuid": "f09ca809_7bd757da",
+      "range": {
+        "startLine": 1035,
+        "startChar": 0,
+        "endLine": 1037,
+        "endChar": 0
+      },
+      "revId": "79f16d06024fe9c923614a0414cb1ac6cbf7d397",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "03fbd721_7fe25093",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1037,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-03-29T11:41:26Z",
+      "side": 1,
+      "message": "Then the ftl_io_done should return true, so it should call ftl_io_complete anyway. Let\u0027s keep up with the practice of completing the IO only if ftl_io_done returns true.",
+      "parentUuid": "dc76efae_39c46372",
       "range": {
         "startLine": 1035,
         "startChar": 0,
