@@ -260,7 +260,6 @@ main(int argc, char **argv)
 	/* Set default values in opts structure. */
 	spdk_app_opts_init(&opts);
 	opts.name = "hello_bdev";
-	opts.config_file = "bdev.conf";
 
 	/*
 	 * The user can provide the config file and bdev name at run time.
