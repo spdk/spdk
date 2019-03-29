@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9f0216e3_c110437f",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-03-29T19:04:49Z",
+      "side": 1,
+      "message": "Do you actually rely on qpair being NULL anywhere? Could you instead change that check to rqpair-\u003esrq? I\u0027m wondering if we can entirely unify the code paths here.",
+      "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
