@@ -79,13 +79,7 @@ task_complete(struct perf_task *task);
 
 static void
 timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
-	   struct spdk_nvme_qpair *qpair, uint16_t cid)
-{
-	/* leave hotplug monitor loop, use the timeout_cb to monitor the hotplug */
-	if (spdk_nvme_probe(NULL, NULL, NULL, NULL, NULL) != 0) {
-		fprintf(stderr, "spdk_nvme_probe() failed\n");
-	}
-}
+	   struct spdk_nvme_qpair *qpair, uint16_t cid);
 
 static void
 register_dev(struct spdk_nvme_ctrlr *ctrlr)
@@ -326,6 +320,16 @@ remove_cb(void *cb_ctx, struct spdk_nvme_ctrlr *ctrlr)
 	 * so immediately detach it.
 	 */
 	spdk_nvme_detach(ctrlr);
+}
+
+static void
+timeout_cb(void *cb_arg, struct spdk_nvme_ctrlr *ctrlr,
+	   struct spdk_nvme_qpair *qpair, uint16_t cid)
+{
+	/* leave hotplug monitor loop, use the timeout_cb to monitor the hotplug */
+	if (spdk_nvme_probe(NULL, NULL, probe_cb, attach_cb, remove_cb) != 0) {
+		fprintf(stderr, "spdk_nvme_probe() failed\n");
+	}
 }
 
 static void
