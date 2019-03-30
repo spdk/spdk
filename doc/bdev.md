@@ -252,7 +252,7 @@ To delete an aio bdev use the delete_aio_bdev command.
 
 OCF virtual bdev module is based on [Open CAS Framework](https://github.com/Open-CAS/ocf) - a
 high performance block storage caching meta-library.
-To enable the module, configure SPDK with `--with-ocf=/path/to/ocf/library`.
+To enable the module, configure SPDK using `--with-ocf` flag.
 OCF bdev can be used to enable caching for any underlying bdev.
 
 Below is an example command for creating OCF bdev:
