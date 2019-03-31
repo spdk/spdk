@@ -1,0 +1,256 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "69ed5f9e_e3f9c59e",
+        "filename": "examples/vmd/identify/identify.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1712,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "I don\u0027t remember what was the plan for the examples. Would it make sense to provide the vmd bdf via command line to the existing nvme apps? There would be ~50 additional lines per app instead of a few thousands. Those vmd examples will quickly get outdated and they will be difficult to maintain.",
+      "range": {
+        "startLine": 1712,
+        "startChar": 1,
+        "endLine": 1712,
+        "endChar": 55
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "572b5c3e_360960e7",
+        "filename": "lib/env_dpdk/pci_vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "This file is needed, but it isn\u0027t compiled anywhere - there are no references to it in any makefile.",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e6878c22_865fd93a",
+        "filename": "lib/env_dpdk/pci_vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "This is not even defined anywhere.",
+      "range": {
+        "startLine": 39,
+        "startChar": 38,
+        "endLine": 39,
+        "endChar": 61
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ac573bf5_815f2a22",
+        "filename": "lib/env_dpdk/pci_vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 62,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "This is not declared anywhere.",
+      "range": {
+        "startLine": 62,
+        "startChar": 0,
+        "endLine": 62,
+        "endChar": 23
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2c0fdb83_1fc930c6",
+        "filename": "lib/vmd/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "unused. some of the functions below are unused as well",
+      "range": {
+        "startLine": 42,
+        "startChar": 5,
+        "endLine": 42,
+        "endChar": 27
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a4da0d7a_e64133a0",
+        "filename": "lib/vmd/hotplug.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "unused",
+      "range": {
+        "startLine": 92,
+        "startChar": 13,
+        "endLine": 92,
+        "endChar": 40
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ce1aeb85_22f61225",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 158,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "implicit conversion would suffice",
+      "range": {
+        "startLine": 158,
+        "startChar": 24,
+        "endLine": 158,
+        "endChar": 42
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "edd096cd_2610a463",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 162,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "do we need this check?",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "92d356b7_ad2253ea",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 169,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "We generally try to declare all variables at the beginning of the function scope just like in c89.",
+      "range": {
+        "startLine": 169,
+        "startChar": 0,
+        "endLine": 169,
+        "endChar": 22
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dc302c1_930f2e64",
+        "filename": "lib/vmd/vmd.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 315,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "The SPDK PCI APIs allow you to iterate through all non-attached devices. After you return 0 from the provided callback, the spdk_pci_device will be perceived as attached and won\u0027t show up in subsequent spdk_pci_enumerate() calls until it\u0027s explicitly detached with spdk_pci_device_detach(). The VMD layer keeps track of all attached devices in g_vmd_container and that\u0027s fine, but those devices are leaked after this function is called again due to memset in line #310. Since spdk_vmd_probe() accepts a BDF as a parameter, it\u0027s not even possible to use two VMD devices at once:\n\n * spdk_vmd_probe(A)\n   * spdk_pci_enumerate\n     * vmd_enum_cb(A)\n       * return 0, attached\n     * vmd_enum_cb(B)\n       * return 0, attached\n     * vmd_enumerate_devices(A)\n * spdk_vmd_probe(B)\n   * memset(g_vmd_container, 0)\n   * spdk_pci_enumerate\n     * finds nothing, everything\u0027s already attached\n   * vmd not found! returns\n\nThis function shouldn\u0027t zero-out the g_vmd_container and vmd_enum_cb shouldn\u0027t return 0 for devices other than `vmd_addr`.\n\n\nBesides, having the spdk_pci_enumerate() completely abstracted away seems very nice for VMD, but does it really make sense if we have to provide the raw spdk_pci_device via get_vmd_pci_device_list()? Right now it seems like we could export vmd_enumerate_devices as a public function and let the the upper layer use spdk_pci_enumerate directly. That\u0027d be much more flexible.",
+      "range": {
+        "startLine": 315,
+        "startChar": 10,
+        "endLine": 315,
+        "endChar": 28
+      },
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "785cdfd2_30a16f43",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 59,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "From what I see this is always used in print_pci_info(). Please remove the unused attribute and add \"g_\" prefix to the variable so we know it\u0027s global.",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bc32e9d6_4f55125d",
+        "filename": "lib/vmd/vmdpci.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 928,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-03-31T15:40:57Z",
+      "side": 1,
+      "message": "interrupts? why?",
+      "revId": "0970f003bfd5f4d638940ee8aa22fc29c41f959c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
