@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25f9aa82_7b45b0e0",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-31T12:33:25Z",
+      "side": 1,
+      "message": "In this patch, I see a lot codes to update both data_iov[] and data_len and there is a relationship between data_iov[] and data_len. Is data_len really necessary, since field data has been removed?",
+      "range": {
+        "startLine": 113,
+        "startChar": 14,
+        "endLine": 113,
+        "endChar": 22
+      },
+      "revId": "115ff18937e057f4a8b8fb6a6aa71f0c94f8800a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4dc3311d_e98d8324",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1293,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-31T12:33:25Z",
+      "side": 1,
+      "message": "Also update rsp_pdu-\u003edata_iov[0].iov_len?",
+      "revId": "115ff18937e057f4a8b8fb6a6aa71f0c94f8800a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
