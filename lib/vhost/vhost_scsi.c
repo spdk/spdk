@@ -1416,14 +1416,15 @@ destroy_session_poller_cb(void *arg)
 		enum spdk_scsi_dev_vhost_status prev_status;
 
 		state = &svsession->scsi_dev_state[i];
+		/* clear the REMOVED status so that we won't send hotremove events anymore */
+		prev_status = state->status;
+		state->status = VHOST_SCSI_DEV_EMPTY;
 		if (state->dev == NULL) {
 			continue;
 		}
 
 		spdk_scsi_dev_free_io_channels(state->dev);
 
-		prev_status = state->status;
-		state->status = VHOST_SCSI_DEV_EMPTY;
 		state->dev = NULL;
 
 		if (prev_status == VHOST_SCSI_DEV_REMOVING) {
