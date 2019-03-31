@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a0a420c7_0131f88c",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 14,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-31T11:15:01Z",
+      "side": 1,
+      "message": "I can\u0027t see any relation between these 2 points and the code changes. Could you explain more?",
+      "range": {
+        "startLine": 9,
+        "startChar": 0,
+        "endLine": 14,
+        "endChar": 40
+      },
+      "revId": "a6fcd8b60e9cf8fe81b659a35fa4e88e5172fc54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e1e03f6b_441a643d",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 16,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-03-31T11:15:01Z",
+      "side": 1,
+      "message": "This change cause a regression, see https://review.gerrithub.io/c/spdk/spdk/+/368619",
+      "range": {
+        "startLine": 15,
+        "startChar": 0,
+        "endLine": 16,
+        "endChar": 15
+      },
+      "revId": "a6fcd8b60e9cf8fe81b659a35fa4e88e5172fc54",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
