@@ -337,7 +337,14 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		return rc;
 	}
 
-	return nvme_ctrlr_identify_id_desc(ns);
+	rc = nvme_ctrlr_identify_id_desc(ns);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = nvme_robust_mutex_init_recursive_shared(&ns->ns_lock);
+
+	return rc;
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)

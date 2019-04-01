@@ -509,18 +509,28 @@ spdk_nvme_ns_cmd_compare(struct spdk_nvme_ns *ns, struct spdk_nvme_qpair *qpair,
 {
 	struct nvme_request *req;
 	struct nvme_payload payload;
+	struct spdk_nvme_ns tmp_ns;
+
+	nvme_robust_mutex_lock(&ns->ns_lock);
+	if (!spdk_nvme_ns_is_active(ns)) {
+		nvme_robust_mutex_unlock(&ns->ns_lock);
+		return -EINVAL;
+	} else {
+		tmp_ns = *ns;
+	}
+	nvme_robust_mutex_unlock(&ns->ns_lock);
 
 	payload = NVME_PAYLOAD_CONTIG(buffer, NULL);
 
-	req = _nvme_ns_cmd_rw(ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
+	req = _nvme_ns_cmd_rw(&tmp_ns, qpair, &payload, 0, 0, lba, lba_count, cb_fn, cb_arg,
 			      SPDK_NVME_OPC_COMPARE,
 			      io_flags, 0,
 			      0, true);
 	if (req != NULL) {
 		return nvme_qpair_submit_request(qpair, req);
 	} else if (spdk_nvme_ns_check_request_length(lba_count,
-			ns->sectors_per_max_io,
-			ns->sectors_per_stripe,
+			tmp_ns.sectors_per_max_io,
+			tmp_ns.sectors_per_stripe,
 			qpair->ctrlr->opts.io_queue_requests)) {
 		return -EINVAL;
 	} else {
