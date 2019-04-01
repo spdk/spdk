@@ -16,6 +16,24 @@
       "revId": "328e75a0e73fb76a45c578d2175e3aec5040a41a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "bfafa144_4680fe7b",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 7
+      },
+      "lineNbr": 1412,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-01T01:44:31Z",
+      "side": 1,
+      "message": "Hi Ben,\n\nThis issue is reported by the customer, which has coredump stack. But I cannot paste here.",
+      "parentUuid": "5931ffad_356fc7aa",
+      "revId": "328e75a0e73fb76a45c578d2175e3aec5040a41a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
