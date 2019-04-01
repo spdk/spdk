@@ -1843,6 +1843,7 @@ trtype                  | Required | string      | Transport type
 traddr                  | Required | string      | NVMe target address
 punits                  | Required | string      | Parallel unit range in the form of start-end e.g 4-8
 uuid                    | Optional | string      | UUID of restored bdev (not applicable when creating new instance)
+cache                   | Optional | string      | Name of the bdev to be used as a write buffer cache
 
 ### Result
 
