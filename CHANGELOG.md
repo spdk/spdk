@@ -30,6 +30,11 @@ New API spdk_nvme_ctrlr_get_flags() was added.
 Added new strip_size_kb rpc param on create to replace the more ambiguous
 strip_size. The strip_size rpc param is deprecated.
 
+### etc
+
+Added or changed raid related configurations in iscsi.conf.in/nvmf.conf.in/
+vhost.conf.in which can be used to construct raid bdevs with nvme/malloc/AIO.
+
 ### thread
 
 Added spdk_thread_has_pollers() function to verify if there are
