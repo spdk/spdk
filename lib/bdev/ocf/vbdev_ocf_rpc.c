@@ -115,11 +115,29 @@ static const struct spdk_json_object_decoder rpc_delete_ocf_bdev_decoders[] = {
 };
 
 static void
+delete_cb(void *cb_arg, int status)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not delete OCF vbdev: %d",
+						     status);
+	} else {
+		w = spdk_jsonrpc_begin_result(request);
+		if (w) {
+			spdk_json_write_bool(w, true);
+			spdk_jsonrpc_end_result(request, w);
+		}
+	}
+}
+
+static void
 spdk_rpc_delete_ocf_bdev(struct spdk_jsonrpc_request *request,
 			 const struct spdk_json_val *params)
 {
 	struct rpc_delete_ocf_bdev req = {NULL};
-	struct spdk_json_write_ctx *w;
 	struct vbdev_ocf *vbdev;
 	int status;
 
@@ -139,21 +157,13 @@ spdk_rpc_delete_ocf_bdev(struct spdk_jsonrpc_request *request,
 		goto end;
 	}
 
-	status = vbdev_ocf_delete(vbdev);
+	status = vbdev_ocf_delete(vbdev, delete_cb, request);
 	if (status) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not delete OCF vbdev: %s",
 						     spdk_strerror(-status));
 		goto end;
 	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w == NULL) {
-		goto end;
-	}
-
-	spdk_json_write_bool(w, true);
-	spdk_jsonrpc_end_result(request, w);
 
 end:
 	free_rpc_delete_ocf_bdev(&req);
