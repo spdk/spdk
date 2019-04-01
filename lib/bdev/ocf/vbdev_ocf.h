@@ -145,7 +145,7 @@ struct vbdev_ocf *vbdev_ocf_get_by_name(const char *name);
 struct vbdev_ocf_base *vbdev_ocf_get_base_by_name(const char *name);
 
 /* Stop OCF cache and unregister SPDK bdev */
-int vbdev_ocf_delete(struct vbdev_ocf *vbdev);
+int vbdev_ocf_delete(struct vbdev_ocf *vbdev, void (*cb)(void *, int), void *cb_arg);
 
 typedef void (*vbdev_ocf_foreach_fn)(struct vbdev_ocf *, void *);
 

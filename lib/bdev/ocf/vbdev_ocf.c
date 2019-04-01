@@ -232,14 +232,17 @@ vbdev_ocf_destruct(void *opaque)
 
 /* Stop OCF cache and unregister SPDK bdev */
 int
-vbdev_ocf_delete(struct vbdev_ocf *vbdev)
+vbdev_ocf_delete(struct vbdev_ocf *vbdev, void (*cb)(void *, int), void *cb_arg)
 {
 	int rc = 0;
 
 	if (vbdev->state.started) {
-		spdk_bdev_unregister(&vbdev->exp_bdev, NULL, NULL);
+		spdk_bdev_unregister(&vbdev->exp_bdev, cb, cb_arg);
 	} else {
 		rc = vbdev_ocf_destruct(vbdev);
+		if (rc == 0 && cb) {
+			cb(cb_arg, 0);
+		}
 	}
 
 	return rc;
@@ -917,7 +920,7 @@ hotremove_cb(void *ctx)
 
 		SPDK_NOTICELOG("Deinitializing '%s' because its core device '%s' was removed\n",
 			       base->parent->name, base->name);
-		vbdev_ocf_delete(base->parent);
+		vbdev_ocf_delete(base->parent, NULL, NULL);
 		return;
 	}
 
@@ -929,7 +932,7 @@ hotremove_cb(void *ctx)
 			SPDK_NOTICELOG("Deinitializing '%s' because"
 				       " its cache device '%s' was removed\n",
 				       vbdev->name, base->name);
-			vbdev_ocf_delete(vbdev);
+			vbdev_ocf_delete(vbdev, NULL, NULL);
 		}
 	}
 }
