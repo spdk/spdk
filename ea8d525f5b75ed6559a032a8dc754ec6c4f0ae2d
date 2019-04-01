@@ -1,0 +1,165 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8f884d2a_eb9f5541",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "shall we check whether iter-\u003eopal_dev is valid before the following operation?",
+      "range": {
+        "startLine": 938,
+        "startChar": 3,
+        "endLine": 938,
+        "endChar": 52
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7248b5ad_3b88218d",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 947,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "Better to also print out the BDF information like\nBDF: NVMe Security...\nBDF: Opal Not Supported\n\nSince this is the iteration of all devices and if several devices are configured. Looks like it is not clear who is not supporting.",
+      "range": {
+        "startLine": 947,
+        "startChar": 11,
+        "endLine": 947,
+        "endChar": 57
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "449aebe4_5b985160",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "should we use uint16_t here for the bit fields as overall there are 9 bits here or maybe need to group with below section as there is a newline separation here (just remove below new line).",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 26
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ed64ff77_0b404ad8",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "if it is not timeout, it will then reset the response and send another security_receive operation? It seems that spdk_nvme_ctrlr_security_receive() is an Sync API except the error path. In this way, why we need to send again if the command is not timeout?",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 4
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5ad0c795_6fbc2d77",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "is this a right setting here? Reading opal_next() function, if the opal_fn is not set, it will just break and return 0 by default, in this case, the dev-\u003esupported will be set to true?",
+      "range": {
+        "startLine": 498,
+        "startChar": 1,
+        "endLine": 498,
+        "endChar": 23
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78063d2c_c1676974",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "remove these spaces for the alignment",
+      "range": {
+        "startLine": 42,
+        "startChar": 18,
+        "endLine": 42,
+        "endChar": 22
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fe1e0778_a712a7bf",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-01T09:03:18Z",
+      "side": 1,
+      "message": "may replace \"tab\" for the alignment. Same for below OPAL_INVAL_PARAM",
+      "range": {
+        "startLine": 47,
+        "startChar": 30,
+        "endLine": 47,
+        "endChar": 36
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
