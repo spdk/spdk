@@ -4351,6 +4351,7 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 	struct spdk_blob *newblob = ctx->new.blob;
 
 	if (bserrno != 0) {
+		ctx->original.blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4358,6 +4359,7 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 	/* Remove metadata descriptor SNAPSHOT_IN_PROGRESS */
 	bserrno = _spdk_blob_remove_xattr(newblob, SNAPSHOT_IN_PROGRESS, true);
 	if (bserrno != 0) {
+		ctx->original.blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4365,6 +4367,8 @@ _spdk_bs_snapshot_origblob_sync_cpl(void *cb_arg, int bserrno)
 	_spdk_bs_blob_list_add(ctx->original.blob);
 
 	spdk_blob_set_read_only(newblob);
+
+	ctx->original.blob->locked_operation_in_progress = false;
 
 	/* sync snapshot metadata */
 	spdk_blob_sync_md(newblob, _spdk_bs_clone_snapshot_origblob_cleanup, cb_arg);
@@ -4378,6 +4382,7 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	struct spdk_blob *newblob = ctx->new.blob;
 
 	if (bserrno != 0) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4385,6 +4390,7 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	/* Set internal xattr for snapshot id */
 	bserrno = _spdk_blob_set_xattr(origblob, BLOB_SNAPSHOT, &newblob->id, sizeof(spdk_blob_id), true);
 	if (bserrno != 0) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4395,6 +4401,7 @@ _spdk_bs_snapshot_newblob_sync_cpl(void *cb_arg, int bserrno)
 	/* Create new back_bs_dev for snapshot */
 	origblob->back_bs_dev = spdk_bs_create_blob_bs_dev(newblob);
 	if (origblob->back_bs_dev == NULL) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, -EINVAL);
 		return;
 	}
@@ -4421,6 +4428,7 @@ _spdk_bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 	int bserrno;
 
 	if (rc != 0) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_newblob_cleanup(ctx, rc);
 		return;
 	}
@@ -4439,6 +4447,7 @@ _spdk_bs_snapshot_freeze_cpl(void *cb_arg, int rc)
 		bserrno = _spdk_blob_set_xattr(newblob, BLOB_SNAPSHOT,
 					       &origblob->parent_id, sizeof(spdk_blob_id), true);
 		if (bserrno != 0) {
+			origblob->locked_operation_in_progress = false;
 			_spdk_bs_clone_snapshot_newblob_cleanup(ctx, bserrno);
 			return;
 		}
@@ -4460,6 +4469,7 @@ _spdk_bs_snapshot_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bs
 	struct spdk_blob *newblob = _blob;
 
 	if (bserrno != 0) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4476,6 +4486,7 @@ _spdk_bs_snapshot_newblob_create_cpl(void *cb_arg, spdk_blob_id blobid, int bser
 	struct spdk_blob *origblob = ctx->original.blob;
 
 	if (bserrno != 0) {
+		origblob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4513,12 +4524,20 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (_blob->data_ro || _blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot from read only blob with id %lu\n",
 			      _blob->id);
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4587,6 +4606,7 @@ _spdk_bs_clone_newblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserr
 	ctx->new.blob = clone;
 	_spdk_bs_blob_list_add(clone);
 
+	ctx->original.blob->locked_operation_in_progress = false;
 	spdk_blob_close(clone, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
 }
 
@@ -4614,11 +4634,19 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create clone - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (!_blob->data_ro || !_blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Clone not from read-only blob\n");
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4672,6 +4700,7 @@ _spdk_bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, in
 	struct spdk_blob *_blob = ctx->original.blob;
 
 	if (bserrno != 0) {
+		_blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4687,6 +4716,7 @@ _spdk_bs_inflate_blob_set_parent_cpl(void *cb_arg, struct spdk_blob *_parent, in
 	_blob->back_bs_dev = spdk_bs_create_blob_bs_dev(_parent);
 	_spdk_bs_blob_list_add(_blob);
 
+	_blob->locked_operation_in_progress = false;
 	spdk_blob_sync_md(_blob, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
 }
 
@@ -4698,6 +4728,7 @@ _spdk_bs_inflate_blob_done(void *cb_arg, int bserrno)
 	struct spdk_blob *_parent;
 
 	if (bserrno != 0) {
+		_blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4727,6 +4758,7 @@ _spdk_bs_inflate_blob_done(void *cb_arg, int bserrno)
 	}
 
 	_blob->state = SPDK_BLOB_STATE_DIRTY;
+	_blob->locked_operation_in_progress = false;
 	spdk_blob_sync_md(_blob, _spdk_bs_clone_snapshot_origblob_cleanup, ctx);
 }
 
@@ -4760,6 +4792,7 @@ _spdk_bs_inflate_blob_touch_next(void *cb_arg, int bserrno)
 	uint64_t offset;
 
 	if (bserrno != 0) {
+		_blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, bserrno);
 		return;
 	}
@@ -4795,17 +4828,28 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 		_spdk_bs_clone_snapshot_cleanup_finish(ctx, bserrno);
 		return;
 	}
+
 	ctx->original.blob = _blob;
+
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot inflate blob - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
+	_blob->locked_operation_in_progress = true;
 
 	if (!ctx->allocate_all && _blob->parent_id == SPDK_BLOBID_INVALID) {
 		/* This blob have no parent, so we cannot decouple it. */
 		SPDK_ERRLOG("Cannot decouple parent of blob with no parent.\n");
+		_blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
 
 	if (spdk_blob_is_thin_provisioned(_blob) == false) {
 		/* This is not thin provisioned blob. No need to inflate. */
+		_blob->locked_operation_in_progress = false;
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, 0);
 		return;
 	}
@@ -4819,6 +4863,7 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 			lfc = spdk_bit_array_find_first_clear(_blob->bs->used_clusters, lfc);
 			if (lfc == UINT32_MAX) {
 				/* No more free clusters. Cannot satisfy the request */
+				_blob->locked_operation_in_progress = false;
 				_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -ENOSPC);
 				return;
 			}
@@ -5009,6 +5054,14 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+	if (blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot remove blob - another operation in progress\n");
+		spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
+		return;
+	}
+
+	blob->locked_operation_in_progress = true;
+
 	_spdk_blob_verify_md_op(blob);
 
 	if (blob->open_ref > 1) {
@@ -5017,6 +5070,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		 *  Decrement the ref count directly and return -EBUSY.
 		 */
 		blob->open_ref--;
+		blob->locked_operation_in_progress = false;
 		spdk_bs_sequence_finish(seq, -EBUSY);
 		return;
 	}
@@ -5031,6 +5085,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		/* If snapshot have clones, we cannot remove it */
 		if (!TAILQ_EMPTY(&snapshot->clones)) {
 			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+			blob->locked_operation_in_progress = false;
 			spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
 			return;
 		}
@@ -5039,6 +5094,7 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 	bserrno = _spdk_bs_blob_list_remove(blob);
 	if (bserrno != 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Remove blob #%" PRIu64 " from a list\n", blob->id);
+		blob->locked_operation_in_progress = false;
 		spdk_bs_sequence_finish(seq, bserrno);
 		return;
 	}
