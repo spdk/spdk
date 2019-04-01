@@ -2,6 +2,91 @@
   "comments": [
     {
       "key": {
+        "uuid": "e03c596c_ec04b8aa",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-01T16:53:02Z",
+      "side": 1,
+      "message": "This should be moved to spdk_nvmf_ctrlr_create I think.",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "95f0e298_eda83243",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-01T16:53:02Z",
+      "side": 1,
+      "message": "Move this function to ctrlr.c",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cd76e11e_568c268d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-01T16:53:02Z",
+      "side": 1,
+      "message": "Which thread owns this log_head TAILQ? There are 3 types of threads on NVMe-oF - a \"subsystem\" thread that owns the whole subsystem, a \"controller\" thread which owns the controller/admin queue pair, and \"io\" threads. It would be nice if we could always make the \"controller\" thread the same as the \"subsystem\" thread, but we often don\u0027t have enough information available when a connection is being established to do that.\n\nI think the current flow here is as follows:\n\n1. A reservation command arrives on the \"controller\" thread for controller A.\n2. A message is sent to the \"subsystem\" thread to do subsystem-wide reservation processing.\n3. The \"subsystem\" thread touches the log_head list for each controller - but that list could be accessed via a get log page command on the \"controller\" thread for each of these controllers simultaneously and corrupt.\n\nI think the best solution here is to send a message to each controller thread to call this function.",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a02d81f5_56240f4c",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-01T16:53:02Z",
+      "side": 1,
+      "message": "Let\u0027s call this function \u0027nvmf_subsystem_gen_ctrlr_notification\u0027. For arguments, it can take the subsystem, the namespace, the notification type, and the hostid.",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6f2fb78e_d283578d",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-01T16:53:02Z",
+      "side": 1,
+      "message": "Everywhere else in the code where you\u0027ve piped a ctrlr pointer through - can you remove that and then just make calls to this function at the top level right below the calls that update the reservation status on the namespace? I think that makes the control flow clearer.",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "d7378f11_8ab7707b",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 18
