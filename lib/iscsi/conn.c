@@ -636,7 +636,7 @@ iscsi_conn_check_shutdown(void *arg)
 }
 
 static void
-spdk_iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
+iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 {
 	struct spdk_scsi_desc *desc;
 
@@ -649,12 +649,12 @@ spdk_iscsi_conn_close_lun(struct spdk_iscsi_conn *conn, int lun_id)
 }
 
 static void
-spdk_iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
+iscsi_conn_close_luns(struct spdk_iscsi_conn *conn)
 {
 	int i;
 
 	for (i = 0; i < SPDK_SCSI_DEV_MAX_LUN; i++) {
-		spdk_iscsi_conn_close_lun(conn, i);
+		iscsi_conn_close_lun(conn, i);
 	}
 }
 
@@ -695,11 +695,11 @@ _iscsi_conn_remove_lun(void *arg1, void *arg2)
 		}
 	}
 
-	spdk_iscsi_conn_close_lun(conn, lun_id);
+	iscsi_conn_close_lun(conn, lun_id);
 }
 
 static void
-spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
+iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 {
 	struct spdk_iscsi_conn *conn = remove_ctx;
 	struct spdk_event *event;
@@ -710,7 +710,7 @@ spdk_iscsi_conn_remove_lun(struct spdk_scsi_lun *lun, void *remove_ctx)
 }
 
 static void
-spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
+iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 {
 	int i, rc;
 	struct spdk_scsi_lun *lun;
@@ -722,7 +722,7 @@ spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 			continue;
 		}
 
-		rc = spdk_scsi_lun_open(lun, spdk_iscsi_conn_remove_lun, conn, &desc);
+		rc = spdk_scsi_lun_open(lun, iscsi_conn_remove_lun, conn, &desc);
 		if (rc != 0) {
 			goto error;
 		}
@@ -739,7 +739,7 @@ spdk_iscsi_conn_open_luns(struct spdk_iscsi_conn *conn)
 	return;
 
 error:
-	spdk_iscsi_conn_close_luns(conn);
+	iscsi_conn_close_luns(conn);
 }
 
 /**
@@ -758,7 +758,7 @@ iscsi_conn_stop(struct spdk_iscsi_conn *conn)
 		target->num_active_conns--;
 		pthread_mutex_unlock(&target->mutex);
 
-		spdk_iscsi_conn_close_luns(conn);
+		iscsi_conn_close_luns(conn);
 	}
 
 	assert(conn->lcore == spdk_env_get_current_core());
@@ -1448,7 +1448,7 @@ iscsi_conn_full_feature_migrate(void *arg1, void *arg2)
 	struct spdk_iscsi_conn *conn = arg1;
 
 	if (conn->sess->session_type == SESSION_TYPE_NORMAL) {
-		spdk_iscsi_conn_open_luns(conn);
+		iscsi_conn_open_luns(conn);
 	}
 
 	/* The poller has been unregistered, so now we can re-register it on the new core. */
