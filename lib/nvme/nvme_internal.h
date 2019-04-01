@@ -367,6 +367,7 @@ struct spdk_nvme_qpair {
 
 struct spdk_nvme_ns {
 	struct spdk_nvme_ctrlr		*ctrlr;
+	pthread_mutex_t			ns_lock;
 	uint32_t			sector_size;
 
 	/*

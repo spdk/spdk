@@ -337,7 +337,14 @@ int nvme_ns_construct(struct spdk_nvme_ns *ns, uint32_t id,
 		return rc;
 	}
 
-	return nvme_ctrlr_identify_id_desc(ns);
+	rc = nvme_ctrlr_identify_id_desc(ns);
+	if (rc != 0) {
+		return rc;
+	}
+
+	rc = nvme_robust_mutex_init_recursive_shared(&ns->ns_lock);
+
+	return rc;
 }
 
 void nvme_ns_destruct(struct spdk_nvme_ns *ns)
@@ -348,6 +355,7 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 		return;
 	}
 
+	nvme_robust_mutex_lock(&ns->ns_lock);
 	nsdata = _nvme_ns_get_data(ns);
 	memset(nsdata, 0, sizeof(*nsdata));
 	ns->sector_size = 0;
@@ -357,4 +365,5 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 	ns->sectors_per_max_io = 0;
 	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
+	nvme_robust_mutex_unlock(&ns->ns_lock);
 }

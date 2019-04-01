@@ -35,6 +35,8 @@
 
 #include "spdk/env.h"
 
+#include "nvme/nvme_internal.h"
+
 #include "nvme/nvme_ns.c"
 
 #include "common/lib/test_env.c"
@@ -63,6 +65,27 @@ int32_t
 spdk_nvme_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_completions)
 {
 	return -1;
+}
+
+int
+nvme_robust_mutex_init_recursive_shared(pthread_mutex_t *mtx)
+{
+	pthread_mutexattr_t attr;
+	int rc = 0;
+
+	if (pthread_mutexattr_init(&attr)) {
+		return -1;
+	}
+	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE) ||
+#ifndef __FreeBSD__
+	    pthread_mutexattr_setrobust(&attr, PTHREAD_MUTEX_ROBUST) ||
+	    pthread_mutexattr_setpshared(&attr, PTHREAD_PROCESS_SHARED) ||
+#endif
+	    pthread_mutex_init(mtx, &attr)) {
+		rc = -1;
+	}
+	pthread_mutexattr_destroy(&attr);
+	return rc;
 }
 
 static void
