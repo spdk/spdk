@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8aa251eb_ef00c573",
+        "filename": "test/unit/lib/bdev/vbdev_ocf.c/vbdev_ocf_ut.c",
+        "patchSetId": 23
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-01T06:23:29Z",
+      "side": 1,
+      "message": "please don\u0027t do global initialization in one of the test cases. You can do it within callbacks provided to CU_add_suite.",
+      "range": {
+        "startLine": 249,
+        "startChar": 1,
+        "endLine": 249,
+        "endChar": 21
+      },
+      "revId": "4539ed9f3a1bed49fd4538c20efe4d450438c4ec",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
