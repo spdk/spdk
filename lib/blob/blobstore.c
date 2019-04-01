@@ -4889,7 +4889,7 @@ _spdk_bs_resize_unfreeze_cpl(void *cb_arg, int rc)
 		rc = ctx->rc;
 	}
 
-	ctx->blob->resize_in_progress = false;
+	ctx->blob->locked_operation_in_progress = false;
 
 	ctx->cb_fn(ctx->cb_arg, rc);
 	free(ctx);
@@ -4901,7 +4901,7 @@ _spdk_bs_resize_freeze_cpl(void *cb_arg, int rc)
 	struct spdk_bs_resize_ctx *ctx = (struct spdk_bs_resize_ctx *)cb_arg;
 
 	if (rc != 0) {
-		ctx->blob->resize_in_progress = false;
+		ctx->blob->locked_operation_in_progress = false;
 		ctx->cb_fn(ctx->cb_arg, rc);
 		free(ctx);
 		return;
@@ -4931,7 +4931,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 		return;
 	}
 
-	if (blob->resize_in_progress) {
+	if (blob->locked_operation_in_progress) {
 		cb_fn(cb_arg, -EBUSY);
 		return;
 	}
@@ -4942,7 +4942,7 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 		return;
 	}
 
-	blob->resize_in_progress = true;
+	blob->locked_operation_in_progress = true;
 	ctx->cb_fn = cb_fn;
 	ctx->cb_arg = cb_arg;
 	ctx->blob = blob;
