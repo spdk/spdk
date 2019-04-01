@@ -411,7 +411,7 @@ int main(int argc, char **argv)
 	if (lcore == SPDK_TRACE_MAX_LCORE) {
 		for (i = 0; i < SPDK_TRACE_MAX_LCORE; i++) {
 			history = spdk_get_per_lcore_history(g_histories, i);
-			if (history->entries[0].tsc == 0) {
+			if (history->num_entries == 0 || history->entries[0].tsc == 0) {
 				continue;
 			}
 
@@ -423,7 +423,7 @@ int main(int argc, char **argv)
 		}
 	} else {
 		history = spdk_get_per_lcore_history(g_histories, lcore);
-		if (history->entries[0].tsc != 0) {
+		if (history->num_entries > 0 && history->entries[0].tsc != 0) {
 			if (g_verbose && history->num_entries) {
 				printf("Trace Size of lcore (%d): %ju\n", lcore, history->num_entries);
 			}
