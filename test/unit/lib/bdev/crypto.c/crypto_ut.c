@@ -439,7 +439,7 @@ test_simple_write(void)
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->buf_addr != NULL);
 	CU_ASSERT(g_test_crypto_ops[0]->sym->m_dst->data_len == 512);
 
-	spdk_dma_free(g_io_ctx->cry_iov.iov_base);
+	spdk_free(g_io_ctx->cry_iov.iov_base);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_src);
 	spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[0]->sym->m_dst);
 }
@@ -534,7 +534,7 @@ test_large_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_dma_free(g_io_ctx->cry_iov.iov_base);
+	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -653,7 +653,7 @@ test_crazy_rw(void)
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_src);
 		spdk_mempool_put(g_mbuf_mp, g_test_crypto_ops[i]->sym->m_dst);
 	}
-	spdk_dma_free(g_io_ctx->cry_iov.iov_base);
+	spdk_free(g_io_ctx->cry_iov.iov_base);
 }
 
 static void
@@ -836,7 +836,8 @@ test_crypto_op_complete(void)
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, 0);
 	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_dma_malloc(16, 0x10, NULL);
+	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x10, NULL, SPDK_ENV_LCORE_ID_ANY,
+				     SPDK_MALLOC_DMA);
 	orig_ctx = (struct crypto_bdev_io *)g_bdev_io->driver_ctx;
 	old_iov_base = orig_ctx->cry_iov.iov_base;
 	_crypto_operation_complete(g_bdev_io);
@@ -849,7 +850,8 @@ test_crypto_op_complete(void)
 	g_completion_called = false;
 	MOCK_SET(spdk_bdev_writev_blocks, -1);
 	/* Code under test will free this, if not ASAN will complain. */
-	g_io_ctx->cry_iov.iov_base = spdk_dma_malloc(16, 0x40, NULL);
+	g_io_ctx->cry_iov.iov_base = spdk_malloc(16, 0x40, NULL, SPDK_ENV_LCORE_ID_ANY,
+				     SPDK_MALLOC_DMA);
 	/* To Do: remove this garbage assert as soon as scan-build stops throwing a
 	 * heap use after free error.
 	 */
