@@ -52,7 +52,8 @@ vbdev_ocf_ctx_data_alloc(uint32_t pages)
 	data = vbdev_ocf_data_alloc(1);
 
 	sz = pages * PAGE_SIZE;
-	buf = spdk_dma_malloc(sz, PAGE_SIZE, NULL);
+	buf = spdk_malloc(sz, PAGE_SIZE, NULL,
+			  SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (buf == NULL) {
 		return NULL;
 	}
@@ -75,7 +76,7 @@ vbdev_ocf_ctx_data_free(ctx_data_t *ctx_data)
 	}
 
 	for (i = 0; i < data->iovcnt; i++) {
-		spdk_dma_free(data->iovs[i].iov_base);
+		spdk_free(data->iovs[i].iov_base);
 	}
 
 	vbdev_ocf_data_free(data);
