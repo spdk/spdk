@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6159d80f_84ef148c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3149,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:07:07Z",
+      "side": 1,
+      "message": "The following assumes that each sends_to_post has only a ibv_send_wr ? (I don\u0027t fine any loop for sends_to_post here.)",
+      "revId": "d4a4f3c9b6693254f356543ceb9995743a5d0d0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
