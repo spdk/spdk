@@ -47,16 +47,6 @@
 # The file name is the backing device
 # The bdev name can be referenced from elsewhere in the configuration file.
 # Block size may be omitted to automatically detect the block size of a disk.
-[AIO]
-  AIO /dev/sdb AIO0
-  AIO /dev/sdc AIO1
-  AIO /tmp/myfile AIO2 4096
-
-# PMDK libpmemblk-based block device
-[Pmem]
-  # Syntax:
-  #   Blk <pmemblk pool file name> <bdev name>
-  Blk /path/to/pmem-pool Pmem0
 
 # Define NVMf protocol global options
 [Nvmf]
@@ -102,9 +92,9 @@
   # Set the maximum number outstanding I/O per shared receive queue. Relevant only for RDMA transport
   #MaxSRQDepth 4096
 
-[Transport]
+#[Transport]
   # Set TCP transport type.
-  Type TCP
+#  Type TCP
 
   # Set the maximum number of outstanding I/O per queue.
   #MaxQueueDepth 128
@@ -142,12 +132,12 @@
   # other sections in the configuration file. For NVMe devices, a namespace
   # is automatically appended to each name in the format <YourName>nY, where
   # Y is the NSID (starts at 1).
-  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
-  TransportID "trtype:PCIe traddr:0000:02:00.0" Nvme2
-  TransportID "trtype:PCIe traddr:0000:03:00.0" Nvme3
-  TransportID "trtype:RDMA adrfam:IPv4 traddr:192.168.100.8 trsvcid:4420 hostaddr:192.168.100.9 subnqn:nqn.2016-06.io.spdk:cnode1" Nvme4
-  TransportID "trtype:TCP adrfam:IPv4 traddr:192.168.100.3 trsvcid:4420 hostaddr:192.168.100.4 subnqn:nqn.2016-06.io.spdk:cnode2" Nvme5
+  TransportID "trtype:PCIe traddr:0000:60:00.0" Nvme0
+  TransportID "trtype:PCIe traddr:0000:61:00.0" Nvme1
+  TransportID "trtype:PCIe traddr:0000:62:00.0" Nvme2
+  TransportID "trtype:PCIe traddr:0000:63:00.0" Nvme3
+#  TransportID "trtype:RDMA adrfam:IPv4 traddr:192.168.4.1 trsvcid:4420 hostaddr:192.168.4.1 subnqn:nqn.2016-06.io.spdk:cnode1" Nvme4
+#  TransportID "trtype:TCP adrfam:IPv4 traddr:192.168.100.3 trsvcid:4420 hostaddr:192.168.100.4 subnqn:nqn.2016-06.io.spdk:cnode2" Nvme5
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
@@ -172,16 +162,6 @@
   HotplugEnable No
 
 # The Split virtual block device slices block devices into multiple smaller bdevs.
-[Split]
-  # Syntax:
-  #   Split <bdev> <count> [<size_in_megabytes>]
-
-  # Split Malloc2 into two equally-sized portions, Malloc2p0 and Malloc2p1
-  Split Malloc2 2
-
-  # Split Malloc3 into eight 1-megabyte portions, Malloc3p0 ... Malloc3p7,
-  # leaving the rest of the device inaccessible
-  Split Malloc3 8 1
 
 # The RAID virtual block device based on pre-configured block device.
 [RAID1]
@@ -193,8 +173,12 @@
   StripSize 64
   # Number of pre-configured bdevs.
   NumDevices 2
-  # Pre-configured bdevs name.
+  # Pre-configured Nvme bdevs name.
   Devices Nvme2n1 Nvme3n1
+  # Pre-configured Malloc bdevs name.
+  #Devices Malloc0 Malloc1
+  # Pre-configured AIO bdevs name.
+  #Devices AIO0 AIO1
 
 # Define an NVMf Subsystem.
 # - NQN is required and must be unique.
@@ -218,8 +202,8 @@
 # Namespaces backed by physical NVMe devices
 [Subsystem1]
   NQN nqn.2016-06.io.spdk:cnode1
-  Listen TCP 15.15.15.2:4420
-  AllowAnyHost No
+  Listen RDMA  192.168.4.1:4420
+  AllowAnyHost yes
   Host nqn.2016-06.io.spdk:init
   SN SPDK00000000000001
   MaxNamespaces 20
@@ -229,13 +213,13 @@
 
 # Multiple subsystems are allowed.
 # Namespaces backed by non-NVMe devices
-[Subsystem2]
-  NQN nqn.2016-06.io.spdk:cnode2
-  Listen RDMA 192.168.2.21:4420
-  AllowAnyHost No
-  Host nqn.2016-06.io.spdk:init
-  SN SPDK00000000000002
-  Namespace Malloc0
-  Namespace Malloc1
-  Namespace AIO0
-  Namespace AIO1
+#[Subsystem2]
+#  NQN nqn.2016-06.io.spdk:cnode2
+#  Listen RDMA 192.168.2.21:4420
+#  AllowAnyHost No
+#  Host nqn.2016-06.io.spdk:init
+#  SN SPDK00000000000002
+#  Namespace Malloc0
+#  Namespace Malloc1
+#  Namespace AIO0
+#  Namespace AIO1

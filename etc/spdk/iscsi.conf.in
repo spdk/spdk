@@ -81,8 +81,7 @@
 #  Syntax:
 #    Portal <Name> <IP address>[:<port>[@<cpumask>]]
 [PortalGroup1]
-  Portal DA1 192.168.2.21:3260
-  Portal DA2 192.168.2.22:3260@0xF
+  Portal DA1 10.67.110.212:3260
 
 # Users must change the InitiatorGroup section(s) to match the IP
 #  addresses and initiator configuration in their environment.
@@ -91,7 +90,7 @@
 #  Netmask 192.168.1.0/24 <== IP range 192.168.1.*
 [InitiatorGroup1]
   InitiatorName ANY
-  Netmask 192.168.2.0/24
+  Netmask 10.67.110.0/24
 
 # NVMe configuration options
 [Nvme]
@@ -102,8 +101,8 @@
   # other sections in the configuration file. For NVMe devices, a namespace
   # is automatically appended to each name in the format <YourName>nY, where
   # Y is the NSID (starts at 1).
-  TransportID "trtype:PCIe traddr:0000:00:00.0" Nvme0
-  TransportID "trtype:PCIe traddr:0000:01:00.0" Nvme1
+  TransportID "trtype:PCIe traddr:0000:60:00.0" Nvme0
+  TransportID "trtype:PCIe traddr:0000:61:00.0" Nvme1
 
   # The number of attempts per I/O when an I/O fails. Do not include
   # this key to get the default behavior.
@@ -139,7 +138,7 @@
 # Offload is disabled by default even it is available.
 [Malloc]
   # Number of Malloc targets
-  NumberOfLuns 3
+  NumberOfLuns 5
   # Malloc targets are 128M
   LunSizeInMB 128
   # Block size. Default is 512 bytes.
@@ -149,10 +148,6 @@
 # if it is available.
 # Users may use the whitelist to initialize specified devices, IDS
 #  uses BUS:DEVICE.FUNCTION to identify each Ioat channel.
-[Ioat]
-  Enable No
-  Whitelist 00:04.0
-  Whitelist 00:04.1
 
 # Users must change this section to match the /dev/sdX devices to be
 # exported as iSCSI LUNs. The devices are accessed using Linux AIO.
@@ -161,50 +156,29 @@
 # The file name is the backing device
 # The bdev name can be referenced from elsewhere in the configuration file.
 # Block size may be omitted to automatically detect the block size of a disk.
-[AIO]
-  AIO /dev/sdb AIO0
-  AIO /dev/sdc AIO1
-  AIO /tmp/myfile AIO2 4096
 
 # PMDK libpmemblk-based block device
-[Pmem]
-  # Syntax:
-  #   Blk <pmemblk pool file name> <bdev name>
-  Blk /path/to/pmem-pool Pmem0
 
-# The Split virtual block device slices block devices into multiple smaller bdevs.
-[Split]
-  # Syntax:
-  #   Split <bdev> <count> [<size_in_megabytes>]
 
-  # Split Malloc1 into two equally-sized portions, Malloc1p0 and Malloc1p1
-  Split Malloc1 2
-
-  # Split Malloc2 into eight 1-megabyte portions, Malloc2p0 ... Malloc2p7,
-  # leaving the rest of the device inaccessible
-  Split Malloc2 8 1
+# The RAID virtual block device based on pre-configured block device.
+[RAID1]
+  # Unique name of this RAID device.
+  Name Raid0
+  # RAID level, only raid level 0 is supported.
+  RaidLevel 0
+  # Strip size in KB.
+  StripSize 64
+  # Number of pre-configured bdevs.
+  NumDevices 2
+  # Pre-configured Nvme bdevs name.
+  #Devices Nvme0n1 Nvme1n1
+  # Pre-configured Malloc bdevs name.
+  Devices Malloc3 Malloc4
+  # Pre-configured AIO bdevs name.
+  #Devices AIO0 AIO1
 
 # Users should change the TargetNode section(s) below to match the
 #  desired iSCSI target node configuration.
-# TargetName, Mapping, LUN0 are minimum required
-[TargetNode1]
-  TargetName disk1
-  TargetAlias "Data Disk1"
-  Mapping PortalGroup1 InitiatorGroup1
-  AuthMethod Auto
-  AuthGroup AuthGroup1
-  # Enable header and data digest
-  # UseDigest Header Data
-  UseDigest Auto
-  # Use the first malloc target
-  LUN0 Malloc0
-  # Using the first AIO target
-  LUN1 AIO0
-  # Using the second storage target
-  LUN2 AIO1
-  # Using the third storage target
-  LUN3 AIO2
-  QueueDepth 128
 
 [TargetNode2]
   TargetName disk2
@@ -214,4 +188,5 @@
   AuthGroup AuthGroup1
   UseDigest Auto
   LUN0 Nvme0n1
+  LUN1 Raid0
   QueueDepth 32
