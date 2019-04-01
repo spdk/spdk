@@ -647,8 +647,9 @@ _crypto_operation(struct spdk_bdev_io *bdev_io, enum rte_crypto_cipher_operation
 		 * has a buffer, which ours always will.  So, until we modify that API
 		 * or better yet the current ZCOPY work lands, this is the best we can do.
 		 */
-		io_ctx->cry_iov.iov_base = spdk_dma_malloc(total_length,
-					   spdk_bdev_get_buf_align(bdev_io->bdev), NULL);
+		io_ctx->cry_iov.iov_base = spdk_malloc(total_length,
+						       spdk_bdev_get_buf_align(bdev_io->bdev), NULL,
+						       SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 		if (!io_ctx->cry_iov.iov_base) {
 			SPDK_ERRLOG("ERROR trying to allocate write buffer for encryption!\n");
 			rc = -ENOMEM;
@@ -871,7 +872,7 @@ _complete_internal_write(struct spdk_bdev_io *bdev_io, bool success, void *cb_ar
 	int status = success ? SPDK_BDEV_IO_STATUS_SUCCESS : SPDK_BDEV_IO_STATUS_FAILED;
 	struct crypto_bdev_io *orig_ctx = (struct crypto_bdev_io *)orig_io->driver_ctx;
 
-	spdk_dma_free(orig_ctx->cry_iov.iov_base);
+	spdk_free(orig_ctx->cry_iov.iov_base);
 	spdk_bdev_io_complete(orig_io, status);
 	spdk_bdev_free_io(bdev_io);
 }
