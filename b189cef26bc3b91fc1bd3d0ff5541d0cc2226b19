@@ -16,6 +16,24 @@
       "revId": "b189cef26bc3b91fc1bd3d0ff5541d0cc2226b19",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d4c676b2_fcbe73e5",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 803,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-04-01T14:28:20Z",
+      "side": 1,
+      "message": "I think bdevs created during init should send notifications.",
+      "parentUuid": "649767eb_e706cbde",
+      "revId": "b189cef26bc3b91fc1bd3d0ff5541d0cc2226b19",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
