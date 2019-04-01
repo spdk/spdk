@@ -4296,6 +4296,7 @@ _spdk_bs_snapshot_unfreeze_cpl(void *cb_arg, int bserrno)
 	}
 
 	ctx->original.id = origblob->id;
+	origblob->locked_operation_in_progress = false;
 	spdk_blob_close(origblob, _spdk_bs_clone_snapshot_cleanup_finish, ctx);
 }
 
@@ -4513,12 +4514,20 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (_blob->data_ro || _blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot from read only blob with id %lu\n",
 			      _blob->id);
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4614,11 +4623,19 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create clone - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (!_blob->data_ro || !_blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Clone not from read-only blob\n");
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4795,7 +4812,16 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 		_spdk_bs_clone_snapshot_cleanup_finish(ctx, bserrno);
 		return;
 	}
+
 	ctx->original.blob = _blob;
+
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot inflate blob - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
+	_blob->locked_operation_in_progress = true;
 
 	if (!ctx->allocate_all && _blob->parent_id == SPDK_BLOBID_INVALID) {
 		/* This blob have no parent, so we cannot decouple it. */
@@ -5012,6 +5038,8 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		spdk_bs_sequence_finish(seq, -EBUSY);
 		return;
 	}
+
+	blob->locked_operation_in_progress = true;
 
 	bserrno = _spdk_bs_blob_list_remove(blob);
 	if (bserrno != 0) {
