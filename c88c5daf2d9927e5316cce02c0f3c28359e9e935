@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "75e685dc_3e14ce7c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "So we don\u0027t want to line up comments?",
+      "parentUuid": "2dda579b_b7add71a",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3e490a3_cb2b11a0",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 29
@@ -36,6 +54,24 @@
     },
     {
       "key": {
+        "uuid": "5cc880df_81c031e5",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "What changed here? I\u0027m not seeing it",
+      "parentUuid": "e3e490a3_cb2b11a0",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ee38aac1_891f2e7a",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 29
@@ -47,6 +83,24 @@
       "writtenOn": "2019-03-29T18:44:37Z",
       "side": 1,
       "message": "there are a ton of changes to various logging messages in this patch - most of which aren\u0027t related at all to integrating compression - let\u0027s make all of these changes in a separate patch",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "58a2c7d4_c28f8968",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 301,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "OK",
+      "parentUuid": "ee38aac1_891f2e7a",
       "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -87,6 +141,24 @@
     },
     {
       "key": {
+        "uuid": "29717b48_57f0a152",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7968a5b7_4a5ecd03",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7188f3c3_8a24b337",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 29
@@ -104,6 +176,24 @@
     },
     {
       "key": {
+        "uuid": "f6ce5889_23536088",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 451,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "7188f3c3_8a24b337",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "0f17d6f6_6fe5bf54",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 29
@@ -115,6 +205,24 @@
       "writtenOn": "2019-03-29T18:44:37Z",
       "side": 1,
       "message": "I think we want to keep this as 4KB (BACKING_IO_UNIT_SZ).  Even if the base bdev has a 512 block size, we want to write to the backing device in 4096 byte increments.  Otherwise we\u0027ll get really crappy performance since SSDs usually do RMW for anything not 4KB sized/aligned.",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e19e042d_932318d3",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 977,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-01T15:57:35Z",
+      "side": 1,
+      "message": "That didn\u0027t work and I was focused on the DPDK interface so didn\u0027t debug.  Will circle back to it and update in another patch.",
+      "parentUuid": "0f17d6f6_6fe5bf54",
       "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
