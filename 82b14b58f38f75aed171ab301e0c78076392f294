@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6c586661_97366727",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:37:23Z",
+      "side": 1,
+      "message": "the prefix \"spdk_\" is necessary?",
+      "range": {
+        "startLine": 588,
+        "startChar": 0,
+        "endLine": 588,
+        "endChar": 5
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9bb8ebf5_7a374872",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 602,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:37:23Z",
+      "side": 1,
+      "message": "Why you don\u0027t put this current_data_wr into spdk_mempool_put here?",
+      "range": {
+        "startLine": 602,
+        "startChar": 1,
+        "endLine": 602,
+        "endChar": 16
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2fe4c08b_bb6aad0d",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:37:23Z",
+      "side": 1,
+      "message": "The prefix spdk_ is necessary?",
+      "range": {
+        "startLine": 1506,
+        "startChar": 0,
+        "endLine": 1506,
+        "endChar": 5
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
