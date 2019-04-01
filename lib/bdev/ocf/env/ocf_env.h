@@ -115,34 +115,38 @@ typedef uint64_t sector_t;
 
 static inline void *env_malloc(size_t size, int flags)
 {
-	return spdk_dma_malloc(size, 0, NULL);
+	return spdk_malloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+			   SPDK_MALLOC_DMA);
 }
 
 static inline void *env_zalloc(size_t size, int flags)
 {
-	return spdk_dma_zmalloc(size, 0, NULL);
+	return spdk_zmalloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+			    SPDK_MALLOC_DMA);
 }
 
 static inline void env_free(const void *ptr)
 {
-	return spdk_dma_free((void *)ptr);
+	return spdk_free((void *)ptr);
 }
 
 static inline void *env_vmalloc(size_t size)
 {
-	return spdk_dma_malloc(size, 0, NULL);
+	return spdk_malloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+			   SPDK_MALLOC_DMA);
 }
 
 static inline void *env_vzalloc(size_t size)
 {
 	/* TODO: raw_ram init can request huge amount of memory to store
 	 * hashtable in it. need to ensure that allocation succedds */
-	return spdk_dma_zmalloc(size, 0, NULL);
+	return spdk_zmalloc(size, 0, NULL, SPDK_ENV_LCORE_ID_ANY,
+			    SPDK_MALLOC_DMA);
 }
 
 static inline void env_vfree(const void *ptr)
 {
-	return spdk_dma_free((void *)ptr);
+	return spdk_free((void *)ptr);
 }
 
 static inline uint64_t env_get_free_memory(void)
