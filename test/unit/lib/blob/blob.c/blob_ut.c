@@ -6455,6 +6455,112 @@ blob_io_unit_compatiblity(void)
 	g_blobid = 0;
 }
 
+static void
+blob_simultaneous_operations(void)
+{
+	struct spdk_blob_store *bs;
+	struct spdk_bs_dev *dev;
+	struct spdk_blob_opts opts;
+	struct spdk_blob *blob, *snapshot;
+	spdk_blob_id blobid, snapshotid;
+	struct spdk_io_channel *channel;
+
+	dev = init_dev();
+
+	spdk_bs_init(dev, NULL, bs_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_bs != NULL);
+	bs = g_bs;
+
+	channel = spdk_bs_alloc_io_channel(bs);
+	SPDK_CU_ASSERT_FATAL(channel != NULL);
+
+	spdk_blob_opts_init(&opts);
+	opts.num_clusters = 10;
+
+	spdk_bs_create_blob_ext(bs, &opts, blob_op_with_id_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+	blobid = g_blobid;
+
+	spdk_bs_open_blob(bs, blobid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	blob = g_blob;
+
+	/* Create snapshot and try to remove blob in the same time:
+	 * - snapshot should be created successfully
+	 * - delete operation should fail w -EBUSY */
+	spdk_bs_create_snapshot(bs, blobid, NULL, blob_op_with_id_complete, NULL);
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	/* Deletion failure */
+	CU_ASSERT(g_bserrno == -EBUSY);
+	poll_threads();
+	/* Snapshot creation success */
+	CU_ASSERT(g_bserrno == 0);
+	CU_ASSERT(g_blobid != SPDK_BLOBID_INVALID);
+
+	snapshotid = g_blobid;
+
+	spdk_bs_open_blob(bs, snapshotid, blob_op_with_handle_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	SPDK_CU_ASSERT_FATAL(g_blob != NULL);
+	snapshot = g_blob;
+
+	/* Inflate blob and try to remove blob in the same time:
+	 * - blob should be inflated successfully
+	 * - delete operation should fail w -EBUSY */
+	spdk_bs_inflate_blob(bs, channel, blobid, blob_op_complete, NULL);
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	/* Deletion failure */
+	CU_ASSERT(g_bserrno == -EBUSY);
+	poll_threads();
+	/* Inflation success */
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Clone snapshot and try to remove snapshot in the same time:
+	 * - snapshot should be cloned successfully
+	 * - delete operation should fail w -EBUSY */
+	spdk_bs_create_clone(bs, snapshotid, NULL, blob_op_with_id_complete, NULL);
+	spdk_bs_delete_blob(bs, snapshotid, blob_op_complete, NULL);
+	/* Deletion failure */
+	CU_ASSERT(g_bserrno == -EBUSY);
+	poll_threads();
+	/* Clone created */
+	CU_ASSERT(g_bserrno == 0);
+
+	/* Resize blob and try to remove blob in the same time:
+	 * - blob should be resized successfully
+	 * - delete operation should fail w -EBUSY */
+	spdk_blob_resize(blob, 50, blob_op_complete, NULL);
+	spdk_bs_delete_blob(bs, blobid, blob_op_complete, NULL);
+	/* Deletion failure */
+	CU_ASSERT(g_bserrno == -EBUSY);
+	poll_threads();
+	/* Blob resized successfully */
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(blob, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_blob_close(snapshot, blob_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+
+	spdk_bs_unload(g_bs, bs_op_complete, NULL);
+	poll_threads();
+	CU_ASSERT(g_bserrno == 0);
+	g_bs = NULL;
+
+	spdk_bs_free_io_channel(channel);
+	poll_threads();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -6522,7 +6628,8 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "blob_operation_split_rw", blob_operation_split_rw) == NULL ||
 		CU_add_test(suite, "blob_operation_split_rw_iov", blob_operation_split_rw_iov) == NULL ||
 		CU_add_test(suite, "blob_io_unit", blob_io_unit) == NULL ||
-		CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity) == NULL
+		CU_add_test(suite, "blob_io_unit_compatiblity", blob_io_unit_compatiblity) == NULL ||
+		CU_add_test(suite, "blob_simultaneous_operations", blob_simultaneous_operations) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
