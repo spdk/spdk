@@ -72,7 +72,7 @@
  */
 #define MAX_NUM_DRV_TYPES 1
 #define ISAL_PMD "compress_isal"
-/* TODO: #define QAT "tbd" */
+/* TODO: #define QAT_PMD "tbd" */
 const char *g_drv_names[MAX_NUM_DRV_TYPES] = { ISAL_PMD };
 
 #define NUM_MBUFS		512
@@ -299,7 +299,7 @@ vbdev_init_compress_drivers(void)
 	} else if (rc == -EEXIST) {
 		SPDK_NOTICELOG("virtual PMD %s already exists.\n", ISAL_PMD);
 	} else {
-		SPDK_ERRLOG("error creating virtual PMD %s\n", ISAL_PMD);
+		SPDK_ERRLOG("creating virtual PMD %s\n", ISAL_PMD);
 		return -EINVAL;
 	}
 
@@ -309,7 +309,7 @@ vbdev_init_compress_drivers(void)
 		return 0;
 	}
 	if (cdev_count > RTE_COMPRESS_MAX_DEVS) {
-		SPDK_ERRLOG("error invalid device count from rte_compressdev_count()\n");
+		SPDK_ERRLOG("invalid device count from rte_compressdev_count()\n");
 		return -EINVAL;
 	}
 
@@ -549,9 +549,6 @@ comp_read_get_buf_cb(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, b
 			      spdk_reduce_rw_blocks_cb, bdev_io);
 }
 
-/* TODO: A future patch will add routines to complete IO up the stack, need
- * to send the completion on the original bdev_io thread.
- */
 static void
 _spdk_bdev_io_submit(void *arg)
 {
@@ -609,7 +606,7 @@ vbdev_compress_submit_request(struct spdk_io_channel *ch, struct spdk_bdev_io *b
 			io_ctx->ch = ch;
 			vbdev_compress_queue_io(bdev_io);
 		} else {
-			SPDK_ERRLOG("ERROR on bdev_io submission!\n");
+			SPDK_ERRLOG("on bdev_io submission!\n");
 			spdk_bdev_io_complete(bdev_io, SPDK_BDEV_IO_STATUS_FAILED);
 		}
 	}
@@ -682,7 +679,7 @@ _reduce_destroy_cb(void *ctx, int reduce_errno)
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
 	if (reduce_errno) {
-		SPDK_ERRLOG("error %d\n", reduce_errno);
+		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 
 	comp_bdev->vol = NULL;
@@ -699,7 +696,7 @@ delete_vol_unload_cb(void *cb_arg, int reduce_errno)
 	/* Close the underlying bdev. */
 	spdk_bdev_close(comp_bdev->base_desc);
 	if (reduce_errno) {
-		SPDK_ERRLOG("error %d\n", reduce_errno);
+		SPDK_ERRLOG("number %d\n", reduce_errno);
 	} else {
 		/* Clean the device before we free our resources. */
 		spdk_reduce_vol_destroy(&comp_bdev->backing_dev, _reduce_destroy_cb, comp_bdev);
@@ -712,19 +709,12 @@ vbdev_compress_destruct_cb(void *cb_arg, int reduce_errno)
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
 	if (reduce_errno) {
-		SPDK_ERRLOG("error %d\n", reduce_errno);
+		SPDK_ERRLOG("number %d\n", reduce_errno);
 	} else {
-		/* Remove this device from the internal list */
 		TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);
-
-		/* Unclaim the underlying bdev. */
 		spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
-
-		/* Close the underlying bdev. */
 		spdk_bdev_close(comp_bdev->base_desc);
-
 		comp_bdev->vol = NULL;
-		/* Unregister the io_device. */
 		spdk_io_device_unregister(comp_bdev, _device_unregister_cb);
 	}
 }
@@ -738,7 +728,7 @@ vbdev_compress_destruct(void *ctx)
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)ctx;
 
 	if (comp_bdev->vol != NULL) {
-		/* Tell reduceLiib that we're done with this volume. */
+		/* Tell reducelib that we're done with this volume. */
 		spdk_reduce_vol_unload(comp_bdev->vol, vbdev_compress_destruct_cb, comp_bdev);
 	} else {
 		vbdev_compress_destruct_cb(comp_bdev, 0);
@@ -814,12 +804,10 @@ vbdev_reduce_init_cb(void *cb_arg, struct spdk_reduce_vol *vol, int reduce_errno
 	meta_ctx->base_desc = NULL;
 
 	if (reduce_errno == 0) {
-		SPDK_NOTICELOG("OK for vol %s, error %u\n",
-			       spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
 		meta_ctx->vol = vol;
 		vbdev_compress_claim(meta_ctx);
 	} else {
-		SPDK_ERRLOG("ERR for vol %s, error %u\n",
+		SPDK_ERRLOG("for vol %s, error %u\n",
 			    spdk_bdev_get_name(meta_ctx->base_bdev), reduce_errno);
 		free(meta_ctx);
 	}
@@ -864,7 +852,7 @@ _comp_reduce_readv(struct spdk_reduce_backing_dev *dev, struct iovec *iov, int i
 			SPDK_ERRLOG("No memory, start to queue io.\n");
 			/* TODO: there's no bdev_io to queue */
 		} else {
-			SPDK_ERRLOG("error submitting readv request\n");
+			SPDK_ERRLOG("submitting readv request\n");
 		}
 		args->cb_fn(args->cb_arg, rc);
 	}
@@ -917,12 +905,11 @@ _comp_reduce_unmap(struct spdk_reduce_backing_dev *dev,
 			SPDK_ERRLOG("No memory, start to queue io.\n");
 			/* TODO: there's no bdev_io to queue */
 		} else {
-			SPDK_ERRLOG("error submitting unmap request\n");
+			SPDK_ERRLOG("submitting unmap request\n");
 		}
 		args->cb_fn(args->cb_arg, rc);
 	}
 }
-
 
 /* Called by reduceLib after performing unload vol actions following base bdev hotremove */
 static void
@@ -931,7 +918,7 @@ bdev_hotremove_vol_unload_cb(void *cb_arg, int reduce_errno)
 	struct vbdev_compress *comp_bdev = (struct vbdev_compress *)cb_arg;
 
 	if (reduce_errno) {
-		SPDK_ERRLOG("error %d\n", reduce_errno);
+		SPDK_ERRLOG("number %d\n", reduce_errno);
 	}
 
 	spdk_bdev_unregister(&comp_bdev->comp_bdev, NULL, NULL);
@@ -946,7 +933,7 @@ vbdev_compress_base_bdev_hotremove_cb(void *ctx)
 
 	TAILQ_FOREACH_SAFE(comp_bdev, &g_vbdev_comp, link, tmp) {
 		if (bdev_find == comp_bdev->base_bdev) {
-			/* Tell reducelib that we're done with this volume. */
+			/* Tell reduceLiib that we're done with this volume. */
 			spdk_reduce_vol_unload(comp_bdev->vol, bdev_hotremove_vol_unload_cb, comp_bdev);
 		}
 	}
@@ -1121,7 +1108,6 @@ create_compress_bdev(const char *bdev_name, const char *vbdev_name, const char *
 	}
 
 	vbdev_init_reduce(bdev, vbdev_name, comp_pmd);
-
 	return 0;
 }
 
@@ -1250,7 +1236,7 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 
 	rc = spdk_vbdev_register(&comp_bdev->comp_bdev, &comp_bdev->base_bdev, 1);
 	if (rc < 0) {
-		SPDK_ERRLOG("ERROR trying to register vbdev\n");
+		SPDK_ERRLOG("trying to register vbdev\n");
 		goto error_vbdev_register;
 	}
 
@@ -1288,7 +1274,7 @@ delete_compress_bdev(struct spdk_bdev *bdev, spdk_delete_compress_complete cb_fn
 	comp_bdev->delete_cb_fn = cb_fn;
 	comp_bdev->delete_cb_arg = cb_arg;
 
-	/* Tell reduceLiib that we're done with this volume. */
+	/* Tell reducelib that we're done with this volume. */
 	spdk_reduce_vol_unload(comp_bdev->vol, delete_vol_unload_cb, comp_bdev);
 }
 
