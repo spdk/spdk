@@ -110,6 +110,23 @@
   # leaving the rest of the device inaccessible
   #Split Malloc2 8 1
 
+# The RAID virtual block device based on pre-configured block device.
+[RAID1]
+  # Unique name of this RAID device.
+  Name Raid0
+  # RAID level, only raid level 0 is supported.
+  RaidLevel 0
+  # Strip size in KB.
+  StripSize 64
+  # Number of pre-configured bdevs.
+  NumDevices 2
+  # Pre-configured bdevs name with Nvme.
+  #Devices Nvme0n1 Nvme1n1
+  # Pre-configured bdevs name with Malloc.
+  Devices Malloc1 Malloc2
+  # Pre-configured bdevs name with AIO.
+  #Devices AIO0 AIO1
+
 # Vhost scsi controller configuration
 # Users should change the VhostScsi section(s) below to match the desired
 # vhost configuration.
@@ -148,6 +165,12 @@
   #  this cpumask.  By default, it not specified, will use any core in the
   #  SPDK process.
   #Cpumask 0x1
+
+#[VhostBlk1]
+  # Define name for controller
+  #Name vhost.2
+  # Use device which named Raid0
+  #Dev Raid0
 
 #[VhostNvme0]
   # Define name for controller

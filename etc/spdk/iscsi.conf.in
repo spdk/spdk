@@ -139,7 +139,7 @@
 # Offload is disabled by default even it is available.
 [Malloc]
   # Number of Malloc targets
-  NumberOfLuns 3
+  NumberOfLuns 5
   # Malloc targets are 128M
   LunSizeInMB 128
   # Block size. Default is 512 bytes.
@@ -184,6 +184,23 @@
   # leaving the rest of the device inaccessible
   Split Malloc2 8 1
 
+# The RAID virtual block device based on pre-configured block device.
+[RAID1]
+  # Unique name of this RAID device.
+  Name Raid0
+  # RAID level, only raid level 0 is supported.
+  RaidLevel 0
+  # Strip size in KB.
+  StripSize 64
+  # Number of pre-configured bdevs.
+  NumDevices 2
+  # Pre-configured bdevs name with Nvme.
+  #Devices Nvme0n1 Nvme1n1
+  # Pre-configured bdevs name with Malloc.
+  Devices Malloc3 Malloc4
+  # Pre-configured bdevs name with AIO.
+  #Devices AIO0 AIO1
+
 # Users should change the TargetNode section(s) below to match the
 #  desired iSCSI target node configuration.
 # TargetName, Mapping, LUN0 are minimum required
@@ -214,4 +231,5 @@
   AuthGroup AuthGroup1
   UseDigest Auto
   LUN0 Nvme0n1
+  LUN1 Raid0
   QueueDepth 32
