@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "614209af_83be6610",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 938,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "True. we need to check if it is NULL. Thank you for pointing this out.",
+      "parentUuid": "8f884d2a_eb9f5541",
+      "range": {
+        "startLine": 938,
+        "startChar": 3,
+        "endLine": 938,
+        "endChar": 52
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "7248b5ad_3b88218d",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 42
@@ -71,6 +95,30 @@
     },
     {
       "key": {
+        "uuid": "32a7c4dc_45232401",
+        "filename": "include/spdk/opal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 98,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "I think I will just remove the blank line here.",
+      "parentUuid": "449aebe4_5b985160",
+      "range": {
+        "startLine": 90,
+        "startChar": 0,
+        "endLine": 98,
+        "endChar": 26
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ed64ff77_0b404ad8",
         "filename": "lib/opal/opal.c",
         "patchSetId": 42
@@ -82,6 +130,30 @@
       "writtenOn": "2019-04-01T09:03:18Z",
       "side": 1,
       "message": "if it is not timeout, it will then reset the response and send another security_receive operation? It seems that spdk_nvme_ctrlr_security_receive() is an Sync API except the error path. In this way, why we need to send again if the command is not timeout?",
+      "range": {
+        "startLine": 91,
+        "startChar": 0,
+        "endLine": 94,
+        "endChar": 4
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4698df89_e8fe4e0a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "Do you mean why receive again if no timeout? The fact is the TPer(trusted peripheral) need time to prepare for the response. Although security_receive can make sure we get all the response from the controller, it can\u0027t guarantee that the response is complete. It will only return once we get the complete response. Will add more comments.",
+      "parentUuid": "ed64ff77_0b404ad8",
       "range": {
         "startLine": 91,
         "startChar": 0,
@@ -117,6 +189,30 @@
     },
     {
       "key": {
+        "uuid": "25da1990_28415fda",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 498,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "It is corret. I think it is only allowed to pass NULL as the last function as a terminator of opal_next(). Thus it won\u0027t happen this situation that the first opal_fn is NULL and just break and return 0. But it is better to have a check. Will do.",
+      "parentUuid": "5ad0c795_6fbc2d77",
+      "range": {
+        "startLine": 498,
+        "startChar": 1,
+        "endLine": 498,
+        "endChar": 23
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "78063d2c_c1676974",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 42
@@ -140,6 +236,30 @@
     },
     {
       "key": {
+        "uuid": "d42e10ef_6f15afe9",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 42,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "78063d2c_c1676974",
+      "range": {
+        "startLine": 42,
+        "startChar": 18,
+        "endLine": 42,
+        "endChar": 22
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "fe1e0778_a712a7bf",
         "filename": "lib/opal/opal_internal.h",
         "patchSetId": 42
@@ -151,6 +271,30 @@
       "writtenOn": "2019-04-01T09:03:18Z",
       "side": 1,
       "message": "may replace \"tab\" for the alignment. Same for below OPAL_INVAL_PARAM",
+      "range": {
+        "startLine": 47,
+        "startChar": 30,
+        "endLine": 47,
+        "endChar": 36
+      },
+      "revId": "ea8d525f5b75ed6559a032a8dc754ec6c4f0ae2d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "eea8e8ee_fcca0cda",
+        "filename": "lib/opal/opal_internal.h",
+        "patchSetId": 42
+      },
+      "lineNbr": 47,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T10:10:42Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "fe1e0778_a712a7bf",
       "range": {
         "startLine": 47,
         "startChar": 30,
