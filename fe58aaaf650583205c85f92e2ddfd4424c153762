@@ -1,0 +1,84 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "144a074a_5181ad8c",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 407,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-01T02:46:04Z",
+      "side": 1,
+      "message": "This should be likely(), most of the vhost driver in QEMU will not set this field.",
+      "revId": "fe58aaaf650583205c85f92e2ddfd4424c153762",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cc7ce9fc_6d983166",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-01T02:46:04Z",
+      "side": 1,
+      "message": "Is this barrier required?",
+      "revId": "fe58aaaf650583205c85f92e2ddfd4424c153762",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9b4a9fb6_de74738d",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 424,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-01T02:46:04Z",
+      "side": 1,
+      "message": "Can you point me where is the place to set the inflight_cnt ?",
+      "range": {
+        "startLine": 424,
+        "startChar": 25,
+        "endLine": 424,
+        "endChar": 47
+      },
+      "revId": "fe58aaaf650583205c85f92e2ddfd4424c153762",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6635b6cf_c68c18e8",
+        "filename": "lib/vhost/vhost_blk.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 482,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-01T02:46:04Z",
+      "side": 1,
+      "message": "spdk_unlikely can be used here, and the code in vhost_blk.c should be in a separate commit.",
+      "range": {
+        "startLine": 482,
+        "startChar": 1,
+        "endLine": 482,
+        "endChar": 30
+      },
+      "revId": "fe58aaaf650583205c85f92e2ddfd4424c153762",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
