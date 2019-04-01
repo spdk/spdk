@@ -62,13 +62,40 @@ static const struct spdk_json_object_decoder rpc_construct_ocf_bdev_decoders[] =
 	{"core_bdev_name", offsetof(struct rpc_construct_ocf_bdev, core_bdev_name), spdk_json_decode_string},
 };
 
+struct construct_cb_arg {
+	struct spdk_jsonrpc_request   *request;
+	struct rpc_construct_ocf_bdev req;
+};
+
+static void
+construct_cb(int status, void *cb_arg)
+{
+	struct construct_cb_arg *arg = cb_arg;
+	struct spdk_json_write_ctx *w;
+
+	if (status) {
+		spdk_jsonrpc_send_error_response_fmt(arg->request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Could not create OCF vbdev: %d",
+						     status);
+	} else {
+		w = spdk_jsonrpc_begin_result(arg->request);
+		if (w) {
+			spdk_json_write_string(w, arg->req.name);
+			spdk_jsonrpc_end_result(arg->request, w);
+		}
+	}
+
+	free_rpc_construct_ocf_bdev(&arg->req);
+	free(arg);
+}
+
 static void
 spdk_rpc_construct_ocf_bdev(struct spdk_jsonrpc_request *request,
 			    const struct spdk_json_val *params)
 {
 	int ret = 0;
 	struct rpc_construct_ocf_bdev req = {NULL};
-	struct spdk_json_write_ctx *w;
+	struct construct_cb_arg *arg;
 
 	ret = spdk_json_decode_object(params, rpc_construct_ocf_bdev_decoders,
 				      SPDK_COUNTOF(rpc_construct_ocf_bdev_decoders),
@@ -76,26 +103,29 @@ spdk_rpc_construct_ocf_bdev(struct spdk_jsonrpc_request *request,
 	if (ret) {
 		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INVALID_PARAMS,
 						 "Invalid parameters");
-		goto end;
+		return;
 	}
 
+	arg = malloc(sizeof(*arg));
+	if (arg == NULL) {
+		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						     "Unable to initiate responce: %s", spdk_strerror(ENOMEM));
+		free_rpc_construct_ocf_bdev(&req);
+		return;
+	}
+
+	arg->request = request;
+	arg->req = req;
+
 	ret = vbdev_ocf_construct(req.name, req.mode, req.cache_bdev_name, req.core_bdev_name,
-				  NULL, NULL);
+				  construct_cb, arg);
 	if (ret) {
 		spdk_jsonrpc_send_error_response_fmt(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
 						     "Could not create OCF vbdev: %s",
 						     spdk_strerror(-ret));
-		goto end;
+		free_rpc_construct_ocf_bdev(&req);
+		free(arg);
 	}
-
-	w = spdk_jsonrpc_begin_result(request);
-	if (w) {
-		spdk_json_write_string(w, req.name);
-		spdk_jsonrpc_end_result(request, w);
-	}
-
-end:
-	free_rpc_construct_ocf_bdev(&req);
 }
 SPDK_RPC_REGISTER("construct_ocf_bdev", spdk_rpc_construct_ocf_bdev, SPDK_RPC_RUNTIME)
 
