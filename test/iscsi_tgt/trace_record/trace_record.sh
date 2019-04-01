@@ -9,6 +9,7 @@ TRACE_TMP_FOLDER=./tmp-trace
 TRACE_RECORD_OUTPUT=${TRACE_TMP_FOLDER}/record.trace
 TRACE_RECORD_NOTICE_LOG=${TRACE_TMP_FOLDER}/record.notice
 TRACE_TOOL_LOG=${TRACE_TMP_FOLDER}/trace.log
+TRACE_TOOL_LOG_REF=${TRACE_TMP_FOLDER}/trace_ref.log
 
 delete_tmp_files() {
 	rm -rf $TRACE_TMP_FOLDER
@@ -80,11 +81,20 @@ for i in $(seq 0 $CONNECTION_NUMBER); do
 	$rpc_py delete_malloc_bdev Malloc${i}
 done
 
+#confirm optimized trace on circular trace file
+./app/trace/spdk_trace -s iscsi -p ${iscsi_pid} > ${TRACE_TOOL_LOG}
+./app/trace/spdk_trace -s iscsi -p ${iscsi_pid} -b > ${TRACE_TOOL_LOG_REF}
+cmp ${TRACE_TOOL_LOG_REF} ${TRACE_TOOL_LOG}
+
 trap "delete_tmp_files; exit 1" SIGINT SIGTERM EXIT
 
 killprocess $iscsi_pid
 killprocess $record_pid
 ./app/trace/spdk_trace -f ${TRACE_RECORD_OUTPUT} > ${TRACE_TOOL_LOG}
+./app/trace/spdk_trace -f ${TRACE_RECORD_OUTPUT} -b > ${TRACE_TOOL_LOG_REF}
+
+#confirm optimized trace on ordered trace file
+cmp ${TRACE_TOOL_LOG_REF} ${TRACE_TOOL_LOG}
 
 #verify trace record and trace tool
 #trace entries str in trace-record, like "Trace Size of lcore (0): 4136"
