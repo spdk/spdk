@@ -1579,7 +1579,7 @@ __rw_done(void *ctx, int bserrno)
 	struct spdk_fs_request *req = ctx;
 	struct spdk_fs_cb_args *args = &req->args;
 
-	spdk_dma_free(args->op.rw.pin_buf);
+	spdk_free(args->op.rw.pin_buf);
 	args->fn.file_op(args->arg, bserrno);
 	free_fs_request(req);
 }
@@ -1671,7 +1671,8 @@ __readwrite(struct spdk_file *file, struct spdk_io_channel *_channel,
 	args->op.rw.blocklen = lba_size;
 
 	pin_buf_length = num_lba * lba_size;
-	args->op.rw.pin_buf = spdk_dma_malloc(pin_buf_length, lba_size, NULL);
+	args->op.rw.pin_buf = spdk_malloc(pin_buf_length, lba_size, NULL,
+					  SPDK_ENV_SOCKET_ID_ANY, SPDK_MALLOC_DMA);
 	if (args->op.rw.pin_buf == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOBFS, "Failed to allocate buf for: file=%s offset=%jx length=%jx\n",
 			      file->name, offset, length);
