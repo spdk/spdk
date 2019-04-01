@@ -93,6 +93,8 @@ struct ns_entry {
 	uint32_t		md_size;
 	bool			md_interleave;
 	bool			pi_loc;
+	bool			is_active;
+	pthread_mutex_t		lock;
 	enum spdk_nvme_pi_type	pi_type;
 	uint32_t		io_flags;
 	char			name[1024];
@@ -464,6 +466,13 @@ nvme_submit_io(struct perf_task *task, struct ns_worker_ctx *ns_ctx,
 		DIF_MODE_DIX = 2,
 	}  mode = DIF_MODE_NONE;
 
+	pthread_mutex_lock(&entry->lock);
+	if (entry->is_active != true) {
+		pthread_mutex_unlock(&entry->lock);
+		return -1;
+	}
+	pthread_mutex_unlock(&entry->lock);
+
 	lba = offset_in_ios * entry->io_size_blocks;
 
 	if (entry->md_size != 0 && !(entry->io_flags & SPDK_NVME_IO_FLAGS_PRACT)) {
@@ -696,6 +705,8 @@ register_ns(struct spdk_nvme_ctrlr *ctrlr, struct spdk_nvme_ns *ns)
 	entry->md_interleave = spdk_nvme_ns_supports_extended_lba(ns);
 	entry->pi_loc = spdk_nvme_ns_get_data(ns)->dps.md_start;
 	entry->pi_type = spdk_nvme_ns_get_pi_type(ns);
+	entry->is_active = true;
+	pthread_mutex_init(&entry->lock, NULL);
 
 	if (spdk_nvme_ns_get_flags(ns) & SPDK_NVME_NS_DPS_PI_SUPPORTED) {
 		entry->io_flags = g_metacfg_pract_flag | g_metacfg_prchk_flags;
@@ -763,6 +774,45 @@ set_latency_tracking_feature(struct spdk_nvme_ctrlr *ctrlr, bool enable)
 }
 
 static void
+ctrlr_stop_ns(struct spdk_nvme_ctrlr *ctrlr)
+{
+	struct ns_entry *entry = g_namespaces;
+
+	while (entry) {
+		/* this callback works before namespace update */
+		if (entry->u.nvme.ctrlr == ctrlr &&
+		    !spdk_nvme_ctrlr_is_active_ns(ctrlr, spdk_nvme_ns_get_id(entry->u.nvme.ns)) &&
+		    spdk_nvme_ns_is_active(entry->u.nvme.ns)) {
+			pthread_mutex_lock(&entry->lock);
+			entry->is_active = false;
+			pthread_mutex_unlock(&entry->lock);
+		}
+
+		entry = entry->next;
+	}
+}
+
+/* used to stop send I/Os */
+static void
+aer_cb(void *arg, const struct spdk_nvme_cpl *cpl)
+{
+	struct spdk_nvme_ctrlr *ctrlr = arg;
+	union spdk_nvme_async_event_completion event;
+
+	if (spdk_nvme_cpl_is_error(cpl)) {
+		SPDK_WARNLOG("AER request execute failed\n");
+		return;
+	}
+
+	event.raw = cpl->cdw0;
+
+	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
+	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
+		ctrlr_stop_ns(ctrlr);
+	}
+}
+
+static void
 register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 {
 	struct spdk_nvme_ns *ns;
@@ -812,6 +862,9 @@ register_ctrlr(struct spdk_nvme_ctrlr *ctrlr, struct trid_entry *trid_entry)
 
 		register_ns(ctrlr, ns);
 	}
+
+	/* register the AER callback */
+	spdk_nvme_ctrlr_register_aer_callback(ctrlr, aer_cb, ctrlr);
 
 	if (g_nr_unused_io_queues) {
 		int i;
@@ -866,6 +919,7 @@ submit_single_io(struct perf_task *task)
 	rc = entry->fn_table->submit_io(task, ns_ctx, entry, offset_in_ios);
 
 	if (rc != 0) {
+		printf("send I/O failed\n");
 		fprintf(stderr, "starting I/O failed\n");
 	} else {
 		ns_ctx->current_queue_depth++;
