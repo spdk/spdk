@@ -42,6 +42,24 @@
     },
     {
       "key": {
+        "uuid": "86178565_86b35022",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 946,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "85e2db64_c13f8f6f",
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d672ff1b_9a1ffde4",
         "filename": "include/spdk/opal_spec.h",
         "patchSetId": 41
@@ -53,6 +71,30 @@
       "writtenOn": "2019-03-29T09:12:36Z",
       "side": 1,
       "message": "better to have same alignment for all below members.",
+      "range": {
+        "startLine": 125,
+        "startChar": 15,
+        "endLine": 125,
+        "endChar": 16
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cfee622e_1ef23322",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d672ff1b_9a1ffde4",
       "range": {
         "startLine": 125,
         "startChar": 15,
@@ -82,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "3a6ac752_cfd0f87a",
+        "filename": "include/spdk/opal_spec.h",
+        "patchSetId": 41
+      },
+      "lineNbr": 179,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "d662f935_372814b4",
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5f3269c7_a56be01b",
         "filename": "lib/opal/opal.c",
         "patchSetId": 41
@@ -93,6 +153,30 @@
       "writtenOn": "2019-03-29T09:12:36Z",
       "side": 1,
       "message": "Is this Received or Sent?",
+      "range": {
+        "startLine": 81,
+        "startChar": 32,
+        "endLine": 81,
+        "endChar": 36
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ad6effe_818c346a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 81,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "This is sent from Opal controller. Maybe I will change the log to avoid ambiguity. Thanks for noticing.",
+      "parentUuid": "5f3269c7_a56be01b",
       "range": {
         "startLine": 81,
         "startChar": 32,
@@ -128,6 +212,30 @@
     },
     {
       "key": {
+        "uuid": "0409fd05_b66d6a7f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 93,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Hi Gang, Thank you for your review. This error code is actually defined in an array and use the number as the index. I think I will keep it here.",
+      "parentUuid": "5a273566_db341d0c",
+      "range": {
+        "startLine": 93,
+        "startChar": 11,
+        "endLine": 93,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8cef1f15_ac7adef1",
         "filename": "lib/opal/opal.c",
         "patchSetId": 41
@@ -139,6 +247,30 @@
       "writtenOn": "2019-03-29T09:12:36Z",
       "side": 1,
       "message": "remove this extra space",
+      "range": {
+        "startLine": 153,
+        "startChar": 34,
+        "endLine": 153,
+        "endChar": 35
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "081956dd_5cd5f499",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "8cef1f15_ac7adef1",
       "range": {
         "startLine": 153,
         "startChar": 34,
@@ -174,6 +306,30 @@
     },
     {
       "key": {
+        "uuid": "16a8e5a8_811bb37a",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 195,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "7eef6610_e2cf3f54",
+      "range": {
+        "startLine": 195,
+        "startChar": 37,
+        "endLine": 195,
+        "endChar": 40
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "42a2bda1_e078625f",
         "filename": "lib/opal/opal.c",
         "patchSetId": 41
@@ -197,6 +353,30 @@
     },
     {
       "key": {
+        "uuid": "94b63c51_81a6920f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 274,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Hi Gang, Thanks for your review. Actually, this is more like putting the parsed information into a info struct. I will insist on keeping the name. Thank you.",
+      "parentUuid": "42a2bda1_e078625f",
+      "range": {
+        "startLine": 274,
+        "startChar": 0,
+        "endLine": 274,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9766fbba_922e9062",
         "filename": "lib/opal/opal.c",
         "patchSetId": 41
@@ -208,6 +388,30 @@
       "writtenOn": "2019-03-29T09:12:36Z",
       "side": 1,
       "message": "better to check\nsupported \u003d\u003d false\n\nsame for below single_user and found_com_id",
+      "range": {
+        "startLine": 408,
+        "startChar": 5,
+        "endLine": 408,
+        "endChar": 15
+      },
+      "revId": "51c5003ad104e47a88da9a2e31fd1aceafb3d2cb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a9df960_0597708f",
+        "filename": "lib/opal/opal.c",
+        "patchSetId": 41
+      },
+      "lineNbr": 408,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-01T05:53:19Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9766fbba_922e9062",
       "range": {
         "startLine": 408,
         "startChar": 5,
