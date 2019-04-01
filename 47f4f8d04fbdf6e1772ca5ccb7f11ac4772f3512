@@ -261,6 +261,30 @@
     },
     {
       "key": {
+        "uuid": "6f8727fd_e360c14d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-01T12:58:53Z",
+      "side": 1,
+      "message": "Ok, I\u0027ve changed ftl_io_done to rely on io-\u003epos \u003d\u003d io-\u003elbk_cnt condition.",
+      "parentUuid": "c5b9b3e1_1ee8c550",
+      "range": {
+        "startLine": 1026,
+        "startChar": 3,
+        "endLine": 1026,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c5f14d8b_23600504",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 6
@@ -320,6 +344,30 @@
       "side": 1,
       "message": "You can only break here, if ftl_io_done(parent) returns false until all the requests are sent out. The behaviour should be the same as in the condition above (wptr-\u003echunk-\u003ebusy).",
       "parentUuid": "010a1350_7c7fbc4a",
+      "range": {
+        "startLine": 1035,
+        "startChar": 1,
+        "endLine": 1035,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8c74336_51ff4c29",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1035,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-01T12:58:53Z",
+      "side": 1,
+      "message": "Ok, I think we could retry this init in same way as chunk is busy.",
+      "parentUuid": "b0a28838_88e044c3",
       "range": {
         "startLine": 1035,
         "startChar": 1,
