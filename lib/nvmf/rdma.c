@@ -430,7 +430,7 @@ struct spdk_nvmf_rdma_poller {
 
 	int					num_cqe;
 	int					required_num_wr;
-	struct ibv_cq				*cq;
+	struct ibv_cq_ex			*cq;
 
 	/* The maximum number of I/O outstanding on the shared receive queue at one time */
 	uint16_t				max_srq_depth;
@@ -976,7 +976,7 @@ nvmf_rdma_resize_cq(struct spdk_nvmf_rdma_qpair *rqpair, struct spdk_nvmf_rdma_d
 		}
 
 		SPDK_DEBUGLOG(SPDK_LOG_RDMA, "Resize RDMA CQ from %d to %d\n", rpoller->num_cqe, num_cqe);
-		rc = ibv_resize_cq(rpoller->cq, num_cqe);
+		rc = ibv_resize_cq(ibv_cq_ex_to_cq(rpoller->cq), num_cqe);
 		if (rc) {
 			SPDK_ERRLOG("RDMA CQ resize failed: errno %d: %s\n", errno, spdk_strerror(errno));
 			return -1;
@@ -1006,8 +1006,8 @@ spdk_nvmf_rdma_qpair_initialize(struct spdk_nvmf_qpair *qpair)
 	memset(&ibv_init_attr, 0, sizeof(struct ibv_qp_init_attr));
 	ibv_init_attr.qp_context	= rqpair;
 	ibv_init_attr.qp_type		= IBV_QPT_RC;
-	ibv_init_attr.send_cq		= rqpair->poller->cq;
-	ibv_init_attr.recv_cq		= rqpair->poller->cq;
+	ibv_init_attr.send_cq		= ibv_cq_ex_to_cq(rqpair->poller->cq);
+	ibv_init_attr.recv_cq		= ibv_cq_ex_to_cq(rqpair->poller->cq);
 
 	if (rqpair->srq) {
 		ibv_init_attr.srq		= rqpair->srq;
@@ -3152,6 +3152,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 	struct spdk_nvmf_rdma_poll_group	*rgroup;
 	struct spdk_nvmf_rdma_poller		*poller;
 	struct spdk_nvmf_rdma_device		*device;
+	struct ibv_cq_init_attr_ex		cq_init_attr;
 	struct ibv_srq_init_attr		srq_init_attr;
 	struct spdk_nvmf_rdma_resource_opts	opts;
 	int					num_cqe;
@@ -3227,7 +3228,14 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 			num_cqe = DEFAULT_NVMF_RDMA_CQ_SIZE;
 		}
 
-		poller->cq = ibv_create_cq(device->context, num_cqe, poller, NULL, 0);
+		memset(&cq_init_attr, 0, sizeof(cq_init_attr));
+		cq_init_attr.cqe = num_cqe;
+		cq_init_attr.cq_context = poller;
+		cq_init_attr.wc_flags = IBV_WC_EX_WITH_QP_NUM;
+		cq_init_attr.comp_mask = IBV_CQ_INIT_ATTR_MASK_FLAGS;
+		cq_init_attr.flags = 0;
+
+		poller->cq = ibv_create_cq_ex(device->context, &cq_init_attr);
 		if (!poller->cq) {
 			SPDK_ERRLOG("Unable to create completion queue\n");
 			spdk_nvmf_rdma_poll_group_destroy(&rgroup->group);
@@ -3276,7 +3284,7 @@ spdk_nvmf_rdma_poll_group_destroy(struct spdk_nvmf_transport_poll_group *group)
 		}
 
 		if (poller->cq) {
-			ibv_destroy_cq(poller->cq);
+			ibv_destroy_cq(ibv_cq_ex_to_cq(poller->cq));
 		}
 
 		free(poller);
@@ -3422,16 +3430,16 @@ spdk_nvmf_rdma_close_qpair(struct spdk_nvmf_qpair *qpair)
 }
 
 static struct spdk_nvmf_rdma_qpair *
-get_rdma_qpair_from_wc(struct spdk_nvmf_rdma_poller *rpoller, struct ibv_wc *wc)
+get_rdma_qpair_by_num(struct spdk_nvmf_rdma_poller *rpoller, uint32_t qp_num)
 {
 	struct spdk_nvmf_rdma_qpair *rqpair;
-	/* @todo: improve QP search */
+	/* TODO: improve QP search */
 	TAILQ_FOREACH(rqpair, &rpoller->qpairs, link) {
-		if (wc->qp_num == rqpair->cm_id->qp->qp_num) {
+		if (qp_num == rqpair->cm_id->qp->qp_num) {
 			return rqpair;
 		}
 	}
-	SPDK_ERRLOG("Didn't find QP with qp_num %u\n", wc->qp_num);
+	SPDK_ERRLOG("Didn't find QP with qp_num %u\n", qp_num);
 	return NULL;
 }
 
@@ -3594,39 +3602,51 @@ static int
 spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			   struct spdk_nvmf_rdma_poller *rpoller)
 {
-	struct ibv_wc wc[32];
 	struct spdk_nvmf_rdma_wr	*rdma_wr;
 	struct spdk_nvmf_rdma_request	*rdma_req;
 	struct spdk_nvmf_rdma_recv	*rdma_recv;
 	struct spdk_nvmf_rdma_qpair	*rqpair;
-	int reaped, i;
+	struct ibv_poll_cq_attr		cq_attr;
+	int reaped, rc;
 	int count = 0;
 	bool error = false;
 	uint64_t poll_tsc = spdk_get_ticks();
 
+	/* TODO: Don't forget to check count against a maximum */
+
 	/* Poll for completing operations. */
-	reaped = ibv_poll_cq(rpoller->cq, 32, wc);
-	if (reaped < 0) {
+	cq_attr.comp_mask = IBV_CQ_INIT_ATTR_MASK_FLAGS;
+	rc = ibv_start_poll(rpoller->cq, &cq_attr);
+	if (!rc) {
 		SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
 			    errno, spdk_strerror(errno));
 		return -1;
 	}
 
-	rpoller->stat.polls++;
-	rpoller->stat.completions += reaped;
+	reaped = 0;
+	while (reaped < 32) {
+		rc = ibv_next_poll(rpoller->cq);
+		if (rc == ENOENT) {
+			break;
+		} else if (rc != 0) {
+			SPDK_ERRLOG("Error polling CQ! (%d): %s\n",
+				    errno, spdk_strerror(errno));
+			error = true;
+			break;
+		}
 
-	for (i = 0; i < reaped; i++) {
+		reaped++;
 
-		rdma_wr = (struct spdk_nvmf_rdma_wr *)wc[i].wr_id;
+		rdma_wr = (struct spdk_nvmf_rdma_wr *)rpoller->cq->wr_id;
 
 		switch (rdma_wr->type) {
 		case RDMA_WR_TYPE_SEND:
 			rdma_req = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_request, rsp.rdma_wr);
 			rqpair = SPDK_CONTAINEROF(rdma_req->req.qpair, struct spdk_nvmf_rdma_qpair, qpair);
 
-			if (!wc[i].status) {
+			if (!rpoller->cq->status) {
 				count++;
-				assert(wc[i].opcode == IBV_WC_SEND);
+				assert(ibv_wc_read_opcode(rpoller->cq) == IBV_WC_SEND);
 				assert(spdk_nvmf_rdma_req_is_completing(rdma_req));
 			} else {
 				SPDK_ERRLOG("data=%p length=%u\n", rdma_req->req.data, rdma_req->req.length);
@@ -3643,7 +3663,7 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			/* rdma_recv->qpair will be invalid if using an SRQ.  In that case we have to get the qpair from the wc. */
 			rdma_recv = SPDK_CONTAINEROF(rdma_wr, struct spdk_nvmf_rdma_recv, rdma_wr);
 			if (rpoller->srq != NULL) {
-				rdma_recv->qpair = get_rdma_qpair_from_wc(rpoller, &wc[i]);
+				rdma_recv->qpair = get_rdma_qpair_by_num(rpoller, ibv_wc_read_qp_num(rpoller->cq));
 				/* It is possible that there are still some completions for destroyed QP
 				 * associated with SRQ. We just ignore these late completions and re-post
 				 * receive WRs back to SRQ.
@@ -3665,8 +3685,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			rqpair = rdma_recv->qpair;
 
 			assert(rqpair != NULL);
-			if (!wc[i].status) {
-				assert(wc[i].opcode == IBV_WC_RECV);
+			if (!rpoller->cq->status) {
+				assert(ibv_wc_read_opcode(rpoller->cq) == IBV_WC_RECV);
 				if (rqpair->current_recv_depth >= rqpair->max_queue_depth) {
 					spdk_nvmf_rdma_start_disconnect(rqpair);
 					break;
@@ -3687,8 +3707,8 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 
 			rqpair->current_send_depth--;
 			rdma_req->num_outstanding_data_wr--;
-			if (!wc[i].status) {
-				assert(wc[i].opcode == IBV_WC_RDMA_READ);
+			if (!rpoller->cq->status) {
+				assert(ibv_wc_read_opcode(rpoller->cq) == IBV_WC_RDMA_READ);
 				rqpair->current_read_depth--;
 				/* wait for all outstanding reads associated with the same rdma_req to complete before proceeding. */
 				if (rdma_req->num_outstanding_data_wr == 0) {
@@ -3710,14 +3730,14 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			}
 			break;
 		default:
-			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", wc[i].opcode);
+			SPDK_ERRLOG("Received an unknown opcode on the CQ: %d\n", ibv_wc_read_opcode(rpoller->cq));
 			continue;
 		}
 
 		/* Handle error conditions */
-		if (wc[i].status) {
+		if (rpoller->cq->status) {
 			SPDK_DEBUGLOG(SPDK_LOG_RDMA, "CQ error on CQ %p, Request 0x%lu (%d): %s\n",
-				      rpoller->cq, wc[i].wr_id, wc[i].status, ibv_wc_status_str(wc[i].status));
+				      rpoller->cq, rpoller->cq->wr_id, rpoller->cq->status, ibv_wc_status_str(rpoller->cq->status));
 
 			error = true;
 
@@ -3736,6 +3756,11 @@ spdk_nvmf_rdma_poller_poll(struct spdk_nvmf_rdma_transport *rtransport,
 			nvmf_rdma_destroy_drained_qpair(rqpair);
 		}
 	}
+
+	rpoller->stat.polls++;
+	rpoller->stat.completions += reaped;
+
+	ibv_end_poll(rpoller->cq);
 
 	if (error == true) {
 		return -1;
