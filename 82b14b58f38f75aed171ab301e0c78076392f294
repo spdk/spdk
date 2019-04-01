@@ -48,6 +48,46 @@
     },
     {
       "key": {
+        "uuid": "aef7fa56_3881d4e8",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:41:33Z",
+      "side": 1,
+      "message": "this is duplicated with the line 593.",
+      "range": {
+        "startLine": 617,
+        "startChar": 7,
+        "endLine": 617,
+        "endChar": 10
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e8dbe7c9_85f5a333",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-01T23:41:33Z",
+      "side": 1,
+      "message": "We can remove this empty line.",
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2fe4c08b_bb6aad0d",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 74
