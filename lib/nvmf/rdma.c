@@ -3233,7 +3233,7 @@ spdk_nvmf_rdma_poll_group_create(struct spdk_nvmf_transport *transport)
 		cq_init_attr.cq_context = poller;
 		cq_init_attr.wc_flags = IBV_WC_EX_WITH_QP_NUM;
 		cq_init_attr.comp_mask = IBV_CQ_INIT_ATTR_MASK_FLAGS;
-		cq_init_attr.flags = 0;
+		cq_init_attr.flags = IBV_CREATE_CQ_ATTR_SINGLE_THREADED;
 
 		poller->cq = ibv_create_cq_ex(device->context, &cq_init_attr);
 		if (!poller->cq) {
