@@ -4296,6 +4296,7 @@ _spdk_bs_snapshot_unfreeze_cpl(void *cb_arg, int bserrno)
 	}
 
 	ctx->original.id = origblob->id;
+	origblob->locked_operation_in_progress = false;
 	spdk_blob_close(origblob, _spdk_bs_clone_snapshot_cleanup_finish, ctx);
 }
 
@@ -4513,12 +4514,20 @@ _spdk_bs_snapshot_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int b
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (_blob->data_ro || _blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create snapshot from read only blob with id %lu\n",
 			      _blob->id);
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4614,11 +4623,19 @@ _spdk_bs_clone_origblob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bser
 
 	ctx->original.blob = _blob;
 
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot create clone - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
 	if (!_blob->data_ro || !_blob->md_ro) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Clone not from read-only blob\n");
 		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EINVAL);
 		return;
 	}
+
+	_blob->locked_operation_in_progress = true;
 
 	spdk_blob_opts_init(&opts);
 	_spdk_blob_xattrs_init(&internal_xattrs);
@@ -4795,7 +4812,16 @@ _spdk_bs_inflate_blob_open_cpl(void *cb_arg, struct spdk_blob *_blob, int bserrn
 		_spdk_bs_clone_snapshot_cleanup_finish(ctx, bserrno);
 		return;
 	}
+
 	ctx->original.blob = _blob;
+
+	if (_blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot inflate blob - another operation in progress\n");
+		_spdk_bs_clone_snapshot_origblob_cleanup(ctx, -EBUSY);
+		return;
+	}
+
+	_blob->locked_operation_in_progress = true;
 
 	if (!ctx->allocate_all && _blob->parent_id == SPDK_BLOBID_INVALID) {
 		/* This blob have no parent, so we cannot decouple it. */
@@ -4956,6 +4982,14 @@ spdk_blob_resize(struct spdk_blob *blob, uint64_t sz, spdk_blob_op_complete cb_f
 /* START spdk_bs_delete_blob */
 
 static void
+_spdk_bs_delete_ebusy_close_cpl(void *cb_arg, int bserrno)
+{
+	spdk_bs_sequence_t *seq = cb_arg;
+
+	spdk_bs_sequence_finish(seq, -EBUSY);
+}
+
+static void
 _spdk_bs_delete_close_cpl(void *cb_arg, int bserrno)
 {
 	spdk_bs_sequence_t *seq = cb_arg;
@@ -5001,6 +5035,14 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		return;
 	}
 
+	if (blob->locked_operation_in_progress) {
+		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Cannot remove blob - another operation in progress\n");
+		spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
+		return;
+	}
+
+	blob->locked_operation_in_progress = true;
+
 	_spdk_blob_verify_md_op(blob);
 
 	if (blob->open_ref > 1) {
@@ -5009,13 +5051,31 @@ _spdk_bs_delete_open_cpl(void *cb_arg, struct spdk_blob *blob, int bserrno)
 		 *  Decrement the ref count directly and return -EBUSY.
 		 */
 		blob->open_ref--;
+		blob->locked_operation_in_progress = false;
 		spdk_bs_sequence_finish(seq, -EBUSY);
 		return;
+	}
+
+	/* Check if this is a snapshot with clones */
+	TAILQ_FOREACH(snapshot, &blob->bs->snapshots, link) {
+		if (snapshot->id == blob->id) {
+			break;
+		}
+	}
+	if (snapshot != NULL) {
+		/* If snapshot have clones, we cannot remove it */
+		if (!TAILQ_EMPTY(&snapshot->clones)) {
+			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
+			blob->locked_operation_in_progress = false;
+			spdk_blob_close(blob, _spdk_bs_delete_ebusy_close_cpl, seq);
+			return;
+		}
 	}
 
 	bserrno = _spdk_bs_blob_list_remove(blob);
 	if (bserrno != 0) {
 		SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Remove blob #%" PRIu64 " from a list\n", blob->id);
+		blob->locked_operation_in_progress = false;
 		spdk_bs_sequence_finish(seq, bserrno);
 		return;
 	}
@@ -5050,26 +5110,10 @@ spdk_bs_delete_blob(struct spdk_blob_store *bs, spdk_blob_id blobid,
 {
 	struct spdk_bs_cpl	cpl;
 	spdk_bs_sequence_t	*seq;
-	struct spdk_blob_list	*snapshot_entry = NULL;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BLOB, "Deleting blob %lu\n", blobid);
 
 	assert(spdk_get_thread() == bs->md_thread);
-
-	/* Check if this is a snapshot with clones */
-	TAILQ_FOREACH(snapshot_entry, &bs->snapshots, link) {
-		if (snapshot_entry->id == blobid) {
-			break;
-		}
-	}
-	if (snapshot_entry != NULL) {
-		/* If snapshot have clones, we cannot remove it */
-		if (!TAILQ_EMPTY(&snapshot_entry->clones)) {
-			SPDK_ERRLOG("Cannot remove snapshot with clones\n");
-			cb_fn(cb_arg, -EBUSY);
-			return;
-		}
-	}
 
 	cpl.type = SPDK_BS_CPL_TYPE_BLOB_BASIC;
 	cpl.u.blob_basic.cb_fn = cb_fn;
