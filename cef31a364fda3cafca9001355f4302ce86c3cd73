@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "04be64cc_0c726cfb",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-01T07:23:53Z",
+      "side": 1,
+      "message": "It\u0027s better to use a function to get the channel, you can add new member to thread context without changing here again.",
+      "range": {
+        "startLine": 860,
+        "startChar": 35,
+        "endLine": 860,
+        "endChar": 65
+      },
+      "revId": "cef31a364fda3cafca9001355f4302ce86c3cd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
