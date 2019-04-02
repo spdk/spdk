@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa6a02da_d3790093",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 723,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:47:01Z",
+      "side": 1,
+      "message": "This would be a lot simpler as:\n\nremaining_length \u003d io_u-\u003exfer_buflen - fio_req-\u003eiov_offset;",
+      "revId": "11b83d99234f3c85ba9d2f37244b91c74d104fc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a664158f_81a7fd86",
+        "filename": "examples/nvme/fio_plugin/fio_plugin.c",
+        "patchSetId": 38
+      },
+      "lineNbr": 724,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:47:01Z",
+      "side": 1,
+      "message": "let\u0027s get rid of remaining_length and just use iov_len\n\niov_len \u003d io_u-\u003exfer_buflen - fio_req-\u003eiov_offset;\nif (iov_len \u003e g_spdk_sge_size) {\n  iov_len \u003d g_spdk_sge_size;\n}",
+      "revId": "11b83d99234f3c85ba9d2f37244b91c74d104fc0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
