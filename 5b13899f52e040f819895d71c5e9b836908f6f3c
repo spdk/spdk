@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "74091d83_178f9730",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "25f57209_53821907",
+      "range": {
+        "startLine": 126,
+        "startChar": 28,
+        "endLine": 126,
+        "endChar": 36
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "5e30f3cf_3ed1fc20",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -36,6 +60,24 @@
       "writtenOn": "2019-04-02T04:12:31Z",
       "side": 1,
       "message": "unnecessary blank line",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb399cd5_adb8e5e0",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "5e30f3cf_3ed1fc20",
       "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -59,6 +101,24 @@
     },
     {
       "key": {
+        "uuid": "03644cc2_5b3d06df",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "33ec6fc0_ca7810a2",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f73558a8_9d3d32e8",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -70,6 +130,24 @@
       "writtenOn": "2019-04-02T04:12:31Z",
       "side": 1,
       "message": "Please be consistent about spaces between the line 471-475 and the line 494-497",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "89083197_f7e8662f",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Cool, I reordered the first block up above so it\u0027s easier to see what\u0027s different vs the same about setting up src vs dst",
+      "parentUuid": "f73558a8_9d3d32e8",
       "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
@@ -123,6 +201,30 @@
     },
     {
       "key": {
+        "uuid": "765a1e93_5b498d5e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "I don\u0027t think I\u0027m supposed to set it on the dst.  I\u0027ll confirm and if not will remove where I zero it out after using it for src and the line here were it adds up.  If I do need to provide it, I\u0027ll confirm where and test as this currently works.",
+      "parentUuid": "7bd9bb45_6e710375",
+      "range": {
+        "startLine": 487,
+        "startChar": 2,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59d03330_f625a0c0",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -134,6 +236,30 @@
       "writtenOn": "2019-04-02T04:12:31Z",
       "side": 1,
       "message": "this should be rte_comp_op_free?",
+      "range": {
+        "startLine": 515,
+        "startChar": 1,
+        "endLine": 515,
+        "endChar": 16
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35d9cc18_748a7a17",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Oh geeze, yes.  Thanks!",
+      "parentUuid": "59d03330_f625a0c0",
       "range": {
         "startLine": 515,
         "startChar": 1,
@@ -163,6 +289,24 @@
     },
     {
       "key": {
+        "uuid": "3cadc99b_e5314899",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "I\u0027m good at extra blank lines :)",
+      "parentUuid": "58880160_27b09abe",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e030e128_2e5e17bc",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -174,6 +318,30 @@
       "writtenOn": "2019-04-02T04:12:31Z",
       "side": 1,
       "message": "this change is intentional?",
+      "range": {
+        "startLine": 825,
+        "startChar": 19,
+        "endLine": 825,
+        "endChar": 21
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83f0bf22_0ddc92bf",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "nope thanks.  This is cleaned up in the next patch but I\u0027ll for the f back in so it doesn\u0027t show up as a diff ehere",
+      "parentUuid": "e030e128_2e5e17bc",
       "range": {
         "startLine": 825,
         "startChar": 19,
@@ -203,6 +371,24 @@
     },
     {
       "key": {
+        "uuid": "083388b7_56232068",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "OK, I\u0027ll try it again now that everyone is working and see what the problem was",
+      "parentUuid": "878028af_8e18c514",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "35e78ea5_332aa1e6",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -217,6 +403,24 @@
       "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a97ebe53_fb7504ae",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1011289
+      },
+      "writtenOn": "2019-04-02T20:15:12Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "35e78ea5_332aa1e6",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
