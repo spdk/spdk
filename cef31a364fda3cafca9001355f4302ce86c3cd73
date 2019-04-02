@@ -22,6 +22,30 @@
       "revId": "cef31a364fda3cafca9001355f4302ce86c3cd73",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7a98d322_bf62c0d7",
+        "filename": "lib/blobfs/blobfs.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 860,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-02T14:30:54Z",
+      "side": 1,
+      "message": "I was trying to minimize the number of lines of code changed, so I left this as a cast. In reality, we can get rid of this and just use the spdk_fs_channel parameter directly. I\u0027ll be submitting a patch to do that as a follow on later.",
+      "parentUuid": "04be64cc_0c726cfb",
+      "range": {
+        "startLine": 860,
+        "startChar": 35,
+        "endLine": 860,
+        "endChar": 65
+      },
+      "revId": "cef31a364fda3cafca9001355f4302ce86c3cd73",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
