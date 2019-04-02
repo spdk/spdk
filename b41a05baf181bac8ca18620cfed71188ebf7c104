@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "544ca6db_9cef247d",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T08:37:20Z",
+      "side": 1,
+      "message": "Moving this between the line 625 and 625 will ensure remain_len is zero when while loop exits.",
+      "range": {
+        "startLine": 628,
+        "startChar": 3,
+        "endLine": 628,
+        "endChar": 21
+      },
+      "revId": "b41a05baf181bac8ca18620cfed71188ebf7c104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
