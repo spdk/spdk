@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "bf853d9f_379fccd3",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T08:01:12Z",
+      "side": 1,
+      "message": "Name of the master thread is \"app_thread\" but name of the slave threads are \"reactor_#\". Is this OK?\n\nI think it may be natural that initializer starts app_thread on the master core first and app_thread starts reactor_0 and then exit.",
+      "revId": "5288102f7e1e74c7d4acbe419688389f03fc4f6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
