@@ -16,6 +16,24 @@
       "revId": "d4a4f3c9b6693254f356543ceb9995743a5d0d0b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "927d2c93_80e29f09",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3149,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-02T17:26:43Z",
+      "side": 1,
+      "message": "The RDMA spec allows for us to chain work requests which I do above in request_queue_sends. This allows us to only call down once to the IB code. So there can be an arbitrary number of work requests, but we only need to call once. I know, however, that if the first pointer is NULL, there are no SENDs available to post.",
+      "parentUuid": "6159d80f_84ef148c",
+      "revId": "d4a4f3c9b6693254f356543ceb9995743a5d0d0b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
