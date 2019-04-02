@@ -1,0 +1,313 @@
+From e17d571b44c020f0b30adc4a5b2ca60ba9f4e52e Mon Sep 17 00:00:00 2001
+From: Tomasz Kulasek <tomaszx.kulasek@intel.com>
+Date: Thu, 28 Mar 2019 08:17:59 -0400
+Subject: [PATCH] fix building on fedora28
+
+This patch fixes compilation for gcc8 and glibc 2.27 used in Fedora 28:
+ 1) replaces nasm with newer version 2.14 (gcc8),
+ 2) removes inline definition for functions cannot be inlined (gcc8),
+ 3) removes definition of memfd_create if already defined (glibc 2.27)
+
+Signed-off-by: Tomasz Kulasek <tomaszx.kulasek@intel.com>
+---
+ dpdk/Makefile                       |  2 +-
+ extras/libmemif/configure.ac        |  2 ++
+ extras/libmemif/src/memif_private.h |  2 ++
+ src/configure.ac                    |  1 +
+ src/svm/memfd.c                     |  3 +++
+ src/svm/memfd.h                     |  4 ++++
+ src/vnet/dpo/lookup_dpo.c           | 24 ++++++++++++------------
+ src/vnet/interface_output.c         | 12 ++++++------
+ src/vnet/ip/ip4_forward.c           |  4 ++--
+ src/vnet/ip/ip6_forward.c           |  4 ++--
+ src/vnet/mpls/mpls_lookup.c         |  2 +-
+ src/vppinfra/linux/syscall.h        |  2 ++
+ 12 files changed, 38 insertions(+), 24 deletions(-)
+
+diff --git a/dpdk/Makefile b/dpdk/Makefile
+index 869cac2..39e3252 100644
+--- a/dpdk/Makefile
++++ b/dpdk/Makefile
+@@ -35,7 +35,7 @@ DPDK_SOURCE := $(B)/dpdk-$(DPDK_VERSION)
+ MACHINE=$(shell uname -m)
+
+ NASM_BASE_URL := http://www.nasm.us/pub/nasm/releasebuilds
+-NASM_VER := 2.13.01
++NASM_VER := 2.14
+ NASM_TARBALL := nasm-$(NASM_VER).tar.xz
+ NASM_TAR_URL := $(NASM_BASE_URL)/$(NASM_VER)/$(NASM_TARBALL)
+ NASM_SOURCE := $(B)/nasm-$(NASM_VER)
+diff --git a/extras/libmemif/configure.ac b/extras/libmemif/configure.ac
+index 323e113..dfe33cf 100644
+--- a/extras/libmemif/configure.ac
++++ b/extras/libmemif/configure.ac
+@@ -7,6 +7,8 @@ AC_PREFIX_DEFAULT([/usr])
+ PKG_CHECK_MODULES([CHECK], [check], [HAVE_CHECK=1], [HAVE_CHECK=0])
+ AM_CONDITIONAL([USE_CHECK],[test "$HAVE_CHECK" -eq 1])
+
++AC_CHECK_FUNC([memfd_create], [AC_DEFINE([HAVE_MEMFD_CREATE], [1], [Define if memfd exists])])
++
+ AC_PROG_CC
+
+ AC_OUTPUT([Makefile])
+diff --git a/extras/libmemif/src/memif_private.h b/extras/libmemif/src/memif_private.h
+index c213ee6..ed13072 100644
+--- a/extras/libmemif/src/memif_private.h
++++ b/extras/libmemif/src/memif_private.h
+@@ -237,11 +237,13 @@ int free_list_elt (memif_list_elt_t * list, uint16_t len, int key);
+ #endif
+ #endif
+
++#ifndef HAVE_MEMFD_CREATE
+ static inline int
+ memfd_create (const char *name, unsigned int flags)
+ {
+   return syscall (__NR_memfd_create, name, flags);
+ }
++#endif /* HAVE_MEMFD_CREATE */
+
+ static inline void *
+ memif_get_buffer (memif_connection_t * conn, memif_ring_t * ring,
+diff --git a/src/configure.ac b/src/configure.ac
+index db6484f..dafb962 100644
+--- a/src/configure.ac
++++ b/src/configure.ac
+@@ -227,6 +227,7 @@ PLUGIN_ENABLED(l2e)
+ ###############################################################################
+ # Dependency checks
+ ###############################################################################
++AC_CHECK_FUNC([memfd_create], [AC_DEFINE([HAVE_MEMFD_CREATE], [1], [Define if memfd exists])])
+
+ AM_COND_IF([ENABLE_DPDK_SHARED],
+ [
+diff --git a/src/svm/memfd.c b/src/svm/memfd.c
+index 9fe487d..a736810 100644
+--- a/src/svm/memfd.c
++++ b/src/svm/memfd.c
+@@ -12,6 +12,9 @@
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
++#ifndef _GNU_SOURCE
++#define _GNU_SOURCE
++#endif
+ #include "memfd.h"
+
+ int
+diff --git a/src/svm/memfd.h b/src/svm/memfd.h
+index 3ed4a9a..00cfebf 100644
+--- a/src/svm/memfd.h
++++ b/src/svm/memfd.h
+@@ -171,6 +171,8 @@ void memfd_delete (memfd_private_t * memfd);
+ /* These do not belong here, but the original keeps running around... */
+ /* $$$$ work w/ Damjan to fix properly */
+
++#ifndef HAVE_MEMFD_CREATE
++
+ #ifndef F_LINUX_SPECIFIC_BASE
+ #define F_LINUX_SPECIFIC_BASE 1024
+ #endif
+@@ -183,6 +185,8 @@ void memfd_delete (memfd_private_t * memfd);
+ #define F_SEAL_GROW     0x0004	/* prevent file from growing */
+ #define F_SEAL_WRITE    0x0008	/* prevent writes */
+
++#endif
++
+ #endif /* __included_memfd_h__ */
+
+ /*
+diff --git a/src/vnet/dpo/lookup_dpo.c b/src/vnet/dpo/lookup_dpo.c
+index 9426d1c..80259cf 100644
+--- a/src/vnet/dpo/lookup_dpo.c
++++ b/src/vnet/dpo/lookup_dpo.c
+@@ -604,7 +604,7 @@ format_lookup_trace (u8 * s, va_list * args)
+     return s;
+ }
+
+-always_inline uword
++static uword
+ lookup_ip4_dst (vlib_main_t * vm,
+                 vlib_node_runtime_t * node,
+                 vlib_frame_t * from_frame)
+@@ -621,7 +621,7 @@ VLIB_REGISTER_NODE (lookup_ip4_dst_node) = {
+ };
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_ip4_dst_node, lookup_ip4_dst)
+
+-always_inline uword
++static uword
+ lookup_ip4_dst_itf (vlib_main_t * vm,
+                     vlib_node_runtime_t * node,
+                     vlib_frame_t * from_frame)
+@@ -638,7 +638,7 @@ VLIB_REGISTER_NODE (lookup_ip4_dst_itf_node) = {
+ };
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_ip4_dst_itf_node, lookup_ip4_dst_itf)
+
+-always_inline uword
++static uword
+ lookup_ip4_src (vlib_main_t * vm,
+                 vlib_node_runtime_t * node,
+                 vlib_frame_t * from_frame)
+@@ -930,7 +930,7 @@ lookup_dpo_ip6_inline (vlib_main_t * vm,
+     return from_frame->n_vectors;
+ }
+
+-always_inline uword
++static uword
+ lookup_ip6_dst (vlib_main_t * vm,
+                 vlib_node_runtime_t * node,
+                 vlib_frame_t * from_frame)
+@@ -947,10 +947,10 @@ VLIB_REGISTER_NODE (lookup_ip6_dst_node) = {
+ };
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_ip6_dst_node, lookup_ip6_dst)
+
+-always_inline uword
++static uword
+ lookup_ip6_dst_itf (vlib_main_t * vm,
+-		    vlib_node_runtime_t * node,
+-		    vlib_frame_t * from_frame)
++                    vlib_node_runtime_t * node,
++                    vlib_frame_t * from_frame)
+ {
+     return (lookup_dpo_ip6_inline(vm, node, from_frame, 0 /*use src*/, 1));
+ }
+@@ -964,7 +964,7 @@ VLIB_REGISTER_NODE (lookup_ip6_dst_itf_node) = {
+ };
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_ip6_dst_itf_node, lookup_ip6_dst_itf)
+
+-always_inline uword
++static uword
+ lookup_ip6_src (vlib_main_t * vm,
+                 vlib_node_runtime_t * node,
+                 vlib_frame_t * from_frame)
+@@ -1126,7 +1126,7 @@ format_lookup_mpls_trace (u8 * s, va_list * args)
+     return s;
+ }
+
+-always_inline uword
++static uword
+ lookup_mpls_dst (vlib_main_t * vm,
+                 vlib_node_runtime_t * node,
+                 vlib_frame_t * from_frame)
+@@ -1144,7 +1144,7 @@ VLIB_REGISTER_NODE (lookup_mpls_dst_node) = {
+ };
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_mpls_dst_node, lookup_mpls_dst)
+
+-always_inline uword
++static uword
+ lookup_mpls_dst_itf (vlib_main_t * vm,
+                     vlib_node_runtime_t * node,
+                     vlib_frame_t * from_frame)
+@@ -1257,7 +1257,7 @@ lookup_dpo_ip_dst_mcast_inline (vlib_main_t * vm,
+     return from_frame->n_vectors;
+ }
+
+-always_inline uword
++static uword
+ lookup_ip4_dst_mcast (vlib_main_t * vm,
+                       vlib_node_runtime_t * node,
+                       vlib_frame_t * from_frame)
+@@ -1279,7 +1279,7 @@ VLIB_REGISTER_NODE (lookup_ip4_dst_mcast_node) = {
+ VLIB_NODE_FUNCTION_MULTIARCH (lookup_ip4_dst_mcast_node,
+                               lookup_ip4_dst_mcast)
+
+-always_inline uword
++static uword
+ lookup_ip6_dst_mcast (vlib_main_t * vm,
+                       vlib_node_runtime_t * node,
+                       vlib_frame_t * from_frame)
+diff --git a/src/vnet/interface_output.c b/src/vnet/interface_output.c
+index 563f614..9004e9f 100644
+--- a/src/vnet/interface_output.c
++++ b/src/vnet/interface_output.c
+@@ -201,10 +201,10 @@ calc_checksums (vlib_main_t * vm, vlib_buffer_t * b)
+
+ static_always_inline uword
+ vnet_interface_output_node_inline (vlib_main_t * vm,
+-				   vlib_node_runtime_t * node,
+-				   vlib_frame_t * frame, vnet_main_t * vnm,
+-				   vnet_hw_interface_t * hi,
+-				   int do_tx_offloads)
++                                   vlib_node_runtime_t * node,
++                                   vlib_frame_t * frame, vnet_main_t * vnm,
++                                   vnet_hw_interface_t * hi,
++                                   int do_tx_offloads)
+ {
+   vnet_interface_output_runtime_t *rt = (void *) node->runtime_data;
+   vnet_sw_interface_t *si;
+@@ -443,9 +443,9 @@ vnet_interface_output_node_inline (vlib_main_t * vm,
+   return n_buffers;
+ }
+
+-static_always_inline uword
++static uword
+ vnet_interface_output_node (vlib_main_t * vm, vlib_node_runtime_t * node,
+-			    vlib_frame_t * frame)
++                            vlib_frame_t * frame)
+ {
+   vnet_main_t *vnm = vnet_get_main ();
+   vnet_hw_interface_t *hi;
+diff --git a/src/vnet/ip/ip4_forward.c b/src/vnet/ip/ip4_forward.c
+index 9c57757..6887ca0 100755
+--- a/src/vnet/ip/ip4_forward.c
++++ b/src/vnet/ip/ip4_forward.c
+@@ -484,9 +484,9 @@ VLIB_REGISTER_NODE (ip4_lookup_node) =
+
+ VLIB_NODE_FUNCTION_MULTIARCH (ip4_lookup_node, ip4_lookup);
+
+-always_inline uword
++static uword
+ ip4_load_balance (vlib_main_t * vm,
+-		  vlib_node_runtime_t * node, vlib_frame_t * frame)
++                  vlib_node_runtime_t * node, vlib_frame_t * frame)
+ {
+   vlib_combined_counter_main_t *cm = &load_balance_main.lbm_via_counters;
+   u32 n_left_from, n_left_to_next, *from, *to_next;
+diff --git a/src/vnet/ip/ip6_forward.c b/src/vnet/ip/ip6_forward.c
+index 29cd3ca..0b7c594 100644
+--- a/src/vnet/ip/ip6_forward.c
++++ b/src/vnet/ip/ip6_forward.c
+@@ -745,9 +745,9 @@ VLIB_REGISTER_NODE (ip6_lookup_node) =
+
+ VLIB_NODE_FUNCTION_MULTIARCH (ip6_lookup_node, ip6_lookup);
+
+-always_inline uword
++static uword
+ ip6_load_balance (vlib_main_t * vm,
+-		  vlib_node_runtime_t * node, vlib_frame_t * frame)
++                  vlib_node_runtime_t * node, vlib_frame_t * frame)
+ {
+   vlib_combined_counter_main_t *cm = &load_balance_main.lbm_via_counters;
+   u32 n_left_from, n_left_to_next, *from, *to_next;
+diff --git a/src/vnet/mpls/mpls_lookup.c b/src/vnet/mpls/mpls_lookup.c
+index 30031e5..0e53bef 100644
+--- a/src/vnet/mpls/mpls_lookup.c
++++ b/src/vnet/mpls/mpls_lookup.c
+@@ -500,7 +500,7 @@ format_mpls_load_balance_trace (u8 * s, va_list * args)
+   return s;
+ }
+
+-always_inline uword
++static uword
+ mpls_load_balance (vlib_main_t * vm,
+                   vlib_node_runtime_t * node,
+                   vlib_frame_t * frame)
+diff --git a/src/vppinfra/linux/syscall.h b/src/vppinfra/linux/syscall.h
+index f8ec591..4511b85 100644
+--- a/src/vppinfra/linux/syscall.h
++++ b/src/vppinfra/linux/syscall.h
+@@ -39,11 +39,13 @@ move_pages (int pid, unsigned long count, void **pages, const int *nodes,
+   return syscall (__NR_move_pages, pid, count, pages, nodes, status, flags);
+ }
+
++#ifndef HAVE_MEMFD_CREATE
+ static inline int
+ memfd_create (const char *name, unsigned int flags)
+ {
+   return syscall (__NR_memfd_create, name, flags);
+ }
++#endif
+
+ #endif /* included_linux_syscall_h */
+
+--
+2.7.4
