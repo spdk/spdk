@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "daf23329_1bdda061",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011211
+      },
+      "writtenOn": "2019-04-02T16:04:28Z",
+      "side": 1,
+      "message": "return (iono \u003e 0);",
+      "range": {
+        "startLine": 736,
+        "startChar": 1,
+        "endLine": 740,
+        "endChar": 2
+      },
+      "revId": "4751a77f8d585e1d29d2498e7661ddc166fef856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
