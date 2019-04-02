@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9fc72ee1_1a9605ee",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T21:03:23Z",
+      "side": 1,
+      "message": "we usually try to name functions like subject_verb[_object] - so would nvmf_rdma_qpair_queue_send_wrs be a better name?",
+      "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d438dc63_0dde63d0",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T21:03:23Z",
+      "side": 1,
+      "message": "do we need to wait to update these until we actually call ibv_post_send?",
+      "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "47453da7_db005274",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1073,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T21:03:23Z",
+      "side": 1,
+      "message": "same here",
+      "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
