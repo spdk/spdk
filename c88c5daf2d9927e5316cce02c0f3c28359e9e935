@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "f7ede4a2_7eb2fca6",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 116,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:30:54Z",
+      "side": 1,
+      "message": "I\u0027m all for lining up comments.  The previous ones were lined up with the comments on 102-107 though, so this patch changed them.  They\u0027re fine like you\u0027ve changed them here - it was just extra churn that I didn\u0027t think was needed.",
+      "parentUuid": "75e685dc_3e14ce7c",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "e3e490a3_cb2b11a0",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 29
@@ -66,6 +84,24 @@
       "side": 1,
       "message": "What changed here? I\u0027m not seeing it",
       "parentUuid": "e3e490a3_cb2b11a0",
+      "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e58ea6eb_55f9082c",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 29
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:30:54Z",
+      "side": 1,
+      "message": "removing the extra tabs from lines 131-135\n\nI guess it\u0027s fine since it\u0027s just above these other lines that are getting removed.  So ignore this comment.",
+      "parentUuid": "5cc880df_81c031e5",
       "revId": "c88c5daf2d9927e5316cce02c0f3c28359e9e935",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
