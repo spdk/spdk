@@ -99,6 +99,30 @@
     },
     {
       "key": {
+        "uuid": "7bd9bb45_6e710375",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:38:43Z",
+      "side": 1,
+      "message": "is comp_op-\u003edst.length supposed to be set after this for loop maybe?",
+      "parentUuid": "98f7bdc9_8d7f1c7e",
+      "range": {
+        "startLine": 487,
+        "startChar": 2,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "59d03330_f625a0c0",
         "filename": "lib/bdev/compress/vbdev_compress.c",
         "patchSetId": 33
@@ -159,6 +183,40 @@
       "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "878028af_8e18c514",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 992,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:38:43Z",
+      "side": 1,
+      "message": "Hey Paul - saw your comment on last patch.  I\u0027d like to get to the bottom of this rather than merging this part of the change.  The whole intention of the design is that we write to the backing device in 4KB units, not 512B.",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "35e78ea5_332aa1e6",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 993,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:38:43Z",
+      "side": 1,
+      "message": "this makes line 991 unnecessary - but I think we want line 991, not this one since eventually the backing_io_unit_size will be 4KB",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
