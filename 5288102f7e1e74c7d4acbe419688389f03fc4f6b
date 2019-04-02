@@ -16,6 +16,24 @@
       "revId": "5288102f7e1e74c7d4acbe419688389f03fc4f6b",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3e0bdd9f_191ed282",
+        "filename": "lib/event/app.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 649,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T09:57:58Z",
+      "side": 1,
+      "message": "This comment is wrong. Do you have any plan to add parent child relationship in spdk thread?",
+      "parentUuid": "bf853d9f_379fccd3",
+      "revId": "5288102f7e1e74c7d4acbe419688389f03fc4f6b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
