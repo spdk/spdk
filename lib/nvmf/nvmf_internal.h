@@ -247,6 +247,7 @@ struct spdk_nvmf_ctrlr_feat {
 struct spdk_nvmf_reservation_log {
 	struct spdk_nvme_reservation_notification_log	log;
 	TAILQ_ENTRY(spdk_nvmf_reservation_log)		link;
+	struct spdk_nvmf_ctrlr				*ctrlr;
 };
 
 /*
