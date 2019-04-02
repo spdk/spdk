@@ -1,0 +1,242 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d6480073_603fc51a",
+        "filename": "test/app/fuzz/Makefile",
+        "patchSetId": 18
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "Following up on earlier comment - how will you put multiple fuzz applications in this one directory?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e9875cdd_b715ebef",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 43,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "I\u0027d suggest adding an extra CFLAG to the Makefile for the lib/nvme directory, rather than putting relative path names in the source code\n\nsee app/iscsi_tgt and app/iscsi_top - they add -I$(SPDK_ROOT_DIR)/lib to CFLAGS (or CXXFLAGS) and then just include the equivalent of nvme/nvme_internal.h here",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9ae3959c_d0b37345",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "use SPDK_SEC_TO_USEC instead",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ffbf0f00_734a8d78",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "I think we should just use printf instead of SPDK_NOTICELOG in this application.  I think SPDK_NOTICELOG is more useful when it\u0027s being used in one of the targets.  For a test app, just write to stdout directly.",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eee8f468_efe41d9d",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "fprintf(stderr) instead?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d9e90e36_7e43f63f",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 131,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "since we use this for both admin and io, would g_cmd_counter be a better name?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "fdc7ce94_845068bf",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 135,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "g_successful_cmds?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "664dc861_47d029e0",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 138,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "g_outstanding_cmds?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "aa9d5d10_895438d8",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 142,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "submit_next_cmd?",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "88e2789f_c995c545",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 148,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "new line after variable declaration",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "de69339c_8a759389",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 233,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "We should allow the user to pass in a seed.  That way if we find some seed value that generates some kind of interesting failure, we have a way to easily reproduce it (or try to reproduce it at least).",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c8c9e818_b00a7f8c",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 237,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "rather than asserting to check for overflow, it might be better to just cap g_runtime_ticks to some reasonable value such that we know it can\u0027t overflow - if the user specifies something bigger than an hour (or a day) than just exit immediately with an error message\n\nI like that you\u0027re checking for overflow though.  :)",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "99bba9cd_6592e0e5",
+        "filename": "test/app/fuzz/nvme_fuzz.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 512,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "could we just require user to specify a trid, even for local NVMe devices?  then local and fabrics take the same path and behave similarly",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bb967b0_6f2e3a99",
+        "filename": "test/nvmf/fuzz/fuzz.sh",
+        "patchSetId": 18
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:59:50Z",
+      "side": 1,
+      "message": "if the fuzz tester fails, will this get reported back up as a test failure with the \"|| true\"?\n\nI guess I\u0027m thinking we want this to just fail like any other test, if it returns an error.  This isn\u0027t probably something we\u0027ll run in per-patch testing - it\u0027s more a nightly test kind of thing that we run for a longer period of time.  At least that\u0027s my current thinking.",
+      "revId": "4d6eb4dc8ed26cb973fd224800b4bdc9ec1bf840",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
