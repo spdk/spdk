@@ -234,6 +234,7 @@ function install_vpp()
         else
             git clone "${GIT_REPO_VPP}"
             git -C ./vpp checkout v18.01.1
+            git -C ./vpp am ${VM_SETUP_PATH}/patch/vpp/0001-fix-building-on-fedora28.patch
             # VPP 18.01.1 does not support OpenSSL 1.1.
             # For compilation, a compatibility package is used temporarily.
             sudo dnf install -y --allowerasing compat-openssl10-devel
