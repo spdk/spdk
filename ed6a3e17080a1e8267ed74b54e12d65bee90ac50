@@ -1,0 +1,96 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "57481999_6181baaa",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 3
+      },
+      "lineNbr": 35,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-04-02T06:55:57Z",
+      "side": 1,
+      "message": "and updated",
+      "range": {
+        "startLine": 35,
+        "startChar": 6,
+        "endLine": 35,
+        "endChar": 16
+      },
+      "revId": "ed6a3e17080a1e8267ed74b54e12d65bee90ac50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3026f02c_8061f2d6",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 123,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-04-02T06:55:57Z",
+      "side": 1,
+      "message": "# Pre-configured NVMe bdev name.",
+      "range": {
+        "startLine": 123,
+        "startChar": 0,
+        "endLine": 123,
+        "endChar": 40
+      },
+      "revId": "ed6a3e17080a1e8267ed74b54e12d65bee90ac50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "78766f27_70eac2b5",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 125,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-04-02T06:55:57Z",
+      "side": 1,
+      "message": "# Pre-configured Malloc bdevs name.",
+      "range": {
+        "startLine": 125,
+        "startChar": 0,
+        "endLine": 125,
+        "endChar": 42
+      },
+      "revId": "ed6a3e17080a1e8267ed74b54e12d65bee90ac50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f361305d_2d54c326",
+        "filename": "etc/spdk/vhost.conf.in",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1011373
+      },
+      "writtenOn": "2019-04-02T06:55:57Z",
+      "side": 1,
+      "message": "# Pre-configured AIO bdevs name.",
+      "range": {
+        "startLine": 127,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 39
+      },
+      "revId": "ed6a3e17080a1e8267ed74b54e12d65bee90ac50",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
