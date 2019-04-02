@@ -1,0 +1,164 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "25f57209_53821907",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 126,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "Using tabs may be consistent with other places.",
+      "range": {
+        "startLine": 126,
+        "startChar": 28,
+        "endLine": 126,
+        "endChar": 36
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5e30f3cf_3ed1fc20",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 390,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "unnecessary blank line",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "33ec6fc0_ca7810a2",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 436,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "unnecessary blank line",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f73558a8_9d3d32e8",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 472,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "Please be consistent about spaces between the line 471-475 and the line 494-497",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "98f7bdc9_8d7f1c7e",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 487,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "total_length is not referenced after for loop. Updating total_length for dst is not necessary?",
+      "range": {
+        "startLine": 487,
+        "startChar": 2,
+        "endLine": 487,
+        "endChar": 14
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "59d03330_f625a0c0",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 515,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "this should be rte_comp_op_free?",
+      "range": {
+        "startLine": 515,
+        "startChar": 1,
+        "endLine": 515,
+        "endChar": 16
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "58880160_27b09abe",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 517,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "unnecessary blank line",
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e030e128_2e5e17bc",
+        "filename": "lib/bdev/compress/vbdev_compress.c",
+        "patchSetId": 33
+      },
+      "lineNbr": 825,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T04:12:31Z",
+      "side": 1,
+      "message": "this change is intentional?",
+      "range": {
+        "startLine": 825,
+        "startChar": 19,
+        "endLine": 825,
+        "endChar": 21
+      },
+      "revId": "5b13899f52e040f819895d71c5e9b836908f6f3c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
