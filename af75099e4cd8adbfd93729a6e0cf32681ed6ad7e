@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "11022d2b_c3235be7",
+        "filename": "lib/nbd/nbd_rpc.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 50,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:23:41Z",
+      "side": 1,
+      "message": "Let\u0027s just create a separate bool variable here named something like \"user_specified_idx\" - rather than overloading nbd_idx and creating USER_SPECIFIED_NBD_DEVICE special value.  It will make the code more understandable.  This is not in the I/O performance path, so the extra variable won\u0027t hurt anything.",
+      "revId": "af75099e4cd8adbfd93729a6e0cf32681ed6ad7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33aa9f7b_703a47b7",
+        "filename": "test/bdev/blockdev.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 45,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:23:41Z",
+      "side": 1,
+      "message": "\"nbd_rpc_operation_verify\" isn\u0027t a very good function name - can you think of a name that describes better what this function is doing?",
+      "revId": "af75099e4cd8adbfd93729a6e0cf32681ed6ad7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e89e1fde_4ecf6a0c",
+        "filename": "test/bdev/nbd_common.sh",
+        "patchSetId": 9
+      },
+      "lineNbr": 54,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:23:41Z",
+      "side": 1,
+      "message": "Instead of adding this function, could the caller do lines 58-59 and then just call nbd_stop_disks?\n\nOr name this function nbd_stop_all_disks() - have it do lines 58 and 59 and then call nbd_stop_disks\n\nMy main concern is that \"nbd_stop_disks_optional\" isn\u0027t a very good function name.  It\u0027s not clear what \"optional\" means.",
+      "revId": "af75099e4cd8adbfd93729a6e0cf32681ed6ad7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
