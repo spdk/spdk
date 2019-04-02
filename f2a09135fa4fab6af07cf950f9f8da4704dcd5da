@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "6de11f97_b1c08360",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 978,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-02T23:25:46Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "9fc72ee1_1a9605ee",
+      "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d438dc63_0dde63d0",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 5
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-02T21:03:23Z",
       "side": 1,
       "message": "do we need to wait to update these until we actually call ibv_post_send?",
+      "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "793bb515_079108fa",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1011,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-02T23:25:46Z",
+      "side": 1,
+      "message": "I updated the error path to reflect how we currently respond when a call to ibv_post_send fails.",
+      "parentUuid": "d438dc63_0dde63d0",
       "revId": "f2a09135fa4fab6af07cf950f9f8da4704dcd5da",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
