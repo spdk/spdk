@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9703f5ab_1311540c",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 3162,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T21:07:42Z",
+      "side": 1,
+      "message": "if you can\u0027t break from this function, would it be easier to just do STAILQ_FOREACH, and then do an STAILQ_INIT after that loop is done?\n\nI also think it would be somewhat more clear to do STAILQ_REMOVE instead of STAILQ_REMOVE_HEAD.  Using STAILQ_REMOVE_HEAD with STAILQ_FOREACH_SAFE makes me want to go read the queue.h code to make sure I really know how those two work together.",
+      "revId": "1449ddb9234c4b0af092274ca1dc52e8a9138b85",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
