@@ -411,13 +411,10 @@ free_rpc_delete_subsystem(struct rpc_delete_subsystem *r)
 }
 
 static void
-spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
-				void *cb_arg, int status)
+spdk_rpc_nvmf_subsystem_destroyed(void *cb_arg)
 {
 	struct spdk_jsonrpc_request *request = cb_arg;
 	struct spdk_json_write_ctx *w;
-
-	spdk_nvmf_subsystem_destroy(subsystem);
 
 	w = spdk_jsonrpc_begin_result(request);
 	if (w == NULL) {
@@ -426,6 +423,21 @@ spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
 
 	spdk_json_write_bool(w, true);
 	spdk_jsonrpc_end_result(request, w);
+}
+
+static void
+spdk_rpc_nvmf_subsystem_stopped(struct spdk_nvmf_subsystem *subsystem,
+				void *cb_arg, int status)
+{
+	struct spdk_jsonrpc_request *request = cb_arg;
+	int rc;
+
+	rc = spdk_nvmf_subsystem_destroy_async(subsystem, spdk_rpc_nvmf_subsystem_destroyed, cb_arg);
+
+	if (rc != 0) {
+		spdk_jsonrpc_send_error_response(request, SPDK_JSONRPC_ERROR_INTERNAL_ERROR,
+						 "Memory Allocation Failure");
+	}
 }
 
 static const struct spdk_json_object_decoder rpc_delete_subsystem_decoders[] = {

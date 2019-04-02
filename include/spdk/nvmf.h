@@ -45,6 +45,7 @@
 #include "spdk/nvmf_spec.h"
 #include "spdk/queue.h"
 #include "spdk/uuid.h"
+#include "spdk/thread.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -252,11 +253,28 @@ struct spdk_nvmf_subsystem *spdk_nvmf_subsystem_create(struct spdk_nvmf_tgt *tgt
 
 /**
  * Destroy an NVMe-oF subsystem. A subsystem may only be destroyed when in
- * the Inactive state. See spdk_nvmf_subsystem_stop().
+ * the Inactive state. See spdk_nvmf_subsystem_stop(). This function should
+ * only be called from the thread on which the subsystem was created.
+ * See spdk_nvmf_subsystem_destroy_async.
  *
  * \param subsystem The NVMe-oF subsystem to destroy.
  */
 void spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem);
+
+/**
+ * Destroy an NVMe-oF subsystem asynchronously. This function passes a message to
+ * the thread on which the subsystem was created and calls spdk_nvmf_subsystem_destroy.
+ * It then passes a message back to the original thread and calls cb_fn.
+ *
+ * \param subsystem The NVMe-oF subsystem to destroy.
+ * \param cb_fn The spdk_msg_fn to call when the subsystem has been destroyed.
+ * \param cb_arg The argument to provide to cb_fn.
+ *
+ * \return -ENOMEM if the context cannot be allocated, or 0 on success.
+ *
+ */
+int spdk_nvmf_subsystem_destroy_async(struct spdk_nvmf_subsystem *subsystem, spdk_msg_fn cb_fn,
+				      void *cb_arg);
 
 /**
  * Function to be called once the subsystem has changed state.
