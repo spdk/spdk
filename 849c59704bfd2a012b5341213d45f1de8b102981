@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a17bbb14_d6c3abfb",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:37:27Z",
+      "side": 1,
+      "message": "You could probably skip this check here.  Technically it\u0027s the right thing to do, but almost nowhere in SPDK do we actually check the spdk_poller_register return value, so removing it would make it consistent.  But I\u0027m OK if you want to leave it.",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d14811c6_5813bad3",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:37:27Z",
+      "side": 1,
+      "message": "is it valid for us to get a NULL array here?\n\nI\u0027m wondering if an assert would be better",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "67115615_9fa656f2",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:37:27Z",
+      "side": 1,
+      "message": "Receives\n\n(English spelling is hard even for native English speakers)",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d7d13b1e_55eb289f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:37:27Z",
+      "side": 1,
+      "message": "a comment describing this current_step would be good - it took me a minute to realize this was an array of function pointers",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
