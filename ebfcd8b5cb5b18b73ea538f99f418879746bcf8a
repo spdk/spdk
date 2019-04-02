@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5fd5032_080ac8c7",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T08:27:01Z",
+      "side": 1,
+      "message": "data_iov_num is OK, but iov_num may remind me the index of iovec array. data_iov_cnt or data_iov_count may be easier to understand.",
+      "range": {
+        "startLine": 112,
+        "startChar": 14,
+        "endLine": 112,
+        "endChar": 26
+      },
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b5652bda_54ca80ba",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1147,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-02T08:27:01Z",
+      "side": 1,
+      "message": "Why nvme_tcp_pdu_set_data cannot be used here?",
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
