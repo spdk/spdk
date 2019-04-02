@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ecc4a47d_e3031b89",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2213,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:23:04Z",
+      "side": 1,
+      "message": "you may also want to assert(*snapshot_entry \u003d\u003d NULL) and assert(*clone_entry \u003d\u003d NULL) - right now this function is depending on the calling function doing this\n\nor you can change this function to explicit set *snapshot_entry \u003d NULL and *clone_entry \u003d NULL so that future callers don\u0027t have to worry about remembering to initialize these to NULL - this function can just do it for them",
+      "revId": "f33e5cf4f6aafe7fb773662612e6f97e571b2c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c9c04842_82452f9f",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2225,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T19:23:04Z",
+      "side": 1,
+      "message": "does this assert belong here?  same for the one below for clone_entry\n\nthis is a helper function - so I think it\u0027s valid for either of these to be NULL here - probably these asserts belong in _spdk_bs_blob_list_remove instead, after it calls this function",
+      "revId": "f33e5cf4f6aafe7fb773662612e6f97e571b2c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
