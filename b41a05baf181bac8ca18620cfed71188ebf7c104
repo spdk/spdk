@@ -2,6 +2,57 @@
   "comments": [
     {
       "key": {
+        "uuid": "42d2001d_985e3c2a",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:53:01Z",
+      "side": 1,
+      "message": "iovcnt",
+      "revId": "b41a05baf181bac8ca18620cfed71188ebf7c104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "64e20fbd_bfb548f7",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 504,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:53:01Z",
+      "side": 1,
+      "message": "use iovcnt instead?  then this matches the tcp_req-\u003eiovcnt name",
+      "revId": "b41a05baf181bac8ca18620cfed71188ebf7c104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0bf5fed3_7c7c5d75",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 590,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:53:01Z",
+      "side": 1,
+      "message": "Let\u0027s say max_incapsule_data_size is 8KB, and we have two iovs - each are 4KB.  Can\u0027t we still send this as incapsule?",
+      "revId": "b41a05baf181bac8ca18620cfed71188ebf7c104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "544ca6db_9cef247d",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 4
@@ -13,6 +64,30 @@
       "writtenOn": "2019-04-02T08:37:20Z",
       "side": 1,
       "message": "Moving this between the line 625 and 625 will ensure remain_len is zero when while loop exits.",
+      "range": {
+        "startLine": 628,
+        "startChar": 3,
+        "endLine": 628,
+        "endChar": 21
+      },
+      "revId": "b41a05baf181bac8ca18620cfed71188ebf7c104",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "462741af_cd12e071",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 628,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:53:01Z",
+      "side": 1,
+      "message": "I think Shuhei meant between line 624 and 625.",
+      "parentUuid": "544ca6db_9cef247d",
       "range": {
         "startLine": 628,
         "startChar": 3,
