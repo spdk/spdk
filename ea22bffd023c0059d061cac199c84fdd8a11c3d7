@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "ae52a416_ce8ae75b",
+        "filename": "lib/nvmf/ctrlr.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 252,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-02T05:43:30Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "e03c596c_ec04b8aa",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "95f0e298_eda83243",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 18
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-01T16:53:02Z",
       "side": 1,
       "message": "Move this function to ctrlr.c",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "2699194a_667b1239",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1305,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-02T05:43:30Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "95f0e298_eda83243",
       "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c20fc35b_7305668f",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1337,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-02T05:43:30Z",
+      "side": 1,
+      "message": "Thanks, I used the controller thread to process the notice log in the following patch.",
+      "parentUuid": "cd76e11e_568c268d",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a02d81f5_56240f4c",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 18
@@ -70,6 +124,24 @@
     },
     {
       "key": {
+        "uuid": "70697d0f_2ef318b6",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1358,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-02T05:43:30Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "a02d81f5_56240f4c",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "6f2fb78e_d283578d",
         "filename": "lib/nvmf/subsystem.c",
         "patchSetId": 18
@@ -81,6 +153,24 @@
       "writtenOn": "2019-04-01T16:53:02Z",
       "side": 1,
       "message": "Everywhere else in the code where you\u0027ve piped a ctrlr pointer through - can you remove that and then just make calls to this function at the top level right below the calls that update the reservation status on the namespace? I think that makes the control flow clearer.",
+      "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b19b493c_3db30618",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1359,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-02T05:43:30Z",
+      "side": 1,
+      "message": "Done.",
+      "parentUuid": "6f2fb78e_d283578d",
       "revId": "ea22bffd023c0059d061cac199c84fdd8a11c3d7",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
