@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "647c12ff_a10c1b29",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 588,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "yeah - we shouldn\u0027t put spdk_ prefix on static functions",
+      "parentUuid": "6c586661_97366727",
+      "range": {
+        "startLine": 588,
+        "startChar": 0,
+        "endLine": 588,
+        "endChar": 5
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9bb8ebf5_7a374872",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 74
@@ -95,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "8d9a54a9_fbf0e720",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 617,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "yes - we also don\u0027t declare variables inside the for loop like this in spdk",
+      "parentUuid": "aef7fa56_3881d4e8",
+      "range": {
+        "startLine": 617,
+        "startChar": 7,
+        "endLine": 617,
+        "endChar": 10
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e8dbe7c9_85f5a333",
         "filename": "lib/nvmf/rdma.c",
         "patchSetId": 74
@@ -109,6 +157,41 @@
       "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3f22b146_e294611a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 626,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "agreed",
+      "parentUuid": "e8dbe7c9_85f5a333",
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da998751_918239e9",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 1390,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "should we add an else { assert(false); } here?",
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     },
     {
       "key": {
@@ -156,6 +239,47 @@
       "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ba0a143_a7c821df",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 1506,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "let\u0027s still remove the spdk_ prefix here - there are some static functions that have it, but others that don\u0027t - let\u0027s remove these here so we don\u0027t have to remove them later",
+      "parentUuid": "dc28da60_e4843be8",
+      "range": {
+        "startLine": 1506,
+        "startChar": 0,
+        "endLine": 1506,
+        "endChar": 5
+      },
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5c9d71cc_41b6c1cd",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 74
+      },
+      "lineNbr": 1516,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T18:26:50Z",
+      "side": 1,
+      "message": "just \"i\" is fine - I\u0027m guessing you did this to mean \"unsigned int\" - but I think most people think of \u0027i\u0027 as just index",
+      "revId": "82b14b58f38f75aed171ab301e0c78076392f294",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
