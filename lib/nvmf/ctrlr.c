@@ -2087,6 +2087,28 @@ spdk_nvmf_ctrlr_abort_aer(struct spdk_nvmf_ctrlr *ctrlr)
 	ctrlr->aer_req = NULL;
 }
 
+static void
+_nvmf_ctrlr_add_reservation_log(void *ctx)
+{
+	struct spdk_nvmf_reservation_log *log = (struct spdk_nvmf_reservation_log *)ctx;
+	struct spdk_nvmf_ctrlr *ctrlr = log->ctrlr;
+
+	ctrlr->log_page_count++;
+
+	/* Maximum number of queued log pages is 255 */
+	if (ctrlr->num_avail_log_pages == 0xff) {
+		struct spdk_nvmf_reservation_log *entry;
+		entry = TAILQ_LAST(&ctrlr->log_head, log_page_head);
+		entry->log.log_page_count = ctrlr->log_page_count;
+		free(log);
+		return;
+	}
+
+	log->log.log_page_count = ctrlr->log_page_count;
+	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
+	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
+}
+
 void
 spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 				       struct spdk_nvmf_ns *ns,
@@ -2116,26 +2138,16 @@ spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
 		return;
 	}
 
-	ctrlr->log_page_count++;
-
-	/* Maximum number of queued log pages is 255 */
-	if (ctrlr->num_avail_log_pages == 0xff) {
-		log = TAILQ_LAST(&ctrlr->log_head, log_page_head);
-		log->log.log_page_count = ctrlr->log_page_count;
-		return;
-	}
-
 	log = calloc(1, sizeof(*log));
 	if (!log) {
 		SPDK_ERRLOG("Alloc log page failed, ignore the log\n");
 		return;
 	}
-
-	log->log.log_page_count = ctrlr->log_page_count;
+	log->ctrlr = ctrlr;
 	log->log.type = type;
-	log->log.num_avail_log_pages = ctrlr->num_avail_log_pages++;
 	log->log.nsid = ns->nsid;
-	TAILQ_INSERT_TAIL(&ctrlr->log_head, log, link);
+
+	spdk_thread_send_msg(ctrlr->thread, _nvmf_ctrlr_add_reservation_log, log);
 }
 
 /* Check from subsystem poll group's namespace information data structure */
