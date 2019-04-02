@@ -1,7 +1,8 @@
 {
   "general": {
     "username": "uname",
-    "password": "pass"
+    "password": "pass",
+    "transport": "transport_type"
   },
   "target": {
     "rdma_ips": ["192.0.1.1", "192.0.2.1"],
@@ -14,7 +15,8 @@
   "initiator1": {
     "ip": "10.0.0.1",
     "rdma_ips": ["192.0.1.1"],
-    "mode": "spdk"
+    "mode": "spdk",
+    "nvmecli_dir": "/path/to/nvmecli"
   },
   "initiator2": {
     "ip": "10.0.0.2",
