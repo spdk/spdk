@@ -11,10 +11,12 @@ Configure the target, initiators, and FIO workload in the json configuration fil
 Options which apply to both target and all initiator servers such as "password" and "username" fields.
 All servers are required to have the same user credentials for running the test.
 Test results can be found in /tmp/results directory.
+### transport
+Transport layer to use between Target and Initiator servers - rdma or tcp.
 
 ## Target
 Configure the target server information.
-### rdma_ips
+### nic_ips
 List of IP addresses othat will be used in this test..
 NVMe namespaces will be split between provided IP addresses.
 So for example providing 2 IP's with 16 NVMe drives present will result in each IP managing
@@ -39,13 +41,16 @@ For the sake of easier results parsing from multiple initiators please use only 
 in initiator section name.
 ### ip
 Management IP address used for SSH communication with initiator server.
-### rdma_ips
+### nic_ips
 List of target IP addresses to which the initiator should try to connect.
 ### mode
 "spdk" or "kernel" values allowed.
 ### num_cores
 Applies only to SPDK initiator. Number of CPUs core to use for running FIO job.
 If not specified then by default each connected subsystem gets its own CPU core.
+### nvmecli_dir
+Path to directory with nvme-cli application. If not provided then system-wide package will be used
+by default. Not used if "mode" is set to "spdk".
 
 ## fio
 Fio job parameters.
