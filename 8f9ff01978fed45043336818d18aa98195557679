@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c2b726be_10eafa36",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 5058,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T22:56:14Z",
+      "side": 1,
+      "message": "Let\u0027s expand on this just a little bit.",
+      "revId": "8f9ff01978fed45043336818d18aa98195557679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b69d131e_6fd70a79",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 5075,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T22:56:14Z",
+      "side": 1,
+      "message": "string not number",
+      "revId": "8f9ff01978fed45043336818d18aa98195557679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "82d3a355_2e04ed32",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 42
+      },
+      "lineNbr": 5087,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T22:56:14Z",
+      "side": 1,
+      "message": "This example is confusing I think.  The request specifies first event ID \u003d 1, but the response returns event ID 0.",
+      "revId": "8f9ff01978fed45043336818d18aa98195557679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cb4cca59_f0f97be0",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 42
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T22:56:14Z",
+      "side": 1,
+      "message": "remove extra space before -EINVAL",
+      "revId": "8f9ff01978fed45043336818d18aa98195557679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e938917d_d9148c6b",
+        "filename": "scripts/rpc.py",
+        "patchSetId": 42
+      },
+      "lineNbr": 1787,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T22:56:14Z",
+      "side": 1,
+      "message": "don\u0027t these need required\u003dFalse?",
+      "revId": "8f9ff01978fed45043336818d18aa98195557679",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
