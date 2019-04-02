@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "72db5b7e_c1bea143",
+        "filename": "lib/opal/Makefile",
+        "patchSetId": 43
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:13:13Z",
+      "side": 1,
+      "message": "This license header doesn\u0027t look right.  I\u0027m curious how yours ended up like this.  There\u0027s one that looks like the same in test/unit/lib/iscsi/portal_grp.c/Makefile - but I\u0027d be surprised if you happened to just pick that one to create this Makefile?\n\nAnyways - take a look at some other Makefile for the proper header.  :)\n\nNote - I just pushed a patch to fix the portal_grp.c Makefile header.",
+      "revId": "232ebacc6e6367f08f219da249ed7dae47088406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
