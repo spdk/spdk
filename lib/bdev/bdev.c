@@ -858,6 +858,8 @@ spdk_bdev_module_examine_done(struct spdk_bdev_module *module)
 
 /** The last initialized bdev module */
 static struct spdk_bdev_module *g_resume_bdev_module = NULL;
+/** The initialization failed module */
+static struct spdk_bdev_module *g_failed_bdev_module = NULL;
 
 static int
 spdk_bdev_modules_init(void)
@@ -869,6 +871,7 @@ spdk_bdev_modules_init(void)
 		g_resume_bdev_module = module;
 		rc = module->module_init();
 		if (rc != 0) {
+			g_failed_bdev_module = module;
 			return rc;
 		}
 	}
@@ -1044,8 +1047,16 @@ spdk_bdev_module_finish_iter(void *arg)
 	if (!g_resume_bdev_module) {
 		bdev_module = TAILQ_LAST(&g_bdev_mgr.bdev_modules, bdev_module_list);
 	} else {
-		bdev_module = TAILQ_PREV(g_resume_bdev_module, bdev_module_list,
-					 internal.tailq);
+		/* When the module initialization fails, we need to record the
+		 * module which to clean up the resources to ensure that resources will not leak.
+		 * We use global variables to save the failed module. */
+		if (g_failed_bdev_module) {
+			bdev_module = g_failed_bdev_module;
+			g_failed_bdev_module = NULL;
+		} else {
+			bdev_module = TAILQ_PREV(g_resume_bdev_module, bdev_module_list,
+						 internal.tailq);
+		}
 	}
 
 	while (bdev_module) {
