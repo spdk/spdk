@@ -58,6 +58,11 @@ The size of a shared receive queue is defined by transport configuration file pa
 `MaxSRQDepth` and `nvmf_create_transport` RPC method parameter `max_srq_depth`.
 Default size is 4096.
 
+A new API function `spdk_nvmf_subsystem_destroy_async` has been added which can be called
+from any thread to asynchronously destroy a subsystem. A clarifying note was also added to
+the documentation for `spdk_nvmf_subsystem_destroy` to indicate that it should only be called
+from the thread on which the subsystem was created.
+
 ### env
 
 The `phys_addr` parameter in spdk_malloc() and spdk_zmalloc() has been deprecated.

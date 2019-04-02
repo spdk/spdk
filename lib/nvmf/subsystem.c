@@ -367,6 +367,44 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	free(subsystem);
 }
 
+struct subsystem_destroy_ctx {
+	struct spdk_nvmf_subsystem *subsystem;
+	struct spdk_thread *orig_thread;
+	spdk_msg_fn cb_fn;
+	void *cb_arg;
+};
+
+static void
+_nvmf_subsystem_destroy_on_thread(void *ctx)
+{
+	struct subsystem_destroy_ctx *destroy_ctx = ctx;
+
+	spdk_nvmf_subsystem_destroy(destroy_ctx->subsystem);
+	spdk_thread_send_msg(destroy_ctx->orig_thread, destroy_ctx->cb_fn, destroy_ctx->cb_arg);
+	free(destroy_ctx);
+}
+
+int
+spdk_nvmf_subsystem_destroy_async(struct spdk_nvmf_subsystem *subsystem, spdk_msg_fn cb_fn,
+				  void *cb_arg)
+{
+	struct subsystem_destroy_ctx *cb_ctx = calloc(1, sizeof(*cb_ctx));
+
+	if (cb_ctx == NULL) {
+		return -ENOMEM;
+	}
+	cb_ctx->subsystem = subsystem;
+	cb_ctx->orig_thread = spdk_get_thread();
+	cb_ctx->cb_fn = cb_fn;
+	cb_ctx->cb_arg = cb_arg;
+
+	assert(subsystem->thread != NULL);
+	assert(cb_ctx->orig_thread != NULL);
+	spdk_thread_send_msg(subsystem->thread, _nvmf_subsystem_destroy_on_thread, cb_ctx);
+
+	return 0;
+}
+
 static int
 spdk_nvmf_subsystem_set_state(struct spdk_nvmf_subsystem *subsystem,
 			      enum spdk_nvmf_subsystem_state state)
