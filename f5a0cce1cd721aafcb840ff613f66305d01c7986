@@ -34,6 +34,24 @@
       "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "680d0128_b578fb0a",
+        "filename": "lib/nvmf/rdma.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1072,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-02T19:58:21Z",
+      "side": 1,
+      "message": "So I don\u0027t think this is actually possible. If we don\u0027t set the qpair to NULL before we run the risk of the qpair being destroyed between when we post the recv and when we get the completion for the posted recv. In that case, we can run into the issue where the qpair has been freed and the pointers inside are garbage. This can be seen in the output from the last two iterations through the test pool on this patch.",
+      "parentUuid": "6cc6f540_fd42616a",
+      "revId": "f5a0cce1cd721aafcb840ff613f66305d01c7986",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
