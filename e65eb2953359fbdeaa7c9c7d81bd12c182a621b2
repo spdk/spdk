@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "777ea9a0_6ba93f7f",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-02T10:03:14Z",
+      "side": 1,
+      "message": "Why not using this function again, to prevent list lookup on every poller iteration?\nDo we know how frequently metadata updater should be run? I would even consider spdk_thread_send_msg instead of poller, if updates are not very frequent.",
+      "range": {
+        "startLine": 370,
+        "startChar": 11,
+        "endLine": 370,
+        "endChar": 15
+      },
+      "revId": "e65eb2953359fbdeaa7c9c7d81bd12c182a621b2",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
