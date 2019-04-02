@@ -1799,6 +1799,11 @@ spdk_bdev_io_type_supported(struct spdk_bdev *bdev, enum spdk_bdev_io_type io_ty
 			/* The bdev layer will emulate write zeroes as long as write is supported. */
 			supported = _spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE);
 			break;
+		case SPDK_BDEV_IO_TYPE_ZCOPY:
+			/* Zero copy can be emulated with regular read and write */
+			supported = _spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_READ) &&
+				    _spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_WRITE);
+			break;
 		default:
 			break;
 		}
@@ -2752,6 +2757,29 @@ spdk_bdev_writev_blocks(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	return 0;
 }
 
+static void
+bdev_zcopy_get_buf(struct spdk_io_channel *ch, struct spdk_bdev_io *bdev_io, bool success)
+{
+	if (!success) {
+		/* Don't use spdk_bdev_io_complete here - this bdev_io was never actually submitted. */
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_NOMEM;
+		bdev_io->internal.cb(bdev_io, success, bdev_io->internal.caller_ctx);
+		return;
+	}
+
+	if (bdev_io->u.bdev.zcopy.populate) {
+		/* Read the real data into the buffer */
+		bdev_io->type = SPDK_BDEV_IO_TYPE_READ;
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
+		spdk_bdev_io_submit(bdev_io);
+		return;
+	}
+
+	/* Don't use spdk_bdev_io_complete here - this bdev_io was never actually submitted. */
+	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+	bdev_io->internal.cb(bdev_io, success, bdev_io->internal.caller_ctx);
+}
+
 int
 spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 		      uint64_t offset_blocks, uint64_t num_blocks,
@@ -2789,7 +2817,14 @@ spdk_bdev_zcopy_start(struct spdk_bdev_desc *desc, struct spdk_io_channel *ch,
 	bdev_io->u.bdev.zcopy.start = 1;
 	spdk_bdev_io_init(bdev_io, bdev, cb_arg, cb);
 
-	spdk_bdev_io_submit(bdev_io);
+	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+		spdk_bdev_io_submit(bdev_io);
+	} else {
+		/* Emulate zcopy by allocating a buffer */
+		spdk_bdev_io_get_buf(bdev_io, bdev_zcopy_get_buf,
+				     bdev_io->u.bdev.num_blocks * bdev->blocklen);
+	}
+
 	return 0;
 }
 
@@ -2797,6 +2832,16 @@ int
 spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
 		    spdk_bdev_io_completion_cb cb, void *cb_arg)
 {
+	struct spdk_bdev *bdev = bdev_io->bdev;
+
+	if (bdev_io->type == SPDK_BDEV_IO_TYPE_READ) {
+		/* This can happen if the zcopy was emulated in start */
+		if (bdev_io->u.bdev.zcopy.start != 1) {
+			return -EINVAL;
+		}
+		bdev_io->type = SPDK_BDEV_IO_TYPE_ZCOPY;
+	}
+
 	if (bdev_io->type != SPDK_BDEV_IO_TYPE_ZCOPY) {
 		return -EINVAL;
 	}
@@ -2807,7 +2852,22 @@ spdk_bdev_zcopy_end(struct spdk_bdev_io *bdev_io, bool commit,
 	bdev_io->internal.cb = cb;
 	bdev_io->internal.status = SPDK_BDEV_IO_STATUS_PENDING;
 
+	if (_spdk_bdev_io_type_supported(bdev, SPDK_BDEV_IO_TYPE_ZCOPY)) {
+		spdk_bdev_io_submit(bdev_io);
+		return 0;
+	}
+
+	if (!bdev_io->u.bdev.zcopy.commit) {
+		/* Don't use spdk_bdev_io_complete here - this bdev_io was never actually submitted. */
+		bdev_io->internal.status = SPDK_BDEV_IO_STATUS_SUCCESS;
+		bdev_io->internal.cb(bdev_io, true, bdev_io->internal.caller_ctx);
+		return 0;
+	}
+
+
+	bdev_io->type = SPDK_BDEV_IO_TYPE_WRITE;
 	spdk_bdev_io_submit(bdev_io);
+
 	return 0;
 }
 
