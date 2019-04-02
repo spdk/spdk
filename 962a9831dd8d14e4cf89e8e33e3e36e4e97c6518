@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "6d639981_37e2c35a",
+        "filename": "doc/notify.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:00:46Z",
+      "side": 1,
+      "message": "\"Architecture and naming\" isn\u0027t a good title for this document.\n\nAlso needs an empty line after line 1.",
+      "revId": "962a9831dd8d14e4cf89e8e33e3e36e4e97c6518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5a7634e5_715b0625",
+        "filename": "doc/notify.md",
+        "patchSetId": 15
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T23:00:46Z",
+      "side": 1,
+      "message": "Let\u0027s not duplicate text here - just link to the entries in jsonrpc.md",
+      "revId": "962a9831dd8d14e4cf89e8e33e3e36e4e97c6518",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
