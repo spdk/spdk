@@ -285,6 +285,30 @@
     },
     {
       "key": {
+        "uuid": "a3ffba68_7afb06dd",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 1026,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-02T14:23:50Z",
+      "side": 1,
+      "message": "Great! Actually this is something that would be pretty useful for what I\u0027m currently working on. Could you please extract it into a separate patch?",
+      "parentUuid": "6f8727fd_e360c14d",
+      "range": {
+        "startLine": 1026,
+        "startChar": 3,
+        "endLine": 1026,
+        "endChar": 18
+      },
+      "revId": "47f4f8d04fbdf6e1772ca5ccb7f11ac4772f3512",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "c5f14d8b_23600504",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 6
