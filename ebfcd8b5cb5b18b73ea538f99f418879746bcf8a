@@ -25,6 +25,47 @@
     },
     {
       "key": {
+        "uuid": "239b3b60_62053834",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:45:50Z",
+      "side": 1,
+      "message": "agreed - for example, struct _iov_ctx uses iovcnt to count the number of iovs currently used - so data_iovcnt would be more consistent\n\nbdev, blobstore, dif and other libraries also use the iovcnt naming convention",
+      "parentUuid": "f5fd5032_080ac8c7",
+      "range": {
+        "startLine": 112,
+        "startChar": 14,
+        "endLine": 112,
+        "endChar": 26
+      },
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "4d9eed11_ac28aaf5",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:45:50Z",
+      "side": 1,
+      "message": "a lot of these changes could be done in a separate patch before the one that adds SGLs\n\nthen the SGL patch can just modify nvme_tcp_pdu_set_data() to use the new iov array and set iovcnt correctly",
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "b5652bda_54ca80ba",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 4
@@ -39,6 +80,23 @@
       "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ba09eab5_45e84e2d",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 1295,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T20:45:50Z",
+      "side": 1,
+      "message": "use nvme_tcp_pdu_set_data?",
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
