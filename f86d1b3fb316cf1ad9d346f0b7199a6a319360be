@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "07cb55a3_f8e74f9d",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 5
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-02T21:35:30Z",
+      "side": 1,
+      "message": "Hi Yi,\n\nThis does not need to be added to CHANGELOG.  Usually CHANGELOG is only updated for major new features, important new library functions, or changes to existing functions.\n\n-Jim",
+      "revId": "f86d1b3fb316cf1ad9d346f0b7199a6a319360be",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
