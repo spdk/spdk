@@ -3758,16 +3758,8 @@ spdk_bdev_register(struct spdk_bdev *bdev)
 int
 spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
 {
-	int rc;
-
-	rc = spdk_bdev_init(vbdev);
-	if (rc) {
-		return rc;
-	}
-
-	spdk_bdev_start(vbdev);
-	spdk_notify_send("bdev_register", spdk_bdev_get_name(vbdev));
-	return 0;
+	SPDK_ERRLOG("This function is deprecated.  Use spdk_bdev_register() instead.\n");
+	return spdk_bdev_register(vbdev);
 }
 
 void

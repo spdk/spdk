@@ -1605,11 +1605,11 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 			goto error_session_init;
 		}
 
-		rc = spdk_vbdev_register(&vbdev->crypto_bdev, &vbdev->base_bdev, 1);
+		rc = spdk_bdev_register(&vbdev->crypto_bdev);
 		if (rc < 0) {
-			SPDK_ERRLOG("ERROR trying to register vbdev\n");
+			SPDK_ERRLOG("ERROR trying to register bdev\n");
 			rc = -EINVAL;
-			goto error_vbdev_register;
+			goto error_bdev_register;
 		}
 		SPDK_DEBUGLOG(SPDK_LOG_VBDEV_crypto, "registered io_device and virtual bdev for: %s\n",
 			      name->vbdev_name);
@@ -1619,7 +1619,7 @@ vbdev_crypto_claim(struct spdk_bdev *bdev)
 	return rc;
 
 	/* Error cleanup paths. */
-error_vbdev_register:
+error_bdev_register:
 error_session_init:
 	rte_cryptodev_sym_session_free(vbdev->session_decrypt);
 error_session_de_create:

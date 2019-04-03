@@ -43,6 +43,9 @@ to be performed on the thread at given time.
 An new API `spdk_bdev_get_data_block_size` has been added to get size of data
 block except for metadata.
 
+spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
+instead.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.

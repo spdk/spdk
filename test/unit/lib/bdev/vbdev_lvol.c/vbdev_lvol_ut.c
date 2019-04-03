@@ -550,7 +550,7 @@ spdk_bdev_get_name(const struct spdk_bdev *bdev)
 }
 
 int
-spdk_vbdev_register(struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs, int base_bdev_count)
+spdk_bdev_register(struct spdk_bdev *vbdev)
 {
 	TAILQ_INIT(&vbdev->aliases);
 
