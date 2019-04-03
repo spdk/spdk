@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "d93903f0_14c2915a",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 94,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T13:44:14Z",
+      "side": 1,
+      "message": "Ack, but I prefer to leave this because the whole point of these utilities is to handle ENOMEM right, so it feels justified",
+      "parentUuid": "a17bbb14_d6c3abfb",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d14811c6_5813bad3",
         "filename": "lib/bdev/ocf/utils.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-02T23:37:27Z",
       "side": 1,
       "message": "is it valid for us to get a NULL array here?\n\nI\u0027m wondering if an assert would be better",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6b083648_e010d7ee",
+        "filename": "lib/bdev/ocf/utils.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 117,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T13:44:14Z",
+      "side": 1,
+      "message": "Yes, we define it to be valid for the purpose of avoiding duplication of functions that can be used both with and without management context. For example, function to remove base device is synchronous if vbdev is not started, but is asynchronous when it is, so in following patch, remove_base is implemented so that it invokes mngt_continue every time, no matter from where remove_base is called.\nAre you OK with such uses? Does this code need comments?",
+      "parentUuid": "d14811c6_5813bad3",
       "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -53,6 +89,24 @@
     },
     {
       "key": {
+        "uuid": "c2696557_6a32612b",
+        "filename": "lib/bdev/ocf/utils.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 44,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T13:44:14Z",
+      "side": 1,
+      "message": "Ack\nAgree. Implementation is easy, getting comments right is the hard part",
+      "parentUuid": "67115615_9fa656f2",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d7d13b1e_55eb289f",
         "filename": "lib/bdev/ocf/vbdev_ocf.h",
         "patchSetId": 3
@@ -67,6 +121,24 @@
       "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a37e9c33_da74c085",
+        "filename": "lib/bdev/ocf/vbdev_ocf.h",
+        "patchSetId": 3
+      },
+      "lineNbr": 90,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T13:44:14Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "d7d13b1e_55eb289f",
+      "revId": "849c59704bfd2a012b5341213d45f1de8b102981",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
