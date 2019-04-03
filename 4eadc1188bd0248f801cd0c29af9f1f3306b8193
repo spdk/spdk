@@ -73,6 +73,30 @@
     },
     {
       "key": {
+        "uuid": "882130e3_72a86635",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 73,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-03T06:19:19Z",
+      "side": 1,
+      "message": "I think current_io is fine.",
+      "parentUuid": "390b91b7_4ea8f6ca",
+      "range": {
+        "startLine": 73,
+        "startChar": 18,
+        "endLine": 73,
+        "endChar": 28
+      },
+      "revId": "4eadc1188bd0248f801cd0c29af9f1f3306b8193",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "edaa2bd8_5b573c1b",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 8
@@ -84,6 +108,30 @@
       "writtenOn": "2019-04-02T13:57:18Z",
       "side": 1,
       "message": "Isn\u0027t this safer? What if spdk_nvme_ocssd_ns_cmd_vector_reset calls the callback before finishing?",
+      "range": {
+        "startLine": 307,
+        "startChar": 3,
+        "endLine": 307,
+        "endChar": 22
+      },
+      "revId": "4eadc1188bd0248f801cd0c29af9f1f3306b8193",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "dcfe59a8_6b900047",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-03T06:19:19Z",
+      "side": 1,
+      "message": "I\u0027m not sure what you are trying to say. Someone must poll for completion to trigger callback?",
+      "parentUuid": "edaa2bd8_5b573c1b",
       "range": {
         "startLine": 307,
         "startChar": 3,

@@ -42,6 +42,30 @@
     },
     {
       "key": {
+        "uuid": "e1ffb02f_a4efec63",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-03T06:19:19Z",
+      "side": 1,
+      "message": "If we relying on io-\u003epos to complete callback from now it is cleaner to make this in such way instead adding new condition to io_done",
+      "parentUuid": "9cf6715e_c65d3f8a",
+      "range": {
+        "startLine": 755,
+        "startChar": 3,
+        "endLine": 755,
+        "endChar": 22
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23873790_b1191f1e",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 9
@@ -53,6 +77,30 @@
       "writtenOn": "2019-04-02T13:57:18Z",
       "side": 1,
       "message": "Since we\u0027re moving away from tracking multiple requests in a single in favor of separate ftl_ios for each individual requsts, can we replace this with a \u0027done\u0027 flag? Also, can we merge the ftl_io_inc_req with the functions that updates io-\u003epos and position within the iovec?",
+      "range": {
+        "startLine": 254,
+        "startChar": 12,
+        "endLine": 254,
+        "endChar": 19
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b0f218c4_63cf5eef",
+        "filename": "lib/ftl/ftl_io.h",
+        "patchSetId": 9
+      },
+      "lineNbr": 254,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-03T06:19:19Z",
+      "side": 1,
+      "message": "I think such refactor is topic for separate patch.",
+      "parentUuid": "23873790_b1191f1e",
       "range": {
         "startLine": 254,
         "startChar": 12,
