@@ -313,18 +313,30 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 	/* TODO [writeback]: implement with writeback mode support */
 }
 
-static int vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
+static void
+vbdev_ocf_md_kick(void *ctx)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	ocf_metadata_updater_t mu = (ocf_metadata_updater_t)ctx;
+
+	ocf_metadata_updater_run(mu);
+}
+
+static int
+vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
+{
+	struct spdk_thread *md_thread = spdk_get_thread();
+
+	ocf_metadata_updater_set_priv(mu, md_thread);
+
 	return 0;
 }
-static void vbdev_ocf_volume_updater_stop(ocf_metadata_updater_t mu)
+
+static void
+vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
-}
-static void vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
-{
-	/* TODO [metadata]: implement with persistent metadata support */
+	struct spdk_thread *md_thread = (struct spdk_thread *)ocf_metadata_updater_get_priv(mu);
+
+	spdk_thread_send_msg(md_thread, vbdev_ocf_md_kick, mu);
 }
 
 /* This function is main way by which OCF communicates with user
@@ -367,7 +379,7 @@ static const struct ocf_ctx_config vbdev_ocf_ctx_cfg = {
 
 		.metadata_updater = {
 			.init = vbdev_ocf_volume_updater_init,
-			.stop = vbdev_ocf_volume_updater_stop,
+			.stop = NULL,
 			.kick = vbdev_ocf_volume_updater_kick,
 		},
 
