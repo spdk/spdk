@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c3baf2b0_859f8370",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 317,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "This is really a conisidence that return status of poller is compatible with boolean expression.\nAlso, this is how we do it in vbdev_ocf.c, so this is more consistant",
+      "parentUuid": "46368609_b4670c31",
+      "range": {
+        "startLine": 313,
+        "startChar": 0,
+        "endLine": 317,
+        "endChar": 2
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "a7ce4a03_60e8cc63",
         "filename": "lib/bdev/ocf/ctx.c",
         "patchSetId": 6
@@ -45,6 +69,30 @@
       "revId": "732a0068e5101453a99070d91dccffca528b3e62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0196dac5_14bd2ac7",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 323,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a7ce4a03_60e8cc63",
+      "range": {
+        "startLine": 323,
+        "startChar": 1,
+        "endLine": 323,
+        "endChar": 59
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -71,6 +119,30 @@
     },
     {
       "key": {
+        "uuid": "2d0a04c4_373b13ac",
+        "filename": "lib/bdev/ocf/ctx.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 330,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "OCF does not always interpret NULL as noop, so to be consistant and avoid checking if OCF supports NULLs for concrete examples, I prefer giving empty callback",
+      "parentUuid": "a776e868_315a15c9",
+      "range": {
+        "startLine": 326,
+        "startChar": 0,
+        "endLine": 330,
+        "endChar": 1
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2943136c_28a575e5",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 6
@@ -91,6 +163,30 @@
       "revId": "732a0068e5101453a99070d91dccffca528b3e62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4c8ebda6_72c4ac25",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 175,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "2943136c_28a575e5",
+      "range": {
+        "startLine": 175,
+        "startChar": 0,
+        "endLine": 175,
+        "endChar": 34
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -117,6 +213,30 @@
     },
     {
       "key": {
+        "uuid": "2a8638b8_ab7e0173",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 250,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3aa5600a_29b92a70",
+      "range": {
+        "startLine": 250,
+        "startChar": 0,
+        "endLine": 250,
+        "endChar": 43
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "19077ea6_b20281ca",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 6
@@ -137,6 +257,30 @@
       "revId": "732a0068e5101453a99070d91dccffca528b3e62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "33ca501c_851cd7d5",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "19077ea6_b20281ca",
+      "range": {
+        "startLine": 257,
+        "startChar": 1,
+        "endLine": 257,
+        "endChar": 43
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     },
     {
       "key": {
@@ -163,6 +307,30 @@
     },
     {
       "key": {
+        "uuid": "bd055822_ab5d0683",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "0542543f_1fbc8103",
+      "range": {
+        "startLine": 271,
+        "startChar": 2,
+        "endLine": 271,
+        "endChar": 34
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "52cc1fa0_d932020c",
         "filename": "lib/bdev/ocf/volume.c",
         "patchSetId": 6
@@ -186,6 +354,30 @@
     },
     {
       "key": {
+        "uuid": "9bbe8113_ad02c6e5",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 216,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "52cc1fa0_d932020c",
+      "range": {
+        "startLine": 216,
+        "startChar": 17,
+        "endLine": 216,
+        "endChar": 29
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "339ba1bc_d1182e38",
         "filename": "lib/bdev/ocf/volume.c",
         "patchSetId": 6
@@ -206,6 +398,30 @@
       "revId": "732a0068e5101453a99070d91dccffca528b3e62",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "db52496c_f2e0aaf0",
+        "filename": "lib/bdev/ocf/volume.c",
+        "patchSetId": 6
+      },
+      "lineNbr": 262,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:04Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "339ba1bc_d1182e38",
+      "range": {
+        "startLine": 262,
+        "startChar": 8,
+        "endLine": 262,
+        "endChar": 10
+      },
+      "revId": "732a0068e5101453a99070d91dccffca528b3e62",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
