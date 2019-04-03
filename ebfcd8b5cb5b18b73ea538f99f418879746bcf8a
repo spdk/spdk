@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "4b0245ab_72e3c782",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 4
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-03T04:20:00Z",
+      "side": 1,
+      "message": "Let me change the name of this variable.",
+      "parentUuid": "239b3b60_62053834",
+      "range": {
+        "startLine": 112,
+        "startChar": 14,
+        "endLine": 112,
+        "endChar": 26
+      },
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "4d9eed11_ac28aaf5",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 4
@@ -60,6 +84,24 @@
       "writtenOn": "2019-04-02T20:45:50Z",
       "side": 1,
       "message": "a lot of these changes could be done in a separate patch before the one that adds SGLs\n\nthen the SGL patch can just modify nvme_tcp_pdu_set_data() to use the new iov array and set iovcnt correctly",
+      "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "ec69b07b_0ccab9b7",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 593,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-03T04:20:00Z",
+      "side": 1,
+      "message": "A separate patch is added",
+      "parentUuid": "4d9eed11_ac28aaf5",
       "revId": "ebfcd8b5cb5b18b73ea538f99f418879746bcf8a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
