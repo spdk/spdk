@@ -164,7 +164,9 @@ int vbdev_ocf_construct(
 	const char *vbdev_name,
 	const char *cache_mode_name,
 	const char *cache_name,
-	const char *core_name);
+	const char *core_name,
+	void (*cb)(int, void *),
+	void *cb_arg);
 
 /* If vbdev is online, return its object */
 struct vbdev_ocf *vbdev_ocf_get_by_name(const char *name);
