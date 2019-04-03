@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9542ad06_b248b0ba",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 812,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-03T09:07:07Z",
+      "side": 1,
+      "message": "If we change the order of this 2 line, the code maybe cleaner:\n\n  nvme_tcp_pdu_set_data(rsp_pdu, (uint8_t *)rsp_pdu-\u003ehdr.raw + h2c_term_req_hdr_len, copy_len);\n  memcpy(rsp_pdu-\u003edata, pdu-\u003ehdr.raw, copy_len);\n\nJust personal opinion, feel free to update it.",
+      "range": {
+        "startLine": 811,
+        "startChar": 1,
+        "endLine": 812,
+        "endChar": 93
+      },
+      "revId": "9f7906b5a1598ffd7ad00c312c482ce28ecbf81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d8652887_413097ba",
+        "filename": "lib/nvmf/tcp.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1296,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-03T09:07:07Z",
+      "side": 1,
+      "message": "Ditto:\n\n  nvme_tcp_pdu_set_data(rsp_pdu, (uint8_t *)rsp_pdu-\u003ehdr.raw + c2h_term_req_hdr_len, copy_len);\n  memcpy(rsp_pdu-\u003edata, pdu-\u003ehdr.raw, copy_len);\n\nFeel free to update it.",
+      "range": {
+        "startLine": 1295,
+        "startChar": 0,
+        "endLine": 1296,
+        "endChar": 93
+      },
+      "revId": "9f7906b5a1598ffd7ad00c312c482ce28ecbf81c",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
