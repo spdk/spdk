@@ -946,15 +946,14 @@ spdk_vhost_scsi_session_add_tgt(struct spdk_vhost_dev *vdev,
 		return 0;
 	}
 
-	if (vsession->lcore == -1) {
+	svsession = (struct spdk_vhost_scsi_session *)vsession;
+	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
+	if (vsession->lcore == -1 || session_sdev->dev != NULL) {
 		/* Nothing to do. */
 		return 0;
 	}
 
-	svsession = (struct spdk_vhost_scsi_session *)vsession;
 	vhost_sdev = &svsession->svdev->scsi_dev_state[scsi_tgt_num];
-	session_sdev = &svsession->scsi_dev_state[scsi_tgt_num];
-
 	session_sdev->dev = vhost_sdev->dev;
 	session_sdev->status = VHOST_SCSI_DEV_PRESENT;
 
@@ -1333,7 +1332,7 @@ spdk_vhost_scsi_start_cb(struct spdk_vhost_dev *vdev,
 
 		assert(svsession->scsi_dev_state[i].status == VHOST_SCSI_DEV_EMPTY);
 		svsession->scsi_dev_state[i].dev = state->dev;
-		svsession->scsi_dev_state[i].status = state->status;
+		svsession->scsi_dev_state[i].status = VHOST_SCSI_DEV_PRESENT;
 		rc = spdk_scsi_dev_allocate_io_channels(state->dev);
 		if (rc != 0) {
 			SPDK_ERRLOG("%s: failed to alloc io_channel for SCSI target %"PRIu32"\n", vdev->name, i);
