@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "7af719ad_c39cce47",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-03T06:46:52Z",
+      "side": 1,
+      "message": "should assert(remain_len \u003d\u003d 0) between the line 632 and 633 ?",
+      "range": {
+        "startLine": 634,
+        "startChar": 18,
+        "endLine": 634,
+        "endChar": 26
+      },
+      "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
