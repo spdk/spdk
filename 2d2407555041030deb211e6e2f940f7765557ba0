@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8500030b_50aa3774",
+        "filename": "scripts/perf/nvmf/run_nvmf.py",
+        "patchSetId": 1
+      },
+      "lineNbr": 674,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-03T18:03:26Z",
+      "side": 1,
+      "message": "I think you could have written **data[\"general\"] below instead of making this dictionary.",
+      "revId": "2d2407555041030deb211e6e2f940f7765557ba0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
