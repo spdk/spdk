@@ -22,6 +22,30 @@
       "revId": "4751a77f8d585e1d29d2498e7661ddc166fef856",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "16d14dd6_e8622e8e",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:46:50Z",
+      "side": 1,
+      "message": "This is really a conisidence that return status of poller is compatible with boolean expression.\nAlso, this is how we do it in vbdev_ocf.c, so this is more consistant",
+      "parentUuid": "daf23329_1bdda061",
+      "range": {
+        "startLine": 736,
+        "startChar": 1,
+        "endLine": 740,
+        "endChar": 2
+      },
+      "revId": "4751a77f8d585e1d29d2498e7661ddc166fef856",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
