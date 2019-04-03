@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "46814f23_b54a2621",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 120,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:51:54Z",
+      "side": 1,
+      "message": "I would simplify things for this case, but usually SPDK asynchronous functions return status and call callback only if it is 0. Also, the change that you propose would need to be implemented in separate patch, not this one",
+      "parentUuid": "7f5a696f_b5c7c170",
+      "range": {
+        "startLine": 120,
+        "startChar": 7,
+        "endLine": 120,
+        "endChar": 26
+      },
+      "revId": "41b4b9cdcc136f99a5bb65612fa032844fa0720d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "2e6beb6f_3100824b",
         "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
         "patchSetId": 3
@@ -45,6 +69,30 @@
       "revId": "41b4b9cdcc136f99a5bb65612fa032844fa0720d",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7ebd8335_a947234f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 127,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-03T12:51:54Z",
+      "side": 1,
+      "message": "Not in current implementation of vbdev_ocf_construct, because it will not call construct_cb if ret !\u003d 0",
+      "parentUuid": "2e6beb6f_3100824b",
+      "range": {
+        "startLine": 122,
+        "startChar": 0,
+        "endLine": 127,
+        "endChar": 12
+      },
+      "revId": "41b4b9cdcc136f99a5bb65612fa032844fa0720d",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
