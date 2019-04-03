@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e50f6d96_ce69d048",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-03T08:13:44Z",
+      "side": 1,
+      "message": "Is this correct ? remove_scsi_tgt() be called several times if multi-session exist.",
+      "revId": "295d410bd8185b01c3109a375b8496e8208a1f47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
