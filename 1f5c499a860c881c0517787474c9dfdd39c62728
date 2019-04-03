@@ -66,6 +66,30 @@
     },
     {
       "key": {
+        "uuid": "24096b01_5045f14d",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-03T07:39:17Z",
+      "side": 1,
+      "message": "It certainly is not cleaner, as you have to make sure to update the iovec in case of errors. How will ftl_io_done return true if you\u0027re supposed to schedule two reads, but fail here during the first one? You\u0027ll only update io-\u003epos with lbk_cnt of the first read. If you\u0027ve checked io-\u003estatus as well, you\u0027d only need to update iovec in case of success.",
+      "parentUuid": "e1ffb02f_a4efec63",
+      "range": {
+        "startLine": 755,
+        "startChar": 3,
+        "endLine": 755,
+        "endChar": 22
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23873790_b1191f1e",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 9

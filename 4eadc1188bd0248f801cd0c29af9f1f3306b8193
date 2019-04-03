@@ -141,6 +141,30 @@
       "revId": "4eadc1188bd0248f801cd0c29af9f1f3306b8193",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f8ac6a48_38e588c6",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 8
+      },
+      "lineNbr": 307,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-03T07:39:17Z",
+      "side": 1,
+      "message": "I guess you\u0027re right, without process_completions, the callback shouldn\u0027t trigger.",
+      "parentUuid": "dcfe59a8_6b900047",
+      "range": {
+        "startLine": 307,
+        "startChar": 3,
+        "endLine": 307,
+        "endChar": 22
+      },
+      "revId": "4eadc1188bd0248f801cd0c29af9f1f3306b8193",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
