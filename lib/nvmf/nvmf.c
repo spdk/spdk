@@ -848,7 +848,7 @@ spdk_nvmf_poll_group_add_transport(struct spdk_nvmf_poll_group *group,
 		}
 	}
 
-	tgroup = spdk_nvmf_transport_poll_group_create(transport);
+	tgroup = spdk_nvmf_transport_poll_group_create(transport, group);
 	if (!tgroup) {
 		SPDK_ERRLOG("Unable to create poll group for transport\n");
 		return -1;
