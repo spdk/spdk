@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "6cba02d1_d8c6930f",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 5
+      },
+      "lineNbr": 404,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-03T09:28:12Z",
+      "side": 1,
+      "message": "Shuhei:\nIf my understanding is correct, one element of this array is for reading data and the other is for reading data_digest. So 2 elements is enough and has nothing to do with this patch series. Waiting Ziye\u0027s response.",
+      "parentUuid": "f3f5fa55_4910fcc8",
+      "range": {
+        "startLine": 404,
+        "startChar": 26,
+        "endLine": 404,
+        "endChar": 27
+      },
+      "revId": "a98e950b1add1db5885657c5252e07d83a1b89f4",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e7242402_b167305f",
         "filename": "include/spdk_internal/nvme_tcp.h",
         "patchSetId": 5
