@@ -76,7 +76,7 @@ class ServerHandler(BaseHTTPRequestHandler):
 
     def do_POST(self):
         if self.headers['Authorization'] != 'Basic ' + self.key:
-                self.do_AUTHHEAD()
+            self.do_AUTHHEAD()
         else:
             data_string = self.rfile.read(int(self.headers['Content-Length']))
 
