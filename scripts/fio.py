@@ -68,11 +68,11 @@ def main():
 
     configure_devices(devices)
     try:
-            fio_executable = check_output("which fio", shell=True).split()[0]
+        fio_executable = check_output("which fio", shell=True).split()[0]
     except CalledProcessError as e:
-            sys.stderr.write(str(e))
-            sys.stderr.write("\nCan't find the fio binary, please install it.\n")
-            sys.exit(1)
+        sys.stderr.write(str(e))
+        sys.stderr.write("\nCan't find the fio binary, please install it.\n")
+        sys.exit(1)
 
     device_paths = ['/dev/' + dev for dev in devices]
     print("Device paths:")
