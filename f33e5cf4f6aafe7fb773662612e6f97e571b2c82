@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "bd5792a6_1b53d1cb",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2213,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-03T11:49:29Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "ecc4a47d_e3031b89",
+      "revId": "f33e5cf4f6aafe7fb773662612e6f97e571b2c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "c9c04842_82452f9f",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 3
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-02T19:23:04Z",
       "side": 1,
       "message": "does this assert belong here?  same for the one below for clone_entry\n\nthis is a helper function - so I think it\u0027s valid for either of these to be NULL here - probably these asserts belong in _spdk_bs_blob_list_remove instead, after it calls this function",
+      "revId": "f33e5cf4f6aafe7fb773662612e6f97e571b2c82",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "55d0316e_39195d30",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 2225,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-03T11:49:29Z",
+      "side": 1,
+      "message": "I agree - we should remove those asserts here, but we cannot add them to _spdk_bs_blob_list_remove as snapshot and clone \u003d\u003d NULL is acceptable - case for parent_od \u003d\u003d SPDK_BLOBID_INVALID (those asserts should not be there in the first place)",
+      "parentUuid": "c9c04842_82452f9f",
       "revId": "f33e5cf4f6aafe7fb773662612e6f97e571b2c82",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
