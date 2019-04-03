@@ -50,10 +50,6 @@ DEFINE_STUB(spdk_bdev_module_claim_bdev,
 DEFINE_STUB_V(spdk_bdev_module_release_bdev,
 	      (struct spdk_bdev *bdev));
 
-DEFINE_STUB_V(spdk_nvmf_ctrlr_reservation_notice_log,
-	      (struct spdk_nvmf_ctrlr *ctrlr, struct spdk_nvmf_ns *ns,
-	       enum spdk_nvme_reservation_notification_log_page_type type));
-
 DEFINE_STUB(spdk_bdev_get_block_size, uint32_t,
 	    (const struct spdk_bdev *bdev), 512);
 
@@ -481,22 +477,26 @@ ut_reservation_init(void)
 	spdk_uuid_generate(&g_ctrlr1_A.hostid);
 	TAILQ_INIT(&g_ctrlr1_A.log_head);
 	g_ctrlr1_A.subsys = &g_subsystem;
+	g_ctrlr1_A.num_avail_log_pages = 0;
 	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr1_A, link);
 	spdk_uuid_copy(&g_ctrlr2_A.hostid, &g_ctrlr1_A.hostid);
 	TAILQ_INIT(&g_ctrlr2_A.log_head);
 	g_ctrlr2_A.subsys = &g_subsystem;
+	g_ctrlr2_A.num_avail_log_pages = 0;
 	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr2_A, link);
 
 	/* Host B has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_B.hostid);
 	TAILQ_INIT(&g_ctrlr_B.log_head);
 	g_ctrlr_B.subsys = &g_subsystem;
+	g_ctrlr_B.num_avail_log_pages = 0;
 	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_B, link);
 
 	/* Host C has 1 controller */
 	spdk_uuid_generate(&g_ctrlr_C.hostid);
 	TAILQ_INIT(&g_ctrlr_C.log_head);
 	g_ctrlr_C.subsys = &g_subsystem;
+	g_ctrlr_C.num_avail_log_pages = 0;
 	TAILQ_INSERT_TAIL(&g_subsystem.ctrlrs, &g_ctrlr_C, link);
 }
 
@@ -869,6 +869,219 @@ test_reservation_release(void)
 	ut_reservation_deinit();
 }
 
+void
+spdk_nvmf_ctrlr_reservation_notice_log(struct spdk_nvmf_ctrlr *ctrlr,
+				       struct spdk_nvmf_ns *ns,
+				       enum spdk_nvme_reservation_notification_log_page_type type)
+{
+	ctrlr->num_avail_log_pages++;
+}
+
+static void
+test_reservation_unregister_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_B unregister the registration.
+	 * Reservation release notification sends to g_ctrlr1_A/g_ctrlr2_A/g_ctrlr_C only for
+	 * SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY or SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_REG_ONLY
+	 * type.
+	 */
+	ut_reservation_build_register_request(req, SPDK_NVME_RESERVE_UNREGISTER_KEY,
+					      0, 0, 0xb1, 0);
+	nvmf_ns_reservation_register(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == 0);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
+test_reservation_release_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_B release the reservation.
+	 * Reservation release notification sends to g_ctrlr1_A/g_ctrlr2_A/g_ctrlr_C.
+	 */
+	ut_reservation_build_release_request(req, SPDK_NVME_RESERVE_RELEASE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1);
+	nvmf_ns_reservation_release(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == 0);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
+test_reservation_release_notification_write_exclusive(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, 0xb1, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_B release the reservation.
+	 * Because the reservation type is SPDK_NVME_RESERVE_WRITE_EXCLUSIVE,
+	 * no reservation notification occurs.
+	 */
+	ut_reservation_build_release_request(req, SPDK_NVME_RESERVE_RELEASE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE, 0xb1);
+	nvmf_ns_reservation_release(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == 0);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
+test_reservation_clear_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_B clear the reservation.
+	 * Reservation Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A/g_ctrlr_C.
+	 */
+	ut_reservation_build_release_request(req, SPDK_NVME_RESERVE_CLEAR, 0,
+					     0, 0xb1);
+	nvmf_ns_reservation_release(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == 0);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
+static void
+test_reservation_preempt_notification(void)
+{
+	struct spdk_nvmf_request *req;
+	struct spdk_nvme_cpl *rsp;
+
+	ut_reservation_init();
+
+	req = ut_reservation_build_req(16);
+	SPDK_CU_ASSERT_FATAL(req != NULL);
+	rsp = &req->rsp->nvme_cpl;
+
+	ut_reservation_build_registrants();
+
+	/* ACQUIRE: Host B with g_ctrlr_B get reservation with
+	 * type SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_ACQUIRE, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY, 0xb1, 0x0);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_B, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_REG_ONLY);
+
+	/* Test Case : g_ctrlr_B holds the reservation, g_ctrlr_C preempt g_ctrlr_B,
+	 * g_ctrlr_B registrant is unregistred, and reservation is preempted.
+	 * Registration Preempted notification sends to g_ctrlr_B.
+	 * Reservation Preempted notification sends to g_ctrlr1_A/g_ctrlr2_A.
+	 */
+	ut_reservation_build_acquire_request(req, SPDK_NVME_RESERVE_PREEMPT, 0,
+					     SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS, 0xc1, 0xb1);
+	nvmf_ns_reservation_acquire(&g_ns, &g_ctrlr_C, req);
+	SPDK_CU_ASSERT_FATAL(rsp->status.sc == SPDK_NVME_SC_SUCCESS);
+	SPDK_CU_ASSERT_FATAL(g_ns.rtype == SPDK_NVME_RESERVE_WRITE_EXCLUSIVE_ALL_REGS);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr1_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr2_A.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(1 == g_ctrlr_B.num_avail_log_pages);
+	SPDK_CU_ASSERT_FATAL(0 == g_ctrlr_C.num_avail_log_pages);
+
+	ut_reservation_free_req(req);
+	ut_reservation_deinit();
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -890,7 +1103,16 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "nvmf_subsystem_set_sn", test_spdk_nvmf_subsystem_set_sn) == NULL ||
 		CU_add_test(suite, "reservation_register", test_reservation_register) == NULL ||
 		CU_add_test(suite, "reservation_acquire_preempt_1", test_reservation_acquire_preempt_1) == NULL ||
-		CU_add_test(suite, "reservation_release", test_reservation_release) == NULL
+		CU_add_test(suite, "reservation_release", test_reservation_release) == NULL ||
+		CU_add_test(suite, "reservation_unregister_notification",
+			    test_reservation_unregister_notification) == NULL ||
+		CU_add_test(suite, "reservation_release_notification",
+			    test_reservation_release_notification) == NULL ||
+		CU_add_test(suite, "reservation_release_notification_write_exclusive",
+			    test_reservation_release_notification_write_exclusive) == NULL ||
+		CU_add_test(suite, "reservation_clear_notification", test_reservation_clear_notification) == NULL ||
+		CU_add_test(suite, "reservation_preempt_notification",
+			    test_reservation_preempt_notification) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
