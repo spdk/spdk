@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "b56132a9_d16b3848",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-03T09:47:46Z",
+      "side": 1,
+      "message": "The type of remaining_size if unsigned. Is it possible that length \u003e remaining_size and minus a bigger number causes remaining_size become a very large number?",
+      "range": {
+        "startLine": 528,
+        "startChar": 2,
+        "endLine": 528,
+        "endChar": 27
+      },
+      "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7af719ad_c39cce47",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 5
