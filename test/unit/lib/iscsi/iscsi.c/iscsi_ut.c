@@ -111,6 +111,10 @@ spdk_scsi_dev_get_lun(struct spdk_scsi_dev *dev, int lun_id)
 	return dev->lun[lun_id];
 }
 
+DEFINE_STUB(spdk_scsi_lun_id_int_to_fmt, uint64_t, (int lun_id), 0);
+
+DEFINE_STUB(spdk_scsi_lun_id_fmt_to_int, int, (uint64_t lun_fmt), 0);
+
 static void
 op_login_check_target_test(void)
 {

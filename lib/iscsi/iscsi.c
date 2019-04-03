@@ -279,26 +279,6 @@ hex2bin(uint8_t *data, size_t data_len, const char *str)
 	return total;
 }
 
-static int
-islun2lun(uint64_t islun)
-{
-	uint64_t fmt_lun;
-	uint64_t method;
-	int lun_i;
-
-	fmt_lun = islun;
-	method = (fmt_lun >> 62) & 0x03U;
-	fmt_lun = fmt_lun >> 48;
-	if (method == 0x00U) {
-		lun_i = (int)(fmt_lun & 0x00ffU);
-	} else if (method == 0x01U) {
-		lun_i = (int)(fmt_lun & 0x3fffU);
-	} else {
-		lun_i = 0xffffU;
-	}
-	return lun_i;
-}
-
 uint32_t
 spdk_iscsi_pdu_calc_header_digest(struct spdk_iscsi_pdu *pdu)
 {
@@ -3004,7 +2984,7 @@ iscsi_op_scsi(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	}
 
 	spdk_iscsi_task_associate_pdu(task, pdu);
-	lun_i = islun2lun(lun);
+	lun_i = spdk_scsi_lun_id_fmt_to_int(lun);
 	task->lun_id = lun_i;
 	dev = conn->dev;
 	task->scsi.lun = spdk_scsi_dev_get_lun(dev, lun_i);
@@ -3462,7 +3442,7 @@ iscsi_op_task(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu)
 	SPDK_DEBUGLOG(SPDK_LOG_ISCSI, "StatSN=%u, ExpCmdSN=%u, MaxCmdSN=%u\n",
 		      conn->StatSN, conn->sess->ExpCmdSN, conn->sess->MaxCmdSN);
 
-	lun_i = islun2lun(lun);
+	lun_i = spdk_scsi_lun_id_fmt_to_int(lun);
 	dev = conn->dev;
 
 	task = spdk_iscsi_task_get(conn, NULL, spdk_iscsi_task_mgmt_cpl);
@@ -4372,6 +4352,7 @@ iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 {
 	struct spdk_iscsi_pdu *rsp_pdu;
 	struct iscsi_bhs_r2t *rsph;
+	uint64_t fmt_lun;
 
 	/* R2T PDU */
 	rsp_pdu = spdk_get_pdu();
@@ -4382,7 +4363,8 @@ iscsi_send_r2t(struct spdk_iscsi_conn *conn,
 	rsp_pdu->data = NULL;
 	rsph->opcode = ISCSI_OP_R2T;
 	rsph->flags |= 0x80; /* bit 0 is default to 1 */
-	to_be64(&rsph->lun, task->lun_id);
+	fmt_lun = spdk_scsi_lun_id_int_to_fmt(task->lun_id);
+	to_be64(&rsph->lun, fmt_lun);
 	to_be32(&rsph->itt, task->tag);
 	to_be32(&rsph->ttt, transfer_tag);
 
@@ -4662,7 +4644,7 @@ spdk_iscsi_get_dif_ctx(struct spdk_iscsi_conn *conn, struct spdk_iscsi_pdu *pdu,
 		offset = 0;
 		cdb = sbhs->cdb;
 		lun = from_be64(&sbhs->lun);
-		lun_id = islun2lun(lun);
+		lun_id = spdk_scsi_lun_id_fmt_to_int(lun);
 		break;
 	}
 	case ISCSI_OP_SCSI_DATAOUT: {
