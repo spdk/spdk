@@ -1557,7 +1557,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 	rtype = (cmd->cdw10 >> 8) & 0xffu;
 	memcpy(&key, req->data, sizeof(key));
 
-	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIIRE: RACQA %u, IEKEY %u, RTYPE %u, "
+	SPDK_DEBUGLOG(SPDK_LOG_NVMF, "ACQUIRE: RACQA %u, IEKEY %u, RTYPE %u, "
 		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
 		      racqa, iekey, rtype, key.crkey, key.prkey);
 
