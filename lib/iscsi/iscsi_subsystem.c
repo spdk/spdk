@@ -164,7 +164,7 @@ iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_immediate_data_pool = spdk_mempool_create_ctor("PDU_immediate_data_Pool",
 					 IMMEDIATE_DATA_POOL_SIZE(iscsi),
 					 imm_mobj_size, 256,
-					 spdk_env_get_socket_id(spdk_env_get_current_core()),
+					 SPDK_ENV_SOCKET_ID_ANY,
 					 mobj_ctor, NULL);
 	if (!iscsi->pdu_immediate_data_pool) {
 		SPDK_ERRLOG("create PDU immediate data pool failed\n");
@@ -174,7 +174,7 @@ iscsi_initialize_pdu_pool(void)
 	iscsi->pdu_data_out_pool = spdk_mempool_create_ctor("PDU_data_out_Pool",
 				   DATA_OUT_POOL_SIZE(iscsi),
 				   dout_mobj_size, 256,
-				   spdk_env_get_socket_id(spdk_env_get_current_core()),
+				   SPDK_ENV_SOCKET_ID_ANY,
 				   mobj_ctor, NULL);
 	if (!iscsi->pdu_data_out_pool) {
 		SPDK_ERRLOG("create PDU data out pool failed\n");
