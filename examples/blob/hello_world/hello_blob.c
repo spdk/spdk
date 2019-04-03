@@ -51,7 +51,7 @@ struct hello_context_t {
 	struct spdk_io_channel *channel;
 	uint8_t *read_buff;
 	uint8_t *write_buff;
-	uint64_t page_size;
+	uint64_t io_unit_size;
 	int rc;
 };
 
@@ -159,7 +159,7 @@ read_complete(void *arg1, int bserrno)
 
 	/* Now let's make sure things match. */
 	match_res = memcmp(hello_context->write_buff, hello_context->read_buff,
-			   hello_context->page_size);
+			   hello_context->io_unit_size);
 	if (match_res) {
 		unload_bs(hello_context, "Error in data compare", -1);
 		return;
@@ -179,7 +179,7 @@ read_blob(struct hello_context_t *hello_context)
 {
 	SPDK_NOTICELOG("entry\n");
 
-	hello_context->read_buff = spdk_malloc(hello_context->page_size,
+	hello_context->read_buff = spdk_malloc(hello_context->io_unit_size,
 					       0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
 					       SPDK_MALLOC_DMA);
 	if (hello_context->read_buff == NULL) {
@@ -223,9 +223,9 @@ blob_write(struct hello_context_t *hello_context)
 
 	/*
 	 * Buffers for data transfer need to be allocated via SPDK. We will
-	 * tranfer 1 page of 4K aligned data at offset 0 in the blob.
+	 * transfer 1 io_unit of 4K aligned data at offset 0 in the blob.
 	 */
-	hello_context->write_buff = spdk_malloc(hello_context->page_size,
+	hello_context->write_buff = spdk_malloc(hello_context->io_unit_size,
 						0x1000, NULL, SPDK_ENV_LCORE_ID_ANY,
 						SPDK_MALLOC_DMA);
 	if (hello_context->write_buff == NULL) {
@@ -233,7 +233,7 @@ blob_write(struct hello_context_t *hello_context)
 			  -ENOMEM);
 		return;
 	}
-	memset(hello_context->write_buff, 0x5a, hello_context->page_size);
+	memset(hello_context->write_buff, 0x5a, hello_context->io_unit_size);
 
 	/* Now we have to allocate a channel. */
 	hello_context->channel = spdk_bs_alloc_io_channel(hello_context->bs);
@@ -243,7 +243,7 @@ blob_write(struct hello_context_t *hello_context)
 		return;
 	}
 
-	/* Let's perform the write, 1 page at offset 0. */
+	/* Let's perform the write, 1 io_unit at offset 0. */
 	spdk_blob_io_write(hello_context->blob, hello_context->channel,
 			   hello_context->write_buff,
 			   0, 1, write_complete, hello_context);
@@ -379,10 +379,10 @@ bs_init_complete(void *cb_arg, struct spdk_blob_store *bs,
 	hello_context->bs = bs;
 	SPDK_NOTICELOG("blobstore: %p\n", hello_context->bs);
 	/*
-	 * We will use the page size in allocating buffers, etc., later
+	 * We will use the io_unit size in allocating buffers, etc., later
 	 * so we'll just save it in out context buffer here.
 	 */
-	hello_context->page_size = spdk_bs_get_page_size(hello_context->bs);
+	hello_context->io_unit_size = spdk_bs_get_io_unit_size(hello_context->bs);
 
 	/*
 	 * The blostore has been initialized, let's create a blob.
