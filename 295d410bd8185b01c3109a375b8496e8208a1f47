@@ -16,6 +16,47 @@
       "revId": "295d410bd8185b01c3109a375b8496e8208a1f47",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e5021ad4_7c24b1d9",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1085,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-03T11:34:20Z",
+      "side": 1,
+      "message": "So the idea behind foreach_session() API is that the provided callback will be called once for each session and then one last time with vsession \u003d\u003d NULL. This lets us rely on foreach_session() even if there are no sessions on given device. In this particular case, we iterate through all sessions, put them into VHOST_SCSI_DEV_REMOVING state, and then on the final callback here:\n a) if we didn\u0027t schedule any asynchronous removal for any session (ctx-\u003easync_fini \u003d\u003d false), remove the scsi target from the entire device - there just won\u0027t be anyone else to remove it later.\n b) if we did schedule asynchronous removal, just free the context and return. remove_scsi_tgt() will be potentially called again after that asynchronous removal completes - that is either process_removed_devs() or destroy_session_poller_cb()",
+      "parentUuid": "e50f6d96_ce69d048",
+      "revId": "295d410bd8185b01c3109a375b8496e8208a1f47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "8a5da19a_026d37d3",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1334,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-03T11:34:20Z",
+      "side": 1,
+      "message": "Opps, this is a NOP. TO be removed.",
+      "range": {
+        "startLine": 1334,
+        "startChar": 0,
+        "endLine": 1334,
+        "endChar": 29
+      },
+      "revId": "295d410bd8185b01c3109a375b8496e8208a1f47",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
