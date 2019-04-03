@@ -16,7 +16,7 @@ function start_spdk()
 }
 function stop_spdk()
 {
-	kill -2 $spdk_pid
+	killprocess $spdk_pid
 	trap - SIGINT SIGTERM EXIT
 }
 
