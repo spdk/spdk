@@ -396,4 +396,11 @@ nvme_tcp_read_payload_data(struct spdk_sock *sock, struct nvme_tcp_pdu *pdu)
 	return nvme_tcp_readv_data(sock, iov, iovec_cnt);
 }
 
+static void
+nvme_tcp_pdu_set_data(struct nvme_tcp_pdu *pdu, void *data, uint32_t data_len)
+{
+	pdu->data = data;
+	pdu->data_len = data_len;
+}
+
 #endif /* SPDK_INTERNAL_NVME_TCP_H */
