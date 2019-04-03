@@ -64,12 +64,16 @@ fi
 
 function remove_kernel_vhost()
 {
-	targetcli "/vhost delete $kernel_vhost_disk"
-	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+	if targetcli "/vhost/$kernel_vhost_disk ls"; then
+		targetcli "/vhost delete $kernel_vhost_disk"
+	fi
+	if targetcli "/backstores/$targetcli_rd_name/ramdisk ls"; then
+		targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+	fi
 }
 
 trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0;\
- error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+ remove_kernel_vhost; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024 --spdk_single_seg=1
