@@ -300,18 +300,57 @@ vbdev_ocf_ctx_cleaner_stop(ocf_cleaner_t c)
 	/* TODO [writeback]: implement with writeback mode support */
 }
 
-static int vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
+struct spdk_metadata_ctx {
+	struct	spdk_poller *poller;
+	bool	kick;
+};
+
+static int
+metadata_poller(void *mu_ctx)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	ocf_metadata_updater_t mu = (ocf_metadata_updater_t)mu_ctx;
+	struct spdk_metadata_ctx *ctx = (struct spdk_metadata_ctx *)ocf_metadata_updater_get_priv(mu);
+
+	if (ctx->kick) {
+		ocf_metadata_updater_run(mu);
+		ctx->kick = false;
+		return 1;
+	}
 	return 0;
 }
-static void vbdev_ocf_volume_updater_stop(ocf_metadata_updater_t mu)
+
+static int
+vbdev_ocf_volume_updater_init(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	struct spdk_metadata_ctx *ctx;
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (ctx == NULL) {
+		return -ENOMEM;
+	}
+
+	ctx->poller = spdk_poller_register(metadata_poller, mu, 0);
+
+	ocf_metadata_updater_set_priv(mu, ctx);
+
+	return 0;
 }
-static void vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
+
+static void
+vbdev_ocf_volume_updater_stop(ocf_metadata_updater_t mu)
 {
-	/* TODO [metadata]: implement with persistent metadata support */
+	struct spdk_metadata_ctx *ctx = (struct spdk_metadata_ctx *)ocf_metadata_updater_get_priv(mu);
+
+	spdk_poller_unregister(&ctx->poller);
+	free(ctx);
+}
+
+static void
+vbdev_ocf_volume_updater_kick(ocf_metadata_updater_t mu)
+{
+	struct spdk_metadata_ctx *ctx = (struct ocf_metadata_ctx *)ocf_metadata_updater_get_priv(mu);
+
+	ctx->kick = true;
 }
 
 /* This function is main way by which OCF communicates with user
