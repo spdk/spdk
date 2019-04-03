@@ -348,7 +348,7 @@ spdk_nvmf_subsystem_destroy(struct spdk_nvmf_subsystem *subsystem)
 	}
 
 	TAILQ_FOREACH_SAFE(ctrlr, &subsystem->ctrlrs, link, ctrlr_tmp) {
-		spdk_nvmf_ctrlr_destruct(ctrlr);
+		spdk_nvmf_subsystem_remove_ctrlr(subsystem, ctrlr);
 	}
 
 	ns = spdk_nvmf_subsystem_get_first_ns(subsystem);
@@ -1264,8 +1264,17 @@ void
 spdk_nvmf_subsystem_remove_ctrlr(struct spdk_nvmf_subsystem *subsystem,
 				 struct spdk_nvmf_ctrlr *ctrlr)
 {
+	if (subsystem == NULL || ctrlr->subsys == NULL) {
+		SPDK_ERRLOG("Attempting to remove from NULL subsystem\n");
+		goto out;
+	}
+
 	assert(subsystem == ctrlr->subsys);
 	TAILQ_REMOVE(&subsystem->ctrlrs, ctrlr, link);
+	ctrlr->subsys = NULL;
+
+out:
+	return;
 }
 
 struct spdk_nvmf_ctrlr *
