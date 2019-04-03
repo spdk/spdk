@@ -16,6 +16,24 @@
       "revId": "232ebacc6e6367f08f219da249ed7dae47088406",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b7cc9fef_3fa4e2c8",
+        "filename": "lib/opal/Makefile",
+        "patchSetId": 43
+      },
+      "lineNbr": 2,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-03T02:45:59Z",
+      "side": 1,
+      "message": "Hi Jim, thanks for your review. Sorry for omitting this. I think it is due to editor\u0027s formatting issue when copying.",
+      "parentUuid": "72db5b7e_c1bea143",
+      "revId": "232ebacc6e6367f08f219da249ed7dae47088406",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
