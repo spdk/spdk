@@ -70,16 +70,13 @@ struct ftl_rwb_batch {
 struct ftl_rwb {
 	/* Number of batches */
 	size_t					num_batches;
-
 	/* Number of entries per batch */
 	size_t					xfer_size;
-
 	/* Metadata's size */
 	size_t					md_size;
 
 	/* Number of acquired entries */
 	unsigned int				num_acquired[FTL_RWB_TYPE_MAX];
-
 	/* User/internal limits */
 	size_t					limits[FTL_RWB_TYPE_MAX];
 
@@ -88,9 +85,10 @@ struct ftl_rwb {
 
 	/* Free batch queue */
 	STAILQ_HEAD(, ftl_rwb_batch)		free_queue;
-
 	/* Submission batch queue */
 	struct spdk_ring			*submit_queue;
+	/* High-priority batch queue */
+	struct spdk_ring			*prio_queue;
 
 	/* Batch buffer */
 	struct ftl_rwb_batch			*batches;
@@ -204,7 +202,14 @@ ftl_rwb_init(const struct spdk_ftl_conf *conf, size_t xfer_size, size_t md_size)
 		goto error;
 	}
 
-	/* TODO: use rte_ring with SP / MC */
+	rwb->prio_queue = spdk_ring_create(SPDK_RING_TYPE_MP_SC,
+					   spdk_align32pow2(rwb->num_batches + 1),
+					   SPDK_ENV_SOCKET_ID_ANY);
+	if (!rwb->prio_queue) {
+		SPDK_ERRLOG("Failed to create high-prio submission queue\n");
+		goto error;
+	}
+
 	STAILQ_INIT(&rwb->free_queue);
 
 	for (i = 0; i < rwb->num_batches; ++i) {
@@ -253,6 +258,7 @@ ftl_rwb_free(struct ftl_rwb *rwb)
 
 	pthread_spin_destroy(&rwb->lock);
 	spdk_ring_free(rwb->submit_queue);
+	spdk_ring_free(rwb->prio_queue);
 	free(rwb->batches);
 	free(rwb);
 }
@@ -323,7 +329,7 @@ ftl_rwb_batch_revert(struct ftl_rwb_batch *batch)
 {
 	struct ftl_rwb *rwb = batch->rwb;
 
-	if (spdk_ring_enqueue(rwb->submit_queue, (void **)&batch, 1) != 1) {
+	if (spdk_ring_enqueue(rwb->prio_queue, (void **)&batch, 1) != 1) {
 		assert(0 && "Should never happen");
 	}
 }
@@ -395,11 +401,15 @@ ftl_rwb_pop(struct ftl_rwb *rwb)
 {
 	struct ftl_rwb_batch *batch = NULL;
 
-	if (spdk_ring_dequeue(rwb->submit_queue, (void **)&batch, 1) != 1) {
-		return NULL;
+	if (spdk_ring_dequeue(rwb->prio_queue, (void **)&batch, 1) == 1) {
+		return batch;
 	}
 
-	return batch;
+	if (spdk_ring_dequeue(rwb->submit_queue, (void **)&batch, 1) == 1) {
+		return batch;
+	}
+
+	return NULL;
 }
 
 static struct ftl_rwb_batch *
