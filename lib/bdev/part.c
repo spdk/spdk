@@ -367,7 +367,7 @@ spdk_bdev_part_construct(struct spdk_bdev_part *part, struct spdk_bdev_part_base
 				base->channel_size,
 				name);
 
-	spdk_vbdev_register(&part->internal.bdev, &base->bdev, 1);
+	spdk_bdev_register(&part->internal.bdev);
 	TAILQ_INSERT_TAIL(base->tailq, part, tailq);
 
 	return 0;

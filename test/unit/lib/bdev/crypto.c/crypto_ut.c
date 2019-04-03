@@ -162,8 +162,7 @@ DEFINE_STUB(spdk_bdev_open, int, (struct spdk_bdev *bdev, bool write,
 DEFINE_STUB(spdk_bdev_module_claim_bdev, int, (struct spdk_bdev *bdev, struct spdk_bdev_desc *desc,
 		struct spdk_bdev_module *module), 0);
 DEFINE_STUB_V(spdk_bdev_module_examine_done, (struct spdk_bdev_module *module));
-DEFINE_STUB(spdk_vbdev_register, int, (struct spdk_bdev *vbdev, struct spdk_bdev **base_bdevs,
-				       int base_bdev_count), 0);
+DEFINE_STUB(spdk_bdev_register, int, (struct spdk_bdev *vbdev), 0);
 DEFINE_STUB(spdk_env_get_socket_id, uint32_t, (uint32_t core), 0);
 
 /* DPDK stubs */

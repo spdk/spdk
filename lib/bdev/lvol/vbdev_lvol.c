@@ -967,7 +967,7 @@ _create_lvol_disk(struct spdk_lvol *lvol, bool destroy)
 	bdev->fn_table = &vbdev_lvol_fn_table;
 	bdev->module = &g_lvol_if;
 
-	rc = spdk_vbdev_register(bdev, &lvs_bdev->bdev, 1);
+	rc = spdk_bdev_register(bdev);
 	if (rc) {
 		free(bdev);
 		return rc;

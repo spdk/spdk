@@ -630,7 +630,7 @@ vbdev_passthru_register(struct spdk_bdev *bdev)
 		}
 		SPDK_NOTICELOG("bdev claimed\n");
 
-		rc = spdk_vbdev_register(&pt_node->pt_bdev, &bdev, 1);
+		rc = spdk_bdev_register(&pt_node->pt_bdev);
 		if (rc) {
 			SPDK_ERRLOG("could not register pt_bdev\n");
 			spdk_bdev_close(pt_node->base_desc);

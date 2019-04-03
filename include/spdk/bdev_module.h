@@ -603,6 +603,10 @@ void spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno);
 /**
  * Register a virtual bdev.
  *
+ * This function is deprecated.  Users should call spdk_bdev_register instead.
+ * The bdev layer currently makes no use of the base_bdevs array, so switching
+ * to spdk_bdev_register results in no loss of functionality.
+ *
  * \param vbdev Virtual bdev to register.
  * \param base_bdevs Array of bdevs upon which this vbdev is based.
  * \param base_bdev_count Number of bdevs in base_bdevs.

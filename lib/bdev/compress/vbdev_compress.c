@@ -1234,17 +1234,17 @@ vbdev_compress_claim(struct vbdev_compress *comp_bdev)
 		goto error_claim;
 	}
 
-	rc = spdk_vbdev_register(&comp_bdev->comp_bdev, &comp_bdev->base_bdev, 1);
+	rc = spdk_bdev_register(&comp_bdev->comp_bdev);
 	if (rc < 0) {
-		SPDK_ERRLOG("trying to register vbdev\n");
-		goto error_vbdev_register;
+		SPDK_ERRLOG("trying to register bdev\n");
+		goto error_bdev_register;
 	}
 
 	SPDK_NOTICELOG("registered io_device and virtual bdev for: %s\n", comp_bdev->comp_bdev.name);
 
 	return;
 	/* Error cleanup paths. */
-error_vbdev_register:
+error_bdev_register:
 	spdk_bdev_module_release_bdev(comp_bdev->base_bdev);
 error_claim:
 	TAILQ_REMOVE(&g_vbdev_comp, comp_bdev, link);

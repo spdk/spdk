@@ -330,10 +330,9 @@ allocate_bdev(char *name)
 }
 
 static struct spdk_bdev *
-allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
+allocate_vbdev(char *name)
 {
 	struct spdk_bdev *bdev;
-	struct spdk_bdev *array[2];
 	int rc;
 
 	bdev = calloc(1, sizeof(*bdev));
@@ -343,13 +342,7 @@ allocate_vbdev(char *name, struct spdk_bdev *base1, struct spdk_bdev *base2)
 	bdev->fn_table = &fn_table;
 	bdev->module = &vbdev_ut_if;
 
-	/* vbdev must have at least one base bdev */
-	CU_ASSERT(base1 != NULL);
-
-	array[0] = base1;
-	array[1] = base2;
-
-	rc = spdk_vbdev_register(bdev, array, base2 == NULL ? 1 : 2);
+	rc = spdk_bdev_register(bdev);
 	CU_ASSERT(rc == 0);
 
 	return bdev;
@@ -464,19 +457,19 @@ open_write_test(void)
 	rc = spdk_bdev_module_claim_bdev(bdev[3], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
-	bdev[4] = allocate_vbdev("bdev4", bdev[0], bdev[1]);
+	bdev[4] = allocate_vbdev("bdev4");
 	rc = spdk_bdev_module_claim_bdev(bdev[4], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
-	bdev[5] = allocate_vbdev("bdev5", bdev[2], NULL);
+	bdev[5] = allocate_vbdev("bdev5");
 	rc = spdk_bdev_module_claim_bdev(bdev[5], NULL, &bdev_ut_if);
 	CU_ASSERT(rc == 0);
 
-	bdev[6] = allocate_vbdev("bdev6", bdev[2], NULL);
+	bdev[6] = allocate_vbdev("bdev6");
 
-	bdev[7] = allocate_vbdev("bdev7", bdev[2], bdev[3]);
+	bdev[7] = allocate_vbdev("bdev7");
 
-	bdev[8] = allocate_vbdev("bdev8", bdev[4], bdev[5]);
+	bdev[8] = allocate_vbdev("bdev8");
 
 	/* Open bdev0 read-only.  This should succeed. */
 	rc = spdk_bdev_open(bdev[0], false, NULL, NULL, &desc[0]);
