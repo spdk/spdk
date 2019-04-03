@@ -22,6 +22,30 @@
       "revId": "f781c5b1d56c4afdd93168553c4922dbea41fe4e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "17c8a7bf_6e9ea03d",
+        "filename": "lib/vhost/vhost_scsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1330,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-03T07:48:28Z",
+      "side": 1,
+      "message": "True, it could have been never added. I\u0027ve changed this check just to ignore targets that are either EMPTY or REMOVING",
+      "parentUuid": "569ba674_310585cf",
+      "range": {
+        "startLine": 1330,
+        "startChar": 2,
+        "endLine": 1330,
+        "endChar": 48
+      },
+      "revId": "f781c5b1d56c4afdd93168553c4922dbea41fe4e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
