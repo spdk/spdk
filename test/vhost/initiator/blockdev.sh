@@ -62,14 +62,21 @@ else
 	 Neither backstores/ramdisk nor backstores/rd_mcp is available"
 fi
 
+ramdisk_flag=false
+vhost_disk_flag=false
+
 function remove_kernel_vhost()
 {
-	targetcli "/vhost delete $kernel_vhost_disk"
-	targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+	if $vhost_disk_flag; then
+		targetcli "/vhost delete $kernel_vhost_disk"
+	fi
+	if $ramdisk_flag; then
+		targetcli "/backstores/$targetcli_rd_name delete ramdisk"
+	fi
 }
 
 trap 'rm -f *.state $ROOT_DIR/spdk.tar.gz $ROOT_DIR/fio.tar.gz $(get_vhost_dir)/Virtio0;\
- error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
+ remove_kernel_vhost; error_exit "${FUNCNAME}""${LINENO}"' ERR SIGTERM SIGABRT
 function run_spdk_fio() {
 	LD_PRELOAD=$PLUGIN_DIR/fio_plugin $FIO_PATH/fio --ioengine=spdk_bdev\
          "$@" --spdk_mem=1024 --spdk_single_seg=1
@@ -108,6 +115,7 @@ function create_bdev_config()
 	 | join(":")' <<< $vbdevs)
 }
 
+
 timing_enter spdk_vhost_run
 spdk_vhost_run
 timing_exit spdk_vhost_run
@@ -129,7 +137,9 @@ timing_exit run_spdk_fio_unmap
 
 timing_enter create_kernel_vhost
 targetcli "/backstores/$targetcli_rd_name create name=ramdisk size=1GB"
+ramdisk_flag=true
 targetcli "/vhost create $kernel_vhost_disk"
+vhost_disk_flag=true
 targetcli "/vhost/$kernel_vhost_disk/tpg1/luns create /backstores/$targetcli_rd_name/ramdisk"
 timing_exit create_kernel_vhost
 
