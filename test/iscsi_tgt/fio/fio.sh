@@ -138,8 +138,5 @@ delete_tmp_files
 trap - SIGINT SIGTERM EXIT
 
 killprocess $pid
-#echo 1 > /sys/bus/pci/rescan
-#sleep 2
-$rootdir/scripts/setup.sh
 
 timing_exit fio
