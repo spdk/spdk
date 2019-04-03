@@ -102,7 +102,7 @@
   # Set the maximum number outstanding I/O per shared receive queue. Relevant only for RDMA transport
   #MaxSRQDepth 4096
 
-[Transport]
+[Transport1]
   # Set TCP transport type.
   Type TCP
 
@@ -133,6 +133,13 @@
 
   # Set the number of shared buffers to be cached per poll group
   #BufCacheSize 32
+
+# Define FC transport
+#[Transport2]
+#  Type FC
+#  MaxQueuesPerSession 5
+#  MaxQueueDepth 128
+#  MaxIOSize 65536
 
 [Nvme]
   # NVMe Device Whitelist

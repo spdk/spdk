@@ -151,6 +151,13 @@ and `strtoll`.
 Added `spdk_sprintf_append_realloc` and `spdk_vsprintf_append_realloc` for appending a string
 with automatic buffer re-allocation.
 
+### NVME-oF Target (FC)
+
+New Fibre Channel transport for NVMe over Fabrics target. Requires an FC HBA to use.
+Also, requires a Fibre Channel HBA low level driver (lld).  This driver source code must be
+put in the SPDK's top-level 'fc' directory and is built with the SPDK build when the FC option
+is enabled. Use configure with the "--with-fc" option to build with the FC transport.
+
 ### nvme
 
 Wrapper functions spdk_nvme_ctrlr_security_send() and spdk_nvme_ctrlr_security_receive() are

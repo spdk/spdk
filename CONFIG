@@ -88,6 +88,10 @@ CONFIG_FIO_SOURCE_DIR=/usr/src/fio
 CONFIG_RDMA=n
 CONFIG_RDMA_SEND_WITH_INVAL=n
 
+# Enable FC support for the NVMf target.
+# Requires FC low level driver (from FC vendor)
+CONFIG_FC=n
+
 # Build Ceph RBD support in bdev modules
 # Requires librbd development libraries
 CONFIG_RBD=n

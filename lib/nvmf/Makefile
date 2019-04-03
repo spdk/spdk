@@ -59,4 +59,28 @@ endif
 endif
 endif
 
+ifeq ($(CONFIG_FC),y)
+C_SRCS += fc.c fc_ls.c fc_poller_api.c
+DIRS-y += fc_adm_api
+CFLAGS += $(ENV_CFLAGS)
+endif
+
+.PHONY: all clean $(DIRS-y)
+
+all: $(DIRS-y)
+clean: $(DIRS-y)
+
 include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk
+
+# Disable clang warning: taking address of packed member of class or structure may result in an unaligned pointer value [-Werror,-Waddress-of-packed-member]
+ifeq ($(CC),clang)
+CLANG_VERSION := $(shell $(CC) -v 2>&1 | \
+         sed -n "s/.*version \([0-9]*\.[0-9]*\).*/\1/p")
+
+CLANG_MAJOR_VERSION := $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
+
+
+ifeq ($(shell test $(CLANG_MAJOR_VERSION) -ge 4 && echo 1), 1)
+CFLAGS += -Wno-address-of-packed-member
+endif
+endif

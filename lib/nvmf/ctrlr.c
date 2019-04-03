@@ -456,7 +456,8 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 	struct spdk_nvmf_fabric_connect_cmd *cmd = &req->cmd->connect_cmd;
 	struct spdk_nvmf_fabric_connect_rsp *rsp = &req->rsp->connect_rsp;
 	struct spdk_nvmf_qpair *qpair = req->qpair;
-	struct spdk_nvmf_tgt *tgt = qpair->transport->tgt;
+	struct spdk_nvmf_transport *transport = qpair->transport;
+	struct spdk_nvmf_tgt *tgt = transport->tgt;
 	struct spdk_nvmf_ctrlr *ctrlr;
 	struct spdk_nvmf_subsystem *subsystem;
 	const char *subnqn, *hostnqn;
@@ -550,14 +551,29 @@ spdk_nvmf_ctrlr_connect(struct spdk_nvmf_request *req)
 
 	/*
 	 * SQSIZE is a 0-based value, so it must be at least 1 (minimum queue depth is 2) and
-	 *  strictly less than max_queue_depth.
+	 *  strictly less than max_aq_depth (admin queues) or max_queue_depth.
 	 */
-	if (cmd->sqsize == 0 || cmd->sqsize >= qpair->transport->opts.max_queue_depth) {
-		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
-			    cmd->sqsize, qpair->transport->opts.max_queue_depth - 1);
+	if (cmd->sqsize == 0) {
+		SPDK_ERRLOG("Invalid SQSIZE = 0\n");
 		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
 		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
 	}
+
+	if (spdk_nvmf_qpair_is_admin_queue(qpair)) {
+
+		if (cmd->sqsize >= transport->opts.max_aq_depth) {
+			SPDK_ERRLOG("Invalid SQSIZE for admin queue %u (min 1, max %u)\n",
+				    cmd->sqsize, transport->opts.max_aq_depth - 1);
+			SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
+			return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+		}
+	} else if (cmd->sqsize >= transport->opts.max_queue_depth) {
+		SPDK_ERRLOG("Invalid SQSIZE %u (min 1, max %u)\n",
+			    cmd->sqsize, transport->opts.max_queue_depth - 1);
+		SPDK_NVMF_INVALID_CONNECT_CMD(rsp, sqsize);
+		return SPDK_NVMF_REQUEST_EXEC_STATUS_COMPLETE;
+	}
+
 	qpair->sq_head_max = cmd->sqsize;
 	qpair->qid = cmd->qid;
 
@@ -1362,7 +1378,7 @@ spdk_nvmf_ctrlr_get_log_page(struct spdk_nvmf_request *req)
 	uint32_t numdl, numdu;
 	uint8_t lid;
 
-	if (req->data == NULL) {
+	if (req->data == NULL && !req->iovcnt) {
 		SPDK_ERRLOG("get log command with no buffer\n");
 		response->status.sct = SPDK_NVME_SCT_GENERIC;
 		response->status.sc = SPDK_NVME_SC_INVALID_FIELD;

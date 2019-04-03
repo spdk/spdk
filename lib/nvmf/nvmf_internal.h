@@ -184,6 +184,12 @@ struct spdk_nvmf_request {
 	struct spdk_bdev_io_wait_entry	bdev_io_wait;
 
 	TAILQ_ENTRY(spdk_nvmf_request)	link;
+
+	struct spdk_scsi_unmap_bdesc	*unmap_bdesc;
+	struct spdk_bdev_io             *bdev_io;
+#define MAX_REQ_STATES       16
+	uint64_t			req_state_trace[MAX_REQ_STATES];
+	struct spdk_mempool		*io_rsrc_pool;
 };
 
 struct spdk_nvmf_registrant {
@@ -326,6 +332,7 @@ void spdk_nvmf_poll_group_resume_subsystem(struct spdk_nvmf_poll_group *group,
 void spdk_nvmf_request_exec(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_free(struct spdk_nvmf_request *req);
 int spdk_nvmf_request_complete(struct spdk_nvmf_request *req);
+int spdk_nvmf_request_abort(struct spdk_nvmf_request *req);
 
 void spdk_nvmf_get_discovery_log_page(struct spdk_nvmf_tgt *tgt, struct iovec *iov,
 				      uint32_t iovcnt, uint64_t offset, uint32_t length);
@@ -391,6 +398,48 @@ static inline bool
 spdk_nvmf_qpair_is_admin_queue(struct spdk_nvmf_qpair *qpair)
 {
 	return qpair->qid == 0;
+}
+
+#define OBJECT_NVMF_IO				0x30
+
+#define TRACE_GROUP_NVMF			0x3
+#define TRACE_NVMF_IO_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0)
+#define TRACE_RDMA_READ_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x1)
+#define TRACE_RDMA_WRITE_START			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x2)
+#define TRACE_RDMA_READ_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x3)
+#define TRACE_RDMA_WRITE_COMPLETE		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x4)
+#define TRACE_NVMF_LIB_READ_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x5)
+#define TRACE_NVMF_LIB_WRITE_START		SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x6)
+#define TRACE_NVMF_LIB_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x7)
+#define TRACE_NVMF_IO_COMPLETE			SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x8)
+
+#define TRACE_FC_REQ_INIT                       SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x09)
+#define TRACE_FC_REQ_READ_BDEV                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0A)
+#define TRACE_FC_REQ_READ_XFER                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0B)
+#define TRACE_FC_REQ_READ_RSP                   SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0C)
+#define TRACE_FC_REQ_WRITE_BUFFS                SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0D)
+#define TRACE_FC_REQ_WRITE_XFER                 SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0E)
+#define TRACE_FC_REQ_WRITE_BDEV                 SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x0F)
+#define TRACE_FC_REQ_WRITE_RSP                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x10)
+#define TRACE_FC_REQ_NONE_BDEV                  SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x11)
+#define TRACE_FC_REQ_NONE_RSP                   SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x12)
+#define TRACE_FC_REQ_SUCCESS                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x13)
+#define TRACE_FC_REQ_FAILED                     SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x14)
+#define TRACE_FC_REQ_ABORTED                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x15)
+#define TRACE_FC_REQ_BDEV_ABORTED               SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x16)
+#define TRACE_FC_REQ_PENDING                    SPDK_TPOINT_ID(TRACE_GROUP_NVMF, 0x17)
+
+static inline int
+spdk_nvmf_dma_virt_to_iovec(void *buf, uint32_t len, struct iovec *iov, int iovcnt)
+{
+	/* Check if enough iovcnt is passed */
+	if (!iovcnt || !iov) {
+		return 0;
+	}
+
+	iov[0].iov_base = buf;
+	iov[0].iov_len = len;
+	return 1;
 }
 
 #endif /* __NVMF_INTERNAL_H__ */

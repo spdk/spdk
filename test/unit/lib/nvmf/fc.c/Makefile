@@ -1,8 +1,8 @@
 #
 #  BSD LICENSE
 #
-#  Copyright (c) Intel Corporation.
-#  All rights reserved.
+#  Copyright (c) 2018 Broadcom.  All Rights Reserved.
+#  The term "Broadcom" refers to Broadcom Limited and/or its subsidiaries.
 #
 #  Redistribution and use in source and binary forms, with or without
 #  modification, are permitted provided that the following conditions
@@ -31,38 +31,24 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
-include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
-include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../../../../)
 
-APP = spdk_tgt
+CFLAGS += -I$(SPDK_ROOT_DIR)/test/common/lib -I$(SPDK_ROOT_DIR)/lib \
+-I$(SPDK_ROOT_DIR)/lib/nvmf
 
-C_SRCS := spdk_tgt.c
+CFLAGS += $(ENV_CFLAGS)
+TEST_FILE = fc_ut.c
 
-SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+include $(SPDK_ROOT_DIR)/mk/spdk.unittest.mk
 
-ifeq ($(OS),Linux)
-ifeq ($(CONFIG_VHOST),y)
-SPDK_LIB_LIST += vhost event_vhost
-ifeq ($(CONFIG_VHOST_INTERNAL_LIB),y)
-SPDK_LIB_LIST += rte_vhost
+# Disable clang warning: taking address of packed member of class or structure may result in an unaligned pointer value [-Werror,-Waddress-of-packed-member]
+ifeq ($(CC),clang)
+	CLANG_VERSION := $(shell $(CC) -v 2>&1 | \
+		        sed -n "s/.*version \([0-9]*\.[0-9]*\).*/\1/p")
+
+CLANG_MAJOR_VERSION := $(shell echo $(CLANG_VERSION) | cut -f1 -d.)
+
+ifeq ($(shell test $(CLANG_MAJOR_VERSION) -ge 4 && echo 1), 1)
+	CFLAGS += -Wno-address-of-packed-member
 endif
 endif
-endif
-
-SPDK_LIB_LIST += event_bdev event_copy event_iscsi event_net event_scsi event_nvmf event
-SPDK_LIB_LIST += nvmf trace log conf thread util bdev iscsi scsi copy rpc jsonrpc json
-SPDK_LIB_LIST += app_rpc log_rpc trace_rpc bdev_rpc net sock notify
-
-ifeq ($(OS),Linux)
-SPDK_LIB_LIST += event_nbd nbd
-endif
-
-ifeq ($(CONFIG_FC),y)
-SPDK_LIB_LIST += fc fc_adm_api
-endif
-
-include $(SPDK_ROOT_DIR)/mk/spdk.app.mk
-
-install: $(APP)
-	$(INSTALL_APP)

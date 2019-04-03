@@ -62,6 +62,8 @@ function usage()
 	echo "                           No path required."
 	echo " rdma                      [disabled]"
 	echo "                           No path required."
+	echo " fc                        [disabled]"
+	echo "                           No path required."
 	echo " shared                    Required to build spdk shared libraries."
 	echo "                           No path required."
 	echo " iscsi-initiator           [disabled]"
@@ -203,6 +205,12 @@ for i in "$@"; do
 			;;
 		--without-rdma)
 			CONFIG[RDMA]=n
+			;;
+		--with-fc)
+			CONFIG[FC]=y
+			;;
+		--without-fc)
+			CONFIG[FC]=n
 			;;
 		--with-shared)
 			CONFIG[SHARED]=y
@@ -451,6 +459,32 @@ if [[ "${CONFIG[ISAL]}" = "y" ]] || [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 	else
 		if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
 			CONFIG[IPSEC_MB]=y
+		fi
+	fi
+fi
+
+if [ "${CONFIG[FC]}" = "y" ]; then
+	echo "
+*******************************************************************************
+WARNING: In order to build and run NVMf over FC target applications, 3rd party
+Fibre Channel low level driver (lld) code must be placed into the 'fc' directory
+at SPDK root. The SPDK build process will compile these files into a library
+(libspdk_fc.a) and the nvmf_tgt and spdk_tgt apps will link with it.
+
+Contact your Fibre Channel vendor for more details.
+*******************************************************************************"
+fi
+
+if [[ "${CONFIG[CRYPTO]}" = "y" ]]; then
+	if [[ $(nasm -v | sed 's/[^0-9]*//g' | awk '{print substr ($0, 0, 5)}') -lt "21202" ]]; then
+		echo Crypto requires NASM version 2.12.02 or newer.  Please install
+		echo or upgrade then re-run this script.
+		exit 1
+        else
+		if [[ "$(find /usr -xdev -name intel-ipsec-mb.h 2>/dev/null)" == "" ]]; then
+			echo "To enable crypto you must first go to the intel-ipsec-mb directory and "
+			echo "run 'make' then 'sudo make install' then re-run this script."
+			exit 1
 		fi
 	fi
 fi
