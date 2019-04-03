@@ -188,10 +188,8 @@ class Initiator(Server):
         self.ssh_connection = paramiko.SSHClient()
         self.ssh_connection.set_missing_host_key_policy(paramiko.AutoAddPolicy)
         self.ssh_connection.connect(self.ip, username=self.username, password=self.password)
-        stdin, stdout, stderr = self.ssh_connection.exec_command("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
-        stdout.channel.recv_exit_status()
-        stdin, stdout, stderr = self.ssh_connection.exec_command("mkdir -p %s" % self.spdk_dir)
-        stdout.channel.recv_exit_status()
+        self.remote_call("sudo rm -rf %s/nvmf_perf" % self.spdk_dir)
+        self.remote_call("mkdir -p %s" % self.spdk_dir)
 
     def __del__(self):
         self.ssh_connection.close()
@@ -206,6 +204,12 @@ class Initiator(Server):
         ftp.get(remote, local_dest)
         ftp.close()
 
+    def remote_call(self, cmd):
+        stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
+        out = stdout.read().decode(encoding="utf-8")
+        err = stderr.read().decode(encoding="utf-8")
+        return out, err
+
     def copy_result_files(self, dest_dir):
         self.log_print("Copying results")
 
@@ -213,9 +217,9 @@ class Initiator(Server):
             os.mkdir(dest_dir)
 
         # Get list of result files from initiator and copy them back to target
-        stdin, stdout, stderr = self.ssh_connection.exec_command("ls %s/nvmf_perf" % self.spdk_dir)
+        stdout, stderr = self.remote_call("ls %s/nvmf_perf" % self.spdk_dir)
+        file_list = stdout.strip().split("\n")
 
-        file_list = stdout.read().decode(encoding="utf-8").strip().split("\n")
         for file in file_list:
             self.get_file(os.path.join(self.spdk_dir, "nvmf_perf", file),
                           os.path.join(dest_dir, file))
@@ -233,10 +237,9 @@ class Initiator(Server):
                                  "-a %s" % ip]
             nvme_discover_cmd = " ".join(nvme_discover_cmd)
 
-            stdin, stdout, stderr = self.ssh_connection.exec_command(nvme_discover_cmd)
-            out = stdout.read().decode(encoding="utf-8")
-            if out:
-                nvme_discover_output = nvme_discover_output + out
+            stdout, stderr = self.remote_call(nvme_discover_cmd)
+            if stdout:
+                nvme_discover_output = nvme_discover_output + stdout
 
         subsystems = re.findall(r'trsvcid:\s(\d+)\s+'  # get svcid number
                                 r'subnqn:\s+([a-zA-Z0-9\.\-\:]+)\s+'  # get NQN id
@@ -272,7 +275,7 @@ runtime={run_time}
         if "spdk" in self.mode:
             subsystems = self.discover_subsystems(self.nic_ips, subsys_no)
             bdev_conf = self.gen_spdk_bdev_conf(subsystems)
-            stdin, stdout, stderr = self.ssh_connection.exec_command("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
+            self.remote_call("echo '%s' > %s/bdev.conf" % (bdev_conf, self.spdk_dir))
             ioengine = "%s/examples/bdev/fio_plugin/fio_plugin" % self.spdk_dir
             spdk_conf = "spdk_conf=%s/bdev.conf" % self.spdk_dir
             filename_section = self.gen_fio_filename_conf(subsystems)
@@ -293,10 +296,8 @@ runtime={run_time}
             fio_config_filename += "_%sCPU" % self.num_cores
         fio_config_filename += ".fio"
 
-        stdin, stdout, stderr = self.ssh_connection.exec_command("mkdir -p %s/nvmf_perf" % self.spdk_dir)
-        stdin, stdout, stderr = self.ssh_connection.exec_command(
-            "echo '%s' > %s/nvmf_perf/%s" % (fio_config, self.spdk_dir, fio_config_filename))
-        stdout.channel.recv_exit_status()
+        self.remote_call("mkdir -p %s/nvmf_perf" % self.spdk_dir)
+        self.remote_call("echo '%s' > %s/nvmf_perf/%s" % (fio_config, self.spdk_dir, fio_config_filename))
         self.log_print("Created FIO Config:")
         self.log_print(fio_config)
 
@@ -309,17 +310,13 @@ runtime={run_time}
             for i in range(1, run_num + 1):
                 output_filename = job_name + "_run_" + str(i) + "_" + self.name + ".json"
                 cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
-                stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
-                output = stdout.read().decode(encoding="utf-8")
-                error = stderr.read().decode(encoding="utf-8")
+                output, error = self.remote_call(cmd)
                 self.log_print(output)
                 self.log_print(error)
         else:
             output_filename = job_name + "_" + self.name + ".json"
             cmd = "sudo /usr/src/fio/fio %s --output-format=json --output=%s" % (fio_config_file, output_filename)
-            stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
-            output = stdout.read().decode(encoding="utf-8")
-            error = stderr.read().decode(encoding="utf-8")
+            output, error = self.remote_call(cmd)
             self.log_print(output)
             self.log_print(error)
         self.log_print("FIO run finished. Results in: %s" % output_filename)
@@ -576,20 +573,17 @@ class KernelInitiator(Initiator):
         self.log_print("Below connection attempts may result in error messages, this is expected!")
         for subsystem in subsystems:
             self.log_print("Trying to connect %s %s %s" % subsystem)
-            cmd = "sudo %s connect -t %s -s %s -n %s -a %s" % (self.nvmecli_bin, self.transport, *subsystem)
-            stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
+            self.remote_call("sudo %s connect -t %s -s %s -n %s -a %s -i 8" % (self.nvmecli_bin, self.transport, *subsystem))
             time.sleep(2)
 
     def kernel_init_disconnect(self, address_list, subsys_no):
         subsystems = self.discover_subsystems(address_list, subsys_no)
         for subsystem in subsystems:
-            cmd = "sudo %s disconnect -n %s" % (self.nvmecli_bin, subsystem[1])
-            stdin, stdout, stderr = self.ssh_connection.exec_command(cmd)
+            self.remote_call("sudo %s disconnect -n %s" % (self.nvmecli_bin, subsystem[1]))
             time.sleep(1)
 
     def gen_fio_filename_conf(self):
-        stdin, stdout, stderr = self.ssh_connection.exec_command("lsblk -o NAME -nlp")
-        out = stdout.read().decode(encoding="utf-8")
+        out, err = self.remote_call("lsblk -o NAME -nlp")
         nvme_list = [x for x in out.split("\n") if "nvme" in x]
 
         filename_section = ""
@@ -610,18 +604,14 @@ class SPDKInitiator(Initiator):
     def install_spdk(self, local_spdk_zip):
         self.put_file(local_spdk_zip, "/tmp/spdk_drop.zip")
         self.log_print("Copied sources zip from target")
-        stdin, stdout, stderr = self.ssh_connection.exec_command("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
-        stdout.channel.recv_exit_status()
+        self.remote_call("unzip -qo /tmp/spdk_drop.zip -d %s" % self.spdk_dir)
 
         self.log_print("Sources unpacked")
-        stdin, stdout, stderr = self.ssh_connection.exec_command(
-            "cd %s; git submodule update --init; ./configure --with-rdma --with-fio=/usr/src/fio;"
-            "make clean; make -j$(($(nproc)*2))" % self.spdk_dir)
-        stdout.channel.recv_exit_status()
+        self.remote_call("cd %s; git submodule update --init; ./configure --with-rdma --with-fio=/usr/src/fio;"
+                         "make clean; make -j$(($(nproc)*2))" % self.spdk_dir)
 
         self.log_print("SPDK built")
-        stdin, stdout, stderr = self.ssh_connection.exec_command("sudo %s/scripts/setup.sh" % self.spdk_dir)
-        stdout.channel.recv_exit_status()
+        self.remote_call("sudo %s/scripts/setup.sh" % self.spdk_dir)
 
     def gen_spdk_bdev_conf(self, remote_subsystem_list):
         header = "[Nvme]"
