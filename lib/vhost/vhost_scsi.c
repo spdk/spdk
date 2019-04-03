@@ -184,11 +184,6 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	struct spdk_scsi_dev *dev;
 
 	state = &svdev->scsi_dev_state[scsi_tgt_num];
-	if (state->dev == NULL) {
-		/* we've been already removed in the meantime */
-		return 0;
-	}
-
 	dev = state->dev;
 	state->dev = NULL;
 	assert(state->status == VHOST_SCSI_DEV_REMOVING);
@@ -215,6 +210,11 @@ spdk_vhost_scsi_session_process_removed(struct spdk_vhost_dev *vdev,
 		/* all sessions have already detached the device */
 		struct spdk_vhost_scsi_dev *svdev = SPDK_CONTAINEROF(vdev,
 						    struct spdk_vhost_scsi_dev, vdev);
+
+		if (svdev->scsi_dev_state[scsi_tgt_num].status != VHOST_SCSI_DEV_REMOVING) {
+			/* device was already removed in the meantime */
+			return 0;
+		}
 
 		return remove_scsi_tgt(svdev, scsi_tgt_num);
 	}
