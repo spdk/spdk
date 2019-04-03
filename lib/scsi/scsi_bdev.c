@@ -107,7 +107,7 @@ bdev_scsi_report_luns(struct spdk_scsi_lun *lun,
 		      int sel, uint8_t *data, int alloc_len)
 {
 	struct spdk_scsi_dev *dev;
-	uint64_t fmt_lun, lun_id, method;
+	uint64_t fmt_lun;
 	int hlen, len = 0;
 	int i;
 
@@ -143,22 +143,7 @@ bdev_scsi_report_luns(struct spdk_scsi_lun *lun,
 			return -1;
 		}
 
-		lun_id = (uint64_t)i;
-
-		if (SPDK_SCSI_DEV_MAX_LUN <= 0x0100) {
-			/* below 256 */
-			method = 0x00U;
-			fmt_lun = (method & 0x03U) << 62;
-			fmt_lun |= (lun_id & 0x00ffU) << 48;
-		} else if (SPDK_SCSI_DEV_MAX_LUN <= 0x4000) {
-			/* below 16384 */
-			method = 0x01U;
-			fmt_lun = (method & 0x03U) << 62;
-			fmt_lun |= (lun_id & 0x3fffU) << 48;
-		} else {
-			/* XXX */
-			fmt_lun = 0;
-		}
+		fmt_lun = spdk_scsi_lun_id_int_to_fmt(i);
 
 		/* LUN */
 		to_be64(&data[hlen + len], fmt_lun);

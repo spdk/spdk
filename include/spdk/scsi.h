@@ -540,6 +540,24 @@ bool spdk_scsi_lun_get_dif_ctx(struct spdk_scsi_lun *lun, uint8_t *cdb, uint32_t
  */
 void spdk_scsi_port_set_iscsi_transport_id(struct spdk_scsi_port *port,
 		char *iscsi_name, uint64_t isid);
+
+/**
+ * Convert LUN ID from integer to LUN format
+ *
+ * \param lun_id Integer LUN ID
+ *
+ * \return LUN format of LUN ID
+ */
+uint64_t spdk_scsi_lun_id_int_to_fmt(int lun_id);
+
+/**
+ * Convert LUN ID from LUN format to integer
+ *
+ * \param fmt_lun LUN format of LUN ID
+ *
+ * \return integer LUN ID
+ */
+int spdk_scsi_lun_id_fmt_to_int(uint64_t fmt_lun);
 #ifdef __cplusplus
 }
 #endif
