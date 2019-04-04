@@ -49,6 +49,11 @@ if $VHOST_APP -c /path/to/non_existing_file/conf -f $SPDK_VHOST_SCSI_TEST_DIR/vh
 	fail "vhost started when specifying invalid config file"
 fi
 
+# Testing vhost start with invalid config. Vhost will exit with error as bdev module init failed
+if $VHOST_APP -c $NEGATIVE_BASE_DIR/invalid.config; then
+	fail "vhost started when specifying invalid config file"
+fi
+
 # Expecting vhost to fail if an incorrect argument is given
 if $VHOST_APP -x -h; then
 	fail "vhost started with invalid -x command line option"
