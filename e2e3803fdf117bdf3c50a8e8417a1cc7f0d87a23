@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "c138149c_8d8855be",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-04T14:29:51Z",
+      "side": 1,
+      "message": "I will add this in separate patch.",
+      "parentUuid": "766f2530_2339e872",
+      "range": {
+        "startLine": 1046,
+        "startChar": 0,
+        "endLine": 1049,
+        "endChar": 50
+      },
+      "revId": "e2e3803fdf117bdf3c50a8e8417a1cc7f0d87a23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ea8b88cc_7dda36dd",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 10
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-04T13:30:46Z",
       "side": 1,
       "message": "This should be extracted as a separate function that would be passed \u0027child\u0027. It\u0027d make all the things related to updating io-\u003epos etc. easier to read.",
+      "range": {
+        "startLine": 1024,
+        "startChar": 0,
+        "endLine": 1056,
+        "endChar": 0
+      },
+      "revId": "e2e3803fdf117bdf3c50a8e8417a1cc7f0d87a23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "d1baad50_8b5c0b98",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1056,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-04T14:29:51Z",
+      "side": 1,
+      "message": "Ok, sounds reasonable.",
+      "parentUuid": "ea8b88cc_7dda36dd",
       "range": {
         "startLine": 1024,
         "startChar": 0,
