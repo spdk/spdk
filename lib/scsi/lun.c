@@ -220,10 +220,33 @@ scsi_lun_remove(struct spdk_scsi_lun *lun)
 	free(lun);
 }
 
+static void
+scsi_lun_dump_open_descs(struct spdk_scsi_lun *lun)
+{
+	struct spdk_scsi_desc *desc;
+	int count = 0;
+
+	SPDK_ERRLOG("Dumping open descriptors (lun %d)\n", lun->id);
+
+	TAILQ_FOREACH(desc, &lun->open_descs, link) {
+		count++;
+	}
+
+	SPDK_ERRLOG("\t%d descriptors are still open\n", count);
+}
+
 static int
 scsi_lun_check_io_channel(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	/* Dump open descriptors once per second after the first timeout
+	 * until completion.
+	 */
+	if (lun->hotremove_timeout_tsc && spdk_get_ticks() > lun->hotremove_timeout_tsc) {
+		scsi_lun_dump_open_descs(lun);
+		lun->hotremove_timeout_tsc += spdk_get_ticks_hz();
+	}
 
 	if (lun->io_channel) {
 		return -1;
@@ -252,6 +275,8 @@ scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 	}
 
 	if (lun->io_channel) {
+		lun->hotremove_timeout_tsc = spdk_get_ticks() + SCSI_HOTREMOVE_TIMEOUT *
+					     spdk_get_ticks_hz();
 		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_io_channel,
 					lun, 10);
 	} else {
