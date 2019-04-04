@@ -117,6 +117,30 @@
       "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "583d848f_1f561c88",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-04T04:12:10Z",
+      "side": 1,
+      "message": "Let me add an assert.",
+      "parentUuid": "5aab176c_a7331730",
+      "range": {
+        "startLine": 634,
+        "startChar": 18,
+        "endLine": 634,
+        "endChar": 26
+      },
+      "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
