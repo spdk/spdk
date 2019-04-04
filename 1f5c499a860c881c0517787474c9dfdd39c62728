@@ -114,6 +114,30 @@
     },
     {
       "key": {
+        "uuid": "7276bd1f_1e57c9f0",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-04T09:01:29Z",
+      "side": 1,
+      "message": "I don\u0027t think a comment is enough - the code should be correct for all error cases (or at least it should be explicit in what\u0027s not supported). I\u0027m waiting for the other patch then.",
+      "parentUuid": "b6695795_bf8120ab",
+      "range": {
+        "startLine": 755,
+        "startChar": 3,
+        "endLine": 755,
+        "endChar": 22
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23873790_b1191f1e",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 9
