@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3a2d8dbc_65f36932",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 1
+      },
+      "lineNbr": 118,
+      "author": {
+        "id": 1011259
+      },
+      "writtenOn": "2019-04-04T09:48:09Z",
+      "side": 1,
+      "message": "new line",
+      "revId": "c47093ec38b1949edb34eddbb502df083313914b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
