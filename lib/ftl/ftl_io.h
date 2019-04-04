@@ -251,11 +251,14 @@ ftl_io_mode_lba(const struct ftl_io *io)
 static inline bool
 ftl_io_done(struct ftl_io *io)
 {
-	return io->req_cnt == 0 && !(io->flags & FTL_IO_RETRY);
+	return io->req_cnt == 0 &&
+	       io->pos == io->lbk_cnt &&
+	       !(io->flags & FTL_IO_RETRY);
 }
 
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
 struct ftl_io *ftl_io_alloc_child(struct ftl_io *parent);
+void ftl_io_fail(struct ftl_io *io, int status);
 void ftl_io_free(struct ftl_io *io);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 void ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn cb,
@@ -265,7 +268,7 @@ void ftl_io_inc_req(struct ftl_io *io);
 void ftl_io_dec_req(struct ftl_io *io);
 struct iovec *ftl_io_iovec(struct ftl_io *io);
 uint64_t ftl_io_current_lba(struct ftl_io *io);
-void ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt);
+void ftl_io_advance(struct ftl_io *io, size_t lbk_cnt);
 size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);

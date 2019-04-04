@@ -59,6 +59,7 @@ DEFINE_STUB(ftl_band_validate_md, bool, (struct ftl_band *band, const uint64_t *
 #endif
 DEFINE_STUB_V(ftl_io_dec_req, (struct ftl_io *io));
 DEFINE_STUB_V(ftl_io_inc_req, (struct ftl_io *io));
+DEFINE_STUB_V(ftl_io_fail, (struct ftl_io *io, int status));
 DEFINE_STUB_V(ftl_trace_completion, (struct spdk_ftl_dev *dev, const struct ftl_io *io,
 				     enum ftl_trace_completion completion));
 DEFINE_STUB_V(ftl_reloc_add, (struct ftl_reloc *reloc, struct ftl_band *band, size_t offset,
@@ -90,6 +91,12 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 	io->lbk_cnt = 1;
 
 	return io;
+}
+
+void
+ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
+{
+	io->pos += lbk_cnt;
 }
 
 void

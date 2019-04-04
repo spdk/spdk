@@ -93,12 +93,16 @@ ftl_io_current_lba(struct ftl_io *io)
 }
 
 void
-ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt)
+ftl_io_advance(struct ftl_io *io, size_t lbk_cnt)
 {
 	struct iovec *iov = ftl_io_iovec(io);
 	size_t iov_lbks;
 
 	io->pos += lbk_cnt;
+
+	if (io->iov_cnt == 0) {
+		return;
+	}
 
 	while (lbk_cnt > 0) {
 		assert(io->iov_pos < io->iov_cnt);
@@ -373,6 +377,12 @@ ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 	}
 
 	io->status = -EIO;
+}
+
+void ftl_io_fail(struct ftl_io *io, int status)
+{
+	io->status = status;
+	ftl_io_advance(io, io->lbk_cnt - io->pos);
 }
 
 void *
