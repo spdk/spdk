@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "41de93d8_0c4622e0",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 528,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-04T02:13:37Z",
+      "side": 1,
+      "message": "Unlikely and nvme-rdma don\u0027t do that yet. I think we can do in the separate patch later if necessary.",
+      "parentUuid": "b56132a9_d16b3848",
+      "range": {
+        "startLine": 528,
+        "startChar": 2,
+        "endLine": 528,
+        "endChar": 27
+      },
+      "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "7af719ad_c39cce47",
         "filename": "lib/nvme/nvme_tcp.c",
         "patchSetId": 5
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-03T06:46:52Z",
       "side": 1,
       "message": "should assert(remain_len \u003d\u003d 0) between the line 632 and 633 ?",
+      "range": {
+        "startLine": 634,
+        "startChar": 18,
+        "endLine": 634,
+        "endChar": 26
+      },
+      "revId": "a6941bd84d2848d2611e2d6c02d96d6501e1c654",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aab176c_a7331730",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 634,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-04T02:13:37Z",
+      "side": 1,
+      "message": "Also unlikely. But the break at the line 628 may give some impression that remain_len !\u003d 0 is likely.\n\nChanging the break at the line 628 to assert(false) may be better.\n\nWill you put any comment on this Ziye? I want to finalize my review after your comment.",
+      "parentUuid": "7af719ad_c39cce47",
       "range": {
         "startLine": 634,
         "startChar": 18,
