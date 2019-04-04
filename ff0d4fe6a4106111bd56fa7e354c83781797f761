@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0fcfa5df_0d57aae7",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T04:49:53Z",
+      "side": 1,
+      "message": "Does this work correctly if we have 2 iovs, and both have mod !\u003d 0?\n\nI don\u0027t think it does.  For the crc, it does not care if the data was from one iov, or split across two iovs.  But if split across two iovs, if first one has mod !\u003d 0, then extra padding bytes will added to the crc before data for the second buffer is processed.\n\nI think the correct thing to do is to move the mod !\u003d 0 check outside of the for loop.  Only do it at the very end if the total data_len has a mod !\u003d 0.",
+      "revId": "ff0d4fe6a4106111bd56fa7e354c83781797f761",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
