@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "f5b3e65d_7d595fda",
+        "filename": "include/spdk/bdev.h",
+        "patchSetId": 20
+      },
+      "lineNbr": 809,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-04T02:28:21Z",
+      "side": 1,
+      "message": "Unnecessary empty line.",
+      "revId": "2ec649aac010e60d1b003ea95911b8467a32879e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9360507f_4f320c16",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 430,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-04T02:28:21Z",
+      "side": 1,
+      "message": "Can we move this to spdk_bdev_zcopy_start like other bdev IO APIs?\n\nWhen I read the next patch, bdev_io_set_buf() is called only if bdev_io-\u003eu.bdev.zcopy.start.",
+      "range": {
+        "startLine": 427,
+        "startChar": 0,
+        "endLine": 430,
+        "endChar": 2
+      },
+      "revId": "2ec649aac010e60d1b003ea95911b8467a32879e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
