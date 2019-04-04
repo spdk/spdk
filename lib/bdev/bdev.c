@@ -3793,9 +3793,10 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	struct spdk_bdev_desc	*desc, *tmp;
 	int			rc = 0;
 
+	/* Notify each descriptor about hotremoval */
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
+		rc = -EBUSY;
 		if (desc->remove_cb) {
-			rc = -EBUSY;
 			/*
 			 * Defer invocation of the remove_cb to a separate message that will
 			 *  run later on its thread.  This ensures this context unwinds and
@@ -3810,6 +3811,7 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 		}
 	}
 
+	/* If there are no descriptors, proceed removing the bdev */
 	if (rc == 0) {
 		TAILQ_REMOVE(&g_bdev_mgr.bdevs, bdev, internal.link);
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Removing bdev %s from list done\n", bdev->name);

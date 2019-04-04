@@ -358,6 +358,33 @@ unregister_and_close(void)
 	spdk_bdev_close(g_desc);
 	poll_threads();
 
+	/* Try hotremoving a bdev with descriptors which don't provide
+	 * the notification callback */
+	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &desc);
+	CU_ASSERT(desc != NULL);
+
+	/* There is an open descriptor on the device. Unregister it,
+	 * which can't proceed until the descriptor is closed. */
+	done = false;
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done);
+
+	/* Poll the threads to allow all events to be processed */
+	poll_threads();
+
+	/* Make sure the bdev was not unregistered. We still have a
+	 * descriptor open */
+	CU_ASSERT(done == false);
+
+	spdk_bdev_close(desc);
+	poll_threads();
+
+	/* The unregister should have completed */
+	CU_ASSERT(done == true);
+
+
+	/* Register the bdev again */
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+
 	remove_notify = false;
 	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
 	CU_ASSERT(remove_notify == false);

@@ -579,7 +579,10 @@ struct spdk_bdev_io {
 int spdk_bdev_register(struct spdk_bdev *bdev);
 
 /**
- * Unregister a bdev
+ * Start unregistering a bdev. This will notify each currently open descriptor
+ * on this bdev about the hotremoval in hopes that the upper layers will stop
+ * using this bdev and manually close all the descriptors with spdk_bdev_close().
+ * The actual bdev unregistration may be deferred until all descriptor are closed.
  *
  * \param bdev Block device to unregister.
  * \param cb_fn Callback function to be called when the unregister is complete.
