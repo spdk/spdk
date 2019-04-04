@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "766f2530_2339e872",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 1049,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-04T13:37:38Z",
+      "side": 1,
+      "message": "Please replace all these calls with a ftl_io_fail(io, status) that would set status and/or io-\u003epos.",
+      "range": {
+        "startLine": 1046,
+        "startChar": 0,
+        "endLine": 1049,
+        "endChar": 50
+      },
+      "revId": "e2e3803fdf117bdf3c50a8e8417a1cc7f0d87a23",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "ea8b88cc_7dda36dd",
         "filename": "lib/ftl/ftl_core.c",
         "patchSetId": 10
