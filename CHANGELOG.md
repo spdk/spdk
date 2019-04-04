@@ -46,6 +46,9 @@ block except for metadata.
 spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
 instead.
 
+Bdev descriptors can now be closed from any thread, not just the one that originally
+opened the particular descriptor.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.

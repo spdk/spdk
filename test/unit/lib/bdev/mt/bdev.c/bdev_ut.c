@@ -361,7 +361,7 @@ unregister_and_close(void)
 	/* Try hotremoving a bdev with descriptors which don't provide
 	 * the notification callback */
 	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &desc);
-	CU_ASSERT(desc != NULL);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* There is an open descriptor on the device. Unregister it,
 	 * which can't proceed until the descriptor is closed. */
@@ -388,7 +388,7 @@ unregister_and_close(void)
 	remove_notify = false;
 	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
 	CU_ASSERT(remove_notify == false);
-	CU_ASSERT(desc != NULL);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* There is an open descriptor on the device. Unregister it,
 	 * which can't proceed until the descriptor is closed. */
@@ -411,6 +411,45 @@ unregister_and_close(void)
 	/* The unregister should have completed */
 	CU_ASSERT(done == true);
 
+
+	/* Register the bdev again on thread 0 */
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+
+	remove_notify = false;
+	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
+	CU_ASSERT(remove_notify == false);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
+
+	/* Process any pending messages */
+	poll_threads();
+
+	/* Unregister the bdev on thread 1. We still have the descriptor
+	 * open, so this can't proceed */
+	set_thread(1);
+	done = false;
+	spdk_bdev_unregister(&g_bdev.bdev, _bdev_unregistered, &done);
+	CU_ASSERT(remove_notify == false);
+	CU_ASSERT(done == false);
+
+	/* Prior to the unregister completing, close the descriptor on thread 2 */
+	set_thread(2);
+	spdk_bdev_close(desc);
+
+	poll_thread(2);
+	/* The notify callback mustn't be called since the descriptor was closed
+	 * already. */
+	CU_ASSERT(remove_notify == false);
+
+	/* Poll all the threads to let the bdev unregister finish */
+	poll_threads();
+
+	/* Double-check that the notify callback hasn't been called. */
+	CU_ASSERT(remove_notify == false);
+
+	/* The unregister should have completed */
+	CU_ASSERT(done == true);
+
+	set_thread(0);
 	spdk_bdev_finish(finish_cb, NULL);
 	poll_threads();
 	free_threads();
