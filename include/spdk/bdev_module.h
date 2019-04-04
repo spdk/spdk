@@ -584,6 +584,8 @@ int spdk_bdev_register(struct spdk_bdev *bdev);
  * using this bdev and manually close all the descriptors with spdk_bdev_close().
  * The actual bdev unregistration may be deferred until all descriptor are closed.
  *
+ * This function is thread-safe.
+ *
  * \param bdev Block device to unregister.
  * \param cb_fn Callback function to be called when the unregister is complete.
  * \param cb_arg Argument to be supplied to cb_fn

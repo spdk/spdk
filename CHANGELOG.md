@@ -51,6 +51,8 @@ unregister was initiated. Practically, the bdev layer will now wait for all bdev
 to be closed before completing the bdev unregistration. Descriptors without the hotremove callback
 will now behave just like descriptors with it.
 
+Bdev descriptors can now be closed from any thread, not just the one that originally opened them.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
