@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c8aea522_a984f841",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 327,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-04T15:48:55Z",
+      "side": 1,
+      "message": "Right now, this function is being called from the RPC thread. Please see my comment on line 530 for why that is. This function needs to be called from the subsystem thread. \n\nThe reason that this is important, is because earlier on, we call spdk_nvmf_ctrlr_destruct from the subsystem thread (See nvmf.c:695 on master). That function also calls spdk_nvmf_subsystem_remove_ctrlrs. So if you don\u0027t ensure that this function is called from the subsystem thread on both functions, you will be racing on subsystem-\u003ectrlrs.",
+      "revId": "f82dd0ac367191be1549b7322ec1742c53408f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7957a826_0d87ea60",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 530,
+      "author": {
+        "id": 1011223
+      },
+      "writtenOn": "2019-04-04T15:48:55Z",
+      "side": 1,
+      "message": "spdk_for_each_channel calls subsystem_state_change_on_pg from each thread, then, after it returns to the original calling thread (in this case the RPC thread), it calls subsystem_state_change_done.\nsubsystem_state_change_done will invoke the callback we provided (spdk_rpc_nvmf_subsystem_stopped) which will call spdk_nvmf_subsystem_destroy on the RPC thread.",
+      "revId": "f82dd0ac367191be1549b7322ec1742c53408f7e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
