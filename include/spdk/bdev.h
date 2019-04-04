@@ -259,9 +259,12 @@ struct spdk_bdev *spdk_bdev_next_leaf(struct spdk_bdev *prev);
  *
  * \param bdev Block device to open.
  * \param write true is read/write access requested, false if read-only
- * \param remove_cb callback function for hot remove the device. Will
- * always be called on the same thread that spdk_bdev_open() was called on.
- * \param remove_ctx param for hot removal callback function.
+ * \param remove_cb notification callback to be called when the bdev gets
+ * hotremoved. This will always be called on the same thread that
+ * spdk_bdev_open() was called on. It can be NULL, in which case the upper
+ * layer won't be notified about the bdev hotremoval. The descriptor will
+ * have to be manually closed to make the bdev unregister proceed.
+ * \param remove_ctx param for remove_cb.
  * \param desc output parameter for the descriptor when operation is successful
  * \return 0 if operation is successful, suitable errno value otherwise
  */
