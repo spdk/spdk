@@ -269,10 +269,11 @@ int spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t rem
 		   void *remove_ctx, struct spdk_bdev_desc **desc);
 
 /**
- * Close a previously opened block device.
+ * Close a previously opened block device. After this function returns, it's
+ * guranteeed the hotremove notification callback for this descriptor won't
+ * be ever called.
  *
- * Must be called on the same thread that the spdk_bdev_open()
- * was performed on.
+ * This function is thread-safe.
  *
  * \param desc Block device descriptor to close.
  */
