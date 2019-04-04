@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "86bc1a95_f58b7c19",
+        "filename": "lib/iscsi/iscsi.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 3373,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-04T07:48:06Z",
+      "side": 1,
+      "message": "I\u0027d be surprised to see this output in my application. Could we mention there was a timeout and I/O did not finish in X seconds?\n\nI\u0027m not familiar with iSCSI - could you tell me if those logs could continuously flood the console, or will they be printed just once?",
+      "range": {
+        "startLine": 3373,
+        "startChar": 14,
+        "endLine": 3373,
+        "endChar": 63
+      },
+      "revId": "0f34e5e32bedc576e23d54dc415ee0b967b33156",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
