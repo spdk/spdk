@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "274d1643_3b9a71d0",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 2
+      },
+      "lineNbr": 367,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-04T14:50:49Z",
+      "side": 1,
+      "message": "doesn\u0027t it break the entire bdev_null? This unregisters the io_device regardless of the return code. Trying to use g_null_bdev_head will always segfault.",
+      "revId": "c45ca1ce1f033ec7c3c10ddaf7a6b7f71238fb5a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
