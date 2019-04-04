@@ -1079,16 +1079,16 @@ nvme_pcie_copy_command(struct spdk_nvme_cmd *dst, const struct spdk_nvme_cmd *sr
 	__m256i *d256 = (__m256i *)dst;
 	const __m256i *s256 = (const __m256i *)src;
 
-	_mm256_store_si256(&d256[0], _mm256_load_si256(&s256[0]));
-	_mm256_store_si256(&d256[1], _mm256_load_si256(&s256[1]));
+	_mm256_stream_si256(&d256[0], _mm256_load_si256(&s256[0]));
+	_mm256_stream_si256(&d256[1], _mm256_load_si256(&s256[1]));
 #elif defined(__SSE2__)
 	__m128i *d128 = (__m128i *)dst;
 	const __m128i *s128 = (const __m128i *)src;
 
-	_mm_store_si128(&d128[0], _mm_load_si128(&s128[0]));
-	_mm_store_si128(&d128[1], _mm_load_si128(&s128[1]));
-	_mm_store_si128(&d128[2], _mm_load_si128(&s128[2]));
-	_mm_store_si128(&d128[3], _mm_load_si128(&s128[3]));
+	_mm_stream_si128(&d128[0], _mm_load_si128(&s128[0]));
+	_mm_stream_si128(&d128[1], _mm_load_si128(&s128[1]));
+	_mm_stream_si128(&d128[2], _mm_load_si128(&s128[2]));
+	_mm_stream_si128(&d128[3], _mm_load_si128(&s128[3]));
 #else
 	*dst = *src;
 #endif
