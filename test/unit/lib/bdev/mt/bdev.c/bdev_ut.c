@@ -384,9 +384,10 @@ unregister_and_close(void)
 	/* The unregister should have completed */
 	CU_ASSERT(done == true);
 
-	spdk_bdev_finish(finish_cb, NULL);
-	poll_threads();
-	free_threads();
+	/* Restore the original g_bdev so that we can use teardown_test(). */
+	register_bdev(&g_bdev, "ut_bdev", &g_io_device);
+	spdk_bdev_open(&g_bdev.bdev, true, NULL, NULL, &g_desc);
+	teardown_test();
 }
 
 static void
