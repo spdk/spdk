@@ -259,10 +259,45 @@ scsi_lun_notify_hot_remove(struct spdk_scsi_lun *lun)
 	}
 }
 
+static void
+scsi_lun_dump_pending_tasks(struct spdk_scsi_lun *lun)
+{
+	struct spdk_scsi_task *task;
+
+	SPDK_ERRLOG("Dumping contents of pending SCSI tasks (lun %d)\n", lun->id);
+
+	TAILQ_FOREACH(task, &lun->tasks, scsi_link) {
+		SPDK_ERRLOG("\tscsi_task opcode: %d, dir:%d, length:%d\n",
+			    task->cdb[0], task->dxfer_dir, task->length);
+	}
+}
+
+static void
+scsi_lun_dump_pending_mgmt_tasks(struct spdk_scsi_lun *lun)
+{
+	struct spdk_scsi_task *task;
+
+	SPDK_ERRLOG("Dumping contents of pending SCSI management tasks (lun %d)\n", lun->id);
+
+	TAILQ_FOREACH(task, &lun->mgmt_tasks, scsi_link) {
+		SPDK_ERRLOG("\tscsi_mgmt_task opcode: %d, dir:%d, length:%d\n",
+			    task->cdb[0], task->dxfer_dir, task->length);
+	}
+}
+
 static int
 scsi_lun_check_pending_tasks(void *arg)
 {
 	struct spdk_scsi_lun *lun = (struct spdk_scsi_lun *)arg;
+
+	/* Dump pending SCSI tasks once per second after the first timeout
+	 * until completion.
+	 */
+	if (lun->hotremove_timeout_tsc && spdk_get_ticks() > lun->hotremove_timeout_tsc) {
+		scsi_lun_dump_pending_tasks(lun);
+		scsi_lun_dump_pending_mgmt_tasks(lun);
+		lun->hotremove_timeout_tsc += spdk_get_ticks_hz();
+	}
 
 	if (spdk_scsi_lun_has_pending_tasks(lun) ||
 	    spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
@@ -281,6 +316,8 @@ _scsi_lun_hot_remove(void *arg1)
 
 	if (spdk_scsi_lun_has_pending_tasks(lun) ||
 	    spdk_scsi_lun_has_pending_mgmt_tasks(lun)) {
+		lun->hotremove_timeout_tsc = spdk_get_ticks() + SCSI_HOTREMOVE_TIMEOUT *
+					     spdk_get_ticks_hz();
 		lun->hotremove_poller = spdk_poller_register(scsi_lun_check_pending_tasks,
 					lun, 10);
 	} else {

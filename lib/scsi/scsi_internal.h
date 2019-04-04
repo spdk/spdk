@@ -45,6 +45,8 @@
 
 #include "spdk_internal/log.h"
 
+#define SCSI_HOTREMOVE_TIMEOUT	20
+
 enum {
 	SPDK_SCSI_TASK_UNKNOWN = -1,
 	SPDK_SCSI_TASK_COMPLETE,
@@ -103,6 +105,7 @@ struct spdk_scsi_lun {
 
 	/** Poller to release the resource of the lun when it is hot removed */
 	struct spdk_poller *hotremove_poller;
+	uint64_t hotremove_timeout_tsc;
 
 	/** The LUN is removed */
 	bool removed;
