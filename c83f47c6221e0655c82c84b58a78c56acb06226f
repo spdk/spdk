@@ -1,0 +1,89 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "82878642_60670aa9",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 16
+      },
+      "lineNbr": 206,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T16:05:04Z",
+      "side": 1,
+      "message": "This should be moved up to the 19.04 section now (since 19.01 has been released).",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4fc6dd74_1b37699c",
+        "filename": "lib/event/subsystems/nvmf/nvmf_rpc.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 249,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T16:05:04Z",
+      "side": 1,
+      "message": "you can use spdk_json_write_named_string - this saves a line of code, and is consistent with how serial_number is done just above here",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9a02397c_162ad6bb",
+        "filename": "lib/nvmf/subsystem.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 1226,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T16:05:04Z",
+      "side": 1,
+      "message": "strnlen would be better to use here so we don\u0027t waste time counting characters past max_len\n\nbut set_sn is using strlen also, so just keep using strlen here - we can change both of these to strnlen later",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9db2047a_dc7ab765",
+        "filename": "scripts/rpc/nvmf.py",
+        "patchSetId": 16
+      },
+      "lineNbr": 111,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T16:05:04Z",
+      "side": 1,
+      "message": "I don\u0027t think you need to specify \u0027SPDK bdev controller\u0027 here - it\u0027s an optional RPC parameter, so we don\u0027t need to specify a default here",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68a71df8_eda28fb4",
+        "filename": "test/unit/lib/nvmf/ctrlr.c/ctrlr_ut.c",
+        "patchSetId": 16
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T16:05:04Z",
+      "side": 1,
+      "message": "can you double check that this DEFINE_STUB is needed?  I don\u0027t see any code added to lib/nvmf/ctrlr.c that calls spdk_nvmf_subsystem_get_ns, so I don\u0027t think this stub should be needed",
+      "revId": "c83f47c6221e0655c82c84b58a78c56acb06226f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
