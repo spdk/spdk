@@ -254,7 +254,7 @@ ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
 		.size		= sizeof(struct ftl_io),
 		.flags		= FTL_IO_PPA_MODE,
 		.type		= FTL_IO_ERASE,
-		.iov_cnt	= 0,
+		.iov_cnt	= 1,
 		.req_size	= 1,
 		.fn		= cb,
 		.data		= NULL,
@@ -373,6 +373,12 @@ ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status)
 	}
 
 	io->status = -EIO;
+}
+
+void ftl_io_fail(struct ftl_io *io, int status)
+{
+	io->status = status;
+	ftl_io_update_iovec(io, io->lbk_cnt - io->pos);
 }
 
 void *

@@ -251,11 +251,14 @@ ftl_io_mode_lba(const struct ftl_io *io)
 static inline bool
 ftl_io_done(struct ftl_io *io)
 {
-	return io->req_cnt == 0 && !(io->flags & FTL_IO_RETRY);
+	return io->req_cnt == 0 &&
+	       io->pos == io->lbk_cnt &&
+	       !(io->flags & FTL_IO_RETRY);
 }
 
 struct ftl_io *ftl_io_alloc(struct spdk_io_channel *ch);
 struct ftl_io *ftl_io_alloc_child(struct ftl_io *parent);
+void ftl_io_fail(struct ftl_io *io, int status);
 void ftl_io_free(struct ftl_io *io);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 void ftl_io_reinit(struct ftl_io *io, spdk_ftl_fn cb,

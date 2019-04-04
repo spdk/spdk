@@ -290,16 +290,17 @@ ftl_submit_erase(struct ftl_io *io)
 		assert(ppa.lbk == 0);
 		ppa_packed = ftl_ppa_addr_pack(dev, ppa);
 
-		ftl_io_inc_req(io);
-
 		ftl_trace_submission(dev, io, ppa, 1);
 		rc = spdk_nvme_ocssd_ns_cmd_vector_reset(dev->ns, ftl_get_write_qpair(dev),
 				&ppa_packed, 1, NULL, ftl_io_cmpl_cb, io);
 		if (rc) {
+			ftl_io_fail(io, rc);
 			SPDK_ERRLOG("Vector reset failed with status: %d\n", rc);
-			ftl_io_dec_req(io);
 			break;
 		}
+
+		ftl_io_inc_req(io);
+		ftl_io_update_iovec(io, 1);
 	}
 
 	if (ftl_io_done(io)) {
@@ -735,7 +736,7 @@ ftl_submit_read(struct ftl_io *io, ftl_next_ppa_fn next_ppa,
 			ftl_add_to_retry_queue(io);
 			break;
 		} else if (rc) {
-			io->status = rc;
+			ftl_io_fail(io, rc);
 			break;
 		}
 
@@ -996,14 +997,14 @@ ftl_submit_write(struct ftl_wptr *wptr, struct ftl_io *io)
 						    ftl_ppa_addr_pack(dev, wptr->ppa),
 						    lbk_cnt, ftl_io_cmpl_cb, io, 0, 0, 0);
 		if (rc) {
+			ftl_io_fail(io, rc);
 			SPDK_ERRLOG("spdk_nvme_ns_cmd_write failed with status:%d, ppa:%lu\n",
 				    rc, wptr->ppa.ppa);
-			io->status = -EIO;
 			break;
 		}
 
-		ftl_io_update_iovec(io, lbk_cnt);
 		ftl_io_inc_req(io);
+		ftl_io_update_iovec(io, lbk_cnt);
 		ftl_wptr_advance(wptr, lbk_cnt);
 	}
 
