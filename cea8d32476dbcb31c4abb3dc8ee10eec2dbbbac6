@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a0345eb_8be53979",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-04T09:49:43Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "3d16515a_06249152",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 40
+      },
+      "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "823f377d_7b40c14b",
         "filename": "lib/bdev/ocf/env/ocf_env.h",
         "patchSetId": 12
@@ -45,6 +69,30 @@
       "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "97f4083b_dbb1533a",
+        "filename": "lib/bdev/ocf/env/ocf_env.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-04T09:49:43Z",
+      "side": 1,
+      "message": "No, this is on purpose\nThere is no specification, but here is an example\nhttps://github.com/Open-CAS/ocf/blob/master/env/posix/ocf_env.h#L158\n\nSimilar with env_memset - it is basically the libc\u0027s memset, but return status is opposite.",
+      "parentUuid": "823f377d_7b40c14b",
+      "range": {
+        "startLine": 210,
+        "startChar": 9,
+        "endLine": 210,
+        "endChar": 10
+      },
+      "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
