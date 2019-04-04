@@ -3365,11 +3365,33 @@ iscsi_conn_abort_queued_datain_tasks(struct spdk_iscsi_conn *conn,
 	return 0;
 }
 
+static void
+iscsi_conn_dump_queued_datain_tasks(struct spdk_iscsi_conn *conn)
+{
+	struct spdk_iscsi_task *task;
+
+	SPDK_ERRLOG("Dumping contents of queued datain tasks (conn %d)\n", conn->id);
+	SPDK_ERRLOG("\tdata_in_cnt: %d\n", conn->data_in_cnt);
+
+	TAILQ_FOREACH(task, &conn->queued_datain_tasks, link) {
+		SPDK_ERRLOG("\tdatain_task tag: %d, current_offset: %d, transfer_len: %d\n",
+			    task->tag, task->current_datain_offset, task->scsi.transfer_len);
+	}
+}
+
 static int
 _iscsi_op_abort_task(void *arg)
 {
 	struct spdk_iscsi_task *task = arg;
 	int rc;
+
+	/* Dump queued datain tasks once per second after the first timeout
+	 * until completion.
+	 */
+	if (task->timeout_tsc && spdk_get_ticks() > task->timeout_tsc) {
+		iscsi_conn_dump_queued_datain_tasks(task->conn);
+		task->timeout_tsc += spdk_get_ticks_hz();
+	}
 
 	rc = iscsi_conn_abort_queued_datain_task(task->conn, task->scsi.abort_id);
 	if (rc != 0) {
@@ -3386,6 +3408,7 @@ iscsi_op_abort_task(struct spdk_iscsi_task *task, uint32_t ref_task_tag)
 {
 	task->scsi.abort_id = ref_task_tag;
 	task->scsi.function = SPDK_SCSI_TASK_FUNC_ABORT_TASK;
+	task->timeout_tsc = spdk_get_ticks() + ISCSI_MGMT_TIMEOUT * spdk_get_ticks_hz();
 	task->mgmt_poller = spdk_poller_register(_iscsi_op_abort_task, task, 10);
 }
 
@@ -3394,6 +3417,14 @@ _iscsi_op_abort_task_set(void *arg)
 {
 	struct spdk_iscsi_task *task = arg;
 	int rc;
+
+	/* Dump queued datain tasks once per second after the first timeout
+	 * until completion.
+	 */
+	if (task->timeout_tsc && spdk_get_ticks() > task->timeout_tsc) {
+		iscsi_conn_dump_queued_datain_tasks(task->conn);
+		task->timeout_tsc += spdk_get_ticks_hz();
+	}
 
 	rc = iscsi_conn_abort_queued_datain_tasks(task->conn, task->scsi.lun,
 			task->pdu);
@@ -3410,6 +3441,7 @@ void
 spdk_iscsi_op_abort_task_set(struct spdk_iscsi_task *task, uint8_t function)
 {
 	task->scsi.function = function;
+	task->timeout_tsc = spdk_get_ticks() + ISCSI_MGMT_TIMEOUT * spdk_get_ticks_hz();
 	task->mgmt_poller = spdk_poller_register(_iscsi_op_abort_task_set, task, 10);
 }
 

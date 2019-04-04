@@ -39,6 +39,8 @@
 #include "spdk/scsi.h"
 #include "spdk/util.h"
 
+#define ISCSI_MGMT_TIMEOUT	20
+
 struct spdk_iscsi_task {
 	struct spdk_scsi_task	scsi;
 
@@ -98,6 +100,7 @@ struct spdk_iscsi_task {
 	int lun_id;
 
 	struct spdk_poller *mgmt_poller;
+	uint64_t timeout_tsc;
 
 	TAILQ_ENTRY(spdk_iscsi_task) link;
 
