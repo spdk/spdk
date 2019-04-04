@@ -90,6 +90,30 @@
     },
     {
       "key": {
+        "uuid": "b6695795_bf8120ab",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-04T08:25:58Z",
+      "side": 1,
+      "message": "I\u0027ve add comment that it should be updatated by io-\u003elbk_cnt instead lbk_cnt. I will add separate patch for this io_done, io_upadte_iovec etc manipulation...",
+      "parentUuid": "24096b01_5045f14d",
+      "range": {
+        "startLine": 755,
+        "startChar": 3,
+        "endLine": 755,
+        "endChar": 22
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23873790_b1191f1e",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 9
