@@ -279,6 +279,12 @@ null_bdev_destroy_cb(void *io_device, void *ctx_buf)
 	spdk_poller_unregister(&ch->poller);
 }
 
+static void
+_bdev_null_cleanup_cb(void *arg)
+{
+	spdk_free(g_null_read_buf);	
+}
+
 static int
 bdev_null_initialize(void)
 {
@@ -353,12 +359,13 @@ bdev_null_initialize(void)
 		if (bdev == NULL) {
 			SPDK_ERRLOG("Could not create null bdev\n");
 			rc = EINVAL;
-			goto end;
+			goto cleanup;
 		}
 
 		i++;
 	}
-
+cleanup:
+	spdk_io_device_unregister(&g_null_bdev_head, _bdev_null_cleanup_cb);
 end:
 	return rc;
 }
