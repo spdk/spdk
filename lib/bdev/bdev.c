@@ -3778,18 +3778,57 @@ spdk_bdev_destruct_done(struct spdk_bdev *bdev, int bdeverrno)
 	}
 }
 
+static void bdev_close_unsafe(struct spdk_bdev_desc *desc);
+static int spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev);
+
 static void
 _remove_notify(void *arg)
 {
 	struct spdk_bdev_desc *desc = arg;
+	struct spdk_bdev *bdev = desc->bdev;
+	int rc;
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+
+	assert(desc->remove_scheduled);
+	assert(desc->thread == spdk_get_thread());
+
+	/* Close the desc if it wasn't closed yet */
+	if (!desc->closed) {
+		/* remove_scheduled is still set, so any bdev_close() will
+		 * just return early. It's safe to unlock the mutex here.
+		 */
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		desc->remove_cb(desc->remove_ctx);
+		pthread_mutex_lock(&bdev->internal.mutex);
+	}
 
 	desc->remove_scheduled = false;
 
-	if (desc->closed) {
-		free(desc);
-	} else {
-		desc->remove_cb(desc->remove_ctx);
+	/* The callback above might have closed the descriptor immediately.
+	 * If it hadn't - just return now. We'll be called again after the
+	 * descriptor is closed. */
+	if (!desc->closed) {
+		goto out_unlock;
 	}
+
+	/* Otherwise continue removing the descriptor. */
+	bdev_close_unsafe(desc);
+
+	/* If there is a pending bdev hotremoval and this was the last open
+	 * descriptor, continue removing the bdev.
+	 */
+	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
+		rc = spdk_bdev_unregister_unsafe(bdev);
+		pthread_mutex_unlock(&bdev->internal.mutex);
+		if (rc == 0) {
+			spdk_bdev_fini(bdev);
+		}
+		return;
+	}
+
+out_unlock:
+	pthread_mutex_unlock(&bdev->internal.mutex);
 }
 
 /* Must be called while holding bdev->internal.mutex.
@@ -3804,14 +3843,8 @@ spdk_bdev_unregister_unsafe(struct spdk_bdev *bdev)
 	TAILQ_FOREACH_SAFE(desc, &bdev->internal.open_descs, link, tmp) {
 		if (desc->remove_cb) {
 			rc = -EBUSY;
-			/*
-			 * Defer invocation of the remove_cb to a separate message that will
-			 *  run later on its thread.  This ensures this context unwinds and
-			 *  we don't recursively unregister this bdev again if the remove_cb
-			 *  immediately closes its descriptor.
-			 */
 			if (!desc->remove_scheduled) {
-				/* Avoid scheduling removal of the same descriptor multiple times. */
+				/* Close the descriptor on a proper thread. */
 				desc->remove_scheduled = true;
 				spdk_thread_send_msg(desc->thread, _remove_notify, desc);
 			}
@@ -3930,26 +3963,15 @@ spdk_bdev_open(struct spdk_bdev *bdev, bool write, spdk_bdev_remove_cb_t remove_
 	return 0;
 }
 
-void
-spdk_bdev_close(struct spdk_bdev_desc *desc)
+static void
+bdev_close_unsafe(struct spdk_bdev_desc *desc)
 {
 	struct spdk_bdev *bdev = desc->bdev;
-	int rc;
 
-	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
-		      spdk_get_thread());
-
+	assert(desc->closed);
 	assert(desc->thread == spdk_get_thread());
-
-	pthread_mutex_lock(&bdev->internal.mutex);
-
 	TAILQ_REMOVE(&bdev->internal.open_descs, desc, link);
-
-	desc->closed = true;
-
-	if (!desc->remove_scheduled) {
-		free(desc);
-	}
+	free(desc);
 
 	/* If no more descriptors, kill QoS channel */
 	if (bdev->internal.qos && TAILQ_EMPTY(&bdev->internal.open_descs)) {
@@ -3965,17 +3987,33 @@ spdk_bdev_close(struct spdk_bdev_desc *desc)
 	}
 
 	spdk_bdev_set_qd_sampling_period(bdev, 0);
+}
 
-	if (bdev->internal.status == SPDK_BDEV_STATUS_REMOVING && TAILQ_EMPTY(&bdev->internal.open_descs)) {
-		rc = spdk_bdev_unregister_unsafe(bdev);
-		pthread_mutex_unlock(&bdev->internal.mutex);
+void
+spdk_bdev_close(struct spdk_bdev_desc *desc)
+{
+	struct spdk_bdev *bdev = desc->bdev;
 
-		if (rc == 0) {
-			spdk_bdev_fini(bdev);
-		}
-	} else {
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV, "Closing descriptor %p for bdev %s on thread %p\n", desc, bdev->name,
+		      spdk_get_thread());
+
+	pthread_mutex_lock(&bdev->internal.mutex);
+
+	assert(!desc->closed);
+	desc->closed = true;
+
+	if (desc->remove_scheduled) {
+		/* we've already marked the descriptor as closed, so the scheduled
+		 * removal will now continue releasing the desc resources (instead
+		 * of calling remove_cb).
+		 */
 		pthread_mutex_unlock(&bdev->internal.mutex);
+		return;
 	}
+
+	desc->remove_scheduled = true;
+	spdk_thread_send_msg(desc->thread, _remove_notify, desc);
+	pthread_mutex_unlock(&bdev->internal.mutex);
 }
 
 int

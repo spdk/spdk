@@ -361,7 +361,7 @@ unregister_and_close(void)
 	remove_notify = false;
 	spdk_bdev_open(&g_bdev.bdev, true, _bdev_removed, &remove_notify, &desc);
 	CU_ASSERT(remove_notify == false);
-	CU_ASSERT(desc != NULL);
+	SPDK_CU_ASSERT_FATAL(desc != NULL);
 
 	/* There is an open descriptor on the device. Unregister it,
 	 * which can't proceed until the descriptor is closed. */
