@@ -138,6 +138,30 @@
     },
     {
       "key": {
+        "uuid": "152a5a56_91e3479b",
+        "filename": "lib/ftl/ftl_core.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 755,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-04T09:12:31Z",
+      "side": 1,
+      "message": "I was referring to first comment on this thread. This was fixed in next patch.",
+      "parentUuid": "7276bd1f_1e57c9f0",
+      "range": {
+        "startLine": 755,
+        "startChar": 3,
+        "endLine": 755,
+        "endChar": 22
+      },
+      "revId": "1f5c499a860c881c0517787474c9dfdd39c62728",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "23873790_b1191f1e",
         "filename": "lib/ftl/ftl_io.h",
         "patchSetId": 9
