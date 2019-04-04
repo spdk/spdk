@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d7772578_4075c812",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 2386,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-04T15:03:20Z",
+      "side": 1,
+      "message": "Reading this patch more, I think we still want an assert(clone_entry !\u003d NULL).  But I think we do want this at the very end of the _spdk_blob_get_snapshot_and_clone_entries() function.  It should be invalid to ever have a blob where we find its parent in the snapshot list (snapshot_entry !\u003d NULL) but can\u0027t find the blob in it\u0027s parent\u0027s clones TAILQ.\n\nThis would effectively replace the assert in the current code at line 2376.",
+      "revId": "86a6a3ce06569dd7affc86b5235536c3ab305faf",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
