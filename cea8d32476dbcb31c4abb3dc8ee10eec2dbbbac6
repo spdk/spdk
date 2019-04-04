@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d16515a_06249152",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 12
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-04T08:13:36Z",
+      "side": 1,
+      "message": "This is outdated",
+      "range": {
+        "startLine": 11,
+        "startChar": 0,
+        "endLine": 11,
+        "endChar": 40
+      },
+      "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "823f377d_7b40c14b",
+        "filename": "lib/bdev/ocf/env/ocf_env.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-04T08:13:36Z",
+      "side": 1,
+      "message": "Shouldn\u0027t we return 0 here? This function works the opposite way to env_rwsem_is_locked().",
+      "range": {
+        "startLine": 210,
+        "startChar": 9,
+        "endLine": 210,
+        "endChar": 10
+      },
+      "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
