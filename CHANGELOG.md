@@ -46,6 +46,11 @@ block except for metadata.
 spdk_vbdev_register() has been deprecated.  spdk_bdev_register() should be used
 instead.
 
+Bdev descriptors without the hotremove notification callback can now be closed after the bdev
+unregister was initiated. Practically, the bdev layer will now wait for all bdev descriptors
+to be closed before completing the bdev unregistration. Descriptors without the hotremove callback
+will now behave just like descriptors with it.
+
 ### NVMe-oF Target
 
 Support for per-device shared receive queues in the RDMA transport has been added.
