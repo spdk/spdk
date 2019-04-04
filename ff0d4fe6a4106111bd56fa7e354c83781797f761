@@ -16,6 +16,24 @@
       "revId": "ff0d4fe6a4106111bd56fa7e354c83781797f761",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "b25d85c2_0104c6d6",
+        "filename": "include/spdk_internal/nvme_tcp.h",
+        "patchSetId": 7
+      },
+      "lineNbr": 182,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-04T06:34:31Z",
+      "side": 1,
+      "message": "It is a good observation. let me update the code. But normally, I think that there be no mod!\u003d0 case, since even with SGL, it should operate on block level, which will be aligned.",
+      "parentUuid": "0fcfa5df_0d57aae7",
+      "revId": "ff0d4fe6a4106111bd56fa7e354c83781797f761",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
