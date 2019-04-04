@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3dc27243_f691a818",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 386,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-04-04T02:48:59Z",
+      "side": 1,
+      "message": "typo here, scale.",
+      "revId": "309bb518d67f87a7f19196212b310c5740fb7c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8c9ef32c_effa531b",
+        "filename": "app/trace/trace.cpp",
+        "patchSetId": 4
+      },
+      "lineNbr": 394,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-04-04T02:48:59Z",
+      "side": 1,
+      "message": "Please",
+      "revId": "309bb518d67f87a7f19196212b310c5740fb7c13",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
