@@ -83,13 +83,21 @@ ftl_io_iovec(struct ftl_io *io)
 }
 
 uint64_t
-ftl_io_current_lba(struct ftl_io *io)
+ftl_io_get_lba(const struct ftl_io *io, size_t offset)
 {
+	assert(offset < io->lbk_cnt);
+
 	if (io->flags & FTL_IO_VECTOR_LBA) {
-		return io->lba.vector[io->pos];
+		return io->lba.vector[offset];
 	} else {
-		return io->lba.single + io->pos;
+		return io->lba.single + offset;
 	}
+}
+
+uint64_t
+ftl_io_current_lba(const struct ftl_io *io)
+{
+	return ftl_io_get_lba(io, io->pos);
 }
 
 void
