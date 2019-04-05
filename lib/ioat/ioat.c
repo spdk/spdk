@@ -363,11 +363,11 @@ ioat_channel_destruct(struct spdk_ioat_chan *ioat)
 	}
 
 	if (ioat->hw_ring) {
-		spdk_dma_free(ioat->hw_ring);
+		spdk_free(ioat->hw_ring);
 	}
 
 	if (ioat->comp_update) {
-		spdk_dma_free((void *)ioat->comp_update);
+		spdk_free((void *)ioat->comp_update);
 		ioat->comp_update = NULL;
 	}
 }
@@ -413,15 +413,15 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		ioat->max_xfer_size = 1U << xfercap;
 	}
 
-	ioat->comp_update = spdk_dma_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
-					     NULL);
+	ioat->comp_update = spdk_zmalloc(sizeof(*ioat->comp_update), SPDK_IOAT_CHANCMP_ALIGN,
+					 NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (ioat->comp_update == NULL) {
 		return -1;
 	}
 
 	comp_update_bus_addr = spdk_vtophys((void *)ioat->comp_update, NULL);
 	if (comp_update_bus_addr == SPDK_VTOPHYS_ERROR) {
-		spdk_dma_free((void *)ioat->comp_update);
+		spdk_free((void *)ioat->comp_update);
 		return -1;
 	}
 
@@ -434,8 +434,8 @@ ioat_channel_start(struct spdk_ioat_chan *ioat)
 		return -1;
 	}
 
-	ioat->hw_ring = spdk_dma_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
-					 NULL);
+	ioat->hw_ring = spdk_zmalloc(num_descriptors * sizeof(union spdk_ioat_hw_desc), 64,
+				     NULL, SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!ioat->hw_ring) {
 		return -1;
 	}

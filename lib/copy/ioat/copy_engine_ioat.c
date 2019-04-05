@@ -138,7 +138,7 @@ copy_engine_ioat_exit(void *ctx)
 		TAILQ_REMOVE(&g_devices, dev, tailq);
 		spdk_ioat_detach(dev->ioat);
 		ioat_free_device(dev);
-		spdk_dma_free(dev);
+		free(dev);
 	}
 	spdk_copy_engine_module_finish();
 }
@@ -268,7 +268,7 @@ attach_cb(void *cb_ctx, struct spdk_pci_device *pci_dev, struct spdk_ioat_chan *
 {
 	struct ioat_device *dev;
 
-	dev = spdk_dma_zmalloc(sizeof(*dev), 0, NULL);
+	dev = calloc(1, sizeof(*dev));
 	if (dev == NULL) {
 		SPDK_ERRLOG("Failed to allocate device struct\n");
 		return;
