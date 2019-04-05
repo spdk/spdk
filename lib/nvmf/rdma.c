@@ -1497,6 +1497,7 @@ nvmf_rdma_fill_buffers(struct spdk_nvmf_rdma_transport *rtransport,
 		}
 		i++;
 	}
+	wr->num_sge = i;
 
 	return 0;
 }
