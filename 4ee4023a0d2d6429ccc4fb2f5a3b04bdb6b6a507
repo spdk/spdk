@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9bf0420e_27cd4f12",
+        "filename": "CHANGELOG.md",
+        "patchSetId": 21
+      },
+      "lineNbr": 642,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-05T00:59:24Z",
+      "side": 0,
+      "message": "This change is unrelated.",
+      "revId": "4ee4023a0d2d6429ccc4fb2f5a3b04bdb6b6a507",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
