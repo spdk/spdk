@@ -94,6 +94,30 @@
       "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a67c0474_23caecce",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-05T14:36:50Z",
+      "side": 1,
+      "message": "Ok, iovec here have no sense, but ftl_band_erase /erase_submit need to be changed .",
+      "parentUuid": "c64accf2_5078bbfe",
+      "range": {
+        "startLine": 257,
+        "startChar": 13,
+        "endLine": 257,
+        "endChar": 14
+      },
+      "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
