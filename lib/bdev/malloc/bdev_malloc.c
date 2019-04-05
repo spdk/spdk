@@ -119,8 +119,8 @@ malloc_disk_free(struct malloc_disk *malloc_disk)
 	}
 
 	free(malloc_disk->disk.name);
-	spdk_dma_free(malloc_disk->malloc_buf);
-	spdk_dma_free(malloc_disk);
+	spdk_free(malloc_disk->malloc_buf);
+	free(malloc_disk);
 }
 
 static int
@@ -386,9 +386,9 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 		return NULL;
 	}
 
-	mdisk = spdk_dma_zmalloc(sizeof(*mdisk), 0, NULL);
+	mdisk = calloc(1, sizeof(*mdisk));
 	if (!mdisk) {
-		SPDK_ERRLOG("mdisk spdk_dma_zmalloc() failed\n");
+		SPDK_ERRLOG("mdisk calloc() failed\n");
 		return NULL;
 	}
 
@@ -398,9 +398,10 @@ struct spdk_bdev *create_malloc_disk(const char *name, const struct spdk_uuid *u
 	 * TODO: need to pass a hint so we know which socket to allocate
 	 *  from on multi-socket systems.
 	 */
-	mdisk->malloc_buf = spdk_dma_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL);
+	mdisk->malloc_buf = spdk_zmalloc(num_blocks * block_size, 2 * 1024 * 1024, NULL,
+					 SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!mdisk->malloc_buf) {
-		SPDK_ERRLOG("malloc_buf spdk_dma_zmalloc() failed\n");
+		SPDK_ERRLOG("malloc_buf spdk_zmalloc() failed\n");
 		malloc_disk_free(mdisk);
 		return NULL;
 	}
