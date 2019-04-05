@@ -1,0 +1,101 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d2999dc7_583f78f6",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 88,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T10:41:09Z",
+      "side": 1,
+      "message": "Not multi-thread safe, could be a problem?",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5851de0d_319952db",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 92,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T10:41:09Z",
+      "side": 1,
+      "message": "Add\n\n  foreach(group, \u0026g_app_affinity_groups, link)\n      spdk_cpuset_xor(g_app_free_core_mask, group-\u003ecpuset);\n\nbecause we should exclude assigned cores from free cores. Right?",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "85345951_36bbad11",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 132,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T10:41:09Z",
+      "side": 1,
+      "message": "I think we can use spdk_app_get_free_core_mask() here",
+      "range": {
+        "startLine": 129,
+        "startChar": 1,
+        "endLine": 132,
+        "endChar": 2
+      },
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8f402aa3_318df7a4",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 137,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T10:41:09Z",
+      "side": 1,
+      "message": "According to the following SPDK_ERRLOG() Affinity groups creation/verification rules (1), the codes should be:\n\n  spdk_cpuset_copy(tmp, cpuset);\n  spdk_cpuset_and(tmp, g_app_free_core_mask);\n  if (!spdk_cpuset_equal(tmp, cpuset)) {",
+      "range": {
+        "startLine": 135,
+        "startChar": 1,
+        "endLine": 137,
+        "endChar": 35
+      },
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f1c99fbf_2c6a55db",
+        "filename": "test/unit/lib/event/app.c/app_ut.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 220,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T10:41:09Z",
+      "side": 1,
+      "message": "Add a case for group overlapped.",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
