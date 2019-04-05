@@ -96,6 +96,7 @@ fi
 
 trap - SIGINT SIGTERM EXIT
 
+rm -f ./local-test-0-verify.state
 killprocess $nvmfpid
 nvmftestfini $1
 timing_exit fio
