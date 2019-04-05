@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8ffc00ee_cd442bd6",
+        "filename": "lib/copy/ioat/copy_engine_ioat.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 271,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-05T16:20:14Z",
+      "side": 1,
+      "message": "This struct ioat_device doesn\u0027t need to be allocated from DMA-able memory.  calloc would be fine.",
+      "revId": "a4decbfc0e3643422a5a7531df1fd2b29c1fd8ae",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
