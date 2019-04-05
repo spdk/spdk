@@ -46,6 +46,30 @@
       "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f24ccb51_bc3b44ea",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-05T10:42:11Z",
+      "side": 1,
+      "message": "For sure we shouldn\u0027t set iov_cnt \u003d 1 if there\u0027s no iovec tied to that IO. Let\u0027s just change ftl_io_update_iovec to check if iov_cnt \u003e 0. Also, since this function does a bit more then just update iovec\u0027s position, let\u0027s rename it to ftl_io_advance.",
+      "parentUuid": "f0444d68_2c9f933d",
+      "range": {
+        "startLine": 257,
+        "startChar": 13,
+        "endLine": 257,
+        "endChar": 14
+      },
+      "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
