@@ -76,19 +76,31 @@ struct iovec *
 ftl_io_iovec(struct ftl_io *io)
 {
 	if (io->iov_cnt > 1) {
-		return io->iovs;
+		return io->iov.vector;
 	} else {
-		return &io->iov;
+		return &io->iov.single;
 	}
 }
 
 uint64_t
-ftl_io_current_lba(struct ftl_io *io)
+ftl_io_current_lba(const struct ftl_io *io)
 {
 	if (io->flags & FTL_IO_VECTOR_LBA) {
-		return io->lbas[io->pos];
+		return io->lba.vector[io->pos];
 	} else {
-		return io->lba + io->pos;
+		return io->lba.single + io->pos;
+	}
+}
+
+uint64_t
+ftl_io_next_lba(const struct ftl_io *io, size_t offset)
+{
+	assert(io->pos + offset < io->lbk_cnt);
+
+	if (io->flags & FTL_IO_VECTOR_LBA) {
+		return io->lba.vector[io->pos + offset];
+	} else {
+		return io->lba.single + io->pos + offset;
 	}
 }
 
@@ -153,12 +165,12 @@ ftl_io_init_iovec(struct ftl_io *io, void *buf,
 	size_t i;
 
 	if (iov_cnt > 1) {
-		iov = io->iovs = calloc(iov_cnt, sizeof(*iov));
+		iov = io->iov.vector = calloc(iov_cnt, sizeof(*iov));
 		if (!iov) {
 			return -ENOMEM;
 		}
 	} else {
-		iov = &io->iov;
+		iov = &io->iov.single;
 	}
 
 	io->iov_pos = 0;
@@ -178,7 +190,8 @@ ftl_io_init(struct ftl_io *io, struct spdk_ftl_dev *dev,
 	io->flags |= flags | FTL_IO_INITIALIZED;
 	io->type = type;
 	io->dev = dev;
-	io->lba = FTL_LBA_INVALID;
+	io->lba.single = FTL_LBA_INVALID;
+	io->ppa.ppa = FTL_PPA_INVALID;
 	io->cb.fn = fn;
 	io->cb.ctx = ctx;
 	io->trace = ftl_trace_alloc_id(dev);
@@ -278,14 +291,14 @@ ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba, size
 
 	ftl_io_init(io, dev, cb_fn, cb_arg, 0, type);
 
-	io->lba = lba;
+	io->lba.single = lba;
 	io->lbk_cnt = lbk_cnt;
 	io->iov_cnt = iov_cnt;
 
 	if (iov_cnt > 1) {
-		io->iovs = iov;
+		io->iov.vector = iov;
 	} else {
-		io->iov = *iov;
+		io->iov.single = *iov;
 	}
 
 	ftl_trace_lba_io_init(io->dev, io);
@@ -299,7 +312,7 @@ _ftl_io_free(struct ftl_io *io)
 	assert(LIST_EMPTY(&io->children));
 
 	if ((io->flags & FTL_IO_INTERNAL) && io->iov_cnt > 1) {
-		free(io->iovs);
+		free(io->iov.vector);
 	}
 
 	if (pthread_spin_destroy(&io->lock)) {
