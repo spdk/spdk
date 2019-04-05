@@ -8,9 +8,10 @@ enable_sgl=1
 time_based=1
 ramp_time=0
 runtime=2
-iodepth=4
+iodepth=128
 rw=randrw
 bs=16k
+verify=md5
 
 [test]
 numjobs=1
