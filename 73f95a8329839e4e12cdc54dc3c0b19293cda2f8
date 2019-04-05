@@ -1,0 +1,44 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8a8eb2cd_76e90167",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2839,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-05T01:00:11Z",
+      "side": 1,
+      "message": "\u003d\u003d 0 may be better?",
+      "range": {
+        "startLine": 2839,
+        "startChar": 33,
+        "endLine": 2839,
+        "endChar": 38
+      },
+      "revId": "73f95a8329839e4e12cdc54dc3c0b19293cda2f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "9cf332df_8bfa0b3b",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 20
+      },
+      "lineNbr": 2866,
+      "author": {
+        "id": 1012251
+      },
+      "writtenOn": "2019-04-05T01:00:11Z",
+      "side": 1,
+      "message": "unnecessary blank line?",
+      "revId": "73f95a8329839e4e12cdc54dc3c0b19293cda2f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
