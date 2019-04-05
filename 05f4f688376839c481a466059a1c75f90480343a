@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "deb00844_2c8d4dd3",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 19
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1014600
+      },
+      "writtenOn": "2019-04-05T12:39:31Z",
+      "side": 1,
+      "message": "Missing signed-off-by.",
+      "revId": "05f4f688376839c481a466059a1c75f90480343a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
