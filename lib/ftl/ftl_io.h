@@ -70,6 +70,8 @@ enum ftl_io_flags {
 	FTL_IO_VECTOR_LBA	= (1 << 7),
 	/* Indicates that IO is being retried */
 	FTL_IO_RETRY		= (1 << 8),
+	/* The IO is directed to non-volatile cache */
+	FTL_IO_CACHE		= (1 << 9),
 };
 
 enum ftl_io_type {
@@ -282,5 +284,6 @@ void *ftl_io_get_md(const struct ftl_io *io);
 void ftl_io_complete(struct ftl_io *io);
 void ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size);
 void ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
+void ftl_io_copy(struct ftl_io *dest, const struct ftl_io *src);
 
 #endif /* FTL_IO_H */
