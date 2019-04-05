@@ -97,7 +97,7 @@ spdk_gpt_base_free(void *ctx)
 {
 	struct gpt_base *gpt_base = ctx;
 
-	spdk_dma_free(gpt_base->gpt.buf);
+	spdk_free(gpt_base->gpt.buf);
 	free(gpt_base);
 }
 
@@ -147,7 +147,8 @@ spdk_gpt_base_bdev_init(struct spdk_bdev *bdev)
 	gpt = &gpt_base->gpt;
 	gpt->parse_phase = SPDK_GPT_PARSE_PHASE_PRIMARY;
 	gpt->buf_size = spdk_max(SPDK_GPT_BUFFER_SIZE, bdev->blocklen);
-	gpt->buf = spdk_dma_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev), NULL);
+	gpt->buf = spdk_zmalloc(gpt->buf_size, spdk_bdev_get_buf_align(bdev), NULL,
+				SPDK_ENV_LCORE_ID_ANY, SPDK_MALLOC_DMA);
 	if (!gpt->buf) {
 		SPDK_ERRLOG("Cannot alloc buf\n");
 		spdk_bdev_part_base_free(gpt_base->part_base);
