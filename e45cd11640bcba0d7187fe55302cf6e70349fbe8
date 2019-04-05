@@ -70,6 +70,30 @@
       "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "c64accf2_5078bbfe",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-05T11:18:02Z",
+      "side": 1,
+      "message": "I\u0027m not so sure about it. I\u0027ve looked at submit_erase logic and it is iterating over io-\u003elbk_cnt like submit_read. In my opinion it should rely on io-\u003eiov_cnt and has similar semantics like submit_write because in both cases we are jumping across chunks in band. Using iovec instead lbk_cnt seems more logical. Anyway we have little mess with this erase now. In ftl_band_erase we are iterating over chunks and creating single io erase for each chunk and in submit erase we are iterating over lbk_cnt trying to jump across band chunks. We should either create iovec with the number of chunks in the band in submit erase or allow only for single erase in submit_erase. This is of course subject for another patch.",
+      "parentUuid": "f24ccb51_bc3b44ea",
+      "range": {
+        "startLine": 257,
+        "startChar": 13,
+        "endLine": 257,
+        "endChar": 14
+      },
+      "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
