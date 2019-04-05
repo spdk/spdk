@@ -12,7 +12,7 @@ export ASAN_OPTIONS=new_delete_type_mismatch=0
 
 PS4=' \t	\$ '
 
-: ${RUN_NIGHTLY:=0}
+: ${RUN_NIGHTLY:=1}
 export RUN_NIGHTLY
 
 : ${RUN_NIGHTLY_FAILING:=0}
@@ -789,3 +789,4 @@ function freebsd_update_contigmem_mod()
 
 set -o errtrace
 trap "trap - ERR; print_backtrace >&2" ERR
+DATE='Fri Apr  5 05:00:43 MST 2019'
