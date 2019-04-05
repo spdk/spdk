@@ -16,6 +16,24 @@
       "revId": "a3049da160cc7cb98aa716234ca8e6c8e5eb8570",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8efcd8a4_0e2d0a2f",
+        "filename": "lib/nvme/nvme_tcp.c",
+        "patchSetId": 9
+      },
+      "lineNbr": 153,
+      "author": {
+        "id": 1011275
+      },
+      "writtenOn": "2019-04-05T00:29:20Z",
+      "side": 1,
+      "message": "Yes, JIM. You are right, the memset can be removed. I checked the code, we use iovcnt to determine the contents. Evenif it is not removed, it will not affect any thing.",
+      "parentUuid": "7d9dcab2_c2ad86bc",
+      "revId": "a3049da160cc7cb98aa716234ca8e6c8e5eb8570",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
