@@ -93,6 +93,30 @@
       "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49a61a66_f3fc1ff0",
+        "filename": "lib/bdev/ocf/env/ocf_env.h",
+        "patchSetId": 12
+      },
+      "lineNbr": 210,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-05T07:34:31Z",
+      "side": 1,
+      "message": "Actually, you are right, this should be the same as in env_rwsem_is_locked()\nExample was wrong, OCF uses correct version in their Linux implementation.\nI fixed this part.",
+      "parentUuid": "97f4083b_dbb1533a",
+      "range": {
+        "startLine": 210,
+        "startChar": 9,
+        "endLine": 210,
+        "endChar": 10
+      },
+      "revId": "cea8d32476dbcb31c4abb3dc8ee10eec2dbbbac6",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
