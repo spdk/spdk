@@ -75,6 +75,8 @@ DEFINE_STUB(spdk_nvme_ocssd_ns_cmd_vector_reset, int, (struct spdk_nvme_ns *ns,
 		struct spdk_nvme_qpair *qpair, uint64_t *lba_list, uint32_t num_lbas,
 		struct spdk_ocssd_chunk_information_entry *chunk_info,
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg), 0);
+DEFINE_STUB(spdk_bdev_desc_get_bdev, struct spdk_bdev *, (struct spdk_bdev_desc *dsc), NULL);
+DEFINE_STUB(spdk_bdev_get_num_blocks, uint64_t, (const struct spdk_bdev *bdev), 0);
 
 struct ftl_io *
 ftl_io_erase_init(struct ftl_band *band, size_t lbk_cnt, spdk_ftl_fn cb)
@@ -150,6 +152,7 @@ test_wptr(void)
 		ftl_band_set_state(band, FTL_BAND_STATE_OPENING);
 		ftl_band_set_state(band, FTL_BAND_STATE_OPEN);
 		io.band = band;
+		io.dev = dev;
 
 		for (lbk = 0, offset = 0; lbk < ftl_dev_lbks_in_chunk(dev) / xfer_size; ++lbk) {
 			for (chunk = 0; chunk < band->num_chunks; ++chunk) {
