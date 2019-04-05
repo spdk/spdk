@@ -36,6 +36,7 @@
 #include "spdk/nvme.h"
 #include "spdk/io_channel.h"
 #include "spdk/bdev_module.h"
+#include "spdk/string.h"
 #include "spdk_internal/log.h"
 #include "spdk/ftl.h"
 
@@ -195,7 +196,9 @@ static void
 ftl_md_write_cb(void *arg, int status)
 {
 	struct ftl_io *io = arg;
+	struct spdk_ftl_dev *dev = io->dev;
 	struct ftl_wptr *wptr;
+	struct spdk_bdev *bdev;
 
 	wptr = ftl_wptr_from_band(io->band);
 
@@ -206,6 +209,18 @@ ftl_md_write_cb(void *arg, int status)
 
 	ftl_band_set_next_state(io->band);
 	if (io->band->state == FTL_BAND_STATE_CLOSED) {
+		if (dev->cache_bdev_desc) {
+			bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+
+			pthread_spin_lock(&dev->cache_lock);
+			dev->cache_available += ftl_band_user_lbks(io->band);
+
+			if (spdk_unlikely(dev->cache_available > spdk_bdev_get_num_blocks(bdev))) {
+				dev->cache_available = spdk_bdev_get_num_blocks(bdev);
+			}
+			pthread_spin_unlock(&dev->cache_lock);
+		}
+
 		ftl_remove_wptr(wptr);
 	}
 }
@@ -850,6 +865,156 @@ ftl_process_flush(struct spdk_ftl_dev *dev, struct ftl_rwb_batch *batch)
 	}
 }
 
+static uint64_t
+ftl_reserve_nv_cache(struct spdk_ftl_dev *dev, size_t *num_lbks)
+{
+	struct spdk_bdev *bdev = spdk_bdev_desc_get_bdev(dev->cache_bdev_desc);
+	uint64_t num_available, cache_size, cache_addr = FTL_LBA_INVALID;
+
+	cache_size = spdk_bdev_get_num_blocks(bdev);
+
+	pthread_spin_lock(&dev->cache_lock);
+	if (spdk_unlikely(dev->cache_available == 0)) {
+		goto out;
+	}
+
+	num_available = spdk_min(dev->cache_available, *num_lbks);
+	if (spdk_unlikely(dev->cache_addr + num_available > cache_size)) {
+		*num_lbks = cache_size - dev->cache_addr;
+	} else {
+		*num_lbks = num_available;
+	}
+
+	cache_addr = dev->cache_addr;
+	dev->cache_addr += *num_lbks;
+	dev->cache_available -= *num_lbks;
+
+	if (dev->cache_addr == spdk_bdev_get_num_blocks(bdev)) {
+		dev->cache_addr = 0;
+	}
+out:
+	pthread_spin_unlock(&dev->cache_lock);
+	return cache_addr;
+}
+
+static struct ftl_io *
+ftl_alloc_io_nv_cache(struct ftl_io *parent, size_t num_lbks)
+{
+	struct ftl_io_init_opts opts = {
+		.dev		= parent->dev,
+		.parent		= parent,
+		.iov_cnt	= 1,
+		.data		= ftl_io_iovec_addr(parent),
+		.req_size	= num_lbks,
+		.flags		= FTL_IO_CACHE,
+	};
+
+	return ftl_io_init_internal(&opts);
+}
+
+static void
+ftl_nv_cache_submit_cb(struct spdk_bdev_io *bdev_io, bool success, void *cb_arg)
+{
+	struct ftl_io *io = cb_arg;
+
+	if (spdk_unlikely(!success)) {
+		SPDK_ERRLOG("Non-volatile cache write failed at %"PRIx64"\n", io->ppa.ppa);
+		io->status = -EIO;
+	}
+
+	ftl_io_dec_req(io);
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+
+	spdk_bdev_free_io(bdev_io);
+}
+
+static void
+ftl_submit_nv_cache(void *ctx)
+{
+	struct ftl_io *io = ctx;
+	struct spdk_ftl_dev *dev = io->dev;
+	struct spdk_thread *thread;
+	struct ftl_io_channel *ioch;
+	int rc;
+
+	ioch = spdk_io_channel_get_ctx(io->ioch);
+	thread = spdk_io_channel_get_thread(io->ioch);
+
+	rc = spdk_bdev_write_blocks(dev->cache_bdev_desc, ioch->cache_ioch,
+				    ftl_io_iovec_addr(io), io->ppa.ppa, io->lbk_cnt,
+				    ftl_nv_cache_submit_cb, io);
+	if (rc == -ENOMEM) {
+		spdk_thread_send_msg(thread, ftl_submit_nv_cache, io);
+		return;
+	} else if (rc) {
+		SPDK_ERRLOG("Write to persistent cache failed: %s (%"PRIu64", %"PRIu64")\n",
+			    spdk_strerror(-rc), io->ppa.ppa, io->lbk_cnt);
+		io->status = -EIO;
+		ftl_io_complete(io);
+		return;
+	}
+
+	ftl_io_inc_req(io);
+}
+
+static void
+_ftl_write_nv_cache(void *ctx)
+{
+	struct ftl_io *child, *io = ctx;
+	struct spdk_ftl_dev *dev = io->dev;
+	struct spdk_thread *thread;
+	uint64_t cache_addr, num_lbks;
+
+	thread = spdk_io_channel_get_thread(io->ioch);
+
+	while (io->pos < io->lbk_cnt) {
+		num_lbks = ftl_io_iovec_len_left(io);
+
+		child = ftl_alloc_io_nv_cache(io, num_lbks);
+		if (spdk_unlikely(!child)) {
+			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
+			return;
+		}
+
+		child->ppa.ppa = cache_addr = ftl_reserve_nv_cache(dev, &num_lbks);
+		if (cache_addr == FTL_LBA_INVALID) {
+			ftl_io_free(child);
+			spdk_thread_send_msg(thread, _ftl_write_nv_cache, io);
+			return;
+		}
+
+		if (spdk_unlikely(num_lbks != ftl_io_iovec_len_left(io))) {
+			ftl_io_shrink_iovec(child, ftl_io_iovec_addr(child), 1, num_lbks);
+		}
+
+		ftl_submit_nv_cache(child);
+		ftl_io_update_iovec(io, num_lbks);
+	}
+
+	if (ftl_io_done(io)) {
+		ftl_io_complete(io);
+	}
+}
+
+static int
+ftl_write_nv_cache(struct ftl_io *parent)
+{
+	struct ftl_io *io;
+
+	io = ftl_io_alloc_child(parent);
+	if (spdk_unlikely(!io)) {
+		return -EAGAIN;
+	}
+
+	ftl_io_copy(io, parent);
+	io->flags |= FTL_IO_CACHE;
+	_ftl_write_nv_cache(io);
+
+	return 0;
+}
+
 static void
 ftl_write_fail(struct ftl_io *io, int status)
 {
@@ -1150,6 +1315,7 @@ ftl_rwb_entry_fill(struct ftl_rwb_entry *entry, struct ftl_io *io)
 	}
 
 	entry->trace = io->trace;
+	entry->lba = ftl_io_current_lba(io);
 
 	if (entry->md) {
 		memcpy(entry->md, &entry->lba, sizeof(uint64_t));
@@ -1163,11 +1329,9 @@ ftl_rwb_fill(struct ftl_io *io)
 	struct ftl_rwb_entry *entry;
 	struct ftl_ppa ppa = { .cached = 1 };
 	int flags = ftl_rwb_flags_from_io(io);
-	uint64_t lba;
 
 	while (io->pos < io->lbk_cnt) {
-		lba = ftl_io_current_lba(io);
-		if (lba == FTL_LBA_INVALID) {
+		if (ftl_io_current_lba(io) == FTL_LBA_INVALID) {
 			ftl_io_update_iovec(io, 1);
 			continue;
 		}
@@ -1177,14 +1341,13 @@ ftl_rwb_fill(struct ftl_io *io)
 			return -EAGAIN;
 		}
 
-		entry->lba = lba;
 		ftl_rwb_entry_fill(entry, io);
 
 		ppa.offset = entry->pos;
 
 		ftl_trace_rwb_fill(dev, io);
-		ftl_io_update_iovec(io, 1);
 		ftl_update_l2p(dev, entry, ppa);
+		ftl_io_update_iovec(io, 1);
 
 		/* Needs to be done after L2P is updated to avoid race with */
 		/* write completion callback when it's processed faster than */
@@ -1192,7 +1355,14 @@ ftl_rwb_fill(struct ftl_io *io)
 		ftl_rwb_push(entry);
 	}
 
-	ftl_io_complete(io);
+	if (ftl_io_done(io)) {
+		if (dev->cache_bdev_desc && ftl_write_nv_cache(io)) {
+			return -EAGAIN;
+		}
+
+		ftl_io_complete(io);
+	}
+
 	return 0;
 }
 

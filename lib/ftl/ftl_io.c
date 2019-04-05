@@ -45,7 +45,7 @@ ftl_io_inc_req(struct ftl_io *io)
 {
 	struct ftl_band *band = io->band;
 
-	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
+	if (!(io->flags & FTL_IO_CACHE) && io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
 		ftl_band_acquire_md(band);
 	}
 
@@ -60,7 +60,7 @@ ftl_io_dec_req(struct ftl_io *io)
 	struct ftl_band *band = io->band;
 	unsigned long num_inflight __attribute__((unused));
 
-	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
+	if (!(io->flags & FTL_IO_CACHE) && io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
 		ftl_band_release_md(band);
 	}
 
@@ -463,6 +463,20 @@ ftl_io_clear(struct ftl_io *io)
 	io->flags = 0;
 	io->rwb_batch = NULL;
 	io->band = NULL;
+}
+
+void
+ftl_io_copy(struct ftl_io *dest, const struct ftl_io *src)
+{
+	dest->dev = src->dev;
+	dest->ioch = src->ioch;
+	dest->lba = src->lba;
+	dest->iov = src->iov;
+	dest->iov_cnt = src->iov_cnt;
+	dest->lbk_cnt = src->lbk_cnt;
+	dest->flags = src->flags & (~FTL_IO_KEEP_ALIVE);
+	dest->ppa = src->ppa;
+	dest->md = src->md;
 }
 
 void
