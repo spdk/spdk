@@ -384,7 +384,7 @@ git -C spdk_repo/spdk config submodule.intel-ipsec-mb.url "${GIT_REPO_INTEL_IPSE
 git -C spdk_repo/spdk submodule update --init --recursive
 
 if $INSTALL; then
-    sudo spdk_repo/spdk/scripts/pkgdep.sh -i
+    sudo spdk_repo/spdk/scripts/pkgdep.sh
 
     if echo $CONF | grep -q tsocks; then
         sudo dnf install -y tsocks
