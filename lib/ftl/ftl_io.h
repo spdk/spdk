@@ -144,11 +144,11 @@ struct ftl_io {
 
 	union {
 		/* LBA table */
-		uint64_t			*lbas;
+		uint64_t			*vector;
 
 		/* First LBA */
-		uint64_t			lba;
-	};
+		uint64_t			single;
+	} lba;
 
 	/* First PPA */
 	struct ftl_ppa				ppa;
@@ -161,11 +161,11 @@ struct ftl_io {
 
 	union {
 		/* IO vector table */
-		struct iovec			*iovs;
+		struct iovec			*vector;
 
 		/* Single iovec */
-		struct iovec			iov;
-	};
+		struct iovec			single;
+	} iov;
 
 	/* Metadata */
 	void					*md;
@@ -266,7 +266,8 @@ void ftl_io_clear(struct ftl_io *io);
 void ftl_io_inc_req(struct ftl_io *io);
 void ftl_io_dec_req(struct ftl_io *io);
 struct iovec *ftl_io_iovec(struct ftl_io *io);
-uint64_t ftl_io_current_lba(struct ftl_io *io);
+uint64_t ftl_io_current_lba(const struct ftl_io *io);
+uint64_t ftl_io_next_lba(const struct ftl_io *io, size_t offset);
 void ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt);
 size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
