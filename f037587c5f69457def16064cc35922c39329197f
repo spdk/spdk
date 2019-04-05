@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "1ef340ac_e20e31e6",
+        "filename": "test/vhost/initiator/blockdev.sh",
+        "patchSetId": 2
+      },
+      "lineNbr": 70,
+      "author": {
+        "id": 1011256
+      },
+      "writtenOn": "2019-04-05T07:21:25Z",
+      "side": 1,
+      "message": "Theres no need to have additional variables for flag.\nIf you don\u0027t want to mask targetcli delete commands with || true, then you can get rid of flag variables by doing this for example:\n\nif targetcli ls /backstores/$targetcli_rd_name/ramdisk\n\nif it\u0027s not there, then you won\u0027t enter the if block.",
+      "range": {
+        "startLine": 70,
+        "startChar": 4,
+        "endLine": 70,
+        "endChar": 20
+      },
+      "revId": "f037587c5f69457def16064cc35922c39329197f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
