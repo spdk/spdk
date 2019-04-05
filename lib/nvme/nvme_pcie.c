@@ -1238,7 +1238,7 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	req = tr->req;
 	assert(req != NULL);
 
-	pqpair->tr[tr->cid].active = true;
+	tr->active = true;
 
 	/* Copy the command from the tracker to the submission queue. */
 	nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
@@ -1278,8 +1278,8 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		nvme_qpair_print_completion(qpair, cpl);
 	}
 
-	was_active = pqpair->tr[cpl->cid].active;
-	pqpair->tr[cpl->cid].active = false;
+	was_active = tr->active;
+	tr->active = false;
 
 	assert(cpl->cid == req->cmd.cid);
 
