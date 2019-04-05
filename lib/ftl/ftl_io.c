@@ -45,7 +45,7 @@ ftl_io_inc_req(struct ftl_io *io)
 {
 	struct ftl_band *band = io->band;
 
-	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
+	if (!(io->flags & FTL_IO_CACHE) && io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
 		ftl_band_acquire_md(band);
 	}
 
@@ -60,7 +60,7 @@ ftl_io_dec_req(struct ftl_io *io)
 	struct ftl_band *band = io->band;
 	unsigned long num_inflight __attribute__((unused));
 
-	if (io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
+	if (!(io->flags & FTL_IO_CACHE) && io->type != FTL_IO_READ && io->type != FTL_IO_ERASE) {
 		ftl_band_release_md(band);
 	}
 
@@ -175,12 +175,38 @@ ftl_io_init_iovec(struct ftl_io *io, void *buf,
 
 	io->iov_pos = 0;
 	io->iov_cnt = iov_cnt;
+	io->lbk_cnt = iov_cnt * req_size;
+
 	for (i = 0; i < iov_cnt; ++i) {
 		iov[i].iov_base = (char *)buf + i * req_size * PAGE_SIZE;
 		iov[i].iov_len = req_size * PAGE_SIZE;
 	}
 
 	return 0;
+}
+
+void
+ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size)
+{
+	struct iovec *iov;
+	size_t i;
+
+	assert(io->iov_cnt >= iov_cnt);
+	assert(io->lbk_cnt >= iov_cnt * req_size);
+	assert(io->pos == 0 && io->iov_pos == 0 && io->iov_off == 0);
+
+	if (iov_cnt == 1 && io->iov_cnt > 1) {
+		free(io->iov.vector);
+	}
+
+	io->iov_cnt = iov_cnt;
+	io->lbk_cnt = iov_cnt * req_size;
+
+	iov = ftl_io_iovec(io);
+	for (i = 0; i < iov_cnt; ++i) {
+		iov[i].iov_base = (char *)buf + i * req_size * PAGE_SIZE;
+		iov[i].iov_len = req_size * PAGE_SIZE;
+	}
 }
 
 static void
@@ -218,7 +244,6 @@ ftl_io_init_internal(const struct ftl_io_init_opts *opts)
 	ftl_io_clear(io);
 	ftl_io_init(io, dev, opts->fn, io, opts->flags | FTL_IO_INTERNAL, opts->type);
 
-	io->lbk_cnt = opts->iov_cnt * opts->req_size;
 	io->rwb_batch = opts->rwb_batch;
 	io->band = opts->band;
 	io->md = opts->md;
@@ -443,12 +468,27 @@ void
 ftl_io_clear(struct ftl_io *io)
 {
 	io->pos = 0;
-	io->req_cnt = 0;
 	io->iov_pos = 0;
 	io->iov_off = 0;
+	io->done = false;
+	io->req_cnt = 0;
 	io->flags = 0;
 	io->rwb_batch = NULL;
 	io->band = NULL;
+}
+
+void
+ftl_io_copy(struct ftl_io *dest, const struct ftl_io *src)
+{
+	dest->dev = src->dev;
+	dest->ioch = src->ioch;
+	dest->lba = src->lba;
+	dest->iov = src->iov;
+	dest->iov_cnt = src->iov_cnt;
+	dest->lbk_cnt = src->lbk_cnt;
+	dest->flags = src->flags & (~FTL_IO_KEEP_ALIVE);
+	dest->ppa = src->ppa;
+	dest->md = src->md;
 }
 
 void
