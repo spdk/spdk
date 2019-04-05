@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "8baf30ea_8cca4ba4",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 257,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-05T08:05:22Z",
+      "side": 1,
+      "message": "What\u0027s the point of this change? There\u0027s no iovec for the erase commands.",
+      "range": {
+        "startLine": 257,
+        "startChar": 13,
+        "endLine": 257,
+        "endChar": 14
+      },
+      "revId": "e45cd11640bcba0d7187fe55302cf6e70349fbe8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
