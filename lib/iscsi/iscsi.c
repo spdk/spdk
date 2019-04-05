@@ -3315,12 +3315,12 @@ _iscsi_conn_abort_queued_datain_task(struct spdk_iscsi_conn *conn,
 			subtask->scsi.transfer_len = subtask->scsi.length;
 			spdk_scsi_task_process_abort(&subtask->scsi);
 			spdk_iscsi_task_cpl(&subtask->scsi);
+		}
 
-			/* Remove the primary task from the list if this is the last subtask */
-			if (task->current_datain_offset == task->scsi.transfer_len) {
-				TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
-				return 0;
-			}
+		/* Remove the primary task from the list if this is the last subtask */
+		if (task->current_datain_offset == task->scsi.transfer_len) {
+			TAILQ_REMOVE(&conn->queued_datain_tasks, task, link);
+			return 0;
 		}
 	}
 
