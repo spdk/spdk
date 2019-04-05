@@ -121,8 +121,11 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	union nvmf_h2c_msg cmd;
 	struct spdk_nvme_sgl_descriptor *sgl;
 	struct spdk_nvmf_transport_pg_cache_buf bufs[4];
+	struct spdk_nvme_sgl_descriptor sgl_desc[SPDK_NVMF_MAX_SGL_ENTRIES] = {{0}};
+	struct spdk_nvmf_rdma_request_data data;
 	int rc, i;
 
+	data.wr.sg_list = data.sgl;
 	STAILQ_INIT(&group.group.buf_cache);
 	group.group.buf_cache_size = 0;
 	group.group.buf_cache_count = 0;
@@ -242,7 +245,102 @@ test_spdk_nvmf_rdma_request_parse_sgl(void)
 	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
 
 	CU_ASSERT(rc == -1);
-	/* Test 3: use PG buffer cache */
+
+	/* Test 3: Multi SGL */
+	sgl->generic.type = SPDK_NVME_SGL_TYPE_LAST_SEGMENT;
+	sgl->unkeyed.subtype = SPDK_NVME_SGL_SUBTYPE_OFFSET;
+	sgl->address = 0;
+	rdma_req.recv->buf = (void *)&sgl_desc;
+	MOCK_SET(spdk_mempool_get, &data);
+
+	/* part 1: 2 segments each with 1 wr. */
+	reset_nvmf_rdma_request(&rdma_req);
+	sgl->unkeyed.length = 2 * sizeof(struct spdk_nvme_sgl_descriptor);
+	for (i = 0; i < 2; i++) {
+		sgl_desc[i].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		sgl_desc[i].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		sgl_desc[i].keyed.length = rtransport.transport.opts.io_unit_size;
+		sgl_desc[i].address = 0x4000 + i * rtransport.transport.opts.io_unit_size;
+		sgl_desc[i].keyed.key = 0x44;
+	}
+
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rdma_req.data_from_pool == true);
+	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 2);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 1);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
+	CU_ASSERT(rdma_req.data.wr.next == &data.wr);
+	CU_ASSERT(data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(data.wr.wr.rdma.remote_addr == 0x4000 + rtransport.transport.opts.io_unit_size);
+	CU_ASSERT(data.wr.num_sge == 1);
+	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
+
+	/* part 2: 2 segments, each with 1 wr containing 8 sge_elements */
+	reset_nvmf_rdma_request(&rdma_req);
+	sgl->unkeyed.length = 2 * sizeof(struct spdk_nvme_sgl_descriptor);
+	for (i = 0; i < 2; i++) {
+		sgl_desc[i].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		sgl_desc[i].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		sgl_desc[i].keyed.length = rtransport.transport.opts.io_unit_size * 8;
+		sgl_desc[i].address = 0x4000 + i * 8 * rtransport.transport.opts.io_unit_size;
+		sgl_desc[i].keyed.key = 0x44;
+	}
+
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rdma_req.data_from_pool == true);
+	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 16);
+	CU_ASSERT(rdma_req.req.iovcnt == 16);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 8);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
+	CU_ASSERT(rdma_req.data.wr.next == &data.wr);
+	CU_ASSERT(data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(data.wr.wr.rdma.remote_addr == 0x4000 + rtransport.transport.opts.io_unit_size * 8);
+	CU_ASSERT(data.wr.num_sge == 8);
+	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
+
+	/* part 3: 2 segments, one very large, one very small */
+	reset_nvmf_rdma_request(&rdma_req);
+	for (i = 0; i < 2; i++) {
+		sgl_desc[i].keyed.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
+		sgl_desc[i].keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
+		sgl_desc[i].keyed.key = 0x44;
+	}
+
+	sgl_desc[0].keyed.length = rtransport.transport.opts.io_unit_size * 15 +
+				   rtransport.transport.opts.io_unit_size / 2;
+	sgl_desc[0].address = 0x4000;
+	sgl_desc[1].keyed.length = rtransport.transport.opts.io_unit_size / 2;
+	sgl_desc[1].address = 0x4000 + rtransport.transport.opts.io_unit_size * 15 +
+			      rtransport.transport.opts.io_unit_size / 2;
+
+	rc = spdk_nvmf_rdma_request_parse_sgl(&rtransport, &device, &rdma_req);
+
+	CU_ASSERT(rc == 0);
+	CU_ASSERT(rdma_req.data_from_pool == true);
+	CU_ASSERT(rdma_req.req.length == rtransport.transport.opts.io_unit_size * 16);
+	CU_ASSERT(rdma_req.req.iovcnt == 17);
+	CU_ASSERT(rdma_req.data.wr.num_sge == 16);
+	for (i = 0; i < 15; i++) {
+		CU_ASSERT(rdma_req.data.sgl[i].length == rtransport.transport.opts.io_unit_size);
+	}
+	CU_ASSERT(rdma_req.data.sgl[15].length == rtransport.transport.opts.io_unit_size / 2);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(rdma_req.data.wr.wr.rdma.remote_addr == 0x4000);
+	CU_ASSERT(rdma_req.data.wr.next == &data.wr);
+	CU_ASSERT(data.wr.wr.rdma.rkey == 0x44);
+	CU_ASSERT(data.wr.wr.rdma.remote_addr == 0x4000 + rtransport.transport.opts.io_unit_size * 15 +
+		  rtransport.transport.opts.io_unit_size / 2);
+	CU_ASSERT(data.sgl[0].length == rtransport.transport.opts.io_unit_size / 2);
+	CU_ASSERT(data.wr.num_sge == 1);
+	CU_ASSERT(data.wr.next == &rdma_req.rsp.wr);
+
+	/* Test 4: use PG buffer cache */
 	sgl->generic.type = SPDK_NVME_SGL_TYPE_KEYED_DATA_BLOCK;
 	sgl->keyed.subtype = SPDK_NVME_SGL_SUBTYPE_ADDRESS;
 	sgl->address = 0xFFFF;
