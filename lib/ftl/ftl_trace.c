@@ -224,7 +224,7 @@ ftl_trace_lba_io_init(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 		}
 	}
 
-	spdk_trace_record(tpoint_id, io->trace, io->lbk_cnt, 0, io->lba);
+	spdk_trace_record(tpoint_id, io->trace, io->lbk_cnt, 0, ftl_io_current_lba(io));
 }
 
 void
@@ -233,7 +233,7 @@ ftl_trace_rwb_fill(struct spdk_ftl_dev *dev, const struct ftl_io *io)
 	assert(io->trace != FTL_TRACE_INVALID_ID);
 
 	spdk_trace_record(FTL_TRACE_WRITE_RWB_FILL(ftl_trace_io_source(io)), io->trace,
-			  0, 0, io->lba + io->pos);
+			  0, 0, ftl_io_current_lba(io));
 }
 
 void
@@ -257,9 +257,12 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 		     enum ftl_trace_completion completion)
 {
 	uint16_t tpoint_id = 0, source;
+	size_t offset;
 
 	assert(io->trace != FTL_TRACE_INVALID_ID);
 	source = ftl_trace_io_source(io);
+
+	offset = io->pos < io->lbk_cnt ? io->pos : io->lbk_cnt - 1;
 
 	if (io->flags & FTL_IO_MD) {
 		switch (io->type) {
@@ -298,7 +301,7 @@ ftl_trace_completion(struct spdk_ftl_dev *dev, const struct ftl_io *io,
 		}
 	}
 
-	spdk_trace_record(tpoint_id, io->trace, 0, 0, io->lba);
+	spdk_trace_record(tpoint_id, io->trace, 0, 0, ftl_io_get_lba(io, offset));
 }
 
 void
