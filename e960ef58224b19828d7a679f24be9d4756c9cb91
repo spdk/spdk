@@ -82,6 +82,74 @@
     },
     {
       "key": {
+        "uuid": "88862b10_6d6df035",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 146,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-04-06T18:26:15Z",
+      "side": 1,
+      "message": "NULL return value should tested",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9219f4de_d002f173",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 147,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-04-06T18:26:15Z",
+      "side": 1,
+      "message": "strdup can return NULL pointer",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "8283fe88_8d872cfa",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 187,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-04-06T18:26:15Z",
+      "side": 1,
+      "message": "strdup function can return error (NULL value)",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3bd98422_bff5602c",
+        "filename": "lib/event/app.c",
+        "patchSetId": 24
+      },
+      "lineNbr": 827,
+      "author": {
+        "id": 1014643
+      },
+      "writtenOn": "2019-04-06T18:26:15Z",
+      "side": 1,
+      "message": "Other messages in the source file don\u0027t have ending \".\" char.",
+      "revId": "e960ef58224b19828d7a679f24be9d4756c9cb91",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "1d359568_dbcbfa5d",
         "filename": "test/unit/lib/event/app.c/app_ut.c",
         "patchSetId": 24
