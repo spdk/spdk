@@ -1,0 +1,9 @@
+<network>
+    <name></name>
+    <bridge name="windows_test_br" />
+    <forward />
+    <ip address="192.200.200.1" netmask="255.255.255.0">
+        <dhcp><range end="192.200.200.254" start="192.200.200.2" /></dhcp>
+    </ip>
+</network>
+
