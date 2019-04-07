@@ -1,0 +1,27 @@
+[Global]
+  LogFacility "local7"
+
+[Rpc]
+  Enable Yes
+
+[Ioat]
+  Disable Yes
+
+[Malloc]
+  NumberOfLuns 2
+  LunSizeInMB 256
+  BlockSize 4096
+
+[AIO]
+  AIO /tmp/aio.disk AIO0 512
+
+[Split]
+  # Split Nvme1n1 2 4096
+  Split Malloc1 2 128
+
+[VhostScsi0]
+  Name vhost.0
+  Target 0 Nvme0n1
+  # Target 1 Nvme1n1p0
+  Target 1 Malloc0
+  Target 2 Malloc1p0
