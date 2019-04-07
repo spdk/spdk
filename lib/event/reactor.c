@@ -371,7 +371,7 @@ spdk_reactor_schedule_thread(struct spdk_thread *thread)
 	memset(lw_thread, 0, sizeof(*lw_thread));
 
 	pthread_mutex_lock(&g_scheduler_mtx);
-	if (g_next_core > spdk_env_get_core_count()) {
+	if (g_next_core > spdk_env_get_last_core()) {
 		g_next_core = spdk_env_get_first_core();
 	}
 	core = g_next_core;
