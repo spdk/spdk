@@ -1291,9 +1291,9 @@ iscsi_parse_globals(void)
 		return rc;
 	}
 
-	g_spdk_iscsi.session = spdk_dma_zmalloc(sizeof(void *) * g_spdk_iscsi.MaxSessions, 0, NULL);
+	g_spdk_iscsi.session = calloc(1, sizeof(void *) * g_spdk_iscsi.MaxSessions);
 	if (!g_spdk_iscsi.session) {
-		SPDK_ERRLOG("spdk_dma_zmalloc() failed for session array\n");
+		SPDK_ERRLOG("calloc() failed for session array\n");
 		return -1;
 	}
 
@@ -1308,12 +1308,14 @@ iscsi_parse_globals(void)
 	rc = iscsi_initialize_all_pools();
 	if (rc != 0) {
 		SPDK_ERRLOG("spdk_initialize_all_pools() failed\n");
+		free(g_spdk_iscsi.session);
 		return -1;
 	}
 
 	rc = spdk_initialize_iscsi_conns();
 	if (rc < 0) {
 		SPDK_ERRLOG("spdk_initialize_iscsi_conns() failed\n");
+		free(g_spdk_iscsi.session);
 		return rc;
 	}
 
@@ -1351,6 +1353,7 @@ spdk_iscsi_fini(spdk_iscsi_fini_cb cb_fn, void *cb_arg)
 
 	spdk_iscsi_portal_grp_close_all();
 	spdk_shutdown_iscsi_conns();
+	free(g_spdk_iscsi.session);
 }
 
 static void
