@@ -1,0 +1,72 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "eea4bbbd_713c3300",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4829,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-08T21:38:58Z",
+      "side": 1,
+      "message": "does the locked flag need to be cleared here?",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5b3809f0_eec360ad",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 5042,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-08T21:38:58Z",
+      "side": 1,
+      "message": "see below",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "a3f73bfa_e7aafa1c",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 5046,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-08T21:38:58Z",
+      "side": 1,
+      "message": "do we need to clear the locked flag here?",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "87b8f6d4_fb005537",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 5101,
+      "author": {
+        "id": 1011222
+      },
+      "writtenOn": "2019-04-08T21:38:58Z",
+      "side": 1,
+      "message": "I think you need to set the locked flag here.  Otherwise someone could create a new clone while you\u0027re waiting for this blob to open.\n\nWe really need some good unit tests for this code.",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
