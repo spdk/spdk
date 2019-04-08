@@ -139,9 +139,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 		return -EINVAL;
 	}
 
-	size = RTE_ALIGN_CEIL(sizeof(*vq) +
-			      vq_size * sizeof(struct vq_desc_extra),
-			      RTE_CACHE_LINE_SIZE);
+	size = sizeof(*vq) + vq_size * sizeof(struct vq_desc_extra);
 
 	vq = spdk_dma_zmalloc(size, RTE_CACHE_LINE_SIZE, NULL);
 	if (vq == NULL) {
