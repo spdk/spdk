@@ -55,9 +55,9 @@
  * NVME_MAX_SGL_DESCRIPTORS defines the maximum number of descriptors in one SGL
  *  segment.
  */
-#define NVME_MAX_SGL_DESCRIPTORS	(253)
+#define NVME_MAX_SGL_DESCRIPTORS	(251)
 
-#define NVME_MAX_PRP_LIST_ENTRIES	(506)
+#define NVME_MAX_PRP_LIST_ENTRIES	(505)
 
 struct nvme_pcie_enum_ctx {
 	struct spdk_nvme_probe_ctx *probe_ctx;
@@ -114,11 +114,11 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint16_t			rsvd1;
+	uint16_t			rsvd0;
+	uint32_t			rsvd1;
 
-	uint32_t			rsvd2;
-
-	uint64_t			rsvd3;
+	spdk_nvme_cmd_cb		cb_fn;
+	void				*cb_arg;
 
 	uint64_t			prp_sgl_bus_addr;
 
@@ -1153,7 +1153,7 @@ nvme_pcie_qpair_complete_pending_admin_request(struct spdk_nvme_qpair *qpair)
 
 		assert(req->pid == pid);
 
-		nvme_complete_request(req, &req->cpl);
+		nvme_complete_request(req->cb_fn, req->cb_arg, req, &req->cpl);
 		nvme_free_request(req);
 	}
 }
@@ -1286,7 +1286,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 			req_from_current_proc = false;
 			nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
 		} else {
-			nvme_complete_request(req, cpl);
+			nvme_complete_request(tr->cb_fn, tr->cb_arg, req, cpl);
 		}
 
 		if (req_from_current_proc == true) {
@@ -2003,6 +2003,8 @@ nvme_pcie_qpair_submit_request(struct spdk_nvme_qpair *qpair, struct nvme_reques
 	TAILQ_REMOVE(&pqpair->free_tr, tr, tq_list); /* remove tr from free_tr */
 	TAILQ_INSERT_TAIL(&pqpair->outstanding_tr, tr, tq_list);
 	tr->req = req;
+	tr->cb_fn = req->cb_fn;
+	tr->cb_arg = req->cb_arg;
 	req->cmd.cid = tr->cid;
 
 	if (req->payload_size && req->payload.md) {

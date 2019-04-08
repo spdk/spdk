@@ -209,7 +209,7 @@ static void
 nvme_rdma_req_complete(struct nvme_request *req,
 		       struct spdk_nvme_cpl *rsp)
 {
-	nvme_complete_request(req, rsp);
+	nvme_complete_request(req->cb_fn, req->cb_arg, req, rsp);
 	nvme_free_request(req);
 }
 

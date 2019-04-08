@@ -908,7 +908,8 @@ struct nvme_request *nvme_allocate_request_user_copy(struct spdk_nvme_qpair *qpa
 		spdk_nvme_cmd_cb cb_fn, void *cb_arg, bool host_to_controller);
 
 static inline void
-nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
+nvme_complete_request(spdk_nvme_cmd_cb cb_fn, void *cb_arg,
+		      struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 {
 	struct spdk_nvme_qpair          *qpair = req->qpair;
 	struct spdk_nvme_cpl            err_cpl;
@@ -938,8 +939,8 @@ nvme_complete_request(struct nvme_request *req, struct spdk_nvme_cpl *cpl)
 		}
 	}
 
-	if (req->cb_fn) {
-		req->cb_fn(req->cb_arg, cpl);
+	if (cb_fn) {
+		cb_fn(cb_arg, cpl);
 	}
 }
 
