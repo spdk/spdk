@@ -98,7 +98,7 @@ struct spdk_vhost_scsi_dev {
 
 	/* The CPU chosen to poll I/O of all active vhost sessions */
 	int32_t lcore;
-} __rte_cache_aligned;
+};
 
 /** Context for a SCSI target in a vhost session */
 struct spdk_scsi_dev_session_state {
@@ -831,8 +831,7 @@ to_scsi_session(struct spdk_vhost_session *vsession)
 int
 spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 {
-	struct spdk_vhost_scsi_dev *svdev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_scsi_dev),
-					    SPDK_CACHE_LINE_SIZE, NULL);
+	struct spdk_vhost_scsi_dev *svdev = calloc(1, sizeof(*svdev));
 	int rc;
 
 	if (svdev == NULL) {
@@ -844,7 +843,7 @@ spdk_vhost_scsi_dev_construct(const char *name, const char *cpumask)
 				     &spdk_vhost_scsi_device_backend);
 
 	if (rc) {
-		spdk_dma_free(svdev);
+		free(svdev);
 	}
 
 	spdk_vhost_unlock();
@@ -881,7 +880,7 @@ spdk_vhost_scsi_dev_remove(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
-	spdk_dma_free(svdev);
+	free(svdev);
 	return 0;
 }
 
@@ -1226,7 +1225,7 @@ free_task_pool(struct spdk_vhost_scsi_session *svsession)
 			continue;
 		}
 
-		spdk_dma_free(vq->tasks);
+		spdk_free(vq->tasks);
 		vq->tasks = NULL;
 	}
 }
