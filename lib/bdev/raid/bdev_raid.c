@@ -64,11 +64,11 @@ struct raid_all_tailq		g_raid_bdev_list;
 struct raid_offline_tailq	g_raid_bdev_offline_list;
 
 /* Function declarations */
-static void   raid_bdev_examine(struct spdk_bdev *bdev);
-static int    raid_bdev_init(void);
-static void   raid_bdev_waitq_io_process(void *ctx);
-static void   raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
-
+static void	raid_bdev_examine(struct spdk_bdev *bdev);
+static int	raid_bdev_init(void);
+static void	raid_bdev_waitq_io_process(void *ctx);
+static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
+static void	raid_bdev_remove_base_bdev(void *ctx);
 
 /*
  * brief:
@@ -1778,7 +1778,7 @@ raid_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct raid_bdev **_rai
  * returns:
  * none
  */
-void
+static void
 raid_bdev_remove_base_bdev(void *ctx)
 {
 	struct spdk_bdev	*base_bdev = ctx;
@@ -1811,6 +1811,33 @@ raid_bdev_remove_base_bdev(void *ctx)
 	}
 
 	raid_bdev_deconfigure(raid_bdev);
+}
+
+/*
+ * brief:
+ * Remove base bdevs from the raid bdev one by one.  Skip any base bdev which
+ *  doesn't exist.
+ * params:
+ * raid_cfg - pointer to raid bdev config.
+ */
+void
+raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
+{
+	struct spdk_bdev	*base_bdev;
+	uint8_t			i;
+
+	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_devices\n");
+
+	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
+		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].name);
+		if (base_bdev == NULL) {
+			SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "base bdev %s doesn't exist now\n",
+				      raid_cfg->base_bdev[i].name);
+			continue;
+		}
+
+		raid_bdev_remove_base_bdev(base_bdev);
+	}
 }
 
 /*
