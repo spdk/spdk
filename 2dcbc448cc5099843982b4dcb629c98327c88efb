@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "5a11a579_03eb5128",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 103,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e This goes unused",
+      "parentUuid": "b02d176d_37e8247b",
+      "range": {
+        "startLine": 103,
+        "startChar": 0,
+        "endLine": 103,
+        "endChar": 16
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "1e09ecfa_838516d3",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 65
@@ -88,6 +112,30 @@
     },
     {
       "key": {
+        "uuid": "a5ff65e0_e761d139",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1100,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e Shouldn\u0027t we cleanup the application session in case of failure ?",
+      "parentUuid": "13c2c936_6ec995aa",
+      "range": {
+        "startLine": 1099,
+        "startChar": 0,
+        "endLine": 1100,
+        "endChar": 49
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "8a75aafe_dd7e457f",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 65
@@ -111,6 +159,30 @@
     },
     {
       "key": {
+        "uuid": "f72cc7e9_d163ebd9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1209,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e Do we need to support all of those ?\n \u003e I thought that at least for SSVM_SEGMENT_SHM, the support for it is\n \u003e not needed if we do MEMFD.",
+      "parentUuid": "8a75aafe_dd7e457f",
+      "range": {
+        "startLine": 1184,
+        "startChar": 0,
+        "endLine": 1209,
+        "endChar": 2
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "ec283eb7_1b782fe7",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 65
@@ -122,6 +194,30 @@
       "writtenOn": "2019-03-19T14:29:57Z",
       "side": 1,
       "message": "We should fail here properly by doing most of what is done in _spdk_vpp_application_detached() [poller unregister, clean up and net_framework init next]",
+      "range": {
+        "startLine": 1213,
+        "startChar": 0,
+        "endLine": 1215,
+        "endChar": 8
+      },
+      "revId": "2dcbc448cc5099843982b4dcb629c98327c88efb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b4f55705_a8cfb5b9",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 65
+      },
+      "lineNbr": 1215,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e We should fail here properly by doing most of what is done in\n \u003e _spdk_vpp_application_detached() [poller unregister, clean up and\n \u003e net_framework init next]",
+      "parentUuid": "ec283eb7_1b782fe7",
       "range": {
         "startLine": 1213,
         "startChar": 0,

@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "941896c1_76d6d073",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 65,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e Have you verified we actually need all those includes ?",
+      "parentUuid": "ae68ca78_593f798d",
+      "range": {
+        "startLine": 46,
+        "startChar": 0,
+        "endLine": 65,
+        "endChar": 18
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "f9980609_e2ffd656",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -209,6 +233,30 @@
     },
     {
       "key": {
+        "uuid": "9fc8184c_1b6c32ec",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1290,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e See below.",
+      "parentUuid": "e59f8070_c283619e",
+      "range": {
+        "startLine": 1279,
+        "startChar": 0,
+        "endLine": 1290,
+        "endChar": 43
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9e1c6827_ec04c00d",
         "filename": "lib/sock/vpp/vpp.c",
         "patchSetId": 64
@@ -266,6 +314,30 @@
       "writtenOn": "2019-03-19T10:44:28Z",
       "side": 1,
       "message": "All that we do is set limited number of _t_handlers. Can we change this and define above this function to simpler vl_msg_api_set_handlers() direct calls ?\nSince we don\u0027t usually use this kind of construction in SPDK, it might be easier to read here.",
+      "range": {
+        "startLine": 1316,
+        "startChar": 0,
+        "endLine": 1324,
+        "endChar": 8
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "ab0b55f5_0efe41c1",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1324,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e All that we do is set limited number of _t_handlers. Can we change\n \u003e this and define above this function to simpler vl_msg_api_set_handlers()\n \u003e direct calls ?\n \u003e Since we don\u0027t usually use this kind of construction in SPDK, it\n \u003e might be easier to read here.",
+      "parentUuid": "bf06a88d_823436ff",
       "range": {
         "startLine": 1316,
         "startChar": 0,
@@ -428,6 +500,30 @@
       "writtenOn": "2019-03-19T14:03:40Z",
       "side": 1,
       "message": "This describes what is being done at line 1357",
+      "range": {
+        "startLine": 1353,
+        "startChar": 1,
+        "endLine": 1353,
+        "endChar": 40
+      },
+      "revId": "f401df33eaeb8ab6558c21bfba7ad872f32cb5da",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "7d897fc5_2c1f079a",
+        "filename": "lib/sock/vpp/vpp.c",
+        "patchSetId": 64
+      },
+      "lineNbr": 1353,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-08T21:48:14Z",
+      "side": 1,
+      "message": "\u003e This describes what is being done at line 1357\n\nLets move it one line down, right before _spdk_vpp_session_enable()",
+      "parentUuid": "caf252cc_1d1f629e",
       "range": {
         "startLine": 1353,
         "startChar": 1,
