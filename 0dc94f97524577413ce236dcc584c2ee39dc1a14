@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "e7221ddb_a9fad15f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 1238,
+      "author": {
+        "id": 1011218
+      },
+      "writtenOn": "2019-04-08T21:08:59Z",
+      "side": 1,
+      "message": "So from what I understand, we want to get rid of the blocking OCF functions in OCF bdev construct path and replace them with new OCF asynchronous functions that were just added.\n\nThe vbdev_ocf_construct() can be already asynchronous if the core or cache bdev is not present. But then the actual ocf bdev creation called from examine_config callback needs to be synchronous.\n\nIs the above correct?\n\nSo we want to make that ocf bdev creation asynchronous, and with this patch it works this way:\nrpc ocf_create -\u003e insert bdev info to list\nexamine_config -\u003e lookup list, if both present ... async\nexamine_disk -\u003e wait with completion until exam_config is done\n\nWhich looks hacky. Currently examine_isdone() returns true if the device was never meant to be used by the ocf module, which works but is really unintuitive. Generally, the role of examine_config is to do static configuration, e.g. add mark the bdev as claimed and add it to a global list somewhere. Then examine_disk can start the entire async initialization.\n\nWould it make sense to refactor this as follows?\nrpc ocf_create -\u003e insert bdev info to the global list (as struct vbdev_ocf)\nexamine_config -\u003e claim the bdev, mark it ready in the vbdev_ocf\nexamine_disk -\u003e check if all the required bdevs are already claimed, start async init",
+      "revId": "0dc94f97524577413ce236dcc584c2ee39dc1a14",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
