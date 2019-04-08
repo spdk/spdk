@@ -1034,6 +1034,67 @@ test_reservation_exclusive_access_regs_only_and_all_regs(void)
 		SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS);
 }
 
+static void
+test_reservation_notification_log_page(void)
+{
+	struct spdk_nvmf_ctrlr ctrlr;
+	struct spdk_nvmf_qpair qpair;
+	struct spdk_nvmf_ns ns;
+	struct spdk_nvmf_request req;
+	union nvmf_h2c_msg cmd;
+	union nvmf_c2h_msg rsp;
+	union spdk_nvme_async_event_completion event = {0};
+	struct spdk_nvme_reservation_notification_log logs[3];
+
+	memset(&ctrlr, 0, sizeof(ctrlr));
+	ctrlr.thread = spdk_get_thread();
+	TAILQ_INIT(&ctrlr.log_head);
+	ns.nsid = 1;
+
+	/* Test Case: Mask all the reservation notifications */
+	ns.mask = SPDK_NVME_REGISTRATION_PREEMPTED_MASK |
+		  SPDK_NVME_RESERVATION_RELEASED_MASK |
+		  SPDK_NVME_RESERVATION_PREEMPTED_MASK;
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_REGISTRATION_PREEMPTED);
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_RESERVATION_RELEASED);
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_RESERVATION_PREEMPTED);
+	poll_threads();
+	SPDK_CU_ASSERT_FATAL(TAILQ_EMPTY(&ctrlr.log_head));
+
+	/* Test Case: Unmask all the reservation notifications,
+	 * 3 log pages are generated, and AER was triggered.
+	 */
+	ns.mask = 0;
+	ctrlr.num_avail_log_pages = 0;
+	req.cmd = &cmd;
+	req.rsp = &rsp;
+	ctrlr.aer_req = &req;
+	req.qpair = &qpair;
+	TAILQ_INIT(&qpair.outstanding);
+	qpair.state = SPDK_NVMF_QPAIR_ACTIVE;
+	TAILQ_INSERT_TAIL(&qpair.outstanding, &req, link);
+
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_REGISTRATION_PREEMPTED);
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_RESERVATION_RELEASED);
+	spdk_nvmf_ctrlr_reservation_notice_log(&ctrlr, &ns,
+					       SPDK_NVME_RESERVATION_PREEMPTED);
+	poll_threads();
+	event.raw = rsp.nvme_cpl.cdw0;
+	SPDK_CU_ASSERT_FATAL(event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_IO);
+	SPDK_CU_ASSERT_FATAL(event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_RESERVATION_LOG_AVAIL);
+	SPDK_CU_ASSERT_FATAL(event.bits.log_page_identifier == SPDK_NVME_LOG_RESERVATION_NOTIFICATION);
+	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 3);
+
+	/* Test Case: Get Log Page to clear the log pages */
+	spdk_nvmf_get_reservation_notification_log_page(&ctrlr, (void *)logs, 0, sizeof(logs));
+	SPDK_CU_ASSERT_FATAL(ctrlr.num_avail_log_pages == 0);
+}
+
 int main(int argc, char **argv)
 {
 	CU_pSuite	suite = NULL;
@@ -1060,7 +1121,9 @@ int main(int argc, char **argv)
 		CU_add_test(suite, "reservation_write_exclusive_regs_only_and_all_regs",
 			    test_reservation_write_exclusive_regs_only_and_all_regs) == NULL ||
 		CU_add_test(suite, "reservation_exclusive_access_regs_only_and_all_regs",
-			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL
+			    test_reservation_exclusive_access_regs_only_and_all_regs) == NULL ||
+		CU_add_test(suite, "reservation_notification_log_page",
+			    test_reservation_notification_log_page) == NULL
 	) {
 		CU_cleanup_registry();
 		return CU_get_error();
