@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "86508d3e_8fb70241",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 954,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-08T05:40:42Z",
+      "side": 1,
+      "message": "Thank you for noticing this. Fixed.",
+      "parentUuid": "493b5fca_6808853b",
+      "range": {
+        "startLine": 954,
+        "startChar": 3,
+        "endLine": 954,
+        "endChar": 11
+      },
+      "revId": "23bd722fa46b6f5e1160554e12ee68db1733c8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "908ac0cf_ac2eb040",
         "filename": "examples/nvme/nvme_manage/nvme_manage.c",
         "patchSetId": 46
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-08T04:22:11Z",
       "side": 1,
       "message": "good catch Yidong, the whole section can be removed.",
+      "range": {
+        "startLine": 949,
+        "startChar": 3,
+        "endLine": 955,
+        "endChar": 3
+      },
+      "revId": "23bd722fa46b6f5e1160554e12ee68db1733c8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "061d332b_9b437cba",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-08T05:40:42Z",
+      "side": 1,
+      "message": "Thank you for your review Changpeng. I think I will keep the log here for non-supported scenarios.",
+      "parentUuid": "908ac0cf_ac2eb040",
       "range": {
         "startLine": 949,
         "startChar": 3,
