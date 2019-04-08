@@ -133,6 +133,8 @@ parser.add_argument('rw', default="randread", type=str,
                     help="RW param for FIO. Default: randread")
 parser.add_argument('-m', '--rwmixread', default="70", type=str,
                     help="Percentage of reads in read-write mode. Default: 70")
+parser.add_argument('-n', '--numjobs', default="1", type=str,
+                    help="Numjobs value for FIO job. Default: 1")
 parser.add_argument('-r', '--runtime', default="10", type=str,
                     help="Run time param for FIO (in seconds). Default: 10")
 parser.add_argument('-R', '--ramptime', default="10", type=str,
