@@ -1,0 +1,38 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "c40f8583_e04f5f30",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 468,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-08T21:37:47Z",
+      "side": 1,
+      "message": "We can\u0027t take a lock in the I/O path in our highest performing benchmark tool.",
+      "revId": "d6f5dc1d1b091d4c9e623c3d08fd6ac245fa0e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5242275a_6367ed8a",
+        "filename": "examples/nvme/perf/perf.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 794,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-08T21:37:47Z",
+      "side": 1,
+      "message": "Is this guaranteed to happen on the thread where the admin queue pair was created? If so, then you wouldn\u0027t need a lock.",
+      "revId": "d6f5dc1d1b091d4c9e623c3d08fd6ac245fa0e10",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
