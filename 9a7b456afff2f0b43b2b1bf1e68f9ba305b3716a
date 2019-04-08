@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "9848f885_ad0be425",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-08T10:39:51Z",
+      "side": 0,
+      "message": "Why do you remove those? This prevent from potential double free when ftl_rwb_batch_init fails in ftl_rwb_init.",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 22
+      },
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
