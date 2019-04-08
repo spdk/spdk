@@ -203,16 +203,16 @@ struct raid_bdev_io_channel {
 };
 
 /* TAIL heads for various raid bdev lists */
-TAILQ_HEAD(spdk_raid_configured_tailq, raid_bdev);
-TAILQ_HEAD(spdk_raid_configuring_tailq, raid_bdev);
-TAILQ_HEAD(spdk_raid_all_tailq, raid_bdev);
-TAILQ_HEAD(spdk_raid_offline_tailq, raid_bdev);
+TAILQ_HEAD(raid_configured_tailq, raid_bdev);
+TAILQ_HEAD(raid_configuring_tailq, raid_bdev);
+TAILQ_HEAD(raid_all_tailq, raid_bdev);
+TAILQ_HEAD(raid_offline_tailq, raid_bdev);
 
-extern struct spdk_raid_configured_tailq    g_spdk_raid_bdev_configured_list;
-extern struct spdk_raid_configuring_tailq   g_spdk_raid_bdev_configuring_list;
-extern struct spdk_raid_all_tailq           g_spdk_raid_bdev_list;
-extern struct spdk_raid_offline_tailq       g_spdk_raid_bdev_offline_list;
-extern struct raid_config                   g_spdk_raid_config;
+extern struct raid_configured_tailq	g_raid_bdev_configured_list;
+extern struct raid_configuring_tailq	g_raid_bdev_configuring_list;
+extern struct raid_all_tailq		g_raid_bdev_list;
+extern struct raid_offline_tailq	g_raid_bdev_offline_list;
+extern struct raid_config		g_raid_config;
 
 int raid_bdev_create(struct raid_bdev_config *raid_cfg);
 void raid_bdev_remove_base_bdev(void *ctx);
