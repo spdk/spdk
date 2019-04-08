@@ -1738,6 +1738,38 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
 
 /*
  * brief:
+ * raid_bdev_find_by_base_bdev function finds the raid bdev which has
+ *  claimed the base bdev.
+ * params:
+ * base_bdev - pointer to base bdev pointer
+ * _raid_bdev - Referenct to pointer to raid bdev
+ * _base_bdev_slot - Reference to the slot of the base bdev.
+ * returns:
+ * true - if the raid bdev is found.
+ * false - if the raid bdev is not found.
+ */
+static bool
+raid_bdev_find_by_base_bdev(struct spdk_bdev *base_bdev, struct raid_bdev **_raid_bdev,
+			    uint16_t *_base_bdev_slot)
+{
+	struct raid_bdev	*raid_bdev;
+	uint16_t		i;
+
+	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
+		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
+			if (raid_bdev->base_bdev_info[i].bdev == base_bdev) {
+				*_raid_bdev = raid_bdev;
+				*_base_bdev_slot = i;
+				return true;
+			}
+		}
+	}
+
+	return false;
+}
+
+/*
+ * brief:
  * raid_bdev_remove_base_bdev function is called by below layers when base_bdev
  * is removed. This function checks if this base bdev is part of any raid bdev
  * or not. If yes, it takes necessary action on that particular raid bdev.
@@ -1750,40 +1782,35 @@ void
 raid_bdev_remove_base_bdev(void *ctx)
 {
 	struct spdk_bdev	*base_bdev = ctx;
-	struct raid_bdev	*raid_bdev;
-	uint16_t		i;
+	struct raid_bdev	*raid_bdev = NULL;
+	uint16_t		base_bdev_slot = 0;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_bdev\n");
 
 	/* Find the raid_bdev which has claimed this base_bdev */
-	TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
-		for (i = 0; i < raid_bdev->num_base_bdevs; i++) {
-			if (raid_bdev->base_bdev_info[i].bdev == base_bdev) {
+	if (!raid_bdev_find_by_base_bdev(base_bdev, &raid_bdev, &base_bdev_slot)) {
+		SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
+		return;
+	}
 
-				assert(raid_bdev->base_bdev_info[i].desc);
-				raid_bdev->base_bdev_info[i].remove_scheduled = true;
+	assert(raid_bdev->base_bdev_info[base_bdev_slot].desc);
+	raid_bdev->base_bdev_info[base_bdev_slot].remove_scheduled = true;
 
-				if (raid_bdev->destruct_called == true ||
-				    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
-					/*
-					 * As raid bdev is not registered yet or already unregistered,
-					 * so cleanup should be done here itself.
-					 */
-					raid_bdev_free_base_bdev_resource(raid_bdev, i);
-					if (raid_bdev->num_base_bdevs_discovered == 0) {
-						/* There is no base bdev for this raid, so free the raid device. */
-						raid_bdev_cleanup(raid_bdev);
-						return;
-					}
-				}
-
-				raid_bdev_deconfigure(raid_bdev);
-				return;
-			}
+	if (raid_bdev->destruct_called == true ||
+	    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+		/*
+		 * As raid bdev is not registered yet or already unregistered,
+		 * so cleanup should be done here itself.
+		 */
+		raid_bdev_free_base_bdev_resource(raid_bdev, base_bdev_slot);
+		if (raid_bdev->num_base_bdevs_discovered == 0) {
+			/* There is no base bdev for this raid, so free the raid device. */
+			raid_bdev_cleanup(raid_bdev);
+			return;
 		}
 	}
 
-	SPDK_ERRLOG("bdev to remove '%s' not found\n", base_bdev->name);
+	raid_bdev_deconfigure(raid_bdev);
 }
 
 /*
