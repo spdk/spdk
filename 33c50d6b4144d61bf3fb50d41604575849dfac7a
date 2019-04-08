@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0318bd95_0303e963",
+        "filename": "lib/bdev/null/bdev_null.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 370,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-08T09:31:46Z",
+      "side": 1,
+      "message": "Seems that we could define the optional function pointer fini_start() from the bdev_module similar to the usage of module_fini() function pointer.\n\nbdev_null_finish_start()\n{\n    spdk_io_device_unregister(\u0026g_null_bdev_head, _bdev_null_cleanup_cb);\n}\n\n.fini_start \u003d bdev_null_finish_start;\n\nJust my thoughts to either call the cleanup directly or define the function pointer and let the normal cleanup process to call the API.\n\nDetails below:\n\t/**\n\t * Optional callback for modules that require notification of when\n\t * the bdev subsystem is starting the fini process.\n\t *\n\t * Modules are not required to define this function.\n\t */\n\tvoid (*fini_start)(void);",
+      "range": {
+        "startLine": 368,
+        "startChar": 0,
+        "endLine": 370,
+        "endChar": 2
+      },
+      "revId": "33c50d6b4144d61bf3fb50d41604575849dfac7a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
