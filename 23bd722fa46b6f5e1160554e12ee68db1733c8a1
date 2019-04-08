@@ -22,6 +22,29 @@
       "revId": "23bd722fa46b6f5e1160554e12ee68db1733c8a1",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "908ac0cf_ac2eb040",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 955,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-08T04:22:11Z",
+      "side": 1,
+      "message": "good catch Yidong, the whole section can be removed.",
+      "range": {
+        "startLine": 949,
+        "startChar": 3,
+        "endLine": 955,
+        "endChar": 3
+      },
+      "revId": "23bd722fa46b6f5e1160554e12ee68db1733c8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
