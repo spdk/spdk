@@ -1047,7 +1047,7 @@ free_task_pool(struct spdk_vhost_nvme_dev *nvme)
 	while (!STAILQ_EMPTY(&nvme->free_tasks)) {
 		task = STAILQ_FIRST(&nvme->free_tasks);
 		STAILQ_REMOVE_HEAD(&nvme->free_tasks, stailq);
-		spdk_dma_free(task);
+		spdk_free(task);
 	}
 }
 
@@ -1379,16 +1379,15 @@ spdk_vhost_nvme_ctrlr_identify_update(struct spdk_vhost_nvme_dev *dev)
 int
 spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t num_io_queues)
 {
-	struct spdk_vhost_nvme_dev *dev = spdk_dma_zmalloc(sizeof(struct spdk_vhost_nvme_dev),
-					  SPDK_CACHE_LINE_SIZE, NULL);
+	struct spdk_vhost_nvme_dev *dev;
 	int rc;
 
-	if (dev == NULL) {
+	if (posix_memalign((void **)&dev, SPDK_CACHE_LINE_SIZE, sizeof(*dev))) {
 		return -ENOMEM;
 	}
 
 	if (num_io_queues < 1 || num_io_queues > MAX_IO_QUEUES) {
-		spdk_dma_free(dev);
+		free(dev);
 		return -EINVAL;
 	}
 
@@ -1397,7 +1396,7 @@ spdk_vhost_nvme_dev_construct(const char *name, const char *cpumask, uint32_t nu
 				     &spdk_vhost_nvme_device_backend);
 
 	if (rc) {
-		spdk_dma_free(dev);
+		free(dev);
 		spdk_vhost_unlock();
 		return rc;
 	}
@@ -1438,7 +1437,7 @@ spdk_vhost_nvme_dev_remove(struct spdk_vhost_dev *vdev)
 		return rc;
 	}
 
-	spdk_dma_free(nvme);
+	free(nvme);
 	return 0;
 }
 
