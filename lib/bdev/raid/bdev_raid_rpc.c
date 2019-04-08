@@ -122,19 +122,19 @@ spdk_rpc_get_raid_bdevs(struct spdk_jsonrpc_request *request, const struct spdk_
 
 	/* Get raid bdev list based on the category requested */
 	if (strcmp(req.category, "all") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_list, global_link) {
+		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_list, global_link) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else if (strcmp(req.category, "online") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_configured_list, state_link) {
+		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configured_list, state_link) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else if (strcmp(req.category, "configuring") == 0) {
-		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_configuring_list, state_link) {
+		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_configuring_list, state_link) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	} else {
-		TAILQ_FOREACH(raid_bdev, &g_spdk_raid_bdev_offline_list, state_link) {
+		TAILQ_FOREACH(raid_bdev, &g_raid_bdev_offline_list, state_link) {
 			spdk_json_write_string(w, raid_bdev->bdev.name);
 		}
 	}
