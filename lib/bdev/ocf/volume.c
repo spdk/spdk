@@ -44,7 +44,7 @@
 #include "vbdev_ocf.h"
 
 static int
-vbdev_ocf_volume_open(ocf_volume_t volume)
+vbdev_ocf_volume_open(ocf_volume_t volume, void *opts)
 {
 	struct vbdev_ocf_base **priv = ocf_volume_get_priv(volume);
 	struct vbdev_ocf_base *base = vbdev_ocf_get_base_by_name(ocf_volume_get_uuid(volume)->data);
@@ -243,7 +243,7 @@ prepare_submit(struct ocf_io *io)
 	cache = ocf_queue_get_cache(q);
 	cctx = ocf_cache_get_priv(cache);
 
-	if (q == cctx->cleaner_queue) {
+	if (q == cctx->cleaner_queue || q == cctx->mngt_queue) {
 		if (base->is_cache) {
 			io_ctx->ch = cctx->cache_channel;
 		} else {
