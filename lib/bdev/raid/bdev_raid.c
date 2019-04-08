@@ -159,7 +159,7 @@ raid_bdev_destroy_cb(void *io_device, void *ctx_buf)
  * returns:
  * none
  */
-void
+static void
 raid_bdev_cleanup(struct raid_bdev *raid_bdev)
 {
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_cleanup, %p name %s, state %u, config %p\n",

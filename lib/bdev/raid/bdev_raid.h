@@ -218,7 +218,6 @@ int raid_bdev_create(struct raid_bdev_config *raid_cfg);
 void raid_bdev_remove_base_bdev(void *ctx);
 int raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg);
 void raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint32_t slot);
-void raid_bdev_cleanup(struct raid_bdev *raid_bdev);
 int raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 			 int raid_level, struct raid_bdev_config **_raid_cfg);
 int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
