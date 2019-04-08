@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "0cca8fb5_74258b7c",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-08T08:12:39Z",
+      "side": 1,
+      "message": "I\u0027m not sure if I understand this condition correctly. io-\u003echild_outstanding is tracked only by parent IO, so it will be always 0 for children, or we could have nested parent-children relation now? If we could have tree structure now please add some comments for this.",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "68ca5529_a6a7c8cc",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-08T08:12:39Z",
+      "side": 1,
+      "message": "Why do we need to wait until all children are done and only parent will start freeing them? We have situation now that we are increasing parent child_outstanding in ftl_io_alloc_child but all decresing is done in ftl_io_complete instead ftl_io_free.",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "1c05158b_07fb0558",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-08T08:12:39Z",
+      "side": 1,
+      "message": "You shoud cleanup spinlock here with pthread_spin_destroy()",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
