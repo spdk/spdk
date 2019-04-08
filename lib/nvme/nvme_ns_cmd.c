@@ -70,7 +70,7 @@ nvme_cb_complete_child(void *child_arg, const struct spdk_nvme_cpl *cpl)
 	}
 
 	if (parent->num_children == 0) {
-		nvme_complete_request(parent, &parent->parent_status);
+		nvme_complete_request(parent->cb_fn, parent->cb_arg, parent, &parent->parent_status);
 		nvme_free_request(parent);
 	}
 }
