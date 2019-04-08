@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "273f22b1_d486ed50",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 4829,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T23:06:34Z",
+      "side": 1,
+      "message": "In next patch clearing locked flag becomes part of _spdk_bs_clone_snapshot_origblob_cleanup subfunctions. For this one I can clear it here and remove this in the next patch.",
+      "parentUuid": "eea4bbbd_713c3300",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "5b3809f0_eec360ad",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 4
@@ -53,6 +71,24 @@
     },
     {
       "key": {
+        "uuid": "7a247ec9_066117a0",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 5046,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T23:06:34Z",
+      "side": 1,
+      "message": "Ack",
+      "parentUuid": "a3f73bfa_e7aafa1c",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "87b8f6d4_fb005537",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 4
@@ -64,6 +100,24 @@
       "writtenOn": "2019-04-08T21:38:58Z",
       "side": 1,
       "message": "I think you need to set the locked flag here.  Otherwise someone could create a new clone while you\u0027re waiting for this blob to open.\n\nWe really need some good unit tests for this code.",
+      "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "07ad2498_b5e1807a",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 4
+      },
+      "lineNbr": 5101,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T23:06:34Z",
+      "side": 1,
+      "message": "We need blob structure so that we could access the locked flag. Maybe we could check clones after we open this blob (in _spdk_bs_delete_open_cpl) - if locked flag is set to false then set it to true and then check the clones list.\n\nOr we should move locked flag somewhere else so that we don\u0027t have to open blob first (but nothing comes to my mind right now, where we could keep that flag).",
+      "parentUuid": "87b8f6d4_fb005537",
       "revId": "0daafc55466f19e3443011c60a145fbe64c91fd0",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
