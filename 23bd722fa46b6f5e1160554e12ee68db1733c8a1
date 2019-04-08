@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "493b5fca_6808853b",
+        "filename": "examples/nvme/nvme_manage/nvme_manage.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 954,
+      "author": {
+        "id": 1014536
+      },
+      "writtenOn": "2019-04-08T03:18:21Z",
+      "side": 1,
+      "message": "hi chunyang, I think it\u0027s not error but no need to add continue here, Am I right?",
+      "range": {
+        "startLine": 954,
+        "startChar": 3,
+        "endLine": 954,
+        "endChar": 11
+      },
+      "revId": "23bd722fa46b6f5e1160554e12ee68db1733c8a1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
