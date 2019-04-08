@@ -900,12 +900,16 @@ nvme_ctrlr_update_ns_bdevs(struct nvme_bdev_ctrlr *nvme_bdev_ctrlr)
 		uint32_t	nsid = i + 1;
 
 		bdev = &nvme_bdev_ctrlr->bdevs[i];
-		if (!bdev->active && spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (!bdev->active &&
+		    spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid) &&
+		    spdk_nvme_ns_is_active(nvme_bdev_ctrlr->bdevs[nsid - 1].ns)) {
 			SPDK_NOTICELOG("NSID %u to be added\n", nsid);
 			nvme_ctrlr_create_bdev(nvme_bdev_ctrlr, nsid);
 		}
 
-		if (bdev->active && !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid)) {
+		if (bdev->active &&
+		    !spdk_nvme_ctrlr_is_active_ns(ctrlr, nsid) &&
+		    !spdk_nvme_ns_is_active(nvme_bdev_ctrlr->bdevs[nsid - 1].ns)) {
 			SPDK_NOTICELOG("NSID %u Bdev %s is removed\n", nsid, bdev->disk.name);
 			nvme_ctrlr_deactivate_bdev(bdev);
 		}
