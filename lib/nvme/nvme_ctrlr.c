@@ -1539,6 +1539,8 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		return;
 	}
 
+	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
+
 	event.raw = cpl->cdw0;
 	if ((event.bits.async_event_type == SPDK_NVME_ASYNC_EVENT_TYPE_NOTICE) &&
 	    (event.bits.async_event_info == SPDK_NVME_ASYNC_EVENT_NS_ATTR_CHANGED)) {
@@ -1546,10 +1548,14 @@ nvme_ctrlr_async_event_cb(void *arg, const struct spdk_nvme_cpl *cpl)
 		if (rc) {
 			return;
 		}
+
+		if (active_proc && active_proc->aer_cb_fn) {
+			active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
+		}
+
 		nvme_ctrlr_update_namespaces(ctrlr);
 	}
 
-	active_proc = spdk_nvme_ctrlr_get_current_process(ctrlr);
 	if (active_proc && active_proc->aer_cb_fn) {
 		active_proc->aer_cb_fn(active_proc->aer_cb_arg, cpl);
 	}
