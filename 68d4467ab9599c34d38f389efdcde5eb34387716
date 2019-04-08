@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "2d7fd862_a26ac30f",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-08T13:07:43Z",
+      "side": 1,
+      "message": "Shouldn\u0027t this be checked by client application (like rpc.py)?",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 2
+      },
+      "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "e290109d_ef372ccc",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-08T13:07:43Z",
+      "side": 1,
+      "message": "This \u0027goto\u0027 can be skipped\nWe usually do:\n\nif (decode()) {\n    spdk_jsonrpc_send_error_responce()\n    return\n}\n\n\nthen defining \u0027rc\u0027 will not be required and \u0027return\u0027 at #127 will be redundant",
+      "range": {
+        "startLine": 113,
+        "startChar": 2,
+        "endLine": 113,
+        "endChar": 15
+      },
+      "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
