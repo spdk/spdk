@@ -41,6 +41,7 @@ DIRS-y += iscsi_top
 DIRS-y += iscsi_tgt
 DIRS-y += spdk_tgt
 DIRS-y += spdk_lspci
+DIRS-y += memcached_tgt
 ifeq ($(OS),Linux)
 DIRS-$(CONFIG_VHOST) += vhost
 endif

@@ -31,15 +31,25 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
+include $(SPDK_ROOT_DIR)/mk/spdk.modules.mk
 
-DIRS-y += bdev copy iscsi nbd net nvmf scsi vhost vmd
-DIRS-y += memcached
+APP = memcached_tgt
 
-.PHONY: all clean $(DIRS-y)
+# Add memcached library directory to include path
+# TODO: remove this once memcached has a public API header
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS := memcached_tgt.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+SPDK_LIB_LIST = $(ALL_MODULES_LIST)
+SPDK_LIB_LIST += event_bdev event_copy event_memcached event_net event
+SPDK_LIB_LIST += jsonrpc json rpc bdev_rpc bdev slab hashtable memcached copy trace conf
+SPDK_LIB_LIST += thread util log log_rpc trace_rpc app_rpc net sock notify
+
+ifeq ($(OS),Linux)
+SPDK_LIB_LIST += event_nbd nbd
+endif
+
+include $(SPDK_ROOT_DIR)/mk/spdk.app.mk

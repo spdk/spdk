@@ -31,15 +31,23 @@
 #  OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #
 
-SPDK_ROOT_DIR := $(abspath $(CURDIR)/../../..)
+SPDK_ROOT_DIR := $(abspath $(CURDIR)/../..)
 include $(SPDK_ROOT_DIR)/mk/spdk.common.mk
 
-DIRS-y += bdev copy iscsi nbd net nvmf scsi vhost vmd
-DIRS-y += memcached
+CFLAGS += -I$(SPDK_ROOT_DIR)/lib
 
-.PHONY: all clean $(DIRS-y)
+C_SRCS = murmur3_hash.c \
+	memcached_subsystem.c portal_grp.c acceptor.c init_grp.c \
+	tgt_node.c \
+	conn.c memcached_cmd.c	
 
-all: $(DIRS-y)
-clean: $(DIRS-y)
+C_SRCS += cmd_handler_extracter.c
 
-include $(SPDK_ROOT_DIR)/mk/spdk.subdirs.mk
+#choose one processor among them
+C_SRCS += cmd_handler_processor.c
+#C_SRCS += cmd_handler_processor_mem.c hashtable_stub.c diskrecord_stub.c
+#C_SRCS += cmd_handler_processor_string.c
+	
+LIBNAME = memcached
+
+include $(SPDK_ROOT_DIR)/mk/spdk.lib.mk

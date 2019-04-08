@@ -1,0 +1,38 @@
+# Memcached target configuration file
+#
+# Please write all parameters using ASCII.
+# The parameter must be quoted if it includes whitespace.
+#
+# Configuration syntax:
+# Leading whitespace is ignored.
+# Lines starting with '#' are comments.
+# Lines ending with '\' are concatenated with the next line.
+# Bracketed ([]) names define sections
+
+[AIO]
+  AIO /home/slab_test_file AIO0 512
+
+[Nvme]
+  TransportID "trtype:PCIe traddr:0000:85:00.0" Nvme0
+
+[Memcached]
+#global setting for memcached
+
+[PortalGroup1]
+  Portal DA1 10.67.110.180:32600@0xF
+
+[InitiatorGroup1]
+  InitiatorName ANY
+  Netmask 10.67.110.0/24
+
+[TargetNode1]
+  TargetName memceched1
+  TargetAlias "memcached service 1"
+  Mapping PortalGroup1 InitiatorGroup1
+
+ # Bdev AIO0
+
+  Bdev Nvme0n1
+  Cpumask 0xF
+  QueueDepth 128
+
