@@ -141,8 +141,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 
 	size = sizeof(*vq) + vq_size * sizeof(struct vq_desc_extra);
 
-	vq = spdk_dma_zmalloc(size, RTE_CACHE_LINE_SIZE, NULL);
-	if (vq == NULL) {
+	if (posix_memalign((void **)&vq, RTE_CACHE_LINE_SIZE, size)) {
 		SPDK_ERRLOG("can not allocate vq\n");
 		return -ENOMEM;
 	}
@@ -165,7 +164,7 @@ virtio_init_queue(struct virtio_dev *dev, uint16_t vtpci_queue_idx)
 	rc = virtio_dev_backend_ops(dev)->setup_queue(dev, vq);
 	if (rc < 0) {
 		SPDK_ERRLOG("setup_queue failed\n");
-		spdk_dma_free(vq);
+		free(vq);
 		dev->vqs[vtpci_queue_idx] = NULL;
 		return rc;
 	}
