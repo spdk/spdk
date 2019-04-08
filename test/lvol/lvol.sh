@@ -71,6 +71,7 @@ function usage() {
                                     758: 'clone_decouple_parent',
                                     759: 'clone_decouple_parent_rw',
                                     760: 'set_read_only',
+                                    761: 'delete_snapshot',
                                     800: 'rename_positive',
                                     801: 'rename_lvs_nonexistent',
                                     802: 'rename_lvs_EEXIST',
