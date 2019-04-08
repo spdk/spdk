@@ -114,8 +114,7 @@ struct nvme_tracker {
 	struct nvme_request		*req;
 	uint16_t			cid;
 
-	uint16_t			rsvd1: 15;
-	uint16_t			active: 1;
+	uint16_t			rsvd1;
 
 	uint32_t			rsvd2;
 
@@ -935,7 +934,7 @@ nvme_qpair_construct_tracker(struct nvme_tracker *tr, uint16_t cid, uint64_t phy
 {
 	tr->prp_sgl_bus_addr = phys_addr + offsetof(struct nvme_tracker, u.prp);
 	tr->cid = cid;
-	tr->active = false;
+	tr->req = NULL;
 }
 
 int
@@ -1238,8 +1237,6 @@ nvme_pcie_qpair_submit_tracker(struct spdk_nvme_qpair *qpair, struct nvme_tracke
 	req = tr->req;
 	assert(req != NULL);
 
-	tr->active = true;
-
 	/* Copy the command from the tracker to the submission queue. */
 	nvme_pcie_copy_command(&pqpair->cmd[pqpair->sq_tail], &req->cmd);
 
@@ -1262,7 +1259,7 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 {
 	struct nvme_pcie_qpair		*pqpair = nvme_pcie_qpair(qpair);
 	struct nvme_request		*req;
-	bool				retry, error, was_active;
+	bool				retry, error;
 	bool				req_from_current_proc = true;
 
 	req = tr->req;
@@ -1278,23 +1275,18 @@ nvme_pcie_qpair_complete_tracker(struct spdk_nvme_qpair *qpair, struct nvme_trac
 		nvme_qpair_print_completion(qpair, cpl);
 	}
 
-	was_active = tr->active;
-	tr->active = false;
-
 	assert(cpl->cid == req->cmd.cid);
 
 	if (retry) {
 		req->retries++;
 		nvme_pcie_qpair_submit_tracker(qpair, tr);
 	} else {
-		if (was_active) {
-			/* Only check admin requests from different processes. */
-			if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
-				req_from_current_proc = false;
-				nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
-			} else {
-				nvme_complete_request(req, cpl);
-			}
+		/* Only check admin requests from different processes. */
+		if (nvme_qpair_is_admin_queue(qpair) && req->pid != getpid()) {
+			req_from_current_proc = false;
+			nvme_pcie_qpair_insert_pending_admin_request(qpair, req, cpl);
+		} else {
+			nvme_complete_request(req, cpl);
 		}
 
 		if (req_from_current_proc == true) {
@@ -2148,7 +2140,7 @@ nvme_pcie_qpair_process_completions(struct spdk_nvme_qpair *qpair, uint32_t max_
 		tr = &pqpair->tr[cpl->cid];
 		pqpair->sq_head = cpl->sqhd;
 
-		if (tr->active) {
+		if (tr->req) {
 			nvme_pcie_qpair_complete_tracker(qpair, tr, cpl, true);
 		} else {
 			SPDK_ERRLOG("cpl does not map to outstanding cmd\n");
