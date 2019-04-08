@@ -193,7 +193,7 @@ raid_bdev_cleanup(struct raid_bdev *raid_bdev)
  * 0 - success
  * non zero - failure
  */
-void
+static void
 raid_bdev_free_base_bdev_resource(struct raid_bdev *raid_bdev, uint32_t base_bdev_slot)
 {
 	struct raid_base_bdev_info *info;
