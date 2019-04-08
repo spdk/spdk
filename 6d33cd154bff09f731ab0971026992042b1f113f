@@ -1,0 +1,182 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "ab5dcca1_7c10d24d",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 2999,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "1/3",
+      "range": {
+        "startLine": 2999,
+        "startChar": 32,
+        "endLine": 2999,
+        "endChar": 34
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "42340c5c_f0ec32a7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3015,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "1/3",
+      "range": {
+        "startLine": 3015,
+        "startChar": 21,
+        "endLine": 3015,
+        "endChar": 25
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7441ee22_7c7b1ff3",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3016,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "1/3_size",
+      "range": {
+        "startLine": 3016,
+        "startChar": 8,
+        "endLine": 3016,
+        "endChar": 17
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "697e20f5_82101aee",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3018,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "The better idea would be to write second 1/3 of space, so it would not cover what previous snapshot provides.",
+      "range": {
+        "startLine": 3018,
+        "startChar": 8,
+        "endLine": 3018,
+        "endChar": 83
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "06315b2d_360931fc",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3029,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "This should be checked earlier as it is no longer valid (but it still passes, becuase lvol info wasn\u0027t refreshed). Here is should be checked lvol_bdev against snapshot2 and snapshot1 vs snapshot2.",
+      "range": {
+        "startLine": 3028,
+        "startChar": 0,
+        "endLine": 3029,
+        "endChar": 27
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "14c7817d_46a21658",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3042,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "3rd 1/3",
+      "range": {
+        "startLine": 3042,
+        "startChar": 15,
+        "endLine": 3042,
+        "endChar": 26
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6baf70ec_d2204de7",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3052,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "or",
+      "range": {
+        "startLine": 3052,
+        "startChar": 16,
+        "endLine": 3052,
+        "endChar": 19
+      },
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "7fe65e05_767dcebe",
+        "filename": "test/lvol/test_cases.py",
+        "patchSetId": 3
+      },
+      "lineNbr": 3062,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-08T22:35:36Z",
+      "side": 1,
+      "message": "Also please check here if lvol correctly points to remaining snapshot as a base snapshot.",
+      "revId": "6d33cd154bff09f731ab0971026992042b1f113f",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
