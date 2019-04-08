@@ -529,7 +529,7 @@ spdk_nvme_ctrlr_cmd_abort_cpl(void *ctx, const struct spdk_nvme_cpl *cpl)
 			next->cpl.status.sct = SPDK_NVME_SCT_GENERIC;
 			next->cpl.status.sc = SPDK_NVME_SC_INTERNAL_DEVICE_ERROR;
 			next->cpl.status.dnr = 1;
-			nvme_complete_request(next, &req->cpl);
+			nvme_complete_request(next->cb_fn, next->cb_arg, next, &req->cpl);
 			nvme_free_request(next);
 		} else {
 			/* If the first abort succeeds, stop iterating. */
