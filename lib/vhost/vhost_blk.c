@@ -622,7 +622,7 @@ free_task_pool(struct spdk_vhost_blk_session *bvsession)
 			continue;
 		}
 
-		spdk_dma_free(vq->tasks);
+		spdk_free(vq->tasks);
 		vq->tasks = NULL;
 	}
 }
@@ -1008,7 +1008,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 		goto out;
 	}
 
-	bvdev = spdk_dma_zmalloc(sizeof(*bvdev), SPDK_CACHE_LINE_SIZE, NULL);
+	bvdev = calloc(1, sizeof(*bvdev));
 	if (bvdev == NULL) {
 		ret = -ENOMEM;
 		goto out;
@@ -1057,7 +1057,7 @@ spdk_vhost_blk_construct(const char *name, const char *cpumask, const char *dev_
 	SPDK_INFOLOG(SPDK_LOG_VHOST, "Controller %s: using bdev '%s'\n", name, dev_name);
 out:
 	if (ret != 0 && bvdev) {
-		spdk_dma_free(bvdev);
+		free(bvdev);
 	}
 	spdk_vhost_unlock();
 	return ret;
@@ -1084,7 +1084,7 @@ spdk_vhost_blk_destroy(struct spdk_vhost_dev *vdev)
 	}
 	bvdev->bdev = NULL;
 
-	spdk_dma_free(bvdev);
+	free(bvdev);
 	return 0;
 }
 

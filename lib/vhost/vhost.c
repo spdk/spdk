@@ -1333,11 +1333,9 @@ new_connection(int vid)
 		return -EINVAL;
 	}
 
-	vsession = spdk_dma_zmalloc(sizeof(struct spdk_vhost_session) +
-				    vdev->backend->session_ctx_size,
-				    SPDK_CACHE_LINE_SIZE, NULL);
-	if (vsession == NULL) {
-		SPDK_ERRLOG("spdk_dma_zmalloc failed\n");
+	if (posix_memalign((void **)&vsession, SPDK_CACHE_LINE_SIZE, sizeof(*vsession) +
+			   vdev->backend->session_ctx_size)) {
+		SPDK_ERRLOG("vsession alloc failed\n");
 		pthread_mutex_unlock(&g_spdk_vhost_mutex);
 		return -1;
 	}
@@ -1374,7 +1372,7 @@ destroy_connection(int vid)
 	}
 
 	TAILQ_REMOVE(&vsession->vdev->vsessions, vsession, tailq);
-	spdk_dma_free(vsession);
+	free(vsession);
 	pthread_mutex_unlock(&g_spdk_vhost_mutex);
 }
 
