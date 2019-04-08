@@ -72,6 +72,24 @@
     },
     {
       "key": {
+        "uuid": "69ebd65c_ea1d4a50",
+        "filename": "lib/vhost/vhost.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 423,
+      "author": {
+        "id": 1015052
+      },
+      "writtenOn": "2019-04-08T06:42:41Z",
+      "side": 1,
+      "message": "The above reply is incorrect. This barrier is used to protect the settings of used-\u003eidx from being disordered by the compiler.",
+      "parentUuid": "14f92f33_c73d673f",
+      "revId": "fe58aaaf650583205c85f92e2ddfd4424c153762",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "9b4a9fb6_de74738d",
         "filename": "lib/vhost/vhost_blk.c",
         "patchSetId": 1
