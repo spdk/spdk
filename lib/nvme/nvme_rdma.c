@@ -1156,7 +1156,9 @@ nvme_rdma_build_sgl_inline_request(struct nvme_rdma_qpair *rqpair,
 			return -1;
 		}
 
-		assert(length <= remaining_payload);
+		if (length > remaining_payload) {
+			length = remaining_payload;
+		}
 
 		requested_size = length;
 		mr = (struct ibv_mr *)spdk_mem_map_translate(rqpair->mr_map->map, (uint64_t)virt_addr,
