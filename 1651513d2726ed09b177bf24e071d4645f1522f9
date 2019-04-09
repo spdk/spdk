@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "be033f58_4e9c96bd",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 5024,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-09T20:42:04Z",
+      "side": 1,
+      "message": "spdk_bs_cpl is used when we use spdk_bs_sequence_start, where different type of callbacks may be required. For this scenario we don\u0027t have to abstract callback.",
+      "parentUuid": "81de98ad_bb2bfc4d",
+      "range": {
+        "startLine": 5024,
+        "startChar": 1,
+        "endLine": 5024,
+        "endChar": 35
+      },
+      "revId": "1651513d2726ed09b177bf24e071d4645f1522f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "73dea79c_8b3cb1c9",
         "filename": "lib/blob/blobstore.c",
         "patchSetId": 17
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-09T15:54:03Z",
       "side": 1,
       "message": "Is it possible that we could reuse som eof the _spdk_bs_(clone|snapshot).*cleanup functions?\nAs well as spdk_clone_snapshot_ctx?",
+      "range": {
+        "startLine": 5029,
+        "startChar": 0,
+        "endLine": 5071,
+        "endChar": 0
+      },
+      "revId": "1651513d2726ed09b177bf24e071d4645f1522f9",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "46d27341_b28fb4f6",
+        "filename": "lib/blob/blobstore.c",
+        "patchSetId": 17
+      },
+      "lineNbr": 5071,
+      "author": {
+        "id": 1011262
+      },
+      "writtenOn": "2019-04-09T20:42:04Z",
+      "side": 1,
+      "message": "I don\u0027t see any operations that we have right now that may use this. This one is specific to operations where we change snapshot and clone at the same time - there isn\u0027t any other operation like that.",
+      "parentUuid": "73dea79c_8b3cb1c9",
       "range": {
         "startLine": 5029,
         "startChar": 0,
