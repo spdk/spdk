@@ -1,0 +1,119 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "d36f4df9_9d9bf79f",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 740,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:05:49Z",
+      "side": 1,
+      "message": "The original EPERM seems to be more intuitive error to give, since the operation could not be performed on that vbdev for one of three reasons. Not that incorrect vbdev_ocf was provided.",
+      "range": {
+        "startLine": 740,
+        "startChar": 2,
+        "endLine": 740,
+        "endChar": 17
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "5aadc9ef_5ceb1e36",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 785,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:05:49Z",
+      "side": 1,
+      "message": "Not sure if this is discussion for this patch but with callbacks and return from function it creates overhead amount of code required to process returned value.\nUsually cb() would check status and proceed accordingly in case of an error. When doing both, the function return needs to be checked and processed the same way.\n\nBetter would be to just return void and only pass errors via status in callback.\n\nAnyway I don\u0027t mind leaving it for this patch, but if others do - please change it.",
+      "range": {
+        "startLine": 781,
+        "startChar": 0,
+        "endLine": 785,
+        "endChar": 15
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "cb2beee1_1350de8c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1076,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:05:49Z",
+      "side": 1,
+      "message": "Have you considered to return vbdev_ocf in the callback, since this is what is created in this function.\n\nIt would simplify for the caller to just access that, instead of searching the vbdev_ocf by saved name. This happens later in the series in RPC https://review.gerrithub.io/#/c/spdk/spdk/+/449776/10/lib/bdev/ocf/vbdev_ocf_rpc.c",
+      "range": {
+        "startLine": 1076,
+        "startChar": 6,
+        "endLine": 1076,
+        "endChar": 29
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "49897d49_67ca7d50",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1173,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:05:49Z",
+      "side": 1,
+      "message": "Since main point of this patch is to add callbacks to register_vbdev, lets use it here (even tough we are synchronous at this OCF commit).\n\nHow about calling back examine_end and passing refcnt here ?\nSimilar to https://review.gerrithub.io/#/c/spdk/spdk/+/447888/18/lib/bdev/ocf/vbdev_ocf.c",
+      "range": {
+        "startLine": 1173,
+        "startChar": 25,
+        "endLine": 1173,
+        "endChar": 35
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3ba7333f_d4c04a1c",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 5
+      },
+      "lineNbr": 1179,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:05:49Z",
+      "side": 1,
+      "message": "Actually for this case vbdev_ocf_get_base_by_name() could be called and checked if it is a core. During single examine disk it should either register single/multiple vbdevs if cache was added _or_ register single  vbdev if core was added.",
+      "range": {
+        "startLine": 1176,
+        "startChar": 0,
+        "endLine": 1179,
+        "endChar": 3
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
