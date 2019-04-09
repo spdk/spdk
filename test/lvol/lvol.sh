@@ -73,6 +73,7 @@ function usage() {
                                     760: 'set_read_only',
                                     761: 'delete_snapshot',
                                     762: 'delete_snapshot_with_snapshot',
+                                    763: 'delete_snapshot_with_clone',
                                     800: 'rename_positive',
                                     801: 'rename_lvs_nonexistent',
                                     802: 'rename_lvs_EEXIST',
