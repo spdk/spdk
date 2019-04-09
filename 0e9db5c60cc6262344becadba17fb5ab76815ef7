@@ -1,0 +1,188 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "a7cd2c81_5202c99b",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 191,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "Why add those steps if they are not asynchronous or use trylock ? It just adds more steps in the vbdev_ocf_mngt.",
+      "range": {
+        "startLine": 179,
+        "startChar": 0,
+        "endLine": 191,
+        "endChar": 1
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "3db1eacd_ea342522",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 205,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "Can\u0027t we use ocf_core_t from vbdev-\u003eocf_core instead of getting it from ocf_cache ?",
+      "range": {
+        "startLine": 201,
+        "startChar": 0,
+        "endLine": 205,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "41ace9d6_46b57d60",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 239,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "Those conditions make it confusing what is happening when. Please either split it to two functions for cache and for core, or rearrange the conditions.\n\nif(base-\u003eis_cache){\n   /* Cache case */\n   if(get_other_cache_base(base)){\n      base-\u003eattached \u003d false;\n   }\n   vbdev_ocf_mngt_continue(vbdev, 0);\n} else {\n   /* Core case */\n   if (vbdev-\u003eocf_cache \u0026\u0026 ocf_cache_is_running(vbdev-\u003eocf_cache) {\n      vbdev_ocf_mngt_poll(vbdev, remove_core_poll);\n   } else {\n      vbdev_ocf_mngt_continue(vbdev, 0);\n   }\n}\n\nNow looking at the above, shouldn\u0027t Core case always call remove_core_poll anyway ? Then it makes it even simpler.",
+      "range": {
+        "startLine": 225,
+        "startChar": 0,
+        "endLine": 239,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "b8f5cf8e_6ca5e093",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 291,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "Please correct me if I\u0027m wrong but from what I see there are multiple steps that can be consolidated, since no trylock or async operation occurs in between.\ndetach_cache \u003e close_cache_bdev \u003e detach_core have no such delays between each other.\nSame with detach_core \u003e close_core_bdev \u003e unregister_finish.",
+      "range": {
+        "startLine": 285,
+        "startChar": 0,
+        "endLine": 291,
+        "endChar": 19
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "26fc48bc_8bbf57cb",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 293,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "I just have to add that having all the functions provided here makes it pretty hard to follow proper order when reviewing. Besides not having them in bottom up order adds to the confusion.",
+      "range": {
+        "startLine": 283,
+        "startChar": 0,
+        "endLine": 293,
+        "endChar": 2
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f398485c_6feeeaa4",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 664,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "Might be more clear to call it on \u0027existing\u0027, since line above does exactly that with the ocf_cache_t.",
+      "range": {
+        "startLine": 664,
+        "startChar": 37,
+        "endLine": 664,
+        "endChar": 53
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "46c9cc86_79acf3a2",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1111,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "This function originally had vbdev-\u003estate.started check too, shouldn\u0027t it be kept here as well ?",
+      "range": {
+        "startLine": 1111,
+        "startChar": 1,
+        "endLine": 1111,
+        "endChar": 56
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "d0f4e862_7a64a837",
+        "filename": "lib/bdev/ocf/vbdev_ocf.c",
+        "patchSetId": 18
+      },
+      "lineNbr": 1256,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T22:49:21Z",
+      "side": 1,
+      "message": "I think this is better suited to patch previous in series. (Please see comment there)",
+      "range": {
+        "startLine": 1247,
+        "startChar": 0,
+        "endLine": 1256,
+        "endChar": 9
+      },
+      "revId": "0e9db5c60cc6262344becadba17fb5ab76815ef7",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
