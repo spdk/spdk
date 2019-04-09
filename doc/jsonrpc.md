@@ -5015,6 +5015,135 @@ Example response:
 }
 ~~~
 
+# Linux Network Block Device (NBD) {#jsonrpc_components_nbd}
+
+NBD is adopted in SPDK to export SPDK bdev directly as NBD disk locally.
+
+It's a brief way to access the content of SPDK bdev with general Linux commands and tools.
+
+Before using NBD related RPC methods, users should make sure that NBD kernel module is already inserted by command "modprobe nbd".
+
+## start_nbd_disk {#rpc_start_nbd_disk}
+
+Start to export one SPDK bdev as NBD disk
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+bdev_name               | Required | string      | Bdev name to export
+nbd_device              | Optional | string      | NBD device name to assign
+
+### Response
+
+Path of exported NBD disk
+
+### Example
+
+Example request:
+
+~~~
+{
+ "params": {
+    "nbd_device": "/dev/nbd1",
+    "bdev_name": "Malloc1"
+  },
+  "jsonrpc": "2.0",
+  "method": "start_nbd_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "/dev/nbd1"
+}
+~~~
+
+## stop_nbd_disk {#rpc_stop_nbd_disk}
+
+Stop one NBD disk which is based on SPDK bdev.
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nbd_device              | Required | string      | NBD device name to stop
+
+### Example
+
+Example request:
+
+~~~
+{
+ "params": {
+    "nbd_device": "/dev/nbd1",
+  },
+  "jsonrpc": "2.0",
+  "method": "stop_nbd_disk",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": "true"
+}
+~~~
+
+## get_nbd_disks {#rpc_get_nbd_disks}
+
+Display all or specified NBD device list
+
+### Parameters
+
+Name                    | Optional | Type        | Description
+----------------------- | -------- | ----------- | -----------
+nbd_device              | Optional | string      | NBD device name to display
+
+### Response
+
+The response is an array of exported NBD devices and their corresponding SPDK bdev.
+
+### Example
+
+Example request:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "method": "get_nbd_disks",
+  "id": 1
+}
+~~~
+
+Example response:
+
+~~~
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result":  [
+    {
+      "bdev_name": "Malloc0",
+      "nbd_device": "/dev/nbd0"
+    },
+    {
+      "bdev_name": "Malloc1",
+      "nbd_device": "/dev/nbd1"
+    }
+  ]
+}
+~~~
+
 # Miscellaneous RPC commands
 
 ## send_nvme_cmd {#rpc_send_nvme_cmd}
