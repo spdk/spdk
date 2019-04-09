@@ -635,7 +635,10 @@ spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 
 	free(target->name);
 	free(target->alias);
+
+	pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	spdk_iscsi_tgt_node_delete_all_pg_maps(target);
+	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
 	pthread_mutex_destroy(&target->mutex);
 	free(target);
@@ -1228,12 +1231,18 @@ int spdk_iscsi_parse_tgt_nodes(void)
 void
 spdk_iscsi_shutdown_tgt_nodes(void)
 {
-	struct spdk_iscsi_tgt_node *target, *tmp;
+	struct spdk_iscsi_tgt_node *target;
 
 	pthread_mutex_lock(&g_spdk_iscsi.mutex);
-	TAILQ_FOREACH_SAFE(target, &g_spdk_iscsi.target_head, tailq, tmp) {
+	while (!TAILQ_EMPTY(&g_spdk_iscsi.target_head)) {
+		target = TAILQ_FIRST(&g_spdk_iscsi.target_head);
 		TAILQ_REMOVE(&g_spdk_iscsi.target_head, target, tailq);
+
+		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
 		spdk_iscsi_tgt_node_destruct(target);
+
+		pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 }
@@ -1247,8 +1256,10 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name)
 	target = spdk_iscsi_find_tgt_node(target_name);
 	if (target != NULL) {
 		spdk_iscsi_tgt_node_unregister(target);
-		spdk_iscsi_tgt_node_destruct(target);
+
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
+
+		spdk_iscsi_tgt_node_destruct(target);
 
 		return 0;
 	}
