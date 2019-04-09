@@ -1561,7 +1561,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		      "NRKEY 0x%"PRIx64", PRKEY 0x%"PRIx64"\n",
 		      racqa, iekey, rtype, key.crkey, key.prkey);
 
-	if (iekey) {
+	if (iekey || rtype > SPDK_NVME_RESERVE_EXCLUSIVE_ACCESS_ALL_REGS) {
 		SPDK_ERRLOG("Ignore existing key field set to 1\n");
 		status = SPDK_NVME_SC_INVALID_FIELD;
 		update_sgroup = false;
@@ -1641,6 +1641,7 @@ nvmf_ns_reservation_acquire(struct spdk_nvmf_ns *ns,
 		}
 		break;
 	default:
+		status = SPDK_NVME_SC_INVALID_FIELD;
 		update_sgroup = false;
 		break;
 	}
