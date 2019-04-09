@@ -660,9 +660,7 @@ iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
 	target->destruct_cb_fn = cb_fn;
 	target->destruct_cb_arg = cb_arg;
 
-	spdk_scsi_dev_destruct(target->dev);
-
-	iscsi_tgt_node_destruct_done(NULL, target);
+	spdk_scsi_dev_destruct(target->dev, iscsi_tgt_node_destruct_done, target);
 }
 
 static int

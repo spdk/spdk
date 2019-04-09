@@ -193,7 +193,7 @@ remove_scsi_tgt(struct spdk_vhost_scsi_dev *svdev,
 	state->dev = NULL;
 	assert(state->status == VHOST_SCSI_DEV_REMOVING);
 	state->status = VHOST_SCSI_DEV_EMPTY;
-	spdk_scsi_dev_destruct(dev);
+	spdk_scsi_dev_destruct(dev, NULL, NULL);
 	if (state->remove_cb) {
 		state->remove_cb(&svdev->vdev, state->remove_ctx);
 		state->remove_cb = NULL;
