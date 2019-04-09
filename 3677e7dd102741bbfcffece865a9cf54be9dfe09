@@ -1,0 +1,142 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55592211_b2e058b1",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "what about just\n\npos \u003d buf + sizeof(*hdr);",
+      "range": {
+        "startLine": 302,
+        "startChar": 1,
+        "endLine": 303,
+        "endChar": 21
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "0ad2f212_5b2ebca0",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 319,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "better to add a SPDK_ERRLOG() to print out the unexpected length",
+      "range": {
+        "startLine": 319,
+        "startChar": 2,
+        "endLine": 319,
+        "endChar": 17
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c09b376f_fc4e6bbd",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 325,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "Is that possible for the total to be negative? zero is impossible as slen has been checked with 0. With current below logic, the num_entries will always \u003e 0. Together with my new comment for the opal_response_parse_short() return status check, it could be having the situation that num_entries equals 0.",
+      "range": {
+        "startLine": 323,
+        "startChar": 1,
+        "endLine": 325,
+        "endChar": 20
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "6824e10b_2a90dd99",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 329,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "Looks like this function could return a negative value, should we check the return status and return the error properly like line 344-347.",
+      "range": {
+        "startLine": 329,
+        "startChar": 3,
+        "endLine": 329,
+        "endChar": 61
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "52f0f467_e2dc6717",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 425,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "could we define a new enumeration for these values, 5/1/4, it\u0027s hard to get what does it mean.\n\nYou may define\n\nenum XXX {\n    OPAL_TOKEN_INDEX_OFFSET_ENDLIS \u003d 1,\n    OPAL_TOKEN.... \u003d 4,\n    OPAL_TOKEN.... \u003d 5\n}",
+      "range": {
+        "startLine": 425,
+        "startChar": 49,
+        "endLine": 425,
+        "endChar": 50
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "e2810c00_2f38661c",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 12
+      },
+      "lineNbr": 446,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T10:48:24Z",
+      "side": 1,
+      "message": "may just in one line:\n\nint error \u003d opal_resposne_parse(...)",
+      "range": {
+        "startLine": 444,
+        "startChar": 1,
+        "endLine": 446,
+        "endChar": 77
+      },
+      "revId": "3677e7dd102741bbfcffece865a9cf54be9dfe09",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
