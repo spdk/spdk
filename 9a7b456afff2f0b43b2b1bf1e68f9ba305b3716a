@@ -19,6 +19,24 @@
     },
     {
       "key": {
+        "uuid": "123058f2_6f26e9f4",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-09T11:23:41Z",
+      "side": 1,
+      "message": "Yes, it\u0027s possible to have a multiple levels of relationships, as evidenced by unit tests. I don\u0027t see a need to comment this - it should work that way from the beginning.",
+      "parentUuid": "0cca8fb5_74258b7c",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "68ca5529_a6a7c8cc",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 13
@@ -30,6 +48,24 @@
       "writtenOn": "2019-04-08T08:12:39Z",
       "side": 1,
       "message": "Why do we need to wait until all children are done and only parent will start freeing them? We have situation now that we are increasing parent child_outstanding in ftl_io_alloc_child but all decresing is done in ftl_io_complete instead ftl_io_free.",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f9187829_c4d4776e",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 312,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-09T11:23:41Z",
+      "side": 1,
+      "message": "Yeah, there\u0027s no point in keeping children around except for storing their status. But we can just store it in parent once child completes. I\u0027ll change it.",
+      "parentUuid": "68ca5529_a6a7c8cc",
       "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
@@ -50,6 +86,24 @@
       "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "f7067c15_57b225f4",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 439,
+      "author": {
+        "id": 1015368
+      },
+      "writtenOn": "2019-04-09T11:23:41Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c05158b_07fb0558",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
     }
   ]
 }
