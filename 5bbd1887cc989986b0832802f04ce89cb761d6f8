@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "966bac31_5f1d52cf",
+        "filename": "doc/jsonrpc.md",
+        "patchSetId": 1
+      },
+      "lineNbr": 5019,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T20:20:07Z",
+      "side": 1,
+      "message": "If I can help with wording a bit:\n\nSPDK supports exporting bdevs through Linux nbd. These devices then appear as standard Linux kernel block devices and can be accessed using standard utilities like fdisk.\n\nIn order to export a device over nbd, first make sure the Linux kernel nbd driver is loaded by running \u0027modprobe nbd\u0027.",
+      "revId": "5bbd1887cc989986b0832802f04ce89cb761d6f8",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
