@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "0803b74f_9e0e8243",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 5
+      },
+      "lineNbr": 15,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T21:07:42Z",
+      "side": 1,
+      "message": "This is main portion of the patch, actually the vbdev_ocf_construct() is not used here at all, only starting with patch https://review.gerrithub.io/#/c/spdk/spdk/+/449776/\n\nHow about moving vbdev_ocf_construct() callback addition there and keeping this patch about changes in examine/register_vbdev ?",
+      "range": {
+        "startLine": 13,
+        "startChar": 0,
+        "endLine": 15,
+        "endChar": 11
+      },
+      "revId": "602fb9c16947e2efeb2f16403af58b8d0736b426",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "d36f4df9_9d9bf79f",
         "filename": "lib/bdev/ocf/vbdev_ocf.c",
         "patchSetId": 5
