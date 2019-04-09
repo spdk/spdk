@@ -1824,9 +1824,18 @@ void
 raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
 {
 	struct spdk_bdev	*base_bdev;
+	struct raid_bdev	*raid_bdev;
 	uint8_t			i;
+	uint16_t		j;
+	bool			found;
 
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid_bdev_remove_base_devices\n");
+
+	raid_bdev = raid_cfg->raid_bdev;
+	if (raid_bdev == NULL) {
+		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev %s doesn't exist now\n", raid_cfg->name);
+		return;
+	}
 
 	for (i = 0; i < raid_cfg->num_base_bdevs; i++) {
 		base_bdev = spdk_bdev_get_by_name(raid_cfg->base_bdev[i].name);
@@ -1836,7 +1845,38 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
 			continue;
 		}
 
-		raid_bdev_remove_base_bdev(base_bdev);
+		found = false;
+		for (j = 0; j < raid_bdev->num_base_bdevs; j++) {
+			if (raid_bdev->base_bdev_info[j].bdev == base_bdev) {
+				found = true;
+				break;
+			}
+		}
+
+		if (!found) {
+			SPDK_ERRLOG("raid bdev %s doesn't have %s as a base bdev\n",
+				    raid_cfg->name, raid_cfg->base_bdev[i].name);
+			continue;
+		}
+
+		assert(raid_bdev->base_bdev_info[j].desc);
+		raid_bdev->base_bdev_info[j].remove_scheduled = true;
+
+		if (raid_bdev->destruct_called == true ||
+		    raid_bdev->state == RAID_BDEV_STATE_CONFIGURING) {
+			/*
+			 * As raid bdev is not registered yet or already unregistered,
+			 * so cleanup should be done here itself.
+			 */
+			raid_bdev_free_base_bdev_resource(raid_bdev, j);
+			if (raid_bdev->num_base_bdevs_discovered == 0) {
+				/* There is no base bdev for this raid, so free the raid device. */
+				raid_bdev_cleanup(raid_bdev);
+				return;
+			}
+		}
+
+		raid_bdev_deconfigure(raid_bdev);
 	}
 }
 
