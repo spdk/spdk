@@ -350,11 +350,6 @@ void nvme_ns_destruct(struct spdk_nvme_ns *ns)
 
 	nsdata = _nvme_ns_get_data(ns);
 	memset(nsdata, 0, sizeof(*nsdata));
-	ns->sector_size = 0;
-	ns->extended_lba_size = 0;
-	ns->md_size = 0;
 	ns->pi_type = 0;
-	ns->sectors_per_max_io = 0;
-	ns->sectors_per_stripe = 0;
 	ns->flags = 0;
 }
