@@ -1858,9 +1858,9 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
 				return;
 			}
 		}
-
-		raid_bdev_deconfigure(raid_bdev);
 	}
+
+	raid_bdev_deconfigure(raid_bdev);
 }
 
 /*
