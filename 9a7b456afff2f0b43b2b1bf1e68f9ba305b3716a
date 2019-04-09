@@ -37,6 +37,24 @@
     },
     {
       "key": {
+        "uuid": "aed593cb_8be74828",
+        "filename": "lib/ftl/ftl_io.c",
+        "patchSetId": 13
+      },
+      "lineNbr": 308,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-09T11:46:20Z",
+      "side": 1,
+      "message": "Ok, but in previous implementation this \"if\" operates directly on child/parent bool and it was easier to understand what is happening. Now we are relying on num_outstanding \u003d\u003d 0 and this is only true for \"leafs\" in this children-parent tree structure. I would like to have this more emphasised because when I was reviewing this it take some moment to figure it out. Either add some comment for this or rely on some child/parent bool.",
+      "parentUuid": "123058f2_6f26e9f4",
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "68ca5529_a6a7c8cc",
         "filename": "lib/ftl/ftl_io.c",
         "patchSetId": 13
