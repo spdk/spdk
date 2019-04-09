@@ -242,8 +242,9 @@ raid_bdev_destruct(void *ctxt)
 		TAILQ_REMOVE(&g_raid_bdev_configured_list, raid_bdev, state_link);
 		raid_bdev->state = RAID_BDEV_STATE_OFFLINE;
 		TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
-		spdk_io_device_unregister(raid_bdev, NULL);
 	}
+
+	spdk_io_device_unregister(raid_bdev, NULL);
 
 	if (raid_bdev->num_base_bdevs_discovered == 0) {
 		/* Free raid_bdev when there are no base bdevs left */
@@ -1732,7 +1733,6 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
 	TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev state chaning from online to offline\n");
 
-	spdk_io_device_unregister(raid_bdev, NULL);
 	spdk_bdev_unregister(&raid_bdev->bdev, NULL, NULL);
 }
 
