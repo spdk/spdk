@@ -25,6 +25,30 @@
     },
     {
       "key": {
+        "uuid": "e733a0dd_2df70faf",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1450,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T05:03:46Z",
+      "side": 1,
+      "message": "This is from lines 1438-1445 where a new (next) IO is picked and starts a new check at line 1427. Removing this will go to the follow logic to submit the IO.\n\nI can add a comment here for more clearness.",
+      "parentUuid": "b643872b_b43b3721",
+      "range": {
+        "startLine": 1448,
+        "startChar": 3,
+        "endLine": 1450,
+        "endChar": 4
+      },
+      "revId": "42707e16a9044ea4525b4fc83b76de02507dec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "cbd6a81a_43c4214c",
         "filename": "lib/bdev/bdev.c",
         "patchSetId": 1
@@ -36,6 +60,30 @@
       "writtenOn": "2019-04-09T04:08:56Z",
       "side": 1,
       "message": "move to after line 1441.",
+      "range": {
+        "startLine": 1471,
+        "startChar": 3,
+        "endLine": 1471,
+        "endChar": 62
+      },
+      "revId": "42707e16a9044ea4525b4fc83b76de02507dec3e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "926f6825_34440d90",
+        "filename": "lib/bdev/bdev.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1471,
+      "author": {
+        "id": 1011207
+      },
+      "writtenOn": "2019-04-09T05:03:46Z",
+      "side": 1,
+      "message": "Line 1441 is to get the IO and determine whether to send the IO based on the limits, when coming to this block 1470-1474, it is remove the IO from the queues after the submission. Same for below comment. This could be similar operation to line 1469.",
+      "parentUuid": "cbd6a81a_43c4214c",
       "range": {
         "startLine": 1471,
         "startChar": 3,
