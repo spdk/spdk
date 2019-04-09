@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fe683db7_19746681",
+        "filename": "lib/nvme/nvme_pcie.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 1280,
+      "author": {
+        "id": 1011204
+      },
+      "writtenOn": "2019-04-09T01:13:41Z",
+      "side": 1,
+      "message": "You cannot set tr-\u003ereq to NULL here, as the the following function nvme_pcie_qpair_submit_tracker() still use it.  Just remove this line is OK.",
+      "range": {
+        "startLine": 1280,
+        "startChar": 1,
+        "endLine": 1280,
+        "endChar": 16
+      },
+      "revId": "a95920e71990b70a411da47a35bafe6398b15ae1",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
