@@ -25,6 +25,64 @@
     },
     {
       "key": {
+        "uuid": "dc850b0e_c08cbe8f",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 303,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-09T05:41:56Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "1c9c96b3_45c7a5f4",
+      "range": {
+        "startLine": 297,
+        "startChar": 1,
+        "endLine": 303,
+        "endChar": 2
+      },
+      "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "a3992427_2d151616",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 371,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-09T05:41:56Z",
+      "side": 1,
+      "message": "index",
+      "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "fb3610d5_86cc95f3",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 391,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-09T05:41:56Z",
+      "side": 1,
+      "message": "index",
+      "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "369987df_ae3475a3",
         "filename": "lib/nvme/nvme_opal.c",
         "patchSetId": 11
@@ -36,6 +94,24 @@
       "writtenOn": "2019-04-09T05:11:55Z",
       "side": 1,
       "message": "Is 5/4/1 in this function have any special purpose, if this is related to header length, I think you can add a variable to spdk_opal_resp_token to record the skipped header length.",
+      "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f0e13b75_429cc401",
+        "filename": "lib/nvme/nvme_opal.c",
+        "patchSetId": 11
+      },
+      "lineNbr": 429,
+      "author": {
+        "id": 1011792
+      },
+      "writtenOn": "2019-04-09T05:41:56Z",
+      "side": 1,
+      "message": "Hi Changpeng, thanks for your review. This is just used to check the status code in the response. I think it is unnecessary to track the length by now. I will add comments.",
+      "parentUuid": "369987df_ae3475a3",
       "revId": "dd27becd409e2a0cccab111b10977b2c3f8fe23e",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": false
