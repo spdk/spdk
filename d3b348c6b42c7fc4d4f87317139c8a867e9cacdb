@@ -1,0 +1,50 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "55b5d474_2455aab7",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 10
+      },
+      "lineNbr": 9,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T20:51:49Z",
+      "side": 1,
+      "message": "asynchronous",
+      "range": {
+        "startLine": 9,
+        "startChar": 28,
+        "endLine": 9,
+        "endChar": 40
+      },
+      "revId": "d3b348c6b42c7fc4d4f87317139c8a867e9cacdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "c3638d82_c44e4a8f",
+        "filename": "lib/bdev/ocf/vbdev_ocf_rpc.c",
+        "patchSetId": 10
+      },
+      "lineNbr": 121,
+      "author": {
+        "id": 1011221
+      },
+      "writtenOn": "2019-04-09T20:51:49Z",
+      "side": 1,
+      "message": "Please note comment in https://review.gerrithub.io/#/c/spdk/spdk/+/450033/5/lib/bdev/ocf/vbdev_ocf.c on line 1076.\nstruct construct_cb_arg *arg could be removed from here, only passing struct rpc_construct_ocf_bdev req.\nThe construct_cb could retrieve info on name directly from vbdev_ocf that was just created.",
+      "range": {
+        "startLine": 121,
+        "startChar": 20,
+        "endLine": 121,
+        "endChar": 23
+      },
+      "revId": "d3b348c6b42c7fc4d4f87317139c8a867e9cacdb",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    }
+  ]
+}
