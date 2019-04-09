@@ -271,8 +271,6 @@ void ftl_io_update_iovec(struct ftl_io *io, size_t lbk_cnt);
 size_t ftl_iovec_num_lbks(struct iovec *iov, size_t iov_cnt);
 void *ftl_io_iovec_addr(struct ftl_io *io);
 size_t ftl_io_iovec_len_left(struct ftl_io *io);
-int ftl_io_init_iovec(struct ftl_io *io, void *buf,
-		      size_t iov_cnt, size_t req_size);
 struct ftl_io *ftl_io_init_internal(const struct ftl_io_init_opts *opts);
 struct ftl_io *ftl_io_rwb_init(struct spdk_ftl_dev *dev, struct ftl_band *band,
 			       struct ftl_rwb_batch *entry, spdk_ftl_fn cb);
@@ -283,6 +281,7 @@ void ftl_io_user_init(struct spdk_ftl_dev *dev, struct ftl_io *io, uint64_t lba,
 void *ftl_io_get_md(const struct ftl_io *io);
 void ftl_io_complete(struct ftl_io *io);
 bool ftl_io_done(struct ftl_io *io);
+void ftl_io_shrink_iovec(struct ftl_io *io, char *buf, size_t iov_cnt, size_t req_size);
 void ftl_io_process_error(struct ftl_io *io, const struct spdk_nvme_cpl *status);
 
 #endif /* FTL_IO_H */
