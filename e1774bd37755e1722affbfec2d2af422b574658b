@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "304fcc3e_c651186d",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 114,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T11:24:15Z",
+      "side": 1,
+      "message": "return here ?",
+      "range": {
+        "startLine": 114,
+        "startChar": 1,
+        "endLine": 114,
+        "endChar": 2
+      },
+      "revId": "e1774bd37755e1722affbfec2d2af422b574658b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}

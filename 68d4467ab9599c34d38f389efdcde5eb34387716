@@ -49,6 +49,30 @@
     },
     {
       "key": {
+        "uuid": "990658b4_a4c4e6f2",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 45
+      },
+      "lineNbr": 60,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T11:24:15Z",
+      "side": 1,
+      "message": "Well, I am OK with this. But it feels like we shouldn\u0027t debug other application",
+      "parentUuid": "e48d9aca_7bf24e1f",
+      "range": {
+        "startLine": 56,
+        "startChar": 0,
+        "endLine": 60,
+        "endChar": 2
+      },
+      "revId": "68d4467ab9599c34d38f389efdcde5eb34387716",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": false
+    },
+    {
+      "key": {
         "uuid": "e290109d_ef372ccc",
         "filename": "lib/event/rpc/notify_rpc.c",
         "patchSetId": 45
