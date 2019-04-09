@@ -1,0 +1,174 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3ea163c3_2a5f98ee",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 1,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "The notify library implements an event bus, allowing users to register, generate, and listen for events. For example, the bdev library may register a new event type for bdev creation. Any time a bdev is created, it \"sends\" the event. Consumers of that event may periodically poll for new events to retrieve them.\n\nThe event bus is implemented as a circular ring of fixed size. If event consumers do not poll frequently enough, events may be lost. All events are identified by a monotonically increasing integer, so missing events may be detected, although not recovered.",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5211691d_c4ce185b",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 12,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "the sender library",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "38f47535_87d128d7",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 18,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "A consumer can get information about the available event types during...",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "cc94f23b_07cfee18",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 20,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "calls a callback on each of them, so that the user can produce detailed information about the notification.",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "eaa33393_6304424b",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 25,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "A consumer can get events by calling the function...",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "6c21b4a6_7fcd8e9f",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 26,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "The caller should specify the last received event and the maximum number of events to retrieve.",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "0d83a5a4_a6195c7c",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 27,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "multiple",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "5077f46d_081669e7",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "The event bus is implemented as a circular buffer, so older events may be overwritten by newer ones.",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "4166b22c_f4eadc57",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 32,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "When an event occurs, a library can invoke",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "9cd1547a_a6615faa",
+        "filename": "doc/notify.md",
+        "patchSetId": 20
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T18:33:47Z",
+      "side": 1,
+      "message": "containing the type",
+      "revId": "6db5d38349fd66d66181e765de358cccc050b9f0",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
