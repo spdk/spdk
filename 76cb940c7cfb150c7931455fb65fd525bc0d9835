@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b41d678d_dde84287",
+        "filename": "/COMMIT_MSG",
+        "patchSetId": 1
+      },
+      "lineNbr": 8,
+      "author": {
+        "id": 1010531
+      },
+      "writtenOn": "2019-04-09T20:16:45Z",
+      "side": 1,
+      "message": "I\u0027m trying to understand what the specific scenario is that causes the problem. Can you outline the sequence of functions that this patch is addressing?",
+      "revId": "76cb940c7cfb150c7931455fb65fd525bc0d9835",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    }
+  ]
+}
