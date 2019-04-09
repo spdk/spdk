@@ -2,6 +2,29 @@
   "comments": [
     {
       "key": {
+        "uuid": "e6445b2f_1219d621",
+        "filename": "lib/event/rpc/notify_rpc.c",
+        "patchSetId": 46
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 1014935
+      },
+      "writtenOn": "2019-04-09T11:26:23Z",
+      "side": 1,
+      "message": "Also, this should be positive EINVAL - spdk_strerror accepts only positive codes :( That\u0027s why there previusly was twice negated rc...",
+      "range": {
+        "startLine": 113,
+        "startChar": 21,
+        "endLine": 113,
+        "endChar": 28
+      },
+      "revId": "e1774bd37755e1722affbfec2d2af422b574658b",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
+    },
+    {
+      "key": {
         "uuid": "304fcc3e_c651186d",
         "filename": "lib/event/rpc/notify_rpc.c",
         "patchSetId": 46
