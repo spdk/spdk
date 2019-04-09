@@ -373,8 +373,8 @@ opal_discovery0_end(struct spdk_opal_dev *dev)
 	cpos += sizeof(*hdr); /* current position on buffer */
 
 	while (cpos < epos) {
-		const union spdk_discovery0_features *body =
-				(const union spdk_discovery0_features *)cpos;
+		union spdk_discovery0_features *body = calloc(1, sizeof(union spdk_discovery0_features));
+		memcpy(body, (union spdk_discovery0_features *)cpos, sizeof(union spdk_discovery0_features));
 		uint16_t feature_code = from_be16(&(body->tper.feature_code));
 
 		switch (feature_code) {
