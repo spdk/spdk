@@ -324,6 +324,10 @@ void
 spdk_bdev_unregister(struct spdk_bdev *bdev, spdk_bdev_unregister_cb cb_fn, void *cb_arg)
 {
 	bdev->fn_table->destruct(bdev->ctxt);
+
+	if (cb_fn) {
+		cb_fn(cb_arg, 0);
+	}
 }
 
 int
