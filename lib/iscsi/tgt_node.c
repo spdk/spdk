@@ -624,14 +624,17 @@ spdk_iscsi_tgt_node_delete_all_pg_maps(struct spdk_iscsi_tgt_node *target)
 	}
 }
 
-static void
-spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
-{
-	if (target == NULL) {
-		return;
-	}
+struct iscsi_tgt_node_destruct_ctx {
+	struct spdk_iscsi_tgt_node *target;
+	iscsi_tgt_node_destruct_cb cb_fn;
+	void *cb_arg;
+};
 
-	spdk_scsi_dev_destruct(target->dev);
+static void
+spdk_iscsi_tgt_node_destruct_done(struct spdk_scsi_lun *lun, void *cb_arg)
+{
+	struct iscsi_tgt_node_destruct_ctx *ctx = cb_arg;
+	struct spdk_iscsi_tgt_node *target = ctx->target;
 
 	free(target->name);
 	free(target->alias);
@@ -642,6 +645,41 @@ spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 
 	pthread_mutex_destroy(&target->mutex);
 	free(target);
+
+	if (ctx->cb_fn) {
+		ctx->cb_fn(ctx->cb_arg, 0);
+	}
+	free(ctx);
+}
+
+static void
+spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target,
+			     iscsi_tgt_node_destruct_cb cb_fn, void *cb_arg)
+{
+	struct iscsi_tgt_node_destruct_ctx *ctx;
+
+	if (target == NULL) {
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOENT);
+		}
+		return;
+	}
+
+	ctx = calloc(1, sizeof(*ctx));
+	if (!ctx) {
+		if (cb_fn) {
+			cb_fn(cb_arg, -ENOMEM);
+		}
+		return;
+	}
+
+	ctx->target = target;
+	ctx->cb_fn = cb_fn;
+	ctx->cb_arg = cb_arg;
+
+	spdk_scsi_dev_destruct(target->dev);
+
+	spdk_iscsi_tgt_node_destruct_done(NULL, ctx);
 }
 
 static int
@@ -914,7 +952,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = pthread_mutex_init(&target->mutex, NULL);
 	if (rc != 0) {
 		SPDK_ERRLOG("tgt_node%d: mutex_init() failed\n", target->num);
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -923,7 +961,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	target->name = strdup(fullname);
 	if (!target->name) {
 		SPDK_ERRLOG("Could not allocate TargetName\n");
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -933,7 +971,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 		target->alias = strdup(alias);
 		if (!target->alias) {
 			SPDK_ERRLOG("Could not allocate TargetAlias\n");
-			spdk_iscsi_tgt_node_destruct(target);
+			spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 			return NULL;
 		}
 	}
@@ -942,7 +980,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 					      SPDK_SPC_PROTOCOL_IDENTIFIER_ISCSI, NULL, NULL);
 	if (!target->dev) {
 		SPDK_ERRLOG("Could not construct SCSI device\n");
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -950,7 +988,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = spdk_iscsi_tgt_node_add_pg_ig_maps(target, pg_tag_list, ig_tag_list, num_maps);
 	if (rc != 0) {
 		SPDK_ERRLOG("could not add map to target\n");
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -972,7 +1010,7 @@ spdk_iscsi_tgt_node_construct(int target_index,
 	rc = spdk_iscsi_tgt_node_register(target);
 	if (rc != 0) {
 		SPDK_ERRLOG("register target is failed\n");
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 		return NULL;
 	}
 
@@ -1240,7 +1278,7 @@ spdk_iscsi_shutdown_tgt_nodes(void)
 
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, NULL, NULL);
 
 		pthread_mutex_lock(&g_spdk_iscsi.mutex);
 	}
@@ -1260,11 +1298,8 @@ spdk_iscsi_shutdown_tgt_node_by_name(const char *target_name,
 
 		pthread_mutex_unlock(&g_spdk_iscsi.mutex);
 
-		spdk_iscsi_tgt_node_destruct(target);
+		spdk_iscsi_tgt_node_destruct(target, cb_fn, cb_arg);
 
-		if (cb_fn) {
-			cb_fn(cb_arg, 0);
-		}
 		return;
 	}
 	pthread_mutex_unlock(&g_spdk_iscsi.mutex);
