@@ -631,10 +631,11 @@ spdk_iscsi_tgt_node_destruct(struct spdk_iscsi_tgt_node *target)
 		return;
 	}
 
+	spdk_scsi_dev_destruct(target->dev);
+
 	free(target->name);
 	free(target->alias);
 	spdk_iscsi_tgt_node_delete_all_pg_maps(target);
-	spdk_scsi_dev_destruct(target->dev);
 
 	pthread_mutex_destroy(&target->mutex);
 	free(target);
