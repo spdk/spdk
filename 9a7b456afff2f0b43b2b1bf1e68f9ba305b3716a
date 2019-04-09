@@ -46,6 +46,30 @@
       "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
       "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
       "unresolved": true
+    },
+    {
+      "key": {
+        "uuid": "3770f651_290b4a9e",
+        "filename": "lib/ftl/ftl_rwb.c",
+        "patchSetId": 3
+      },
+      "lineNbr": 172,
+      "author": {
+        "id": 1015344
+      },
+      "writtenOn": "2019-04-09T11:39:20Z",
+      "side": 0,
+      "message": "I remember that was scan-build finding so you should probably do this in this patch.",
+      "parentUuid": "334d0034_2d0f0030",
+      "range": {
+        "startLine": 170,
+        "startChar": 0,
+        "endLine": 172,
+        "endChar": 22
+      },
+      "revId": "9a7b456afff2f0b43b2b1bf1e68f9ba305b3716a",
+      "serverId": "d5d70762-12d0-45a1-890d-524b12d3f735",
+      "unresolved": true
     }
   ]
 }
