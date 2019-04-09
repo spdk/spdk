@@ -704,10 +704,8 @@ spdk_rpc_delete_target_node(struct spdk_jsonrpc_request *request,
 
 	ctx->request = request;
 
-	if (spdk_iscsi_shutdown_tgt_node_by_name(ctx->req.name)) {
-		SPDK_ERRLOG("shutdown_tgt_node_by_name failed\n");
-		goto invalid;
-	}
+	spdk_iscsi_shutdown_tgt_node_by_name(ctx->req.name,
+					     rpc_delete_target_node_done, ctx);
 
 	rpc_delete_target_node_done(ctx, 0);
 	return;
