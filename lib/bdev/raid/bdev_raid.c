@@ -67,7 +67,8 @@ struct raid_offline_tailq	g_raid_bdev_offline_list;
 static void	raid_bdev_examine(struct spdk_bdev *bdev);
 static int	raid_bdev_init(void);
 static void	raid_bdev_waitq_io_process(void *ctx);
-static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev);
+static void	raid_bdev_deconfigure(struct raid_bdev *raid_bdev,
+				      raid_bdev_destruct_cb cb_fn, void *cb_arg);
 static void	raid_bdev_remove_base_bdev(void *ctx);
 
 /*
@@ -1716,13 +1717,19 @@ raid_bdev_configure(struct raid_bdev *raid_bdev)
  * in configuring list
  * params:
  * raid_bdev - pointer to raid bdev
+ * cb_fn - callback function
+ * cb_arg - argument to callback function
  * returns:
  * none
  */
 static void
-raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
+raid_bdev_deconfigure(struct raid_bdev *raid_bdev, raid_bdev_destruct_cb cb_fn,
+		      void *cb_arg)
 {
 	if (raid_bdev->state != RAID_BDEV_STATE_ONLINE) {
+		if (cb_fn) {
+			cb_fn(cb_arg, 0);
+		}
 		return;
 	}
 
@@ -1733,7 +1740,7 @@ raid_bdev_deconfigure(struct raid_bdev *raid_bdev)
 	TAILQ_INSERT_TAIL(&g_raid_bdev_offline_list, raid_bdev, state_link);
 	SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev state chaning from online to offline\n");
 
-	spdk_bdev_unregister(&raid_bdev->bdev, NULL, NULL);
+	spdk_bdev_unregister(&raid_bdev->bdev, cb_fn, cb_arg);
 }
 
 /*
@@ -1810,7 +1817,7 @@ raid_bdev_remove_base_bdev(void *ctx)
 		}
 	}
 
-	raid_bdev_deconfigure(raid_bdev);
+	raid_bdev_deconfigure(raid_bdev, NULL, NULL);
 }
 
 /*
@@ -1819,9 +1826,12 @@ raid_bdev_remove_base_bdev(void *ctx)
  *  doesn't exist.
  * params:
  * raid_cfg - pointer to raid bdev config.
+ * cb_fn - callback function
+ * cb_ctx - argument to callback function
  */
 void
-raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
+raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
+			      raid_bdev_destruct_cb cb_fn, void *cb_arg)
 {
 	struct spdk_bdev	*base_bdev;
 	struct raid_bdev	*raid_bdev;
@@ -1834,6 +1844,9 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
 	raid_bdev = raid_cfg->raid_bdev;
 	if (raid_bdev == NULL) {
 		SPDK_DEBUGLOG(SPDK_LOG_BDEV_RAID, "raid bdev %s doesn't exist now\n", raid_cfg->name);
+		if (cb_fn) {
+			cb_fn(cb_arg, 0);
+		}
 		return;
 	}
 
@@ -1872,12 +1885,15 @@ raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg)
 			if (raid_bdev->num_base_bdevs_discovered == 0) {
 				/* There is no base bdev for this raid, so free the raid device. */
 				raid_bdev_cleanup(raid_bdev);
+				if (cb_fn) {
+					cb_fn(cb_arg, 0);
+				}
 				return;
 			}
 		}
 	}
 
-	raid_bdev_deconfigure(raid_bdev);
+	raid_bdev_deconfigure(raid_bdev, cb_fn, cb_arg);
 }
 
 /*

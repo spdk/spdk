@@ -214,9 +214,12 @@ extern struct raid_all_tailq		g_raid_bdev_list;
 extern struct raid_offline_tailq	g_raid_bdev_offline_list;
 extern struct raid_config		g_raid_config;
 
+typedef void (*raid_bdev_destruct_cb)(void *cb_ctx, int rc);
+
 int raid_bdev_create(struct raid_bdev_config *raid_cfg);
 int raid_bdev_add_base_devices(struct raid_bdev_config *raid_cfg);
-void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg);
+void raid_bdev_remove_base_devices(struct raid_bdev_config *raid_cfg,
+				   raid_bdev_destruct_cb cb_fn, void *cb_ctx);
 int raid_bdev_config_add(const char *raid_name, int strip_size, int num_base_bdevs,
 			 int raid_level, struct raid_bdev_config **_raid_cfg);
 int raid_bdev_config_add_base_bdev(struct raid_bdev_config *raid_cfg,
